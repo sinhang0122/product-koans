@@ -4,6 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>차량 판매 — KoAus</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;800;900&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
   <script>
     (function () {
@@ -12,7 +15,6 @@
       if ((saved ?? sys) === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
     })();
   </script>
-  <!-- Google AdSense -->
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3691720629746826" crossorigin="anonymous"></script>
 </head>
 <body>
@@ -22,53 +24,87 @@
       <span class="topbar-logo-icon">◈</span>
       <span class="topbar-logo-text">KoAus</span>
     </a>
-    <button class="topbar-menu-btn" id="hamburgerBtn" aria-label="메뉴 열기" aria-expanded="false">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
-        <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
-      </svg>
-    </button>
+    <div class="topbar-actions">
+      <a href="index.html" class="topbar-login-btn">로그인</a>
+      <button class="topbar-menu-btn" id="hamburgerBtn" aria-label="메뉴 열기" aria-expanded="false">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+          <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+    </div>
   </div>
 
   <div class="sidebar-overlay" id="sidebarOverlay"></div>
   <aside class="sidebar" id="sidebar" aria-label="사이드 메뉴">
     <div class="sidebar-header">
-      <span class="sidebar-brand"><span class="sidebar-brand-icon">◈</span>KoAus</span>
-      <button class="sidebar-close-btn" id="sidebarCloseBtn">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+      <span class="sidebar-brand">◈ KoAus</span>
+      <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="닫기">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
           <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
         </svg>
       </button>
     </div>
+    <div class="sidebar-settings">
+      <div class="sidebar-setting-row">
+        <span class="sidebar-setting-label">화면 테마</span>
+        <div class="sidebar-setting-btns">
+          <button class="setting-btn" data-theme-set="light">라이트</button>
+          <button class="setting-btn" data-theme-set="dark">다크</button>
+        </div>
+      </div>
+    </div>
     <nav class="sidebar-nav">
-      <div class="sidebar-group">
-        <div class="sidebar-group-label">생활 &amp; 비자</div>
-        <ul class="sidebar-list">
-          <li><a href="exchange.html" class="sidebar-item"><span class="sidebar-item-icon">💸</span><span class="sidebar-item-text">오늘의 환율</span></a></li>
-          <li><a href="points.html" class="sidebar-item"><span class="sidebar-item-icon">🎯</span><span class="sidebar-item-text">기술심사 점수 가채점</span></a></li>
-        </ul>
+      <div class="accord-item" data-group="living">
+        <button class="accord-header">
+          <span>Living <em>숙소 · 생활</em></span>
+          <svg class="accord-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="accord-body">
+          <a href="accom.html" class="accord-link">숙소 (쉐어)</a>
+          <a href="rent.html" class="accord-link">숙소 렌트 (독채)</a>
+          <a href="#" class="accord-link accord-link--soon" tabindex="-1">렌트 정보 <span class="soon-tag">준비중</span></a>
+          <a href="#" class="accord-link accord-link--soon" tabindex="-1">헬스 양도 <span class="soon-tag">준비중</span></a>
+        </div>
       </div>
-      <div class="sidebar-group">
-        <div class="sidebar-group-label">마켓 &amp; 커뮤니티</div>
-        <ul class="sidebar-list">
-          <li><a href="jobs.html" class="sidebar-item"><span class="sidebar-item-icon">💼</span><span class="sidebar-item-text">구인구직</span></a></li>
-          <li><a href="accom.html" class="sidebar-item"><span class="sidebar-item-icon">🏠</span><span class="sidebar-item-text">숙소 (쉐어)</span></a></li>
-          <li><a href="rent.html" class="sidebar-item"><span class="sidebar-item-icon">🏡</span><span class="sidebar-item-text">숙소 렌트 (독채)</span></a></li>
-        </ul>
+      <div class="accord-item open" data-group="works">
+        <button class="accord-header">
+          <span>Works <em>일자리 · 거래</em></span>
+          <svg class="accord-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="accord-body">
+          <a href="jobs.html" class="accord-link">구인구직</a>
+          <a href="car-sale.html" class="accord-link accord-link--active">차량 판매</a>
+          <a href="car-rent.html" class="accord-link">차량 렌트</a>
+          <a href="#" class="accord-link accord-link--soon" tabindex="-1">사업 광고 <span class="soon-tag">준비중</span></a>
+          <a href="#" class="accord-link accord-link--soon" tabindex="-1">정보 공유 <span class="soon-tag">준비중</span></a>
+        </div>
       </div>
-      <div class="sidebar-group">
-        <div class="sidebar-group-label">자동차 (Car)</div>
-        <ul class="sidebar-list">
-          <li><a href="car-sale.html" class="sidebar-item sidebar-item--active"><span class="sidebar-item-icon">🚗</span><span class="sidebar-item-text">차량 판매</span></a></li>
-          <li><a href="car-rent.html" class="sidebar-item"><span class="sidebar-item-icon">🚙</span><span class="sidebar-item-text">차량 렌트</span></a></li>
-        </ul>
+      <div class="accord-item" data-group="legal">
+        <button class="accord-header">
+          <span>Legal <em>비자 · 법률</em></span>
+          <svg class="accord-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="accord-body">
+          <a href="#" class="accord-link accord-link--soon" tabindex="-1">워홀 정보 <span class="soon-tag">준비중</span></a>
+          <a href="#" class="accord-link accord-link--soon" tabindex="-1">법률 가이드 <span class="soon-tag">준비중</span></a>
+          <a href="points.html" class="accord-link">기술심사 점수</a>
+        </div>
       </div>
-      <div class="sidebar-group">
-        <div class="sidebar-group-label">비즈니스</div>
-        <ul class="sidebar-list">
-          <li><a href="index.html#section-contact" class="sidebar-item"><span class="sidebar-item-icon">📢</span><span class="sidebar-item-text">광고 문의</span></a></li>
-        </ul>
+      <div class="accord-item" data-group="care">
+        <button class="accord-header">
+          <span>Care <em>긴급 · 케어</em></span>
+          <svg class="accord-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="accord-body">
+          <a href="#" class="accord-link accord-link--soon" tabindex="-1">동행 메카닉 <span class="soon-tag">준비중</span></a>
+          <a href="#" class="accord-link accord-link--soon" tabindex="-1">사고 견적 <span class="soon-tag">준비중</span></a>
+          <a href="#" class="accord-link accord-link--soon" tabindex="-1">긴급 견인 <span class="soon-tag">준비중</span></a>
+        </div>
       </div>
     </nav>
+    <div class="sidebar-footer-nav">
+      <a href="exchange.html" class="sidebar-exchange-link">💸 오늘의 환율 →</a>
+    </div>
   </aside>
 
   <main class="page-container">
@@ -81,7 +117,6 @@
       <a href="index.html" class="page-back">← 홈으로</a>
     </div>
 
-    <!-- Google AdSense 반응형 배너 -->
     <div class="adsense-wrap">
       <ins class="adsbygoogle"
            style="display:block"
@@ -109,7 +144,6 @@
 
   </main>
 
-  <!-- 글쓰기 모달 -->
   <div class="write-overlay" id="writeOverlay">
     <div class="write-modal">
       <div class="write-modal-title">✏️ 차량 판매 글쓰기</div>
@@ -136,7 +170,6 @@
     </div>
   </div>
 
-  <!-- 상세 보기 -->
   <div class="post-detail-overlay" id="detailOverlay">
     <div class="post-detail-card">
       <div class="post-detail-header">
@@ -162,6 +195,17 @@
     cBtn.addEventListener('click', closeSb);
     ov.addEventListener('click', closeSb);
     document.addEventListener('keydown', e => e.key==='Escape' && closeSb());
+    document.querySelectorAll('.accord-header').forEach(btn => {
+      btn.addEventListener('click', () => btn.closest('.accord-item').classList.toggle('open'));
+    });
+    function applyTheme(t) {
+      if (t === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+      else document.documentElement.removeAttribute('data-theme');
+      localStorage.setItem('koaus-theme', t);
+      document.querySelectorAll('.setting-btn').forEach(b => b.classList.toggle('active', b.dataset.themeSet === t));
+    }
+    document.querySelectorAll('.setting-btn').forEach(btn => btn.addEventListener('click', () => applyTheme(btn.dataset.themeSet)));
+    applyTheme(localStorage.getItem('koaus-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
 
     const STORE_KEY = 'koaus-car-sale-posts';
     const SAMPLES = [
@@ -173,39 +217,27 @@
     function escHtml(s) {
       return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
-
     function loadPosts() {
       const raw = localStorage.getItem(STORE_KEY);
       if (raw) return JSON.parse(raw);
       localStorage.setItem(STORE_KEY, JSON.stringify(SAMPLES));
       return SAMPLES;
     }
-
-    function savePosts(posts) {
-      localStorage.setItem(STORE_KEY, JSON.stringify(posts));
-    }
-
+    function savePosts(posts) { localStorage.setItem(STORE_KEY, JSON.stringify(posts)); }
     function renderPosts() {
       const posts = loadPosts();
       document.getElementById('boardCount').textContent = `총 ${posts.length}건`;
       const list = document.getElementById('postList');
-      if (!posts.length) {
-        list.innerHTML = '<div class="post-empty">등록된 글이 없습니다. 첫 글을 작성해보세요!</div>';
-        return;
-      }
+      if (!posts.length) { list.innerHTML = '<div class="post-empty">등록된 글이 없습니다. 첫 글을 작성해보세요!</div>'; return; }
       list.innerHTML = posts.slice().reverse().map((p, i) => `
         <div class="post-row" data-id="${p.id}" style="cursor:pointer">
           <span class="post-num">${posts.length - i}</span>
           <span class="post-title" style="color:var(--text-primary);font-weight:500;">${escHtml(p.title)}</span>
           <span class="post-author">${escHtml(p.author)}</span>
           <span class="post-date">${p.date}</span>
-        </div>
-      `).join('');
-      list.querySelectorAll('.post-row').forEach(row => {
-        row.addEventListener('click', () => openDetail(row.dataset.id));
-      });
+        </div>`).join('');
+      list.querySelectorAll('.post-row').forEach(row => row.addEventListener('click', () => openDetail(row.dataset.id)));
     }
-
     function openDetail(id) {
       const posts = loadPosts();
       const p = posts.find(x => String(x.id) === String(id));
@@ -217,19 +249,12 @@
       contactEl.innerHTML = p.contact ? `📞 연락처: <strong>${escHtml(p.contact)}</strong>` : '';
       document.getElementById('detailOverlay').classList.add('open');
     }
-
-    document.getElementById('detailClose').addEventListener('click', () => {
-      document.getElementById('detailOverlay').classList.remove('open');
-    });
-    document.getElementById('detailOverlay').addEventListener('click', e => {
-      if (e.target === e.currentTarget) document.getElementById('detailOverlay').classList.remove('open');
-    });
-
+    document.getElementById('detailClose').addEventListener('click', () => { document.getElementById('detailOverlay').classList.remove('open'); });
+    document.getElementById('detailOverlay').addEventListener('click', e => { if (e.target === e.currentTarget) document.getElementById('detailOverlay').classList.remove('open'); });
     const writeOverlay = document.getElementById('writeOverlay');
     document.getElementById('writeBtnOpen').addEventListener('click', () => writeOverlay.classList.add('open'));
     document.getElementById('writeBtnCancel').addEventListener('click', () => writeOverlay.classList.remove('open'));
     writeOverlay.addEventListener('click', e => { if (e.target === writeOverlay) writeOverlay.classList.remove('open'); });
-
     document.getElementById('writeBtnSubmit').addEventListener('click', () => {
       const title = document.getElementById('wTitle').value.trim();
       const body  = document.getElementById('wBody').value.trim();
@@ -246,7 +271,6 @@
       writeOverlay.classList.remove('open');
       ['wTitle','wBody','wAuthor','wContact'].forEach(id => { document.getElementById(id).value = ''; });
     });
-
     renderPosts();
   </script>
 </body>
