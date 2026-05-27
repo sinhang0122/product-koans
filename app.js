@@ -986,3 +986,71 @@ renderPowerball(0);
     commentList.innerHTML = '<p class="comment-empty" style="color:var(--red)">댓글을 불러오지 못했습니다.</p>';
   });
 })();
+
+/* ════════════════════════════════════════════════════════════
+   § 7. 햄버거 메뉴 (사이드바)
+════════════════════════════════════════════════════════════ */
+(function () {
+  const hamburgerBtn    = document.getElementById('hamburgerBtn');
+  const sidebarCloseBtn = document.getElementById('sidebarCloseBtn');
+  const sidebar         = document.getElementById('sidebar');
+  const overlay         = document.getElementById('sidebarOverlay');
+  const sidebarLoginLink = document.getElementById('sidebarLoginLink');
+
+  function openSidebar() {
+    sidebar.classList.add('open');
+    overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    hamburgerBtn.setAttribute('aria-expanded', 'true');
+  }
+
+  function closeSidebar() {
+    sidebar.classList.remove('open');
+    overlay.classList.remove('open');
+    document.body.style.overflow = '';
+    hamburgerBtn.setAttribute('aria-expanded', 'false');
+  }
+
+  hamburgerBtn.addEventListener('click', openSidebar);
+  sidebarCloseBtn.addEventListener('click', closeSidebar);
+  overlay.addEventListener('click', closeSidebar);
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeSidebar();
+  });
+
+  /* 스크롤 이동 링크 */
+  document.querySelectorAll('.sidebar-scroll').forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      const target = document.querySelector(link.getAttribute('href'));
+      if (target) {
+        closeSidebar();
+        setTimeout(() => target.scrollIntoView({ behavior: 'smooth', block: 'start' }), 320);
+      }
+    });
+  });
+
+  /* 사이드바 로그인/로그아웃 버튼 */
+  sidebarLoginLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    closeSidebar();
+    setTimeout(() => {
+      if (auth.currentUser) {
+        document.getElementById('logoutBtn').click();
+      } else {
+        document.getElementById('loginBtn').click();
+      }
+    }, 320);
+  });
+
+  /* 인증 상태에 따라 사이드바 로그인 텍스트 업데이트 */
+  onAuthStateChanged(auth, (user) => {
+    const textEl = sidebarLoginLink.querySelector('.sidebar-item-text');
+    if (textEl) {
+      textEl.textContent = user
+        ? `${user.displayName || '사용자'} · 로그아웃`
+        : '로그인 / 회원가입';
+    }
+  });
+})();

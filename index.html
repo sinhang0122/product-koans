@@ -25,6 +25,153 @@
 </head>
 <body>
 
+  <!-- ── 고정 상단 탑바 ── -->
+  <div class="topbar" id="topbar">
+    <a class="topbar-brand" href="#" onclick="window.scrollTo({top:0,behavior:'smooth'});return false;">
+      <span class="topbar-logo-icon">◈</span>
+      <span class="topbar-logo-text">Cores</span>
+    </a>
+    <button class="topbar-menu-btn" id="hamburgerBtn" aria-label="메뉴 열기" aria-expanded="false">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+        <line x1="3" y1="6" x2="21" y2="6"/>
+        <line x1="3" y1="12" x2="21" y2="12"/>
+        <line x1="3" y1="18" x2="21" y2="18"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- ── 사이드바 오버레이 ── -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- ── 사이드바 ── -->
+  <aside class="sidebar" id="sidebar" aria-label="사이드 메뉴">
+    <div class="sidebar-header">
+      <span class="sidebar-brand">
+        <span class="sidebar-brand-icon">◈</span>
+        Cores
+      </span>
+      <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="메뉴 닫기">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <nav class="sidebar-nav">
+
+      <!-- 내 계정 -->
+      <div class="sidebar-group">
+        <div class="sidebar-group-label">내 계정</div>
+        <ul class="sidebar-list">
+          <li>
+            <a href="#" class="sidebar-item" id="sidebarLoginLink">
+              <span class="sidebar-item-icon">👤</span>
+              <span class="sidebar-item-text">로그인 / 회원가입</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- 생활 & 비자 -->
+      <div class="sidebar-group">
+        <div class="sidebar-group-label">생활 &amp; 비자</div>
+        <ul class="sidebar-list">
+          <li>
+            <a href="#section-remit" class="sidebar-item sidebar-scroll">
+              <span class="sidebar-item-icon">💸</span>
+              <span class="sidebar-item-text">오늘의 환율</span>
+            </a>
+          </li>
+          <li>
+            <a href="#" class="sidebar-item sidebar-item--soon">
+              <span class="sidebar-item-icon">📋</span>
+              <span class="sidebar-item-text">워홀 &amp; 법률 정보</span>
+              <span class="sidebar-soon-badge">준비 중</span>
+            </a>
+          </li>
+          <li>
+            <a href="#" class="sidebar-item sidebar-item--soon">
+              <span class="sidebar-item-icon">🎯</span>
+              <span class="sidebar-item-text">기술심사 점수 가채점</span>
+              <span class="sidebar-soon-badge">준비 중</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- 마켓 & 커뮤니티 -->
+      <div class="sidebar-group">
+        <div class="sidebar-group-label">마켓 &amp; 커뮤니티</div>
+        <ul class="sidebar-list">
+          <li>
+            <a href="#" class="sidebar-item sidebar-item--soon">
+              <span class="sidebar-item-icon">💼</span>
+              <span class="sidebar-item-text">구인구직</span>
+              <span class="sidebar-soon-badge">준비 중</span>
+            </a>
+          </li>
+          <li>
+            <a href="#" class="sidebar-item sidebar-item--soon">
+              <span class="sidebar-item-icon">🏠</span>
+              <span class="sidebar-item-text">숙소 &amp; 렌트</span>
+              <span class="sidebar-soon-badge">준비 중</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- 자동차 -->
+      <div class="sidebar-group">
+        <div class="sidebar-group-label">자동차 (Car)</div>
+        <ul class="sidebar-list">
+          <li>
+            <a href="#" class="sidebar-item sidebar-item--soon">
+              <span class="sidebar-item-icon">🚗</span>
+              <span class="sidebar-item-text">차량 판매</span>
+              <span class="sidebar-soon-badge">준비 중</span>
+            </a>
+          </li>
+          <li>
+            <a href="#" class="sidebar-item sidebar-item--soon">
+              <span class="sidebar-item-icon">🔧</span>
+              <span class="sidebar-item-text">동행 메카닉</span>
+              <span class="sidebar-soon-badge">준비 중</span>
+            </a>
+          </li>
+          <li>
+            <a href="#" class="sidebar-item sidebar-item--soon">
+              <span class="sidebar-item-icon">🚨</span>
+              <span class="sidebar-item-text">사고 견적 &amp; 견인</span>
+              <span class="sidebar-soon-badge">준비 중</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- 비즈니스 -->
+      <div class="sidebar-group">
+        <div class="sidebar-group-label">비즈니스</div>
+        <ul class="sidebar-list">
+          <li>
+            <a href="#" class="sidebar-item sidebar-item--soon">
+              <span class="sidebar-item-icon">📊</span>
+              <span class="sidebar-item-text">사업 정보</span>
+              <span class="sidebar-soon-badge">준비 중</span>
+            </a>
+          </li>
+          <li>
+            <a href="#section-contact" class="sidebar-item sidebar-scroll">
+              <span class="sidebar-item-icon">📢</span>
+              <span class="sidebar-item-text">광고 문의</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+
+    </nav>
+  </aside>
+
   <header class="site-header">
     <div class="logo">
       <span class="logo-icon">◈</span>
@@ -214,7 +361,7 @@
       <span class="tool-label">02 — 송금 수수료 비교</span>
     </div>
 
-    <section class="remit-section">
+    <section class="remit-section" id="section-remit">
       <div class="remit-top-bar">
         <div class="remit-top-left">
           <span class="feature-badge feature-badge--blue" id="remitBadgeLabel">AUD → KRW</span>
@@ -343,7 +490,7 @@
       <span class="tool-label">05 — 제휴 문의</span>
     </div>
 
-    <section class="contact-section">
+    <section class="contact-section" id="section-contact">
       <div class="contact-header">
         <h2 class="feature-title">💼 제휴·협업 문의</h2>
         <p class="feature-subtitle">서비스 연동, 광고, 협업 등 무엇이든 편하게 남겨주세요.</p>
