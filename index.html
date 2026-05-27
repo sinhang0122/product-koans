@@ -5,6 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cores — 링크 요약 · 환전 비교 · 파워볼</title>
   <link rel="stylesheet" href="style.css" />
+  <!-- 라이트/다크 모드 FOUC 방지: CSS 로드 전 테마를 즉시 결정 -->
+  <script>
+    (function () {
+      const saved = localStorage.getItem('cores-theme');
+      const sys   = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+      if ((saved || sys) === 'light') document.documentElement.setAttribute('data-theme', 'light');
+    })();
+  </script>
   <!--
     Firebase SDK v9+ (모듈 방식)
     실제 SDK import는 app.js 상단의 ES module import 구문으로 처리됩니다.
@@ -26,6 +34,9 @@
 
     <!-- ── 구글 인증 바 (우측 상단 플로팅) ── -->
     <div class="auth-bar" id="authBar">
+
+      <!-- 다크 / 라이트 모드 토글 (JS가 아이콘 삽입) -->
+      <button class="theme-toggle" id="themeToggle" aria-label="테마 전환"></button>
 
       <!-- 로그아웃 상태: Google 로그인 버튼 -->
       <div class="auth-state" id="authLoggedOut">

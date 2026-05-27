@@ -818,6 +818,7 @@ body {
   right: 24px;
   display: flex;
   align-items: center;
+  gap: 8px;
   z-index: 100;
 }
 
@@ -907,11 +908,108 @@ body {
 
 /* 모바일: 로그인 버튼 텍스트 숨기고 아이콘만 표시 */
 @media (max-width: 480px) {
-  .auth-bar { top: 14px; right: 16px; }
+  .auth-bar { top: 14px; right: 16px; gap: 6px; }
+  .theme-toggle { width: 32px; height: 32px; }
   .auth-google-btn { padding: 8px 10px; font-size: 0; gap: 0; }
   .auth-google-btn svg { width: 20px; height: 20px; }
   .auth-username { max-width: 72px; font-size: 12px; }
   .auth-logout-btn { padding: 6px 10px; font-size: 11px; }
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   Theme Toggle Button — 다크/라이트 모드 스위처
+════════════════════════════════════════════════════════════════════════ */
+.theme-toggle {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--r-md);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.2s, border-color 0.2s, color 0.2s, transform 0.18s;
+}
+.theme-toggle:hover {
+  background: var(--bg-elevated);
+  color: var(--accent);
+  border-color: var(--accent);
+  transform: rotate(20deg);
+}
+.theme-toggle:active { transform: scale(0.88) rotate(20deg); }
+
+/* ════════════════════════════════════════════════════════════════════════
+   Light Mode — CSS 변수 오버라이드 (html[data-theme="light"])
+════════════════════════════════════════════════════════════════════════ */
+:root[data-theme="light"] {
+  /* 배경 레이어 */
+  --bg-base:        #f2f2f8;
+  --bg-surface:     #ffffff;
+  --bg-card:        #ebebf5;
+  --bg-input:       #f8f8fd;
+  --bg-elevated:    #e2e2f0;
+
+  /* 테두리 */
+  --border:         #d0d0e4;
+  --border-subtle:  #dcdcec;
+  --border-focus:   #7c6fff;
+
+  /* 텍스트 */
+  --text-primary:   #12121e;
+  --text-secondary: #46466a;
+  --text-muted:     #9090b0;
+
+  /* 액센트 (브랜드 색상 유지) */
+  --accent-glow:    rgba(124, 111, 255, 0.18);
+  --accent-dim:     rgba(124, 111, 255, 0.10);
+
+  /* 골드 */
+  --gold-bg:        rgba(245, 158, 11, 0.08);
+  --gold-border:    rgba(245, 158, 11, 0.22);
+
+  /* 플랫폼 */
+  --youtube-bg:     rgba(255, 68, 68, 0.08);
+  --instagram-bg:   rgba(225, 48, 108, 0.08);
+}
+
+/* 라이트 모드: 공 그림자 강도 완화 */
+:root[data-theme="light"] .pb-ball--regular {
+  box-shadow: 0 4px 14px rgba(79, 70, 229, .22), inset 0 1px 0 rgba(255,255,255,.35);
+}
+:root[data-theme="light"] .pb-ball--power {
+  box-shadow: 0 4px 18px rgba(245, 158, 11, .32), inset 0 1px 0 rgba(255,255,255,.45);
+}
+
+/* 라이트 모드: 드롭다운 화살표 색상 */
+:root[data-theme="light"] .category-select,
+:root[data-theme="light"] .currency-select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239090b0' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+}
+
+/* 라이트 모드: 카드 호버 그림자 */
+:root[data-theme="light"] .remit-card:hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, .08);
+}
+
+/* 테마 전환 부드러운 애니메이션 (transition) */
+body,
+.site-header,
+.input-section, .result-section, .result-card,
+.remit-section, .remit-card, .remit-card-body,
+.powerball-section, .pb-nav-content, .pb-prize-panel,
+.my-cores-section, .my-cores-container, .cores-entry,
+.save-area, .auth-google-btn, .auth-logout-btn,
+.theme-toggle, .url-input, .aud-input, .aud-input-wrapper,
+.category-select, .currency-select, .market-rate-pill,
+.cores-tab, .summarize-btn, .save-btn {
+  transition:
+    background-color 0.25s ease,
+    border-color     0.25s ease,
+    color            0.25s ease,
+    box-shadow       0.25s ease;
 }
 
 /* ════════════════════════════════════════════════════════════════════════

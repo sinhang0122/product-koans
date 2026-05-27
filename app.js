@@ -104,6 +104,66 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
 });
 
 /* ════════════════════════════════════════════════════════════════════════
+   0-b. 다크 / 라이트 모드 토글
+   - localStorage 'cores-theme' 에 테마 저장 (dark | light)
+   - 시스템 설정(prefers-color-scheme) 우선 반영, 이후 수동 선택 유지
+   - FOUC 방지용 인라인 스크립트(index.html <head>)와 쌍으로 동작
+════════════════════════════════════════════════════════════════════════ */
+
+const THEME_KEY = 'cores-theme';
+const htmlEl    = document.documentElement;
+
+/* 아이콘: 현재 라이트 → 달(다크로 전환 암시), 현재 다크 → 해(라이트로 전환 암시) */
+const ICON_SUN = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+  stroke="currentColor" stroke-width="2" stroke-linecap="round">
+  <circle cx="12" cy="12" r="4"/>
+  <line x1="12" y1="2"  x2="12" y2="5"/>
+  <line x1="12" y1="19" x2="12" y2="22"/>
+  <line x1="4.93" y1="4.93"  x2="6.34" y2="6.34"/>
+  <line x1="17.66" y1="17.66" x2="19.07" y2="19.07"/>
+  <line x1="2"  y1="12" x2="5"  y2="12"/>
+  <line x1="19" y1="12" x2="22" y2="12"/>
+  <line x1="4.93" y1="19.07" x2="6.34" y2="17.66"/>
+  <line x1="17.66" y1="6.34"  x2="19.07" y2="4.93"/>
+</svg>`;
+
+const ICON_MOON = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+  stroke="currentColor" stroke-width="2" stroke-linecap="round">
+  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+</svg>`;
+
+/**
+ * 테마 적용: data-theme 속성 토글 + 버튼 아이콘/툴팁 교체
+ * @param {'dark'|'light'} theme
+ */
+function applyTheme(theme) {
+  const btn = document.getElementById('themeToggle');
+  if (theme === 'light') {
+    htmlEl.setAttribute('data-theme', 'light');
+    btn.innerHTML       = ICON_MOON;           // 달 아이콘 → 클릭하면 다크 복귀
+    btn.title           = '다크 모드로 전환';
+    btn.setAttribute('aria-label', '다크 모드로 전환');
+  } else {
+    htmlEl.removeAttribute('data-theme');
+    btn.innerHTML       = ICON_SUN;            // 해 아이콘 → 클릭하면 라이트 전환
+    btn.title           = '라이트 모드로 전환';
+    btn.setAttribute('aria-label', '라이트 모드로 전환');
+  }
+}
+
+/* 초기 테마 결정: ① 저장값 → ② 시스템 설정 → ③ 기본 dark */
+const _saved = localStorage.getItem(THEME_KEY);
+const _sys   = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+applyTheme(_saved ?? _sys);
+
+/* 토글 버튼 클릭 → 테마 전환 & 저장 */
+document.getElementById('themeToggle').addEventListener('click', () => {
+  const next = htmlEl.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+  applyTheme(next);
+  localStorage.setItem(THEME_KEY, next);
+});
+
+/* ════════════════════════════════════════════════════════════════════════
    1. 전역 유틸
 ════════════════════════════════════════════════════════════════════════ */
 
