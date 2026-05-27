@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>숙소 렌트 (독채) — KoAus</title>
+  <title>Care — KoAus</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;800;900&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet" />
@@ -155,80 +155,25 @@
 
     <div class="page-header">
       <div>
-        <h1 class="page-title">🏡 숙소 렌트 (독채)</h1>
-        <p class="page-subtitle">호주 주택 · 아파트 렌트 게시판 · 입주 가능 날짜와 조건을 함께 올려주세요</p>
+        <h1 class="page-title">🤝 Care</h1>
+        <p class="page-subtitle">호주 한인 돌봄 · 의료 · 생활 지원 정보</p>
       </div>
       <a href="index.html" class="page-back">← 홈으로</a>
     </div>
 
-    <div class="adsense-wrap">
-      <ins class="adsbygoogle"
-           style="display:block"
-           data-ad-client="ca-pub-3691720629746826"
-           data-ad-slot="auto"
-           data-ad-format="auto"
-           data-full-width-responsive="true"></ins>
-      <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
-    </div>
-
-    <div class="board-toolbar">
-      <span class="board-count" id="boardCount">총 0건</span>
-      <button class="board-write-btn" id="writeBtnOpen">+ 글쓰기</button>
-    </div>
-
-    <div class="post-list-table">
-      <div class="post-list-head">
-        <span class="post-num">번호</span>
-        <span class="post-title">제목</span>
-        <span class="post-author">작성자</span>
-        <span class="post-date">날짜</span>
-      </div>
-      <div id="postList"></div>
-    </div>
+    <section class="care-empty">
+      <div class="care-empty-icon">🚧</div>
+      <h2 class="care-empty-title">준비 중입니다</h2>
+      <p class="care-empty-text">Care 섹션은 현재 준비 중입니다.<br />곧 더 나은 모습으로 찾아뵙겠습니다.</p>
+      <a href="index.html" class="care-empty-btn">홈으로 돌아가기</a>
+    </section>
 
   </main>
-
-  <div class="write-overlay" id="writeOverlay">
-    <div class="write-modal">
-      <div class="write-modal-title">✏️ 숙소 렌트 글쓰기</div>
-      <div class="write-field">
-        <label class="write-label" for="wTitle">제목</label>
-        <input class="write-input" id="wTitle" type="text" placeholder="지역 · 방 수 · 월세 등" maxlength="80" />
-      </div>
-      <div class="write-field">
-        <label class="write-label" for="wBody">내용</label>
-        <textarea class="write-textarea" id="wBody" placeholder="방 수, 욕실 수, 월세, 보증금, 입주 가능일, 교통 등 자세히 적어주세요"></textarea>
-      </div>
-      <div class="write-field">
-        <label class="write-label" for="wAuthor">작성자</label>
-        <input class="write-input" id="wAuthor" type="text" placeholder="닉네임 또는 이름" maxlength="20" />
-      </div>
-      <div class="write-field">
-        <label class="write-label" for="wContact">연락처 (선택)</label>
-        <input class="write-input" id="wContact" type="text" placeholder="이메일 또는 전화번호" maxlength="60" />
-      </div>
-      <div class="write-modal-actions">
-        <button class="write-cancel-btn" id="writeBtnCancel">취소</button>
-        <button class="write-submit-btn" id="writeBtnSubmit">등록하기</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="post-detail-overlay" id="detailOverlay">
-    <div class="post-detail-card">
-      <div class="post-detail-header">
-        <div class="post-detail-title" id="detailTitle"></div>
-        <button class="post-detail-close" id="detailClose">✕</button>
-      </div>
-      <div class="post-detail-meta" id="detailMeta"></div>
-      <div class="post-detail-body" id="detailBody"></div>
-      <div class="post-detail-contact" id="detailContact"></div>
-    </div>
-  </div>
 
   <footer class="site-footer"><p>KoAus &mdash; 호주 한인 포털 &nbsp;·&nbsp; 2026</p></footer>
 
   <script>
+    // ── Sidebar ──
     const hBtn = document.getElementById('hamburgerBtn');
     const cBtn = document.getElementById('sidebarCloseBtn');
     const sb   = document.getElementById('sidebar');
@@ -251,72 +196,6 @@
     document.querySelectorAll('.setting-btn').forEach(btn => btn.addEventListener('click', () => applyTheme(btn.dataset.themeSet)));
     applyTheme(localStorage.getItem('koaus-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
     document.getElementById('sidebarAccountBtn').addEventListener('click', () => { window.location.href = 'index.html'; });
-
-    const STORE_KEY = 'koaus-rent-posts';
-    const SAMPLES = [
-      { id: 1, title: '[렌트] 시드니 Hurstville 3베드 타운하우스 · 주 $650', body: '허스트빌 3베드 2바스 타운하우스 렌트 문의 받습니다.\n\n- 방 3개 / 욕실 2개\n- 월세: 주 $650\n- 보증금: 4주치\n- 입주 가능: 6월 15일\n- 내부 세탁기 / 식기세척기 포함\n- 기차역 도보 10분\n- 장기 거주자 우대', author: '부동산 김씨', contact: 'kim.realty@email.com', date: '05/20' },
-      { id: 2, title: '[렌트 구함] 멜번 Box Hill 근처 2베드 아파트 찾아요', body: '박스힐 또는 인근 지역에서 2베드 아파트 또는 유닛을 찾고 있습니다.\n\n- 예산: 주 $500 ~ $600\n- 입주: 7월 1일\n- 가족 2인 (어른)\n- 반려동물 없음, 비흡연\n- 한인 커뮤니티 근처 선호', author: '정현우', contact: '0423-XXX-XXX', date: '05/23' },
-      { id: 3, title: '[렌트] 브리즈번 Sunnybank 4베드 하우스 · 월 $2,400', body: '써니뱅크 한인타운 근처 단독 주택 렌트합니다.\n\n- 방 4개 / 욕실 2개 / 차고 2대\n- 월세: $2,400/월 (주 $553 상당)\n- 뒤뜰 넓음, 바베큐 공간 있음\n- 학교 도보 5분, 마트 차량 3분\n- 최소 12개월 계약', author: '이부동산', contact: 'lee.property@gmail.com', date: '05/25' },
-    ];
-
-    function escHtml(s) {
-      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    }
-    function loadPosts() {
-      const raw = localStorage.getItem(STORE_KEY);
-      if (raw) return JSON.parse(raw);
-      localStorage.setItem(STORE_KEY, JSON.stringify(SAMPLES));
-      return SAMPLES;
-    }
-    function savePosts(posts) { localStorage.setItem(STORE_KEY, JSON.stringify(posts)); }
-    function renderPosts() {
-      const posts = loadPosts();
-      document.getElementById('boardCount').textContent = `총 ${posts.length}건`;
-      const list = document.getElementById('postList');
-      if (!posts.length) { list.innerHTML = '<div class="post-empty">등록된 글이 없습니다. 첫 글을 작성해보세요!</div>'; return; }
-      list.innerHTML = posts.slice().reverse().map((p, i) => `
-        <div class="post-row" data-id="${p.id}" style="cursor:pointer">
-          <span class="post-num">${posts.length - i}</span>
-          <span class="post-title" style="color:var(--text-primary);font-weight:500;">${escHtml(p.title)}</span>
-          <span class="post-author">${escHtml(p.author)}</span>
-          <span class="post-date">${p.date}</span>
-        </div>`).join('');
-      list.querySelectorAll('.post-row').forEach(row => row.addEventListener('click', () => openDetail(row.dataset.id)));
-    }
-    function openDetail(id) {
-      const posts = loadPosts();
-      const p = posts.find(x => String(x.id) === String(id));
-      if (!p) return;
-      document.getElementById('detailTitle').textContent = p.title;
-      document.getElementById('detailMeta').innerHTML = `<span>${escHtml(p.author)}</span><span>${p.date}</span>`;
-      document.getElementById('detailBody').textContent = p.body;
-      const contactEl = document.getElementById('detailContact');
-      contactEl.innerHTML = p.contact ? `📞 연락처: <strong>${escHtml(p.contact)}</strong>` : '';
-      document.getElementById('detailOverlay').classList.add('open');
-    }
-    document.getElementById('detailClose').addEventListener('click', () => { document.getElementById('detailOverlay').classList.remove('open'); });
-    document.getElementById('detailOverlay').addEventListener('click', e => { if (e.target === e.currentTarget) document.getElementById('detailOverlay').classList.remove('open'); });
-    const writeOverlay = document.getElementById('writeOverlay');
-    document.getElementById('writeBtnOpen').addEventListener('click', () => writeOverlay.classList.add('open'));
-    document.getElementById('writeBtnCancel').addEventListener('click', () => writeOverlay.classList.remove('open'));
-    writeOverlay.addEventListener('click', e => { if (e.target === writeOverlay) writeOverlay.classList.remove('open'); });
-    document.getElementById('writeBtnSubmit').addEventListener('click', () => {
-      const title = document.getElementById('wTitle').value.trim();
-      const body  = document.getElementById('wBody').value.trim();
-      const author = document.getElementById('wAuthor').value.trim() || '익명';
-      const contact = document.getElementById('wContact').value.trim();
-      if (!title) { alert('제목을 입력해 주세요.'); return; }
-      if (!body)  { alert('내용을 입력해 주세요.'); return; }
-      const posts = loadPosts();
-      const d = new Date();
-      const date = `${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
-      posts.push({ id: Date.now(), title, body, author, contact, date });
-      savePosts(posts);
-      renderPosts();
-      writeOverlay.classList.remove('open');
-      ['wTitle','wBody','wAuthor','wContact'].forEach(id => { document.getElementById(id).value = ''; });
-    });
-    renderPosts();
   </script>
 </body>
 </html>

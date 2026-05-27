@@ -25,7 +25,7 @@
       <span class="topbar-logo-text">KoAus</span>
     </a>
     <div class="topbar-actions">
-      <a href="index.html" class="topbar-login-btn">로그인</a>
+      <button type="button" class="topbar-login-btn" id="topbarLoginBtn">로그인</button>
       <button class="topbar-menu-btn" id="hamburgerBtn" aria-label="메뉴 열기" aria-expanded="false">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
           <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
@@ -55,64 +55,88 @@
           <button class="theme-accord-btn setting-btn" data-theme-set="dark">Dark</button>
         </div>
       </div>
-      <div class="accord-item" data-group="melbourne">
+      <div class="accord-item" data-group="wa">
         <button class="accord-header">
-          <span>Melbourne <em>멜버른</em></span>
+          <span>WA <em>웨스턴 오스트레일리아 주</em></span>
           <svg class="accord-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
         </button>
         <div class="accord-body">
-          <a href="accom.html" class="accord-link accord-link--active">Living</a>
+          <a href="accom.html?state=wa" class="accord-link">Living</a>
           <a href="jobs.html" class="accord-link">Work</a>
           <a href="points.html" class="accord-link">Legal</a>
-          <a href="#" class="accord-link accord-link--soon" tabindex="-1">Care <span class="soon-tag">준비중</span></a>
+          <a href="care.html" class="accord-link">Care</a>
         </div>
       </div>
-      <div class="accord-item" data-group="tasmania">
+      <div class="accord-item" data-group="nt">
         <button class="accord-header">
-          <span>Tasmania <em>타즈매니아</em></span>
+          <span>NT <em>노던 준주</em></span>
           <svg class="accord-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
         </button>
         <div class="accord-body">
-          <a href="accom.html" class="accord-link">Living</a>
+          <a href="accom.html?state=nt" class="accord-link">Living</a>
           <a href="jobs.html" class="accord-link">Work</a>
           <a href="points.html" class="accord-link">Legal</a>
-          <a href="#" class="accord-link accord-link--soon" tabindex="-1">Care <span class="soon-tag">준비중</span></a>
+          <a href="care.html" class="accord-link">Care</a>
         </div>
       </div>
-      <div class="accord-item" data-group="sydney">
+      <div class="accord-item" data-group="qld">
         <button class="accord-header">
-          <span>Sydney <em>시드니</em></span>
+          <span>QLD <em>퀸즐랜드 주</em></span>
           <svg class="accord-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
         </button>
         <div class="accord-body">
-          <a href="accom.html" class="accord-link">Living</a>
+          <a href="accom.html?state=qld" class="accord-link">Living</a>
           <a href="jobs.html" class="accord-link">Work</a>
           <a href="points.html" class="accord-link">Legal</a>
-          <a href="#" class="accord-link accord-link--soon" tabindex="-1">Care <span class="soon-tag">준비중</span></a>
+          <a href="care.html" class="accord-link">Care</a>
         </div>
       </div>
-      <div class="accord-item" data-group="perth">
+      <div class="accord-item" data-group="nsw">
         <button class="accord-header">
-          <span>Perth <em>퍼스</em></span>
+          <span>NSW <em>뉴사우스 웨일스 주</em></span>
           <svg class="accord-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
         </button>
         <div class="accord-body">
-          <a href="accom.html" class="accord-link">Living</a>
+          <a href="accom.html?state=nsw" class="accord-link">Living</a>
           <a href="jobs.html" class="accord-link">Work</a>
           <a href="points.html" class="accord-link">Legal</a>
-          <a href="#" class="accord-link accord-link--soon" tabindex="-1">Care <span class="soon-tag">준비중</span></a>
+          <a href="care.html" class="accord-link">Care</a>
         </div>
       </div>
-      <div class="accord-item" data-group="brisbane">
+      <div class="accord-item" data-group="vic">
         <button class="accord-header">
-          <span>Brisbane <em>브리즈번</em></span>
+          <span>VIC <em>빅토리아 주</em></span>
           <svg class="accord-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
         </button>
         <div class="accord-body">
-          <a href="accom.html" class="accord-link">Living</a>
+          <a href="accom.html?state=vic" class="accord-link">Living</a>
           <a href="jobs.html" class="accord-link">Work</a>
           <a href="points.html" class="accord-link">Legal</a>
-          <a href="#" class="accord-link accord-link--soon" tabindex="-1">Care <span class="soon-tag">준비중</span></a>
+          <a href="care.html" class="accord-link">Care</a>
+        </div>
+      </div>
+      <div class="accord-item" data-group="sa">
+        <button class="accord-header">
+          <span>SA <em>사우스 오스트레일리아 주</em></span>
+          <svg class="accord-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="accord-body">
+          <a href="accom.html?state=sa" class="accord-link">Living</a>
+          <a href="jobs.html" class="accord-link">Work</a>
+          <a href="points.html" class="accord-link">Legal</a>
+          <a href="care.html" class="accord-link">Care</a>
+        </div>
+      </div>
+      <div class="accord-item" data-group="tas">
+        <button class="accord-header">
+          <span>TAS <em>태즈메이니아 주</em></span>
+          <svg class="accord-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="accord-body">
+          <a href="accom.html?state=tas" class="accord-link">Living</a>
+          <a href="jobs.html" class="accord-link">Work</a>
+          <a href="points.html" class="accord-link">Legal</a>
+          <a href="care.html" class="accord-link">Care</a>
         </div>
       </div>
       <a href="mailto:sinhang0122@gmail.com" class="accord-direct-link">
@@ -147,42 +171,208 @@
       <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
     </div>
 
-    <div class="board-toolbar">
-      <span class="board-count" id="boardCount">총 0건</span>
-      <button class="board-write-btn" id="writeBtnOpen">+ 글쓰기</button>
+    <!-- Main Tabs: 방 내놓기 / 방 구하기 -->
+    <div class="accom-main-tabs">
+      <button class="accom-tab active" id="tabOffering">
+        방 내놓기
+        <em>Offering</em>
+      </button>
+      <button class="accom-tab" id="tabLooking">
+        방 구하기
+        <em>Looking</em>
+      </button>
     </div>
 
-    <div class="post-list-table">
-      <div class="post-list-head">
-        <span class="post-num">번호</span>
-        <span class="post-title">제목</span>
-        <span class="post-author">작성자</span>
-        <span class="post-date">날짜</span>
+    <!-- Controls -->
+    <div class="accom-controls">
+      <div class="view-toggle">
+        <button class="view-btn active" id="viewListBtn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          List View
+        </button>
+        <button class="view-btn" id="viewMapBtn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+          Map View
+        </button>
       </div>
-      <div id="postList"></div>
+      <span class="board-count" id="boardCount">총 0건</span>
+      <div class="accom-ctrl-actions">
+        <button class="accom-filter-btn" id="filterModalBtn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+          상세 필터
+        </button>
+        <button class="board-write-btn" id="writeBtnOpen">+ 글쓰기</button>
+      </div>
+    </div>
+
+    <!-- List View -->
+    <div id="listView">
+      <div id="postGrid" class="accom-grid"></div>
+    </div>
+
+    <!-- Map View -->
+    <div id="mapView" style="display:none;">
+      <div id="accomMap"></div>
     </div>
 
   </main>
 
+  <!-- ── Filter Modal ── -->
+  <div class="filter-overlay" id="filterOverlay">
+    <div class="filter-modal">
+      <div class="filter-modal-header">
+        <span class="filter-modal-title">상세 필터 <em>Filters</em></span>
+        <button class="filter-modal-close" id="filterModalClose">✕</button>
+      </div>
+
+      <div class="filter-section">
+        <label class="filter-section-label">Property Type</label>
+        <div class="filter-pills" id="filterPropTypes">
+          <button class="filter-pill active" data-prop="">All</button>
+          <button class="filter-pill" data-prop="house">House</button>
+          <button class="filter-pill" data-prop="apartment">Apartment</button>
+          <button class="filter-pill" data-prop="townhouse">Townhouse</button>
+          <button class="filter-pill" data-prop="villa">Villa</button>
+          <button class="filter-pill" data-prop="unit">Unit</button>
+        </div>
+      </div>
+
+      <div class="filter-section">
+        <label class="filter-section-label">Max Price / wk</label>
+        <div class="filter-price-row">
+          <span>$</span>
+          <input type="number" id="filterPrice" value="9999" min="0" max="9999" placeholder="9999" />
+          <span>/wk</span>
+        </div>
+      </div>
+
+      <div class="filter-section">
+        <label class="filter-section-label">Room Type</label>
+        <div class="filter-pills" id="filterRoomType">
+          <button class="filter-pill active" data-room="">All</button>
+          <button class="filter-pill" data-room="single">Single Room</button>
+          <button class="filter-pill" data-room="share">Share Room</button>
+        </div>
+      </div>
+
+      <div class="filter-section">
+        <label class="filter-section-label">Bathroom</label>
+        <div class="filter-pills" id="filterBathroom">
+          <button class="filter-pill active" data-bath="">All</button>
+          <button class="filter-pill" data-bath="ensuite">Ensuite</button>
+          <button class="filter-pill" data-bath="shared">Shared</button>
+        </div>
+      </div>
+
+      <div class="filter-section">
+        <label class="filter-section-label">Options</label>
+        <div class="filter-checks">
+          <label class="filter-check"><input type="checkbox" id="fParking"> 🅿 Parking</label>
+          <label class="filter-check"><input type="checkbox" id="fPet"> 🐾 Pet Friendly</label>
+          <label class="filter-check"><input type="checkbox" id="fKids"> 👶 Kids OK</label>
+          <label class="filter-check"><input type="checkbox" id="fAirCon"> ❄ Air Con</label>
+        </div>
+      </div>
+
+      <div class="filter-modal-actions">
+        <button class="filter-reset-btn" id="filterResetBtn">초기화 Reset</button>
+        <button class="filter-apply-btn" id="filterApplyBtn">적용하기 Apply</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Write Modal ── -->
   <div class="write-overlay" id="writeOverlay">
-    <div class="write-modal">
-      <div class="write-modal-title">✏️ 숙소 (쉐어) 글쓰기</div>
-      <div class="write-field">
-        <label class="write-label" for="wTitle">제목</label>
-        <input class="write-input" id="wTitle" type="text" placeholder="[구함/구합니다] 지역 · 가격 · 조건 등" maxlength="80" />
+    <div class="write-modal write-modal--tall">
+      <div class="write-modal-header">
+        <div class="write-modal-title">글쓰기 <em>Write Post</em></div>
+        <button class="write-modal-close" id="writeBtnClose">✕</button>
       </div>
+
       <div class="write-field">
-        <label class="write-label" for="wBody">내용</label>
-        <textarea class="write-textarea" id="wBody" placeholder="방 크기, 주간/월간 비용, 포함 내역, 입주 가능 날짜 등 자세히 적어주세요"></textarea>
+        <span class="write-label">게시 유형 Post Type</span>
+        <div class="write-posttype-tabs">
+          <label class="write-posttype-tab">
+            <input type="radio" name="wPostType" id="wPostTypeOffering" value="offering" checked>
+            <span>방 내놓기 <em>Offering</em></span>
+          </label>
+          <label class="write-posttype-tab">
+            <input type="radio" name="wPostType" id="wPostTypeLooking" value="looking">
+            <span>방 구하기 <em>Looking</em></span>
+          </label>
+        </div>
       </div>
+
       <div class="write-field">
-        <label class="write-label" for="wAuthor">작성자</label>
-        <input class="write-input" id="wAuthor" type="text" placeholder="닉네임 또는 이름" maxlength="20" />
+        <label class="write-label" for="wTitle">제목 Title</label>
+        <input class="write-input" id="wTitle" type="text" placeholder="예: 멜번 Box Hill 싱글룸 · 주 $210" maxlength="80" />
       </div>
+
       <div class="write-field">
-        <label class="write-label" for="wContact">연락처 (선택)</label>
-        <input class="write-input" id="wContact" type="text" placeholder="이메일 또는 전화번호" maxlength="60" />
+        <label class="write-label" for="wAddress">주소 Address</label>
+        <input class="write-input" id="wAddress" type="text" placeholder="예: Strathfield, NSW 또는 1 Park St, Sydney" />
       </div>
+
+      <div class="write-field write-field--row">
+        <div>
+          <label class="write-label" for="wPropType">주거 형태 Property</label>
+          <select class="write-input" id="wPropType">
+            <option value="house">House</option>
+            <option value="apartment">Apartment</option>
+            <option value="townhouse">Townhouse</option>
+            <option value="villa">Villa</option>
+            <option value="unit">Unit</option>
+          </select>
+        </div>
+        <div>
+          <label class="write-label" for="wPrice">주당 렌트비 Price / wk ($)</label>
+          <input class="write-input" id="wPrice" type="number" placeholder="200" min="0" />
+        </div>
+      </div>
+
+      <div class="write-field write-field--row">
+        <div>
+          <label class="write-label" for="wRoomType">방 형태 Room Type</label>
+          <select class="write-input" id="wRoomType">
+            <option value="single">Single Room (독방)</option>
+            <option value="share">Share Room (쉐어)</option>
+          </select>
+        </div>
+        <div>
+          <label class="write-label" for="wBathroom">욕실 Bathroom</label>
+          <select class="write-input" id="wBathroom">
+            <option value="shared">Shared (공용)</option>
+            <option value="ensuite">Ensuite (개인)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="write-field">
+        <span class="write-label">옵션 Options</span>
+        <div class="write-checks">
+          <label class="write-check"><input type="checkbox" id="wParking"> 🅿 주차 가능</label>
+          <label class="write-check"><input type="checkbox" id="wPet"> 🐾 반려동물 가능</label>
+          <label class="write-check"><input type="checkbox" id="wKids"> 👶 아이 있는 집</label>
+          <label class="write-check"><input type="checkbox" id="wAirCon"> ❄ 에어컨 있음</label>
+        </div>
+      </div>
+
+      <div class="write-field">
+        <label class="write-label" for="wBody">상세 설명 Comments</label>
+        <textarea class="write-textarea" id="wBody" placeholder="방 크기, 가격, 포함 내역, 입주 가능 날짜 등 자세히 적어주세요"></textarea>
+      </div>
+
+      <div class="write-field write-field--row">
+        <div>
+          <label class="write-label" for="wAuthor">작성자 Author</label>
+          <input class="write-input" id="wAuthor" type="text" placeholder="닉네임" maxlength="20" />
+        </div>
+        <div>
+          <label class="write-label" for="wContact">연락처 Contact (선택)</label>
+          <input class="write-input" id="wContact" type="text" placeholder="이메일 또는 전화번호" maxlength="60" />
+        </div>
+      </div>
+
       <div class="write-modal-actions">
         <button class="write-cancel-btn" id="writeBtnCancel">취소</button>
         <button class="write-submit-btn" id="writeBtnSubmit">등록하기</button>
@@ -190,6 +380,7 @@
     </div>
   </div>
 
+  <!-- ── Post Detail Modal ── -->
   <div class="post-detail-overlay" id="detailOverlay">
     <div class="post-detail-card">
       <div class="post-detail-header">
@@ -202,9 +393,74 @@
     </div>
   </div>
 
+  <!-- ── Auth Modal ── -->
+  <div class="auth-overlay" id="authOverlay">
+    <div class="auth-modal">
+      <button class="auth-close" id="authClose" aria-label="닫기">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+      <div class="auth-title">◈ KoAus 계정</div>
+      <div class="auth-subtitle">로그인하여 게시판을 자유롭게 이용해 보세요</div>
+      <div class="auth-tabs">
+        <button class="auth-tab active" data-auth-tab="login">로그인</button>
+        <button class="auth-tab" data-auth-tab="signup">회원가입</button>
+      </div>
+
+      <!-- 로그인 폼 -->
+      <div id="authLoginForm">
+        <div class="auth-field">
+          <label class="auth-label" for="authLoginEmail">이메일</label>
+          <input class="auth-input" id="authLoginEmail" type="email" placeholder="email@example.com" autocomplete="email" />
+        </div>
+        <div class="auth-field">
+          <label class="auth-label" for="authLoginPw">비밀번호</label>
+          <input class="auth-input" id="authLoginPw" type="password" placeholder="비밀번호 입력" autocomplete="current-password" />
+        </div>
+        <div class="auth-error" id="authLoginError"></div>
+        <button class="auth-submit" id="authLoginSubmit">로그인</button>
+      </div>
+
+      <!-- 회원가입 폼 -->
+      <div id="authSignupForm" style="display:none">
+        <div class="auth-field">
+          <label class="auth-label" for="authSignupEmail">이메일</label>
+          <input class="auth-input" id="authSignupEmail" type="email" placeholder="email@example.com" autocomplete="email" />
+        </div>
+        <div class="auth-field">
+          <label class="auth-label" for="authSignupPw">비밀번호</label>
+          <input class="auth-input" id="authSignupPw" type="password" placeholder="6자 이상" autocomplete="new-password" />
+        </div>
+        <div class="auth-field">
+          <label class="auth-label" for="authSignupPwConfirm">비밀번호 확인</label>
+          <input class="auth-input" id="authSignupPwConfirm" type="password" placeholder="비밀번호 재입력" autocomplete="new-password" />
+        </div>
+        <div class="auth-error" id="authSignupError"></div>
+        <button class="auth-submit" id="authSignupSubmit">회원가입</button>
+      </div>
+
+      <div class="auth-divider">또는</div>
+
+      <button class="auth-google" id="authGoogle">
+        <svg width="18" height="18" viewBox="0 0 48 48">
+          <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+          <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+          <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+          <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+        </svg>
+        Google 계정으로 로그인
+      </button>
+    </div>
+  </div>
+
   <footer class="site-footer"><p>KoAus &mdash; 호주 한인 포털 &nbsp;·&nbsp; 2026</p></footer>
 
   <script>
+    // ── 구글 클라우드 API 키 ──
+    const GOOGLE_MAPS_KEY = 'AIzaSyDwogQ55V0-JqZ-ZYRTpYgNZWOdp_-5vOQ';
+
+    // ── Sidebar ──
     const hBtn = document.getElementById('hamburgerBtn');
     const cBtn = document.getElementById('sidebarCloseBtn');
     const sb   = document.getElementById('sidebar');
@@ -214,7 +470,13 @@
     hBtn.addEventListener('click', openSb);
     cBtn.addEventListener('click', closeSb);
     ov.addEventListener('click', closeSb);
-    document.addEventListener('keydown', e => e.key==='Escape' && closeSb());
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        closeSb();
+        closeFilterModal();
+        closeWriteModal();
+      }
+    });
     document.querySelectorAll('.accord-header').forEach(btn => {
       btn.addEventListener('click', () => btn.closest('.accord-item').classList.toggle('open'));
     });
@@ -228,71 +490,533 @@
     applyTheme(localStorage.getItem('koaus-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
     document.getElementById('sidebarAccountBtn').addEventListener('click', () => { window.location.href = 'index.html'; });
 
-    const STORE_KEY = 'koaus-accom-posts';
+    // ── Data ──
+    const STORE_KEY    = 'koaus-accom-posts';
+    const SEED_VERSION = '2026-05-qld-brisbane';   // SAMPLES 변경 시 localStorage 재시드용
     const SAMPLES = [
-      { id: 1, title: '[구합니다] 시드니 Strathfield 근처 쉐어룸 구해요', body: '안녕하세요. 6월 초부터 스트라스필드 근처에서 쉐어룸 구하고 있습니다.\n\n- 예산: 주 $200 ~ $250\n- 입주 희망: 6월 1일\n- 20대 여성, 직장인\n- 조용한 분들과 함께하고 싶어요\n- 한인 쉐어하우스 환영 😊', author: '이지은', contact: 'jieun.lee@gmail.com', date: '05/21' },
-      { id: 2, title: '[구함] 멜번 Clayton 2베드 쉐어 · 주 $180', body: '멜번 Clayton 지역 쉐어하우스 룸메이트 모집합니다.\n\n- 방 크기: 싱글룸 (책상, 침대, 옷장 포함)\n- 주 $180 (공과금 포함)\n- 전체 2룸 중 1룸 남음\n- Monash Uni 도보 15분 거리\n- 집 안 깔끔하게 유지하시는 분', author: '박민준', contact: '0451-XXX-XXX', date: '05/22' },
-      { id: 3, title: '[구합니다] 브리즈번 City 근처 여성 전용 쉐어 찾아요', body: '브리즈번 시티 또는 South Brisbane 근처 여성 전용 쉐어를 찾고 있습니다.\n\n- 예산: 월 $800 이하\n- 입주: 즉시 가능\n- 영주권자, 직장인\n- 반려동물 없고 비흡연자입니다.', author: '최수아', contact: 'sua.choi@email.com', date: '05/24' },
+      {
+        id: 1, postType: 'offering',
+        title: '[브리즈번 시티 아파트 독방] 주 $220',
+        body: '브리즈번 시티 중심 아파트에서 독방 내놓습니다.\n\n- Queen Street Mall 도보 5분\n- 주 $220 (공과금 포함)\n- 가구 완비, 인터넷 무료\n- 시티 직장인/학생 환영',
+        author: '정해린', contact: 'haerin.j@email.com', date: '05/26',
+        address: 'Queen Street, Brisbane City QLD 4000', lat: -27.4698, lng: 153.0251,
+        price: 220, propType: 'apartment', roomType: 'single',
+        bathroom: 'shared', parking: false, petFriendly: false, kidsInHouse: false, airCon: true,
+      },
+      {
+        id: 2, postType: 'offering',
+        title: '[포티튜드 밸리 마스터룸] 주 $240',
+        body: '포티튜드 밸리 모던 유닛 마스터룸 내놓습니다.\n\n- 개인 욕실(Ensuite) 포함\n- 주 $240 (전기/가스 별도)\n- Valley 기차역 도보 7분\n- 밤문화·맛집 인근',
+        author: '오세훈', contact: '0431-XXX-XXX', date: '05/26',
+        address: 'Wickham Street, Fortitude Valley QLD 4006', lat: -27.4565, lng: 153.0348,
+        price: 240, propType: 'apartment', roomType: 'single',
+        bathroom: 'ensuite', parking: true, petFriendly: false, kidsInHouse: false, airCon: true,
+      },
+      {
+        id: 3, postType: 'offering',
+        title: '[써니뱅크 깨끗한 싱글룸] 주 $200',
+        body: '써니뱅크 조용한 하우스 싱글룸 내놓습니다.\n\n- 주 $200 (공과금 포함)\n- 한인마트·맛집 밀집 지역\n- Sunnybank Plaza 도보 거리\n- 주차 가능, 깨끗한 환경',
+        author: '한지우', contact: 'jiwoo.han@email.com', date: '05/25',
+        address: 'Mains Road, Sunnybank QLD 4109', lat: -27.5622, lng: 153.0558,
+        price: 200, propType: 'house', roomType: 'single',
+        bathroom: 'shared', parking: true, petFriendly: true, kidsInHouse: false, airCon: true,
+      },
+      {
+        id: 4, postType: 'offering',
+        title: '[스프링힐 시티 인근 유닛] 주 $220',
+        body: '스프링힐 시티 인근 유닛 룸 내놓습니다.\n\n- 시티까지 도보 12분\n- 주 $220 (인터넷 포함)\n- 조용한 주거 지역\n- 직장인 선호',
+        author: '배수지', contact: 'suzy.b@email.com', date: '05/25',
+        address: 'Boundary Street, Spring Hill QLD 4000', lat: -27.4612, lng: 153.0265,
+        price: 220, propType: 'unit', roomType: 'single',
+        bathroom: 'shared', parking: false, petFriendly: false, kidsInHouse: false, airCon: true,
+      },
+      {
+        id: 5, postType: 'offering',
+        title: '[사우스 브리즈번 모던 플랫] 주 $230',
+        body: '사우스 브리즈번 모던 플랫 룸 내놓습니다.\n\n- South Bank·Grey St 인근\n- 주 $230 (공과금 포함)\n- 강변 산책로·문화시설 도보권\n- 가구 완비',
+        author: '윤도현', contact: '0422-XXX-XXX', date: '05/24',
+        address: 'Grey Street, South Brisbane QLD 4101', lat: -27.4764, lng: 153.0203,
+        price: 230, propType: 'apartment', roomType: 'single',
+        bathroom: 'ensuite', parking: true, petFriendly: false, kidsInHouse: false, airCon: true,
+      },
     ];
 
+    // ── State ──
+    let activeTab      = 'offering';
+    let activePropType = '';
+    let activeRoomType = '';
+    let activeBathroom = '';
+
+    // ── Tab switching ──
+    document.getElementById('tabOffering').addEventListener('click', () => switchTab('offering'));
+    document.getElementById('tabLooking').addEventListener('click',  () => switchTab('looking'));
+
+    function switchTab(tab) {
+      activeTab = tab;
+      document.getElementById('tabOffering').classList.toggle('active', tab === 'offering');
+      document.getElementById('tabLooking').classList.toggle('active',  tab === 'looking');
+      renderAll();
+    }
+
+    // ── Filter Modal ──
+    const filterOverlay = document.getElementById('filterOverlay');
+
+    document.getElementById('filterModalBtn').addEventListener('click', () => {
+      filterOverlay.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    });
+    document.getElementById('filterModalClose').addEventListener('click', closeFilterModal);
+    filterOverlay.addEventListener('click', e => { if (e.target === filterOverlay) closeFilterModal(); });
+
+    function closeFilterModal() {
+      filterOverlay.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    // Filter pill handlers (update state only; render on Apply)
+    document.querySelectorAll('#filterPropTypes .filter-pill').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#filterPropTypes .filter-pill').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        activePropType = btn.dataset.prop;
+      });
+    });
+    document.querySelectorAll('#filterRoomType .filter-pill').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#filterRoomType .filter-pill').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        activeRoomType = btn.dataset.room;
+      });
+    });
+    document.querySelectorAll('#filterBathroom .filter-pill').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#filterBathroom .filter-pill').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        activeBathroom = btn.dataset.bath;
+      });
+    });
+
+    document.getElementById('filterApplyBtn').addEventListener('click', () => {
+      closeFilterModal();
+      renderAll();
+      updateFilterBtnState();
+    });
+
+    document.getElementById('filterResetBtn').addEventListener('click', () => {
+      activePropType = '';
+      activeRoomType = '';
+      activeBathroom = '';
+      document.querySelectorAll('#filterPropTypes .filter-pill').forEach((b, i) => b.classList.toggle('active', i === 0));
+      document.querySelectorAll('#filterRoomType .filter-pill').forEach((b, i) => b.classList.toggle('active', i === 0));
+      document.querySelectorAll('#filterBathroom .filter-pill').forEach((b, i) => b.classList.toggle('active', i === 0));
+      document.getElementById('filterPrice').value = '9999';
+      ['fParking','fPet','fKids','fAirCon'].forEach(id => { document.getElementById(id).checked = false; });
+      renderAll();
+      updateFilterBtnState();
+      closeFilterModal();
+    });
+
+    function updateFilterBtnState() {
+      const maxPrice = parseInt(document.getElementById('filterPrice').value) || 9999;
+      const hasFilter = activePropType || activeRoomType || activeBathroom || maxPrice < 9999 ||
+        document.getElementById('fParking').checked || document.getElementById('fPet').checked ||
+        document.getElementById('fKids').checked   || document.getElementById('fAirCon').checked;
+      document.getElementById('filterModalBtn').classList.toggle('has-filter', !!hasFilter);
+    }
+
+    // ── Write Modal ──
+    const writeOverlay = document.getElementById('writeOverlay');
+
+    document.getElementById('writeBtnOpen').addEventListener('click',   openWriteModal);
+    document.getElementById('writeBtnClose').addEventListener('click',  closeWriteModal);
+    document.getElementById('writeBtnCancel').addEventListener('click', closeWriteModal);
+    writeOverlay.addEventListener('click', e => { if (e.target === writeOverlay) closeWriteModal(); });
+
+    function openWriteModal() {
+      writeOverlay.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeWriteModal() {
+      writeOverlay.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    document.getElementById('writeBtnSubmit').addEventListener('click', () => {
+      // 로그인 필수: 미로그인 시 로그인 모달 유도
+      if (!window.koausAuth || !window.koausAuth.user) {
+        alert('글을 등록하려면 로그인이 필요합니다.');
+        if (window.koausAuth) window.koausAuth.openAuthModal();
+        return;
+      }
+      // 로그인 상태 → 등록 진행 (DB 연동 전이므로 모달만 닫음)
+      closeWriteModal();
+    });
+
+    // ── Helpers ──
     function escHtml(s) {
       return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
+    function propTypeLabel(t) {
+      return { house:'House', apartment:'Apartment', townhouse:'Townhouse', villa:'Villa', unit:'Unit' }[t] || 'Property';
+    }
     function loadPosts() {
+      const ver = localStorage.getItem(STORE_KEY + '-v');
       const raw = localStorage.getItem(STORE_KEY);
-      if (raw) return JSON.parse(raw);
+      if (raw && ver === SEED_VERSION) return JSON.parse(raw);
+      // 시드 버전이 바뀌면 최신 테스트 데이터로 재시드
       localStorage.setItem(STORE_KEY, JSON.stringify(SAMPLES));
+      localStorage.setItem(STORE_KEY + '-v', SEED_VERSION);
       return SAMPLES;
     }
     function savePosts(posts) { localStorage.setItem(STORE_KEY, JSON.stringify(posts)); }
-    function renderPosts() {
-      const posts = loadPosts();
-      document.getElementById('boardCount').textContent = `총 ${posts.length}건`;
-      const list = document.getElementById('postList');
-      if (!posts.length) { list.innerHTML = '<div class="post-empty">등록된 글이 없습니다. 첫 글을 작성해보세요!</div>'; return; }
-      list.innerHTML = posts.slice().reverse().map((p, i) => `
-        <div class="post-row" data-id="${p.id}" style="cursor:pointer">
-          <span class="post-num">${posts.length - i}</span>
-          <span class="post-title" style="color:var(--text-primary);font-weight:500;">${escHtml(p.title)}</span>
-          <span class="post-author">${escHtml(p.author)}</span>
-          <span class="post-date">${p.date}</span>
-        </div>`).join('');
-      list.querySelectorAll('.post-row').forEach(row => row.addEventListener('click', () => openDetail(row.dataset.id)));
+
+    // ── Filter ──
+    function applyFilters(posts) {
+      const maxPrice = parseInt(document.getElementById('filterPrice').value) || 9999;
+      const fParking = document.getElementById('fParking').checked;
+      const fPet     = document.getElementById('fPet').checked;
+      const fKids    = document.getElementById('fKids').checked;
+      const fAirCon  = document.getElementById('fAirCon').checked;
+      return posts.filter(p => {
+        if (p.postType !== activeTab) return false;
+        if (activePropType && p.propType !== activePropType) return false;
+        if (p.price && p.price > maxPrice) return false;
+        if (activeRoomType && p.roomType !== activeRoomType) return false;
+        if (activeBathroom && p.bathroom !== activeBathroom) return false;
+        if (fParking  && !p.parking)     return false;
+        if (fPet      && !p.petFriendly) return false;
+        if (fKids     && !p.kidsInHouse) return false;
+        if (fAirCon   && !p.airCon)      return false;
+        return true;
+      });
     }
+
+    // ── View Toggle ──
+    let currentView = 'list';
+    document.getElementById('viewListBtn').addEventListener('click', () => switchView('list'));
+    document.getElementById('viewMapBtn').addEventListener('click',  () => switchView('map'));
+
+    function switchView(v) {
+      currentView = v;
+      document.getElementById('viewListBtn').classList.toggle('active', v === 'list');
+      document.getElementById('viewMapBtn').classList.toggle('active',  v === 'map');
+      document.getElementById('listView').style.display = v === 'list' ? '' : 'none';
+      document.getElementById('mapView').style.display  = v === 'map'  ? '' : 'none';
+      if (v === 'map') {
+        loadMapScript();
+        if (mapReady) updateMapMarkers(applyFilters(loadPosts()));
+      }
+    }
+
+    // ── Render ──
+    function renderAll() {
+      const posts    = loadPosts();
+      const filtered = applyFilters(posts);
+      document.getElementById('boardCount').textContent = `총 ${filtered.length}건`;
+      renderListView(filtered);
+      if (currentView === 'map' && mapReady) updateMapMarkers(filtered);
+    }
+
+    function renderListView(filtered) {
+      const grid = document.getElementById('postGrid');
+      if (!filtered.length) {
+        grid.innerHTML = '<div class="post-empty">조건에 맞는 숙소가 없습니다.</div>';
+        return;
+      }
+      grid.innerHTML = filtered.slice().reverse().map(p => `
+        <div class="accom-card" data-id="${p.id}">
+          <div class="accom-card-header">
+            <div class="accom-card-badges">
+              <span class="accom-type-badge accom-type-badge--${p.postType === 'offering' ? 'offering' : 'looking'}">${p.postType === 'offering' ? '내놓기' : '구하기'}</span>
+              <span class="accom-badge">${propTypeLabel(p.propType)}</span>
+            </div>
+            ${p.price ? `<span class="accom-price">$${p.price}<span style="font-size:12px;font-weight:500">/wk</span></span>` : ''}
+          </div>
+          <div class="accom-card-title">${escHtml(p.title)}</div>
+          ${p.address ? `<div class="accom-card-addr">📍 ${escHtml(p.address)}</div>` : ''}
+          <div class="accom-card-meta">
+            ${p.roomType === 'single' ? '<span>🛏 Single Room</span>' : p.roomType === 'share' ? '<span>🛏 Share Room</span>' : ''}
+            ${p.bathroom === 'ensuite' ? '<span>🚿 Ensuite</span>' : p.bathroom === 'shared' ? '<span>🚿 Shared Bath</span>' : ''}
+          </div>
+          <div class="accom-card-tags">
+            ${p.parking     ? '<span class="accom-tag">🅿 Parking</span>' : ''}
+            ${p.petFriendly ? '<span class="accom-tag">🐾 Pet OK</span>' : ''}
+            ${p.kidsInHouse ? '<span class="accom-tag">👶 Kids</span>'   : ''}
+            ${p.airCon      ? '<span class="accom-tag">❄ AC</span>'      : ''}
+          </div>
+          <div class="accom-card-footer">
+            <span>${escHtml(p.author)}</span>
+            <span>${p.date}</span>
+          </div>
+        </div>`).join('');
+      grid.querySelectorAll('.accom-card').forEach(card => {
+        card.addEventListener('click', () => openDetail(card.dataset.id));
+      });
+    }
+
     function openDetail(id) {
       const posts = loadPosts();
       const p = posts.find(x => String(x.id) === String(id));
       if (!p) return;
       document.getElementById('detailTitle').textContent = p.title;
-      document.getElementById('detailMeta').innerHTML = `<span>${escHtml(p.author)}</span><span>${p.date}</span>`;
+      document.getElementById('detailMeta').innerHTML =
+        `<span>${escHtml(p.author)}</span><span>${p.date}</span>` +
+        (p.address ? `<span>📍 ${escHtml(p.address)}</span>` : '') +
+        (p.price   ? `<span>$${p.price}/wk</span>` : '');
       document.getElementById('detailBody').textContent = p.body;
       const contactEl = document.getElementById('detailContact');
       contactEl.innerHTML = p.contact ? `📞 연락처: <strong>${escHtml(p.contact)}</strong>` : '';
       document.getElementById('detailOverlay').classList.add('open');
     }
-    document.getElementById('detailClose').addEventListener('click', () => { document.getElementById('detailOverlay').classList.remove('open'); });
-    document.getElementById('detailOverlay').addEventListener('click', e => { if (e.target === e.currentTarget) document.getElementById('detailOverlay').classList.remove('open'); });
-    const writeOverlay = document.getElementById('writeOverlay');
-    document.getElementById('writeBtnOpen').addEventListener('click', () => writeOverlay.classList.add('open'));
-    document.getElementById('writeBtnCancel').addEventListener('click', () => writeOverlay.classList.remove('open'));
-    writeOverlay.addEventListener('click', e => { if (e.target === writeOverlay) writeOverlay.classList.remove('open'); });
-    document.getElementById('writeBtnSubmit').addEventListener('click', () => {
-      const title = document.getElementById('wTitle').value.trim();
-      const body  = document.getElementById('wBody').value.trim();
-      const author = document.getElementById('wAuthor').value.trim() || '익명';
-      const contact = document.getElementById('wContact').value.trim();
-      if (!title) { alert('제목을 입력해 주세요.'); return; }
-      if (!body)  { alert('내용을 입력해 주세요.'); return; }
-      const posts = loadPosts();
-      const d = new Date();
-      const date = `${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
-      posts.push({ id: Date.now(), title, body, author, contact, date });
-      savePosts(posts);
-      renderPosts();
-      writeOverlay.classList.remove('open');
-      ['wTitle','wBody','wAuthor','wContact'].forEach(id => { document.getElementById(id).value = ''; });
+
+    document.getElementById('detailClose').addEventListener('click', () =>
+      document.getElementById('detailOverlay').classList.remove('open'));
+    document.getElementById('detailOverlay').addEventListener('click', e => {
+      if (e.target === e.currentTarget) document.getElementById('detailOverlay').classList.remove('open');
     });
-    renderPosts();
+
+    // ── Google Maps ──
+    let mapReady   = false;
+    let mapLoading = false;
+    let map        = null;
+    let infoWindow = null;
+    let markers    = [];
+
+    // 주(State)별 지도 중심/축척. URL ?state=qld 등으로 진입 시 해당 뷰 적용.
+    const STATE_VIEWS = {
+      qld: { center: { lat: -27.4698, lng: 153.0251 }, zoom: 12 },  // 브리즈번 시티
+    };
+    const urlState        = new URLSearchParams(location.search).get('state');
+    // 현재 테스트 데이터가 전부 브리즈번이므로 기본값을 QLD 뷰로 고정
+    const activeStateView = STATE_VIEWS[urlState] || STATE_VIEWS.qld;
+
+    function loadMapScript() {
+      if (mapReady || mapLoading) return;
+      if (GOOGLE_MAPS_KEY === 'YOUR_API_KEY') {
+        document.getElementById('accomMap').innerHTML =
+          '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-muted);font-size:14px;">Google Maps API 키를 설정해 주세요 (accom.html 내 GOOGLE_MAPS_KEY)</div>';
+        return;
+      }
+      mapLoading = true;
+      window.initMap = function () {
+        map = new google.maps.Map(document.getElementById('accomMap'), {
+          center: activeStateView.center,
+          zoom: activeStateView.zoom,
+          mapTypeControl: false,
+          streetViewControl: false,
+          fullscreenControl: false,
+        });
+        infoWindow = new google.maps.InfoWindow();
+        mapReady   = true;
+        mapLoading = false;
+        updateMapMarkers(applyFilters(loadPosts()));
+      };
+      const script   = document.createElement('script');
+      script.src     = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_KEY}&loading=async&callback=initMap`;
+      script.async   = true;
+      script.defer   = true;
+      script.onerror = () => {
+        document.getElementById('accomMap').innerHTML =
+          '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-muted);font-size:14px;">지도를 불러올 수 없습니다. API 키를 확인해 주세요.</div>';
+      };
+      document.head.appendChild(script);
+    }
+
+    function updateMapMarkers(filteredPosts) {
+      if (!map) return;
+      markers.forEach(m => m.setMap(null));
+      markers = [];
+      const bounds = new google.maps.LatLngBounds();
+      let hasCoord  = false;
+
+      filteredPosts.forEach(p => {
+        if (!p.lat || !p.lng) return;
+        const marker = new google.maps.Marker({
+          position: { lat: p.lat, lng: p.lng },
+          map,
+          title: p.title,
+          icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 10,
+            fillColor: '#000000',
+            fillOpacity: 1,
+            strokeColor: '#ffffff',
+            strokeWeight: 2,
+          },
+        });
+        marker.addListener('click', () => {
+          infoWindow.setContent(`
+            <div style="font-family:'Urbanist','Noto Sans KR',sans-serif;max-width:220px;padding:4px 0;">
+              <div style="font-weight:700;font-size:13px;line-height:1.4;margin-bottom:6px;">${escHtml(p.title)}</div>
+              ${p.address ? `<div style="font-size:12px;color:#666;margin-bottom:4px;">📍 ${escHtml(p.address)}</div>` : ''}
+              ${p.price   ? `<div style="font-size:15px;font-weight:800;color:#000;">$${p.price}<span style="font-size:11px;font-weight:500">/wk</span></div>` : ''}
+              <div style="font-size:11px;color:#888;margin-top:4px;">${escHtml(p.author)} · ${p.date}</div>
+            </div>`);
+          infoWindow.open(map, marker);
+        });
+        markers.push(marker);
+        bounds.extend({ lat: p.lat, lng: p.lng });
+        hasCoord = true;
+      });
+
+      // 주(State) 뷰가 지정된 경우(현재 QLD/브리즈번 고정) 축척을 풀지 않고
+      // 브리즈번 시가지가 크게 보이는 고배율 중심을 유지한다.
+      if (activeStateView) {
+        map.setCenter(activeStateView.center);
+        map.setZoom(activeStateView.zoom);
+      } else if (hasCoord) {
+        if (markers.length === 1) {
+          map.setCenter({ lat: filteredPosts.find(p => p.lat)?.lat, lng: filteredPosts.find(p => p.lng)?.lng });
+          map.setZoom(12);
+        } else {
+          map.fitBounds(bounds);
+        }
+      }
+    }
+
+    // ── Geocoding (for future use) ──
+    async function geocodeAddress(address) {
+      try {
+        const res  = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${GOOGLE_MAPS_KEY}`);
+        const data = await res.json();
+        if (data.status === 'OK' && data.results.length > 0) {
+          return data.results[0].geometry.location;
+        }
+      } catch (e) {
+        console.error('Geocoding 오류:', e);
+      }
+      return null;
+    }
+
+    renderAll();
+  </script>
+
+  <!-- ── Firebase Auth (로그인 모달 + 로그인 상태) ── -->
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
+    import {
+      getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged,
+      createUserWithEmailAndPassword, signInWithEmailAndPassword,
+    } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
+
+    const firebaseConfig = {
+      apiKey:            'AIzaSyCamqnt0bNUD9uz1N5BbCuQjSkWLSpPqlU',
+      authDomain:        'koaus-f564c.firebaseapp.com',
+      projectId:         'koaus-f564c',
+      storageBucket:     'koaus-f564c.firebasestorage.app',
+      messagingSenderId: '663988594088',
+      appId:             '1:663988594088:web:ef30c2fd557407b00b299d',
+      measurementId:     'G-DERZ9MTKPL',
+    };
+
+    const app  = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    // ── Auth Modal ──
+    const authOverlay = document.getElementById('authOverlay');
+    let _authOpenedAt = 0;
+
+    const openAuthModal = () => {
+      _authOpenedAt = Date.now();
+      authOverlay.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    };
+    const hardCloseAuthModal = () => {
+      authOverlay.classList.remove('open');
+      document.body.style.overflow = '';
+      clearAuthErrors();
+    };
+    const softCloseAuthModal = () => {
+      if (Date.now() - _authOpenedAt < 300) return;
+      hardCloseAuthModal();
+    };
+
+    document.getElementById('authClose').addEventListener('click', hardCloseAuthModal);
+    authOverlay.addEventListener('click', e => { if (e.target === authOverlay) softCloseAuthModal(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') softCloseAuthModal(); });
+
+    // Tabs
+    document.querySelectorAll('.auth-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const target = tab.dataset.authTab;
+        document.getElementById('authLoginForm').style.display  = target === 'login'  ? '' : 'none';
+        document.getElementById('authSignupForm').style.display = target === 'signup' ? '' : 'none';
+        clearAuthErrors();
+      });
+    });
+
+    function clearAuthErrors() {
+      document.getElementById('authLoginError').textContent  = '';
+      document.getElementById('authSignupError').textContent = '';
+    }
+    function authErrMsg(code) {
+      const map = {
+        'auth/email-already-in-use': '이미 사용 중인 이메일입니다.',
+        'auth/invalid-email':        '유효하지 않은 이메일입니다.',
+        'auth/weak-password':        '비밀번호는 6자 이상이어야 합니다.',
+        'auth/wrong-password':       '비밀번호가 틀렸습니다.',
+        'auth/user-not-found':       '등록되지 않은 이메일입니다.',
+        'auth/invalid-credential':   '이메일 또는 비밀번호가 올바르지 않습니다.',
+        'auth/too-many-requests':    '잠시 후 다시 시도해 주세요.',
+      };
+      return map[code] || '오류가 발생했습니다. 다시 시도해 주세요.';
+    }
+
+    // Email sign-up
+    document.getElementById('authSignupSubmit').addEventListener('click', async () => {
+      const email = document.getElementById('authSignupEmail').value.trim();
+      const pw    = document.getElementById('authSignupPw').value;
+      const pw2   = document.getElementById('authSignupPwConfirm').value;
+      const errEl = document.getElementById('authSignupError');
+      if (!email || !pw) { errEl.textContent = '이메일과 비밀번호를 입력해 주세요.'; return; }
+      if (pw !== pw2)    { errEl.textContent = '비밀번호가 일치하지 않습니다.'; return; }
+      try {
+        await createUserWithEmailAndPassword(auth, email, pw);
+        hardCloseAuthModal();
+      } catch (e) { errEl.textContent = authErrMsg(e.code); }
+    });
+
+    // Email sign-in
+    document.getElementById('authLoginSubmit').addEventListener('click', async () => {
+      const email = document.getElementById('authLoginEmail').value.trim();
+      const pw    = document.getElementById('authLoginPw').value;
+      const errEl = document.getElementById('authLoginError');
+      if (!email || !pw) { errEl.textContent = '이메일과 비밀번호를 입력해 주세요.'; return; }
+      try {
+        await signInWithEmailAndPassword(auth, email, pw);
+        hardCloseAuthModal();
+      } catch (e) { errEl.textContent = authErrMsg(e.code); }
+    });
+
+    // Google sign-in
+    document.getElementById('authGoogle').addEventListener('click', () => {
+      signInWithPopup(auth, new GoogleAuthProvider())
+        .then(hardCloseAuthModal)
+        .catch(error => { console.error('로그인 에러:', error); });
+    });
+
+    // ── Shared login state (inline script가 참조) ──
+    window.koausAuth = { user: null, openAuthModal };
+
+    const loginBtn = document.getElementById('topbarLoginBtn');
+    loginBtn.addEventListener('click', () => {
+      if (window.koausAuth.user) window.location.href = 'index.html';
+      else openAuthModal();
+    });
+
+    onAuthStateChanged(auth, user => {
+      window.koausAuth.user = user;
+      if (user) {
+        const nick = localStorage.getItem('koaus-nickname') || user.displayName?.split(' ')[0] || user.email?.split('@')[0] || '계정';
+        loginBtn.textContent = nick;
+        loginBtn.title = '내 계정 (index.html)';
+      } else {
+        loginBtn.textContent = '로그인';
+        loginBtn.title = '로그인 / 회원가입';
+      }
+    });
   </script>
 </body>
 </html>
