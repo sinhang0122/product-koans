@@ -26,7 +26,7 @@
       <span class="topbar-tagline"><b>Korea&nbsp;-&nbsp;Australia</b><span class="topbar-tagline-div">|</span>호주 한인 커뮤니티의 새로운 기준</span>
     </a>
     <div class="topbar-actions">
-      <a href="index.html" class="topbar-login-btn">로그인</a>
+      <button type="button" class="topbar-login-btn" id="topbarLoginBtn">로그인</button>
       <button class="topbar-menu-btn" id="hamburgerBtn" aria-label="메뉴 열기" aria-expanded="false">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
           <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
@@ -62,9 +62,22 @@
           <svg class="accord-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
         </button>
         <div class="accord-body">
-          <a href="accom.html?state=wa" class="accord-link">Living</a>
-          <a href="jobs.html" class="accord-link">Work</a>
-          <a href="points.html" class="accord-link">Legal</a>
+          <div class="accord-subgroup">
+            <span class="accord-sublabel">Living</span>
+            <a href="accom.html?state=wa&amp;tab=offering" class="accord-link accord-link--sub">방 올리기 (List a Room)</a>
+            <a href="accom.html?state=wa&amp;tab=looking" class="accord-link accord-link--sub">방 구하기 (Find a Room)</a>
+          </div>
+          <div class="accord-subgroup">
+            <span class="accord-sublabel">Work</span>
+            <a href="jobs.html?tab=post" class="accord-link accord-link--sub">직원 채용 (Post a Job)</a>
+            <a href="jobs.html?tab=find" class="accord-link accord-link--sub">일 구하기 (Find a Job)</a>
+          </div>
+          <div class="accord-subgroup">
+            <span class="accord-sublabel">Visa &amp; Migration</span>
+            <a href="points.html" class="accord-link accord-link--sub">지역 법무팀</a>
+            <a href="points.html" class="accord-link accord-link--sub">유학팀</a>
+            <a href="points.html" class="accord-link accord-link--sub">기술심사 가채점</a>
+          </div>
           <a href="care.html" class="accord-link">Care</a>
         </div>
       </div>
@@ -74,9 +87,22 @@
           <svg class="accord-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
         </button>
         <div class="accord-body">
-          <a href="accom.html?state=nt" class="accord-link">Living</a>
-          <a href="jobs.html" class="accord-link">Work</a>
-          <a href="points.html" class="accord-link">Legal</a>
+          <div class="accord-subgroup">
+            <span class="accord-sublabel">Living</span>
+            <a href="accom.html?state=nt&amp;tab=offering" class="accord-link accord-link--sub">방 올리기 (List a Room)</a>
+            <a href="accom.html?state=nt&amp;tab=looking" class="accord-link accord-link--sub">방 구하기 (Find a Room)</a>
+          </div>
+          <div class="accord-subgroup">
+            <span class="accord-sublabel">Work</span>
+            <a href="jobs.html?tab=post" class="accord-link accord-link--sub">직원 채용 (Post a Job)</a>
+            <a href="jobs.html?tab=find" class="accord-link accord-link--sub">일 구하기 (Find a Job)</a>
+          </div>
+          <div class="accord-subgroup">
+            <span class="accord-sublabel">Visa &amp; Migration</span>
+            <a href="points.html" class="accord-link accord-link--sub">지역 법무팀</a>
+            <a href="points.html" class="accord-link accord-link--sub">유학팀</a>
+            <a href="points.html" class="accord-link accord-link--sub">기술심사 가채점</a>
+          </div>
           <a href="care.html" class="accord-link">Care</a>
         </div>
       </div>
@@ -86,9 +112,22 @@
           <svg class="accord-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
         </button>
         <div class="accord-body">
-          <a href="accom.html?state=qld" class="accord-link">Living</a>
-          <a href="jobs.html" class="accord-link">Work</a>
-          <a href="points.html" class="accord-link">Legal</a>
+          <div class="accord-subgroup">
+            <span class="accord-sublabel">Living</span>
+            <a href="accom.html?state=qld&amp;tab=offering" class="accord-link accord-link--sub">방 올리기 (List a Room)</a>
+            <a href="accom.html?state=qld&amp;tab=looking" class="accord-link accord-link--sub">방 구하기 (Find a Room)</a>
+          </div>
+          <div class="accord-subgroup">
+            <span class="accord-sublabel">Work</span>
+            <a href="jobs.html?tab=post" class="accord-link accord-link--sub">직원 채용 (Post a Job)</a>
+            <a href="jobs.html?tab=find" class="accord-link accord-link--sub">일 구하기 (Find a Job)</a>
+          </div>
+          <div class="accord-subgroup">
+            <span class="accord-sublabel">Visa &amp; Migration</span>
+            <a href="points.html" class="accord-link accord-link--sub">지역 법무팀</a>
+            <a href="points.html" class="accord-link accord-link--sub">유학팀</a>
+            <a href="points.html" class="accord-link accord-link--sub">기술심사 가채점</a>
+          </div>
           <a href="care.html" class="accord-link">Care</a>
         </div>
       </div>
@@ -98,9 +137,22 @@
           <svg class="accord-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
         </button>
         <div class="accord-body">
-          <a href="accom.html?state=nsw" class="accord-link">Living</a>
-          <a href="jobs.html" class="accord-link">Work</a>
-          <a href="points.html" class="accord-link">Legal</a>
+          <div class="accord-subgroup">
+            <span class="accord-sublabel">Living</span>
+            <a href="accom.html?state=nsw&amp;tab=offering" class="accord-link accord-link--sub">방 올리기 (List a Room)</a>
+            <a href="accom.html?state=nsw&amp;tab=looking" class="accord-link accord-link--sub">방 구하기 (Find a Room)</a>
+          </div>
+          <div class="accord-subgroup">
+            <span class="accord-sublabel">Work</span>
+            <a href="jobs.html?tab=post" class="accord-link accord-link--sub">직원 채용 (Post a Job)</a>
+            <a href="jobs.html?tab=find" class="accord-link accord-link--sub">일 구하기 (Find a Job)</a>
+          </div>
+          <div class="accord-subgroup">
+            <span class="accord-sublabel">Visa &amp; Migration</span>
+            <a href="points.html" class="accord-link accord-link--sub">지역 법무팀</a>
+            <a href="points.html" class="accord-link accord-link--sub">유학팀</a>
+            <a href="points.html" class="accord-link accord-link--sub">기술심사 가채점</a>
+          </div>
           <a href="care.html" class="accord-link">Care</a>
         </div>
       </div>
@@ -110,9 +162,22 @@
           <svg class="accord-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
         </button>
         <div class="accord-body">
-          <a href="accom.html?state=vic" class="accord-link">Living</a>
-          <a href="jobs.html" class="accord-link">Work</a>
-          <a href="points.html" class="accord-link">Legal</a>
+          <div class="accord-subgroup">
+            <span class="accord-sublabel">Living</span>
+            <a href="accom.html?state=vic&amp;tab=offering" class="accord-link accord-link--sub">방 올리기 (List a Room)</a>
+            <a href="accom.html?state=vic&amp;tab=looking" class="accord-link accord-link--sub">방 구하기 (Find a Room)</a>
+          </div>
+          <div class="accord-subgroup">
+            <span class="accord-sublabel">Work</span>
+            <a href="jobs.html?tab=post" class="accord-link accord-link--sub">직원 채용 (Post a Job)</a>
+            <a href="jobs.html?tab=find" class="accord-link accord-link--sub">일 구하기 (Find a Job)</a>
+          </div>
+          <div class="accord-subgroup">
+            <span class="accord-sublabel">Visa &amp; Migration</span>
+            <a href="points.html" class="accord-link accord-link--sub">지역 법무팀</a>
+            <a href="points.html" class="accord-link accord-link--sub">유학팀</a>
+            <a href="points.html" class="accord-link accord-link--sub">기술심사 가채점</a>
+          </div>
           <a href="care.html" class="accord-link">Care</a>
         </div>
       </div>
@@ -122,9 +187,22 @@
           <svg class="accord-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
         </button>
         <div class="accord-body">
-          <a href="accom.html?state=sa" class="accord-link">Living</a>
-          <a href="jobs.html" class="accord-link">Work</a>
-          <a href="points.html" class="accord-link">Legal</a>
+          <div class="accord-subgroup">
+            <span class="accord-sublabel">Living</span>
+            <a href="accom.html?state=sa&amp;tab=offering" class="accord-link accord-link--sub">방 올리기 (List a Room)</a>
+            <a href="accom.html?state=sa&amp;tab=looking" class="accord-link accord-link--sub">방 구하기 (Find a Room)</a>
+          </div>
+          <div class="accord-subgroup">
+            <span class="accord-sublabel">Work</span>
+            <a href="jobs.html?tab=post" class="accord-link accord-link--sub">직원 채용 (Post a Job)</a>
+            <a href="jobs.html?tab=find" class="accord-link accord-link--sub">일 구하기 (Find a Job)</a>
+          </div>
+          <div class="accord-subgroup">
+            <span class="accord-sublabel">Visa &amp; Migration</span>
+            <a href="points.html" class="accord-link accord-link--sub">지역 법무팀</a>
+            <a href="points.html" class="accord-link accord-link--sub">유학팀</a>
+            <a href="points.html" class="accord-link accord-link--sub">기술심사 가채점</a>
+          </div>
           <a href="care.html" class="accord-link">Care</a>
         </div>
       </div>
@@ -134,9 +212,22 @@
           <svg class="accord-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
         </button>
         <div class="accord-body">
-          <a href="accom.html?state=tas" class="accord-link">Living</a>
-          <a href="jobs.html" class="accord-link">Work</a>
-          <a href="points.html" class="accord-link">Legal</a>
+          <div class="accord-subgroup">
+            <span class="accord-sublabel">Living</span>
+            <a href="accom.html?state=tas&amp;tab=offering" class="accord-link accord-link--sub">방 올리기 (List a Room)</a>
+            <a href="accom.html?state=tas&amp;tab=looking" class="accord-link accord-link--sub">방 구하기 (Find a Room)</a>
+          </div>
+          <div class="accord-subgroup">
+            <span class="accord-sublabel">Work</span>
+            <a href="jobs.html?tab=post" class="accord-link accord-link--sub">직원 채용 (Post a Job)</a>
+            <a href="jobs.html?tab=find" class="accord-link accord-link--sub">일 구하기 (Find a Job)</a>
+          </div>
+          <div class="accord-subgroup">
+            <span class="accord-sublabel">Visa &amp; Migration</span>
+            <a href="points.html" class="accord-link accord-link--sub">지역 법무팀</a>
+            <a href="points.html" class="accord-link accord-link--sub">유학팀</a>
+            <a href="points.html" class="accord-link accord-link--sub">기술심사 가채점</a>
+          </div>
           <a href="care.html" class="accord-link">Care</a>
         </div>
       </div>
@@ -145,7 +236,7 @@
       </a>
     </nav>
     <div class="sidebar-footer-nav">
-      <a href="exchange.html" class="sidebar-exchange-link">💸 오늘의 환율 →</a>
+      <a href="powerball.html" class="sidebar-exchange-link">🎱 파워볼 당첨 번호 →</a>
     </div>
     <div class="sidebar-account">
       <button class="sidebar-account-btn" id="sidebarAccountBtn">내 계정 (My Account)</button>
@@ -172,26 +263,52 @@
       <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
     </div>
 
+    <div class="accom-main-tabs">
+      <button class="accom-tab active" id="tabHiring">
+        직원 채용
+        <em>Post a Job</em>
+      </button>
+      <button class="accom-tab" id="tabSeeking">
+        일 구하기
+        <em>Find a Job</em>
+      </button>
+    </div>
+
     <div class="board-toolbar">
       <span class="board-count" id="boardCount">총 0건</span>
       <button class="board-write-btn" id="writeBtnOpen">+ 글쓰기</button>
     </div>
 
-    <div class="post-list-table">
+    <div class="post-list-table post-list-table--jobs">
       <div class="post-list-head">
         <span class="post-num">번호</span>
         <span class="post-title">제목</span>
         <span class="post-author">작성자</span>
         <span class="post-date">날짜</span>
+        <span class="post-star">저장</span>
       </div>
       <div id="postList"></div>
     </div>
+    <div class="pagination" id="pagination"></div>
 
   </main>
 
   <div class="write-overlay" id="writeOverlay">
     <div class="write-modal">
       <div class="write-modal-title">✏️ 구인구직 글쓰기</div>
+      <div class="write-field">
+        <span class="write-label">게시 유형 Post Type</span>
+        <div class="write-posttype-tabs">
+          <label class="write-posttype-tab">
+            <input type="radio" name="wPostType" id="wPostTypeHiring" value="hiring" checked>
+            <span>직원 채용 <em>Post a Job</em></span>
+          </label>
+          <label class="write-posttype-tab">
+            <input type="radio" name="wPostType" id="wPostTypeSeeking" value="seeking">
+            <span>일 구하기 <em>Find a Job</em></span>
+          </label>
+        </div>
+      </div>
       <div class="write-field">
         <label class="write-label" for="wTitle">제목</label>
         <input class="write-input" id="wTitle" type="text" placeholder="[구인/구직] 직종 · 지역 · 조건 등" maxlength="80" />
@@ -251,11 +368,40 @@
     }
     document.querySelectorAll('.setting-btn').forEach(btn => btn.addEventListener('click', () => applyTheme(btn.dataset.themeSet)));
     applyTheme(localStorage.getItem('koaus-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
-    document.getElementById('sidebarAccountBtn').addEventListener('click', () => { window.location.href = 'index.html'; });
+    document.getElementById('sidebarAccountBtn').addEventListener('click', () => { window.location.href = 'mypage.html'; });
 
     const STORE_KEY = 'koaus-jobs-posts';
     const SEED_VERSION = '2026-05-empty';
     const SAMPLES = [];
+
+    // 저장/최근/내글 (마이페이지 연동)
+    const SAVED_KEY = 'koaus-saved-posts', RECENT_KEY = 'koaus-recent-posts', MYPOSTS_KEY = 'koaus-my-posts', BOARD = 'jobs';
+    function readJSON(k) { try { return JSON.parse(localStorage.getItem(k) || '[]'); } catch { return []; } }
+    function isSaved(id) { return readJSON(SAVED_KEY).some(s => s.board === BOARD && String(s.id) === String(id)); }
+    function toggleSaved(p) {
+      const saved = readJSON(SAVED_KEY);
+      const idx = saved.findIndex(s => s.board === BOARD && String(s.id) === String(p.id));
+      if (idx >= 0) saved.splice(idx, 1);
+      else saved.unshift({ board: BOARD, id: p.id, title: p.title, author: p.author, authorEmail: p.authorEmail || '', date: p.date, time: p.time || '' });
+      localStorage.setItem(SAVED_KEY, JSON.stringify(saved));
+    }
+    function recordRecent(p) {
+      let r = readJSON(RECENT_KEY).filter(x => !(x.board === BOARD && String(x.id) === String(p.id)));
+      r.unshift({ board: BOARD, id: p.id, title: p.title, author: p.author, authorEmail: p.authorEmail || '', date: p.date, time: p.time || '' });
+      localStorage.setItem(RECENT_KEY, JSON.stringify(r.slice(0, 30)));
+    }
+    function recordMyPost(p) {
+      const mine = readJSON(MYPOSTS_KEY);
+      mine.unshift({ board: BOARD, id: p.id, title: p.title, author: p.author, authorEmail: p.authorEmail || '', date: p.date, time: p.time || '' });
+      localStorage.setItem(MYPOSTS_KEY, JSON.stringify(mine));
+    }
+    function maskEmailPrefix(email) {
+      if (!email) return '';
+      return escHtml(String(email).split('@')[0].slice(0, 4)) + '***';
+    }
+    function authorLabel(p) {
+      return escHtml(p.author) + (p.authorEmail ? ` (${maskEmailPrefix(p.authorEmail)})` : '');
+    }
 
     function escHtml(s) {
       return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -269,29 +415,84 @@
       return SAMPLES;
     }
     function savePosts(posts) { localStorage.setItem(STORE_KEY, JSON.stringify(posts)); }
-    function renderPosts() {
-      const posts = loadPosts();
-      document.getElementById('boardCount').textContent = `총 ${posts.length}건`;
-      const list = document.getElementById('postList');
-      if (!posts.length) { list.innerHTML = '<div class="post-empty">등록된 글이 없습니다. 첫 글을 작성해보세요!</div>'; return; }
-      list.innerHTML = posts.slice().reverse().map((p, i) => `
-        <div class="post-row" data-id="${p.id}" style="cursor:pointer">
-          <span class="post-num">${posts.length - i}</span>
-          <span class="post-title" style="color:var(--text-primary);font-weight:500;">${escHtml(p.title)}</span>
-          <span class="post-author">${escHtml(p.author)}</span>
-          <span class="post-date">${p.date}</span>
-        </div>`).join('');
-      list.querySelectorAll('.post-row').forEach(row => row.addEventListener('click', () => openDetail(row.dataset.id)));
+
+    // ── Tabs ──
+    const urlTab = new URLSearchParams(location.search).get('tab');
+    let activeTab = urlTab === 'find' ? 'seeking' : 'hiring';  // post→hiring, find→seeking
+    let currentPage = 1;
+    const PER_PAGE = 10;
+    document.getElementById('tabHiring').addEventListener('click', () => switchTab('hiring'));
+    document.getElementById('tabSeeking').addEventListener('click', () => switchTab('seeking'));
+    function switchTab(tab) {
+      activeTab = tab;
+      currentPage = 1;
+      document.getElementById('tabHiring').classList.toggle('active', tab === 'hiring');
+      document.getElementById('tabSeeking').classList.toggle('active', tab === 'seeking');
+      renderPosts();
     }
+
+    function renderPosts() {
+      const all = loadPosts().filter(p => (p.postType || 'hiring') === activeTab);
+      document.getElementById('boardCount').textContent = `총 ${all.length}건`;
+      const list  = document.getElementById('postList');
+      const pager = document.getElementById('pagination');
+      if (!all.length) {
+        list.innerHTML = '<div class="post-empty">아직 등록된 글이 없습니다. 첫 글을 작성해보세요!</div>';
+        pager.innerHTML = '';
+        return;
+      }
+      const sorted = all.slice().sort((a, b) => b.id - a.id);  // 최신 글 위로
+      const totalPages = Math.max(1, Math.ceil(sorted.length / PER_PAGE));
+      if (currentPage > totalPages) currentPage = totalPages;
+      const start = (currentPage - 1) * PER_PAGE;
+      const pageItems = sorted.slice(start, start + PER_PAGE);
+
+      list.innerHTML = pageItems.map((p, i) => {
+        const saved = isSaved(p.id);
+        return `
+        <div class="post-row" data-id="${p.id}" style="cursor:pointer">
+          <span class="post-num">${sorted.length - (start + i)}</span>
+          <span class="post-title" style="color:var(--text-primary);font-weight:500;">${escHtml(p.title)}</span>
+          <span class="post-author">${authorLabel(p)}</span>
+          <span class="post-date">${p.date}${p.time ? ' ' + p.time : ''}</span>
+          <button class="bookmark-btn${saved ? ' is-saved' : ''}" data-id="${p.id}" title="저장한 글" aria-label="저장">${saved ? '★' : '☆'}</button>
+        </div>`;
+      }).join('');
+
+      list.querySelectorAll('.post-row').forEach(row => row.addEventListener('click', () => openDetail(row.dataset.id)));
+      list.querySelectorAll('.bookmark-btn').forEach(btn => {
+        btn.addEventListener('click', e => {
+          e.stopPropagation();
+          const p = loadPosts().find(x => String(x.id) === String(btn.dataset.id));
+          if (!p) return;
+          toggleSaved(p);
+          renderPosts();
+        });
+      });
+
+      pager.innerHTML = '';
+      if (totalPages > 1) {
+        for (let i = 1; i <= totalPages; i++) {
+          pager.innerHTML += `<button class="pagination-btn${i === currentPage ? ' active' : ''}" data-page="${i}">${i}</button>`;
+        }
+        pager.querySelectorAll('.pagination-btn').forEach(b => b.addEventListener('click', () => {
+          currentPage = parseInt(b.dataset.page);
+          renderPosts();
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }));
+      }
+    }
+
     function openDetail(id) {
       const posts = loadPosts();
       const p = posts.find(x => String(x.id) === String(id));
       if (!p) return;
       document.getElementById('detailTitle').textContent = p.title;
-      document.getElementById('detailMeta').innerHTML = `<span>${escHtml(p.author)}</span><span>${p.date}</span>`;
+      document.getElementById('detailMeta').innerHTML = `<span>${authorLabel(p)}</span><span>${p.date}${p.time ? ' ' + p.time : ''}</span>`;
       document.getElementById('detailBody').textContent = p.body;
       const contactEl = document.getElementById('detailContact');
       contactEl.innerHTML = p.contact ? `📞 연락처: <strong>${escHtml(p.contact)}</strong>` : '';
+      recordRecent(p);
       document.getElementById('detailOverlay').classList.add('open');
     }
     document.getElementById('detailClose').addEventListener('click', () => { document.getElementById('detailOverlay').classList.remove('open'); });
@@ -301,22 +502,226 @@
     document.getElementById('writeBtnCancel').addEventListener('click', () => writeOverlay.classList.remove('open'));
     writeOverlay.addEventListener('click', e => { if (e.target === writeOverlay) writeOverlay.classList.remove('open'); });
     document.getElementById('writeBtnSubmit').addEventListener('click', () => {
+      if (!window.koausAuth || !window.koausAuth.user) {
+        alert('글을 등록하려면 로그인이 필요합니다.');
+        if (window.koausAuth) window.koausAuth.openAuthModal();
+        return;
+      }
+      const user = window.koausAuth.user;
+      const postType = document.querySelector('input[name="wPostType"]:checked')?.value || 'hiring';
       const title = document.getElementById('wTitle').value.trim();
       const body  = document.getElementById('wBody').value.trim();
-      const author = document.getElementById('wAuthor').value.trim() || '익명';
-      const contact = document.getElementById('wContact').value.trim();
       if (!title) { alert('제목을 입력해 주세요.'); return; }
       if (!body)  { alert('내용을 입력해 주세요.'); return; }
-      const posts = loadPosts();
+      const nick = document.getElementById('wAuthor').value.trim()
+        || localStorage.getItem('koaus-nickname') || user.displayName?.split(' ')[0] || user.email?.split('@')[0] || '사용자';
+      const contact = document.getElementById('wContact').value.trim();
       const d = new Date();
-      const date = `${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
-      posts.push({ id: Date.now(), title, body, author, contact, date });
+      const pad = n => String(n).padStart(2, '0');
+      const date = `${pad(d.getMonth() + 1)}/${pad(d.getDate())}`;
+      const time = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+      const post = { id: Date.now(), postType, title, body, author: nick, authorEmail: user.email || '', contact, date, time };
+      const posts = loadPosts();
+      posts.push(post);
       savePosts(posts);
-      renderPosts();
+      recordMyPost(post);
       writeOverlay.classList.remove('open');
       ['wTitle','wBody','wAuthor','wContact'].forEach(id => { document.getElementById(id).value = ''; });
+      switchTab(postType);
     });
-    renderPosts();
+
+    switchTab(activeTab);
   </script>
+
+  <!-- ── Auth Modal ── -->
+  <div class="auth-overlay" id="authOverlay">
+    <div class="auth-modal">
+      <button class="auth-close" id="authClose" aria-label="닫기">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+      <div class="auth-title">◈ KoAus 계정</div>
+      <div class="auth-subtitle">로그인하여 게시판을 자유롭게 이용해 보세요</div>
+      <div class="auth-tabs">
+        <button class="auth-tab active" data-auth-tab="login">로그인</button>
+        <button class="auth-tab" data-auth-tab="signup">회원가입</button>
+      </div>
+
+      <!-- 로그인 폼 -->
+      <div id="authLoginForm">
+        <div class="auth-field">
+          <label class="auth-label" for="authLoginEmail">이메일</label>
+          <input class="auth-input" id="authLoginEmail" type="email" placeholder="email@example.com" autocomplete="email" />
+        </div>
+        <div class="auth-field">
+          <label class="auth-label" for="authLoginPw">비밀번호</label>
+          <input class="auth-input" id="authLoginPw" type="password" placeholder="비밀번호 입력" autocomplete="current-password" />
+        </div>
+        <div class="auth-error" id="authLoginError"></div>
+        <button class="auth-submit" id="authLoginSubmit">로그인</button>
+      </div>
+
+      <!-- 회원가입 폼 -->
+      <div id="authSignupForm" style="display:none">
+        <div class="auth-field">
+          <label class="auth-label" for="authSignupEmail">이메일</label>
+          <input class="auth-input" id="authSignupEmail" type="email" placeholder="email@example.com" autocomplete="email" />
+        </div>
+        <div class="auth-field">
+          <label class="auth-label" for="authSignupPw">비밀번호</label>
+          <input class="auth-input" id="authSignupPw" type="password" placeholder="6자 이상" autocomplete="new-password" />
+        </div>
+        <div class="auth-field">
+          <label class="auth-label" for="authSignupPwConfirm">비밀번호 확인</label>
+          <input class="auth-input" id="authSignupPwConfirm" type="password" placeholder="비밀번호 재입력" autocomplete="new-password" />
+        </div>
+        <div class="auth-error" id="authSignupError"></div>
+        <button class="auth-submit" id="authSignupSubmit">회원가입</button>
+      </div>
+
+      <div class="auth-divider">또는</div>
+
+      <button class="auth-google" id="authGoogle">
+        <svg width="18" height="18" viewBox="0 0 48 48">
+          <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+          <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+          <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+          <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+        </svg>
+        Google 계정으로 로그인
+      </button>
+    </div>
+  </div>
+
+
+  <!-- ── Firebase Auth (로그인 모달 + 로그인 상태) ── -->
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
+    import {
+      getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged,
+      createUserWithEmailAndPassword, signInWithEmailAndPassword,
+    } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
+
+    const firebaseConfig = {
+      apiKey:            'AIzaSyCamqnt0bNUD9uz1N5BbCuQjSkWLSpPqlU',
+      authDomain:        'koaus-f564c.firebaseapp.com',
+      projectId:         'koaus-f564c',
+      storageBucket:     'koaus-f564c.firebasestorage.app',
+      messagingSenderId: '663988594088',
+      appId:             '1:663988594088:web:ef30c2fd557407b00b299d',
+      measurementId:     'G-DERZ9MTKPL',
+    };
+
+    const app  = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    // ── Auth Modal ──
+    const authOverlay = document.getElementById('authOverlay');
+    let _authOpenedAt = 0;
+
+    const openAuthModal = () => {
+      _authOpenedAt = Date.now();
+      authOverlay.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    };
+    const hardCloseAuthModal = () => {
+      authOverlay.classList.remove('open');
+      document.body.style.overflow = '';
+      clearAuthErrors();
+    };
+    const softCloseAuthModal = () => {
+      if (Date.now() - _authOpenedAt < 300) return;
+      hardCloseAuthModal();
+    };
+
+    document.getElementById('authClose').addEventListener('click', hardCloseAuthModal);
+    authOverlay.addEventListener('click', e => { if (e.target === authOverlay) softCloseAuthModal(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') softCloseAuthModal(); });
+
+    // Tabs
+    document.querySelectorAll('.auth-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const target = tab.dataset.authTab;
+        document.getElementById('authLoginForm').style.display  = target === 'login'  ? '' : 'none';
+        document.getElementById('authSignupForm').style.display = target === 'signup' ? '' : 'none';
+        clearAuthErrors();
+      });
+    });
+
+    function clearAuthErrors() {
+      document.getElementById('authLoginError').textContent  = '';
+      document.getElementById('authSignupError').textContent = '';
+    }
+    function authErrMsg(code) {
+      const map = {
+        'auth/email-already-in-use': '이미 사용 중인 이메일입니다.',
+        'auth/invalid-email':        '유효하지 않은 이메일입니다.',
+        'auth/weak-password':        '비밀번호는 6자 이상이어야 합니다.',
+        'auth/wrong-password':       '비밀번호가 틀렸습니다.',
+        'auth/user-not-found':       '등록되지 않은 이메일입니다.',
+        'auth/invalid-credential':   '이메일 또는 비밀번호가 올바르지 않습니다.',
+        'auth/too-many-requests':    '잠시 후 다시 시도해 주세요.',
+      };
+      return map[code] || '오류가 발생했습니다. 다시 시도해 주세요.';
+    }
+
+    // Email sign-up
+    document.getElementById('authSignupSubmit').addEventListener('click', async () => {
+      const email = document.getElementById('authSignupEmail').value.trim();
+      const pw    = document.getElementById('authSignupPw').value;
+      const pw2   = document.getElementById('authSignupPwConfirm').value;
+      const errEl = document.getElementById('authSignupError');
+      if (!email || !pw) { errEl.textContent = '이메일과 비밀번호를 입력해 주세요.'; return; }
+      if (pw !== pw2)    { errEl.textContent = '비밀번호가 일치하지 않습니다.'; return; }
+      try {
+        await createUserWithEmailAndPassword(auth, email, pw);
+        hardCloseAuthModal();
+      } catch (e) { errEl.textContent = authErrMsg(e.code); }
+    });
+
+    // Email sign-in
+    document.getElementById('authLoginSubmit').addEventListener('click', async () => {
+      const email = document.getElementById('authLoginEmail').value.trim();
+      const pw    = document.getElementById('authLoginPw').value;
+      const errEl = document.getElementById('authLoginError');
+      if (!email || !pw) { errEl.textContent = '이메일과 비밀번호를 입력해 주세요.'; return; }
+      try {
+        await signInWithEmailAndPassword(auth, email, pw);
+        hardCloseAuthModal();
+      } catch (e) { errEl.textContent = authErrMsg(e.code); }
+    });
+
+    // Google sign-in
+    document.getElementById('authGoogle').addEventListener('click', () => {
+      signInWithPopup(auth, new GoogleAuthProvider())
+        .then(hardCloseAuthModal)
+        .catch(error => { console.error('로그인 에러:', error); });
+    });
+
+    // ── Shared login state (inline script가 참조) ──
+    window.koausAuth = { user: null, openAuthModal };
+
+    const loginBtn = document.getElementById('topbarLoginBtn');
+    loginBtn.addEventListener('click', () => {
+      if (window.koausAuth.user) window.location.href = 'index.html';
+      else openAuthModal();
+    });
+
+    onAuthStateChanged(auth, user => {
+      window.koausAuth.user = user;
+      if (user) {
+        const nick = localStorage.getItem('koaus-nickname') || user.displayName?.split(' ')[0] || user.email?.split('@')[0] || '계정';
+        loginBtn.textContent = nick;
+        loginBtn.title = '내 계정 (index.html)';
+      } else {
+        loginBtn.textContent = '로그인';
+        loginBtn.title = '로그인 / 회원가입';
+      }
+    });
+  </script>
+
 </body>
 </html>

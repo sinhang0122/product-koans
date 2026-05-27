@@ -394,6 +394,6 @@ if (acctBtn) {
       ? (localStorage.getItem('koaus-nickname') || user.displayName?.split(' ')[0] || '계정') + ' (My Account)'
       : '내 계정 (My Account)';
     acctBtn.textContent = nick;
-    acctBtn.onclick = user ? openMyAccountModal : openAuthModal;
+    acctBtn.onclick = user ? (() => { window.location.href = 'mypage.html'; }) : openAuthModal;
   });
 }

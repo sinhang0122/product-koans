@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>오늘의 환율 — KoAus</title>
+  <title>마이페이지 — KoAus</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;800;900&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet" />
@@ -26,7 +26,7 @@
       <span class="topbar-tagline"><b>Korea&nbsp;-&nbsp;Australia</b><span class="topbar-tagline-div">|</span>호주 한인 커뮤니티의 새로운 기준</span>
     </a>
     <div class="topbar-actions">
-      <a href="index.html" class="topbar-login-btn">로그인</a>
+      <button type="button" class="topbar-login-btn" id="topbarLoginBtn">로그인</button>
       <button class="topbar-menu-btn" id="hamburgerBtn" aria-label="메뉴 열기" aria-expanded="false">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
           <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
@@ -242,41 +242,49 @@
       <button class="sidebar-account-btn" id="sidebarAccountBtn">내 계정 (My Account)</button>
     </div>
   </aside>
-
   <main class="page-container">
 
     <div class="page-header">
       <div>
-        <h1 class="page-title">💸 오늘의 환율</h1>
-        <p class="page-subtitle">AUD → KRW 주요 송금 앱 환율 비교 (Mock 데이터 · 매일 업데이트 예정)</p>
+        <h1 class="page-title">👤 마이페이지</h1>
+        <p class="page-subtitle">내 활동 내역과 저장한 글을 확인하세요</p>
       </div>
       <a href="index.html" class="page-back">← 홈으로</a>
     </div>
 
-    <div class="adsense-wrap">
-      <ins class="adsbygoogle"
-           style="display:block"
-           data-ad-client="ca-pub-3691720629746826"
-           data-ad-slot="auto"
-           data-ad-format="auto"
-           data-full-width-responsive="true"></ins>
-      <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+    <section class="mypage-login-required" id="loginRequired" style="display:none;">
+      <div class="mypage-lr-icon">🔒</div>
+      <p class="mypage-lr-text">로그인 후 이용할 수 있습니다.</p>
+      <button class="mypage-login-btn" id="mypageLoginBtn">로그인 / 회원가입</button>
+    </section>
+
+    <section class="mypage-profile" id="profileSection" style="display:none;">
+      <div class="mypage-avatar" id="mpAvatar">?</div>
+      <div class="mypage-profile-info">
+        <div class="mypage-name-row">
+          <span class="mypage-name" id="mpName">—</span>
+          <button class="mypage-edit-btn" id="mpEditBtn">닉네임 변경</button>
+          <button class="mypage-photo-btn" id="mpPhotoBtn">사진 교체</button>
+        </div>
+        <div class="mypage-email" id="mpEmail">—</div>
+        <p class="mypage-nick-note">닉네임은 한 번 변경하면 3개월 동안 다시 변경할 수 없습니다.</p>
+      </div>
+    </section>
+
+    <div class="mypage-tabs" id="mypageTabs" style="display:none;">
+      <button class="mypage-tab active" data-mtab="mine">내가 쓴 글</button>
+      <button class="mypage-tab" data-mtab="recent">최근 본 글</button>
+      <button class="mypage-tab" data-mtab="saved">저장한 글</button>
     </div>
 
-    <div class="exchange-grid" id="exchangeGrid"></div>
-
-    <p class="exchange-updated" id="exchangeUpdated"></p>
-
-    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-md);padding:16px 20px;font-size:13px;color:var(--text-muted);line-height:1.7;">
-      ※ 현재 표시된 환율은 Mock(샘플) 데이터입니다. 실제 환율은 각 앱을 직접 확인해주세요.<br>
-      ※ 최종 수령액은 금액, 수수료, 환율 스프레드에 따라 달라질 수 있습니다.
-    </div>
+    <div class="mypage-list" id="mypageList" style="display:none;"></div>
 
   </main>
 
   <footer class="site-footer"><p>KoAus &mdash; 호주 한인 포털 &nbsp;·&nbsp; 2026</p></footer>
 
   <script>
+    // ── Sidebar / Theme ──
     const hBtn = document.getElementById('hamburgerBtn');
     const cBtn = document.getElementById('sidebarCloseBtn');
     const sb   = document.getElementById('sidebar');
@@ -286,7 +294,7 @@
     hBtn.addEventListener('click', openSb);
     cBtn.addEventListener('click', closeSb);
     ov.addEventListener('click', closeSb);
-    document.addEventListener('keydown', e => e.key==='Escape' && closeSb());
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSb(); });
     document.querySelectorAll('.accord-header').forEach(btn => {
       btn.addEventListener('click', () => btn.closest('.accord-item').classList.toggle('open'));
     });
@@ -298,67 +306,218 @@
     }
     document.querySelectorAll('.setting-btn').forEach(btn => btn.addEventListener('click', () => applyTheme(btn.dataset.themeSet)));
     applyTheme(localStorage.getItem('koaus-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
-    document.getElementById('sidebarAccountBtn').addEventListener('click', () => { window.location.href = 'mypage.html'; });
+    document.getElementById('sidebarAccountBtn').addEventListener('click', () => { window.scrollTo({ top: 0, behavior: 'smooth' }); });
+  </script>
 
-    const today = new Date().toLocaleDateString('ko-KR', { year:'numeric', month:'2-digit', day:'2-digit', weekday:'short' });
-    document.getElementById('exchangeUpdated').textContent = `기준일: ${today} · 실시간 API 연동 준비 중`;
-
-    const apps = [
-      {
-        name: 'WireBarley', nameKo: '와이어발리',
-        rate: 1052, fee: 'A$1 이하', feeNote: '정액 수수료',
-        color: '#3b82f6', best: false,
-        tagline: '수수료 최저 수준',
-        url: 'https://www.wirebarley.com',
-      },
-      {
-        name: 'Wise', nameKo: '와이즈',
-        rate: 1049, fee: '0.45% + A$0.50', feeNote: '비율 수수료',
-        color: '#10b981', best: true,
-        tagline: '중간 환율 적용',
-        url: 'https://wise.com',
-      },
-      {
-        name: 'SentBe', nameKo: '센트비',
-        rate: 1044, fee: 'A$1.50~2.50', feeNote: '구간별 정액',
-        color: '#f97316', best: false,
-        tagline: '빠른 송금',
-        url: 'https://www.sentbe.com',
-      },
-      {
-        name: 'Hana Bank', nameKo: '하나은행',
-        rate: 1036, fee: '0.5%', feeNote: '은행 환전 수수료',
-        color: '#6366f1', best: false,
-        tagline: '은행 안심 송금',
-        url: 'https://www.hanabank.com',
-      },
-    ];
-
-    const grid = document.getElementById('exchangeGrid');
-    grid.innerHTML = apps.map(app => `
-      <div class="exchange-card${app.best ? ' exchange-card--best' : ''}" style="border-top: 3px solid ${app.color}">
-        <div>
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-            <div style="width:8px;height:8px;border-radius:50%;background:${app.color};flex-shrink:0;"></div>
-            <span class="exchange-app-name">${app.name}</span>
-            ${app.best ? `<span class="exchange-best-badge">Best</span>` : ''}
-          </div>
-          <div class="exchange-app-sub">${app.nameKo} · ${app.tagline}</div>
-        </div>
-        <div class="exchange-rate-row">
-          <span class="exchange-rate" style="color:${app.color}">${app.rate.toLocaleString()}</span>
-          <span class="exchange-unit">원 / AUD</span>
-        </div>
-        <div class="exchange-fee-row">
-          <span>수수료 ${app.fee}</span>
-          <span style="color:var(--text-muted)">·</span>
-          <span>${app.feeNote}</span>
-        </div>
-        <a href="${app.url}" target="_blank" rel="noopener" style="font-size:12px;color:${app.color};text-decoration:none;font-weight:700;">
-          앱 바로가기 →
-        </a>
+<!-- ── Auth Modal ── -->
+  <div class="auth-overlay" id="authOverlay">
+    <div class="auth-modal">
+      <button class="auth-close" id="authClose" aria-label="닫기">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+      <div class="auth-title">◈ KoAus 계정</div>
+      <div class="auth-subtitle">로그인하여 게시판을 자유롭게 이용해 보세요</div>
+      <div class="auth-tabs">
+        <button class="auth-tab active" data-auth-tab="login">로그인</button>
+        <button class="auth-tab" data-auth-tab="signup">회원가입</button>
       </div>
-    `).join('');
+
+      <!-- 로그인 폼 -->
+      <div id="authLoginForm">
+        <div class="auth-field">
+          <label class="auth-label" for="authLoginEmail">이메일</label>
+          <input class="auth-input" id="authLoginEmail" type="email" placeholder="email@example.com" autocomplete="email" />
+        </div>
+        <div class="auth-field">
+          <label class="auth-label" for="authLoginPw">비밀번호</label>
+          <input class="auth-input" id="authLoginPw" type="password" placeholder="비밀번호 입력" autocomplete="current-password" />
+        </div>
+        <div class="auth-error" id="authLoginError"></div>
+        <button class="auth-submit" id="authLoginSubmit">로그인</button>
+      </div>
+
+      <!-- 회원가입 폼 -->
+      <div id="authSignupForm" style="display:none">
+        <div class="auth-field">
+          <label class="auth-label" for="authSignupEmail">이메일</label>
+          <input class="auth-input" id="authSignupEmail" type="email" placeholder="email@example.com" autocomplete="email" />
+        </div>
+        <div class="auth-field">
+          <label class="auth-label" for="authSignupPw">비밀번호</label>
+          <input class="auth-input" id="authSignupPw" type="password" placeholder="6자 이상" autocomplete="new-password" />
+        </div>
+        <div class="auth-field">
+          <label class="auth-label" for="authSignupPwConfirm">비밀번호 확인</label>
+          <input class="auth-input" id="authSignupPwConfirm" type="password" placeholder="비밀번호 재입력" autocomplete="new-password" />
+        </div>
+        <div class="auth-error" id="authSignupError"></div>
+        <button class="auth-submit" id="authSignupSubmit">회원가입</button>
+      </div>
+
+      <div class="auth-divider">또는</div>
+
+      <button class="auth-google" id="authGoogle">
+        <svg width="18" height="18" viewBox="0 0 48 48">
+          <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+          <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+          <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+          <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+        </svg>
+        Google 계정으로 로그인
+      </button>
+    </div>
+  </div>
+
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
+    import {
+      getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged,
+      createUserWithEmailAndPassword, signInWithEmailAndPassword,
+    } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
+
+    const firebaseConfig = {
+      apiKey:            'AIzaSyCamqnt0bNUD9uz1N5BbCuQjSkWLSpPqlU',
+      authDomain:        'koaus-f564c.firebaseapp.com',
+      projectId:         'koaus-f564c',
+      storageBucket:     'koaus-f564c.firebasestorage.app',
+      messagingSenderId: '663988594088',
+      appId:             '1:663988594088:web:ef30c2fd557407b00b299d',
+      measurementId:     'G-DERZ9MTKPL',
+    };
+    const app  = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    // ── Auth Modal ──
+    const authOverlay = document.getElementById('authOverlay');
+    let _authOpenedAt = 0;
+    const openAuthModal = () => { _authOpenedAt = Date.now(); authOverlay.classList.add('open'); document.body.style.overflow = 'hidden'; };
+    const hardCloseAuthModal = () => { authOverlay.classList.remove('open'); document.body.style.overflow = ''; clearAuthErrors(); };
+    const softCloseAuthModal = () => { if (Date.now() - _authOpenedAt < 300) return; hardCloseAuthModal(); };
+    document.getElementById('authClose').addEventListener('click', hardCloseAuthModal);
+    authOverlay.addEventListener('click', e => { if (e.target === authOverlay) softCloseAuthModal(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') softCloseAuthModal(); });
+    document.querySelectorAll('.auth-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const target = tab.dataset.authTab;
+        document.getElementById('authLoginForm').style.display  = target === 'login'  ? '' : 'none';
+        document.getElementById('authSignupForm').style.display = target === 'signup' ? '' : 'none';
+        clearAuthErrors();
+      });
+    });
+    function clearAuthErrors() {
+      document.getElementById('authLoginError').textContent  = '';
+      document.getElementById('authSignupError').textContent = '';
+    }
+    function authErrMsg(code) {
+      const map = {
+        'auth/email-already-in-use': '이미 사용 중인 이메일입니다.',
+        'auth/invalid-email':        '유효하지 않은 이메일입니다.',
+        'auth/weak-password':        '비밀번호는 6자 이상이어야 합니다.',
+        'auth/wrong-password':       '비밀번호가 틀렸습니다.',
+        'auth/user-not-found':       '등록되지 않은 이메일입니다.',
+        'auth/invalid-credential':   '이메일 또는 비밀번호가 올바르지 않습니다.',
+        'auth/too-many-requests':    '잠시 후 다시 시도해 주세요.',
+      };
+      return map[code] || '오류가 발생했습니다. 다시 시도해 주세요.';
+    }
+    document.getElementById('authSignupSubmit').addEventListener('click', async () => {
+      const email = document.getElementById('authSignupEmail').value.trim();
+      const pw    = document.getElementById('authSignupPw').value;
+      const pw2   = document.getElementById('authSignupPwConfirm').value;
+      const errEl = document.getElementById('authSignupError');
+      if (!email || !pw) { errEl.textContent = '이메일과 비밀번호를 입력해 주세요.'; return; }
+      if (pw !== pw2)    { errEl.textContent = '비밀번호가 일치하지 않습니다.'; return; }
+      try { await createUserWithEmailAndPassword(auth, email, pw); hardCloseAuthModal(); }
+      catch (e) { errEl.textContent = authErrMsg(e.code); }
+    });
+    document.getElementById('authLoginSubmit').addEventListener('click', async () => {
+      const email = document.getElementById('authLoginEmail').value.trim();
+      const pw    = document.getElementById('authLoginPw').value;
+      const errEl = document.getElementById('authLoginError');
+      if (!email || !pw) { errEl.textContent = '이메일과 비밀번호를 입력해 주세요.'; return; }
+      try { await signInWithEmailAndPassword(auth, email, pw); hardCloseAuthModal(); }
+      catch (e) { errEl.textContent = authErrMsg(e.code); }
+    });
+    document.getElementById('authGoogle').addEventListener('click', () => {
+      signInWithPopup(auth, new GoogleAuthProvider()).then(hardCloseAuthModal).catch(err => console.error('로그인 에러:', err));
+    });
+
+    window.koausAuth = { user: null, openAuthModal };
+
+    // ── My Page rendering ──
+    const readJSON = k => { try { return JSON.parse(localStorage.getItem(k) || '[]'); } catch { return []; } };
+    const escHtml = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    const maskEmailPrefix = email => email ? escHtml(String(email).split('@')[0].slice(0,4)) + '***' : '';
+    const boardLabel = b => b === 'accom' ? 'Living' : b === 'jobs' ? 'Work' : b;
+    const boardHref  = b => b === 'accom' ? 'accom.html' : b === 'jobs' ? 'jobs.html' : '#';
+
+    let mtab = 'mine';
+    const emptyMsg = { mine: '아직 작성한 글이 없습니다.', recent: '최근 본 글이 없습니다.', saved: '저장한 글이 없습니다.' };
+    function dataFor(tab) {
+      if (tab === 'mine')   return readJSON('koaus-my-posts');
+      if (tab === 'recent') return readJSON('koaus-recent-posts');
+      return readJSON('koaus-saved-posts');
+    }
+    function renderList() {
+      const items = dataFor(mtab);
+      const el = document.getElementById('mypageList');
+      if (!items.length) { el.innerHTML = '<div class="post-empty">' + emptyMsg[mtab] + '</div>'; return; }
+      el.innerHTML = items.map(p => {
+        const meta = escHtml(p.author || '') + (p.authorEmail ? ' (' + maskEmailPrefix(p.authorEmail) + ')' : '') + ' · ' + (p.date || '') + (p.time ? ' ' + p.time : '');
+        return '<a class="mypage-item" href="' + boardHref(p.board) + '">'
+          + '<span class="mypage-item-badge">' + boardLabel(p.board) + '</span>'
+          + '<span class="mypage-item-title">' + escHtml(p.title || '') + '</span>'
+          + '<span class="mypage-item-meta">' + meta + '</span>'
+          + '</a>';
+      }).join('');
+    }
+    document.querySelectorAll('.mypage-tab').forEach(t => t.addEventListener('click', () => {
+      document.querySelectorAll('.mypage-tab').forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+      mtab = t.dataset.mtab;
+      renderList();
+    }));
+
+    document.getElementById('mpEditBtn').addEventListener('click', () => {
+      const cur = document.getElementById('mpName').textContent;
+      const nn = prompt('새 닉네임을 입력하세요.\n(닉네임은 한 번 변경하면 3개월 동안 다시 변경할 수 없습니다)', cur);
+      if (!nn || !nn.trim()) return;
+      const trimmed = nn.trim();
+      localStorage.setItem('koaus-nickname', trimmed);
+      document.getElementById('mpName').textContent = trimmed;
+      document.getElementById('mpAvatar').textContent = (trimmed[0] || '?').toUpperCase();
+    });
+    document.getElementById('mpPhotoBtn').addEventListener('click', () => alert('이미지 업로드는 준비 중입니다.'));
+    document.getElementById('mypageLoginBtn').addEventListener('click', openAuthModal);
+
+    const tlb = document.getElementById('topbarLoginBtn');
+    if (tlb) tlb.addEventListener('click', () => { if (!window.koausAuth.user) openAuthModal(); });
+
+    onAuthStateChanged(auth, user => {
+      window.koausAuth.user = user;
+      const loginReq = document.getElementById('loginRequired');
+      const prof = document.getElementById('profileSection');
+      const tabs = document.getElementById('mypageTabs');
+      const list = document.getElementById('mypageList');
+      if (user) {
+        const nick = localStorage.getItem('koaus-nickname') || user.displayName?.split(' ')[0] || user.email?.split('@')[0] || '사용자';
+        document.getElementById('mpName').textContent = nick;
+        document.getElementById('mpAvatar').textContent = (nick[0] || '?').toUpperCase();
+        document.getElementById('mpEmail').textContent = user.email || '';
+        loginReq.style.display = 'none';
+        prof.style.display = ''; tabs.style.display = ''; list.style.display = '';
+        renderList();
+        if (tlb) tlb.textContent = nick;
+      } else {
+        loginReq.style.display = ''; prof.style.display = 'none'; tabs.style.display = 'none'; list.style.display = 'none';
+        if (tlb) tlb.textContent = '로그인';
+      }
+    });
   </script>
 </body>
 </html>

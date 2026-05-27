@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>오늘의 환율 — KoAus</title>
+  <title>파워볼 당첨 번호 — KoAus</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;800;900&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet" />
@@ -247,36 +247,38 @@
 
     <div class="page-header">
       <div>
-        <h1 class="page-title">💸 오늘의 환율</h1>
-        <p class="page-subtitle">AUD → KRW 주요 송금 앱 환율 비교 (Mock 데이터 · 매일 업데이트 예정)</p>
+        <h1 class="page-title">🎱 파워볼 당첨 번호</h1>
+        <p class="page-subtitle">호주 파워볼(Powerball) 공식 결과 확인 · 행운의 번호 자동 생성</p>
       </div>
       <a href="index.html" class="page-back">← 홈으로</a>
     </div>
 
-    <div class="adsense-wrap">
-      <ins class="adsbygoogle"
-           style="display:block"
-           data-ad-client="ca-pub-3691720629746826"
-           data-ad-slot="auto"
-           data-ad-format="auto"
-           data-full-width-responsive="true"></ins>
-      <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
-    </div>
+    <section class="pb-official">
+      <div class="pb-official-text">
+        <div class="pb-official-title">공식 당첨 번호 확인</div>
+        <p class="pb-official-desc">호주 복권 공식 사이트(The Lott)에서 최신 파워볼 추첨 결과를 확인하세요.</p>
+      </div>
+      <a class="pb-official-btn" href="https://www.thelott.com/powerball/results" target="_blank" rel="noopener noreferrer">The Lott에서 결과 보기 ↗</a>
+    </section>
 
-    <div class="exchange-grid" id="exchangeGrid"></div>
-
-    <p class="exchange-updated" id="exchangeUpdated"></p>
-
-    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-md);padding:16px 20px;font-size:13px;color:var(--text-muted);line-height:1.7;">
-      ※ 현재 표시된 환율은 Mock(샘플) 데이터입니다. 실제 환율은 각 앱을 직접 확인해주세요.<br>
-      ※ 최종 수령액은 금액, 수수료, 환율 스프레드에 따라 달라질 수 있습니다.
-    </div>
+    <section class="pb-generator">
+      <div class="pb-gen-header">
+        <h2 class="pb-gen-title">🎲 행운의 번호 자동 생성기</h2>
+        <p class="pb-gen-sub">메인 7개 (1–35) + 파워볼 1개 (1–20)</p>
+      </div>
+      <div class="pb-balls" id="pbBalls">
+        <div class="pb-empty">아래 버튼을 눌러 행운의 번호를 추첨하세요</div>
+      </div>
+      <button class="pb-gen-btn" id="pbGenBtn">번호 생성하기</button>
+      <p class="pb-note">※ 본 생성기는 재미를 위한 도구이며 실제 당첨과 무관합니다.</p>
+    </section>
 
   </main>
 
   <footer class="site-footer"><p>KoAus &mdash; 호주 한인 포털 &nbsp;·&nbsp; 2026</p></footer>
 
   <script>
+    // ── Sidebar ──
     const hBtn = document.getElementById('hamburgerBtn');
     const cBtn = document.getElementById('sidebarCloseBtn');
     const sb   = document.getElementById('sidebar');
@@ -300,65 +302,21 @@
     applyTheme(localStorage.getItem('koaus-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
     document.getElementById('sidebarAccountBtn').addEventListener('click', () => { window.location.href = 'mypage.html'; });
 
-    const today = new Date().toLocaleDateString('ko-KR', { year:'numeric', month:'2-digit', day:'2-digit', weekday:'short' });
-    document.getElementById('exchangeUpdated').textContent = `기준일: ${today} · 실시간 API 연동 준비 중`;
-
-    const apps = [
-      {
-        name: 'WireBarley', nameKo: '와이어발리',
-        rate: 1052, fee: 'A$1 이하', feeNote: '정액 수수료',
-        color: '#3b82f6', best: false,
-        tagline: '수수료 최저 수준',
-        url: 'https://www.wirebarley.com',
-      },
-      {
-        name: 'Wise', nameKo: '와이즈',
-        rate: 1049, fee: '0.45% + A$0.50', feeNote: '비율 수수료',
-        color: '#10b981', best: true,
-        tagline: '중간 환율 적용',
-        url: 'https://wise.com',
-      },
-      {
-        name: 'SentBe', nameKo: '센트비',
-        rate: 1044, fee: 'A$1.50~2.50', feeNote: '구간별 정액',
-        color: '#f97316', best: false,
-        tagline: '빠른 송금',
-        url: 'https://www.sentbe.com',
-      },
-      {
-        name: 'Hana Bank', nameKo: '하나은행',
-        rate: 1036, fee: '0.5%', feeNote: '은행 환전 수수료',
-        color: '#6366f1', best: false,
-        tagline: '은행 안심 송금',
-        url: 'https://www.hanabank.com',
-      },
-    ];
-
-    const grid = document.getElementById('exchangeGrid');
-    grid.innerHTML = apps.map(app => `
-      <div class="exchange-card${app.best ? ' exchange-card--best' : ''}" style="border-top: 3px solid ${app.color}">
-        <div>
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-            <div style="width:8px;height:8px;border-radius:50%;background:${app.color};flex-shrink:0;"></div>
-            <span class="exchange-app-name">${app.name}</span>
-            ${app.best ? `<span class="exchange-best-badge">Best</span>` : ''}
-          </div>
-          <div class="exchange-app-sub">${app.nameKo} · ${app.tagline}</div>
-        </div>
-        <div class="exchange-rate-row">
-          <span class="exchange-rate" style="color:${app.color}">${app.rate.toLocaleString()}</span>
-          <span class="exchange-unit">원 / AUD</span>
-        </div>
-        <div class="exchange-fee-row">
-          <span>수수료 ${app.fee}</span>
-          <span style="color:var(--text-muted)">·</span>
-          <span>${app.feeNote}</span>
-        </div>
-        <a href="${app.url}" target="_blank" rel="noopener" style="font-size:12px;color:${app.color};text-decoration:none;font-weight:700;">
-          앱 바로가기 →
-        </a>
-      </div>
-    `).join('');
+    // ── Powerball 자동 생성기 (메인 1~35 중 7개, 파워볼 1~20 중 1개) ──
+    function genPowerball() {
+      const main = [];
+      while (main.length < 7) {
+        const n = Math.floor(Math.random() * 35) + 1;
+        if (!main.includes(n)) main.push(n);
+      }
+      main.sort((a, b) => a - b);
+      const power = Math.floor(Math.random() * 20) + 1;
+      document.getElementById('pbBalls').innerHTML =
+        main.map(n => `<div class="pb-ball">${n}</div>`).join('') +
+        '<div class="pb-sep">PB</div>' +
+        `<div class="pb-ball pb-ball--power">${power}</div>`;
+    }
+    document.getElementById('pbGenBtn').addEventListener('click', genPowerball);
   </script>
 </body>
 </html>
