@@ -44,66 +44,86 @@
         </svg>
       </button>
     </div>
-    <div class="sidebar-settings">
-      <div class="sidebar-setting-row">
-        <span class="sidebar-setting-label">화면 테마</span>
-        <div class="sidebar-setting-btns">
-          <button class="setting-btn" data-theme-set="light">라이트</button>
-          <button class="setting-btn" data-theme-set="dark">다크</button>
-        </div>
-      </div>
-    </div>
     <nav class="sidebar-nav">
-      <div class="accord-item" data-group="living">
+      <div class="accord-item theme-accord" data-group="theme">
         <button class="accord-header">
-          <span>Living <em>숙소 · 생활</em></span>
+          <span>Theme <em>화면 테마</em></span>
           <svg class="accord-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
         </button>
         <div class="accord-body">
-          <a href="accom.html" class="accord-link">숙소 (쉐어)</a>
-          <a href="rent.html" class="accord-link">숙소 렌트 (독채)</a>
-          <a href="#" class="accord-link accord-link--soon" tabindex="-1">렌트 정보 <span class="soon-tag">준비중</span></a>
-          <a href="#" class="accord-link accord-link--soon" tabindex="-1">헬스 양도 <span class="soon-tag">준비중</span></a>
+          <button class="theme-accord-btn setting-btn" data-theme-set="light">Light</button>
+          <button class="theme-accord-btn setting-btn" data-theme-set="dark">Dark</button>
         </div>
       </div>
-      <div class="accord-item" data-group="works">
+      <div class="accord-item" data-group="melbourne">
         <button class="accord-header">
-          <span>Works <em>일자리 · 거래</em></span>
+          <span>Melbourne <em>멜버른</em></span>
           <svg class="accord-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
         </button>
         <div class="accord-body">
-          <a href="jobs.html" class="accord-link">구인구직</a>
-          <a href="car-sale.html" class="accord-link">차량 판매</a>
-          <a href="car-rent.html" class="accord-link">차량 렌트</a>
-          <a href="#" class="accord-link accord-link--soon" tabindex="-1">사업 광고 <span class="soon-tag">준비중</span></a>
-          <a href="#" class="accord-link accord-link--soon" tabindex="-1">정보 공유 <span class="soon-tag">준비중</span></a>
+          <a href="accom.html" class="accord-link">Living</a>
+          <a href="jobs.html" class="accord-link">Work</a>
+          <a href="points.html" class="accord-link">Legal</a>
+          <a href="#" class="accord-link accord-link--soon" tabindex="-1">Care <span class="soon-tag">준비중</span></a>
         </div>
       </div>
-      <div class="accord-item" data-group="legal">
+      <div class="accord-item" data-group="tasmania">
         <button class="accord-header">
-          <span>Legal <em>비자 · 법률</em></span>
+          <span>Tasmania <em>타즈매니아</em></span>
           <svg class="accord-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
         </button>
         <div class="accord-body">
-          <a href="#" class="accord-link accord-link--soon" tabindex="-1">워홀 정보 <span class="soon-tag">준비중</span></a>
-          <a href="#" class="accord-link accord-link--soon" tabindex="-1">법률 가이드 <span class="soon-tag">준비중</span></a>
-          <a href="points.html" class="accord-link">기술심사 점수</a>
+          <a href="accom.html" class="accord-link">Living</a>
+          <a href="jobs.html" class="accord-link">Work</a>
+          <a href="points.html" class="accord-link">Legal</a>
+          <a href="#" class="accord-link accord-link--soon" tabindex="-1">Care <span class="soon-tag">준비중</span></a>
         </div>
       </div>
-      <div class="accord-item" data-group="care">
+      <div class="accord-item" data-group="sydney">
         <button class="accord-header">
-          <span>Care <em>긴급 · 케어</em></span>
+          <span>Sydney <em>시드니</em></span>
           <svg class="accord-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
         </button>
         <div class="accord-body">
-          <a href="#" class="accord-link accord-link--soon" tabindex="-1">동행 메카닉 <span class="soon-tag">준비중</span></a>
-          <a href="#" class="accord-link accord-link--soon" tabindex="-1">사고 견적 <span class="soon-tag">준비중</span></a>
-          <a href="#" class="accord-link accord-link--soon" tabindex="-1">긴급 견인 <span class="soon-tag">준비중</span></a>
+          <a href="accom.html" class="accord-link">Living</a>
+          <a href="jobs.html" class="accord-link">Work</a>
+          <a href="points.html" class="accord-link">Legal</a>
+          <a href="#" class="accord-link accord-link--soon" tabindex="-1">Care <span class="soon-tag">준비중</span></a>
         </div>
       </div>
+      <div class="accord-item" data-group="perth">
+        <button class="accord-header">
+          <span>Perth <em>퍼스</em></span>
+          <svg class="accord-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="accord-body">
+          <a href="accom.html" class="accord-link">Living</a>
+          <a href="jobs.html" class="accord-link">Work</a>
+          <a href="points.html" class="accord-link">Legal</a>
+          <a href="#" class="accord-link accord-link--soon" tabindex="-1">Care <span class="soon-tag">준비중</span></a>
+        </div>
+      </div>
+      <div class="accord-item" data-group="brisbane">
+        <button class="accord-header">
+          <span>Brisbane <em>브리즈번</em></span>
+          <svg class="accord-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="accord-body">
+          <a href="accom.html" class="accord-link">Living</a>
+          <a href="jobs.html" class="accord-link">Work</a>
+          <a href="points.html" class="accord-link">Legal</a>
+          <a href="#" class="accord-link accord-link--soon" tabindex="-1">Care <span class="soon-tag">준비중</span></a>
+        </div>
+      </div>
+      <a href="mailto:sinhang0122@gmail.com" class="accord-direct-link">
+        <span>Ad Inquiry <em>광고 문의</em></span>
+      </a>
     </nav>
     <div class="sidebar-footer-nav">
       <a href="exchange.html" class="sidebar-exchange-link sidebar-exchange-link--active">💸 오늘의 환율 →</a>
+    </div>
+    <div class="sidebar-account">
+      <button class="sidebar-account-btn" id="sidebarAccountBtn">내 계정 (My Account)</button>
     </div>
   </aside>
 
@@ -162,6 +182,7 @@
     }
     document.querySelectorAll('.setting-btn').forEach(btn => btn.addEventListener('click', () => applyTheme(btn.dataset.themeSet)));
     applyTheme(localStorage.getItem('koaus-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+    document.getElementById('sidebarAccountBtn').addEventListener('click', () => { window.location.href = 'index.html'; });
 
     const today = new Date().toLocaleDateString('ko-KR', { year:'numeric', month:'2-digit', day:'2-digit', weekday:'short' });
     document.getElementById('exchangeUpdated').textContent = `기준일: ${today} · 실시간 API 연동 준비 중`;

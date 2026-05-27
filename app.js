@@ -121,6 +121,34 @@ async function updateCalc() {
 
   rateEl.textContent    = `1 ${from.toUpperCase()} = ${rate1Fmt} ${to.toUpperCase()}`;
   updatedEl.textContent = '실시간 기준';
+
+  const compareEl = document.getElementById('calcCompare');
+  if (compareEl) {
+    if (from === 'aud' && to === 'krw' && amount > 0) {
+      const baseRate     = r[to];
+      const wireReceived = amount * (baseRate - 11);
+      const wiseFee      = amount * 0.0045 + 0.50;
+      const wiseReceived = (amount - wiseFee) * baseRate;
+      const fmt0 = n => new Intl.NumberFormat('ko-KR', { maximumFractionDigits: 0 }).format(n);
+      const diff = Math.abs(Math.round(wireReceived - wiseReceived));
+      const tip  = wireReceived >= wiseReceived
+        ? `소액 기준 WireBarley가 약 ${fmt0(diff)}원 더 유리합니다.`
+        : `고액 송금 기준 Wise가 약 ${fmt0(diff)}원 더 유리합니다.`;
+      compareEl.innerHTML = `
+        <div class="calc-compare-row">
+          <span class="calc-compare-label">WireBarley (기준가 −11원/AUD)</span>
+          <span class="calc-compare-value">${fmt0(wireReceived)} KRW</span>
+        </div>
+        <div class="calc-compare-row">
+          <span class="calc-compare-label">Wise (0.45% + A$0.50 수수료)</span>
+          <span class="calc-compare-value">${fmt0(wiseReceived)} KRW</span>
+        </div>
+        <div class="calc-compare-tip">💡 ${tip}</div>`;
+      compareEl.style.display = 'flex';
+    } else {
+      compareEl.style.display = 'none';
+    }
+  }
 }
 
 function setupCalc() {
@@ -170,3 +198,16 @@ function updateFooterStats() {
 }
 
 updateFooterStats();
+
+// ── Sidebar Account Button ──
+const acctBtn = document.getElementById('sidebarAccountBtn');
+if (acctBtn) {
+  onAuthStateChanged(auth, user => {
+    acctBtn.textContent = user
+      ? (user.displayName?.split(' ')[0] || '계정') + ' (My Account)'
+      : '내 계정 (My Account)';
+    acctBtn.onclick = user
+      ? () => signOut(auth)
+      : () => signInWithPopup(auth, provider).catch(() => {});
+  });
+}
