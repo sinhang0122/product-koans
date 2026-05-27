@@ -714,6 +714,82 @@ body {
 /* ── Exchange link active state ── */
 .sidebar-exchange-link--active { color: #ffffff; }
 
+/* ── My Account Modal ── */
+.myacct-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.65);
+  z-index: 3100; display: none; align-items: center;
+  justify-content: center; padding: 20px;
+}
+.myacct-overlay.open { display: flex; }
+.myacct-card {
+  background: var(--bg-base); border: 1px solid var(--border);
+  border-radius: var(--r-xl); width: 100%; max-width: 440px;
+  max-height: 90vh; overflow-y: auto;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.18);
+}
+.myacct-topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 24px 16px; border-bottom: 1px solid var(--border);
+}
+.myacct-title {
+  font-size: 15px; font-weight: 800; color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+.myacct-title em { font-style: normal; font-size: 11px; font-weight: 500; color: var(--text-muted); margin-left: 6px; }
+.myacct-close {
+  background: none; border: none; cursor: pointer;
+  color: var(--text-muted); padding: 4px; border-radius: var(--r-sm);
+  transition: color 0.12s;
+}
+.myacct-close:hover { color: var(--text-primary); }
+.myacct-profile {
+  display: flex; align-items: center; gap: 16px; padding: 24px;
+  border-bottom: 1px solid var(--border);
+}
+.myacct-avatar {
+  width: 52px; height: 52px; border-radius: 50%;
+  background: var(--accent); color: var(--accent-text);
+  font-size: 20px; font-weight: 800; display: flex;
+  align-items: center; justify-content: center; flex-shrink: 0;
+}
+.myacct-profile-info { flex: 1; min-width: 0; }
+.myacct-name-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.myacct-name { font-size: 16px; font-weight: 700; color: var(--text-primary); }
+.myacct-edit-btn {
+  font-size: 11px; font-weight: 700; font-family: var(--font);
+  color: var(--text-muted); background: var(--bg-card);
+  border: 1px solid var(--border); border-radius: 3px;
+  padding: 2px 8px; cursor: pointer; transition: all 0.12s;
+  letter-spacing: 0.04em; text-transform: uppercase;
+}
+.myacct-edit-btn:hover { color: var(--text-primary); border-color: var(--text-muted); }
+.myacct-email { font-size: 13px; color: var(--text-muted); }
+.myacct-sections { border-bottom: 1px solid var(--border); }
+.myacct-section { border-bottom: 1px solid var(--border-subtle); }
+.myacct-section:last-child { border-bottom: none; }
+.myacct-section-hdr {
+  width: 100%; display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 24px; background: none; border: none;
+  font-family: var(--font); font-size: 14px; font-weight: 600;
+  color: var(--text-secondary); cursor: pointer; text-align: left;
+  transition: background 0.12s;
+}
+.myacct-section-hdr:hover { background: var(--bg-surface); }
+.myacct-section-hdr span em { font-style: normal; font-size: 11px; font-weight: 400; color: var(--text-muted); margin-left: 6px; }
+.myacct-arrow { transition: transform 0.2s; flex-shrink: 0; }
+.myacct-section.open .myacct-arrow { transform: rotate(180deg); }
+.myacct-section-body { display: none; padding: 0 24px 16px; }
+.myacct-section.open .myacct-section-body { display: block; }
+.myacct-empty { font-size: 13px; color: var(--text-muted); padding: 8px 0; }
+.myacct-footer { padding: 16px 24px; }
+.myacct-logout-btn {
+  width: 100%; padding: 11px; background: none;
+  border: 1px solid rgba(220,38,38,0.3); border-radius: var(--r-sm);
+  font-family: var(--font); font-size: 14px; font-weight: 600;
+  color: var(--red); cursor: pointer; transition: all 0.15s;
+}
+.myacct-logout-btn:hover { background: rgba(220,38,38,0.06); border-color: var(--red); }
+
 /* ── Auth Modal ── */
 .auth-overlay {
   position: fixed; inset: 0; background: rgba(0,0,0,0.65);

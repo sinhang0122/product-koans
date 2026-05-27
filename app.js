@@ -1,8 +1,9 @@
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
+import { getAnalytics } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-analytics.js';
 import {
   getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut,
-  createUserWithEmailAndPassword, signInWithEmailAndPassword,
-} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+  createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile,
+} from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
 
 const firebaseConfig = {
   apiKey:            'AIzaSyCamqnt0bNUD9uz1N5BbCuQjSkWLSpPqlU',
@@ -11,9 +12,11 @@ const firebaseConfig = {
   storageBucket:     'koaus-f564c.firebasestorage.app',
   messagingSenderId: '663988594088',
   appId:             '1:663988594088:web:ef30c2fd557407b00b299d',
+  measurementId:     'G-DERZ9MTKPL',
 };
 
 const firebaseApp = initializeApp(firebaseConfig);
+const analytics   = getAnalytics(firebaseApp);
 const auth        = getAuth(firebaseApp);
 const provider    = new GoogleAuthProvider();
 
@@ -136,7 +139,70 @@ document.getElementById('authLoginSubmit').addEventListener('click', async () =>
 
 // Google sign-in (modal button)
 document.getElementById('authGoogle').addEventListener('click', () => {
-  signInWithPopup(auth, provider).then(closeAuthModal).catch(() => {});
+  signInWithPopup(auth, new GoogleAuthProvider())
+    .then(closeAuthModal)
+    .catch(error => { console.error('로그인 에러:', error); });
+});
+
+// ── My Account Modal ──
+const myAccountModal = document.getElementById('myAccountModal');
+
+function maskEmail(email) {
+  if (!email) return '';
+  const [local, domain] = email.split('@');
+  const show = local.slice(0, Math.min(4, local.length));
+  return `${show}***@${domain}`;
+}
+
+function openMyAccountModal() {
+  const user = auth.currentUser;
+  if (!user) return;
+  const nick = localStorage.getItem('koaus-nickname') || user.displayName || user.email?.split('@')[0] || '사용자';
+  document.getElementById('myAcctAvatar').textContent = (nick[0] || '?').toUpperCase();
+  document.getElementById('myAcctName').textContent   = nick;
+  document.getElementById('myAcctEmail').textContent  = maskEmail(user.email || '');
+  myAccountModal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeMyAccountModal() {
+  myAccountModal.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+document.getElementById('myAccountClose').addEventListener('click', closeMyAccountModal);
+myAccountModal.addEventListener('click', e => { if (e.target === myAccountModal) closeMyAccountModal(); });
+
+// Nickname edit with 90-day restriction
+document.getElementById('myAcctEditBtn').addEventListener('click', () => {
+  const NICK_KEY = 'koaus-nick-changed-at';
+  const last     = parseInt(localStorage.getItem(NICK_KEY) || '0', 10);
+  const daysSince = last ? (Date.now() - last) / (1000 * 60 * 60 * 24) : Infinity;
+  if (daysSince < 90) {
+    const daysLeft = Math.ceil(90 - daysSince);
+    alert(`닉네임은 3개월에 한 번만 변경 가능합니다.\n(${daysLeft}일 후 변경 가능)`);
+    return;
+  }
+  const current = document.getElementById('myAcctName').textContent;
+  const newNick = prompt('새 닉네임을 입력하세요:', current);
+  if (!newNick || !newNick.trim() || newNick.trim() === current) return;
+  const trimmed = newNick.trim();
+  localStorage.setItem('koaus-nickname', trimmed);
+  localStorage.setItem(NICK_KEY, String(Date.now()));
+  document.getElementById('myAcctName').textContent   = trimmed;
+  document.getElementById('myAcctAvatar').textContent = trimmed[0].toUpperCase();
+  updateProfile(auth.currentUser, { displayName: trimmed }).catch(() => {});
+});
+
+// Section accordions
+document.querySelectorAll('.myacct-section-hdr').forEach(btn => {
+  btn.addEventListener('click', () => btn.closest('.myacct-section').classList.toggle('open'));
+});
+
+// Logout button inside modal
+document.getElementById('myAccountLogout').addEventListener('click', () => {
+  closeMyAccountModal();
+  signOut(auth);
 });
 
 // ── Auth ──
@@ -144,9 +210,10 @@ const loginBtn = document.getElementById('loginBtn');
 
 onAuthStateChanged(auth, user => {
   if (user) {
-    loginBtn.textContent = user.displayName?.split(' ')[0] || user.email?.split('@')[0] || '계정';
-    loginBtn.title = user.email;
-    loginBtn.onclick = () => signOut(auth);
+    const nick = localStorage.getItem('koaus-nickname') || user.displayName?.split(' ')[0] || user.email?.split('@')[0] || '계정';
+    loginBtn.textContent = nick;
+    loginBtn.title = '내 계정';
+    loginBtn.onclick = openMyAccountModal;
   } else {
     loginBtn.textContent = '로그인';
     loginBtn.title = '로그인 / 회원가입';
@@ -155,24 +222,33 @@ onAuthStateChanged(auth, user => {
 });
 
 // ── Exchange rate calculator ──
-const ratesCache = {};
+const FALLBACK_RATES = {
+  aud: { aud: 1,          krw: 900,       usd: 0.63   },
+  krw: { krw: 1,          aud: 0.00111,   usd: 0.00073 },
+  usd: { usd: 1,          aud: 1.58,      krw: 1370   },
+};
+const ratesCache  = {};
+let   usingFallback = false;
 
 async function fetchRates(base) {
   try {
-    const res  = await fetch(`https://api.frankfurter.app/latest?from=${base.toUpperCase()}`);
+    const res = await fetch(`https://open.er-api.com/v6/latest/${base.toUpperCase()}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
+    if (data.result !== 'success') throw new Error('API error');
     const rates = {};
-    for (const [k, v] of Object.entries(data.rates)) {
-      rates[k.toLowerCase()] = v;
-    }
+    for (const [k, v] of Object.entries(data.rates)) rates[k.toLowerCase()] = v;
     rates[base.toLowerCase()] = 1;
+    usingFallback = false;
     return rates;
-  } catch {
-    return null;
+  } catch (err) {
+    console.error('환율 API 오류:', err);
+    usingFallback = true;
+    return { ...(FALLBACK_RATES[base.toLowerCase()] || {}) };
   }
 }
 
-async function updateCalc() {
+function renderCalc() {
   const amountEl  = document.getElementById('calcAmount');
   const fromEl    = document.getElementById('calcFrom');
   const toEl      = document.getElementById('calcTo');
@@ -180,33 +256,28 @@ async function updateCalc() {
   const curEl     = document.getElementById('calcResultCurrency');
   const rateEl    = document.getElementById('calcRateInfo');
   const updatedEl = document.getElementById('calcUpdated');
-
   if (!amountEl) return;
 
   const from   = fromEl.value;
   const to     = toEl.value;
   const amount = parseFloat(amountEl.value) || 0;
+  const r      = ratesCache[from];
 
-  updatedEl.textContent = '불러오는 중…';
-
-  if (!ratesCache[from]) {
-    ratesCache[from] = await fetchRates(from);
-  }
-
-  const r = ratesCache[from];
   if (!r || r[to] == null) {
-    resultEl.textContent  = '오류';
-    updatedEl.textContent = 'API 오류 — 잠시 후 다시 시도해 주세요';
+    resultEl.textContent  = '—';
+    updatedEl.textContent = '환율 데이터를 불러오는 중입니다…';
     return;
   }
 
   const rate      = r[to];
   const converted = amount * rate;
 
-  resultEl.textContent = converted.toFixed(2);
-  curEl.textContent    = to.toUpperCase();
-  rateEl.textContent   = `1 ${from.toUpperCase()} = ${rate.toFixed(2)} ${to.toUpperCase()}`;
-  updatedEl.textContent = '실시간 기준 (Frankfurter API)';
+  resultEl.textContent  = converted.toFixed(2);
+  curEl.textContent     = to.toUpperCase();
+  rateEl.textContent    = `1 ${from.toUpperCase()} = ${rate.toFixed(2)} ${to.toUpperCase()}`;
+  updatedEl.textContent = usingFallback
+    ? '현재 실시간 환율을 불러올 수 없어 기본 환율이 적용되었습니다'
+    : '실시간 기준 (open.er-api.com)';
 
   const compareEl = document.getElementById('calcCompare');
   if (compareEl) {
@@ -235,23 +306,41 @@ async function updateCalc() {
   }
 }
 
-function setupCalc() {
+async function loadRatesFor(base) {
+  if (!ratesCache[base]) {
+    document.getElementById('calcUpdated').textContent = '불러오는 중…';
+    ratesCache[base] = await fetchRates(base);
+  }
+}
+
+async function setupCalc() {
   const amountEl = document.getElementById('calcAmount');
   if (!amountEl) return;
 
-  amountEl.addEventListener('input', updateCalc);
-  document.getElementById('calcFrom').addEventListener('change', updateCalc);
-  document.getElementById('calcTo').addEventListener('change', updateCalc);
-  document.getElementById('calcSwap').addEventListener('click', () => {
-    const from = document.getElementById('calcFrom');
-    const to   = document.getElementById('calcTo');
-    const tmp  = from.value;
-    from.value = to.value;
-    to.value   = tmp;
-    updateCalc();
+  const fromEl = document.getElementById('calcFrom');
+  const toEl   = document.getElementById('calcTo');
+
+  // 페이지 로드 시 최초 1회만 fetch
+  await loadRatesFor(fromEl.value);
+  renderCalc();
+
+  // 금액 입력: fetch 없이 계산만
+  amountEl.addEventListener('input', renderCalc);
+  toEl.addEventListener('change', renderCalc);
+
+  // 기준 통화 변경: 해당 통화 rates가 없을 때만 fetch
+  fromEl.addEventListener('change', async () => {
+    await loadRatesFor(fromEl.value);
+    renderCalc();
   });
 
-  updateCalc();
+  document.getElementById('calcSwap').addEventListener('click', async () => {
+    const tmp    = fromEl.value;
+    fromEl.value = toEl.value;
+    toEl.value   = tmp;
+    await loadRatesFor(fromEl.value);
+    renderCalc();
+  });
 }
 
 setupCalc();
@@ -287,11 +376,10 @@ updateFooterStats();
 const acctBtn = document.getElementById('sidebarAccountBtn');
 if (acctBtn) {
   onAuthStateChanged(auth, user => {
-    acctBtn.textContent = user
-      ? (user.displayName?.split(' ')[0] || '계정') + ' (My Account)'
+    const nick = user
+      ? (localStorage.getItem('koaus-nickname') || user.displayName?.split(' ')[0] || '계정') + ' (My Account)'
       : '내 계정 (My Account)';
-    acctBtn.onclick = user
-      ? () => signOut(auth)
-      : () => signInWithPopup(auth, provider).catch(() => {});
+    acctBtn.textContent = nick;
+    acctBtn.onclick = user ? openMyAccountModal : openAuthModal;
   });
 }
