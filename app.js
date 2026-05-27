@@ -20,6 +20,10 @@ import { initializeApp }
 import { getAuth, signInWithPopup, GoogleAuthProvider,
          signOut, onAuthStateChanged }
   from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
+import { getFirestore, collection, addDoc, onSnapshot,
+         query, orderBy, serverTimestamp, deleteDoc,
+         doc as fsDoc }
+  from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
 
 /* ── Firebase 프로젝트 설정값 ── */
 const firebaseConfig = {
@@ -32,9 +36,10 @@ const firebaseConfig = {
   measurementId:     'G-DERZ9MTKPL',
 };
 
-/* ── Firebase 앱 & 인증 인스턴스 초기화 ── */
+/* ── Firebase 앱 & 인증 & Firestore 인스턴스 초기화 ── */
 const firebaseApp = initializeApp(firebaseConfig);
 const auth        = getAuth(firebaseApp);
+const db          = getFirestore(firebaseApp);
 const provider    = new GoogleAuthProvider();
 
 /* 추가 스코프: 프로필 사진과 이메일 명시적 요청 */
@@ -880,5 +885,104 @@ renderPowerball(0);
       btnText.hidden = false;
       btnLoader.hidden = true;
     }
+  });
+})();
+
+/* ════════════════════════════════════════════════════════════
+   § 6. 실시간 댓글 (Firestore)
+════════════════════════════════════════════════════════════ */
+(function () {
+  const formArea     = document.getElementById('commentFormArea');
+  const loginPrompt  = document.getElementById('commentLoginPrompt');
+  const commentInput = document.getElementById('commentInput');
+  const submitBtn    = document.getElementById('commentSubmitBtn');
+  const commentList  = document.getElementById('commentList');
+
+  function escHtml(s) {
+    return String(s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  /* 인증 상태에 따라 폼/안내 전환 */
+  onAuthStateChanged(auth, (user) => {
+    formArea.hidden    = !user;
+    loginPrompt.hidden = !!user;
+  });
+
+  /* 등록 버튼 */
+  submitBtn.addEventListener('click', async () => {
+    const text = commentInput.value.trim();
+    if (!text) { commentInput.focus(); return; }
+    const user = auth.currentUser;
+    if (!user) return;
+
+    submitBtn.disabled = true;
+    try {
+      await addDoc(collection(db, 'comments'), {
+        uid:       user.uid,
+        name:      user.displayName || user.email || '익명',
+        photoURL:  user.photoURL || '',
+        text,
+        createdAt: serverTimestamp(),
+      });
+      commentInput.value = '';
+    } catch (err) {
+      console.error('[Cores] 댓글 저장 오류:', err.message);
+    } finally {
+      submitBtn.disabled = false;
+    }
+  });
+
+  /* Enter = 등록 / Shift+Enter = 줄바꿈 */
+  commentInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitBtn.click(); }
+  });
+
+  /* 실시간 구독 — 최신순 */
+  const q = query(collection(db, 'comments'), orderBy('createdAt', 'desc'));
+  onSnapshot(q, (snap) => {
+    if (snap.empty) {
+      commentList.innerHTML = '<p class="comment-empty">아직 댓글이 없습니다. 첫 번째 댓글을 남겨보세요! 🙌</p>';
+      return;
+    }
+    commentList.innerHTML = snap.docs.map(docSnap => {
+      const d     = docSnap.data();
+      const ts    = d.createdAt?.toDate();
+      const time  = ts
+        ? ts.toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+        : '방금 전';
+      const isOwn  = auth.currentUser?.uid === d.uid;
+      const init   = escHtml((d.name || '?')[0].toUpperCase());
+      const avatar = d.photoURL
+        ? `<img src="${escHtml(d.photoURL)}" alt="${escHtml(d.name)}" />`
+        : `<span class="comment-initial">${init}</span>`;
+
+      return `<div class="comment-item${isOwn ? ' comment-item--own' : ''}">
+        <div class="comment-avatar">${avatar}</div>
+        <div class="comment-body">
+          <div class="comment-meta">
+            <span class="comment-name">${escHtml(d.name)}</span>
+            <span class="comment-time">${time}</span>
+            ${isOwn ? `<button class="comment-delete-btn" data-id="${docSnap.id}" title="삭제">×</button>` : ''}
+          </div>
+          <div class="comment-text">${escHtml(d.text).replace(/\n/g, '<br>')}</div>
+        </div>
+      </div>`;
+    }).join('');
+
+    commentList.querySelectorAll('.comment-delete-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('댓글을 삭제할까요?')) return;
+        try {
+          await deleteDoc(fsDoc(db, 'comments', btn.dataset.id));
+        } catch (err) {
+          console.error('[Cores] 댓글 삭제 오류:', err.message);
+        }
+      });
+    });
+  }, (err) => {
+    console.error('[Cores] 댓글 구독 오류:', err.message);
+    commentList.innerHTML = '<p class="comment-empty" style="color:var(--red)">댓글을 불러오지 못했습니다.</p>';
   });
 })();

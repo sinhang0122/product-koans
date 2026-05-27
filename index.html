@@ -391,6 +391,44 @@
       </form>
     </section>
 
+    <!-- ══════════════════════════════════════════
+         ⑥ 커뮤니티 댓글
+    ══════════════════════════════════════════ -->
+    <div class="tool-label-row">
+      <span class="tool-label">06 — 커뮤니티</span>
+    </div>
+
+    <section class="comments-section">
+      <div class="comments-header">
+        <h2 class="feature-title">💬 댓글</h2>
+        <p class="feature-subtitle">자유롭게 의견을 남겨주세요.</p>
+      </div>
+
+      <!-- 로그아웃 상태: 로그인 안내 -->
+      <div class="comment-login-prompt" id="commentLoginPrompt">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+        댓글을 작성하려면 먼저 로그인해주세요.
+      </div>
+
+      <!-- 로그인 상태: 댓글 입력 폼 -->
+      <div class="comment-form-area" id="commentFormArea" hidden>
+        <textarea id="commentInput" class="comment-input" rows="3"
+          placeholder="댓글을 입력하세요… (Enter: 등록 / Shift+Enter: 줄바꿈)"></textarea>
+        <div class="comment-form-actions">
+          <span class="comment-hint">Shift+Enter로 줄바꿈</span>
+          <button id="commentSubmitBtn" class="comment-submit-btn">등록</button>
+        </div>
+      </div>
+
+      <!-- 댓글 리스트 (JS 실시간 렌더링) -->
+      <div class="comment-list" id="commentList">
+        <p class="comment-empty">댓글을 불러오는 중…</p>
+      </div>
+    </section>
+
   </main>
 
   <footer class="site-footer">
