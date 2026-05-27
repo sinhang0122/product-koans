@@ -694,13 +694,40 @@
     }
 
     document.getElementById('writeBtnSubmit').addEventListener('click', () => {
-      // 로그인 필수: 미로그인 시 로그인 모달 유도
+      // 로그인 필수: 미로그인 시 로그인 모달을 띄우고, 로그인 직후 등록을 이어서 진행
       if (!window.koausAuth || !window.koausAuth.user) {
         alert('글을 등록하려면 로그인이 필요합니다.');
-        if (window.koausAuth) window.koausAuth.openAuthModal();
+        if (window.koausAuth) {
+          window.koausAuth.afterLogin = submitPost;  // 로그인 성공 시 자동 재시도
+          window.koausAuth.openAuthModal();
+        }
         return;
       }
-      const user     = window.koausAuth.user;
+      submitPost();
+    });
+
+    // 주소 텍스트 → 좌표 변환 (google.maps.Geocoder 우선, 실패 시 REST 폴백)
+    function geocode(address) {
+      return new Promise(resolve => {
+        if (window.google && google.maps && google.maps.Geocoder) {
+          new google.maps.Geocoder().geocode({ address }, (results, status) => {
+            if (status === 'OK' && results && results[0]) {
+              const loc = results[0].geometry.location;
+              resolve({ lat: loc.lat(), lng: loc.lng() });
+            } else {
+              resolve(null);
+            }
+          });
+        } else {
+          geocodeAddress(address).then(resolve).catch(() => resolve(null));
+        }
+      });
+    }
+
+    async function submitPost() {
+      const user = window.koausAuth && window.koausAuth.user;
+      if (!user) { window.koausAuth && window.koausAuth.openAuthModal(); return; }
+
       const postType = document.querySelector('input[name="wPostType"]:checked')?.value || 'offering';
       const title    = document.getElementById('wTitle').value.trim();
       const body     = document.getElementById('wBody').value.trim();
@@ -713,11 +740,11 @@
       const pad = n => String(n).padStart(2, '0');
       const date = `${pad(now.getMonth() + 1)}/${pad(now.getDate())}`;
       const time = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+      const address = document.getElementById('wAddress').value.trim();
 
       const post = {
         id: Date.now(), postType, title, body,
-        author: nick, authorEmail: user.email || '', date, time,
-        address:  document.getElementById('wAddress').value.trim(),
+        author: nick, authorEmail: user.email || '', date, time, address,
         price:    parseInt(document.getElementById('wPrice').value) || 0,
         propType: document.getElementById('wPropType').value,
         roomType: document.getElementById('wRoomType').value,
@@ -730,6 +757,13 @@
         lat: null, lng: null,
       };
 
+      // 주소 → 좌표 (지도 마커용)
+      if (address) {
+        loadMapScript();  // Geocoder 사용을 위해 Maps 스크립트 로드 보장
+        const coords = await geocode(address);
+        if (coords) { post.lat = coords.lat; post.lng = coords.lng; }
+      }
+
       const posts = loadPosts();
       posts.push(post);
       savePosts(posts);
@@ -739,9 +773,16 @@
       switchTab(postType);  // 작성한 유형 탭으로 전환 + 렌더
       closeWriteModal();
 
+      // 지도 뷰라면 새 마커 위치로 이동
+      if (post.lat && post.lng && mapReady) {
+        map.setCenter({ lat: post.lat, lng: post.lng });
+        map.setZoom(14);
+        updateMapMarkers(applyFilters(loadPosts()));
+      }
+
       ['wTitle','wAddress','wPrice','wBody','wAuthor','wContact'].forEach(id => { document.getElementById(id).value = ''; });
       ['wParking','wPet','wKids','wAirCon'].forEach(id => { document.getElementById(id).checked = false; });
-    });
+    }
 
     // ── Helpers ──
     function escHtml(s) {
@@ -947,13 +988,19 @@
     let infoWindow = null;
     let markers    = [];
 
-    // 주(State)별 지도 중심/축척. URL ?state=qld 등으로 진입 시 해당 뷰 적용.
+    // 주(State)별 지도 중심/축척. URL ?state=nsw 등으로 진입 시 해당 주의 주요 도시로 중심 이동.
     const STATE_VIEWS = {
-      qld: { center: { lat: -27.4698, lng: 153.0251 }, zoom: 12 },  // 브리즈번 시티
+      nsw: { center: { lat: -33.8688, lng: 151.2093 }, zoom: 11 },  // 시드니
+      vic: { center: { lat: -37.8136, lng: 144.9631 }, zoom: 11 },  // 멜버른
+      qld: { center: { lat: -27.4698, lng: 153.0251 }, zoom: 11 },  // 브리즈번
+      wa:  { center: { lat: -31.9523, lng: 115.8613 }, zoom: 11 },  // 퍼스
+      sa:  { center: { lat: -34.9285, lng: 138.6007 }, zoom: 11 },  // 애들레이드
+      nt:  { center: { lat: -12.4634, lng: 130.8456 }, zoom: 11 },  // 다윈
+      tas: { center: { lat: -42.8821, lng: 147.3272 }, zoom: 11 },  // 호바트
     };
-    const urlState        = new URLSearchParams(location.search).get('state');
-    // 현재 테스트 데이터가 전부 브리즈번이므로 기본값을 QLD 뷰로 고정
-    const activeStateView = STATE_VIEWS[urlState] || STATE_VIEWS.qld;
+    const AUS_VIEW        = { center: { lat: -25.2744, lng: 133.7751 }, zoom: 4 };  // 전국
+    const urlState        = (new URLSearchParams(location.search).get('state') || '').toLowerCase();
+    const activeStateView = STATE_VIEWS[urlState] || AUS_VIEW;
 
     function loadMapScript() {
       if (mapReady || mapLoading) return;
@@ -1023,20 +1070,7 @@
         bounds.extend({ lat: p.lat, lng: p.lng });
         hasCoord = true;
       });
-
-      // 주(State) 뷰가 지정된 경우(현재 QLD/브리즈번 고정) 축척을 풀지 않고
-      // 브리즈번 시가지가 크게 보이는 고배율 중심을 유지한다.
-      if (activeStateView) {
-        map.setCenter(activeStateView.center);
-        map.setZoom(activeStateView.zoom);
-      } else if (hasCoord) {
-        if (markers.length === 1) {
-          map.setCenter({ lat: filteredPosts.find(p => p.lat)?.lat, lng: filteredPosts.find(p => p.lng)?.lng });
-          map.setZoom(12);
-        } else {
-          map.fitBounds(bounds);
-        }
-      }
+      // 중심은 initMap(주별 도시) 및 글 등록 시 지오코딩 좌표로 제어 — 여기선 마커만 갱신.
     }
 
     // ── Geocoding (for future use) ──
@@ -1157,17 +1191,25 @@
 
     // Google sign-in
     document.getElementById('authGoogle').addEventListener('click', () => {
-      signInWithPopup(auth, new GoogleAuthProvider())
+      const provider = new GoogleAuthProvider();
+      signInWithPopup(auth, provider)
         .then(hardCloseAuthModal)
-        .catch(error => { console.error('로그인 에러:', error); });
+        .catch(error => {
+          console.error('Google 로그인 에러:', error);
+          const msg = error.code === 'auth/unauthorized-domain'
+            ? '현재 도메인이 Firebase에 등록되지 않았습니다. (콘솔 승인 도메인 확인)'
+            : (error.code === 'auth/popup-blocked' ? '팝업이 차단되었습니다. 팝업을 허용해 주세요.'
+            : authErrMsg(error.code));
+          document.getElementById('authLoginError').textContent = msg;
+        });
     });
 
     // ── Shared login state (inline script가 참조) ──
-    window.koausAuth = { user: null, openAuthModal };
+    window.koausAuth = { user: null, openAuthModal, afterLogin: null };
 
     const loginBtn = document.getElementById('topbarLoginBtn');
     loginBtn.addEventListener('click', () => {
-      if (window.koausAuth.user) window.location.href = 'index.html';
+      if (window.koausAuth.user) window.location.href = 'mypage.html';
       else openAuthModal();
     });
 
@@ -1176,7 +1218,13 @@
       if (user) {
         const nick = localStorage.getItem('koaus-nickname') || user.displayName?.split(' ')[0] || user.email?.split('@')[0] || '계정';
         loginBtn.textContent = nick;
-        loginBtn.title = '내 계정 (index.html)';
+        loginBtn.title = '내 계정 (마이페이지)';
+        // 로그인 직후 보류된 등록 작업 이어서 실행
+        if (typeof window.koausAuth.afterLogin === 'function') {
+          const cb = window.koausAuth.afterLogin;
+          window.koausAuth.afterLogin = null;
+          setTimeout(cb, 0);
+        }
       } else {
         loginBtn.textContent = '로그인';
         loginBtn.title = '로그인 / 회원가입';

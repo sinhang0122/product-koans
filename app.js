@@ -141,7 +141,14 @@ document.getElementById('authLoginSubmit').addEventListener('click', async () =>
 document.getElementById('authGoogle').addEventListener('click', () => {
   signInWithPopup(auth, new GoogleAuthProvider())
     .then(closeAuthModal)
-    .catch(error => { console.error('로그인 에러:', error); });
+    .catch(error => {
+      console.error('Google 로그인 에러:', error);
+      const msg = error.code === 'auth/unauthorized-domain'
+        ? '현재 도메인이 Firebase에 등록되지 않았습니다. (콘솔 승인 도메인 확인)'
+        : (error.code === 'auth/popup-blocked' ? '팝업이 차단되었습니다. 팝업을 허용해 주세요.'
+        : authErrMsg(error.code));
+      document.getElementById('authLoginError').textContent = msg;
+    });
 });
 
 // ── My Account Modal ──
@@ -297,19 +304,23 @@ function renderCalc() {
   const compareEl = document.getElementById('calcCompare');
   if (compareEl) {
     if (from === 'aud' && to === 'krw' && amount > 0) {
-      // 송금 수수료 비교 (임의의 최신 기준 비율)
+      // 송금 앱별 환율 우대(수수료) 차등: 기준 환율에서 앱마다 다른 고정 비율을 차감
       const apps = [
-        { name: 'WireBarley', desc: '스프레드 −8원',  recv: amount * (rate - 8) },
-        { name: 'Wise',       desc: '수수료 0.45%',   recv: amount * rate * (1 - 0.0045) },
-        { name: 'Sentbe',     desc: '스프레드 −5원',  recv: amount * (rate - 5) },
-        { name: 'Remitly',    desc: '수수료 0.65%',   recv: amount * rate * (1 - 0.0065) },
+        { name: 'WireBarley', disc: 0.010 },
+        { name: 'Wise',       disc: 0.012 },
+        { name: 'Sentbe',     disc: 0.013 },
+        { name: 'Remitly',    disc: 0.015 },
       ];
-      const best = apps.reduce((a, b) => (b.recv > a.recv ? b : a));
       const fmt0 = n => Math.round(n).toLocaleString();
+      const rows = apps.map(a => {
+        const appliedRate = rate * (1 - a.disc);
+        return { name: a.name, disc: a.disc, appliedRate, recv: amount * appliedRate };
+      });
+      const best = rows.reduce((a, b) => (b.recv > a.recv ? b : a));
       compareEl.innerHTML =
-        apps.map(a => `
+        rows.map(a => `
           <div class="calc-compare-row${a.name === best.name ? ' calc-compare-row--best' : ''}">
-            <span class="calc-compare-label">${a.name} <em>${a.desc}</em></span>
+            <span class="calc-compare-label">${a.name} <em>적용환율 ${a.appliedRate.toFixed(1)}원 (-${(a.disc * 100).toFixed(1)}%)</em></span>
             <span class="calc-compare-value">${fmt0(a.recv)} KRW</span>
           </div>`).join('') +
         `<div class="calc-compare-tip">💡 현재 환율 기준 <strong>${best.name}</strong>가 가장 유리합니다</div>`;

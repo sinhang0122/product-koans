@@ -264,13 +264,15 @@ body {
 
 /* Nested sub-categories (Living / Work / Visa & Migration) */
 .accord-subgroup { padding: 4px 0 6px; border-bottom: 1px solid #0d0d0d; }
+/* 서브 카테고리 소제목: 작은 글씨 + 굵은 폰트 */
 .accord-sublabel {
   display: block; padding: 8px 20px 4px;
-  font-size: 10px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;
-  color: #555;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  color: #888;
 }
+/* 하위 상세 메뉴: 작은 글씨 + 얇은 폰트 */
 .accord-link--sub {
-  padding-left: 32px; font-size: 12px; color: #777;
+  padding-left: 32px; font-size: 13px; font-weight: 400; color: #777;
 }
 .accord-link--sub:hover { color: #fff; }
 .soon-tag {

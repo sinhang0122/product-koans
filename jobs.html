@@ -504,10 +504,18 @@
     document.getElementById('writeBtnSubmit').addEventListener('click', () => {
       if (!window.koausAuth || !window.koausAuth.user) {
         alert('글을 등록하려면 로그인이 필요합니다.');
-        if (window.koausAuth) window.koausAuth.openAuthModal();
+        if (window.koausAuth) {
+          window.koausAuth.afterLogin = submitPost;  // 로그인 직후 자동 재시도
+          window.koausAuth.openAuthModal();
+        }
         return;
       }
-      const user = window.koausAuth.user;
+      submitPost();
+    });
+
+    function submitPost() {
+      const user = window.koausAuth && window.koausAuth.user;
+      if (!user) { window.koausAuth && window.koausAuth.openAuthModal(); return; }
       const postType = document.querySelector('input[name="wPostType"]:checked')?.value || 'hiring';
       const title = document.getElementById('wTitle').value.trim();
       const body  = document.getElementById('wBody').value.trim();
@@ -528,7 +536,7 @@
       writeOverlay.classList.remove('open');
       ['wTitle','wBody','wAuthor','wContact'].forEach(id => { document.getElementById(id).value = ''; });
       switchTab(postType);
-    });
+    }
 
     switchTab(activeTab);
   </script>
@@ -698,15 +706,22 @@
     document.getElementById('authGoogle').addEventListener('click', () => {
       signInWithPopup(auth, new GoogleAuthProvider())
         .then(hardCloseAuthModal)
-        .catch(error => { console.error('로그인 에러:', error); });
+        .catch(error => {
+          console.error('Google 로그인 에러:', error);
+          const msg = error.code === 'auth/unauthorized-domain'
+            ? '현재 도메인이 Firebase에 등록되지 않았습니다. (콘솔 승인 도메인 확인)'
+            : (error.code === 'auth/popup-blocked' ? '팝업이 차단되었습니다. 팝업을 허용해 주세요.'
+            : authErrMsg(error.code));
+          document.getElementById('authLoginError').textContent = msg;
+        });
     });
 
     // ── Shared login state (inline script가 참조) ──
-    window.koausAuth = { user: null, openAuthModal };
+    window.koausAuth = { user: null, openAuthModal, afterLogin: null };
 
     const loginBtn = document.getElementById('topbarLoginBtn');
     loginBtn.addEventListener('click', () => {
-      if (window.koausAuth.user) window.location.href = 'index.html';
+      if (window.koausAuth.user) window.location.href = 'mypage.html';
       else openAuthModal();
     });
 
@@ -715,7 +730,12 @@
       if (user) {
         const nick = localStorage.getItem('koaus-nickname') || user.displayName?.split(' ')[0] || user.email?.split('@')[0] || '계정';
         loginBtn.textContent = nick;
-        loginBtn.title = '내 계정 (index.html)';
+        loginBtn.title = '내 계정 (마이페이지)';
+        if (typeof window.koausAuth.afterLogin === 'function') {
+          const cb = window.koausAuth.afterLogin;
+          window.koausAuth.afterLogin = null;
+          setTimeout(cb, 0);
+        }
       } else {
         loginBtn.textContent = '로그인';
         loginBtn.title = '로그인 / 회원가입';

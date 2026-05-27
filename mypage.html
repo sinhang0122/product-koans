@@ -444,7 +444,16 @@
       catch (e) { errEl.textContent = authErrMsg(e.code); }
     });
     document.getElementById('authGoogle').addEventListener('click', () => {
-      signInWithPopup(auth, new GoogleAuthProvider()).then(hardCloseAuthModal).catch(err => console.error('로그인 에러:', err));
+      signInWithPopup(auth, new GoogleAuthProvider())
+        .then(hardCloseAuthModal)
+        .catch(error => {
+          console.error('Google 로그인 에러:', error);
+          const msg = error.code === 'auth/unauthorized-domain'
+            ? '현재 도메인이 Firebase에 등록되지 않았습니다. (콘솔 승인 도메인 확인)'
+            : (error.code === 'auth/popup-blocked' ? '팝업이 차단되었습니다. 팝업을 허용해 주세요.'
+            : authErrMsg(error.code));
+          document.getElementById('authLoginError').textContent = msg;
+        });
     });
 
     window.koausAuth = { user: null, openAuthModal };
@@ -484,13 +493,8 @@
     }));
 
     document.getElementById('mpEditBtn').addEventListener('click', () => {
-      const cur = document.getElementById('mpName').textContent;
-      const nn = prompt('새 닉네임을 입력하세요.\n(닉네임은 한 번 변경하면 3개월 동안 다시 변경할 수 없습니다)', cur);
-      if (!nn || !nn.trim()) return;
-      const trimmed = nn.trim();
-      localStorage.setItem('koaus-nickname', trimmed);
-      document.getElementById('mpName').textContent = trimmed;
-      document.getElementById('mpAvatar').textContent = (trimmed[0] || '?').toUpperCase();
+      // 프론트엔드 임시 제한: 3개월 이내 재변경 차단 (껍데기 로직)
+      alert('마지막 변경일로부터 3개월이 지나지 않아 닉네임을 변경할 수 없습니다.');
     });
     document.getElementById('mpPhotoBtn').addEventListener('click', () => alert('이미지 업로드는 준비 중입니다.'));
     document.getElementById('mypageLoginBtn').addEventListener('click', openAuthModal);
