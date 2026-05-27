@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cores — 링크 요약 · 환전 비교 · 파워볼</title>
+  <link rel="stylesheet" href="style.css" />
+  <!--
+    Firebase SDK v9+ (모듈 방식)
+    실제 SDK import는 app.js 상단의 ES module import 구문으로 처리됩니다.
+    아래 스크립트 태그의 type="module" 이 모듈 방식 로딩의 핵심입니다.
+    브라우저가 직접 Firebase CDN에서 번들을 fetch합니다.
+  -->
+  <!-- Firebase 도메인 DNS 프리커넥트 (선택적 성능 최적화) -->
+  <link rel="preconnect" href="https://www.gstatic.com" />
+  <link rel="preconnect" href="https://identitytoolkit.googleapis.com" />
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="logo">
+      <span class="logo-icon">◈</span>
+      <span class="logo-text">Cores</span>
+    </div>
+    <p class="tagline">링크 요약 · 환전 비교 · 파워볼 — 핵심만 모아서</p>
+
+    <!-- ── 구글 인증 바 (우측 상단 플로팅) ── -->
+    <div class="auth-bar" id="authBar">
+
+      <!-- 로그아웃 상태: Google 로그인 버튼 -->
+      <div class="auth-state" id="authLoggedOut">
+        <button class="auth-google-btn" id="loginBtn">
+          <!-- Google 공식 G 로고 -->
+          <svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+          </svg>
+          구글로 시작하기
+        </button>
+      </div>
+
+      <!-- 로그인 상태: 프로필 + 사용자명 + 로그아웃 -->
+      <div class="auth-state auth-state--in" id="authLoggedIn" hidden>
+        <img class="auth-avatar" id="authAvatar" src="" alt="프로필 사진" />
+        <span class="auth-username" id="authUsername"></span>
+        <button class="auth-logout-btn" id="logoutBtn">로그아웃</button>
+      </div>
+
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- ══════════════════════════════════════════
+         ① 링크 요약 & 저장
+    ══════════════════════════════════════════ -->
+    <div class="tool-label-row">
+      <span class="tool-label">01 — 링크 요약 &amp; 저장</span>
+    </div>
+
+    <section class="input-section">
+      <div class="input-wrapper">
+        <div class="input-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+          </svg>
+        </div>
+        <input type="url" id="urlInput" class="url-input"
+          placeholder="YouTube 또는 Instagram URL을 붙여넣으세요..."
+          autocomplete="off" spellcheck="false" />
+        <button id="clearBtn" class="clear-btn" title="지우기" aria-label="입력 지우기">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="source-badges">
+        <span class="badge badge-youtube">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M23.5 6.19a3.02 3.02 0 0 0-2.12-2.14C19.54 3.5 12 3.5 12 3.5s-7.54 0-9.38.55A3.02 3.02 0 0 0 .5 6.19C0 8.04 0 12 0 12s0 3.96.5 5.81a3.02 3.02 0 0 0 2.12 2.14C4.46 20.5 12 20.5 12 20.5s7.54 0 9.38-.55a3.02 3.02 0 0 0 2.12-2.14C24 15.96 24 12 24 12s0-3.96-.5-5.81zM9.75 15.52V8.48L15.86 12l-6.11 3.52z"/>
+          </svg>
+          YouTube
+        </span>
+        <span class="badge badge-instagram">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+            <circle cx="12" cy="12" r="4"/>
+            <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/>
+          </svg>
+          Instagram
+        </span>
+      </div>
+
+      <button id="summarizeBtn" class="summarize-btn">
+        <span class="btn-text">요약하기</span>
+        <span class="btn-loader" hidden>
+          <span class="spinner"></span>분석 중...
+        </span>
+      </button>
+    </section>
+
+    <!-- 요약 결과창 -->
+    <section class="result-section" id="resultSection">
+      <!-- 결과 없을 때 빈 상태 -->
+      <div class="result-empty" id="resultEmpty">
+        <div class="empty-icon">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <line x1="8" y1="9" x2="16" y2="9"/>
+            <line x1="8" y1="13" x2="14" y2="13"/>
+            <line x1="8" y1="17" x2="11" y2="17"/>
+          </svg>
+        </div>
+        <p>요약 결과가 여기에 표시됩니다.</p>
+        <span>링크를 입력한 뒤 '요약하기' 버튼을 눌러보세요.</span>
+      </div>
+
+      <!-- 결과 있을 때 -->
+      <div class="result-content" id="resultContent" hidden>
+        <div class="result-meta">
+          <div class="meta-source" id="metaSource"></div>
+          <div class="meta-title"  id="metaTitle"></div>
+          <div class="meta-url"   id="metaUrl"></div>
+        </div>
+
+        <!-- 핵심 요약 (체크박스는 JS가 렌더링) -->
+        <div class="result-card" id="summaryCard">
+          <div class="card-header">
+            <span class="card-icon">✦</span>
+            <h2 class="card-title">핵심 요약</h2>
+            <span class="card-hint">항목을 선택 후 저장</span>
+          </div>
+          <div class="summary-text" id="summaryText"></div>
+        </div>
+
+        <!-- 타임스탬프 (YouTube 전용) -->
+        <div class="result-card timestamp-card" id="timestampCard" hidden>
+          <div class="card-header">
+            <span class="card-icon">🕐</span>
+            <h2 class="card-title">타임스탬프</h2>
+            <span class="card-badge">YouTube</span>
+          </div>
+          <div class="timestamp-placeholder">
+            <p class="placeholder-note">타임스탬프 기능 준비 중 — 구간별 핵심 내용과 링크가 이곳에 표시될 예정입니다.</p>
+            <div class="timestamp-preview">
+              <div class="ts-item ts-item--ghost"><span class="ts-time">0:00</span><span class="ts-desc">인트로 / 주제 소개</span></div>
+              <div class="ts-item ts-item--ghost"><span class="ts-time">2:34</span><span class="ts-desc">주요 내용 #1</span></div>
+              <div class="ts-item ts-item--ghost"><span class="ts-time">8:12</span><span class="ts-desc">주요 내용 #2</span></div>
+              <div class="ts-item ts-item--ghost"><span class="ts-time">15:47</span><span class="ts-desc">결론 / 마무리</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 키워드 -->
+        <div class="result-card" id="keywordsCard" hidden>
+          <div class="card-header">
+            <span class="card-icon">#</span>
+            <h2 class="card-title">핵심 키워드</h2>
+          </div>
+          <div class="keywords-list" id="keywordsList"></div>
+        </div>
+
+        <!-- 카테고리 저장 영역 (요약 후 노출) -->
+        <div class="save-area" id="saveArea" hidden>
+          <div class="save-area-label">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+              <polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
+            </svg>
+            체크한 항목을 내 코어스에 저장
+          </div>
+          <div class="save-controls">
+            <div class="category-select-wrapper">
+              <select id="categorySelect" class="category-select">
+                <option value="economy">💰 경제</option>
+                <option value="health">💪 건강</option>
+                <option value="beauty">✨ 미용</option>
+                <option value="game">🎮 게임</option>
+                <option value="tech">⚙️ 기술</option>
+                <option value="life">🌿 라이프</option>
+                <option value="travel">✈️ 여행</option>
+                <option value="etc">📌 기타</option>
+              </select>
+            </div>
+            <button id="saveBtn" class="save-btn">
+              <span id="saveBtnText">저장하기</span>
+            </button>
+          </div>
+          <div class="save-feedback" id="saveFeedback"></div>
+        </div>
+      </div>
+    </section>
+
+    <div class="section-separator">
+      <div class="sep-line"></div>
+      <span class="sep-text">추가 기능</span>
+      <div class="sep-line"></div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         ② 환전 수수료 비교 (다국어 화폐)
+    ══════════════════════════════════════════ -->
+    <div class="tool-label-row">
+      <span class="tool-label">02 — 송금 수수료 비교</span>
+    </div>
+
+    <section class="remit-section">
+      <div class="remit-top-bar">
+        <div class="remit-top-left">
+          <span class="feature-badge feature-badge--blue" id="remitBadgeLabel">AUD → KRW</span>
+          <h2 class="feature-title">💸 실시간 수수료 비교</h2>
+          <p class="feature-subtitle">와이어발리 · 와이즈 · 센트비 — 최저 수령액 자동 계산</p>
+        </div>
+        <div class="remit-update-tag">
+          <span class="update-dot"></span>Mock 데이터
+        </div>
+      </div>
+
+      <!-- 수취 국가(화폐) 선택 드롭다운 -->
+      <div class="currency-row">
+        <label class="currency-row-label" for="currencySelect">수취 국가 (화폐)</label>
+        <div class="currency-select-wrapper">
+          <select id="currencySelect" class="currency-select">
+            <option value="KRW">🇰🇷 한국 원화 (KRW)</option>
+            <option value="USD">🇺🇸 미국 달러 (USD)</option>
+            <option value="CNY">🇨🇳 중국 위안화 (CNY)</option>
+            <option value="EUR">🇪🇺 유로 (EUR)</option>
+            <option value="VND">🇻🇳 베트남 동 (VND)</option>
+            <option value="JPY">🇯🇵 일본 엔 (JPY)</option>
+            <option value="GBP">🇬🇧 영국 파운드 (GBP)</option>
+            <option value="CAD">🇨🇦 캐나다 달러 (CAD)</option>
+            <option value="NZD">🇳🇿 뉴질랜드 달러 (NZD)</option>
+            <option value="SGD">🇸🇬 싱가포르 달러 (SGD)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- AUD 금액 입력 + 기준 환율 -->
+      <div class="remit-controls">
+        <div class="aud-input-wrapper">
+          <span class="aud-prefix">A$</span>
+          <input type="number" id="audInput" class="aud-input"
+            placeholder="0" min="1" max="99999" value="1000" />
+          <span class="aud-suffix">AUD</span>
+        </div>
+        <div class="market-rate-pill">
+          <span class="market-rate-label">시장 환율</span>
+          <span class="market-rate-value" id="marketRateDisplay">1 AUD = 896.00 KRW</span>
+        </div>
+      </div>
+
+      <!-- 앱 비교 카드 그리드 (JS 렌더링) -->
+      <div class="remit-cards" id="remitCards"></div>
+
+      <p class="remit-disclaimer">
+        ※ 환율·수수료는 실시간 변동됩니다. 현재 화면은 Mock 데이터이며 실제 수치와 다를 수 있습니다.
+      </p>
+    </section>
+
+    <!-- ══════════════════════════════════════════
+         ③ 호주 파워볼 (내비게이션 + 상세 패널)
+    ══════════════════════════════════════════ -->
+    <div class="tool-label-row">
+      <span class="tool-label">03 — 호주 파워볼</span>
+    </div>
+
+    <section class="powerball-section">
+      <!-- 상단 헤더: 배지 + 잭팟 토글 버튼 -->
+      <div class="pb-top-bar">
+        <div class="pb-top-left">
+          <span class="feature-badge feature-badge--gold">AU Powerball</span>
+          <h2 class="feature-title">🎱 당첨 번호</h2>
+          <p class="feature-subtitle" id="pbDrawSubtitle">Draw #1472 · 2026년 05월 21일 (목)</p>
+        </div>
+        <!-- 잭팟 표시 + 화폐 전환 토글 -->
+        <button class="pb-jackpot-box" id="pbJackpotBox" title="클릭하여 화폐 전환">
+          <span class="pb-jackpot-label">잭팟 (탭하여 전환)</span>
+          <span class="pb-jackpot-amount" id="pbJackpotAmount">$8,000,000</span>
+          <span class="pb-jackpot-sub" id="pbJackpotSub">≈ ₩7,168,000,000</span>
+        </button>
+      </div>
+
+      <!-- 회차 내비게이션: ‹ 번호 공 › -->
+      <div class="pb-nav-wrapper">
+        <button class="pb-nav-btn" id="pbPrevBtn" title="이전 회차">&#8249;</button>
+
+        <div class="pb-nav-content" id="pbNavContent">
+          <!-- JS가 공 + 날짜 렌더링 -->
+        </div>
+
+        <button class="pb-nav-btn pb-nav-btn--right" id="pbNextBtn" title="다음 회차" disabled>&#8250;</button>
+      </div>
+
+      <!-- 당첨 내역 패널 (접기/펼치기) -->
+      <div class="pb-prize-panel" id="pbPrizePanel">
+        <button class="pb-prize-toggle" id="pbPrizeToggle">
+          <span id="pbPrizeToggleText">당첨 내역 보기</span>
+          <span class="pb-prize-arrow" id="pbPrizeArrow">▾</span>
+        </button>
+        <div class="pb-prize-table-wrap" id="pbPrizeTableWrap">
+          <div class="pb-prize-table" id="pbPrizeTable"></div>
+        </div>
+      </div>
+
+      <!-- 하단 정보 바 -->
+      <div class="pb-info-bar" id="pbInfoBar">
+        <span class="pb-next-draw" id="pbNextDrawText">📅 다음 추첨: 2026년 5월 28일 (목) 8:30 PM AEST</span>
+        <a class="pb-official-link" href="#" onclick="return false;">공식 사이트 →</a>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════
+         ④ 내 코어스 (저장된 요약 모음)
+    ══════════════════════════════════════════ -->
+    <section class="my-cores-section" id="myCoresSection" hidden>
+      <div class="tool-label-row" style="margin-bottom:0">
+        <span class="tool-label">04 — 내 코어스</span>
+        <span class="cores-total-badge" id="coresTotalBadge">0개 저장됨</span>
+      </div>
+
+      <div class="my-cores-container">
+        <!-- 카테고리 탭 (JS 렌더링) -->
+        <div class="cores-tabs" id="coresTabs"></div>
+        <!-- 탭 내용 (JS 렌더링) -->
+        <div class="cores-content" id="coresContent"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <p>Cores &mdash; MVP Prototype &nbsp;·&nbsp; 2026</p>
+  </footer>
+
+  <!-- type="module" 로 선언해야 app.js 내부의 Firebase ES import가 작동합니다 -->
+  <script type="module" src="app.js"></script>
+</body>
+</html>
