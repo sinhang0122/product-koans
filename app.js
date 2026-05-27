@@ -85,7 +85,7 @@ document.getElementById('loginBtn').addEventListener('click', async () => {
   } catch (err) {
     /* 사용자가 팝업을 닫은 경우(popup-closed-by-user)는 무시 */
     if (err.code !== 'auth/popup-closed-by-user' && err.code !== 'auth/cancelled-popup-request') {
-      console.error('[Cores] 로그인 오류:', err.code, err.message);
+      console.error('[KoAus] 로그인 오류:', err.code, err.message);
     }
   } finally {
     /* 로그인 실패 시에도 버튼 복구 */
@@ -104,7 +104,7 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
   try {
     await signOut(auth);
   } catch (err) {
-    console.error('[Cores] 로그아웃 오류:', err.message);
+    console.error('[KoAus] 로그아웃 오류:', err.message);
   }
 });
 
@@ -115,7 +115,7 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
    - FOUC 방지용 인라인 스크립트(index.html <head>)와 쌍으로 동작
 ════════════════════════════════════════════════════════════════════════ */
 
-const THEME_KEY = 'cores-theme';
+const THEME_KEY = 'koaus-theme';
 const htmlEl    = document.documentElement;
 
 /* 아이콘: 현재 라이트 → 달(다크로 전환 암시), 현재 다크 → 해(라이트로 전환 암시) */
@@ -928,7 +928,7 @@ renderPowerball(0);
       });
       commentInput.value = '';
     } catch (err) {
-      console.error('[Cores] 댓글 저장 오류:', err.message);
+      console.error('[KoAus] 댓글 저장 오류:', err.message);
     } finally {
       submitBtn.disabled = false;
     }
@@ -977,12 +977,12 @@ renderPowerball(0);
         try {
           await deleteDoc(fsDoc(db, 'comments', btn.dataset.id));
         } catch (err) {
-          console.error('[Cores] 댓글 삭제 오류:', err.message);
+          console.error('[KoAus] 댓글 삭제 오류:', err.message);
         }
       });
     });
   }, (err) => {
-    console.error('[Cores] 댓글 구독 오류:', err.message);
+    console.error('[KoAus] 댓글 구독 오류:', err.message);
     commentList.innerHTML = '<p class="comment-empty" style="color:var(--red)">댓글을 불러오지 못했습니다.</p>';
   });
 })();

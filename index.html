@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Cores — 링크 요약 · 환전 비교 · 파워볼</title>
+  <title>KoAus — 호주 한인 포털</title>
   <link rel="stylesheet" href="style.css" />
   <!-- 다크 모드 FOUC 방지: CSS 로드 전 테마를 즉시 결정 (기본: 라이트) -->
   <script>
     (function () {
-      const saved = localStorage.getItem('cores-theme');
+      const saved = localStorage.getItem('koaus-theme');
       const sys   = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
       if ((saved ?? sys) === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
     })();
@@ -29,7 +29,7 @@
   <div class="topbar" id="topbar">
     <a class="topbar-brand" href="#" onclick="window.scrollTo({top:0,behavior:'smooth'});return false;">
       <span class="topbar-logo-icon">◈</span>
-      <span class="topbar-logo-text">Cores</span>
+      <span class="topbar-logo-text">KoAus</span>
     </a>
     <button class="topbar-menu-btn" id="hamburgerBtn" aria-label="메뉴 열기" aria-expanded="false">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
@@ -48,7 +48,7 @@
     <div class="sidebar-header">
       <span class="sidebar-brand">
         <span class="sidebar-brand-icon">◈</span>
-        Cores
+        KoAus
       </span>
       <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="메뉴 닫기">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
@@ -78,7 +78,7 @@
         <div class="sidebar-group-label">생활 &amp; 비자</div>
         <ul class="sidebar-list">
           <li>
-            <a href="#section-remit" class="sidebar-item sidebar-scroll">
+            <a href="exchange.html" class="sidebar-item">
               <span class="sidebar-item-icon">💸</span>
               <span class="sidebar-item-text">오늘의 환율</span>
             </a>
@@ -91,10 +91,9 @@
             </a>
           </li>
           <li>
-            <a href="#" class="sidebar-item sidebar-item--soon">
+            <a href="points.html" class="sidebar-item">
               <span class="sidebar-item-icon">🎯</span>
               <span class="sidebar-item-text">기술심사 점수 가채점</span>
-              <span class="sidebar-soon-badge">준비 중</span>
             </a>
           </li>
         </ul>
@@ -105,17 +104,21 @@
         <div class="sidebar-group-label">마켓 &amp; 커뮤니티</div>
         <ul class="sidebar-list">
           <li>
-            <a href="#" class="sidebar-item sidebar-item--soon">
+            <a href="jobs.html" class="sidebar-item">
               <span class="sidebar-item-icon">💼</span>
               <span class="sidebar-item-text">구인구직</span>
-              <span class="sidebar-soon-badge">준비 중</span>
             </a>
           </li>
           <li>
-            <a href="#" class="sidebar-item sidebar-item--soon">
+            <a href="accom.html" class="sidebar-item">
               <span class="sidebar-item-icon">🏠</span>
-              <span class="sidebar-item-text">숙소 &amp; 렌트</span>
-              <span class="sidebar-soon-badge">준비 중</span>
+              <span class="sidebar-item-text">숙소 (쉐어)</span>
+            </a>
+          </li>
+          <li>
+            <a href="rent.html" class="sidebar-item">
+              <span class="sidebar-item-icon">🏡</span>
+              <span class="sidebar-item-text">숙소 렌트 (독채)</span>
             </a>
           </li>
         </ul>
@@ -126,17 +129,15 @@
         <div class="sidebar-group-label">자동차 (Car)</div>
         <ul class="sidebar-list">
           <li>
-            <a href="#" class="sidebar-item sidebar-item--soon">
+            <a href="car-sale.html" class="sidebar-item">
               <span class="sidebar-item-icon">🚗</span>
               <span class="sidebar-item-text">차량 판매</span>
-              <span class="sidebar-soon-badge">준비 중</span>
             </a>
           </li>
           <li>
-            <a href="#" class="sidebar-item sidebar-item--soon">
-              <span class="sidebar-item-icon">🔧</span>
-              <span class="sidebar-item-text">동행 메카닉</span>
-              <span class="sidebar-soon-badge">준비 중</span>
+            <a href="car-rent.html" class="sidebar-item">
+              <span class="sidebar-item-icon">🚙</span>
+              <span class="sidebar-item-text">차량 렌트</span>
             </a>
           </li>
           <li>
@@ -175,9 +176,10 @@
   <header class="site-header">
     <div class="logo">
       <span class="logo-icon">◈</span>
-      <span class="logo-text">Cores</span>
+      <span class="logo-text">KoAus</span>
     </div>
-    <p class="tagline">링크 요약 · 환전 비교 · 파워볼 — 핵심만 모아서</p>
+    <p class="tagline-main">Korea — Australia</p>
+    <p class="tagline">호주 생활의 모든 것</p>
 
     <!-- ── 구글 인증 바 (우측 상단 플로팅) ── -->
     <div class="auth-bar" id="authBar">
@@ -210,6 +212,13 @@
   </header>
 
   <main class="container">
+
+    <!-- 광고 배너 -->
+    <div class="ad-banner">
+      <span class="ad-banner-label">AD</span>
+      <span class="ad-banner-text">광고주를 찾습니다</span>
+      <a href="#section-contact" class="ad-banner-cta">문의하기 →</a>
+    </div>
 
     <!-- ══════════════════════════════════════════
          ① 링크 요약 & 저장
@@ -579,7 +588,7 @@
   </main>
 
   <footer class="site-footer">
-    <p>Cores &mdash; MVP Prototype &nbsp;·&nbsp; 2026</p>
+    <p>KoAus &mdash; 호주 한인 포털 &nbsp;·&nbsp; 2026</p>
   </footer>
 
   <!-- type="module" 로 선언해야 app.js 내부의 Firebase ES import가 작동합니다 -->

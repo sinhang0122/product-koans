@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>오늘의 환율 — KoAus</title>
+  <link rel="stylesheet" href="style.css" />
+  <script>
+    (function () {
+      const saved = localStorage.getItem('koaus-theme');
+      const sys = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      if ((saved ?? sys) === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+    })();
+  </script>
+</head>
+<body>
+
+  <div class="topbar" id="topbar">
+    <a class="topbar-brand" href="index.html">
+      <span class="topbar-logo-icon">◈</span>
+      <span class="topbar-logo-text">KoAus</span>
+    </a>
+    <button class="topbar-menu-btn" id="hamburgerBtn" aria-label="메뉴 열기" aria-expanded="false">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+        <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <aside class="sidebar" id="sidebar" aria-label="사이드 메뉴">
+    <div class="sidebar-header">
+      <span class="sidebar-brand"><span class="sidebar-brand-icon">◈</span>KoAus</span>
+      <button class="sidebar-close-btn" id="sidebarCloseBtn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-group">
+        <div class="sidebar-group-label">생활 &amp; 비자</div>
+        <ul class="sidebar-list">
+          <li><a href="exchange.html" class="sidebar-item"><span class="sidebar-item-icon">💸</span><span class="sidebar-item-text">오늘의 환율</span></a></li>
+          <li><a href="#" class="sidebar-item sidebar-item--soon"><span class="sidebar-item-icon">📋</span><span class="sidebar-item-text">워홀 &amp; 법률 정보</span><span class="sidebar-soon-badge">준비 중</span></a></li>
+          <li><a href="points.html" class="sidebar-item"><span class="sidebar-item-icon">🎯</span><span class="sidebar-item-text">기술심사 점수 가채점</span></a></li>
+        </ul>
+      </div>
+      <div class="sidebar-group">
+        <div class="sidebar-group-label">마켓 &amp; 커뮤니티</div>
+        <ul class="sidebar-list">
+          <li><a href="jobs.html" class="sidebar-item"><span class="sidebar-item-icon">💼</span><span class="sidebar-item-text">구인구직</span></a></li>
+          <li><a href="accom.html" class="sidebar-item"><span class="sidebar-item-icon">🏠</span><span class="sidebar-item-text">숙소 (쉐어)</span></a></li>
+          <li><a href="rent.html" class="sidebar-item"><span class="sidebar-item-icon">🏡</span><span class="sidebar-item-text">숙소 렌트 (독채)</span></a></li>
+        </ul>
+      </div>
+      <div class="sidebar-group">
+        <div class="sidebar-group-label">자동차 (Car)</div>
+        <ul class="sidebar-list">
+          <li><a href="car-sale.html" class="sidebar-item"><span class="sidebar-item-icon">🚗</span><span class="sidebar-item-text">차량 판매</span></a></li>
+          <li><a href="car-rent.html" class="sidebar-item"><span class="sidebar-item-icon">🚙</span><span class="sidebar-item-text">차량 렌트</span></a></li>
+        </ul>
+      </div>
+      <div class="sidebar-group">
+        <div class="sidebar-group-label">비즈니스</div>
+        <ul class="sidebar-list">
+          <li><a href="index.html#section-contact" class="sidebar-item"><span class="sidebar-item-icon">📢</span><span class="sidebar-item-text">광고 문의</span></a></li>
+        </ul>
+      </div>
+    </nav>
+  </aside>
+
+  <main class="page-container">
+
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">💸 오늘의 환율</h1>
+        <p class="page-subtitle">AUD → KRW 주요 송금 앱 환율 비교 (Mock 데이터 · 매일 업데이트 예정)</p>
+      </div>
+      <a href="index.html" class="page-back">← 홈으로</a>
+    </div>
+
+    <!-- 광고 배너 -->
+    <div class="ad-banner">
+      <span class="ad-banner-label">AD</span>
+      <span class="ad-banner-text">광고주를 찾습니다</span>
+      <a href="index.html#section-contact" class="ad-banner-cta">문의하기 →</a>
+    </div>
+
+    <!-- 환율 카드 -->
+    <div class="exchange-grid" id="exchangeGrid"></div>
+
+    <p class="exchange-updated" id="exchangeUpdated"></p>
+
+    <!-- 환율 안내 -->
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-md);padding:16px 20px;font-size:13px;color:var(--text-muted);line-height:1.7;">
+      ※ 현재 표시된 환율은 Mock(샘플) 데이터입니다. 실제 환율은 각 앱을 직접 확인해주세요.<br>
+      ※ 최종 수령액은 금액, 수수료, 환율 스프레드에 따라 달라질 수 있습니다.
+    </div>
+
+  </main>
+
+  <footer class="site-footer"><p>KoAus &mdash; 호주 한인 포털 &nbsp;·&nbsp; 2026</p></footer>
+
+  <script>
+    // ── 사이드바 토글 ──
+    const hBtn = document.getElementById('hamburgerBtn');
+    const cBtn = document.getElementById('sidebarCloseBtn');
+    const sb   = document.getElementById('sidebar');
+    const ov   = document.getElementById('sidebarOverlay');
+    const open  = () => { sb.classList.add('open'); ov.classList.add('open'); document.body.style.overflow='hidden'; hBtn.setAttribute('aria-expanded','true'); };
+    const close = () => { sb.classList.remove('open'); ov.classList.remove('open'); document.body.style.overflow=''; hBtn.setAttribute('aria-expanded','false'); };
+    hBtn.addEventListener('click', open);
+    cBtn.addEventListener('click', close);
+    ov.addEventListener('click', close);
+    document.addEventListener('keydown', e => e.key==='Escape' && close());
+
+    // ── 테마 토글 ──
+    const THEME_KEY = 'koaus-theme';
+    const html = document.documentElement;
+
+    // ── 환율 데이터 ──
+    const today = new Date().toLocaleDateString('ko-KR', { year:'numeric', month:'2-digit', day:'2-digit', weekday:'short' });
+    document.getElementById('exchangeUpdated').textContent = `기준일: ${today} · 실시간 API 연동 준비 중`;
+
+    const apps = [
+      {
+        name: 'WireBarley', nameKo: '와이어발리',
+        rate: 1052, fee: 'A$1 이하', feeNote: '정액 수수료',
+        color: '#3b82f6', best: false,
+        tagline: '수수료 최저 수준',
+        url: 'https://www.wirebarley.com',
+      },
+      {
+        name: 'Wise', nameKo: '와이즈',
+        rate: 1049, fee: '0.45% + A$0.50', feeNote: '비율 수수료',
+        color: '#10b981', best: true,
+        tagline: '중간 환율 적용',
+        url: 'https://wise.com',
+      },
+      {
+        name: 'SentBe', nameKo: '센트비',
+        rate: 1044, fee: 'A$1.50~2.50', feeNote: '구간별 정액',
+        color: '#f97316', best: false,
+        tagline: '빠른 송금',
+        url: 'https://www.sentbe.com',
+      },
+      {
+        name: 'Hana Bank', nameKo: '하나은행',
+        rate: 1036, fee: '0.5%', feeNote: '은행 환전 수수료',
+        color: '#6366f1', best: false,
+        tagline: '은행 안심 송금',
+        url: 'https://www.hanabank.com',
+      },
+    ];
+
+    const grid = document.getElementById('exchangeGrid');
+    grid.innerHTML = apps.map(app => `
+      <div class="exchange-card${app.best ? ' exchange-card--best' : ''}" style="border-top: 3px solid ${app.color}">
+        <div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+            <div style="width:8px;height:8px;border-radius:50%;background:${app.color};flex-shrink:0;"></div>
+            <span class="exchange-app-name">${app.name}</span>
+            ${app.best ? `<span class="exchange-best-badge">Best</span>` : ''}
+          </div>
+          <div class="exchange-app-sub">${app.nameKo} · ${app.tagline}</div>
+        </div>
+        <div class="exchange-rate-row">
+          <span class="exchange-rate" style="color:${app.color}">${app.rate.toLocaleString()}</span>
+          <span class="exchange-unit">원 / AUD</span>
+        </div>
+        <div class="exchange-fee-row">
+          <span>수수료 ${app.fee}</span>
+          <span style="color:var(--text-muted)">·</span>
+          <span>${app.feeNote}</span>
+        </div>
+        <a href="${app.url}" target="_blank" rel="noopener" style="font-size:12px;color:${app.color};text-decoration:none;font-weight:700;">
+          앱 바로가기 →
+        </a>
+      </div>
+    `).join('');
+  </script>
+</body>
+</html>

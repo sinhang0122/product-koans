@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>기술심사 점수 가채점 — KoAus</title>
+  <link rel="stylesheet" href="style.css" />
+  <script>
+    (function () {
+      const saved = localStorage.getItem('koaus-theme');
+      const sys = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      if ((saved ?? sys) === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+    })();
+  </script>
+</head>
+<body>
+
+  <div class="topbar" id="topbar">
+    <a class="topbar-brand" href="index.html">
+      <span class="topbar-logo-icon">◈</span>
+      <span class="topbar-logo-text">KoAus</span>
+    </a>
+    <button class="topbar-menu-btn" id="hamburgerBtn" aria-label="메뉴 열기" aria-expanded="false">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+        <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <aside class="sidebar" id="sidebar" aria-label="사이드 메뉴">
+    <div class="sidebar-header">
+      <span class="sidebar-brand"><span class="sidebar-brand-icon">◈</span>KoAus</span>
+      <button class="sidebar-close-btn" id="sidebarCloseBtn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-group">
+        <div class="sidebar-group-label">생활 &amp; 비자</div>
+        <ul class="sidebar-list">
+          <li><a href="exchange.html" class="sidebar-item"><span class="sidebar-item-icon">💸</span><span class="sidebar-item-text">오늘의 환율</span></a></li>
+          <li><a href="points.html" class="sidebar-item"><span class="sidebar-item-icon">🎯</span><span class="sidebar-item-text">기술심사 점수 가채점</span></a></li>
+        </ul>
+      </div>
+      <div class="sidebar-group">
+        <div class="sidebar-group-label">마켓 &amp; 커뮤니티</div>
+        <ul class="sidebar-list">
+          <li><a href="jobs.html" class="sidebar-item"><span class="sidebar-item-icon">💼</span><span class="sidebar-item-text">구인구직</span></a></li>
+          <li><a href="accom.html" class="sidebar-item"><span class="sidebar-item-icon">🏠</span><span class="sidebar-item-text">숙소 (쉐어)</span></a></li>
+          <li><a href="rent.html" class="sidebar-item"><span class="sidebar-item-icon">🏡</span><span class="sidebar-item-text">숙소 렌트 (독채)</span></a></li>
+        </ul>
+      </div>
+      <div class="sidebar-group">
+        <div class="sidebar-group-label">자동차 (Car)</div>
+        <ul class="sidebar-list">
+          <li><a href="car-sale.html" class="sidebar-item"><span class="sidebar-item-icon">🚗</span><span class="sidebar-item-text">차량 판매</span></a></li>
+          <li><a href="car-rent.html" class="sidebar-item"><span class="sidebar-item-icon">🚙</span><span class="sidebar-item-text">차량 렌트</span></a></li>
+        </ul>
+      </div>
+    </nav>
+  </aside>
+
+  <main class="page-container">
+
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">🎯 기술심사 점수 가채점</h1>
+        <p class="page-subtitle">호주 General Skilled Migration (189/190/491) 포인트 테스트 · 항목을 선택하면 점수가 자동 계산됩니다</p>
+      </div>
+      <a href="index.html" class="page-back">← 홈으로</a>
+    </div>
+
+    <div class="ad-banner">
+      <span class="ad-banner-label">AD</span>
+      <span class="ad-banner-text">광고주를 찾습니다</span>
+      <a href="index.html#section-contact" class="ad-banner-cta">문의하기 →</a>
+    </div>
+
+    <div class="points-form" id="pointsForm">
+
+      <!-- 나이 -->
+      <div class="points-group">
+        <div class="points-group-title">① 나이 (신청 시점 기준)</div>
+        <div class="points-options" id="grp-age">
+          <label class="points-option"><input type="radio" name="age" value="25"> <span class="points-option-label">18 – 24세</span><span class="points-option-pts">+25점</span></label>
+          <label class="points-option"><input type="radio" name="age" value="30"> <span class="points-option-label">25 – 32세</span><span class="points-option-pts">+30점</span></label>
+          <label class="points-option"><input type="radio" name="age" value="25" id="age-33"> <span class="points-option-label">33 – 39세</span><span class="points-option-pts">+25점</span></label>
+          <label class="points-option"><input type="radio" name="age" value="15"> <span class="points-option-label">40 – 44세</span><span class="points-option-pts">+15점</span></label>
+          <label class="points-option"><input type="radio" name="age" value="0"> <span class="points-option-label">45 – 49세</span><span class="points-option-pts">+0점</span></label>
+        </div>
+      </div>
+
+      <!-- 영어 -->
+      <div class="points-group">
+        <div class="points-group-title">② 영어 능력 (IELTS / PTE / OET 등)</div>
+        <div class="points-options">
+          <label class="points-option"><input type="radio" name="english" value="0"> <span class="points-option-label">Competent (IELTS 각 밴드 6.0 이상)</span><span class="points-option-pts">+0점</span></label>
+          <label class="points-option"><input type="radio" name="english" value="10"> <span class="points-option-label">Proficient (IELTS 각 밴드 7.0 이상)</span><span class="points-option-pts">+10점</span></label>
+          <label class="points-option"><input type="radio" name="english" value="20"> <span class="points-option-label">Superior (IELTS 각 밴드 8.0 이상)</span><span class="points-option-pts">+20점</span></label>
+        </div>
+      </div>
+
+      <!-- 호주 학력 -->
+      <div class="points-group">
+        <div class="points-group-title">③ 호주 학력 / 공인 학력</div>
+        <div class="points-options">
+          <label class="points-option"><input type="radio" name="edu" value="0"> <span class="points-option-label">해당 없음</span><span class="points-option-pts">+0점</span></label>
+          <label class="points-option"><input type="radio" name="edu" value="10"> <span class="points-option-label">Diploma / Trade 자격증</span><span class="points-option-pts">+10점</span></label>
+          <label class="points-option"><input type="radio" name="edu" value="15"> <span class="points-option-label">학사(Bachelor) 이상</span><span class="points-option-pts">+15점</span></label>
+          <label class="points-option"><input type="radio" name="edu" value="20"> <span class="points-option-label">호주 박사(PhD) 학위</span><span class="points-option-pts">+20점</span></label>
+        </div>
+      </div>
+
+      <!-- 호주 경력 -->
+      <div class="points-group">
+        <div class="points-group-title">④ 호주 내 숙련직 경력 (최근 10년)</div>
+        <div class="points-options">
+          <label class="points-option"><input type="radio" name="au-exp" value="0"> <span class="points-option-label">1년 미만</span><span class="points-option-pts">+0점</span></label>
+          <label class="points-option"><input type="radio" name="au-exp" value="5"> <span class="points-option-label">1년 이상 ~ 3년 미만</span><span class="points-option-pts">+5점</span></label>
+          <label class="points-option"><input type="radio" name="au-exp" value="10"> <span class="points-option-label">3년 이상 ~ 5년 미만</span><span class="points-option-pts">+10점</span></label>
+          <label class="points-option"><input type="radio" name="au-exp" value="15"> <span class="points-option-label">5년 이상 ~ 8년 미만</span><span class="points-option-pts">+15점</span></label>
+          <label class="points-option"><input type="radio" name="au-exp" value="20"> <span class="points-option-label">8년 이상</span><span class="points-option-pts">+20점</span></label>
+        </div>
+      </div>
+
+      <!-- 해외 경력 -->
+      <div class="points-group">
+        <div class="points-group-title">⑤ 해외 숙련직 경력 (최근 10년, 호주 제외)</div>
+        <div class="points-options">
+          <label class="points-option"><input type="radio" name="os-exp" value="0"> <span class="points-option-label">3년 미만</span><span class="points-option-pts">+0점</span></label>
+          <label class="points-option"><input type="radio" name="os-exp" value="5"> <span class="points-option-label">3년 이상 ~ 5년 미만</span><span class="points-option-pts">+5점</span></label>
+          <label class="points-option"><input type="radio" name="os-exp" value="10"> <span class="points-option-label">5년 이상 ~ 8년 미만</span><span class="points-option-pts">+10점</span></label>
+          <label class="points-option"><input type="radio" name="os-exp" value="15"> <span class="points-option-label">8년 이상</span><span class="points-option-pts">+15점</span></label>
+        </div>
+      </div>
+
+      <!-- 추가 가산점 -->
+      <div class="points-group">
+        <div class="points-group-title">⑥ 추가 가산점 (해당 항목 모두 선택)</div>
+        <div class="points-options">
+          <label class="points-option"><input type="checkbox" class="bonus" value="5"> <span class="points-option-label">STEM 전공 석사 이상 (호주 공인)</span><span class="points-option-pts">+5점</span></label>
+          <label class="points-option"><input type="checkbox" class="bonus" value="5"> <span class="points-option-label">공인 언어 자격증 (NAATI 등)</span><span class="points-option-pts">+5점</span></label>
+          <label class="points-option"><input type="checkbox" class="bonus" value="5"> <span class="points-option-label">호주 지방/광역 지역 유학 (2년 이상)</span><span class="points-option-pts">+5점</span></label>
+          <label class="points-option"><input type="checkbox" class="bonus" value="5"> <span class="points-option-label">배우자 기술심사 통과 or 영어 자격</span><span class="points-option-pts">+5점</span></label>
+          <label class="points-option"><input type="checkbox" class="bonus" value="10"> <span class="points-option-label">배우자 없음 (단독 신청)</span><span class="points-option-pts">+10점</span></label>
+          <label class="points-option"><input type="checkbox" class="bonus" value="5"> <span class="points-option-label">주정부 스폰서 (Subclass 190)</span><span class="points-option-pts">+5점</span></label>
+          <label class="points-option"><input type="checkbox" class="bonus" value="15"> <span class="points-option-label">지방 스폰서 (Subclass 491)</span><span class="points-option-pts">+15점</span></label>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 총점 스티키 바 -->
+    <div class="points-total-bar" id="totalBar">
+      <div>
+        <div class="points-total-label">총 예상 점수</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">최소 65점 이상 초청 가능 (비자별 상이)</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+        <span class="points-total-score" id="totalScore">0</span>
+        <span class="points-total-status points-total-status--fail" id="totalStatus">미달</span>
+      </div>
+    </div>
+
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-md);padding:16px 20px;font-size:13px;color:var(--text-muted);line-height:1.7;">
+      ※ 본 계산기는 참고용이며, 실제 이민 신청 시 반드시 공인 이민법인사(MARA)에게 확인하세요.<br>
+      ※ 점수 기준은 이민성 정책 변경에 따라 달라질 수 있습니다.
+    </div>
+
+  </main>
+
+  <footer class="site-footer"><p>KoAus &mdash; 호주 한인 포털 &nbsp;·&nbsp; 2026</p></footer>
+
+  <script>
+    // ── 사이드바 ──
+    const hBtn = document.getElementById('hamburgerBtn');
+    const cBtn = document.getElementById('sidebarCloseBtn');
+    const sb   = document.getElementById('sidebar');
+    const ov   = document.getElementById('sidebarOverlay');
+    const open  = () => { sb.classList.add('open'); ov.classList.add('open'); document.body.style.overflow='hidden'; hBtn.setAttribute('aria-expanded','true'); };
+    const close = () => { sb.classList.remove('open'); ov.classList.remove('open'); document.body.style.overflow=''; hBtn.setAttribute('aria-expanded','false'); };
+    hBtn.addEventListener('click', open);
+    cBtn.addEventListener('click', close);
+    ov.addEventListener('click', close);
+    document.addEventListener('keydown', e => e.key==='Escape' && close());
+
+    // ── 점수 계산 ──
+    function calcTotal() {
+      let total = 0;
+      document.querySelectorAll('input[type="radio"]:checked').forEach(r => { total += Number(r.value); });
+      document.querySelectorAll('input.bonus:checked').forEach(c => { total += Number(c.value); });
+      document.getElementById('totalScore').textContent = total;
+      const st = document.getElementById('totalStatus');
+      if (total >= 65) {
+        st.textContent = '통과 가능 ✓';
+        st.className = 'points-total-status points-total-status--pass';
+      } else {
+        st.textContent = `미달 (${65 - total}점 부족)`;
+        st.className = 'points-total-status points-total-status--fail';
+      }
+    }
+    document.getElementById('pointsForm').addEventListener('change', calcTotal);
+  </script>
+</body>
+</html>

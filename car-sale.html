@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>차량 판매 — KoAus</title>
+  <link rel="stylesheet" href="style.css" />
+  <script>
+    (function () {
+      const saved = localStorage.getItem('koaus-theme');
+      const sys = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      if ((saved ?? sys) === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+    })();
+  </script>
+</head>
+<body>
+
+  <div class="topbar" id="topbar">
+    <a class="topbar-brand" href="index.html">
+      <span class="topbar-logo-icon">◈</span>
+      <span class="topbar-logo-text">KoAus</span>
+    </a>
+    <button class="topbar-menu-btn" id="hamburgerBtn" aria-label="메뉴 열기" aria-expanded="false">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+        <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <aside class="sidebar" id="sidebar" aria-label="사이드 메뉴">
+    <div class="sidebar-header">
+      <span class="sidebar-brand"><span class="sidebar-brand-icon">◈</span>KoAus</span>
+      <button class="sidebar-close-btn" id="sidebarCloseBtn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-group">
+        <div class="sidebar-group-label">생활 &amp; 비자</div>
+        <ul class="sidebar-list">
+          <li><a href="exchange.html" class="sidebar-item"><span class="sidebar-item-icon">💸</span><span class="sidebar-item-text">오늘의 환율</span></a></li>
+          <li><a href="points.html" class="sidebar-item"><span class="sidebar-item-icon">🎯</span><span class="sidebar-item-text">기술심사 점수 가채점</span></a></li>
+        </ul>
+      </div>
+      <div class="sidebar-group">
+        <div class="sidebar-group-label">마켓 &amp; 커뮤니티</div>
+        <ul class="sidebar-list">
+          <li><a href="jobs.html" class="sidebar-item"><span class="sidebar-item-icon">💼</span><span class="sidebar-item-text">구인구직</span></a></li>
+          <li><a href="accom.html" class="sidebar-item"><span class="sidebar-item-icon">🏠</span><span class="sidebar-item-text">숙소 (쉐어)</span></a></li>
+          <li><a href="rent.html" class="sidebar-item"><span class="sidebar-item-icon">🏡</span><span class="sidebar-item-text">숙소 렌트 (독채)</span></a></li>
+        </ul>
+      </div>
+      <div class="sidebar-group">
+        <div class="sidebar-group-label">자동차 (Car)</div>
+        <ul class="sidebar-list">
+          <li><a href="car-sale.html" class="sidebar-item sidebar-item--active"><span class="sidebar-item-icon">🚗</span><span class="sidebar-item-text">차량 판매</span></a></li>
+          <li><a href="car-rent.html" class="sidebar-item"><span class="sidebar-item-icon">🚙</span><span class="sidebar-item-text">차량 렌트</span></a></li>
+        </ul>
+      </div>
+      <div class="sidebar-group">
+        <div class="sidebar-group-label">비즈니스</div>
+        <ul class="sidebar-list">
+          <li><a href="index.html#section-contact" class="sidebar-item"><span class="sidebar-item-icon">📢</span><span class="sidebar-item-text">광고 문의</span></a></li>
+        </ul>
+      </div>
+    </nav>
+  </aside>
+
+  <main class="page-container">
+
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">🚗 차량 판매</h1>
+        <p class="page-subtitle">호주 한인 중고차 직거래 게시판 · 연식 / 주행거리 / 가격 정보를 함께 올려주세요</p>
+      </div>
+      <a href="index.html" class="page-back">← 홈으로</a>
+    </div>
+
+    <div class="ad-banner">
+      <span class="ad-banner-label">AD</span>
+      <span class="ad-banner-text">광고주를 찾습니다</span>
+      <a href="index.html#section-contact" class="ad-banner-cta">문의하기 →</a>
+    </div>
+
+    <div class="board-toolbar">
+      <span class="board-count" id="boardCount">총 0건</span>
+      <button class="board-write-btn" id="writeBtnOpen">+ 글쓰기</button>
+    </div>
+
+    <div class="post-list-table">
+      <div class="post-list-head">
+        <span class="post-num">번호</span>
+        <span class="post-title">제목</span>
+        <span class="post-author">작성자</span>
+        <span class="post-date">날짜</span>
+      </div>
+      <div id="postList"></div>
+    </div>
+
+  </main>
+
+  <!-- 글쓰기 모달 -->
+  <div class="write-overlay" id="writeOverlay">
+    <div class="write-modal">
+      <div class="write-modal-title">✏️ 차량 판매 글쓰기</div>
+      <div class="write-field">
+        <label class="write-label" for="wTitle">제목</label>
+        <input class="write-input" id="wTitle" type="text" placeholder="차종 · 연식 · 가격 등 (예: 2019 Toyota Camry $15,000)" maxlength="80" />
+      </div>
+      <div class="write-field">
+        <label class="write-label" for="wBody">내용</label>
+        <textarea class="write-textarea" id="wBody" placeholder="연식, 주행거리(km), 색상, 옵션, 사고 유무, 위치(지역) 등 자세히 적어주세요"></textarea>
+      </div>
+      <div class="write-field">
+        <label class="write-label" for="wAuthor">작성자</label>
+        <input class="write-input" id="wAuthor" type="text" placeholder="닉네임 또는 이름" maxlength="20" />
+      </div>
+      <div class="write-field">
+        <label class="write-label" for="wContact">연락처 (선택)</label>
+        <input class="write-input" id="wContact" type="text" placeholder="이메일 또는 전화번호" maxlength="60" />
+      </div>
+      <div class="write-modal-actions">
+        <button class="write-cancel-btn" id="writeBtnCancel">취소</button>
+        <button class="write-submit-btn" id="writeBtnSubmit">등록하기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 상세 보기 -->
+  <div class="post-detail-overlay" id="detailOverlay">
+    <div class="post-detail-card">
+      <div class="post-detail-header">
+        <div class="post-detail-title" id="detailTitle"></div>
+        <button class="post-detail-close" id="detailClose">✕</button>
+      </div>
+      <div class="post-detail-meta" id="detailMeta"></div>
+      <div class="post-detail-body" id="detailBody"></div>
+      <div class="post-detail-contact" id="detailContact"></div>
+    </div>
+  </div>
+
+  <footer class="site-footer"><p>KoAus &mdash; 호주 한인 포털 &nbsp;·&nbsp; 2026</p></footer>
+
+  <script>
+    const hBtn = document.getElementById('hamburgerBtn');
+    const cBtn = document.getElementById('sidebarCloseBtn');
+    const sb   = document.getElementById('sidebar');
+    const ov   = document.getElementById('sidebarOverlay');
+    const openSb  = () => { sb.classList.add('open'); ov.classList.add('open'); document.body.style.overflow='hidden'; hBtn.setAttribute('aria-expanded','true'); };
+    const closeSb = () => { sb.classList.remove('open'); ov.classList.remove('open'); document.body.style.overflow=''; hBtn.setAttribute('aria-expanded','false'); };
+    hBtn.addEventListener('click', openSb);
+    cBtn.addEventListener('click', closeSb);
+    ov.addEventListener('click', closeSb);
+    document.addEventListener('keydown', e => e.key==='Escape' && closeSb());
+
+    const STORE_KEY = 'koaus-car-sale-posts';
+    const SAMPLES = [
+      { id: 1, title: '2019 Toyota Camry Ascent Sport · $18,500 · 시드니', body: '시드니 직거래 판매합니다.\n\n- 차종: 2019 Toyota Camry Ascent Sport\n- 색상: 실버\n- 주행거리: 67,000km\n- 상태: 무사고, 정기 서비스 완료\n- 선루프, 후방카메라, 블루투스\n- rego: 2026년 3월까지\n- 가격: $18,500 (네고 가능)\n\n시드니 Chatswood 근처에서 확인 가능합니다.', author: '차팔아요', contact: '0415-XXX-XXX', date: '05/19' },
+      { id: 2, title: '2017 Mazda CX-5 디젤 · $16,000 · 멜번', body: '멜번 직거래입니다.\n\n- 차종: 2017 Mazda CX-5 Maxx Sport Diesel AWD\n- 색상: 딥 크리스탈 블루\n- 주행거리: 92,000km\n- 무사고, Full service history\n- 연비 좋은 디젤 SUV\n- 가격: $16,000 협의 가능', author: '마쓰다판매', contact: 'mazda.sell@gmail.com', date: '05/22' },
+      { id: 3, title: '2015 Honda Jazz · $9,500 · 브리즈번 (초보 추천!)', body: '도심 주행하기 좋은 소형차 판매합니다!\n\n- 차종: 2015 Honda Jazz VTi\n- 주행거리: 110,000km\n- 색상: 화이트\n- 상태: 잔기스 약간, 기계 이상 없음\n- rego 4개월 남음\n- 초보 운전자 또는 시내 출퇴근용으로 추천\n- 브리즈번 Sunnybank 픽업', author: '재즈판매', contact: '0437-XXX-XXX', date: '05/24' },
+    ];
+
+    function escHtml(s) {
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function loadPosts() {
+      const raw = localStorage.getItem(STORE_KEY);
+      if (raw) return JSON.parse(raw);
+      localStorage.setItem(STORE_KEY, JSON.stringify(SAMPLES));
+      return SAMPLES;
+    }
+
+    function savePosts(posts) {
+      localStorage.setItem(STORE_KEY, JSON.stringify(posts));
+    }
+
+    function renderPosts() {
+      const posts = loadPosts();
+      document.getElementById('boardCount').textContent = `총 ${posts.length}건`;
+      const list = document.getElementById('postList');
+      if (!posts.length) {
+        list.innerHTML = '<div class="post-empty">등록된 글이 없습니다. 첫 글을 작성해보세요!</div>';
+        return;
+      }
+      list.innerHTML = posts.slice().reverse().map((p, i) => `
+        <div class="post-row" data-id="${p.id}" style="cursor:pointer">
+          <span class="post-num">${posts.length - i}</span>
+          <span class="post-title" style="color:var(--text-primary);font-weight:500;">${escHtml(p.title)}</span>
+          <span class="post-author">${escHtml(p.author)}</span>
+          <span class="post-date">${p.date}</span>
+        </div>
+      `).join('');
+      list.querySelectorAll('.post-row').forEach(row => {
+        row.addEventListener('click', () => openDetail(row.dataset.id));
+      });
+    }
+
+    function openDetail(id) {
+      const posts = loadPosts();
+      const p = posts.find(x => String(x.id) === String(id));
+      if (!p) return;
+      document.getElementById('detailTitle').textContent = p.title;
+      document.getElementById('detailMeta').innerHTML = `<span>${escHtml(p.author)}</span><span>${p.date}</span>`;
+      document.getElementById('detailBody').textContent = p.body;
+      const contactEl = document.getElementById('detailContact');
+      contactEl.innerHTML = p.contact ? `📞 연락처: <strong>${escHtml(p.contact)}</strong>` : '';
+      document.getElementById('detailOverlay').classList.add('open');
+    }
+
+    document.getElementById('detailClose').addEventListener('click', () => {
+      document.getElementById('detailOverlay').classList.remove('open');
+    });
+    document.getElementById('detailOverlay').addEventListener('click', e => {
+      if (e.target === e.currentTarget) document.getElementById('detailOverlay').classList.remove('open');
+    });
+
+    const writeOverlay = document.getElementById('writeOverlay');
+    document.getElementById('writeBtnOpen').addEventListener('click', () => writeOverlay.classList.add('open'));
+    document.getElementById('writeBtnCancel').addEventListener('click', () => writeOverlay.classList.remove('open'));
+    writeOverlay.addEventListener('click', e => { if (e.target === writeOverlay) writeOverlay.classList.remove('open'); });
+
+    document.getElementById('writeBtnSubmit').addEventListener('click', () => {
+      const title = document.getElementById('wTitle').value.trim();
+      const body  = document.getElementById('wBody').value.trim();
+      const author = document.getElementById('wAuthor').value.trim() || '익명';
+      const contact = document.getElementById('wContact').value.trim();
+      if (!title) { alert('제목을 입력해 주세요.'); return; }
+      if (!body)  { alert('내용을 입력해 주세요.'); return; }
+      const posts = loadPosts();
+      const d = new Date();
+      const date = `${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
+      posts.push({ id: Date.now(), title, body, author, contact, date });
+      savePosts(posts);
+      renderPosts();
+      writeOverlay.classList.remove('open');
+      ['wTitle','wBody','wAuthor','wContact'].forEach(id => { document.getElementById(id).value = ''; });
+    });
+
+    renderPosts();
+  </script>
+</body>
+</html>
