@@ -56,10 +56,25 @@ applyTheme(
 // ── Auth Modal ──
 const authOverlay  = document.getElementById('authOverlay');
 const authClose    = document.getElementById('authClose');
-const openAuthModal  = () => { authOverlay.classList.add('open'); document.body.style.overflow = 'hidden'; };
-const closeAuthModal = () => { authOverlay.classList.remove('open'); document.body.style.overflow = ''; clearAuthErrors(); };
 
-authClose.addEventListener('click', closeAuthModal);
+let _authOpenedAt = 0;
+const openAuthModal  = () => {
+  _authOpenedAt = Date.now();
+  authOverlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+};
+const closeAuthModal = () => {
+  if (Date.now() - _authOpenedAt < 300) return;
+  authOverlay.classList.remove('open');
+  document.body.style.overflow = '';
+  clearAuthErrors();
+};
+
+authClose.addEventListener('click', () => {
+  authOverlay.classList.remove('open');
+  document.body.style.overflow = '';
+  clearAuthErrors();
+});
 authOverlay.addEventListener('click', e => { if (e.target === authOverlay) closeAuthModal(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAuthModal(); });
 
