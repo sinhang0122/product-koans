@@ -852,3 +852,45 @@ document.getElementById('pbNextBtn').addEventListener('click', () => {
 
 /* ── 파워볼 초기 렌더 ── */
 renderPowerball(0);
+
+/* ════════════════════════════════════════════════════════════
+   § 5. 제휴 문의 폼 (Formspree)
+════════════════════════════════════════════════════════════ */
+(function () {
+  const form       = document.getElementById('contactForm');
+  const btnText    = document.getElementById('contactBtnText');
+  const btnLoader  = document.getElementById('contactBtnLoader');
+  const submitBtn  = document.getElementById('contactSubmitBtn');
+  const feedback   = document.getElementById('contactFeedback');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    feedback.className = 'contact-feedback';
+    feedback.textContent = '';
+    submitBtn.disabled = true;
+    btnText.hidden = true;
+    btnLoader.hidden = false;
+
+    try {
+      const res = await fetch(form.action, {
+        method: 'POST',
+        body: new FormData(form),
+        headers: { Accept: 'application/json' },
+      });
+      if (res.ok) {
+        form.reset();
+        feedback.className = 'contact-feedback success';
+        feedback.textContent = '✓ 문의가 접수되었습니다. 빠른 시일 내에 답변 드리겠습니다.';
+      } else {
+        throw new Error('server');
+      }
+    } catch {
+      feedback.className = 'contact-feedback error';
+      feedback.textContent = '전송에 실패했습니다. 잠시 후 다시 시도해 주세요.';
+    } finally {
+      submitBtn.disabled = false;
+      btnText.hidden = false;
+      btnLoader.hidden = true;
+    }
+  });
+})();

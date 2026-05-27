@@ -1013,6 +1013,80 @@ body,
 }
 
 /* ════════════════════════════════════════════════════════════════════════
+   Contact Section
+════════════════════════════════════════════════════════════════════════ */
+.contact-section {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
+  padding: 28px 28px 32px;
+  display: flex; flex-direction: column; gap: 20px;
+}
+.contact-header { display: flex; flex-direction: column; gap: 4px; }
+.contact-form { display: flex; flex-direction: column; gap: 16px; }
+.contact-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.contact-field { display: flex; flex-direction: column; gap: 6px; }
+.contact-label {
+  font-size: 12px; font-weight: 600; letter-spacing: .04em;
+  color: var(--text-secondary); text-transform: uppercase;
+}
+.contact-input, .contact-select, .contact-textarea {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  color: var(--text-primary);
+  font-size: 14px; font-family: inherit;
+  padding: 10px 14px;
+  transition: border-color 0.2s, box-shadow 0.2s, background-color 0.25s;
+  outline: none; width: 100%;
+}
+.contact-input::placeholder, .contact-textarea::placeholder { color: var(--text-muted); }
+.contact-input:focus, .contact-select:focus, .contact-textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
+}
+.contact-select { appearance: none; cursor: pointer; }
+.contact-select-wrapper {
+  position: relative;
+}
+.contact-select-wrapper::after {
+  content: '';
+  position: absolute; right: 13px; top: 50%; transform: translateY(-50%);
+  width: 0; height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid var(--text-secondary);
+  pointer-events: none;
+}
+.contact-textarea { resize: vertical; min-height: 110px; line-height: 1.6; }
+.contact-submit-btn {
+  align-self: flex-start;
+  background: var(--accent); color: #fff;
+  border: none; border-radius: var(--r-md);
+  font-size: 14px; font-weight: 600; font-family: inherit;
+  padding: 11px 28px; cursor: pointer;
+  display: flex; align-items: center; gap: 8px;
+  transition: background 0.2s, transform 0.15s, opacity 0.2s;
+}
+.contact-submit-btn:hover { background: var(--accent-hover); transform: translateY(-1px); }
+.contact-submit-btn:active { transform: translateY(0); }
+.contact-submit-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+.contact-feedback {
+  font-size: 13px; padding: 10px 14px; border-radius: var(--r-md);
+  display: none;
+}
+.contact-feedback.success {
+  display: block;
+  background: var(--green-bg); color: var(--green);
+  border: 1px solid rgba(74,222,128,0.25);
+}
+.contact-feedback.error {
+  display: block;
+  background: rgba(248,113,113,0.1); color: var(--red);
+  border: 1px solid rgba(248,113,113,0.25);
+}
+
+/* ════════════════════════════════════════════════════════════════════════
    Footer
 ════════════════════════════════════════════════════════════════════════ */
 .site-footer {
@@ -1026,7 +1100,9 @@ body,
 @media (max-width: 640px) {
   .site-header { padding-top: 36px; }
   .container { padding: 22px 16px 48px; gap: 16px; }
-  .input-section, .remit-section, .powerball-section { padding: 18px; }
+  .input-section, .remit-section, .powerball-section, .contact-section { padding: 18px; }
+  .contact-row { grid-template-columns: 1fr; }
+  .contact-submit-btn { width: 100%; justify-content: center; }
   .result-content { padding: 18px; }
   .logo-text { font-size: 24px; }
   .remit-cards { grid-template-columns: 1fr; }
