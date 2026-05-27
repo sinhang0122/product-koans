@@ -155,14 +155,18 @@ onAuthStateChanged(auth, user => {
 });
 
 // ── Exchange rate calculator ──
-const CURRENCY_API = 'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies';
-const ratesCache   = {};
+const ratesCache = {};
 
 async function fetchRates(base) {
   try {
-    const res  = await fetch(`${CURRENCY_API}/${base}.json`);
+    const res  = await fetch(`https://api.frankfurter.app/latest?from=${base.toUpperCase()}`);
     const data = await res.json();
-    return data[base];
+    const rates = {};
+    for (const [k, v] of Object.entries(data.rates)) {
+      rates[k.toLowerCase()] = v;
+    }
+    rates[base.toLowerCase()] = 1;
+    return rates;
   } catch {
     return null;
   }
@@ -183,53 +187,45 @@ async function updateCalc() {
   const to     = toEl.value;
   const amount = parseFloat(amountEl.value) || 0;
 
+  updatedEl.textContent = '불러오는 중…';
+
   if (!ratesCache[from]) {
     ratesCache[from] = await fetchRates(from);
   }
 
   const r = ratesCache[from];
   if (!r || r[to] == null) {
-    resultEl.textContent    = '오류';
-    updatedEl.textContent   = 'API 오류 — 잠시 후 다시 시도해 주세요';
+    resultEl.textContent  = '오류';
+    updatedEl.textContent = 'API 오류 — 잠시 후 다시 시도해 주세요';
     return;
   }
 
-  const converted = amount * r[to];
-  const isKrw     = to === 'krw';
-  const fmt        = isKrw
-    ? new Intl.NumberFormat('ko-KR', { maximumFractionDigits: 0 })
-    : new Intl.NumberFormat('en-AU', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+  const rate      = r[to];
+  const converted = amount * rate;
 
-  resultEl.textContent  = fmt.format(converted);
-  curEl.textContent     = to.toUpperCase();
-
-  const rate1Fmt = isKrw
-    ? new Intl.NumberFormat('ko-KR', { maximumFractionDigits: 0 }).format(r[to])
-    : new Intl.NumberFormat('en-AU', { minimumFractionDigits: 4, maximumFractionDigits: 4 }).format(r[to]);
-
-  rateEl.textContent    = `1 ${from.toUpperCase()} = ${rate1Fmt} ${to.toUpperCase()}`;
-  updatedEl.textContent = '실시간 기준';
+  resultEl.textContent = converted.toFixed(2);
+  curEl.textContent    = to.toUpperCase();
+  rateEl.textContent   = `1 ${from.toUpperCase()} = ${rate.toFixed(2)} ${to.toUpperCase()}`;
+  updatedEl.textContent = '실시간 기준 (Frankfurter API)';
 
   const compareEl = document.getElementById('calcCompare');
   if (compareEl) {
     if (from === 'aud' && to === 'krw' && amount > 0) {
-      const baseRate     = r[to];
-      const wireReceived = amount * (baseRate - 11);
-      const wiseFee      = amount * 0.0045 + 0.50;
-      const wiseReceived = (amount - wiseFee) * baseRate;
-      const fmt0 = n => new Intl.NumberFormat('ko-KR', { maximumFractionDigits: 0 }).format(n);
-      const diff = Math.abs(Math.round(wireReceived - wiseReceived));
+      const wireReceived = amount * (rate - 11);
+      const wiseReceived = amount * (1 - 0.006) * rate;
+      const fmt2 = n => n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+      const diff = Math.abs(wireReceived - wiseReceived).toFixed(2);
       const tip  = wireReceived >= wiseReceived
-        ? `소액 기준 WireBarley가 약 ${fmt0(diff)}원 더 유리합니다.`
-        : `고액 송금 기준 Wise가 약 ${fmt0(diff)}원 더 유리합니다.`;
+        ? `현재 환율 기준 WireBarley가 유리합니다 (약 ${diff}원 차이)`
+        : `현재 환율 기준 Wise가 유리합니다 (약 ${diff}원 차이)`;
       compareEl.innerHTML = `
         <div class="calc-compare-row">
-          <span class="calc-compare-label">WireBarley (기준가 −11원/AUD)</span>
-          <span class="calc-compare-value">${fmt0(wireReceived)} KRW</span>
+          <span class="calc-compare-label">WireBarley (기준가 −11원 스프레드)</span>
+          <span class="calc-compare-value">${fmt2(wireReceived)} KRW</span>
         </div>
         <div class="calc-compare-row">
-          <span class="calc-compare-label">Wise (0.45% + A$0.50 수수료)</span>
-          <span class="calc-compare-value">${fmt0(wiseReceived)} KRW</span>
+          <span class="calc-compare-label">Wise (수수료 0.6% 차감 후)</span>
+          <span class="calc-compare-value">${fmt2(wiseReceived)} KRW</span>
         </div>
         <div class="calc-compare-tip">💡 ${tip}</div>`;
       compareEl.style.display = 'flex';

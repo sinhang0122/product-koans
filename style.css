@@ -311,14 +311,10 @@ body {
 }
 
 /* Notice Board */
-.notice-section {
-  border: 1px solid var(--border);
-  border-radius: var(--r-md);
-  overflow: hidden;
-}
+.notice-section {}
 .notice-row {
-  display: flex; align-items: center; gap: 14px;
-  padding: 14px 20px; flex-wrap: wrap;
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  padding: 12px 20px; flex-wrap: wrap;
 }
 .notice-badge {
   font-size: 10px; font-weight: 800; letter-spacing: 0.1em;
@@ -327,10 +323,9 @@ body {
   border-radius: 3px; flex-shrink: 0;
 }
 .notice-text {
-  flex: 1; font-size: 14px; color: var(--text-secondary); line-height: 1.5;
-  min-width: 160px;
+  font-size: 14px; color: var(--text-secondary); line-height: 1.5;
+  text-align: center;
 }
-.notice-date { font-size: 12px; color: var(--text-muted); flex-shrink: 0; }
 
 /* Exchange Rate Calculator */
 .calc-section {
