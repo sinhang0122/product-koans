@@ -21,8 +21,9 @@
 
   <div class="topbar" id="topbar">
     <a class="topbar-brand" href="index.html">
-      <span class="topbar-logo-icon">◈</span>
+      <span class="topbar-logo-icon"><span class="logo-ks">K/S</span></span>
       <span class="topbar-logo-text">KoAus</span>
+      <span class="topbar-tagline"><b>Korea&nbsp;-&nbsp;Australia</b><span class="topbar-tagline-div">|</span>호주 한인 커뮤니티의 새로운 기준</span>
     </a>
     <div class="topbar-actions">
       <a href="index.html" class="topbar-login-btn">로그인</a>
@@ -139,7 +140,7 @@
           <a href="care.html" class="accord-link">Care</a>
         </div>
       </div>
-      <a href="mailto:sinhang0122@gmail.com" class="accord-direct-link">
+      <a href="contact.html" class="accord-direct-link">
         <span>Ad Inquiry <em>광고 문의</em></span>
       </a>
     </nav>
@@ -253,19 +254,18 @@
     document.getElementById('sidebarAccountBtn').addEventListener('click', () => { window.location.href = 'index.html'; });
 
     const STORE_KEY = 'koaus-jobs-posts';
-    const SAMPLES = [
-      { id: 1, title: '[구인] 시드니 CBD 한식당 홀서빙 · 주 4~5일', body: '안녕하세요. 시드니 CBD에 위치한 한식당에서 홀서빙 직원을 구합니다.\n\n- 시급: $25 + Super\n- 근무 시간: 오전 11시 ~ 오후 3시 (런치), 오후 5시 ~ 오후 10시 (디너)\n- 주 4~5일 근무\n- 영어 기본 가능자 우대\n- 경력 무관, 성실한 분 환영!', author: '시드니한식당', contact: 'restaurant.sydney@email.com', date: '05/20' },
-      { id: 2, title: '[구직] 멜번 IT 개발자 (Python/Django 3년) 일 구합니다', body: '안녕하세요. 현재 멜번 거주 중인 한국인 개발자입니다.\n\n- 기술스택: Python, Django, React, PostgreSQL\n- 경력: 한국 IT 회사 3년 + 호주 1년\n- 비자: 482 (스폰서 전환 협의 가능)\n- 희망 연봉: $90,000 ~ $110,000\n\n관심 있으신 회사 및 담당자분 연락 주세요.', author: '김개발', contact: 'dev.kim.melb@gmail.com', date: '05/22' },
-      { id: 3, title: '[구인] 브리즈번 청소 알바 · 즉시 출근 가능', body: '브리즈번 북부 지역 상업용 빌딩 청소 알바 모집합니다.\n\n- 시급: $27 이상\n- 근무: 이른 아침 (새벽 4시 ~ 오전 8시)\n- 차량 소지자 우대\n- 비자 종류 무관 (풀타임 가능자)\n- 즉시 출근 가능하신 분', author: '청소마스터', contact: '0412-XXX-XXX', date: '05/23' },
-    ];
+    const SEED_VERSION = '2026-05-empty';
+    const SAMPLES = [];
 
     function escHtml(s) {
       return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
     function loadPosts() {
+      const ver = localStorage.getItem(STORE_KEY + '-v');
       const raw = localStorage.getItem(STORE_KEY);
-      if (raw) return JSON.parse(raw);
+      if (raw && ver === SEED_VERSION) return JSON.parse(raw);
       localStorage.setItem(STORE_KEY, JSON.stringify(SAMPLES));
+      localStorage.setItem(STORE_KEY + '-v', SEED_VERSION);
       return SAMPLES;
     }
     function savePosts(posts) { localStorage.setItem(STORE_KEY, JSON.stringify(posts)); }

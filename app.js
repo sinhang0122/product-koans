@@ -223,12 +223,13 @@ onAuthStateChanged(auth, user => {
 
 // ── Exchange rate calculator ──
 const FALLBACK_RATES = {
-  aud: { aud: 1,          krw: 900,       usd: 0.63   },
-  krw: { krw: 1,          aud: 0.00111,   usd: 0.00073 },
-  usd: { usd: 1,          aud: 1.58,      krw: 1370   },
+  aud: { aud: 1, krw: 905, usd: 0.66, eur: 0.61, jpy: 99,  gbp: 0.52, cad: 0.90, nzd: 1.09, cny: 4.74, sgd: 0.88 },
+  krw: { krw: 1, aud: 0.00110, usd: 0.00073, eur: 0.00067, jpy: 0.109, gbp: 0.00057, cad: 0.00099, nzd: 0.00120, cny: 0.00524, sgd: 0.00097 },
+  usd: { usd: 1, aud: 1.52, krw: 1370, eur: 0.92, jpy: 150, gbp: 0.79, cad: 1.36, nzd: 1.65, cny: 7.2, sgd: 1.34 },
 };
-const ratesCache  = {};
+const ratesCache    = {};
 let   usingFallback = false;
+let   lastUpdateUnix = null;
 
 async function fetchRates(base) {
   try {
@@ -239,6 +240,7 @@ async function fetchRates(base) {
     const rates = {};
     for (const [k, v] of Object.entries(data.rates)) rates[k.toLowerCase()] = v;
     rates[base.toLowerCase()] = 1;
+    lastUpdateUnix = data.time_last_update_unix || null;
     usingFallback = false;
     return rates;
   } catch (err) {
@@ -246,6 +248,21 @@ async function fetchRates(base) {
     usingFallback = true;
     return { ...(FALLBACK_RATES[base.toLowerCase()] || {}) };
   }
+}
+
+// "5월 27일 10시 기준 (open.er-api.com)" 형식
+function formatUpdateTime() {
+  if (usingFallback || !lastUpdateUnix) return '기본 환율 적용 중 (실시간 환율 불러오기 실패)';
+  const d = new Date(lastUpdateUnix * 1000);
+  return `${d.getMonth() + 1}월 ${d.getDate()}일 ${d.getHours()}시 기준 (open.er-api.com)`;
+}
+
+// 환율 표시용: 큰 값은 소수 1자리, 작은 값은 정밀하게
+function fmtRate(r) {
+  if (r >= 100)  return r.toFixed(1);
+  if (r >= 1)    return r.toFixed(2);
+  if (r >= 0.01) return r.toFixed(4);
+  return r.toFixed(6);
 }
 
 function renderCalc() {
@@ -274,31 +291,28 @@ function renderCalc() {
 
   resultEl.textContent  = converted.toFixed(2);
   curEl.textContent     = to.toUpperCase();
-  rateEl.textContent    = `1 ${from.toUpperCase()} = ${rate.toFixed(2)} ${to.toUpperCase()}`;
-  updatedEl.textContent = usingFallback
-    ? '현재 실시간 환율을 불러올 수 없어 기본 환율이 적용되었습니다'
-    : '실시간 기준 (open.er-api.com)';
+  rateEl.textContent    = `1 ${from.toUpperCase()} = ${fmtRate(rate)} ${to.toUpperCase()}`;
+  updatedEl.textContent = formatUpdateTime();
 
   const compareEl = document.getElementById('calcCompare');
   if (compareEl) {
     if (from === 'aud' && to === 'krw' && amount > 0) {
-      const wireReceived = amount * (rate - 11);
-      const wiseReceived = amount * (1 - 0.006) * rate;
-      const fmt2 = n => n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-      const diff = Math.abs(wireReceived - wiseReceived).toFixed(2);
-      const tip  = wireReceived >= wiseReceived
-        ? `현재 환율 기준 WireBarley가 유리합니다 (약 ${diff}원 차이)`
-        : `현재 환율 기준 Wise가 유리합니다 (약 ${diff}원 차이)`;
-      compareEl.innerHTML = `
-        <div class="calc-compare-row">
-          <span class="calc-compare-label">WireBarley (기준가 −11원 스프레드)</span>
-          <span class="calc-compare-value">${fmt2(wireReceived)} KRW</span>
-        </div>
-        <div class="calc-compare-row">
-          <span class="calc-compare-label">Wise (수수료 0.6% 차감 후)</span>
-          <span class="calc-compare-value">${fmt2(wiseReceived)} KRW</span>
-        </div>
-        <div class="calc-compare-tip">💡 ${tip}</div>`;
+      // 송금 수수료 비교 (임의의 최신 기준 비율)
+      const apps = [
+        { name: 'WireBarley', desc: '스프레드 −8원',  recv: amount * (rate - 8) },
+        { name: 'Wise',       desc: '수수료 0.45%',   recv: amount * rate * (1 - 0.0045) },
+        { name: 'Sentbe',     desc: '스프레드 −5원',  recv: amount * (rate - 5) },
+        { name: 'Remitly',    desc: '수수료 0.65%',   recv: amount * rate * (1 - 0.0065) },
+      ];
+      const best = apps.reduce((a, b) => (b.recv > a.recv ? b : a));
+      const fmt0 = n => Math.round(n).toLocaleString();
+      compareEl.innerHTML =
+        apps.map(a => `
+          <div class="calc-compare-row${a.name === best.name ? ' calc-compare-row--best' : ''}">
+            <span class="calc-compare-label">${a.name} <em>${a.desc}</em></span>
+            <span class="calc-compare-value">${fmt0(a.recv)} KRW</span>
+          </div>`).join('') +
+        `<div class="calc-compare-tip">💡 현재 환율 기준 <strong>${best.name}</strong>가 가장 유리합니다</div>`;
       compareEl.style.display = 'flex';
     } else {
       compareEl.style.display = 'none';

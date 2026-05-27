@@ -21,8 +21,9 @@
 
   <div class="topbar" id="topbar">
     <a class="topbar-brand" href="index.html">
-      <span class="topbar-logo-icon">◈</span>
+      <span class="topbar-logo-icon"><span class="logo-ks">K/S</span></span>
       <span class="topbar-logo-text">KoAus</span>
+      <span class="topbar-tagline"><b>Korea&nbsp;-&nbsp;Australia</b><span class="topbar-tagline-div">|</span>호주 한인 커뮤니티의 새로운 기준</span>
     </a>
     <div class="topbar-actions">
       <a href="index.html" class="topbar-login-btn">로그인</a>
@@ -139,7 +140,7 @@
           <a href="care.html" class="accord-link">Care</a>
         </div>
       </div>
-      <a href="mailto:sinhang0122@gmail.com" class="accord-direct-link">
+      <a href="contact.html" class="accord-direct-link">
         <span>Ad Inquiry <em>광고 문의</em></span>
       </a>
     </nav>
@@ -253,19 +254,18 @@
     document.getElementById('sidebarAccountBtn').addEventListener('click', () => { window.location.href = 'index.html'; });
 
     const STORE_KEY = 'koaus-rent-posts';
-    const SAMPLES = [
-      { id: 1, title: '[렌트] 시드니 Hurstville 3베드 타운하우스 · 주 $650', body: '허스트빌 3베드 2바스 타운하우스 렌트 문의 받습니다.\n\n- 방 3개 / 욕실 2개\n- 월세: 주 $650\n- 보증금: 4주치\n- 입주 가능: 6월 15일\n- 내부 세탁기 / 식기세척기 포함\n- 기차역 도보 10분\n- 장기 거주자 우대', author: '부동산 김씨', contact: 'kim.realty@email.com', date: '05/20' },
-      { id: 2, title: '[렌트 구함] 멜번 Box Hill 근처 2베드 아파트 찾아요', body: '박스힐 또는 인근 지역에서 2베드 아파트 또는 유닛을 찾고 있습니다.\n\n- 예산: 주 $500 ~ $600\n- 입주: 7월 1일\n- 가족 2인 (어른)\n- 반려동물 없음, 비흡연\n- 한인 커뮤니티 근처 선호', author: '정현우', contact: '0423-XXX-XXX', date: '05/23' },
-      { id: 3, title: '[렌트] 브리즈번 Sunnybank 4베드 하우스 · 월 $2,400', body: '써니뱅크 한인타운 근처 단독 주택 렌트합니다.\n\n- 방 4개 / 욕실 2개 / 차고 2대\n- 월세: $2,400/월 (주 $553 상당)\n- 뒤뜰 넓음, 바베큐 공간 있음\n- 학교 도보 5분, 마트 차량 3분\n- 최소 12개월 계약', author: '이부동산', contact: 'lee.property@gmail.com', date: '05/25' },
-    ];
+    const SEED_VERSION = '2026-05-empty';
+    const SAMPLES = [];
 
     function escHtml(s) {
       return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
     function loadPosts() {
+      const ver = localStorage.getItem(STORE_KEY + '-v');
       const raw = localStorage.getItem(STORE_KEY);
-      if (raw) return JSON.parse(raw);
+      if (raw && ver === SEED_VERSION) return JSON.parse(raw);
       localStorage.setItem(STORE_KEY, JSON.stringify(SAMPLES));
+      localStorage.setItem(STORE_KEY + '-v', SEED_VERSION);
       return SAMPLES;
     }
     function savePosts(posts) { localStorage.setItem(STORE_KEY, JSON.stringify(posts)); }

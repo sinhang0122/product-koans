@@ -21,8 +21,9 @@
 
   <div class="topbar" id="topbar">
     <a class="topbar-brand" href="index.html">
-      <span class="topbar-logo-icon">◈</span>
+      <span class="topbar-logo-icon"><span class="logo-ks">K/S</span></span>
       <span class="topbar-logo-text">KoAus</span>
+      <span class="topbar-tagline"><b>Korea&nbsp;-&nbsp;Australia</b><span class="topbar-tagline-div">|</span>호주 한인 커뮤니티의 새로운 기준</span>
     </a>
     <div class="topbar-actions">
       <a href="index.html" class="topbar-login-btn">로그인</a>
@@ -139,7 +140,7 @@
           <a href="care.html" class="accord-link">Care</a>
         </div>
       </div>
-      <a href="mailto:sinhang0122@gmail.com" class="accord-direct-link">
+      <a href="contact.html" class="accord-direct-link">
         <span>Ad Inquiry <em>광고 문의</em></span>
       </a>
     </nav>
@@ -253,19 +254,18 @@
     document.getElementById('sidebarAccountBtn').addEventListener('click', () => { window.location.href = 'index.html'; });
 
     const STORE_KEY = 'koaus-car-rent-posts';
-    const SAMPLES = [
-      { id: 1, title: '2020 Toyota RAV4 렌트 · 일 $60 · 시드니', body: '시드니 여행이나 단기 출장용 SUV 렌트 제공합니다.\n\n- 차종: 2020 Toyota RAV4\n- 일 렌트: $60/일 (3일 이상 $55/일)\n- 주 렌트: $350/주\n- 픽업/반납: 시드니 CBD 또는 공항 (공항 픽업 +$20)\n- 보험 포함\n- 국제면허 소지자 환영\n- 최소 렌트 기간: 2일', author: '시드니렌트카', contact: '0421-XXX-XXX', date: '05/18' },
-      { id: 2, title: '2018 Hyundai i30 렌트 · 주 $280 · 멜번', body: '멜번 장기 렌트 가능한 소형차 안내드립니다.\n\n- 차종: 2018 Hyundai i30\n- 주 $280 (한 달 계약 시 $250)\n- 픽업: 멜번 CBD\n- 풀 보험 포함\n- 연비 좋고 주차 편한 소형차\n- 6개월 이상 장기 계약 가능', author: '멜번렌트', contact: 'melb.rent@email.com', date: '05/21' },
-      { id: 3, title: '캠핑카 렌트 · 2주 $1,200 · 브리즈번 (여행용)', body: '퀸즐랜드 여행용 2인 캠핑카 렌트합니다.\n\n- 차종: 2019 Jayco Campervan\n- 2주 패키지: $1,200 (침구, 취사도구 포함)\n- 픽업: 브리즈번 Archerfield\n- 골드코스트 ~ 케언즈 루트에 최적\n- 선착순 예약제', author: '캠핑카호주', contact: '0478-XXX-XXX', date: '05/25' },
-    ];
+    const SEED_VERSION = '2026-05-empty';
+    const SAMPLES = [];
 
     function escHtml(s) {
       return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
     function loadPosts() {
+      const ver = localStorage.getItem(STORE_KEY + '-v');
       const raw = localStorage.getItem(STORE_KEY);
-      if (raw) return JSON.parse(raw);
+      if (raw && ver === SEED_VERSION) return JSON.parse(raw);
       localStorage.setItem(STORE_KEY, JSON.stringify(SAMPLES));
+      localStorage.setItem(STORE_KEY + '-v', SEED_VERSION);
       return SAMPLES;
     }
     function savePosts(posts) { localStorage.setItem(STORE_KEY, JSON.stringify(posts)); }

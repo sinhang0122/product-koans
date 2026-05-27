@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>차량 판매 — KoAus</title>
+  <title>광고 문의 — KoAus</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;800;900&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet" />
@@ -156,80 +156,37 @@
 
     <div class="page-header">
       <div>
-        <h1 class="page-title">🚗 차량 판매</h1>
-        <p class="page-subtitle">호주 한인 중고차 직거래 게시판 · 연식 / 주행거리 / 가격 정보를 함께 올려주세요</p>
+        <h1 class="page-title">📮 광고 문의</h1>
+        <p class="page-subtitle">광고 게재 · 제휴 · 기타 문의를 남겨주세요</p>
       </div>
       <a href="index.html" class="page-back">← 홈으로</a>
     </div>
 
-    <div class="adsense-wrap">
-      <ins class="adsbygoogle"
-           style="display:block"
-           data-ad-client="ca-pub-3691720629746826"
-           data-ad-slot="auto"
-           data-ad-format="auto"
-           data-full-width-responsive="true"></ins>
-      <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
-    </div>
-
-    <div class="board-toolbar">
-      <span class="board-count" id="boardCount">총 0건</span>
-      <button class="board-write-btn" id="writeBtnOpen">+ 글쓰기</button>
-    </div>
-
-    <div class="post-list-table">
-      <div class="post-list-head">
-        <span class="post-num">번호</span>
-        <span class="post-title">제목</span>
-        <span class="post-author">작성자</span>
-        <span class="post-date">날짜</span>
+    <form class="contact-form" id="contactForm" novalidate>
+      <div class="contact-field">
+        <label class="contact-label" for="cSubject">제목</label>
+        <input class="contact-input" id="cSubject" type="text" placeholder="문의 제목을 입력하세요" maxlength="100" />
       </div>
-      <div id="postList"></div>
-    </div>
+      <div class="contact-field">
+        <label class="contact-label" for="cEmail">회신받을 이메일</label>
+        <input class="contact-input" id="cEmail" type="email" placeholder="reply@example.com" autocomplete="email" />
+      </div>
+      <div class="contact-field">
+        <label class="contact-label" for="cBody">내용</label>
+        <textarea class="contact-textarea" id="cBody" placeholder="문의 내용을 자세히 적어주세요"></textarea>
+      </div>
+      <div class="contact-actions">
+        <button type="submit" class="contact-submit" id="cSubmit">제출하기</button>
+      </div>
+      <p class="contact-note" id="cNote"></p>
+    </form>
 
   </main>
-
-  <div class="write-overlay" id="writeOverlay">
-    <div class="write-modal">
-      <div class="write-modal-title">✏️ 차량 판매 글쓰기</div>
-      <div class="write-field">
-        <label class="write-label" for="wTitle">제목</label>
-        <input class="write-input" id="wTitle" type="text" placeholder="차종 · 연식 · 가격 등 (예: 2019 Toyota Camry $15,000)" maxlength="80" />
-      </div>
-      <div class="write-field">
-        <label class="write-label" for="wBody">내용</label>
-        <textarea class="write-textarea" id="wBody" placeholder="연식, 주행거리(km), 색상, 옵션, 사고 유무, 위치(지역) 등 자세히 적어주세요"></textarea>
-      </div>
-      <div class="write-field">
-        <label class="write-label" for="wAuthor">작성자</label>
-        <input class="write-input" id="wAuthor" type="text" placeholder="닉네임 또는 이름" maxlength="20" />
-      </div>
-      <div class="write-field">
-        <label class="write-label" for="wContact">연락처 (선택)</label>
-        <input class="write-input" id="wContact" type="text" placeholder="이메일 또는 전화번호" maxlength="60" />
-      </div>
-      <div class="write-modal-actions">
-        <button class="write-cancel-btn" id="writeBtnCancel">취소</button>
-        <button class="write-submit-btn" id="writeBtnSubmit">등록하기</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="post-detail-overlay" id="detailOverlay">
-    <div class="post-detail-card">
-      <div class="post-detail-header">
-        <div class="post-detail-title" id="detailTitle"></div>
-        <button class="post-detail-close" id="detailClose">✕</button>
-      </div>
-      <div class="post-detail-meta" id="detailMeta"></div>
-      <div class="post-detail-body" id="detailBody"></div>
-      <div class="post-detail-contact" id="detailContact"></div>
-    </div>
-  </div>
 
   <footer class="site-footer"><p>KoAus &mdash; 호주 한인 포털 &nbsp;·&nbsp; 2026</p></footer>
 
   <script>
+    // ── Sidebar ──
     const hBtn = document.getElementById('hamburgerBtn');
     const cBtn = document.getElementById('sidebarCloseBtn');
     const sb   = document.getElementById('sidebar');
@@ -253,70 +210,37 @@
     applyTheme(localStorage.getItem('koaus-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
     document.getElementById('sidebarAccountBtn').addEventListener('click', () => { window.location.href = 'index.html'; });
 
-    const STORE_KEY = 'koaus-car-sale-posts';
-    const SEED_VERSION = '2026-05-empty';
-    const SAMPLES = [];
+    // ── Contact form ──
+    document.getElementById('contactForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const subject = document.getElementById('cSubject').value.trim();
+      const email   = document.getElementById('cEmail').value.trim();
+      const body    = document.getElementById('cBody').value.trim();
+      const note    = document.getElementById('cNote');
+      const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+      if (!subject || !email || !body) {
+        note.textContent = '제목 · 이메일 · 내용을 모두 입력해 주세요.';
+        note.className = 'contact-note contact-note--err';
+        return;
+      }
+      if (!emailOk) {
+        note.textContent = '올바른 이메일 형식을 입력해 주세요.';
+        note.className = 'contact-note contact-note--err';
+        return;
+      }
 
-    function escHtml(s) {
-      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    }
-    function loadPosts() {
-      const ver = localStorage.getItem(STORE_KEY + '-v');
-      const raw = localStorage.getItem(STORE_KEY);
-      if (raw && ver === SEED_VERSION) return JSON.parse(raw);
-      localStorage.setItem(STORE_KEY, JSON.stringify(SAMPLES));
-      localStorage.setItem(STORE_KEY + '-v', SEED_VERSION);
-      return SAMPLES;
-    }
-    function savePosts(posts) { localStorage.setItem(STORE_KEY, JSON.stringify(posts)); }
-    function renderPosts() {
-      const posts = loadPosts();
-      document.getElementById('boardCount').textContent = `총 ${posts.length}건`;
-      const list = document.getElementById('postList');
-      if (!posts.length) { list.innerHTML = '<div class="post-empty">등록된 글이 없습니다. 첫 글을 작성해보세요!</div>'; return; }
-      list.innerHTML = posts.slice().reverse().map((p, i) => `
-        <div class="post-row" data-id="${p.id}" style="cursor:pointer">
-          <span class="post-num">${posts.length - i}</span>
-          <span class="post-title" style="color:var(--text-primary);font-weight:500;">${escHtml(p.title)}</span>
-          <span class="post-author">${escHtml(p.author)}</span>
-          <span class="post-date">${p.date}</span>
-        </div>`).join('');
-      list.querySelectorAll('.post-row').forEach(row => row.addEventListener('click', () => openDetail(row.dataset.id)));
-    }
-    function openDetail(id) {
-      const posts = loadPosts();
-      const p = posts.find(x => String(x.id) === String(id));
-      if (!p) return;
-      document.getElementById('detailTitle').textContent = p.title;
-      document.getElementById('detailMeta').innerHTML = `<span>${escHtml(p.author)}</span><span>${p.date}</span>`;
-      document.getElementById('detailBody').textContent = p.body;
-      const contactEl = document.getElementById('detailContact');
-      contactEl.innerHTML = p.contact ? `📞 연락처: <strong>${escHtml(p.contact)}</strong>` : '';
-      document.getElementById('detailOverlay').classList.add('open');
-    }
-    document.getElementById('detailClose').addEventListener('click', () => { document.getElementById('detailOverlay').classList.remove('open'); });
-    document.getElementById('detailOverlay').addEventListener('click', e => { if (e.target === e.currentTarget) document.getElementById('detailOverlay').classList.remove('open'); });
-    const writeOverlay = document.getElementById('writeOverlay');
-    document.getElementById('writeBtnOpen').addEventListener('click', () => writeOverlay.classList.add('open'));
-    document.getElementById('writeBtnCancel').addEventListener('click', () => writeOverlay.classList.remove('open'));
-    writeOverlay.addEventListener('click', e => { if (e.target === writeOverlay) writeOverlay.classList.remove('open'); });
-    document.getElementById('writeBtnSubmit').addEventListener('click', () => {
-      const title = document.getElementById('wTitle').value.trim();
-      const body  = document.getElementById('wBody').value.trim();
-      const author = document.getElementById('wAuthor').value.trim() || '익명';
-      const contact = document.getElementById('wContact').value.trim();
-      if (!title) { alert('제목을 입력해 주세요.'); return; }
-      if (!body)  { alert('내용을 입력해 주세요.'); return; }
-      const posts = loadPosts();
-      const d = new Date();
-      const date = `${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
-      posts.push({ id: Date.now(), title, body, author, contact, date });
-      savePosts(posts);
-      renderPosts();
-      writeOverlay.classList.remove('open');
-      ['wTitle','wBody','wAuthor','wContact'].forEach(id => { document.getElementById(id).value = ''; });
+      // TODO: Firebase Trigger Email 확장 연동 지점
+      // Firestore 'mail' 컬렉션에 문서를 추가하면 자동 발송됩니다.
+      //   addDoc(collection(db, 'mail'), {
+      //     to: 'sinhang0122@gmail.com',
+      //     replyTo: email,
+      //     message: { subject: `[광고문의] ${subject}`, text: body },
+      //   });
+
+      note.textContent = '문의가 접수되었습니다. 빠른 시일 내에 회신드리겠습니다. (현재는 데모 — 메일 발송 연동 예정)';
+      note.className = 'contact-note contact-note--ok';
+      e.target.reset();
     });
-    renderPosts();
   </script>
 </body>
 </html>

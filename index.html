@@ -21,8 +21,9 @@
 
   <div class="topbar" id="topbar">
     <a class="topbar-brand" href="index.html">
-      <span class="topbar-logo-icon">◈</span>
+      <span class="topbar-logo-icon"><span class="logo-ks">K/S</span></span>
       <span class="topbar-logo-text">KoAus</span>
+      <span class="topbar-tagline"><b>Korea&nbsp;-&nbsp;Australia</b><span class="topbar-tagline-div">|</span>호주 한인 커뮤니티의 새로운 기준</span>
     </a>
     <div class="topbar-actions">
       <button class="topbar-login-btn" id="loginBtn">로그인</button>
@@ -139,7 +140,7 @@
           <a href="care.html" class="accord-link">Care</a>
         </div>
       </div>
-      <a href="mailto:sinhang0122@gmail.com" class="accord-direct-link">
+      <a href="contact.html" class="accord-direct-link">
         <span>Ad Inquiry <em>광고 문의</em></span>
       </a>
     </nav>
@@ -156,14 +157,18 @@
     <section class="notice-section">
       <div class="notice-row">
         <span class="notice-badge">Notice</span>
-        <span class="notice-text">숙소 · 구인구직 · 차량 게시판을 자유롭게 이용해 보세요 · Google 계정으로 간편 로그인 가능합니다</span>
+        <div class="notice-marquee">
+          <div class="notice-track">
+            <span class="notice-text">숙소 · 구인구직 · 차량 게시판을 자유롭게 이용해 보세요 · Google 계정으로 간편 로그인 가능합니다 · KoAus는 호주 한인 커뮤니티의 새로운 기준을 만들어 갑니다</span>
+            <span class="notice-text" aria-hidden="true">숙소 · 구인구직 · 차량 게시판을 자유롭게 이용해 보세요 · Google 계정으로 간편 로그인 가능합니다 · KoAus는 호주 한인 커뮤니티의 새로운 기준을 만들어 갑니다</span>
+          </div>
+        </div>
       </div>
     </section>
 
     <section class="calc-section">
       <div class="calc-header">
-        <h2 class="calc-title">실시간 환율 계산기</h2>
-        <span class="calc-updated" id="calcUpdated">불러오는 중…</span>
+        <h2 class="calc-title">환율 계산기</h2>
       </div>
       <div class="calc-input-row">
         <div class="calc-amount-wrap">
@@ -173,12 +178,26 @@
           <option value="aud">AUD</option>
           <option value="krw">KRW</option>
           <option value="usd">USD</option>
+          <option value="eur">EUR</option>
+          <option value="jpy">JPY</option>
+          <option value="gbp">GBP</option>
+          <option value="cad">CAD</option>
+          <option value="nzd">NZD</option>
+          <option value="cny">CNY</option>
+          <option value="sgd">SGD</option>
         </select>
         <span class="calc-arrow">→</span>
         <select class="calc-select" id="calcTo">
           <option value="krw">KRW</option>
           <option value="aud">AUD</option>
           <option value="usd">USD</option>
+          <option value="eur">EUR</option>
+          <option value="jpy">JPY</option>
+          <option value="gbp">GBP</option>
+          <option value="cad">CAD</option>
+          <option value="nzd">NZD</option>
+          <option value="cny">CNY</option>
+          <option value="sgd">SGD</option>
         </select>
         <button class="calc-swap-btn" id="calcSwap" title="방향 바꾸기">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
@@ -190,7 +209,10 @@
         <span class="calc-result" id="calcResult">—</span>
         <span class="calc-result-currency" id="calcResultCurrency">KRW</span>
       </div>
-      <div class="calc-rate-info" id="calcRateInfo"></div>
+      <div class="calc-meta">
+        <div class="calc-updated" id="calcUpdated">불러오는 중…</div>
+        <div class="calc-rate-info" id="calcRateInfo"></div>
+      </div>
       <div class="calc-compare" id="calcCompare" style="display:none;"></div>
     </section>
 
@@ -210,7 +232,7 @@
     <div class="footer-links">
       <a href="privacy.html">개인정보처리방침</a>
       <a href="terms.html">이용약관</a>
-      <a href="mailto:sinhang0122@gmail.com">문의하기</a>
+      <a href="contact.html">문의하기</a>
     </div>
     <div class="footer-stats">
       <span class="footer-stat-item">방문 <span class="footer-stat-num" id="visitCount">—</span></span>

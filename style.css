@@ -98,12 +98,29 @@ body {
   text-decoration: none;
 }
 .topbar-logo-icon {
-  font-size: 20px; color: var(--text-primary); font-weight: 900;
+  width: 32px; height: 32px; flex-shrink: 0;
+  border: 2px solid #111; background: #fff; border-radius: 5px;
+  display: flex; align-items: center; justify-content: center;
+}
+.logo-ks {
+  display: flex; align-items: center; justify-content: center;
+  width: 21px; height: 21px; background: #111; color: #fff;
+  border-radius: 2px; font-size: 8.5px; font-weight: 900; letter-spacing: -0.5px;
 }
 .topbar-logo-text {
-  font-size: 18px; font-weight: 900; letter-spacing: -0.5px;
+  font-size: 24px; font-weight: 900; letter-spacing: -0.5px;
   color: var(--text-primary);
 }
+.topbar-tagline {
+  display: flex; align-items: center; gap: 7px;
+  margin-left: 6px; padding-left: 10px;
+  border-left: 1px solid var(--border);
+  font-size: 11px; font-weight: 500; color: var(--text-muted); line-height: 1.2;
+  white-space: nowrap;
+}
+.topbar-tagline b { color: var(--text-secondary); font-weight: 700; }
+.topbar-tagline-div { color: var(--border); }
+@media (max-width: 720px) { .topbar-tagline { display: none; } }
 .topbar-actions {
   display: flex; align-items: center; gap: 8px;
 }
@@ -293,12 +310,14 @@ body {
    AdSense Wrap
 ════════════════════════════════════════════════════════════════════════ */
 .adsense-wrap {
-  min-height: 90px;
+  height: 90px; min-height: 0; max-height: 90px;
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--r-md);
-  overflow: hidden; text-align: center;
+  overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
 }
+.adsense-wrap ins { display: block; width: 100%; height: 90px; }
 
 /* ════════════════════════════════════════════════════════════════════════
    Home Layout — 3 Components
@@ -313,8 +332,8 @@ body {
 /* Notice Board */
 .notice-section {}
 .notice-row {
-  display: flex; align-items: center; justify-content: center; gap: 12px;
-  padding: 12px 20px; flex-wrap: wrap;
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 20px;
 }
 .notice-badge {
   font-size: 10px; font-weight: 800; letter-spacing: 0.1em;
@@ -322,9 +341,19 @@ body {
   background: var(--accent); color: var(--accent-text);
   border-radius: 3px; flex-shrink: 0;
 }
+.notice-marquee { flex: 1; min-width: 0; overflow: hidden; }
+.notice-track {
+  display: inline-flex; width: max-content;
+  animation: notice-scroll 28s linear infinite;
+}
+.notice-marquee:hover .notice-track { animation-play-state: paused; }
 .notice-text {
   font-size: 14px; color: var(--text-secondary); line-height: 1.5;
-  text-align: center;
+  white-space: nowrap; padding-right: 60px;
+}
+@keyframes notice-scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
 }
 
 /* Exchange Rate Calculator */
@@ -339,7 +368,8 @@ body {
   display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;
 }
 .calc-title { font-size: 20px; font-weight: 900; color: var(--text-primary); letter-spacing: -0.4px; }
-.calc-updated { font-size: 11px; color: var(--text-muted); }
+.calc-meta { display: flex; flex-direction: column; gap: 3px; }
+.calc-updated { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
 
 .calc-input-row {
   display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
@@ -396,7 +426,7 @@ body {
 .calc-result-currency {
   font-size: 20px; font-weight: 700; color: var(--text-muted);
 }
-.calc-rate-info { font-size: 12px; color: var(--text-muted); line-height: 1.6; }
+.calc-rate-info { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
 
 /* ════════════════════════════════════════════════════════════════════════
    Exchange Sub-page Cards
@@ -700,10 +730,13 @@ body {
   display: flex; justify-content: space-between; align-items: center; gap: 8px;
 }
 .calc-compare-label { color: var(--text-muted); font-size: 12px; }
+.calc-compare-label em { font-style: normal; font-size: 11px; color: var(--text-muted); opacity: 0.75; margin-left: 5px; }
 .calc-compare-value {
   font-weight: 700; color: var(--text-secondary);
   font-variant-numeric: tabular-nums; font-size: 13px;
 }
+.calc-compare-row--best .calc-compare-label { color: var(--text-primary); font-weight: 700; }
+.calc-compare-row--best .calc-compare-value { color: var(--text-primary); }
 .calc-compare-tip {
   font-size: 12px; font-weight: 600;
   padding: 10px 14px; border-radius: var(--r-sm);
@@ -1059,6 +1092,33 @@ body {
   .accom-grid { grid-template-columns: 1fr; }
   .accom-tab { font-size: 13px; padding: 12px 10px; }
 }
+
+/* ── Contact (광고 문의) Page ── */
+.contact-form {
+  background: var(--bg-surface); border: 1px solid var(--border);
+  border-radius: var(--r-xl); padding: 28px;
+  display: flex; flex-direction: column; gap: 18px;
+}
+.contact-field { display: flex; flex-direction: column; gap: 7px; }
+.contact-label { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); }
+.contact-input, .contact-textarea {
+  background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--r-md);
+  color: var(--text-primary); font-family: var(--font); font-size: 14px; padding: 12px 14px; outline: none;
+  transition: border-color 0.15s;
+}
+.contact-input::placeholder, .contact-textarea::placeholder { color: var(--text-muted); }
+.contact-input:focus, .contact-textarea:focus { border-color: var(--border-focus); }
+.contact-textarea { resize: vertical; min-height: 160px; line-height: 1.65; }
+.contact-actions { display: flex; justify-content: flex-end; }
+.contact-submit {
+  padding: 12px 32px; background: var(--accent); color: var(--accent-text); border: none;
+  border-radius: var(--r-md); font-family: var(--font); font-size: 14px; font-weight: 700; cursor: pointer;
+  transition: opacity 0.15s;
+}
+.contact-submit:hover { opacity: 0.85; }
+.contact-note { font-size: 13px; line-height: 1.6; min-height: 18px; margin: 0; }
+.contact-note--ok  { color: var(--green); }
+.contact-note--err { color: var(--red); }
 
 /* ── Care Page (placeholder) ── */
 .care-empty {

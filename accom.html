@@ -21,8 +21,9 @@
 
   <div class="topbar" id="topbar">
     <a class="topbar-brand" href="index.html">
-      <span class="topbar-logo-icon">◈</span>
+      <span class="topbar-logo-icon"><span class="logo-ks">K/S</span></span>
       <span class="topbar-logo-text">KoAus</span>
+      <span class="topbar-tagline"><b>Korea&nbsp;-&nbsp;Australia</b><span class="topbar-tagline-div">|</span>호주 한인 커뮤니티의 새로운 기준</span>
     </a>
     <div class="topbar-actions">
       <button type="button" class="topbar-login-btn" id="topbarLoginBtn">로그인</button>
@@ -139,7 +140,7 @@
           <a href="care.html" class="accord-link">Care</a>
         </div>
       </div>
-      <a href="mailto:sinhang0122@gmail.com" class="accord-direct-link">
+      <a href="contact.html" class="accord-direct-link">
         <span>Ad Inquiry <em>광고 문의</em></span>
       </a>
     </nav>
@@ -492,54 +493,8 @@
 
     // ── Data ──
     const STORE_KEY    = 'koaus-accom-posts';
-    const SEED_VERSION = '2026-05-qld-brisbane';   // SAMPLES 변경 시 localStorage 재시드용
-    const SAMPLES = [
-      {
-        id: 1, postType: 'offering',
-        title: '[브리즈번 시티 아파트 독방] 주 $220',
-        body: '브리즈번 시티 중심 아파트에서 독방 내놓습니다.\n\n- Queen Street Mall 도보 5분\n- 주 $220 (공과금 포함)\n- 가구 완비, 인터넷 무료\n- 시티 직장인/학생 환영',
-        author: '정해린', contact: 'haerin.j@email.com', date: '05/26',
-        address: 'Queen Street, Brisbane City QLD 4000', lat: -27.4698, lng: 153.0251,
-        price: 220, propType: 'apartment', roomType: 'single',
-        bathroom: 'shared', parking: false, petFriendly: false, kidsInHouse: false, airCon: true,
-      },
-      {
-        id: 2, postType: 'offering',
-        title: '[포티튜드 밸리 마스터룸] 주 $240',
-        body: '포티튜드 밸리 모던 유닛 마스터룸 내놓습니다.\n\n- 개인 욕실(Ensuite) 포함\n- 주 $240 (전기/가스 별도)\n- Valley 기차역 도보 7분\n- 밤문화·맛집 인근',
-        author: '오세훈', contact: '0431-XXX-XXX', date: '05/26',
-        address: 'Wickham Street, Fortitude Valley QLD 4006', lat: -27.4565, lng: 153.0348,
-        price: 240, propType: 'apartment', roomType: 'single',
-        bathroom: 'ensuite', parking: true, petFriendly: false, kidsInHouse: false, airCon: true,
-      },
-      {
-        id: 3, postType: 'offering',
-        title: '[써니뱅크 깨끗한 싱글룸] 주 $200',
-        body: '써니뱅크 조용한 하우스 싱글룸 내놓습니다.\n\n- 주 $200 (공과금 포함)\n- 한인마트·맛집 밀집 지역\n- Sunnybank Plaza 도보 거리\n- 주차 가능, 깨끗한 환경',
-        author: '한지우', contact: 'jiwoo.han@email.com', date: '05/25',
-        address: 'Mains Road, Sunnybank QLD 4109', lat: -27.5622, lng: 153.0558,
-        price: 200, propType: 'house', roomType: 'single',
-        bathroom: 'shared', parking: true, petFriendly: true, kidsInHouse: false, airCon: true,
-      },
-      {
-        id: 4, postType: 'offering',
-        title: '[스프링힐 시티 인근 유닛] 주 $220',
-        body: '스프링힐 시티 인근 유닛 룸 내놓습니다.\n\n- 시티까지 도보 12분\n- 주 $220 (인터넷 포함)\n- 조용한 주거 지역\n- 직장인 선호',
-        author: '배수지', contact: 'suzy.b@email.com', date: '05/25',
-        address: 'Boundary Street, Spring Hill QLD 4000', lat: -27.4612, lng: 153.0265,
-        price: 220, propType: 'unit', roomType: 'single',
-        bathroom: 'shared', parking: false, petFriendly: false, kidsInHouse: false, airCon: true,
-      },
-      {
-        id: 5, postType: 'offering',
-        title: '[사우스 브리즈번 모던 플랫] 주 $230',
-        body: '사우스 브리즈번 모던 플랫 룸 내놓습니다.\n\n- South Bank·Grey St 인근\n- 주 $230 (공과금 포함)\n- 강변 산책로·문화시설 도보권\n- 가구 완비',
-        author: '윤도현', contact: '0422-XXX-XXX', date: '05/24',
-        address: 'Grey Street, South Brisbane QLD 4101', lat: -27.4764, lng: 153.0203,
-        price: 230, propType: 'apartment', roomType: 'single',
-        bathroom: 'ensuite', parking: true, petFriendly: false, kidsInHouse: false, airCon: true,
-      },
-    ];
+    const SEED_VERSION = '2026-05-empty';   // SAMPLES 변경 시 localStorage 재시드용
+    const SAMPLES = [];
 
     // ── State ──
     let activeTab      = 'offering';
