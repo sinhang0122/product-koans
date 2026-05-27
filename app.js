@@ -132,33 +132,28 @@ const ICON_MOON = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none"
   <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
 </svg>`;
 
-/**
- * 테마 적용: data-theme 속성 토글 + 버튼 아이콘/툴팁 교체
- * @param {'dark'|'light'} theme
- */
 function applyTheme(theme) {
   const btn = document.getElementById('themeToggle');
-  if (theme === 'light') {
-    htmlEl.setAttribute('data-theme', 'light');
-    btn.innerHTML       = ICON_MOON;           // 달 아이콘 → 클릭하면 다크 복귀
-    btn.title           = '다크 모드로 전환';
-    btn.setAttribute('aria-label', '다크 모드로 전환');
+  if (theme === 'dark') {
+    htmlEl.setAttribute('data-theme', 'dark');
+    btn.innerHTML = ICON_SUN;
+    btn.title     = '라이트 모드로 전환';
+    btn.setAttribute('aria-label', '라이트 모드로 전환');
   } else {
     htmlEl.removeAttribute('data-theme');
-    btn.innerHTML       = ICON_SUN;            // 해 아이콘 → 클릭하면 라이트 전환
-    btn.title           = '라이트 모드로 전환';
-    btn.setAttribute('aria-label', '라이트 모드로 전환');
+    btn.innerHTML = ICON_MOON;
+    btn.title     = '다크 모드로 전환';
+    btn.setAttribute('aria-label', '다크 모드로 전환');
   }
 }
 
-/* 초기 테마 결정: ① 저장값 → ② 시스템 설정 → ③ 기본 dark */
+/* 초기 테마: ① 저장값 → ② 시스템 설정 → ③ 기본 light */
 const _saved = localStorage.getItem(THEME_KEY);
-const _sys   = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+const _sys   = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 applyTheme(_saved ?? _sys);
 
-/* 토글 버튼 클릭 → 테마 전환 & 저장 */
 document.getElementById('themeToggle').addEventListener('click', () => {
-  const next = htmlEl.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+  const next = htmlEl.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
   applyTheme(next);
   localStorage.setItem(THEME_KEY, next);
 });
@@ -182,8 +177,6 @@ const comma = n => Math.round(n).toLocaleString();
 const urlInput     = document.getElementById('urlInput');
 const clearBtn     = document.getElementById('clearBtn');
 const summarizeBtn = document.getElementById('summarizeBtn');
-const btnText      = summarizeBtn.querySelector('.btn-text');
-const btnLoader    = summarizeBtn.querySelector('.btn-loader');
 
 const resultEmpty   = document.getElementById('resultEmpty');
 const resultContent = document.getElementById('resultContent');
@@ -311,14 +304,9 @@ summarizeBtn.addEventListener('click', async () => {
     return;
   }
   summarizeBtn.disabled = true;
-  btnText.hidden = true; btnLoader.hidden = false;
-
-  await new Promise(r => setTimeout(r, 1500)); // 목업 딜레이
-
+  await new Promise(r => setTimeout(r, 1500));
   showMockResult(url, detectSource(url));
-
   summarizeBtn.disabled = false;
-  btnText.hidden = false; btnLoader.hidden = true;
 });
 urlInput.addEventListener('keydown', e => { if (e.key === 'Enter') summarizeBtn.click(); });
 
