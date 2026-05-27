@@ -1,6 +1,8 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut }
-  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import {
+  getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut,
+  createUserWithEmailAndPassword, signInWithEmailAndPassword,
+} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 
 const firebaseConfig = {
   apiKey:            'AIzaSyCamqnt0bNUD9uz1N5BbCuQjSkWLSpPqlU',
@@ -51,18 +53,89 @@ applyTheme(
   (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
 );
 
+// ── Auth Modal ──
+const authOverlay  = document.getElementById('authOverlay');
+const authClose    = document.getElementById('authClose');
+const openAuthModal  = () => { authOverlay.classList.add('open'); document.body.style.overflow = 'hidden'; };
+const closeAuthModal = () => { authOverlay.classList.remove('open'); document.body.style.overflow = ''; clearAuthErrors(); };
+
+authClose.addEventListener('click', closeAuthModal);
+authOverlay.addEventListener('click', e => { if (e.target === authOverlay) closeAuthModal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAuthModal(); });
+
+// Tabs
+document.querySelectorAll('.auth-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    const target = tab.dataset.authTab;
+    document.getElementById('authLoginForm').style.display  = target === 'login'  ? '' : 'none';
+    document.getElementById('authSignupForm').style.display = target === 'signup' ? '' : 'none';
+    clearAuthErrors();
+  });
+});
+
+function clearAuthErrors() {
+  document.getElementById('authLoginError').textContent  = '';
+  document.getElementById('authSignupError').textContent = '';
+}
+
+function authErrMsg(code) {
+  const map = {
+    'auth/email-already-in-use': '이미 사용 중인 이메일입니다.',
+    'auth/invalid-email':        '유효하지 않은 이메일입니다.',
+    'auth/weak-password':        '비밀번호는 6자 이상이어야 합니다.',
+    'auth/wrong-password':       '비밀번호가 틀렸습니다.',
+    'auth/user-not-found':       '등록되지 않은 이메일입니다.',
+    'auth/invalid-credential':   '이메일 또는 비밀번호가 올바르지 않습니다.',
+    'auth/too-many-requests':    '잠시 후 다시 시도해 주세요.',
+  };
+  return map[code] || '오류가 발생했습니다. 다시 시도해 주세요.';
+}
+
+// Email sign-up
+document.getElementById('authSignupSubmit').addEventListener('click', async () => {
+  const email = document.getElementById('authSignupEmail').value.trim();
+  const pw    = document.getElementById('authSignupPw').value;
+  const pw2   = document.getElementById('authSignupPwConfirm').value;
+  const errEl = document.getElementById('authSignupError');
+  if (!email || !pw) { errEl.textContent = '이메일과 비밀번호를 입력해 주세요.'; return; }
+  if (pw !== pw2)    { errEl.textContent = '비밀번호가 일치하지 않습니다.'; return; }
+  try {
+    await createUserWithEmailAndPassword(auth, email, pw);
+    closeAuthModal();
+  } catch (e) { errEl.textContent = authErrMsg(e.code); }
+});
+
+// Email sign-in
+document.getElementById('authLoginSubmit').addEventListener('click', async () => {
+  const email = document.getElementById('authLoginEmail').value.trim();
+  const pw    = document.getElementById('authLoginPw').value;
+  const errEl = document.getElementById('authLoginError');
+  if (!email || !pw) { errEl.textContent = '이메일과 비밀번호를 입력해 주세요.'; return; }
+  try {
+    await signInWithEmailAndPassword(auth, email, pw);
+    closeAuthModal();
+  } catch (e) { errEl.textContent = authErrMsg(e.code); }
+});
+
+// Google sign-in (modal button)
+document.getElementById('authGoogle').addEventListener('click', () => {
+  signInWithPopup(auth, provider).then(closeAuthModal).catch(() => {});
+});
+
 // ── Auth ──
 const loginBtn = document.getElementById('loginBtn');
 
 onAuthStateChanged(auth, user => {
   if (user) {
-    loginBtn.textContent = user.displayName?.split(' ')[0] || '계정';
+    loginBtn.textContent = user.displayName?.split(' ')[0] || user.email?.split('@')[0] || '계정';
     loginBtn.title = user.email;
     loginBtn.onclick = () => signOut(auth);
   } else {
     loginBtn.textContent = '로그인';
-    loginBtn.title = 'Google 로그인';
-    loginBtn.onclick = () => signInWithPopup(auth, provider).catch(() => {});
+    loginBtn.title = '로그인 / 회원가입';
+    loginBtn.onclick = openAuthModal;
   }
 });
 
