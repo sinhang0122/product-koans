@@ -257,28 +257,49 @@ async function fetchRates(base) {
   }
 }
 
-// "5월 27일 10시 기준 (open.er-api.com)" 형식
+// "5월 28일 오후 10시 기준 (open.er-api.com)" 형식 (오전/오후 + 12시간제)
 function formatUpdateTime() {
   if (usingFallback || !lastUpdateUnix) return '기본 환율 적용 중 (실시간 환율 불러오기 실패)';
   const d = new Date(lastUpdateUnix * 1000);
-  return `${d.getMonth() + 1}월 ${d.getDate()}일 ${d.getHours()}시 기준 (open.er-api.com)`;
+  const h = d.getHours();
+  const ampm = h < 12 ? '오전' : '오후';
+  const h12 = (h % 12) || 12;
+  return `${d.getMonth() + 1}월 ${d.getDate()}일 ${ampm} ${h12}시 기준 (open.er-api.com)`;
 }
 
-// 환율 표시용: 큰 값은 소수 1자리, 작은 값은 정밀하게
+// 환율 표시용: 큰 값은 소수 2자리, 작은 값은 정밀하게
 function fmtRate(r) {
-  if (r >= 100)  return r.toFixed(1);
+  if (r >= 100)  return r.toFixed(2);
   if (r >= 1)    return r.toFixed(2);
   if (r >= 0.01) return r.toFixed(4);
   return r.toFixed(6);
+}
+
+let rateManual = false;  // 사용자가 기준 환율을 직접 입력했는지
+
+// API 환율을 [기준 환율 입력 칸]에 채우고 라벨/단위 동기화
+function syncRateInput() {
+  const fromEl = document.getElementById('calcFrom');
+  const toEl   = document.getElementById('calcTo');
+  const rateEl = document.getElementById('calcRate');
+  if (!rateEl) return;
+  const from = fromEl.value, to = toEl.value;
+  const labelEl = document.getElementById('calcRateLabel');
+  const unitEl  = document.getElementById('calcRateUnit');
+  if (labelEl) labelEl.textContent = `기준 환율 (1 ${from.toUpperCase()})`;
+  if (unitEl)  unitEl.textContent  = to.toUpperCase();
+  const r = ratesCache[from];
+  if (r && r[to] != null) rateEl.value = r[to] >= 100 ? r[to].toFixed(2) : r[to].toFixed(6);
 }
 
 function renderCalc() {
   const amountEl  = document.getElementById('calcAmount');
   const fromEl    = document.getElementById('calcFrom');
   const toEl      = document.getElementById('calcTo');
+  const rateInEl  = document.getElementById('calcRate');
   const resultEl  = document.getElementById('calcResult');
   const curEl     = document.getElementById('calcResultCurrency');
-  const rateEl    = document.getElementById('calcRateInfo');
+  const rateInfoEl= document.getElementById('calcRateInfo');
   const updatedEl = document.getElementById('calcUpdated');
   if (!amountEl) return;
 
@@ -293,49 +314,67 @@ function renderCalc() {
     return;
   }
 
-  const rate      = r[to];
-  const converted = amount * rate;
+  const apiRate = r[to];
+  // 사용자가 직접 입력한 기준 환율이 있으면 그 값을, 없으면 API 값을 사용
+  let rate = parseFloat(rateInEl && rateInEl.value);
+  if (!isFinite(rate) || rate <= 0) rate = apiRate;
 
-  resultEl.textContent  = converted.toFixed(2);
+  resultEl.textContent  = (amount * rate).toLocaleString(undefined, { maximumFractionDigits: 2 });
   curEl.textContent     = to.toUpperCase();
-  rateEl.textContent    = `1 ${from.toUpperCase()} = ${fmtRate(rate)} ${to.toUpperCase()}`;
+  rateInfoEl.textContent = `1 ${from.toUpperCase()} = ${fmtRate(rate)} ${to.toUpperCase()}` + (rateManual ? ' (수동 입력)' : '');
   updatedEl.textContent = formatUpdateTime();
 
-  const compareEl = document.getElementById('calcCompare');
-  if (compareEl) {
-    if (from === 'aud' && to === 'krw' && amount > 0) {
-      // 송금 앱별 환율 우대(수수료) 차등: 기준 환율에서 앱마다 다른 고정 비율을 차감
-      const apps = [
-        { name: 'WireBarley', disc: 0.010 },
-        { name: 'Wise',       disc: 0.012 },
-        { name: 'Sentbe',     disc: 0.013 },
-        { name: 'Remitly',    disc: 0.015 },
-      ];
-      const fmt0 = n => Math.round(n).toLocaleString();
-      const rows = apps.map(a => {
-        const appliedRate = rate * (1 - a.disc);
-        return { name: a.name, disc: a.disc, appliedRate, recv: amount * appliedRate };
-      });
-      const best = rows.reduce((a, b) => (b.recv > a.recv ? b : a));
-      compareEl.innerHTML =
-        rows.map(a => `
-          <div class="calc-compare-row${a.name === best.name ? ' calc-compare-row--best' : ''}">
-            <span class="calc-compare-label">${a.name} <em>적용환율 ${a.appliedRate.toFixed(1)}원 (-${(a.disc * 100).toFixed(1)}%)</em></span>
-            <span class="calc-compare-value">${fmt0(a.recv)} KRW</span>
-          </div>`).join('') +
-        `<div class="calc-compare-tip">💡 현재 환율 기준 <strong>${best.name}</strong>가 가장 유리합니다</div>`;
-      compareEl.style.display = 'flex';
-    } else {
-      compareEl.style.display = 'none';
-    }
-  }
+  renderCompare(from, to, amount, rate);
 }
 
+// 송금 앱별 구간 수수료·한도 비교 (AUD → KRW 전용)
+function renderCompare(from, to, amount, rate) {
+  const compareEl = document.getElementById('calcCompare');
+  if (!compareEl) return;
+  if (from !== 'aud' || to !== 'krw' || amount <= 0) { compareEl.style.display = 'none'; return; }
+
+  const fmt0 = n => Math.round(n).toLocaleString();
+  const wbFee = a => (a < 1000 ? 1.49 : a < 3000 ? 1.29 : 0.99);  // WireBarley 구간 고정 수수료
+  const rows = [];
+
+  // WireBarley — 한도 $6,200, 구간 고정 수수료를 원금에서 차감 후 환율 적용
+  if (amount > 6200) rows.push({ name: 'WireBarley', blocked: '송금 한도 초과 ($6,200까지 가능)' });
+  else { const f = wbFee(amount); rows.push({ name: 'WireBarley', feeText: `수수료 $${f.toFixed(2)}`, recv: (amount - f) * rate }); }
+
+  // Wise — 한도 없음, 0.45% 비율 수수료
+  rows.push({ name: 'Wise', feeText: '수수료 0.45%', recv: amount * (1 - 0.0045) * rate });
+
+  // Sentbe — 한도 $5,000, 고정 수수료 $2.50
+  if (amount > 5000) rows.push({ name: 'Sentbe', blocked: '송금 한도 초과 ($5,000까지 가능)' });
+  else rows.push({ name: 'Sentbe', feeText: '수수료 $2.50', recv: (amount - 2.50) * rate });
+
+  // Remitly — 한도 없음, $1,000 미만 $3.99 / 이상 무료
+  { const f = amount < 1000 ? 3.99 : 0; rows.push({ name: 'Remitly', feeText: f ? `수수료 $${f.toFixed(2)}` : '수수료 무료', recv: (amount - f) * rate }); }
+
+  const valid = rows.filter(x => !x.blocked && x.recv > 0);
+  const best  = valid.length ? valid.reduce((a, b) => (b.recv > a.recv ? b : a)) : null;
+
+  compareEl.innerHTML =
+    `<div class="calc-compare-head"><span>송금 앱</span><span>예상 수취액</span></div>` +
+    rows.map(x => {
+      if (x.blocked) {
+        return `<div class="calc-compare-row calc-compare-row--blocked">
+          <span class="calc-compare-label">${x.name}</span>
+          <span class="calc-compare-value calc-compare-blocked">${x.blocked}</span></div>`;
+      }
+      const isBest = best && x.name === best.name;
+      return `<div class="calc-compare-row${isBest ? ' calc-compare-row--best' : ''}">
+        <span class="calc-compare-label">${x.name} <em>${x.feeText}</em></span>
+        <span class="calc-compare-value">${fmt0(x.recv)} KRW</span></div>`;
+    }).join('') +
+    (best ? `<div class="calc-compare-tip">💡 입력 금액 기준 <strong>${best.name}</strong>가 가장 많이 보냅니다</div>` : '');
+  compareEl.style.display = 'flex';
+}
+
+// 항상 최신 환율을 가져온다 (새로고침/주기 갱신 시 최신 동기화)
 async function loadRatesFor(base) {
-  if (!ratesCache[base]) {
-    document.getElementById('calcUpdated').textContent = '불러오는 중…';
-    ratesCache[base] = await fetchRates(base);
-  }
+  document.getElementById('calcUpdated').textContent = '불러오는 중…';
+  ratesCache[base] = await fetchRates(base);
 }
 
 async function setupCalc() {
@@ -344,28 +383,32 @@ async function setupCalc() {
 
   const fromEl = document.getElementById('calcFrom');
   const toEl   = document.getElementById('calcTo');
+  const rateEl = document.getElementById('calcRate');
 
-  // 페이지 로드 시 최초 1회만 fetch
   await loadRatesFor(fromEl.value);
+  syncRateInput();
   renderCalc();
 
-  // 금액 입력: fetch 없이 계산만
   amountEl.addEventListener('input', renderCalc);
-  toEl.addEventListener('change', renderCalc);
-
-  // 기준 통화 변경: 해당 통화 rates가 없을 때만 fetch
+  // 기준 환율 직접 입력 → 수동 모드, 즉시 재계산
+  rateEl.addEventListener('input', () => { rateManual = true; renderCalc(); });
+  toEl.addEventListener('change', () => { rateManual = false; syncRateInput(); renderCalc(); });
   fromEl.addEventListener('change', async () => {
     await loadRatesFor(fromEl.value);
-    renderCalc();
+    rateManual = false; syncRateInput(); renderCalc();
+  });
+  document.getElementById('calcSwap').addEventListener('click', async () => {
+    const tmp = fromEl.value; fromEl.value = toEl.value; toEl.value = tmp;
+    await loadRatesFor(fromEl.value);
+    rateManual = false; syncRateInput(); renderCalc();
   });
 
-  document.getElementById('calcSwap').addEventListener('click', async () => {
-    const tmp    = fromEl.value;
-    fromEl.value = toEl.value;
-    toEl.value   = tmp;
-    await loadRatesFor(fromEl.value);
+  // 10분마다 자동 갱신 (수동 입력 중이면 기준값은 보존)
+  setInterval(async () => {
+    ratesCache[fromEl.value] = await fetchRates(fromEl.value);
+    if (!rateManual) syncRateInput();
     renderCalc();
-  });
+  }, 600000);
 }
 
 setupCalc();

@@ -15,8 +15,8 @@
   --border-subtle:  #ebebeb;
   --border-focus:   #000000;
   --text-primary:   #000000;
-  --text-secondary: #333333;
-  --text-muted:     #888888;
+  --text-secondary: #000000;
+  --text-muted:     #000000;
   --accent:         #000000;
   --accent-hover:   #222222;
   --accent-dim:     rgba(0, 0, 0, 0.06);
@@ -48,8 +48,8 @@
   --border-subtle:  #1e1e1e;
   --border-focus:   #ffffff;
   --text-primary:   #ffffff;
-  --text-secondary: #cccccc;
-  --text-muted:     #666666;
+  --text-secondary: #ffffff;
+  --text-muted:     #ffffff;
   --accent:         #ffffff;
   --accent-hover:   #dddddd;
   --accent-dim:     rgba(255, 255, 255, 0.08);
@@ -186,7 +186,7 @@ body {
 .sidebar-close-btn {
   width: 34px; height: 34px;
   background: #111; border: 1px solid #222;
-  border-radius: var(--r-sm); color: #888;
+  border-radius: var(--r-sm); color: #fff;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; font-size: 18px;
   transition: background 0.15s, color 0.15s;
@@ -213,17 +213,17 @@ body {
 }
 .sidebar-setting-label {
   font-size: 11px; font-weight: 700;
-  color: #444; letter-spacing: 0.08em; text-transform: uppercase;
+  color: #fff; letter-spacing: 0.08em; text-transform: uppercase;
 }
 .sidebar-setting-btns { display: flex; gap: 4px; }
 .setting-btn {
   padding: 5px 12px;
   background: none; border: 1px solid #222;
-  border-radius: var(--r-sm); color: #555;
+  border-radius: var(--r-sm); color: #fff;
   font-family: var(--font); font-size: 12px; font-weight: 700;
   cursor: pointer; transition: all 0.15s;
 }
-.setting-btn:hover { background: #111; color: #aaa; border-color: #333; }
+.setting-btn:hover { background: #111; color: #fff; border-color: #333; }
 .setting-btn.active { background: #ffffff; color: #000000; border-color: #ffffff; }
 
 /* ── 아코디언 내비 ── */
@@ -236,7 +236,7 @@ body {
   display: flex; align-items: center; justify-content: space-between;
   padding: 14px 20px;
   background: none; border: none;
-  color: #aaaaaa;
+  color: #fff;
   font-family: var(--font); font-size: 22px !important; font-weight: 800 !important;
   cursor: pointer; text-align: left;
   transition: background 0.12s, color 0.12s;
@@ -244,13 +244,13 @@ body {
 .accord-header:hover { background: #0a0a0a; color: #ffffff; }
 .accord-header em {
   font-style: normal; font-size: 15px !important; font-weight: 600 !important;
-  color: #6a6a6a; margin-left: 8px; letter-spacing: 0.02em;
+  color: #fff; margin-left: 8px; letter-spacing: 0.02em;
 }
 .accord-arrow {
-  flex-shrink: 0; color: #333;
+  flex-shrink: 0; color: #fff;
   transition: transform 0.25s ease, color 0.15s;
 }
-.accord-item.open .accord-arrow { transform: rotate(180deg); color: #888; }
+.accord-item.open .accord-arrow { transform: rotate(180deg); color: #fff; }
 
 .accord-body {
   max-height: 0; overflow: hidden;
@@ -262,7 +262,7 @@ body {
 .accord-link {
   display: flex; align-items: center; justify-content: space-between;
   padding: 11px 20px 11px 28px;
-  color: #888; text-decoration: none;
+  color: #fff; text-decoration: none;
   font-size: 16px; font-weight: 700;
   transition: background 0.12s, color 0.12s;
 }
@@ -276,17 +276,17 @@ body {
 .accord-sublabel {
   display: block; padding: 9px 20px 5px;
   font-size: 13px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;
-  color: #999;
+  color: #fff;
 }
 /* 하위 상세 메뉴: 1.2배 상향 + 굵기 한 단계 업 */
 .accord-link--sub {
-  padding-left: 32px; font-size: 15px; font-weight: 500; color: #999;
+  padding-left: 32px; font-size: 15px; font-weight: 500; color: #fff;
 }
 .accord-link--sub:hover { color: #fff; }
 .soon-tag {
   font-size: 9px; font-weight: 700;
   padding: 2px 6px; border-radius: 3px;
-  background: #111; color: #444;
+  background: #111; color: #fff;
   border: 1px solid #1e1e1e;
 }
 
@@ -297,10 +297,10 @@ body {
 }
 .sidebar-exchange-link {
   display: block; font-size: 12px; font-weight: 600;
-  color: #555; text-decoration: none;
+  color: #fff; text-decoration: none;
   transition: color 0.15s;
 }
-.sidebar-exchange-link:hover { color: #aaaaaa; }
+.sidebar-exchange-link:hover { color: #fff; }
 
 @media (max-width: 480px) { .sidebar { width: 100%; } }
 
@@ -449,6 +449,27 @@ body {
   font-size: 20px; font-weight: 700; color: var(--text-muted);
 }
 .calc-rate-info { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+
+/* 기준 환율 직접 입력 칸 */
+.calc-rate-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  padding: 12px 0; border-top: 1px solid var(--border-subtle);
+}
+.calc-rate-label { font-size: 13px; font-weight: 700; color: var(--text-secondary); }
+.calc-rate-wrap {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--r-md);
+  padding: 4px 12px; transition: border-color 0.2s;
+}
+.calc-rate-wrap:focus-within { border-color: var(--border-focus); }
+.calc-rate-input {
+  width: 120px; padding: 8px 0; background: transparent; border: none; outline: none;
+  color: var(--text-primary); font-family: var(--font); font-size: 18px; font-weight: 700;
+  font-variant-numeric: tabular-nums; text-align: right;
+}
+.calc-rate-input::-webkit-outer-spin-button,
+.calc-rate-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+.calc-rate-unit { font-size: 13px; font-weight: 700; color: var(--text-muted); }
 
 /* ════════════════════════════════════════════════════════════════════════
    Exchange Sub-page Cards
@@ -726,12 +747,12 @@ body {
   width: 100%; display: block;
   padding: 10px 20px 10px 28px;
   background: none; border: none;
-  color: #666; font-family: var(--font);
+  color: #fff; font-family: var(--font);
   font-size: 13px; font-weight: 500;
   cursor: pointer; text-align: left;
   transition: background 0.12s, color 0.12s;
 }
-.theme-accord-btn:hover { background: #0a0a0a; color: #cccccc; }
+.theme-accord-btn:hover { background: #0a0a0a; color: #fff; }
 .theme-accord-btn.active { color: #ffffff; font-weight: 700; }
 
 /* ── Ad Inquiry Direct Link ── */
@@ -739,7 +760,7 @@ body {
   display: flex; align-items: center;
   padding: 14px 20px;
   border-bottom: 1px solid #111;
-  color: #aaaaaa; text-decoration: none;
+  color: #fff; text-decoration: none;
   font-size: 14px; font-weight: 700;
   font-family: var(--font);
   transition: background 0.12s, color 0.12s;
@@ -747,7 +768,7 @@ body {
 .accord-direct-link:hover { background: #0a0a0a; color: #ffffff; }
 .accord-direct-link em {
   font-style: normal; font-size: 10px; font-weight: 400;
-  color: #3a3a3a; margin-left: 6px; letter-spacing: 0.04em;
+  color: #fff; margin-left: 6px; letter-spacing: 0.04em;
 }
 
 /* ── Sidebar Account ── */
@@ -760,7 +781,7 @@ body {
   width: 100%;
   padding: 10px 14px;
   background: #111; border: 1px solid #222;
-  border-radius: var(--r-sm); color: #666;
+  border-radius: var(--r-sm); color: #fff;
   font-family: var(--font); font-size: 13px; font-weight: 600;
   cursor: pointer; text-align: center;
   transition: all 0.15s;
@@ -778,13 +799,21 @@ body {
   display: flex; justify-content: space-between; align-items: center; gap: 8px;
 }
 .calc-compare-label { color: var(--text-muted); font-size: 12px; }
-.calc-compare-label em { font-style: normal; font-size: 11px; color: var(--text-muted); opacity: 0.75; margin-left: 5px; }
+.calc-compare-label em { font-style: normal; font-size: 11px; color: var(--text-muted); margin-left: 5px; }
 .calc-compare-value {
   font-weight: 700; color: var(--text-secondary);
   font-variant-numeric: tabular-nums; font-size: 13px;
 }
-.calc-compare-row--best .calc-compare-label { color: var(--text-primary); font-weight: 700; }
+.calc-compare-row--best { background: var(--accent-dim); border-radius: var(--r-sm); padding: 6px 10px; margin: 0 -10px; }
+.calc-compare-row--best .calc-compare-label { color: var(--text-primary); font-weight: 800; }
 .calc-compare-row--best .calc-compare-value { color: var(--text-primary); }
+.calc-compare-head {
+  display: flex; justify-content: space-between; font-size: 11px; font-weight: 800;
+  letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-muted);
+  border-bottom: 1px solid var(--border); padding-bottom: 8px;
+}
+.calc-compare-row--blocked .calc-compare-label { color: var(--text-muted); }
+.calc-compare-blocked { color: var(--red); font-size: 12px; font-weight: 600; }
 .calc-compare-tip {
   font-size: 12px; font-weight: 600;
   padding: 10px 14px; border-radius: var(--r-sm);
