@@ -627,6 +627,12 @@ body {
 }
 .write-input::placeholder, .write-textarea::placeholder { color: var(--text-muted); }
 .write-input[readonly] { background: var(--bg-elevated); cursor: default; }
+/* 면책 조항 동의 — 차분한 회색 텍스트 + 명확한 체크박스 */
+.disclaimer-check {
+  display: flex; align-items: flex-start; gap: 9px; cursor: pointer;
+  font-size: 12.5px; line-height: 1.6; color: #64748B;
+}
+.disclaimer-check input { accent-color: var(--accent); width: 17px; height: 17px; flex-shrink: 0; margin-top: 1px; cursor: pointer; }
 .write-input:focus, .write-textarea:focus { border-color: var(--border-focus); }
 .write-textarea { resize: vertical; min-height: 130px; line-height: 1.7; }
 /* select도 input과 동일한 높이 + B&W 화살표로 통일 */

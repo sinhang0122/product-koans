@@ -406,6 +406,13 @@
         <label class="write-label" for="wContact">연락처 Contact<span class="required-mark">*</span></label>
         <input class="write-input" id="wContact" type="tel" placeholder="예: 0412345678 (호주 10자리)" maxlength="20" />
       </div>
+      <div class="write-field">
+        <label class="disclaimer-check">
+          <input type="checkbox" id="wDisclaimer">
+          <span>[필수] 본 플랫폼(KoAus)은 사용자 간의 정보 공유 공간만을 제공하며, 직거래로 인해 발생하는 모든 법적, 금전적 분쟁과 책임은 거래 당사자에게 있음에 동의합니다.</span>
+        </label>
+      </div>
+
       <div class="write-modal-actions">
         <button class="write-cancel-btn" id="writeBtnCancel">취소</button>
         <button class="write-submit-btn" id="writeBtnSubmit">등록하기</button>
@@ -466,7 +473,7 @@
     const params   = new URLSearchParams(location.search);
     const category = CATEGORIES[params.get('category')] ? params.get('category') : 'used-car';
     const stateKey = (params.get('state') || '').toLowerCase();
-    const STORE_KEY = 'koaus-auto-' + category + '-posts';
+    const STORE_KEY = 'koaus-auto-posts';  // 단일 컬렉션, category 속성으로 구분
     const PER_PAGE = 10;
     let currentPage = 1;
 
@@ -474,8 +481,10 @@
     document.getElementById('autoSubtitle').textContent = 'Auto · ' + CATEGORIES[category] + ' 게시판';
 
     function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-    function loadPosts() { try { return JSON.parse(localStorage.getItem(STORE_KEY) || '[]'); } catch { return []; } }
-    function savePosts(p) { localStorage.setItem(STORE_KEY, JSON.stringify(p)); }
+    function loadAll() { try { return JSON.parse(localStorage.getItem(STORE_KEY) || '[]'); } catch { return []; } }
+    function saveAll(arr) { localStorage.setItem(STORE_KEY, JSON.stringify(arr)); }
+    // 현재 카테고리 글만 필터링
+    function loadPosts() { return loadAll().filter(p => p.category === category); }
 
     function renderPosts() {
       const all = loadPosts().slice().sort((a, b) => b.id - a.id);
@@ -531,16 +540,19 @@
       // 호주 전화번호 10자리 검증
       const phone = contactRaw.replace(/[-\s]/g, '');
       if (!/^0\d{9}$/.test(phone)) { alert('올바른 호주 전화번호 10자리를 입력해 주세요. (예: 0412345678)'); return; }
+      // 면책 조항 동의 필수
+      if (!document.getElementById('wDisclaimer').checked) { alert('등록을 위해 면책 조항에 동의해 주세요.'); return; }
       const author = document.getElementById('wAuthor').value.trim() || '익명';
       const d = new Date();
       const pad = n => String(n).padStart(2, '0');
       const date = pad(d.getMonth() + 1) + '/' + pad(d.getDate());
       const time = pad(d.getHours()) + ':' + pad(d.getMinutes());
-      const posts = loadPosts();
-      posts.push({ id: Date.now(), title, body, author, contact: phone, state: stateKey, category, date, time });
-      savePosts(posts);
+      const all = loadAll();
+      all.push({ id: Date.now(), title, body, author, contact: phone, state: stateKey, category, date, time });
+      saveAll(all);
       writeOverlay.classList.remove('open');
       ['wTitle','wBody','wAuthor','wContact'].forEach(id => { document.getElementById(id).value = ''; });
+      document.getElementById('wDisclaimer').checked = false;
       currentPage = 1;
       renderPosts();
     });
