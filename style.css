@@ -615,6 +615,7 @@ body {
 }
 .write-field { display: flex; flex-direction: column; gap: 8px; }
 .write-label { font-size: 14px; font-weight: 700; color: var(--text-primary); letter-spacing: 0.01em; margin-bottom: 2px; }
+.required-mark { margin-left: 4px; font-weight: bold; color: var(--text-primary); }
 .write-input, .write-textarea {
   width: 100%; display: block;
   background: var(--bg-input); border: 1px solid var(--border);
