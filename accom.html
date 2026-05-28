@@ -241,9 +241,6 @@
     <div class="sidebar-footer-nav">
       <a href="powerball.html" class="sidebar-exchange-link">🎱 파워볼 당첨 번호 →</a>
     </div>
-    <div class="sidebar-account">
-      <button class="sidebar-account-btn" id="sidebarAccountBtn">내 계정 (My Account)</button>
-    </div>
   </aside>
 
   <main class="page-container">
@@ -586,7 +583,6 @@
     }
     document.querySelectorAll('.setting-btn').forEach(btn => btn.addEventListener('click', () => applyTheme(btn.dataset.themeSet)));
     applyTheme(localStorage.getItem('koaus-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
-    document.getElementById('sidebarAccountBtn').addEventListener('click', () => { window.location.href = 'mypage.html'; });
 
     // ── Data ──
     const STORE_KEY    = 'koaus-accom-posts';
@@ -828,6 +824,7 @@
         posts.push(target);
         savePosts(posts);
         recordMyPost(target);
+        console.log('[KoAus] 숙소 글 저장 — uid:', target.uid, '| email:', target.email, '| id:', target.id);
       }
 
       currentPage = 1;
@@ -1018,11 +1015,28 @@
             <span>${authorLabel(p)}</span>
             <span>${p.date}${p.time ? ' ' + p.time : ''}</span>
           </div>
+          ${isMine(p) ? `<div class="card-actions">
+            <button class="mp-edit card-edit" data-id="${p.id}">수정</button>
+            <button class="mp-del card-del" data-id="${p.id}">삭제</button>
+          </div>` : ''}
         </div>`;
       }).join('');
 
       grid.querySelectorAll('.accom-card').forEach(card => {
         card.addEventListener('click', () => openDetail(card.dataset.id));
+      });
+      grid.querySelectorAll('.card-edit').forEach(btn => {
+        btn.addEventListener('click', e => {
+          e.stopPropagation();
+          const p = loadPosts().find(x => String(x.id) === String(btn.dataset.id));
+          if (p) openWriteModalForEdit(p);
+        });
+      });
+      grid.querySelectorAll('.card-del').forEach(btn => {
+        btn.addEventListener('click', e => {
+          e.stopPropagation();
+          deletePost(btn.dataset.id);
+        });
       });
       grid.querySelectorAll('.bookmark-btn').forEach(btn => {
         btn.addEventListener('click', e => {

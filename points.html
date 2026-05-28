@@ -241,9 +241,6 @@
     <div class="sidebar-footer-nav">
       <a href="powerball.html" class="sidebar-exchange-link">🎱 파워볼 당첨 번호 →</a>
     </div>
-    <div class="sidebar-account">
-      <button class="sidebar-account-btn" id="sidebarAccountBtn">내 계정 (My Account)</button>
-    </div>
   </aside>
 
   <main class="page-container">
@@ -394,7 +391,6 @@
     }
     document.querySelectorAll('.setting-btn').forEach(btn => btn.addEventListener('click', () => applyTheme(btn.dataset.themeSet)));
     applyTheme(localStorage.getItem('koaus-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
-    document.getElementById('sidebarAccountBtn').addEventListener('click', () => { window.location.href = 'mypage.html'; });
 
     // ── 점수 섹션 아코디언 ──
     document.querySelectorAll('.points-acc-hdr').forEach(h => {

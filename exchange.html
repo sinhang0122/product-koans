@@ -241,9 +241,6 @@
     <div class="sidebar-footer-nav">
       <a href="powerball.html" class="sidebar-exchange-link">🎱 파워볼 당첨 번호 →</a>
     </div>
-    <div class="sidebar-account">
-      <button class="sidebar-account-btn" id="sidebarAccountBtn">내 계정 (My Account)</button>
-    </div>
   </aside>
 
   <main class="page-container">
@@ -301,7 +298,6 @@
     }
     document.querySelectorAll('.setting-btn').forEach(btn => btn.addEventListener('click', () => applyTheme(btn.dataset.themeSet)));
     applyTheme(localStorage.getItem('koaus-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
-    document.getElementById('sidebarAccountBtn').addEventListener('click', () => { window.location.href = 'mypage.html'; });
 
     const today = new Date().toLocaleDateString('ko-KR', { year:'numeric', month:'2-digit', day:'2-digit', weekday:'short' });
     document.getElementById('exchangeUpdated').textContent = `기준일: ${today} · 실시간 API 연동 준비 중`;

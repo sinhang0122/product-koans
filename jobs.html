@@ -241,9 +241,6 @@
     <div class="sidebar-footer-nav">
       <a href="powerball.html" class="sidebar-exchange-link">🎱 파워볼 당첨 번호 →</a>
     </div>
-    <div class="sidebar-account">
-      <button class="sidebar-account-btn" id="sidebarAccountBtn">내 계정 (My Account)</button>
-    </div>
   </aside>
 
   <main class="page-container">
@@ -372,7 +369,6 @@
     }
     document.querySelectorAll('.setting-btn').forEach(btn => btn.addEventListener('click', () => applyTheme(btn.dataset.themeSet)));
     applyTheme(localStorage.getItem('koaus-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
-    document.getElementById('sidebarAccountBtn').addEventListener('click', () => { window.location.href = 'mypage.html'; });
 
     const STORE_KEY = 'koaus-jobs-posts';
     const SEED_VERSION = '2026-05-empty';
@@ -472,7 +468,10 @@
         return `
         <div class="post-row${isMine(p) ? ' my-post-highlight' : ''}" data-id="${p.id}" style="cursor:pointer">
           <span class="post-num">${sorted.length - (start + i)}</span>
-          <span class="post-title" style="color:var(--text-primary);font-weight:500;">${escHtml(p.title)}</span>
+          <span class="post-title" style="color:var(--text-primary);font-weight:500;">
+            <span class="post-title-text">${escHtml(p.title)}</span>
+            ${isMine(p) ? `<span class="row-actions"><button class="mp-edit row-edit" data-id="${p.id}">수정</button><button class="mp-del row-del" data-id="${p.id}">삭제</button></span>` : ''}
+          </span>
           <span class="post-author">${authorLabel(p)}</span>
           <span class="post-date">${p.date}${p.time ? ' ' + p.time : ''}</span>
           <button class="bookmark-btn${saved ? ' is-saved' : ''}" data-id="${p.id}" title="저장한 글" aria-label="저장">${saved ? '★' : '☆'}</button>
@@ -480,6 +479,15 @@
       }).join('');
 
       list.querySelectorAll('.post-row').forEach(row => row.addEventListener('click', () => openDetail(row.dataset.id)));
+      list.querySelectorAll('.row-edit').forEach(btn => btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const p = loadPosts().find(x => String(x.id) === String(btn.dataset.id));
+        if (p) openWriteModalForEdit(p);
+      }));
+      list.querySelectorAll('.row-del').forEach(btn => btn.addEventListener('click', e => {
+        e.stopPropagation();
+        deletePost(btn.dataset.id);
+      }));
       list.querySelectorAll('.bookmark-btn').forEach(btn => {
         btn.addEventListener('click', e => {
           e.stopPropagation();
@@ -609,6 +617,7 @@
         posts.push(post);
         savePosts(posts);
         recordMyPost(post);
+        console.log('[KoAus] 구인구직 글 저장 — uid:', post.uid, '| email:', post.email, '| id:', post.id);
       }
       setWriteMode('create');
       writeOverlay.classList.remove('open');
