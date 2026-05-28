@@ -192,6 +192,13 @@ body {
   transition: background 0.15s, color 0.15s;
 }
 .sidebar-close-btn:hover { background: #1a1a1a; color: #fff; }
+.sidebar-header-right { display: flex; align-items: center; gap: 10px; }
+.sidebar-acct-top {
+  font-size: 13px; font-weight: 700; color: #ddd; text-decoration: none;
+  background: #1a1a1a; border: 1px solid #333; border-radius: 6px;
+  padding: 7px 13px; white-space: nowrap; transition: all 0.12s;
+}
+.sidebar-acct-top:hover { background: #262626; color: #fff; border-color: #555; }
 
 /* 사이드바 설정 (테마) */
 .sidebar-settings {
@@ -229,14 +236,14 @@ body {
   padding: 14px 20px;
   background: none; border: none;
   color: #aaaaaa;
-  font-family: var(--font); font-size: 14px; font-weight: 700;
+  font-family: var(--font); font-size: 17px; font-weight: 800;
   cursor: pointer; text-align: left;
   transition: background 0.12s, color 0.12s;
 }
 .accord-header:hover { background: #0a0a0a; color: #ffffff; }
 .accord-header em {
-  font-style: normal; font-size: 10px; font-weight: 400;
-  color: #3a3a3a; margin-left: 6px; letter-spacing: 0.04em;
+  font-style: normal; font-size: 12px; font-weight: 500;
+  color: #5a5a5a; margin-left: 6px; letter-spacing: 0.04em;
 }
 .accord-arrow {
   flex-shrink: 0; color: #333;
@@ -253,26 +260,26 @@ body {
 
 .accord-link {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 10px 20px 10px 28px;
-  color: #666; text-decoration: none;
-  font-size: 13px; font-weight: 500;
+  padding: 11px 20px 11px 28px;
+  color: #888; text-decoration: none;
+  font-size: 16px; font-weight: 700;
   transition: background 0.12s, color 0.12s;
 }
-.accord-link:hover { background: #0a0a0a; color: #cccccc; }
-.accord-link--active { color: #ffffff; font-weight: 700; }
+.accord-link:hover { background: #0a0a0a; color: #ffffff; }
+.accord-link--active { color: #ffffff; font-weight: 800; }
 .accord-link--soon { opacity: 0.35; pointer-events: none; }
 
 /* Nested sub-categories (Living / Work / Visa & Migration) */
 .accord-subgroup { padding: 4px 0 6px; border-bottom: 1px solid #0d0d0d; }
-/* 서브 카테고리 소제목: 작은 글씨 + 굵은 폰트 */
+/* 서브 카테고리 소제목: 작은 글씨 + 굵은 폰트 (1.2배 상향) */
 .accord-sublabel {
-  display: block; padding: 8px 20px 4px;
-  font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
-  color: #888;
+  display: block; padding: 9px 20px 5px;
+  font-size: 13px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;
+  color: #999;
 }
-/* 하위 상세 메뉴: 작은 글씨 + 얇은 폰트 */
+/* 하위 상세 메뉴: 1.2배 상향 + 굵기 한 단계 업 */
 .accord-link--sub {
-  padding-left: 32px; font-size: 13px; font-weight: 400; color: #777;
+  padding-left: 32px; font-size: 15px; font-weight: 500; color: #999;
 }
 .accord-link--sub:hover { color: #fff; }
 .soon-tag {
@@ -1003,8 +1010,8 @@ body {
 .bookmark-btn.is-saved { color: var(--accent); }
 
 /* 본인 작성 글 강조 (List View) — 파란 테두리 */
-.accom-card.my-post-highlight { border: 2px solid #007BFF; }
-.post-row.my-post-highlight { border-left: 3px solid #007BFF; background: var(--bg-card); }
+.accom-card.my-post-highlight { border: 2px solid #007BFF !important; }
+.post-row.my-post-highlight { border-left: 4px solid #007BFF !important; background: var(--bg-card); }
 
 /* 상세 모달 필터 태그 */
 .post-detail-tags { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -1024,16 +1031,17 @@ body {
 .detail-delete-btn { color: var(--red); }
 .detail-delete-btn:hover { border-color: var(--red); background: rgba(220,38,38,0.06); }
 
-/* 마이페이지 '내가 쓴 글' 액션 버튼 */
+/* 마이페이지 '내가 쓴 글' 액션 버튼 — 깔끔한 사각형 */
 .mypage-item-actions { display: flex; gap: 8px; align-items: center; margin-left: auto; }
 .mp-edit, .mp-del {
-  padding: 5px 12px; border-radius: var(--r-sm); font-family: var(--font);
-  font-size: 12px; font-weight: 700; cursor: pointer; text-decoration: none;
-  background: var(--bg-card); border: 1px solid var(--border); color: var(--text-primary);
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 6px 14px; border-radius: 4px; font-family: var(--font);
+  font-size: 13px; font-weight: 600; line-height: 1; cursor: pointer; text-decoration: none;
+  background: var(--bg-base); border: 1px solid var(--border); color: var(--text-primary) !important;
   transition: all 0.12s;
 }
-.mp-edit:hover { border-color: var(--text-primary); background: var(--bg-elevated); }
-.mp-del { color: var(--red); }
+.mp-edit:hover { border-color: var(--text-primary); background: var(--bg-card); }
+.mp-del { color: var(--red) !important; }
 .mp-del:hover { border-color: var(--red); background: rgba(220,38,38,0.06); }
 
 /* Pagination */
