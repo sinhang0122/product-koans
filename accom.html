@@ -459,8 +459,8 @@
       </div>
 
       <div class="write-field">
-        <label class="write-label" for="wContact">연락처 Contact (선택)</label>
-        <input class="write-input" id="wContact" type="text" placeholder="이메일 또는 전화번호" maxlength="60" />
+        <label class="write-label" for="wContact">연락처 Contact</label>
+        <input class="write-input" id="wContact" type="tel" placeholder="예: 0412345678 (호주 10자리)" maxlength="20" />
       </div>
 
       <div class="write-modal-actions">
@@ -767,10 +767,30 @@
       const user = window.koausAuth && window.koausAuth.user;
       if (!user) { window.koausAuth && window.koausAuth.openAuthModal(); return; }
 
-      const postType = document.querySelector('input[name="wPostType"]:checked')?.value || 'offering';
-      const title    = document.getElementById('wTitle').value.trim();
-      const body     = document.getElementById('wBody').value.trim();
-      if (!title) { alert('제목을 입력해 주세요.'); return; }
+      const postType   = document.querySelector('input[name="wPostType"]:checked')?.value || 'offering';
+      const title      = document.getElementById('wTitle').value.trim();
+      const body       = document.getElementById('wBody').value.trim();
+      const address    = document.getElementById('wAddress').value.trim();
+      const priceVal   = document.getElementById('wPrice').value.trim();
+      const propType   = document.getElementById('wPropType').value;
+      const roomType   = document.getElementById('wRoomType').value;
+      const bathroom   = document.getElementById('wBathroom').value;
+      const contactRaw = document.getElementById('wContact').value.trim();
+
+      // ── 필수 항목 빈 칸 검증 (.trim 기준, Firebase push 직전) ──
+      if (!title || !address || !propType || !priceVal || !roomType || !bathroom || !contactRaw || !body) {
+        alert('모든 필수 항목을 올바르게 입력해 주세요.');
+        return;
+      }
+      const price = parseInt(priceVal, 10);
+      if (!(price > 0)) { alert('모든 필수 항목을 올바르게 입력해 주세요.'); return; }
+
+      // ── 호주 전화번호 검증: 하이픈/공백 제거 후 0으로 시작하는 10자리 숫자 ──
+      const phone = contactRaw.replace(/[-\s]/g, '');
+      if (!/^0\d{9}$/.test(phone)) {
+        alert('올바른 호주 전화번호 10자리를 입력해 주세요. (예: 0412345678)');
+        return;
+      }
 
       const nick = document.getElementById('wAuthor').value.trim()
         || localStorage.getItem('koaus-nickname')
@@ -779,19 +799,14 @@
       const pad = n => String(n).padStart(2, '0');
       const date = `${pad(now.getMonth() + 1)}/${pad(now.getDate())}`;
       const time = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
-      const address = document.getElementById('wAddress').value.trim();
 
       const fields = {
-        postType, title, body, address,
-        price:    parseInt(document.getElementById('wPrice').value) || 0,
-        propType: document.getElementById('wPropType').value,
-        roomType: document.getElementById('wRoomType').value,
-        bathroom: document.getElementById('wBathroom').value,
+        postType, title, body, address, price, propType, roomType, bathroom,
         parking:     document.getElementById('wParking').checked,
         petFriendly: document.getElementById('wPet').checked,
         kidsInHouse: document.getElementById('wKids').checked,
         airCon:      document.getElementById('wAirCon').checked,
-        contact: document.getElementById('wContact').value.trim(),
+        contact: phone,
       };
 
       // 주소 → 좌표 (지도 마커용)
