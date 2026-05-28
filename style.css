@@ -143,6 +143,20 @@ body {
   transition: background 0.15s, border-color 0.15s;
 }
 .topbar-menu-btn:hover { background: var(--bg-card); border-color: var(--accent); color: var(--accent); }
+/* 헤더 테마 토글 — 햄버거 버튼과 동일한 B&W 아이콘 버튼. 라이트=달, 다크=해 */
+.topbar-theme-btn {
+  width: 38px; height: 38px; padding: 0;
+  background: none; border: 1px solid var(--border);
+  border-radius: var(--r-sm); color: var(--text-secondary);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.topbar-theme-btn:hover { background: var(--bg-card); border-color: var(--accent); color: var(--accent); }
+.topbar-theme-btn .ico-sun  { display: none; }
+.topbar-theme-btn .ico-moon { display: block; }
+[data-theme="dark"] .topbar-theme-btn .ico-sun  { display: block; }
+[data-theme="dark"] .topbar-theme-btn .ico-moon { display: none; }
 
 /* ════════════════════════════════════════════════════════════════════════
    Sidebar Overlay
@@ -211,21 +225,6 @@ body {
 .sidebar-setting-row {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
 }
-.sidebar-setting-label {
-  font-size: 11px; font-weight: 700;
-  color: #fff; letter-spacing: 0.08em; text-transform: uppercase;
-}
-.sidebar-setting-btns { display: flex; gap: 4px; }
-.setting-btn {
-  padding: 5px 12px;
-  background: none; border: 1px solid #222;
-  border-radius: var(--r-sm); color: #fff;
-  font-family: var(--font); font-size: 12px; font-weight: 700;
-  cursor: pointer; transition: all 0.15s;
-}
-.setting-btn:hover { background: #111; color: #fff; border-color: #333; }
-.setting-btn.active { background: #ffffff; color: #000000; border-color: #ffffff; }
-
 /* ── 아코디언 내비 ── */
 .sidebar-nav { flex: 1; overflow-y: auto; padding-bottom: 40px; }
 
@@ -771,35 +770,24 @@ select.write-input {
     color            0.2s ease;
 }
 
-/* ════════════════════════════════════════════════════════════════════════
-   v2.1 — Theme Accordion Button
-════════════════════════════════════════════════════════════════════════ */
-.theme-accord-btn {
-  width: 100%; display: block;
-  padding: 10px 20px 10px 28px;
-  background: none; border: none;
-  color: #fff; font-family: var(--font);
-  font-size: 13px; font-weight: 500;
-  cursor: pointer; text-align: left;
-  transition: background 0.12s, color 0.12s;
+/* ── Care · Ad Inquiry 푸터 그룹 — 일반 대분류 카테고리(16px)와 동일 폰트로 통일 ── */
+.accord-foot-group {
+  margin-top: 8px;
+  border-top: 1px solid #1a1a1a;
 }
-.theme-accord-btn:hover { background: #0a0a0a; color: #fff; }
-.theme-accord-btn.active { color: #ffffff; font-weight: 700; }
-
-/* ── Ad Inquiry — 수익 직결 요소: 확대·굵게·여백 강조 ── */
 .accord-direct-link {
   display: flex; align-items: center;
-  padding: 20px 20px; margin: 8px 0;
-  border-top: 1px solid #1a1a1a; border-bottom: 1px solid #1a1a1a;
+  padding: 9px 20px;
   color: #fff; text-decoration: none;
-  font-size: 19px; font-weight: 800;
+  font-size: 16px; font-weight: 800;
+  letter-spacing: 0.04em; text-transform: uppercase;
   font-family: var(--font);
   transition: background 0.12s, color 0.12s;
 }
 .accord-direct-link:hover { background: #0a0a0a; color: #ffffff; }
 .accord-direct-link em {
   font-style: normal; font-size: 12px; font-weight: 500;
-  color: #fff; margin-left: 8px; letter-spacing: 0.04em;
+  color: #fff; margin-left: 8px; letter-spacing: 0.04em; text-transform: none;
 }
 
 /* ── Sidebar Account ── */

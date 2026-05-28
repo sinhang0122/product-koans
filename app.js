@@ -57,12 +57,10 @@ function applyTheme(t) {
   if (t === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
   else document.documentElement.removeAttribute('data-theme');
   localStorage.setItem('koaus-theme', t);
-  document.querySelectorAll('.setting-btn').forEach(b => b.classList.toggle('active', b.dataset.themeSet === t));
 }
 
-document.querySelectorAll('.setting-btn').forEach(btn => {
-  btn.addEventListener('click', () => applyTheme(btn.dataset.themeSet));
-});
+const themeToggleBtn = document.getElementById('themeToggleBtn');
+if (themeToggleBtn) themeToggleBtn.addEventListener('click', () => applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'));
 
 applyTheme(
   localStorage.getItem('koaus-theme') ||

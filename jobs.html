@@ -27,6 +27,10 @@
     </a>
     <div class="topbar-actions">
       <button type="button" class="topbar-login-btn" id="topbarLoginBtn">로그인</button>
+      <button class="topbar-theme-btn" id="themeToggleBtn" type="button" aria-label="테마 변경" title="테마 변경 (Light / Dark)">
+        <svg class="ico-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <svg class="ico-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+      </button>
       <button class="topbar-menu-btn" id="hamburgerBtn" aria-label="메뉴 열기" aria-expanded="false">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
           <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
@@ -49,16 +53,6 @@
       </div>
     </div>
     <nav class="sidebar-nav">
-      <div class="accord-item theme-accord" data-group="theme">
-        <button class="accord-header">
-          <span>Theme <em>화면 테마</em></span>
-          <svg class="accord-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-        </button>
-        <div class="accord-body">
-          <button class="theme-accord-btn setting-btn" data-theme-set="light">Light</button>
-          <button class="theme-accord-btn setting-btn" data-theme-set="dark">Dark</button>
-        </div>
-      </div>
       <div class="accord-item" data-group="nsw">
         <button class="accord-header">
           <span>NSW <em>뉴사우스 웨일스 주</em></span>
@@ -92,7 +86,6 @@
             <a href="auto.html?state=nsw&amp;category=emergency" class="accord-link accord-link--sub">긴급출동</a>
             <a href="auto.html?state=nsw&amp;category=tow" class="accord-link accord-link--sub">견인</a>
           </div>
-          <a href="care.html?state=nsw" class="accord-link accord-link--cat">Care</a>
         </div>
       </div>
       <div class="accord-item" data-group="vic">
@@ -128,7 +121,6 @@
             <a href="auto.html?state=vic&amp;category=emergency" class="accord-link accord-link--sub">긴급출동</a>
             <a href="auto.html?state=vic&amp;category=tow" class="accord-link accord-link--sub">견인</a>
           </div>
-          <a href="care.html?state=vic" class="accord-link accord-link--cat">Care</a>
         </div>
       </div>
       <div class="accord-item" data-group="qld">
@@ -164,7 +156,6 @@
             <a href="auto.html?state=qld&amp;category=emergency" class="accord-link accord-link--sub">긴급출동</a>
             <a href="auto.html?state=qld&amp;category=tow" class="accord-link accord-link--sub">견인</a>
           </div>
-          <a href="care.html?state=qld" class="accord-link accord-link--cat">Care</a>
         </div>
       </div>
       <div class="accord-item" data-group="wa">
@@ -200,7 +191,6 @@
             <a href="auto.html?state=wa&amp;category=emergency" class="accord-link accord-link--sub">긴급출동</a>
             <a href="auto.html?state=wa&amp;category=tow" class="accord-link accord-link--sub">견인</a>
           </div>
-          <a href="care.html?state=wa" class="accord-link accord-link--cat">Care</a>
         </div>
       </div>
       <div class="accord-item" data-group="sa">
@@ -236,7 +226,6 @@
             <a href="auto.html?state=sa&amp;category=emergency" class="accord-link accord-link--sub">긴급출동</a>
             <a href="auto.html?state=sa&amp;category=tow" class="accord-link accord-link--sub">견인</a>
           </div>
-          <a href="care.html?state=sa" class="accord-link accord-link--cat">Care</a>
         </div>
       </div>
       <div class="accord-item" data-group="tas">
@@ -272,7 +261,6 @@
             <a href="auto.html?state=tas&amp;category=emergency" class="accord-link accord-link--sub">긴급출동</a>
             <a href="auto.html?state=tas&amp;category=tow" class="accord-link accord-link--sub">견인</a>
           </div>
-          <a href="care.html?state=tas" class="accord-link accord-link--cat">Care</a>
         </div>
       </div>
       <div class="accord-item" data-group="act">
@@ -308,7 +296,6 @@
             <a href="auto.html?state=act&amp;category=emergency" class="accord-link accord-link--sub">긴급출동</a>
             <a href="auto.html?state=act&amp;category=tow" class="accord-link accord-link--sub">견인</a>
           </div>
-          <a href="care.html?state=act" class="accord-link accord-link--cat">Care</a>
         </div>
       </div>
       <div class="accord-item" data-group="nt">
@@ -344,12 +331,16 @@
             <a href="auto.html?state=nt&amp;category=emergency" class="accord-link accord-link--sub">긴급출동</a>
             <a href="auto.html?state=nt&amp;category=tow" class="accord-link accord-link--sub">견인</a>
           </div>
-          <a href="care.html?state=nt" class="accord-link accord-link--cat">Care</a>
         </div>
       </div>
-      <a href="contact.html" class="accord-direct-link">
-        <span>Ad Inquiry <em>광고 문의</em></span>
-      </a>
+      <div class="accord-foot-group">
+        <a href="care.html" class="accord-direct-link">
+          <span>Care <em>긴급 연락처</em></span>
+        </a>
+        <a href="contact.html" class="accord-direct-link">
+          <span>Ad Inquiry <em>광고 문의</em></span>
+        </a>
+      </div>
     </nav>
     <div class="sidebar-footer-nav">
       <a href="powerball.html" class="sidebar-exchange-link">🎱 파워볼 당첨 번호 →</a>
@@ -478,9 +469,9 @@
       if (t === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
       else document.documentElement.removeAttribute('data-theme');
       localStorage.setItem('koaus-theme', t);
-      document.querySelectorAll('.setting-btn').forEach(b => b.classList.toggle('active', b.dataset.themeSet === t));
     }
-    document.querySelectorAll('.setting-btn').forEach(btn => btn.addEventListener('click', () => applyTheme(btn.dataset.themeSet)));
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    if (themeToggleBtn) themeToggleBtn.addEventListener('click', () => applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'));
     applyTheme(localStorage.getItem('koaus-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
 
     const STORE_KEY = 'koaus-jobs-posts';
