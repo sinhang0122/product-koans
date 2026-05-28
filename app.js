@@ -48,8 +48,18 @@ ov.addEventListener('click', closeSb);
 document.addEventListener('keydown', e => e.key === 'Escape' && closeSb());
 
 // ── Accordion ──
+// 초기 상태: 모든 아코디언 강제 닫힘 (펼침 방지)
+document.querySelectorAll('.accord-item, .accord-subgroup').forEach(it => it.classList.remove('open'));
+// Depth 2 (대분류) 토글 — 클릭 시 해당 소분류 컨테이너만 열고/닫음 (소분류 링크는 그대로 라우팅)
+document.querySelectorAll('.sub-toggle').forEach(t => t.addEventListener('click', () => t.closest('.accord-subgroup').classList.toggle('open')));
 document.querySelectorAll('.accord-header').forEach(btn => {
-  btn.addEventListener('click', () => btn.closest('.accord-item').classList.toggle('open'));
+  btn.addEventListener('click', () => {
+    const item = btn.closest('.accord-item');
+    const willOpen = !item.classList.contains('open');
+    // 한 번에 하나만 — 열려있는 다른 카테고리는 닫기
+    document.querySelectorAll('.accord-item.open').forEach(o => { if (o !== item) o.classList.remove('open'); });
+    item.classList.toggle('open', willOpen);
+  });
 });
 
 // ── Theme ──

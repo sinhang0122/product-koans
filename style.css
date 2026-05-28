@@ -283,6 +283,17 @@ body {
   padding-left: 32px; font-size: 14px; font-weight: 500; color: #fff;
 }
 .accord-link--sub:hover { color: #fff; }
+/* Depth 2 토글 버튼 — .accord-sublabel 폰트/크기/색은 그대로 상속, 우측 화살표만 추가 */
+.sub-toggle {
+  display: flex; align-items: center; justify-content: space-between;
+  width: 100%; background: none; border: none;
+  font-family: var(--font); cursor: pointer; text-align: left;
+}
+.sub-arrow { flex-shrink: 0; transition: transform 0.25s ease; }
+/* Depth 3 소분류 컨테이너 — 초기 완전 숨김(닫힘), 클릭 시에만 펼침 */
+.sub-menu { max-height: 0; overflow: hidden; transition: max-height 0.25s ease; }
+.accord-subgroup.open .sub-menu { max-height: 600px; }
+.accord-subgroup.open .sub-arrow { transform: rotate(180deg); }
 /* Care: 하위 메뉴 없는 단일 대분류 카테고리 — 2순위 블루 스타일 (클릭형) */
 .accord-link--cat {
   padding: 9px 20px; font-size: 16px; font-weight: 800;
