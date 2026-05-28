@@ -180,7 +180,7 @@ body {
   flex-shrink: 0;
 }
 .sidebar-brand {
-  font-size: 18px; font-weight: 900; letter-spacing: -0.5px;
+  font-size: 26px; font-weight: 900; letter-spacing: -0.5px;
   color: #ffffff;
 }
 .sidebar-close-btn {
@@ -196,7 +196,7 @@ body {
 .sidebar-acct-top {
   display: inline-block; font-size: 14px; font-weight: 800; line-height: 1;
   color: #000; background: #fff; border: 1px solid #fff; border-radius: 6px;
-  padding: 8px 14px; white-space: nowrap; text-decoration: none;
+  padding: 8px 22px; white-space: nowrap; text-decoration: none;
   letter-spacing: -0.01em; transition: opacity 0.12s;
 }
 .sidebar-acct-top:hover { opacity: 0.82; }
@@ -272,15 +272,15 @@ body {
 
 /* Nested sub-categories (Living / Work / Visa & Migration) */
 .accord-subgroup { padding: 4px 0 6px; border-bottom: 1px solid #0d0d0d; }
-/* 서브 카테고리 소제목: 작은 글씨 + 굵은 폰트 (1.2배 상향) */
+/* 2순위 — 대분류 카테고리(Living/Work/Visa): 주 이름보다 작고 세부메뉴보다 큼 */
 .accord-sublabel {
   display: block; padding: 9px 20px 5px;
-  font-size: 13px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;
+  font-size: 16px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase;
   color: #fff;
 }
-/* 하위 상세 메뉴: 1.2배 상향 + 굵기 한 단계 업 */
+/* 3순위 — 세부 메뉴(쉐어/렌트 올리기·구하기 등): 가장 작게 */
 .accord-link--sub {
-  padding-left: 32px; font-size: 15px; font-weight: 500; color: #fff;
+  padding-left: 32px; font-size: 14px; font-weight: 500; color: #fff;
 }
 .accord-link--sub:hover { color: #fff; }
 .soon-tag {
