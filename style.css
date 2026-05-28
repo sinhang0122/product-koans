@@ -284,6 +284,12 @@ body {
   padding-left: 32px; font-size: 14px; font-weight: 500; color: #fff;
 }
 .accord-link--sub:hover { color: #fff; }
+/* Care: 하위 메뉴 없는 단일 대분류 카테고리 — 2순위 블루 스타일 (클릭형) */
+.accord-link--cat {
+  padding: 9px 20px; font-size: 16px; font-weight: 800;
+  letter-spacing: 0.04em; text-transform: uppercase; color: #3B82F6;
+}
+.accord-link--cat:hover { background: #0a0a0a; color: #3B82F6; }
 .soon-tag {
   font-size: 9px; font-weight: 700;
   padding: 2px 6px; border-radius: 3px;
@@ -1394,6 +1400,46 @@ select.write-input {
 }
 .mypage-item-title { flex: 1; min-width: 120px; font-size: 14px; font-weight: 600; color: var(--text-primary); }
 .mypage-item-meta { font-size: 12px; color: var(--text-muted); }
+
+/* ── Care · 긴급 연락처 페이지 ── */
+.care-block {
+  background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--r-xl);
+  padding: 22px 24px; margin-bottom: 16px;
+}
+.care-block-title { font-size: 17px; font-weight: 800; color: var(--text-primary); margin-bottom: 6px; }
+.care-block-title em { font-style: normal; font-size: 12px; font-weight: 500; color: var(--text-muted); margin-left: 6px; }
+.care-card {
+  display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;
+  padding: 16px 0; border-bottom: 1px solid var(--border-subtle);
+}
+.care-card:last-child { border-bottom: none; }
+.care-card-info { flex: 1; min-width: 200px; }
+.care-card-name { font-size: 15px; font-weight: 700; color: var(--text-primary); }
+.care-card-tag { font-size: 11px; font-weight: 500; color: var(--text-muted); margin-left: 6px; }
+.care-card-num { font-size: 23px; font-weight: 900; color: var(--text-primary); font-variant-numeric: tabular-nums; margin-top: 5px; letter-spacing: 0.02em; }
+.care-card-addr { font-size: 12px; color: var(--text-muted); margin-top: 5px; line-height: 1.5; }
+.care-card-actions { display: flex; gap: 8px; flex-shrink: 0; flex-wrap: wrap; }
+.care-call-btn {
+  display: inline-flex; align-items: center; gap: 6px; padding: 12px 22px;
+  background: var(--accent); color: var(--accent-text); border-radius: var(--r-md);
+  font-size: 15px; font-weight: 800; text-decoration: none; white-space: nowrap; transition: opacity 0.15s;
+}
+.care-call-btn:hover { opacity: 0.85; }
+.care-map-btn {
+  display: inline-flex; align-items: center; gap: 6px; padding: 12px 18px;
+  background: var(--bg-base); color: var(--text-primary); border: 1px solid var(--border);
+  border-radius: var(--r-md); font-size: 14px; font-weight: 700; text-decoration: none; white-space: nowrap; transition: all 0.15s;
+}
+.care-map-btn:hover { border-color: var(--text-primary); }
+.care-consulate { align-items: flex-start; }
+.care-consulate--gov {
+  background: var(--accent-dim); border: 1px solid var(--accent); border-radius: var(--r-md);
+  padding: 16px; margin: 4px 0 10px; border-bottom: 1px solid var(--accent);
+}
+.care-gov-badge {
+  display: inline-block; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 3px;
+  background: #3B82F6; color: #fff; margin-right: 6px; vertical-align: middle;
+}
 
 /* ── Care Page (placeholder) ── */
 .care-empty {
