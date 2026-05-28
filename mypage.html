@@ -468,8 +468,8 @@
     const readJSON = k => { try { return JSON.parse(localStorage.getItem(k) || '[]'); } catch { return []; } };
     const escHtml = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     const maskEmailPrefix = email => email ? escHtml(String(email).split('@')[0].slice(0,4)) + '***' : '';
-    const boardLabel = b => b === 'accom' ? 'Living' : b === 'jobs' ? 'Work' : b;
-    const boardHref  = b => b === 'accom' ? 'accom.html' : b === 'jobs' ? 'jobs.html' : '#';
+    const boardLabel = b => b === 'accom' ? '쉐어' : b === 'rent' ? '렌트' : b === 'jobs' ? 'Work' : b;
+    const boardHref  = b => b === 'accom' ? 'accom.html' : b === 'rent' ? 'rent.html' : b === 'jobs' ? 'jobs.html' : '#';
 
     let mtab = 'mine';
     const emptyMsg = { mine: '아직 작성한 글이 없습니다.', recent: '최근 본 글이 없습니다.', saved: '저장한 글이 없습니다.' };
@@ -479,7 +479,7 @@
         const u = window.koausAuth && window.koausAuth.user;
         if (!u) return [];
         const out = [];
-        [['accom','koaus-accom-posts'], ['jobs','koaus-jobs-posts']].forEach(([board, key]) => {
+        [['accom','koaus-accom-posts'], ['rent','koaus-rent-posts'], ['jobs','koaus-jobs-posts']].forEach(([board, key]) => {
           readJSON(key).forEach(p => {
             const puid  = p.uid   || p.authorUid;
             const pmail = p.email || p.authorEmail;
@@ -492,7 +492,7 @@
       if (tab === 'recent') return readJSON('koaus-recent-posts');
       return readJSON('koaus-saved-posts');
     }
-    const boardStoreKey = b => b === 'accom' ? 'koaus-accom-posts' : b === 'jobs' ? 'koaus-jobs-posts' : null;
+    const boardStoreKey = b => b === 'accom' ? 'koaus-accom-posts' : b === 'rent' ? 'koaus-rent-posts' : b === 'jobs' ? 'koaus-jobs-posts' : null;
     function deleteMyPost(board, id) {
       if (!confirm('정말 이 게시글을 삭제하시겠습니까?')) return;
       const sk = boardStoreKey(board);
