@@ -406,38 +406,36 @@
         <input class="write-input" id="wAddress" type="text" placeholder="예: Strathfield, NSW 또는 1 Park St, Sydney" />
       </div>
 
-      <div class="write-field write-field--row">
-        <div>
-          <label class="write-label" for="wPropType">주거 형태 Property</label>
-          <select class="write-input" id="wPropType">
-            <option value="house">House</option>
-            <option value="apartment">Apartment</option>
-            <option value="townhouse">Townhouse</option>
-            <option value="villa">Villa</option>
-            <option value="unit">Unit</option>
-          </select>
-        </div>
-        <div>
-          <label class="write-label" for="wPrice">주당 렌트비 Price / wk ($)</label>
-          <input class="write-input" id="wPrice" type="number" placeholder="200" min="0" />
-        </div>
+      <div class="write-field">
+        <label class="write-label" for="wPropType">주거 형태 Property</label>
+        <select class="write-input" id="wPropType">
+          <option value="house">House</option>
+          <option value="apartment">Apartment</option>
+          <option value="townhouse">Townhouse</option>
+          <option value="villa">Villa</option>
+          <option value="unit">Unit</option>
+        </select>
       </div>
 
-      <div class="write-field write-field--row">
-        <div>
-          <label class="write-label" for="wRoomType">방 형태 Room Type</label>
-          <select class="write-input" id="wRoomType">
-            <option value="single">Single Room (독방)</option>
-            <option value="share">Share Room (쉐어)</option>
-          </select>
-        </div>
-        <div>
-          <label class="write-label" for="wBathroom">욕실 Bathroom</label>
-          <select class="write-input" id="wBathroom">
-            <option value="shared">Shared (공용)</option>
-            <option value="ensuite">Ensuite (개인)</option>
-          </select>
-        </div>
+      <div class="write-field">
+        <label class="write-label" for="wPrice">주당 렌트비 Price / wk ($)</label>
+        <input class="write-input" id="wPrice" type="number" placeholder="200" min="0" />
+      </div>
+
+      <div class="write-field">
+        <label class="write-label" for="wRoomType">방 형태 Room Type</label>
+        <select class="write-input" id="wRoomType">
+          <option value="single">Single Room (독방)</option>
+          <option value="share">Share Room (쉐어)</option>
+        </select>
+      </div>
+
+      <div class="write-field">
+        <label class="write-label" for="wBathroom">욕실 Bathroom</label>
+        <select class="write-input" id="wBathroom">
+          <option value="shared">Shared (공용)</option>
+          <option value="ensuite">Ensuite (개인)</option>
+        </select>
       </div>
 
       <div class="write-field">
@@ -455,15 +453,14 @@
         <textarea class="write-textarea" id="wBody" placeholder="방 크기, 가격, 포함 내역, 입주 가능 날짜 등 자세히 적어주세요"></textarea>
       </div>
 
-      <div class="write-field write-field--row">
-        <div>
-          <label class="write-label" for="wAuthor">작성자 Author</label>
-          <input class="write-input" id="wAuthor" type="text" placeholder="닉네임" maxlength="20" />
-        </div>
-        <div>
-          <label class="write-label" for="wContact">연락처 Contact (선택)</label>
-          <input class="write-input" id="wContact" type="text" placeholder="이메일 또는 전화번호" maxlength="60" />
-        </div>
+      <div class="write-field">
+        <label class="write-label" for="wAuthor">작성자 Author</label>
+        <input class="write-input" id="wAuthor" type="text" placeholder="로그인 후 자동 입력" maxlength="20" readonly />
+      </div>
+
+      <div class="write-field">
+        <label class="write-label" for="wContact">연락처 Contact (선택)</label>
+        <input class="write-input" id="wContact" type="text" placeholder="이메일 또는 전화번호" maxlength="60" />
       </div>
 
       <div class="write-modal-actions">
@@ -697,9 +694,15 @@
       ['wTitle','wAddress','wPrice','wBody','wAuthor','wContact'].forEach(id => { document.getElementById(id).value = ''; });
       ['wParking','wPet','wKids','wAirCon'].forEach(id => { document.getElementById(id).checked = false; });
     }
+    // 로그인 사용자 닉네임 (작성자 고정값)
+    function currentNickname() {
+      const u = window.koausAuth && window.koausAuth.user;
+      return localStorage.getItem('koaus-nickname') || u?.displayName?.split(' ')[0] || u?.email?.split('@')[0] || '';
+    }
     function openWriteModal() {
       editingId = null;
       setWriteMode('create');
+      document.getElementById('wAuthor').value = currentNickname();  // 작성자 자동 입력(읽기 전용)
       writeOverlay.classList.add('open');
       document.body.style.overflow = 'hidden';
     }
@@ -1001,15 +1004,8 @@
           </div>
           <div class="accom-card-title">${escHtml(p.title)}</div>
           ${p.address ? `<div class="accom-card-addr">📍 ${escHtml(p.address)}</div>` : ''}
-          <div class="accom-card-meta">
-            ${p.roomType === 'single' ? '<span>🛏 Single Room</span>' : p.roomType === 'share' ? '<span>🛏 Share Room</span>' : ''}
-            ${p.bathroom === 'ensuite' ? '<span>🚿 Ensuite</span>' : p.bathroom === 'shared' ? '<span>🚿 Shared Bath</span>' : ''}
-          </div>
           <div class="accom-card-tags">
-            ${p.parking     ? '<span class="accom-tag">🅿 Parking</span>' : ''}
-            ${p.petFriendly ? '<span class="accom-tag">🐾 Pet OK</span>' : ''}
-            ${p.kidsInHouse ? '<span class="accom-tag">👶 Kids</span>'   : ''}
-            ${p.airCon      ? '<span class="accom-tag">❄ AC</span>'      : ''}
+            ${filterTags(p).map(t => `<span class="accom-tag">${escHtml(t)}</span>`).join('')}
           </div>
           <div class="accom-card-footer">
             <span>${authorLabel(p)}</span>

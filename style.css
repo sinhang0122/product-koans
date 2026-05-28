@@ -622,6 +622,7 @@ body {
   transition: border-color 0.2s;
 }
 .write-input::placeholder, .write-textarea::placeholder { color: var(--text-muted); }
+.write-input[readonly] { background: var(--bg-elevated); cursor: default; }
 .write-input:focus, .write-textarea:focus { border-color: var(--border-focus); }
 .write-textarea { resize: vertical; min-height: 120px; line-height: 1.65; }
 .write-modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
@@ -669,12 +670,16 @@ body {
 }
 .post-detail-close:hover { color: var(--red); }
 .post-detail-meta { font-size: 12px; color: var(--text-muted); display: flex; gap: 14px; }
-.post-detail-body { font-size: 15px; color: var(--text-secondary); line-height: 1.8; white-space: pre-wrap; word-break: break-word; }
-.post-detail-contact {
-  padding: 12px 16px; background: var(--bg-card);
-  border-radius: var(--r-md); border: 1px solid var(--border);
-  font-size: 13px; color: var(--text-secondary); font-weight: 600;
+.post-detail-body {
+  font-size: 16px; color: var(--text-primary); line-height: 1.9;
+  white-space: pre-wrap; word-break: break-word; min-height: 80px;
 }
+/* 연락처: 박스 제거, 본문 하단 일반 텍스트 라인으로 자연스럽게 */
+.post-detail-contact {
+  font-size: 14px; color: var(--text-secondary); font-weight: 600;
+  padding-top: 12px; border-top: 1px solid var(--border-subtle); margin-top: 4px;
+}
+.post-detail-contact:empty { display: none; }
 
 /* ════════════════════════════════════════════════════════════════════════
    Footer v2
@@ -1043,11 +1048,12 @@ body {
 .accom-card.my-post-highlight { border: 2px solid #007BFF !important; }
 .post-row.my-post-highlight { border-left: 4px solid #007BFF !important; background: var(--bg-card); }
 
-/* 상세 모달 필터 태그 */
-.post-detail-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+/* 상세 모달 필터 태그 — 리스트 카드와 동일한 정갈한 사각형 배지 */
+.post-detail-tags { display: flex; flex-wrap: wrap; gap: 7px; }
 .post-detail-tag {
-  font-size: 12px; padding: 3px 10px; border-radius: 999px;
+  font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: var(--r-sm);
   background: var(--bg-card); border: 1px solid var(--border); color: var(--text-secondary);
+  letter-spacing: -0.01em; white-space: nowrap;
 }
 
 /* 상세 모달 수정/삭제 버튼 — B&W 테마에 녹아드는 모노톤 */
@@ -1110,10 +1116,11 @@ body {
 .accom-card-title { font-size: 14px; font-weight: 700; color: var(--text-primary); line-height: 1.4; }
 .accom-card-addr { font-size: 12px; color: var(--text-muted); }
 .accom-card-meta { display: flex; gap: 10px; font-size: 12px; color: var(--text-secondary); flex-wrap: wrap; }
-.accom-card-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.accom-card-tags { display: flex; flex-wrap: wrap; gap: 7px; }
 .accom-tag {
-  font-size: 11px; padding: 2px 8px; border-radius: 999px;
-  background: var(--bg-card); border: 1px solid var(--border); color: var(--text-muted);
+  font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: var(--r-sm);
+  background: var(--bg-card); border: 1px solid var(--border); color: var(--text-secondary);
+  letter-spacing: -0.01em; white-space: nowrap;
 }
 .accom-card-footer {
   display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted);
