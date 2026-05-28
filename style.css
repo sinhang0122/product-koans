@@ -273,10 +273,11 @@ body {
 /* Nested sub-categories (Living / Work / Visa & Migration) */
 .accord-subgroup { padding: 4px 0 6px; border-bottom: 1px solid #0d0d0d; }
 /* 2순위 — 대분류 카테고리(Living/Work/Visa): 주 이름보다 작고 세부메뉴보다 큼 */
+/* 2순위 카테고리: 색맹 안전 + WCAG 충족 일렉트릭 블루 포인트 컬러 (크기 16px 유지) */
 .accord-sublabel {
   display: block; padding: 9px 20px 5px;
   font-size: 16px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase;
-  color: #fff;
+  color: #3B82F6;
 }
 /* 3순위 — 세부 메뉴(쉐어/렌트 올리기·구하기 등): 가장 작게 */
 .accord-link--sub {
@@ -295,12 +296,13 @@ body {
   border-top: 1px solid #111;
   flex-shrink: 0;
 }
+/* 킬러 콘텐츠 — 파워볼: 1.5배+ 확대, 최대 굵기, 고대비 앰버로 시선 집중 */
 .sidebar-exchange-link {
-  display: block; font-size: 12px; font-weight: 600;
-  color: #fff; text-decoration: none;
-  transition: color 0.15s;
+  display: block; font-size: 19px; font-weight: 800;
+  color: #F59E0B; text-decoration: none; letter-spacing: -0.01em;
+  transition: opacity 0.15s;
 }
-.sidebar-exchange-link:hover { color: #fff; }
+.sidebar-exchange-link:hover { opacity: 0.85; }
 
 @media (max-width: 480px) { .sidebar { width: 100%; } }
 
@@ -772,20 +774,20 @@ select.write-input {
 .theme-accord-btn:hover { background: #0a0a0a; color: #fff; }
 .theme-accord-btn.active { color: #ffffff; font-weight: 700; }
 
-/* ── Ad Inquiry Direct Link ── */
+/* ── Ad Inquiry — 수익 직결 요소: 확대·굵게·여백 강조 ── */
 .accord-direct-link {
   display: flex; align-items: center;
-  padding: 14px 20px;
-  border-bottom: 1px solid #111;
+  padding: 20px 20px; margin: 8px 0;
+  border-top: 1px solid #1a1a1a; border-bottom: 1px solid #1a1a1a;
   color: #fff; text-decoration: none;
-  font-size: 14px; font-weight: 700;
+  font-size: 19px; font-weight: 800;
   font-family: var(--font);
   transition: background 0.12s, color 0.12s;
 }
 .accord-direct-link:hover { background: #0a0a0a; color: #ffffff; }
 .accord-direct-link em {
-  font-style: normal; font-size: 10px; font-weight: 400;
-  color: #fff; margin-left: 6px; letter-spacing: 0.04em;
+  font-style: normal; font-size: 12px; font-weight: 500;
+  color: #fff; margin-left: 8px; letter-spacing: 0.04em;
 }
 
 /* ── Sidebar Account ── */
