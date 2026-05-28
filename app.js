@@ -4,6 +4,7 @@ import {
   getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut,
   createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile,
 } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
+import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app-check.js';
 
 const firebaseConfig = {
   apiKey:            'AIzaSyCamqnt0bNUD9uz1N5BbCuQjSkWLSpPqlU',
@@ -16,6 +17,18 @@ const firebaseConfig = {
 };
 
 const firebaseApp = initializeApp(firebaseConfig);
+
+// ── App Check (reCAPTCHA v3) — 봇·외부 스크립트의 백엔드(인증/DB) 접근 차단 ──
+// 사이트 키 발급: Firebase 콘솔 > App Check > 앱 등록(reCAPTCHA v3 공급자)
+// 키를 채우면 자동 활성화됨. (placeholder 상태에서는 운영 사이트를 깨뜨리지 않도록 건너뜀)
+const APP_CHECK_SITE_KEY = 'TODO: 키 입력';
+if (APP_CHECK_SITE_KEY && !APP_CHECK_SITE_KEY.startsWith('TODO')) {
+  initializeAppCheck(firebaseApp, {
+    provider: new ReCaptchaV3Provider(APP_CHECK_SITE_KEY),
+    isTokenAutoRefreshEnabled: true,
+  });
+}
+
 const analytics   = getAnalytics(firebaseApp);
 const auth        = getAuth(firebaseApp);
 const provider    = new GoogleAuthProvider();

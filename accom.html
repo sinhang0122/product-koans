@@ -730,7 +730,10 @@
     let activeRoomType = '';
     let activeBathroom = '';
     let currentPage    = 1;
-    const PER_PAGE     = 10;
+    // 한 번에 20개씩만 렌더(페이지네이션). 향후 Firestore 전환 시:
+    //   query(collection(db,'accom_posts'), orderBy('id','desc'), limit(PER_PAGE))
+    //   다음 페이지는 startAfter(lastDoc) 커서로만 추가 조회 → read 비용 최소화.
+    const PER_PAGE     = 20;
 
     // ── 모드 탭 전환 (방 올리기 / 방 구하기) ──
     document.querySelectorAll('#modeTabs .accom-tab').forEach(btn => {
@@ -1496,6 +1499,7 @@
       getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged,
       createUserWithEmailAndPassword, signInWithEmailAndPassword,
     } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
+    import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app-check.js';
 
     const firebaseConfig = {
       apiKey:            'AIzaSyCamqnt0bNUD9uz1N5BbCuQjSkWLSpPqlU',
@@ -1508,6 +1512,18 @@
     };
 
     const app  = initializeApp(firebaseConfig);
+
+    // ── App Check (reCAPTCHA v3) — 봇·외부 스크립트의 백엔드(인증/DB) 접근 차단 ──
+    // 사이트 키 발급: Firebase 콘솔 > App Check > 앱 등록(reCAPTCHA v3 공급자)
+    // 키를 채우면 자동 활성화됨. (placeholder 상태에서는 운영 사이트를 깨뜨리지 않도록 건너뜀)
+    const APP_CHECK_SITE_KEY = 'TODO: 키 입력';
+    if (APP_CHECK_SITE_KEY && !APP_CHECK_SITE_KEY.startsWith('TODO')) {
+      initializeAppCheck(app, {
+        provider: new ReCaptchaV3Provider(APP_CHECK_SITE_KEY),
+        isTokenAutoRefreshEnabled: true,
+      });
+    }
+
     const auth = getAuth(app);
 
     // ── Auth Modal ──

@@ -1,0 +1,109 @@
+rules_version = '2';
+
+// ════════════════════════════════════════════════════════════════════
+//  KoAus · Firestore 보안 규칙
+//  목적: 봇/매크로의 무한 읽기·쓰기로 인한 요금 폭탄(Billing Shock) 방어
+//   - 쓰기(create): 로그인 + 필수 필드/타입/길이 검증 + 본인 소유만 허용
+//   - 수정/삭제(update/delete): 글 작성자 본인만
+//   - 목록 읽기(list): 한 번에 최대 20개까지만 (페이지네이션 강제)
+//   - 정의되지 않은 모든 경로: 기본 거부(deny-all)
+//  배포:  firebase deploy --only firestore:rules
+// ════════════════════════════════════════════════════════════════════
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── 공통 헬퍼 ──
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function data() {
+      return request.resource.data;
+    }
+    // 필수 문자열: 존재 + string 타입 + 길이 제한(거대 페이로드로 용량 폭증 차단)
+    function reqStr(field, minLen, maxLen) {
+      return field in data()
+        && data()[field] is string
+        && data()[field].size() >= minLen
+        && data()[field].size() <= maxLen;
+    }
+    // 선택 문자열: 없거나 / 있으면 string + 최대 길이 제한
+    function optStr(field, maxLen) {
+      return !(field in data())
+        || (data()[field] is string && data()[field].size() <= maxLen);
+    }
+    // 목록 조회는 반드시 20개 이하만 — 무한 스캔(read 폭탄) 차단
+    function limitedList() {
+      return request.query.limit <= 20;
+    }
+
+    // ── 게시판 글 검증 ──
+    // 작성자 uid 는 반드시 로그인한 본인 (위조 불가)
+    function ownerOnCreate() {
+      return isSignedIn() && 'uid' in data() && data().uid == request.auth.uid;
+    }
+    function ownerOnExisting() {
+      return isSignedIn() && resource.data.uid == request.auth.uid;
+    }
+    // 신규 글: 필수/선택 필드 + 타입 + 길이 빡빡하게 검증
+    function validPostCreate() {
+      return ownerOnCreate()
+        && reqStr('title', 1, 120)
+        && reqStr('body', 1, 5000)
+        && optStr('state', 10)
+        && optStr('mode', 20)
+        && optStr('category', 40)
+        && optStr('propType', 30)
+        && optStr('address', 300)
+        && optStr('contact', 100)
+        && optStr('phone', 30)
+        && optStr('author', 50)
+        && optStr('email', 200);
+    }
+
+    // ── 게시판 컬렉션 (현재 localStorage 스토어 → 향후 Firestore 전환 대비) ──
+    //   koaus-accom-posts → accom_posts,  koaus-rent-posts → rent_posts,
+    //   koaus-jobs-posts  → jobs_posts,   koaus-auto-posts → auto_posts
+    match /accom_posts/{postId} {
+      allow get:           if true;
+      allow list:          if limitedList();
+      allow create:        if validPostCreate();
+      allow update, delete: if ownerOnExisting();
+    }
+    match /rent_posts/{postId} {
+      allow get:           if true;
+      allow list:          if limitedList();
+      allow create:        if validPostCreate();
+      allow update, delete: if ownerOnExisting();
+    }
+    match /jobs_posts/{postId} {
+      allow get:           if true;
+      allow list:          if limitedList();
+      allow create:        if validPostCreate();
+      allow update, delete: if ownerOnExisting();
+    }
+    match /auto_posts/{postId} {
+      allow get:           if true;
+      allow list:          if limitedList();
+      allow create:        if validPostCreate();
+      allow update, delete: if ownerOnExisting();
+    }
+
+    // ── 문의 메일 (contact.html → 'mail' 컬렉션, 쓰기 전용) ──
+    //   누구나 1건 보낼 수 있으나 읽기/수정/삭제 전면 금지 + 필드 검증.
+    //   봇의 대량 전송은 App Check(reCAPTCHA v3)로 차단.
+    match /mail/{mailId} {
+      allow read:           if false;
+      allow create:         if reqStr('message', 1, 5000)
+                               && optStr('subject', 200)
+                               && optStr('email', 200)
+                               && optStr('name', 100);
+      allow update, delete: if false;
+    }
+
+    // ── 그 외 모든 경로: 기본 거부 ──
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

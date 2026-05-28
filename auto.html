@@ -474,7 +474,10 @@
     const category = CATEGORIES[params.get('category')] ? params.get('category') : 'used-car';
     const stateKey = (params.get('state') || '').toLowerCase();
     const STORE_KEY = 'koaus-auto-posts';  // 단일 컬렉션, category 속성으로 구분
-    const PER_PAGE = 10;
+    // 한 번에 20개씩만 렌더(페이지네이션). 향후 Firestore 전환 시:
+    //   query(collection(db,'auto_posts'), where('category','==',category), orderBy('id','desc'), limit(PER_PAGE))
+    //   다음 페이지는 startAfter(lastDoc) 커서로만 추가 조회 → read 비용 최소화.
+    const PER_PAGE = 20;
     let currentPage = 1;
 
     document.getElementById('autoTitle').textContent = '🚗 ' + (STATE_NAMES[stateKey] ? STATE_NAMES[stateKey] + ' ' : '') + CATEGORIES[category];
