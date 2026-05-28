@@ -472,18 +472,41 @@
       if (tab === 'recent') return readJSON('koaus-recent-posts');
       return readJSON('koaus-saved-posts');
     }
+    const boardStoreKey = b => b === 'accom' ? 'koaus-accom-posts' : b === 'jobs' ? 'koaus-jobs-posts' : null;
+    function deleteMyPost(board, id) {
+      if (!confirm('정말 이 게시글을 삭제하시겠습니까?')) return;
+      const sk = boardStoreKey(board);
+      if (sk) localStorage.setItem(sk, JSON.stringify(readJSON(sk).filter(x => String(x.id) !== String(id))));
+      ['koaus-my-posts','koaus-saved-posts','koaus-recent-posts'].forEach(k => {
+        localStorage.setItem(k, JSON.stringify(readJSON(k).filter(r => !(r.board === board && String(r.id) === String(id)))));
+      });
+      renderList();
+    }
     function renderList() {
       const items = dataFor(mtab);
       const el = document.getElementById('mypageList');
       if (!items.length) { el.innerHTML = '<div class="post-empty">' + emptyMsg[mtab] + '</div>'; return; }
       el.innerHTML = items.map(p => {
         const meta = escHtml(p.author || '') + (p.authorEmail ? ' (' + maskEmailPrefix(p.authorEmail) + ')' : '') + ' · ' + (p.date || '') + (p.time ? ' ' + p.time : '');
-        return '<a class="mypage-item" href="' + boardHref(p.board) + '">'
-          + '<span class="mypage-item-badge">' + boardLabel(p.board) + '</span>'
+        const head = '<span class="mypage-item-badge">' + boardLabel(p.board) + '</span>'
           + '<span class="mypage-item-title">' + escHtml(p.title || '') + '</span>'
-          + '<span class="mypage-item-meta">' + meta + '</span>'
-          + '</a>';
+          + '<span class="mypage-item-meta">' + meta + '</span>';
+        if (mtab === 'mine') {
+          const editUrl = boardHref(p.board) + '?state=' + encodeURIComponent(p.state || '') + '&edit=' + encodeURIComponent(p.id);
+          return '<div class="mypage-item">'
+            + head
+            + '<span class="mypage-item-actions">'
+            +   '<a class="mp-edit" href="' + editUrl + '">수정</a>'
+            +   '<button class="mp-del" data-board="' + p.board + '" data-id="' + p.id + '">삭제</button>'
+            + '</span>'
+            + '</div>';
+        }
+        return '<a class="mypage-item" href="' + boardHref(p.board) + '">' + head + '</a>';
       }).join('');
+      el.querySelectorAll('.mp-del').forEach(b => b.addEventListener('click', e => {
+        e.preventDefault(); e.stopPropagation();
+        deleteMyPost(b.dataset.board, b.dataset.id);
+      }));
     }
     document.querySelectorAll('.mypage-tab').forEach(t => t.addEventListener('click', () => {
       document.querySelectorAll('.mypage-tab').forEach(x => x.classList.remove('active'));

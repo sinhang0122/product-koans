@@ -341,6 +341,7 @@
       <div class="post-detail-meta" id="detailMeta"></div>
       <div class="post-detail-body" id="detailBody"></div>
       <div class="post-detail-contact" id="detailContact"></div>
+      <div class="post-detail-actions" id="detailActions"></div>
     </div>
   </div>
 
@@ -391,9 +392,19 @@
       localStorage.setItem(RECENT_KEY, JSON.stringify(r.slice(0, 30)));
     }
     function recordMyPost(p) {
-      const mine = readJSON(MYPOSTS_KEY);
-      mine.unshift({ board: BOARD, id: p.id, title: p.title, author: p.author, authorEmail: p.authorEmail || '', date: p.date, time: p.time || '' });
+      const mine = readJSON(MYPOSTS_KEY).filter(r => !(r.board === BOARD && String(r.id) === String(p.id)));
+      mine.unshift({ board: BOARD, id: p.id, title: p.title, state: p.state || '', author: p.author, authorEmail: p.authorEmail || '', date: p.date, time: p.time || '' });
       localStorage.setItem(MYPOSTS_KEY, JSON.stringify(mine));
+    }
+    function removeRecord(key, id) {
+      localStorage.setItem(key, JSON.stringify(readJSON(key).filter(r => !(r.board === BOARD && String(r.id) === String(id)))));
+    }
+    function isMine(p) {
+      const u = window.koausAuth && window.koausAuth.user;
+      if (!u) return false;
+      if (u.uid && p.authorUid && u.uid === p.authorUid) return true;
+      if (u.email && p.authorEmail && u.email === p.authorEmail) return true;
+      return false;
     }
     function maskEmailPrefix(email) {
       if (!email) return '';
@@ -454,7 +465,7 @@
       list.innerHTML = pageItems.map((p, i) => {
         const saved = isSaved(p.id);
         return `
-        <div class="post-row" data-id="${p.id}" style="cursor:pointer">
+        <div class="post-row${isMine(p) ? ' my-post-highlight' : ''}" data-id="${p.id}" style="cursor:pointer">
           <span class="post-num">${sorted.length - (start + i)}</span>
           <span class="post-title" style="color:var(--text-primary);font-weight:500;">${escHtml(p.title)}</span>
           <span class="post-author">${authorLabel(p)}</span>
@@ -496,13 +507,60 @@
       document.getElementById('detailBody').textContent = p.body;
       const contactEl = document.getElementById('detailContact');
       contactEl.innerHTML = p.contact ? `📞 연락처: <strong>${escHtml(p.contact)}</strong>` : '';
+
+      const actEl = document.getElementById('detailActions');
+      if (isMine(p)) {
+        actEl.innerHTML = `
+          <button class="detail-edit-btn" id="detailEditBtn">수정하기</button>
+          <button class="detail-delete-btn" id="detailDeleteBtn">삭제하기</button>`;
+        document.getElementById('detailEditBtn').onclick   = () => openWriteModalForEdit(p);
+        document.getElementById('detailDeleteBtn').onclick = () => deletePost(p.id);
+        actEl.style.display = 'flex';
+      } else {
+        actEl.innerHTML = '';
+        actEl.style.display = 'none';
+      }
+
       recordRecent(p);
       document.getElementById('detailOverlay').classList.add('open');
+    }
+
+    function deletePost(id) {
+      if (!confirm('정말 이 게시글을 삭제하시겠습니까?')) return;
+      savePosts(loadPosts().filter(x => String(x.id) !== String(id)));
+      removeRecord(MYPOSTS_KEY, id);
+      removeRecord(SAVED_KEY, id);
+      removeRecord(RECENT_KEY, id);
+      document.getElementById('detailOverlay').classList.remove('open');
+      renderPosts();
     }
     document.getElementById('detailClose').addEventListener('click', () => { document.getElementById('detailOverlay').classList.remove('open'); });
     document.getElementById('detailOverlay').addEventListener('click', e => { if (e.target === e.currentTarget) document.getElementById('detailOverlay').classList.remove('open'); });
     const writeOverlay = document.getElementById('writeOverlay');
-    document.getElementById('writeBtnOpen').addEventListener('click', () => writeOverlay.classList.add('open'));
+    let editingId = null;  // 수정 중인 글 id
+
+    function setWriteMode(mode) {
+      const isEdit = mode === 'edit';
+      document.querySelector('.write-modal-title').textContent = isEdit ? '✏️ 구인구직 글 수정' : '✏️ 구인구직 글쓰기';
+      document.getElementById('writeBtnSubmit').textContent = isEdit ? '수정 완료' : '등록하기';
+    }
+    function openWriteModal() {
+      editingId = null;
+      setWriteMode('create');
+      writeOverlay.classList.add('open');
+    }
+    function openWriteModalForEdit(p) {
+      editingId = p.id;
+      document.getElementById(p.postType === 'seeking' ? 'wPostTypeSeeking' : 'wPostTypeHiring').checked = true;
+      document.getElementById('wTitle').value   = p.title || '';
+      document.getElementById('wBody').value    = p.body || '';
+      document.getElementById('wAuthor').value  = p.author || '';
+      document.getElementById('wContact').value = p.contact || '';
+      setWriteMode('edit');
+      document.getElementById('detailOverlay').classList.remove('open');
+      writeOverlay.classList.add('open');
+    }
+    document.getElementById('writeBtnOpen').addEventListener('click', openWriteModal);
     document.getElementById('writeBtnCancel').addEventListener('click', () => writeOverlay.classList.remove('open'));
     writeOverlay.addEventListener('click', e => { if (e.target === writeOverlay) writeOverlay.classList.remove('open'); });
     document.getElementById('writeBtnSubmit').addEventListener('click', () => {
@@ -532,15 +590,34 @@
       const pad = n => String(n).padStart(2, '0');
       const date = `${pad(d.getMonth() + 1)}/${pad(d.getDate())}`;
       const time = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
-      const post = { id: Date.now(), postType, title, body, state: currentState, author: nick, authorEmail: user.email || '', contact, date, time };
       const posts = loadPosts();
-      posts.push(post);
-      savePosts(posts);
-      recordMyPost(post);
+      if (editingId != null) {
+        const idx = posts.findIndex(x => String(x.id) === String(editingId));
+        if (idx >= 0) {
+          Object.assign(posts[idx], { postType, title, body, contact });
+          savePosts(posts);
+          recordMyPost(posts[idx]);
+        }
+        editingId = null;
+      } else {
+        const post = { id: Date.now(), postType, title, body, state: currentState, author: nick, authorUid: user.uid || '', authorEmail: user.email || '', contact, date, time };
+        posts.push(post);
+        savePosts(posts);
+        recordMyPost(post);
+      }
+      setWriteMode('create');
       writeOverlay.classList.remove('open');
       ['wTitle','wBody','wAuthor','wContact'].forEach(id => { document.getElementById(id).value = ''; });
       switchTab(postType);
     }
+
+    // 마이페이지 등에서 ?edit=<id>로 진입 시, 로그인 확인 후 본인 글이면 수정 폼 자동 오픈
+    window.addEventListener('koausAuthReady', () => {
+      const editId = new URLSearchParams(location.search).get('edit');
+      if (!editId) return;
+      const p = loadPosts().find(x => String(x.id) === String(editId));
+      if (p && isMine(p)) openWriteModalForEdit(p);
+    }, { once: true });
 
     switchTab(activeTab);
   </script>
@@ -735,6 +812,8 @@
         const nick = localStorage.getItem('koaus-nickname') || user.displayName?.split(' ')[0] || user.email?.split('@')[0] || '계정';
         loginBtn.textContent = nick;
         loginBtn.title = '내 계정 (마이페이지)';
+        renderPosts();  // 본인 글 하이라이트 반영
+        window.dispatchEvent(new Event('koausAuthReady'));
         if (typeof window.koausAuth.afterLogin === 'function') {
           const cb = window.koausAuth.afterLogin;
           window.koausAuth.afterLogin = null;

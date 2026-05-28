@@ -1002,6 +1002,40 @@ body {
 .bookmark-btn:hover { color: var(--text-primary); transform: scale(1.1); }
 .bookmark-btn.is-saved { color: var(--accent); }
 
+/* 본인 작성 글 강조 (List View) — 파란 테두리 */
+.accom-card.my-post-highlight { border: 2px solid #007BFF; }
+.post-row.my-post-highlight { border-left: 3px solid #007BFF; background: var(--bg-card); }
+
+/* 상세 모달 필터 태그 */
+.post-detail-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.post-detail-tag {
+  font-size: 12px; padding: 3px 10px; border-radius: 999px;
+  background: var(--bg-card); border: 1px solid var(--border); color: var(--text-secondary);
+}
+
+/* 상세 모달 수정/삭제 버튼 — B&W 테마에 녹아드는 모노톤 */
+.post-detail-actions { display: none; gap: 8px; justify-content: flex-end; padding-top: 4px; }
+.detail-edit-btn, .detail-delete-btn {
+  padding: 9px 20px; border-radius: var(--r-md); font-family: var(--font);
+  font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s;
+  background: var(--bg-card); border: 1px solid var(--border); color: var(--text-primary);
+}
+.detail-edit-btn:hover { border-color: var(--text-primary); background: var(--bg-elevated); }
+.detail-delete-btn { color: var(--red); }
+.detail-delete-btn:hover { border-color: var(--red); background: rgba(220,38,38,0.06); }
+
+/* 마이페이지 '내가 쓴 글' 액션 버튼 */
+.mypage-item-actions { display: flex; gap: 8px; align-items: center; margin-left: auto; }
+.mp-edit, .mp-del {
+  padding: 5px 12px; border-radius: var(--r-sm); font-family: var(--font);
+  font-size: 12px; font-weight: 700; cursor: pointer; text-decoration: none;
+  background: var(--bg-card); border: 1px solid var(--border); color: var(--text-primary);
+  transition: all 0.12s;
+}
+.mp-edit:hover { border-color: var(--text-primary); background: var(--bg-elevated); }
+.mp-del { color: var(--red); }
+.mp-del:hover { border-color: var(--red); background: rgba(220,38,38,0.06); }
+
 /* Pagination */
 .pagination { display: flex; justify-content: center; gap: 6px; margin-top: 24px; flex-wrap: wrap; }
 .pagination-btn {

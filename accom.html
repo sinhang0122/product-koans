@@ -263,10 +263,10 @@
       <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
     </div>
 
-    <!-- Main Tabs: 방 내놓기 / 방 구하기 -->
+    <!-- Main Tabs: 방 올리기 / 방 구하기 -->
     <div class="accom-main-tabs">
       <button class="accom-tab active" id="tabOffering">
-        방 내놓기
+        방 올리기
         <em>Offering</em>
       </button>
       <button class="accom-tab" id="tabLooking">
@@ -387,7 +387,7 @@
         <div class="write-posttype-tabs">
           <label class="write-posttype-tab">
             <input type="radio" name="wPostType" id="wPostTypeOffering" value="offering" checked>
-            <span>방 내놓기 <em>Offering</em></span>
+            <span>방 올리기 <em>Offering</em></span>
           </label>
           <label class="write-posttype-tab">
             <input type="radio" name="wPostType" id="wPostTypeLooking" value="looking">
@@ -481,8 +481,10 @@
         <button class="post-detail-close" id="detailClose">✕</button>
       </div>
       <div class="post-detail-meta" id="detailMeta"></div>
+      <div class="post-detail-tags" id="detailTags"></div>
       <div class="post-detail-body" id="detailBody"></div>
       <div class="post-detail-contact" id="detailContact"></div>
+      <div class="post-detail-actions" id="detailActions"></div>
     </div>
   </div>
 
@@ -680,12 +682,46 @@
     // ── Write Modal ──
     const writeOverlay = document.getElementById('writeOverlay');
 
-    document.getElementById('writeBtnOpen').addEventListener('click',   openWriteModal);
+    let editingId = null;  // 수정 중인 글 id (null이면 새 글)
+
+    document.getElementById('writeBtnOpen').addEventListener('click',   () => openWriteModal());
     document.getElementById('writeBtnClose').addEventListener('click',  closeWriteModal);
     document.getElementById('writeBtnCancel').addEventListener('click', closeWriteModal);
     writeOverlay.addEventListener('click', e => { if (e.target === writeOverlay) closeWriteModal(); });
 
+    function setWriteMode(mode) {
+      const isEdit = mode === 'edit';
+      document.querySelector('.write-modal-title').innerHTML = isEdit ? '글 수정 <em>Edit Post</em>' : '글쓰기 <em>Write Post</em>';
+      document.getElementById('writeBtnSubmit').textContent = isEdit ? '수정 완료' : '등록하기';
+    }
+    function resetWriteForm() {
+      ['wTitle','wAddress','wPrice','wBody','wAuthor','wContact'].forEach(id => { document.getElementById(id).value = ''; });
+      ['wParking','wPet','wKids','wAirCon'].forEach(id => { document.getElementById(id).checked = false; });
+    }
     function openWriteModal() {
+      editingId = null;
+      setWriteMode('create');
+      writeOverlay.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+    function openWriteModalForEdit(p) {
+      editingId = p.id;
+      document.getElementById(p.postType === 'looking' ? 'wPostTypeLooking' : 'wPostTypeOffering').checked = true;
+      document.getElementById('wTitle').value    = p.title || '';
+      document.getElementById('wAddress').value  = p.address || '';
+      document.getElementById('wPropType').value = p.propType || 'house';
+      document.getElementById('wPrice').value    = p.price || '';
+      document.getElementById('wRoomType').value = p.roomType || 'single';
+      document.getElementById('wBathroom').value = p.bathroom || 'shared';
+      document.getElementById('wParking').checked = !!p.parking;
+      document.getElementById('wPet').checked     = !!p.petFriendly;
+      document.getElementById('wKids').checked    = !!p.kidsInHouse;
+      document.getElementById('wAirCon').checked  = !!p.airCon;
+      document.getElementById('wBody').value     = p.body || '';
+      document.getElementById('wAuthor').value   = p.author || '';
+      document.getElementById('wContact').value  = p.contact || '';
+      setWriteMode('edit');
+      document.getElementById('detailOverlay').classList.remove('open');
       writeOverlay.classList.add('open');
       document.body.style.overflow = 'hidden';
     }
@@ -743,9 +779,8 @@
       const time = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
       const address = document.getElementById('wAddress').value.trim();
 
-      const post = {
-        id: Date.now(), postType, title, body, state: currentState,
-        author: nick, authorEmail: user.email || '', date, time, address,
+      const fields = {
+        postType, title, body, address,
         price:    parseInt(document.getElementById('wPrice').value) || 0,
         propType: document.getElementById('wPropType').value,
         roomType: document.getElementById('wRoomType').value,
@@ -755,34 +790,54 @@
         kidsInHouse: document.getElementById('wKids').checked,
         airCon:      document.getElementById('wAirCon').checked,
         contact: document.getElementById('wContact').value.trim(),
-        lat: null, lng: null,
       };
 
       // 주소 → 좌표 (지도 마커용)
+      let coords = null;
       if (address) {
         loadMapScript();  // Geocoder 사용을 위해 Maps 스크립트 로드 보장
-        const coords = await geocode(address);
-        if (coords) { post.lat = coords.lat; post.lng = coords.lng; }
+        coords = await geocode(address);
       }
 
       const posts = loadPosts();
-      posts.push(post);
-      savePosts(posts);
-      recordMyPost(post);
+      let target;
 
-      currentPage = 1;
-      switchTab(postType);  // 작성한 유형 탭으로 전환 + 렌더
-      closeWriteModal();
-
-      // 지도 뷰라면 새 마커 갱신 후 해당 위치로 부드럽게 이동
-      if (post.lat && post.lng && mapReady) {
-        updateMapMarkers(applyFilters(loadPosts()));
-        map.setZoom(14);
-        map.panTo({ lat: post.lat, lng: post.lng });
+      if (editingId != null) {
+        // ── 수정: 기존 글 업데이트 ──
+        const idx = posts.findIndex(x => String(x.id) === String(editingId));
+        if (idx < 0) { editingId = null; return; }
+        target = posts[idx];
+        Object.assign(target, fields);
+        if (coords) { target.lat = coords.lat; target.lng = coords.lng; }
+        savePosts(posts);
+        recordMyPost(target);  // 마이페이지 제목 등 동기화
+        editingId = null;
+      } else {
+        // ── 새 글 작성 ──
+        target = {
+          id: Date.now(), state: currentState,
+          author: nick, authorUid: user.uid || '', authorEmail: user.email || '', date, time,
+          lat: null, lng: null, ...fields,
+        };
+        if (coords) { target.lat = coords.lat; target.lng = coords.lng; }
+        posts.push(target);
+        savePosts(posts);
+        recordMyPost(target);
       }
 
-      ['wTitle','wAddress','wPrice','wBody','wAuthor','wContact'].forEach(id => { document.getElementById(id).value = ''; });
-      ['wParking','wPet','wKids','wAirCon'].forEach(id => { document.getElementById(id).checked = false; });
+      currentPage = 1;
+      setWriteMode('create');
+      switchTab(postType);  // 해당 유형 탭으로 전환 + 렌더
+      closeWriteModal();
+
+      // 지도 뷰라면 마커 갱신 후 해당 위치로 부드럽게 이동
+      if (target.lat && target.lng && mapReady) {
+        updateMapMarkers(applyFilters(loadPosts()));
+        map.setZoom(14);
+        map.panTo({ lat: target.lat, lng: target.lng });
+      }
+
+      resetWriteForm();
     }
 
     // ── Helpers ──
@@ -791,6 +846,20 @@
     }
     function propTypeLabel(t) {
       return { house:'House', apartment:'Apartment', townhouse:'Townhouse', villa:'Villa', unit:'Unit' }[t] || 'Property';
+    }
+    // 게시글의 상세 필터 항목들을 태그 텍스트 배열로
+    function filterTags(p) {
+      const tags = [];
+      if (p.propType) tags.push(propTypeLabel(p.propType));
+      if (p.roomType === 'single') tags.push('🛏 독방 (Single)');
+      else if (p.roomType === 'share') tags.push('🛏 쉐어 (Share)');
+      if (p.bathroom === 'ensuite') tags.push('🚿 개인욕실 (Ensuite)');
+      else if (p.bathroom === 'shared') tags.push('🚿 공용욕실 (Shared)');
+      if (p.parking)     tags.push('🅿 주차 가능');
+      if (p.petFriendly) tags.push('🐾 반려동물 가능');
+      if (p.kidsInHouse) tags.push('👶 아이 있는 집');
+      if (p.airCon)      tags.push('❄ 에어컨');
+      return tags;
     }
     function loadPosts() {
       const ver = localStorage.getItem(STORE_KEY + '-v');
@@ -824,9 +893,20 @@
       localStorage.setItem(RECENT_KEY, JSON.stringify(recent.slice(0, 30)));
     }
     function recordMyPost(p) {
-      const mine = readJSON(MYPOSTS_KEY);
-      mine.unshift({ board: BOARD, id: p.id, title: p.title, author: p.author, authorEmail: p.authorEmail || '', date: p.date, time: p.time || '' });
+      const mine = readJSON(MYPOSTS_KEY).filter(r => !(r.board === BOARD && String(r.id) === String(p.id)));
+      mine.unshift({ board: BOARD, id: p.id, title: p.title, state: p.state || '', author: p.author, authorEmail: p.authorEmail || '', date: p.date, time: p.time || '' });
       localStorage.setItem(MYPOSTS_KEY, JSON.stringify(mine));
+    }
+    function removeRecord(key, id) {
+      localStorage.setItem(key, JSON.stringify(readJSON(key).filter(r => !(r.board === BOARD && String(r.id) === String(id)))));
+    }
+    // 현재 로그인 사용자가 작성한 글인지 — 닉네임이 아닌 고유 식별자(uid/email)로 판별
+    function isMine(p) {
+      const u = window.koausAuth && window.koausAuth.user;
+      if (!u) return false;
+      if (u.uid && p.authorUid && u.uid === p.authorUid) return true;
+      if (u.email && p.authorEmail && u.email === p.authorEmail) return true;
+      return false;
     }
     function maskEmailPrefix(email) {
       if (!email) return '';
@@ -904,10 +984,10 @@
       grid.innerHTML = pageItems.map(p => {
         const saved = isSaved(p.id);
         return `
-        <div class="accom-card" data-id="${p.id}">
+        <div class="accom-card${isMine(p) ? ' my-post-highlight' : ''}" data-id="${p.id}">
           <div class="accom-card-header">
             <div class="accom-card-badges">
-              <span class="accom-type-badge accom-type-badge--${p.postType === 'offering' ? 'offering' : 'looking'}">${p.postType === 'offering' ? '내놓기' : '구하기'}</span>
+              <span class="accom-type-badge accom-type-badge--${p.postType === 'offering' ? 'offering' : 'looking'}">${p.postType === 'offering' ? '올리기' : '구하기'}</span>
               <span class="accom-badge">${propTypeLabel(p.propType)}</span>
             </div>
             <div class="accom-card-hd-right">
@@ -971,11 +1051,40 @@
         `<span>${authorLabel(p)}</span><span>${p.date}${p.time ? ' ' + p.time : ''}</span>` +
         (p.address ? `<span>📍 ${escHtml(p.address)}</span>` : '') +
         (p.price   ? `<span>$${p.price}/wk</span>` : '');
+      // 상세 필터 항목들을 태그로 렌더링
+      document.getElementById('detailTags').innerHTML =
+        filterTags(p).map(t => `<span class="post-detail-tag">${escHtml(t)}</span>`).join('');
+
       document.getElementById('detailBody').textContent = p.body;
       const contactEl = document.getElementById('detailContact');
       contactEl.innerHTML = p.contact ? `📞 연락처: <strong>${escHtml(p.contact)}</strong>` : '';
+
+      // 본인 글이면 수정/삭제 버튼 노출
+      const actEl = document.getElementById('detailActions');
+      if (isMine(p)) {
+        actEl.innerHTML = `
+          <button class="detail-edit-btn" id="detailEditBtn">수정하기</button>
+          <button class="detail-delete-btn" id="detailDeleteBtn">삭제하기</button>`;
+        document.getElementById('detailEditBtn').onclick   = () => openWriteModalForEdit(p);
+        document.getElementById('detailDeleteBtn').onclick = () => deletePost(p.id);
+        actEl.style.display = 'flex';
+      } else {
+        actEl.innerHTML = '';
+        actEl.style.display = 'none';
+      }
+
       recordRecent(p);
       document.getElementById('detailOverlay').classList.add('open');
+    }
+
+    function deletePost(id) {
+      if (!confirm('정말 이 게시글을 삭제하시겠습니까?')) return;
+      savePosts(loadPosts().filter(x => String(x.id) !== String(id)));
+      removeRecord(MYPOSTS_KEY, id);
+      removeRecord(SAVED_KEY, id);
+      removeRecord(RECENT_KEY, id);
+      document.getElementById('detailOverlay').classList.remove('open');
+      renderAll();
     }
 
     document.getElementById('detailClose').addEventListener('click', () =>
@@ -1060,12 +1169,16 @@
           },
         });
         marker.addListener('click', () => {
+          const iwTags = filterTags(p).map(t =>
+            `<span style="display:inline-block;font-size:10px;color:#333;background:#f0f0f0;border:1px solid #ddd;border-radius:999px;padding:1px 7px;margin:2px 3px 0 0;white-space:nowrap;">${escHtml(t)}</span>`
+          ).join('');
           infoWindow.setContent(`
-            <div style="font-family:'Urbanist','Noto Sans KR',sans-serif;max-width:220px;padding:4px 0;">
+            <div style="font-family:'Urbanist','Noto Sans KR',sans-serif;max-width:240px;padding:4px 0;">
               <div style="font-weight:700;font-size:13px;line-height:1.4;margin-bottom:6px;">${escHtml(p.title)}</div>
               ${p.address ? `<div style="font-size:12px;color:#666;margin-bottom:4px;">📍 ${escHtml(p.address)}</div>` : ''}
               ${p.price   ? `<div style="font-size:15px;font-weight:800;color:#000;">$${p.price}<span style="font-size:11px;font-weight:500">/wk</span></div>` : ''}
               <div style="font-size:11px;color:#888;margin-top:4px;">${escHtml(p.author)} · ${p.date}</div>
+              ${iwTags ? `<div style="margin-top:6px;line-height:1.7;">${iwTags}</div>` : ''}
             </div>`);
           infoWindow.open(map, marker);
         });
@@ -1089,6 +1202,14 @@
       }
       return null;
     }
+
+    // 마이페이지 등에서 ?edit=<id>로 진입 시, 로그인 확인 후 본인 글이면 수정 폼 자동 오픈
+    window.addEventListener('koausAuthReady', () => {
+      const editId = new URLSearchParams(location.search).get('edit');
+      if (!editId) return;
+      const p = loadPosts().find(x => String(x.id) === String(editId));
+      if (p && isMine(p)) openWriteModalForEdit(p);
+    }, { once: true });
 
     switchTab(activeTab);  // URL ?tab= 반영 + 초기 렌더
   </script>
@@ -1222,6 +1343,8 @@
         const nick = localStorage.getItem('koaus-nickname') || user.displayName?.split(' ')[0] || user.email?.split('@')[0] || '계정';
         loginBtn.textContent = nick;
         loginBtn.title = '내 계정 (마이페이지)';
+        renderAll();  // 본인 글 하이라이트 반영
+        window.dispatchEvent(new Event('koausAuthReady'));
         // 로그인 직후 보류된 등록 작업 이어서 실행
         if (typeof window.koausAuth.afterLogin === 'function') {
           const cb = window.koausAuth.afterLogin;
