@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>KoAus — 호주 한인 포털</title>
+  <title>Auto — KoAus</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;800;900&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet" />
@@ -26,7 +26,7 @@
       <span class="topbar-tagline"><b>Korea&nbsp;-&nbsp;Australia</b><span class="topbar-tagline-div">|</span>호주 한인 커뮤니티의 새로운 기준</span>
     </a>
     <div class="topbar-actions">
-      <button class="topbar-login-btn" id="loginBtn">로그인</button>
+      <a href="index.html" class="topbar-login-btn">로그인</a>
       <button class="topbar-menu-btn" id="hamburgerBtn" aria-label="메뉴 열기" aria-expanded="false">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
           <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
@@ -355,219 +355,197 @@
       <a href="powerball.html" class="sidebar-exchange-link">🎱 파워볼 당첨 번호 →</a>
     </div>
   </aside>
+  <main class="page-container">
 
-  <main class="home-main">
-
-    <section class="notice-section">
-      <div class="notice-row">
-        <span class="notice-badge">Notice</span>
-        <div class="notice-marquee">
-          <div class="notice-track">
-            <span class="notice-text">숙소 · 구인구직 · 차량 게시판을 자유롭게 이용해 보세요 · Google 계정으로 간편 로그인 가능합니다 · KoAus는 호주 한인 커뮤니티의 새로운 기준을 만들어 갑니다</span>
-            <span class="notice-text" aria-hidden="true">숙소 · 구인구직 · 차량 게시판을 자유롭게 이용해 보세요 · Google 계정으로 간편 로그인 가능합니다 · KoAus는 호주 한인 커뮤니티의 새로운 기준을 만들어 갑니다</span>
-          </div>
-        </div>
+    <div class="page-header">
+      <div>
+        <h1 class="page-title" id="autoTitle">🚗 Auto</h1>
+        <p class="page-subtitle" id="autoSubtitle">자동차 종합 서비스 게시판</p>
       </div>
-    </section>
-
-    <section class="calc-section">
-      <div class="calc-header">
-        <h2 class="calc-title">환율 계산기</h2>
-      </div>
-      <div class="calc-input-row">
-        <div class="calc-amount-wrap">
-          <input class="calc-input" id="calcAmount" type="number" value="1" min="0" step="any" />
-        </div>
-        <select class="calc-select" id="calcFrom">
-          <option value="aud">AUD</option>
-          <option value="krw">KRW</option>
-          <option value="usd">USD</option>
-          <option value="eur">EUR</option>
-          <option value="jpy">JPY</option>
-          <option value="gbp">GBP</option>
-          <option value="cad">CAD</option>
-          <option value="nzd">NZD</option>
-          <option value="cny">CNY</option>
-          <option value="sgd">SGD</option>
-        </select>
-        <span class="calc-arrow">→</span>
-        <select class="calc-select" id="calcTo">
-          <option value="krw">KRW</option>
-          <option value="aud">AUD</option>
-          <option value="usd">USD</option>
-          <option value="eur">EUR</option>
-          <option value="jpy">JPY</option>
-          <option value="gbp">GBP</option>
-          <option value="cad">CAD</option>
-          <option value="nzd">NZD</option>
-          <option value="cny">CNY</option>
-          <option value="sgd">SGD</option>
-        </select>
-        <button class="calc-swap-btn" id="calcSwap" title="방향 바꾸기">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
-            <path d="M7 16V4m0 0L3 8m4-4 4 4"/><path d="M17 8v12m0 0 4-4m-4 4-4-4"/>
-          </svg>
-        </button>
-      </div>
-      <div class="calc-rate-row">
-        <label class="calc-rate-label" for="calcRate" id="calcRateLabel">기준 환율 (1 AUD)</label>
-        <div class="calc-rate-wrap">
-          <input class="calc-rate-input" id="calcRate" type="number" step="any" min="0" placeholder="기준 환율" />
-          <span class="calc-rate-unit" id="calcRateUnit">KRW</span>
-        </div>
-      </div>
-      <div class="calc-result-row">
-        <span class="calc-result" id="calcResult">—</span>
-        <span class="calc-result-currency" id="calcResultCurrency">KRW</span>
-      </div>
-      <div class="calc-meta">
-        <div class="calc-updated" id="calcUpdated">불러오는 중…</div>
-        <div class="calc-rate-info" id="calcRateInfo"></div>
-      </div>
-      <div class="calc-compare" id="calcCompare" style="display:none;"></div>
-    </section>
-
-    <div class="adsense-wrap">
-      <ins class="adsbygoogle"
-           style="display:block"
-           data-ad-client="ca-pub-3691720629746826"
-           data-ad-slot="auto"
-           data-ad-format="auto"
-           data-full-width-responsive="true"></ins>
-      <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+      <a href="index.html" class="page-back">← 홈으로</a>
     </div>
+
+    <div class="board-toolbar">
+      <span class="board-count" id="boardCount">총 0건</span>
+      <button class="board-write-btn" id="writeBtnOpen">+ 글쓰기</button>
+    </div>
+
+    <div class="post-list-table">
+      <div class="post-list-head">
+        <span class="post-num">번호</span>
+        <span class="post-title">제목</span>
+        <span class="post-author">작성자</span>
+        <span class="post-date">날짜</span>
+      </div>
+      <div id="postList"></div>
+    </div>
+    <div class="pagination" id="pagination"></div>
 
   </main>
 
-  <footer class="site-footer-v2">
-    <div class="footer-links">
-      <a href="privacy.html">개인정보처리방침</a>
-      <a href="terms.html">이용약관</a>
-      <a href="contact.html">문의하기</a>
-    </div>
-    <p class="footer-copy">KoAus &mdash; 호주 한인 포털 &nbsp;·&nbsp; 2026</p>
-  </footer>
-
-  <!-- My Account Modal -->
-  <div class="myacct-overlay" id="myAccountModal">
-    <div class="myacct-card">
-      <div class="myacct-topbar">
-        <span class="myacct-title">내 계정 <em>My Account</em></span>
-        <button class="myacct-close" id="myAccountClose" aria-label="닫기">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-          </svg>
-        </button>
+  <!-- ── Write Modal ── -->
+  <div class="write-overlay" id="writeOverlay">
+    <div class="write-modal write-modal--tall">
+      <div class="write-modal-header">
+        <div class="write-modal-title" id="writeTitle">글쓰기 <em>Write Post</em></div>
+        <button class="write-modal-close" id="writeBtnClose">✕</button>
       </div>
-
-      <div class="myacct-profile">
-        <div class="myacct-avatar" id="myAcctAvatar">?</div>
-        <div class="myacct-profile-info">
-          <div class="myacct-name-row">
-            <span class="myacct-name" id="myAcctName">—</span>
-            <button class="myacct-edit-btn" id="myAcctEditBtn">Edit</button>
-          </div>
-          <div class="myacct-email" id="myAcctEmail">—</div>
-        </div>
+      <div class="write-field">
+        <label class="write-label" for="wTitle">제목 Title<span class="required-mark">*</span></label>
+        <input class="write-input" id="wTitle" type="text" placeholder="제목을 입력하세요" maxlength="80" />
       </div>
-
-      <div class="myacct-sections">
-        <div class="myacct-section">
-          <button class="myacct-section-hdr">
-            <span>My Posts <em>내가 쓴 글</em></span>
-            <svg class="myacct-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-          </button>
-          <div class="myacct-section-body">
-            <p class="myacct-empty">아직 내역이 없습니다.</p>
-          </div>
-        </div>
-        <div class="myacct-section">
-          <button class="myacct-section-hdr">
-            <span>Recently Viewed <em>최근에 본 글</em></span>
-            <svg class="myacct-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-          </button>
-          <div class="myacct-section-body">
-            <p class="myacct-empty">아직 내역이 없습니다.</p>
-          </div>
-        </div>
-        <div class="myacct-section">
-          <button class="myacct-section-hdr">
-            <span>Saved Posts <em>저장한 글</em></span>
-            <svg class="myacct-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-          </button>
-          <div class="myacct-section-body">
-            <p class="myacct-empty">아직 내역이 없습니다.</p>
-          </div>
-        </div>
+      <div class="write-field">
+        <label class="write-label" for="wBody">상세 내용 Comments<span class="required-mark">*</span></label>
+        <textarea class="write-textarea" id="wBody" placeholder="차량 정보, 가격, 조건 등을 자유롭게 적어주세요"></textarea>
       </div>
-
-      <div class="myacct-footer">
-        <button class="myacct-logout-btn" id="myAccountLogout">로그아웃</button>
+      <div class="write-field">
+        <label class="write-label" for="wAuthor">작성자 Author</label>
+        <input class="write-input" id="wAuthor" type="text" placeholder="닉네임" maxlength="20" />
+      </div>
+      <div class="write-field">
+        <label class="write-label" for="wContact">연락처 Contact<span class="required-mark">*</span></label>
+        <input class="write-input" id="wContact" type="tel" placeholder="예: 0412345678 (호주 10자리)" maxlength="20" />
+      </div>
+      <div class="write-modal-actions">
+        <button class="write-cancel-btn" id="writeBtnCancel">취소</button>
+        <button class="write-submit-btn" id="writeBtnSubmit">등록하기</button>
       </div>
     </div>
   </div>
 
-  <!-- Auth Modal -->
-  <div class="auth-overlay" id="authOverlay">
-    <div class="auth-modal">
-      <button class="auth-close" id="authClose" aria-label="닫기">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-        </svg>
-      </button>
-      <div class="auth-title">◈ KoAus 계정</div>
-      <div class="auth-subtitle">로그인하여 게시판을 자유롭게 이용해 보세요</div>
-      <div class="auth-tabs">
-        <button class="auth-tab active" data-auth-tab="login">로그인</button>
-        <button class="auth-tab" data-auth-tab="signup">회원가입</button>
+  <!-- ── Detail Modal ── -->
+  <div class="post-detail-overlay" id="detailOverlay">
+    <div class="post-detail-card">
+      <div class="post-detail-header">
+        <div class="post-detail-title" id="detailTitle"></div>
+        <button class="post-detail-close" id="detailClose">✕</button>
       </div>
-
-      <!-- 로그인 폼 -->
-      <div id="authLoginForm">
-        <div class="auth-field">
-          <label class="auth-label" for="authLoginEmail">이메일</label>
-          <input class="auth-input" id="authLoginEmail" type="email" placeholder="email@example.com" autocomplete="email" />
-        </div>
-        <div class="auth-field">
-          <label class="auth-label" for="authLoginPw">비밀번호</label>
-          <input class="auth-input" id="authLoginPw" type="password" placeholder="비밀번호 입력" autocomplete="current-password" />
-        </div>
-        <div class="auth-error" id="authLoginError"></div>
-        <button class="auth-submit" id="authLoginSubmit">로그인</button>
-      </div>
-
-      <!-- 회원가입 폼 -->
-      <div id="authSignupForm" style="display:none">
-        <div class="auth-field">
-          <label class="auth-label" for="authSignupEmail">이메일</label>
-          <input class="auth-input" id="authSignupEmail" type="email" placeholder="email@example.com" autocomplete="email" />
-        </div>
-        <div class="auth-field">
-          <label class="auth-label" for="authSignupPw">비밀번호</label>
-          <input class="auth-input" id="authSignupPw" type="password" placeholder="6자 이상" autocomplete="new-password" />
-        </div>
-        <div class="auth-field">
-          <label class="auth-label" for="authSignupPwConfirm">비밀번호 확인</label>
-          <input class="auth-input" id="authSignupPwConfirm" type="password" placeholder="비밀번호 재입력" autocomplete="new-password" />
-        </div>
-        <div class="auth-error" id="authSignupError"></div>
-        <button class="auth-submit" id="authSignupSubmit">회원가입</button>
-      </div>
-
-      <div class="auth-divider">또는</div>
-
-      <button class="auth-google" id="authGoogle">
-        <svg width="18" height="18" viewBox="0 0 48 48">
-          <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-          <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-          <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-          <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-        </svg>
-        Google 계정으로 로그인
-      </button>
+      <div class="post-detail-meta" id="detailMeta"></div>
+      <div class="post-detail-body" id="detailBody"></div>
+      <div class="post-detail-contact" id="detailContact"></div>
     </div>
   </div>
 
-  <script type="module" src="app.js"></script>
+  <footer class="site-footer"><p>KoAus &mdash; 호주 한인 포털 &nbsp;·&nbsp; 2026</p></footer>
+
+  <script>
+    // ── Sidebar / Theme ──
+    const hBtn = document.getElementById('hamburgerBtn');
+    const cBtn = document.getElementById('sidebarCloseBtn');
+    const sb   = document.getElementById('sidebar');
+    const ov   = document.getElementById('sidebarOverlay');
+    const openSb  = () => { sb.classList.add('open'); ov.classList.add('open'); document.body.style.overflow='hidden'; hBtn.setAttribute('aria-expanded','true'); };
+    const closeSb = () => { sb.classList.remove('open'); ov.classList.remove('open'); document.body.style.overflow=''; hBtn.setAttribute('aria-expanded','false'); };
+    hBtn.addEventListener('click', openSb);
+    cBtn.addEventListener('click', closeSb);
+    ov.addEventListener('click', closeSb);
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeSb(); writeOverlay.classList.remove('open'); document.getElementById('detailOverlay').classList.remove('open'); } });
+    document.querySelectorAll('.accord-header').forEach(btn => btn.addEventListener('click', () => btn.closest('.accord-item').classList.toggle('open')));
+    function applyTheme(t) {
+      if (t === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+      else document.documentElement.removeAttribute('data-theme');
+      localStorage.setItem('koaus-theme', t);
+      document.querySelectorAll('.setting-btn').forEach(b => b.classList.toggle('active', b.dataset.themeSet === t));
+    }
+    document.querySelectorAll('.setting-btn').forEach(btn => btn.addEventListener('click', () => applyTheme(btn.dataset.themeSet)));
+    applyTheme(localStorage.getItem('koaus-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+    document.getElementById('sidebarAccountBtn').addEventListener('click', () => { window.location.href = 'mypage.html'; });
+
+    // ── Auto 게시판 ──
+    const CATEGORIES = {
+      'used-car':   '중고차 판매',
+      'inspection': '동행 인스펙션',
+      'repair':     '수리',
+      'quote':      '견적',
+      'rental':     '렌트카',
+      'lift':       '리프트 (카풀)',
+      'emergency':  '긴급출동',
+      'tow':        '견인',
+    };
+    const STATE_NAMES = { nsw:'NSW', vic:'VIC', qld:'QLD', wa:'WA', sa:'SA', tas:'TAS', act:'ACT', nt:'NT' };
+    const params   = new URLSearchParams(location.search);
+    const category = CATEGORIES[params.get('category')] ? params.get('category') : 'used-car';
+    const stateKey = (params.get('state') || '').toLowerCase();
+    const STORE_KEY = 'koaus-auto-' + category + '-posts';
+    const PER_PAGE = 10;
+    let currentPage = 1;
+
+    document.getElementById('autoTitle').textContent = '🚗 ' + (STATE_NAMES[stateKey] ? STATE_NAMES[stateKey] + ' ' : '') + CATEGORIES[category];
+    document.getElementById('autoSubtitle').textContent = 'Auto · ' + CATEGORIES[category] + ' 게시판';
+
+    function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+    function loadPosts() { try { return JSON.parse(localStorage.getItem(STORE_KEY) || '[]'); } catch { return []; } }
+    function savePosts(p) { localStorage.setItem(STORE_KEY, JSON.stringify(p)); }
+
+    function renderPosts() {
+      const all = loadPosts().slice().sort((a, b) => b.id - a.id);
+      document.getElementById('boardCount').textContent = '총 ' + all.length + '건';
+      const list = document.getElementById('postList');
+      const pager = document.getElementById('pagination');
+      if (!all.length) { list.innerHTML = '<div class="post-empty">아직 등록된 글이 없습니다. 첫 글을 작성해보세요!</div>'; pager.innerHTML = ''; return; }
+      const totalPages = Math.max(1, Math.ceil(all.length / PER_PAGE));
+      if (currentPage > totalPages) currentPage = totalPages;
+      const start = (currentPage - 1) * PER_PAGE;
+      const items = all.slice(start, start + PER_PAGE);
+      list.innerHTML = items.map((p, i) =>
+        '<div class="post-row" data-id="' + p.id + '" style="cursor:pointer">'
+        + '<span class="post-num">' + (all.length - (start + i)) + '</span>'
+        + '<span class="post-title" style="color:var(--text-primary);font-weight:500;">' + escHtml(p.title) + '</span>'
+        + '<span class="post-author">' + escHtml(p.author || '익명') + '</span>'
+        + '<span class="post-date">' + p.date + (p.time ? ' ' + p.time : '') + '</span>'
+        + '</div>'
+      ).join('');
+      list.querySelectorAll('.post-row').forEach(row => row.addEventListener('click', () => openDetail(row.dataset.id)));
+      pager.innerHTML = '';
+      if (totalPages > 1) {
+        for (let i = 1; i <= totalPages; i++) pager.innerHTML += '<button class="pagination-btn' + (i === currentPage ? ' active' : '') + '" data-page="' + i + '">' + i + '</button>';
+        pager.querySelectorAll('.pagination-btn').forEach(b => b.addEventListener('click', () => { currentPage = parseInt(b.dataset.page); renderPosts(); window.scrollTo({ top: 0, behavior: 'smooth' }); }));
+      }
+    }
+
+    function openDetail(id) {
+      const p = loadPosts().find(x => String(x.id) === String(id));
+      if (!p) return;
+      document.getElementById('detailTitle').textContent = p.title;
+      document.getElementById('detailMeta').innerHTML = '<span>' + escHtml(p.author || '익명') + '</span><span>' + p.date + (p.time ? ' ' + p.time : '') + '</span>';
+      document.getElementById('detailBody').textContent = p.body;
+      document.getElementById('detailContact').textContent = p.contact ? '📞 연락처: ' + p.contact : '';
+      document.getElementById('detailOverlay').classList.add('open');
+    }
+    document.getElementById('detailClose').addEventListener('click', () => document.getElementById('detailOverlay').classList.remove('open'));
+    document.getElementById('detailOverlay').addEventListener('click', e => { if (e.target === e.currentTarget) document.getElementById('detailOverlay').classList.remove('open'); });
+
+    // ── Write ──
+    const writeOverlay = document.getElementById('writeOverlay');
+    document.getElementById('writeBtnOpen').addEventListener('click', () => writeOverlay.classList.add('open'));
+    document.getElementById('writeBtnClose').addEventListener('click', () => writeOverlay.classList.remove('open'));
+    document.getElementById('writeBtnCancel').addEventListener('click', () => writeOverlay.classList.remove('open'));
+    writeOverlay.addEventListener('click', e => { if (e.target === writeOverlay) writeOverlay.classList.remove('open'); });
+
+    document.getElementById('writeBtnSubmit').addEventListener('click', () => {
+      const title = document.getElementById('wTitle').value.trim();
+      const body  = document.getElementById('wBody').value.trim();
+      const contactRaw = document.getElementById('wContact').value.trim();
+      // 필수 항목 빈 칸 검증
+      if (!title || !body || !contactRaw) { alert('모든 필수 항목을 올바르게 입력해 주세요.'); return; }
+      // 호주 전화번호 10자리 검증
+      const phone = contactRaw.replace(/[-\s]/g, '');
+      if (!/^0\d{9}$/.test(phone)) { alert('올바른 호주 전화번호 10자리를 입력해 주세요. (예: 0412345678)'); return; }
+      const author = document.getElementById('wAuthor').value.trim() || '익명';
+      const d = new Date();
+      const pad = n => String(n).padStart(2, '0');
+      const date = pad(d.getMonth() + 1) + '/' + pad(d.getDate());
+      const time = pad(d.getHours()) + ':' + pad(d.getMinutes());
+      const posts = loadPosts();
+      posts.push({ id: Date.now(), title, body, author, contact: phone, state: stateKey, category, date, time });
+      savePosts(posts);
+      writeOverlay.classList.remove('open');
+      ['wTitle','wBody','wAuthor','wContact'].forEach(id => { document.getElementById(id).value = ''; });
+      currentPage = 1;
+      renderPosts();
+    });
+
+    renderPosts();
+  </script>
 </body>
 </html>

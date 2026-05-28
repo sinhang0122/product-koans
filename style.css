@@ -257,7 +257,7 @@ body {
   transition: max-height 0.28s ease;
   background: #050505;
 }
-.accord-item.open .accord-body { max-height: 1000px; }
+.accord-item.open .accord-body { max-height: 1400px; }
 
 .accord-link {
   display: flex; align-items: center; justify-content: space-between;
