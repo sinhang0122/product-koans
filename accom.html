@@ -69,8 +69,8 @@
           </div>
           <div class="accord-subgroup">
             <span class="accord-sublabel">Work</span>
-            <a href="jobs.html?tab=post" class="accord-link accord-link--sub">직원 채용 (Post a Job)</a>
-            <a href="jobs.html?tab=find" class="accord-link accord-link--sub">일 구하기 (Find a Job)</a>
+            <a href="jobs.html?state=wa&amp;tab=post" class="accord-link accord-link--sub">직원 채용 (Post a Job)</a>
+            <a href="jobs.html?state=wa&amp;tab=find" class="accord-link accord-link--sub">일 구하기 (Find a Job)</a>
           </div>
           <div class="accord-subgroup">
             <span class="accord-sublabel">Visa &amp; Migration</span>
@@ -94,8 +94,8 @@
           </div>
           <div class="accord-subgroup">
             <span class="accord-sublabel">Work</span>
-            <a href="jobs.html?tab=post" class="accord-link accord-link--sub">직원 채용 (Post a Job)</a>
-            <a href="jobs.html?tab=find" class="accord-link accord-link--sub">일 구하기 (Find a Job)</a>
+            <a href="jobs.html?state=nt&amp;tab=post" class="accord-link accord-link--sub">직원 채용 (Post a Job)</a>
+            <a href="jobs.html?state=nt&amp;tab=find" class="accord-link accord-link--sub">일 구하기 (Find a Job)</a>
           </div>
           <div class="accord-subgroup">
             <span class="accord-sublabel">Visa &amp; Migration</span>
@@ -119,8 +119,8 @@
           </div>
           <div class="accord-subgroup">
             <span class="accord-sublabel">Work</span>
-            <a href="jobs.html?tab=post" class="accord-link accord-link--sub">직원 채용 (Post a Job)</a>
-            <a href="jobs.html?tab=find" class="accord-link accord-link--sub">일 구하기 (Find a Job)</a>
+            <a href="jobs.html?state=qld&amp;tab=post" class="accord-link accord-link--sub">직원 채용 (Post a Job)</a>
+            <a href="jobs.html?state=qld&amp;tab=find" class="accord-link accord-link--sub">일 구하기 (Find a Job)</a>
           </div>
           <div class="accord-subgroup">
             <span class="accord-sublabel">Visa &amp; Migration</span>
@@ -144,8 +144,8 @@
           </div>
           <div class="accord-subgroup">
             <span class="accord-sublabel">Work</span>
-            <a href="jobs.html?tab=post" class="accord-link accord-link--sub">직원 채용 (Post a Job)</a>
-            <a href="jobs.html?tab=find" class="accord-link accord-link--sub">일 구하기 (Find a Job)</a>
+            <a href="jobs.html?state=nsw&amp;tab=post" class="accord-link accord-link--sub">직원 채용 (Post a Job)</a>
+            <a href="jobs.html?state=nsw&amp;tab=find" class="accord-link accord-link--sub">일 구하기 (Find a Job)</a>
           </div>
           <div class="accord-subgroup">
             <span class="accord-sublabel">Visa &amp; Migration</span>
@@ -169,8 +169,8 @@
           </div>
           <div class="accord-subgroup">
             <span class="accord-sublabel">Work</span>
-            <a href="jobs.html?tab=post" class="accord-link accord-link--sub">직원 채용 (Post a Job)</a>
-            <a href="jobs.html?tab=find" class="accord-link accord-link--sub">일 구하기 (Find a Job)</a>
+            <a href="jobs.html?state=vic&amp;tab=post" class="accord-link accord-link--sub">직원 채용 (Post a Job)</a>
+            <a href="jobs.html?state=vic&amp;tab=find" class="accord-link accord-link--sub">일 구하기 (Find a Job)</a>
           </div>
           <div class="accord-subgroup">
             <span class="accord-sublabel">Visa &amp; Migration</span>
@@ -194,8 +194,8 @@
           </div>
           <div class="accord-subgroup">
             <span class="accord-sublabel">Work</span>
-            <a href="jobs.html?tab=post" class="accord-link accord-link--sub">직원 채용 (Post a Job)</a>
-            <a href="jobs.html?tab=find" class="accord-link accord-link--sub">일 구하기 (Find a Job)</a>
+            <a href="jobs.html?state=sa&amp;tab=post" class="accord-link accord-link--sub">직원 채용 (Post a Job)</a>
+            <a href="jobs.html?state=sa&amp;tab=find" class="accord-link accord-link--sub">일 구하기 (Find a Job)</a>
           </div>
           <div class="accord-subgroup">
             <span class="accord-sublabel">Visa &amp; Migration</span>
@@ -219,8 +219,8 @@
           </div>
           <div class="accord-subgroup">
             <span class="accord-sublabel">Work</span>
-            <a href="jobs.html?tab=post" class="accord-link accord-link--sub">직원 채용 (Post a Job)</a>
-            <a href="jobs.html?tab=find" class="accord-link accord-link--sub">일 구하기 (Find a Job)</a>
+            <a href="jobs.html?state=tas&amp;tab=post" class="accord-link accord-link--sub">직원 채용 (Post a Job)</a>
+            <a href="jobs.html?state=tas&amp;tab=find" class="accord-link accord-link--sub">일 구하기 (Find a Job)</a>
           </div>
           <div class="accord-subgroup">
             <span class="accord-sublabel">Visa &amp; Migration</span>
@@ -590,6 +590,7 @@
 
     // ── State ──
     const urlTab = new URLSearchParams(location.search).get('tab');
+    const currentState = (new URLSearchParams(location.search).get('state') || '').toLowerCase();
     let activeTab      = (urlTab === 'looking' || urlTab === 'offering') ? urlTab : 'offering';
     let activePropType = '';
     let activeRoomType = '';
@@ -743,7 +744,7 @@
       const address = document.getElementById('wAddress').value.trim();
 
       const post = {
-        id: Date.now(), postType, title, body,
+        id: Date.now(), postType, title, body, state: currentState,
         author: nick, authorEmail: user.email || '', date, time, address,
         price:    parseInt(document.getElementById('wPrice').value) || 0,
         propType: document.getElementById('wPropType').value,
@@ -773,11 +774,11 @@
       switchTab(postType);  // 작성한 유형 탭으로 전환 + 렌더
       closeWriteModal();
 
-      // 지도 뷰라면 새 마커 위치로 이동
+      // 지도 뷰라면 새 마커 갱신 후 해당 위치로 부드럽게 이동
       if (post.lat && post.lng && mapReady) {
-        map.setCenter({ lat: post.lat, lng: post.lng });
-        map.setZoom(14);
         updateMapMarkers(applyFilters(loadPosts()));
+        map.setZoom(14);
+        map.panTo({ lat: post.lat, lng: post.lng });
       }
 
       ['wTitle','wAddress','wPrice','wBody','wAuthor','wContact'].forEach(id => { document.getElementById(id).value = ''; });
@@ -845,6 +846,8 @@
       const fKids    = document.getElementById('fKids').checked;
       const fAirCon  = document.getElementById('fAirCon').checked;
       return posts.filter(p => {
+        // 주(State)별 분리: 현재 주가 지정된 경우 같은 주의 글만 노출
+        if (currentState && (p.state || '') !== currentState) return false;
         if (p.postType !== activeTab) return false;
         if (activePropType && p.propType !== activePropType) return false;
         if (p.price && p.price > maxPrice) return false;

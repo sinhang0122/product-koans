@@ -370,33 +370,6 @@ async function setupCalc() {
 
 setupCalc();
 
-// ── Footer stats ──
-function updateFooterStats() {
-  const KEY   = 'koaus-visit-count';
-  const count = (parseInt(localStorage.getItem(KEY) || '0', 10)) + 1;
-  localStorage.setItem(KEY, String(count));
-
-  const visitEl = document.getElementById('visitCount');
-  if (visitEl) visitEl.textContent = new Intl.NumberFormat().format(count);
-
-  const BOARDS = [
-    'koaus-jobs-posts',
-    'koaus-accom-posts',
-    'koaus-rent-posts',
-    'koaus-car-sale-posts',
-    'koaus-car-rent-posts',
-  ];
-  let total = 0;
-  BOARDS.forEach(k => {
-    try { total += JSON.parse(localStorage.getItem(k) || '[]').length; } catch {}
-  });
-
-  const postEl = document.getElementById('postCount');
-  if (postEl) postEl.textContent = new Intl.NumberFormat().format(total);
-}
-
-updateFooterStats();
-
 // ── Sidebar Account Button ──
 const acctBtn = document.getElementById('sidebarAccountBtn');
 if (acctBtn) {

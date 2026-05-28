@@ -69,8 +69,8 @@
           </div>
           <div class="accord-subgroup">
             <span class="accord-sublabel">Work</span>
-            <a href="jobs.html?tab=post" class="accord-link accord-link--sub">직원 채용 (Post a Job)</a>
-            <a href="jobs.html?tab=find" class="accord-link accord-link--sub">일 구하기 (Find a Job)</a>
+            <a href="jobs.html?state=wa&amp;tab=post" class="accord-link accord-link--sub">직원 채용 (Post a Job)</a>
+            <a href="jobs.html?state=wa&amp;tab=find" class="accord-link accord-link--sub">일 구하기 (Find a Job)</a>
           </div>
           <div class="accord-subgroup">
             <span class="accord-sublabel">Visa &amp; Migration</span>
@@ -94,8 +94,8 @@
           </div>
           <div class="accord-subgroup">
             <span class="accord-sublabel">Work</span>
-            <a href="jobs.html?tab=post" class="accord-link accord-link--sub">직원 채용 (Post a Job)</a>
-            <a href="jobs.html?tab=find" class="accord-link accord-link--sub">일 구하기 (Find a Job)</a>
+            <a href="jobs.html?state=nt&amp;tab=post" class="accord-link accord-link--sub">직원 채용 (Post a Job)</a>
+            <a href="jobs.html?state=nt&amp;tab=find" class="accord-link accord-link--sub">일 구하기 (Find a Job)</a>
           </div>
           <div class="accord-subgroup">
             <span class="accord-sublabel">Visa &amp; Migration</span>
@@ -119,8 +119,8 @@
           </div>
           <div class="accord-subgroup">
             <span class="accord-sublabel">Work</span>
-            <a href="jobs.html?tab=post" class="accord-link accord-link--sub">직원 채용 (Post a Job)</a>
-            <a href="jobs.html?tab=find" class="accord-link accord-link--sub">일 구하기 (Find a Job)</a>
+            <a href="jobs.html?state=qld&amp;tab=post" class="accord-link accord-link--sub">직원 채용 (Post a Job)</a>
+            <a href="jobs.html?state=qld&amp;tab=find" class="accord-link accord-link--sub">일 구하기 (Find a Job)</a>
           </div>
           <div class="accord-subgroup">
             <span class="accord-sublabel">Visa &amp; Migration</span>
@@ -144,8 +144,8 @@
           </div>
           <div class="accord-subgroup">
             <span class="accord-sublabel">Work</span>
-            <a href="jobs.html?tab=post" class="accord-link accord-link--sub">직원 채용 (Post a Job)</a>
-            <a href="jobs.html?tab=find" class="accord-link accord-link--sub">일 구하기 (Find a Job)</a>
+            <a href="jobs.html?state=nsw&amp;tab=post" class="accord-link accord-link--sub">직원 채용 (Post a Job)</a>
+            <a href="jobs.html?state=nsw&amp;tab=find" class="accord-link accord-link--sub">일 구하기 (Find a Job)</a>
           </div>
           <div class="accord-subgroup">
             <span class="accord-sublabel">Visa &amp; Migration</span>
@@ -169,8 +169,8 @@
           </div>
           <div class="accord-subgroup">
             <span class="accord-sublabel">Work</span>
-            <a href="jobs.html?tab=post" class="accord-link accord-link--sub">직원 채용 (Post a Job)</a>
-            <a href="jobs.html?tab=find" class="accord-link accord-link--sub">일 구하기 (Find a Job)</a>
+            <a href="jobs.html?state=vic&amp;tab=post" class="accord-link accord-link--sub">직원 채용 (Post a Job)</a>
+            <a href="jobs.html?state=vic&amp;tab=find" class="accord-link accord-link--sub">일 구하기 (Find a Job)</a>
           </div>
           <div class="accord-subgroup">
             <span class="accord-sublabel">Visa &amp; Migration</span>
@@ -194,8 +194,8 @@
           </div>
           <div class="accord-subgroup">
             <span class="accord-sublabel">Work</span>
-            <a href="jobs.html?tab=post" class="accord-link accord-link--sub">직원 채용 (Post a Job)</a>
-            <a href="jobs.html?tab=find" class="accord-link accord-link--sub">일 구하기 (Find a Job)</a>
+            <a href="jobs.html?state=sa&amp;tab=post" class="accord-link accord-link--sub">직원 채용 (Post a Job)</a>
+            <a href="jobs.html?state=sa&amp;tab=find" class="accord-link accord-link--sub">일 구하기 (Find a Job)</a>
           </div>
           <div class="accord-subgroup">
             <span class="accord-sublabel">Visa &amp; Migration</span>
@@ -219,8 +219,8 @@
           </div>
           <div class="accord-subgroup">
             <span class="accord-sublabel">Work</span>
-            <a href="jobs.html?tab=post" class="accord-link accord-link--sub">직원 채용 (Post a Job)</a>
-            <a href="jobs.html?tab=find" class="accord-link accord-link--sub">일 구하기 (Find a Job)</a>
+            <a href="jobs.html?state=tas&amp;tab=post" class="accord-link accord-link--sub">직원 채용 (Post a Job)</a>
+            <a href="jobs.html?state=tas&amp;tab=find" class="accord-link accord-link--sub">일 구하기 (Find a Job)</a>
           </div>
           <div class="accord-subgroup">
             <span class="accord-sublabel">Visa &amp; Migration</span>
@@ -418,6 +418,7 @@
 
     // ── Tabs ──
     const urlTab = new URLSearchParams(location.search).get('tab');
+    const currentState = (new URLSearchParams(location.search).get('state') || '').toLowerCase();
     let activeTab = urlTab === 'find' ? 'seeking' : 'hiring';  // post→hiring, find→seeking
     let currentPage = 1;
     const PER_PAGE = 10;
@@ -432,7 +433,10 @@
     }
 
     function renderPosts() {
-      const all = loadPosts().filter(p => (p.postType || 'hiring') === activeTab);
+      const all = loadPosts().filter(p =>
+        (p.postType || 'hiring') === activeTab &&
+        (!currentState || (p.state || '') === currentState)
+      );
       document.getElementById('boardCount').textContent = `총 ${all.length}건`;
       const list  = document.getElementById('postList');
       const pager = document.getElementById('pagination');
@@ -528,7 +532,7 @@
       const pad = n => String(n).padStart(2, '0');
       const date = `${pad(d.getMonth() + 1)}/${pad(d.getDate())}`;
       const time = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
-      const post = { id: Date.now(), postType, title, body, author: nick, authorEmail: user.email || '', contact, date, time };
+      const post = { id: Date.now(), postType, title, body, state: currentState, author: nick, authorEmail: user.email || '', contact, date, time };
       const posts = loadPosts();
       posts.push(post);
       savePosts(posts);
