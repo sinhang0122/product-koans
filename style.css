@@ -1424,7 +1424,8 @@ select.filter-mini-input {
 }
 .report-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
 .report-title { font-size: 17px; font-weight: 800; color: var(--text-primary); }
-.report-close { background: none; border: none; cursor: pointer; font-size: 20px; color: var(--text-muted); padding: 4px; }
+.report-close { width: 34px; height: 34px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: none; border: none; cursor: pointer; font-size: 18px; line-height: 1; color: var(--text-muted); border-radius: var(--r-sm); }
+.report-close:active { background: var(--bg-elevated); }
 .report-close:hover { color: var(--text-primary); }
 .report-desc { font-size: 12.5px; color: var(--text-muted); line-height: 1.5; margin-bottom: 14px; }
 .report-reasons { display: flex; flex-direction: column; gap: 10px; }

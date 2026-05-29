@@ -143,15 +143,18 @@ window.onKoausRecaptcha = () => { recaptchaOK = true; updateSignupBtn(); };
 window.onKoausRecaptchaExpired = () => { recaptchaOK = false; updateSignupBtn(); };
 const tosOverlay = document.getElementById('tosOverlay');
 const privacyOverlay = document.getElementById('privacyOverlay');
-const closeTermsModal = ov => ov.classList.remove('open');
-document.getElementById('authTosLink').addEventListener('click', () => tosOverlay.classList.add('open'));
-document.getElementById('authPrivacyLink').addEventListener('click', () => privacyOverlay.classList.add('open'));
-document.getElementById('tosClose').addEventListener('click', () => closeTermsModal(tosOverlay));
-document.getElementById('tosConfirm').addEventListener('click', () => closeTermsModal(tosOverlay));
-document.getElementById('privacyClose').addEventListener('click', () => closeTermsModal(privacyOverlay));
-document.getElementById('privacyConfirm').addEventListener('click', () => closeTermsModal(privacyOverlay));
-tosOverlay.addEventListener('click', e => { if (e.target === tosOverlay) closeTermsModal(tosOverlay); });
-privacyOverlay.addEventListener('click', e => { if (e.target === privacyOverlay) closeTermsModal(privacyOverlay); });
+function closeTermsModal(ov) { if (ov) { ov.classList.remove('open'); } else { tosOverlay.classList.remove('open'); privacyOverlay.classList.remove('open'); } }
+function openTermsModal(ov) { ov.classList.add('open'); history.pushState({ koausTerms: true }, ''); }
+function userCloseTerms(ov) { closeTermsModal(ov); if (history.state && history.state.koausTerms) history.back(); }
+document.getElementById('authTosLink').addEventListener('click', () => openTermsModal(tosOverlay));
+document.getElementById('authPrivacyLink').addEventListener('click', () => openTermsModal(privacyOverlay));
+document.getElementById('tosClose').addEventListener('click', () => userCloseTerms(tosOverlay));
+document.getElementById('tosConfirm').addEventListener('click', () => userCloseTerms(tosOverlay));
+document.getElementById('privacyClose').addEventListener('click', () => userCloseTerms(privacyOverlay));
+document.getElementById('privacyConfirm').addEventListener('click', () => userCloseTerms(privacyOverlay));
+tosOverlay.addEventListener('click', e => { if (e.target === tosOverlay) userCloseTerms(tosOverlay); });
+privacyOverlay.addEventListener('click', e => { if (e.target === privacyOverlay) userCloseTerms(privacyOverlay); });
+window.addEventListener('popstate', () => closeTermsModal());
 
 document.getElementById('authSignupSubmit').addEventListener('click', async () => {
   const email = document.getElementById('authSignupEmail').value.trim();
