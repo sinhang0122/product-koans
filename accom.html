@@ -594,11 +594,23 @@
       </div>
 
       <div class="write-field">
-        <label class="write-label" for="wRoomType">방 형태 Room Type<span class="required-mark">*</span></label>
-        <select class="write-input" id="wRoomType">
-          <option value="single">Single Room (독방)</option>
-          <option value="share">Share Room (쉐어)</option>
-        </select>
+        <span class="write-label">방 형태 Room Type (중복 선택)<span class="required-mark">*</span></span>
+        <div class="write-opts" id="wRoomTypes">
+          <label class="write-opt"><input type="checkbox" data-room="master"> 마스터룸</label>
+          <label class="write-opt"><input type="checkbox" data-room="second"> 세컨룸</label>
+          <label class="write-opt"><input type="checkbox" data-room="single"> 독방</label>
+          <label class="write-opt"><input type="checkbox" data-room="living_share"> 거실쉐어</label>
+          <label class="write-opt"><input type="checkbox" data-room="sunroom"> 썬룸</label>
+        </div>
+      </div>
+
+      <div class="write-field">
+        <span class="write-label">성별 조건 Gender<span class="required-mark">*</span></span>
+        <div class="write-opts" id="wGender">
+          <label class="write-opt"><input type="radio" name="wGenderR" value="male"> 남</label>
+          <label class="write-opt"><input type="radio" name="wGenderR" value="female"> 여</label>
+          <label class="write-opt"><input type="radio" name="wGenderR" value="any"> 성별 무관</label>
+        </div>
       </div>
 
       <div class="write-field">
@@ -607,6 +619,11 @@
           <option value="shared">Shared (공용)</option>
           <option value="ensuite">Ensuite (개인)</option>
         </select>
+      </div>
+
+      <div class="write-field">
+        <label class="write-label" for="wAvailDate">입주 가능한 날 Available Date<span class="required-mark">*</span></label>
+        <input class="write-input" id="wAvailDate" type="date" />
       </div>
 
       <div class="write-field">
@@ -923,10 +940,11 @@
       document.getElementById('writeBtnSubmit').textContent = isEdit ? '수정 완료' : '등록하기';
     }
     function resetWriteForm() {
-      ['wTitle','wAddress','wPrice','wBody','wAuthor','wContact'].forEach(id => { document.getElementById(id).value = ''; });
+      ['wTitle','wAddress','wPrice','wBody','wAuthor','wContact','wAvailDate'].forEach(id => { document.getElementById(id).value = ''; });
       document.getElementById('wPropType').value = '';
       ['wParking','wPet','wKids','wAirCon'].forEach(id => { document.getElementById(id).checked = false; });
-      document.querySelectorAll('#wTypes input').forEach(c => { c.checked = false; });
+      document.querySelectorAll('#wTypes input, #wRoomTypes input').forEach(c => { c.checked = false; });
+      document.querySelectorAll('#wGender input').forEach(r => { r.checked = false; });
       document.getElementById('wDisclaimer').checked = false;
     }
     // 로그인 사용자 닉네임 (작성자 고정값)
@@ -963,7 +981,10 @@
       document.getElementById('wAddress').value  = p.address || '';
       document.getElementById('wPropType').value = p.propType || '';
       document.getElementById('wPrice').value    = p.price || '';
-      document.getElementById('wRoomType').value = p.roomType || 'single';
+      const roomSet = new Set(Array.isArray(p.roomTypes) ? p.roomTypes : (p.roomType ? [p.roomType] : []));
+      document.querySelectorAll('#wRoomTypes input').forEach(c => { c.checked = roomSet.has(c.dataset.room); });
+      document.querySelectorAll('#wGender input').forEach(r => { r.checked = (r.value === p.gender); });
+      document.getElementById('wAvailDate').value = p.availableDate || '';
       document.getElementById('wBathroom').value = p.bathroom || 'shared';
       document.getElementById('wParking').checked = !!p.parking;
       document.getElementById('wPet').checked     = !!p.petFriendly;
@@ -1039,27 +1060,30 @@
         fields = { mode: 'find', title, body, contact: phone };
       } else {
         // ── 방 올리기: 구조화 양식 (주거형태 제외 필수) ──
-        const types    = [...document.querySelectorAll('#wTypes input:checked')].map(c => c.dataset.type);
+        const types     = [...document.querySelectorAll('#wTypes input:checked')].map(c => c.dataset.type);
+        const roomTypes = [...document.querySelectorAll('#wRoomTypes input:checked')].map(c => c.dataset.room);
+        const gender    = (document.querySelector('#wGender input:checked') || {}).value || '';
+        const availableDate = document.getElementById('wAvailDate').value;
         const address  = document.getElementById('wAddress').value.trim();
         const priceVal = document.getElementById('wPrice').value.trim();
         const propType = document.getElementById('wPropType').value;  // 선택 사항
-        const roomType = document.getElementById('wRoomType').value;
         const bathroom = document.getElementById('wBathroom').value;
 
-        if (!title || !address || !priceVal || !roomType || !bathroom || !contactRaw || !body) {
+        if (!title || !address || !priceVal || !bathroom || !gender || !availableDate || !contactRaw || !body) {
           alert('모든 필수 항목을 올바르게 입력해 주세요.');
           return;
         }
         const price = parseInt(priceVal, 10);
         if (!(price > 0)) { alert('모든 필수 항목을 올바르게 입력해 주세요.'); return; }
         if (types.length === 0) { alert('숙박 기간을 1개 이상 선택해 주세요.'); return; }
+        if (roomTypes.length === 0) { alert('방 형태를 1개 이상 선택해 주세요.'); return; }
         const phone = contactRaw.replace(/[-\s]/g, '');
         if (!/^0\d{9}$/.test(phone)) {
           alert('올바른 호주 전화번호 10자리를 입력해 주세요. (예: 0412345678)');
           return;
         }
         fields = {
-          mode: 'offer', types, title, body, address, price, propType, roomType, bathroom,
+          mode: 'offer', types, title, body, address, price, propType, roomTypes, gender, availableDate, bathroom,
           parking:     document.getElementById('wParking').checked,
           petFriendly: document.getElementById('wPet').checked,
           kidsInHouse: document.getElementById('wKids').checked,
@@ -1139,14 +1163,18 @@
     function propTypeLabel(t) {
       return { house:'House', apartment:'Apartment', townhouse:'Townhouse', villa:'Villa', unit:'Unit' }[t] || 'Property';
     }
+    const ROOM_LABELS = { master:'마스터룸', second:'세컨룸', single:'독방', living_share:'거실쉐어', sunroom:'썬룸', share:'쉐어' };
+    const GENDER_LABELS = { male:'남', female:'여', any:'성별 무관' };
     // 게시글의 상세 필터 항목들을 태그 텍스트 배열로
     function filterTags(p) {
       const tags = [];
       const ptypes = Array.isArray(p.types) ? p.types : (p.type ? [p.type] : []);
       ptypes.forEach(t => { if (TYPE_LABELS[t]) tags.push('📅 ' + TYPE_LABELS[t].ko); });
       if (p.propType) tags.push(propTypeLabel(p.propType));
-      if (p.roomType === 'single') tags.push('🛏 독방 (Single)');
-      else if (p.roomType === 'share') tags.push('🛏 쉐어 (Share)');
+      const rooms = Array.isArray(p.roomTypes) ? p.roomTypes : (p.roomType ? [p.roomType] : []);
+      rooms.forEach(r => { if (ROOM_LABELS[r]) tags.push('🛏 ' + ROOM_LABELS[r]); });
+      if (p.gender && GENDER_LABELS[p.gender]) tags.push('👤 ' + GENDER_LABELS[p.gender]);
+      if (p.availableDate) tags.push('🗓 입주 ' + p.availableDate);
       if (p.bathroom === 'ensuite') tags.push('🚿 개인욕실 (Ensuite)');
       else if (p.bathroom === 'shared') tags.push('🚿 공용욕실 (Shared)');
       if (p.parking)     tags.push('🅿 주차 가능');
@@ -1165,6 +1193,7 @@
         posts.forEach(p => {
           if (!p.mode) { p.mode = p.postType === 'looking' ? 'find' : 'offer'; migrated = true; }
           if (!Array.isArray(p.types)) { p.types = p.type ? [p.type] : ['short']; migrated = true; }
+          if (!Array.isArray(p.roomTypes)) { p.roomTypes = p.roomType ? [p.roomType] : []; migrated = true; }
         });
         if (migrated) localStorage.setItem(STORE_KEY, JSON.stringify(posts));
         return posts;
@@ -1248,7 +1277,10 @@
         }
         if (activePropType && p.propType !== activePropType) return false;
         if (p.price && p.price > maxPrice) return false;
-        if (activeRoomType && p.roomType !== activeRoomType) return false;
+        if (activeRoomType) {
+          const pRooms = Array.isArray(p.roomTypes) ? p.roomTypes : (p.roomType ? [p.roomType] : []);
+          if (!pRooms.includes(activeRoomType)) return false;
+        }
         if (activeBathroom && p.bathroom !== activeBathroom) return false;
         if (fParking  && !p.parking)     return false;
         if (fPet      && !p.petFriendly) return false;
