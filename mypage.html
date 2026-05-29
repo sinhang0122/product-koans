@@ -736,6 +736,13 @@
     const NICK_RE = /^(?=.*[a-zA-Z가-힣])[a-zA-Z가-힣0-9]{3,12}$/;
     // 관리자 사칭 방지 금지어 (대소문자 무시, 부분 포함도 차단)
     const RESERVED_NICKS = ['운영', '관리', 'admin', 'KoAus', '대표'];
+    // 욕설/금칙어 필터 (부분 포함 시 차단)
+    const BAD_WORDS = ['시발','씨발','시팔','씨팔','씨발년','개새끼','새끼','병신','지랄','존나','좆','좆같','니미','닥쳐','꺼져','엿먹어','미친놈','미친년','썅','등신','후레','보지','자지','걸레','창녀','fuck','fucking','shit','bitch','asshole','bastard','dick','cunt','motherfucker','slut','whore','retard'];
+    function hasProfanity(text) {
+      if (!text) return false;
+      const low = String(text).toLowerCase().replace(/\s+/g, '');
+      return BAD_WORDS.some(w => low.includes(w.toLowerCase().replace(/\s+/g, '')));
+    }
     const THREE_MONTHS = 1000 * 60 * 60 * 24 * 90;
     const nickError = () => document.getElementById('mpNickError');
     function showNickError(msg) { nickError().textContent = msg; }
@@ -793,6 +800,11 @@
       const nick = document.getElementById('mpNickInput').value.trim();
       if (!NICK_RE.test(nick)) {
         showNickError('닉네임은 3~12자의 한글, 영문, 숫자 조합만 가능합니다. (숫자 단독 불가)');
+        return;
+      }
+      // 욕설/금칙어 필터
+      if (hasProfanity(nick)) {
+        showNickError('부적절한 단어가 포함되어 있습니다.');
         return;
       }
       // 관리자 사칭 방지 금지어 — 일부라도 포함되면 차단 (대소문자 무시)

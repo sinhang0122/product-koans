@@ -612,6 +612,7 @@
         </label>
       </div>
 
+      <p class="auth-error" id="wError"></p>
       <div class="write-modal-actions">
         <button class="write-cancel-btn" id="writeBtnCancel">취소</button>
         <button class="write-submit-btn" id="writeBtnSubmit">등록하기</button>
@@ -627,10 +628,46 @@
         <button class="post-detail-close" id="detailClose">✕</button>
       </div>
       <div class="post-detail-meta" id="detailMeta"></div>
+      <div class="post-detail-addr" id="detailAddrRow"></div>
       <div class="post-detail-tags" id="detailTags"></div>
       <div class="post-detail-body" id="detailBody"></div>
       <div class="post-detail-contact" id="detailContact"></div>
+      <div class="post-detail-tools">
+        <button class="detail-tool-btn detail-tool-btn--report" id="detailReportBtn" type="button">🚨 신고하기</button>
+        <div class="detail-share-wrap">
+          <button class="detail-tool-btn" id="detailShareBtn" type="button">🔗 공유하기</button>
+          <div class="detail-share-menu" id="detailShareMenu">
+            <button type="button" data-share="kakao">💬 카카오톡 공유</button>
+            <button type="button" data-share="facebook">📘 페이스북 공유</button>
+            <button type="button" data-share="copy">🔗 링크 복사</button>
+          </div>
+        </div>
+      </div>
       <div class="post-detail-actions" id="detailActions"></div>
+    </div>
+  </div>
+
+  <!-- ── 신고하기 모달 ── -->
+  <div class="report-overlay" id="reportOverlay">
+    <div class="report-modal">
+      <div class="report-header">
+        <span class="report-title">🚨 게시글 신고</span>
+        <button class="report-close" id="reportClose" type="button">✕</button>
+      </div>
+      <p class="report-desc">신고 사유를 선택해 주세요. 접수된 내용은 운영팀이 검토합니다.</p>
+      <div class="report-reasons" id="reportReasons">
+        <label class="report-reason"><input type="radio" name="reportReason" value="허위 매물 및 잘못된 정보"> 허위 매물 및 잘못된 정보</label>
+        <label class="report-reason"><input type="radio" name="reportReason" value="보증금/렌트비 사기 의심"> 보증금/렌트비 사기 의심</label>
+        <label class="report-reason"><input type="radio" name="reportReason" value="욕설, 비방 및 부적절한 내용"> 욕설, 비방 및 부적절한 내용</label>
+        <label class="report-reason"><input type="radio" name="reportReason" value="상업적 스팸 및 도배성 글"> 상업적 스팸 및 도배성 글</label>
+        <label class="report-reason"><input type="radio" name="reportReason" value="기타"> 기타 (직접 입력)</label>
+      </div>
+      <textarea class="report-etc write-input" id="reportEtc" placeholder="기타 사유를 입력해 주세요" style="display:none;"></textarea>
+      <p class="auth-error" id="reportError"></p>
+      <div class="report-actions">
+        <button class="filter-reset-btn" id="reportCancel" type="button">취소</button>
+        <button class="filter-apply-btn" id="reportSubmit" type="button">제출</button>
+      </div>
     </div>
   </div>
 
@@ -1125,6 +1162,14 @@
       const title      = document.getElementById('wTitle').value.trim();
       const body       = document.getElementById('wBody').value.trim();
 
+      // 욕설/금칙어 필터 — 제목·상세 설명 검사
+      const wErr = document.getElementById('wError');
+      wErr.textContent = '';
+      if (hasProfanity(title) || hasProfanity(body)) {
+        wErr.textContent = '부적절한 단어가 포함되어 있습니다.';
+        return;
+      }
+
       let fields, coords = null;
 
       if (isFind) {
@@ -1226,6 +1271,13 @@
     }
     const ROOM_LABELS = { master:'마스터룸', second:'세컨룸', single:'독방', living_share:'거실쉐어', sunroom:'썬룸', share:'쉐어' };
     const GENDER_LABELS = { male:'남', female:'여', any:'성별 무관' };
+    // 욕설/금칙어 필터 — 제목/상세 설명/닉네임 검사용 (부분 포함 시 차단)
+    const BAD_WORDS = ['시발','씨발','시팔','씨팔','씨발년','개새끼','새끼','병신','지랄','존나','좆','좆같','니미','닥쳐','꺼져','엿먹어','미친놈','미친년','썅','등신','후레','보지','자지','걸레','창녀','fuck','fucking','fuck you','shit','bitch','asshole','bastard','dick','cunt','motherfucker','slut','whore','retard'];
+    function hasProfanity(text) {
+      if (!text) return false;
+      const low = String(text).toLowerCase().replace(/\s+/g, '');
+      return BAD_WORDS.some(w => low.includes(w.toLowerCase().replace(/\s+/g, '')));
+    }
     // 게시글의 상세 필터 항목들을 태그 텍스트 배열로
     function filterTags(p) {
       const tags = [];
@@ -1454,15 +1506,32 @@
       }
     }
 
+    let currentDetailPost = null;
     function openDetail(id) {
       const posts = loadPosts();
       const p = posts.find(x => String(x.id) === String(id));
       if (!p) return;
+      currentDetailPost = p;
       document.getElementById('detailTitle').textContent = p.title;
       document.getElementById('detailMeta').innerHTML =
         `<span>${authorLabel(p)}</span><span>${p.date}${p.time ? ' ' + p.time : ''}</span>` +
-        (p.address ? `<span>📍 ${escHtml(p.address)}</span>` : '') +
         (p.price   ? `<span>$${p.price}/wk</span>` : '');
+      // 주소 행: 복사 + 길찾기 + 스트릿뷰 (외부 링크 아웃링크)
+      const addrRow = document.getElementById('detailAddrRow');
+      if (p.address) {
+        const dirUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(p.address)}&travelmode=transit`;
+        const svUrl  = (p.lat && p.lng)
+          ? `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${p.lat},${p.lng}`
+          : `https://www.google.com/maps?q=${encodeURIComponent(p.address)}&layer=c`;
+        addrRow.innerHTML =
+          `<span class="detail-addr-text">📍 ${escHtml(p.address)}</span>` +
+          `<button class="detail-addr-copy" id="detailAddrCopy" type="button" title="주소 복사" aria-label="주소 복사">` +
+          `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>` +
+          `<a class="detail-addr-link" href="${dirUrl}" target="_blank" rel="noopener noreferrer">📍 길찾기</a>` +
+          `<a class="detail-addr-link" href="${svUrl}" target="_blank" rel="noopener noreferrer">🛣️ 스트릿뷰</a>`;
+        document.getElementById('detailAddrCopy').onclick = () => copyAddress(p.address);
+        addrRow.style.display = 'flex';
+      } else { addrRow.innerHTML = ''; addrRow.style.display = 'none'; }
       // 상세 필터 항목들을 태그로 렌더링
       document.getElementById('detailTags').innerHTML =
         filterTags(p).map(t => `<span class="post-detail-tag">${escHtml(t)}</span>`).join('');
@@ -1511,6 +1580,108 @@
       document.getElementById('detailOverlay').classList.remove('open'));
     document.getElementById('detailOverlay').addEventListener('click', e => {
       if (e.target === e.currentTarget) document.getElementById('detailOverlay').classList.remove('open');
+    });
+
+    // ── 토스트 알림 ──
+    function showToast(msg) {
+      let t = document.getElementById('koausToast');
+      if (!t) { t = document.createElement('div'); t.id = 'koausToast'; t.className = 'koaus-toast'; document.body.appendChild(t); }
+      t.textContent = msg;
+      t.classList.add('show');
+      clearTimeout(t._timer);
+      t._timer = setTimeout(() => t.classList.remove('show'), 2000);
+    }
+    // ── 클립보드 복사 (Clipboard API + 폴백) ──
+    function copyText(text, okMsg) {
+      const done = () => showToast(okMsg);
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, () => fallbackCopy(text, done));
+      } else { fallbackCopy(text, done); }
+    }
+    function fallbackCopy(text, cb) {
+      const ta = document.createElement('textarea');
+      ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); cb && cb(); } catch (e) {}
+      document.body.removeChild(ta);
+    }
+    function copyAddress(addr) { copyText(addr, '주소가 복사되었습니다.'); }
+
+    // ── 공유하기 (모바일: 네이티브 / PC: 드롭다운) ──
+    const shareMenu = document.getElementById('detailShareMenu');
+    function shareUrl() { return location.href; }
+    document.getElementById('detailShareBtn').addEventListener('click', e => {
+      e.stopPropagation();
+      const p = currentDetailPost; if (!p) return;
+      const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+      if (isMobile && navigator.share) {
+        navigator.share({ title: 'KoAus 쉐어', text: `[KoAus 쉐어] ${p.title}`, url: shareUrl() }).catch(() => {});
+      } else {
+        shareMenu.classList.toggle('show');
+      }
+    });
+    shareMenu.addEventListener('click', e => {
+      const btn = e.target.closest('button'); if (!btn) return;
+      const url = shareUrl();
+      const kind = btn.dataset.share;
+      if (kind === 'facebook') {
+        window.open('https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(url), '_blank', 'noopener');
+      } else if (kind === 'copy') {
+        copyText(url, '링크가 복사되었습니다.');
+      } else if (kind === 'kakao') {
+        // 카카오 SDK 미탑재 → 링크 복사 폴백 (붙여넣기로 공유)
+        copyText(url, '링크를 복사했어요. 카카오톡에 붙여넣어 공유하세요.');
+      }
+      shareMenu.classList.remove('show');
+    });
+    document.addEventListener('click', e => { if (!e.target.closest('.detail-share-wrap')) shareMenu.classList.remove('show'); });
+
+    // ── 신고하기 모달 ──
+    let reportingPostId = null;
+    const reportOverlay = document.getElementById('reportOverlay');
+    document.getElementById('detailReportBtn').addEventListener('click', () => {
+      const p = currentDetailPost; if (!p) return;
+      reportingPostId = p.id;
+      document.querySelectorAll('input[name="reportReason"]').forEach(r => { r.checked = false; });
+      document.getElementById('reportEtc').value = '';
+      document.getElementById('reportEtc').style.display = 'none';
+      document.getElementById('reportError').textContent = '';
+      reportOverlay.classList.add('open');
+    });
+    function closeReport() { reportOverlay.classList.remove('open'); }
+    document.getElementById('reportClose').addEventListener('click', closeReport);
+    document.getElementById('reportCancel').addEventListener('click', closeReport);
+    reportOverlay.addEventListener('click', e => { if (e.target === reportOverlay) closeReport(); });
+    document.querySelectorAll('input[name="reportReason"]').forEach(r => {
+      r.addEventListener('change', () => {
+        document.getElementById('reportEtc').style.display = (r.value === '기타' && r.checked) ? '' : 'none';
+      });
+    });
+    document.getElementById('reportSubmit').addEventListener('click', async () => {
+      const errEl = document.getElementById('reportError');
+      const sel = document.querySelector('input[name="reportReason"]:checked');
+      if (!sel) { errEl.textContent = '신고 사유를 선택해 주세요.'; return; }
+      const user = window.koausAuth && window.koausAuth.user;
+      if (!user) { errEl.textContent = '신고하려면 로그인이 필요합니다.'; window.koausAuth && window.koausAuth.openAuthModal(); return; }
+      let reason = sel.value;
+      if (reason === '기타') {
+        const etc = document.getElementById('reportEtc').value.trim();
+        if (!etc) { errEl.textContent = '기타 사유를 입력해 주세요.'; return; }
+        reason = '기타: ' + etc;
+      }
+      const btn = document.getElementById('reportSubmit'); btn.disabled = true;
+      try {
+        if (window.koausDb && window.koausFs) {
+          const { addDoc, collection, serverTimestamp } = window.koausFs;
+          await addDoc(collection(window.koausDb, 'reports'), {
+            postId: String(reportingPostId), board: 'accom', reason,
+            reporterUid: user.uid || '', reporterEmail: user.email || '', createdAt: serverTimestamp(),
+          });
+        }
+      } catch (e) { /* Firestore 미설정 시에도 접수 처리 */ }
+      finally { btn.disabled = false; }
+      closeReport();
+      showToast('신고가 접수되었습니다. 검토 후 조치하겠습니다.');
     });
 
     // ── Google Maps ──
@@ -1660,7 +1831,7 @@
       createUserWithEmailAndPassword, signInWithEmailAndPassword,
     } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
     import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app-check.js';
-    import { getFirestore, doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
+    import { getFirestore, doc, getDoc, setDoc, addDoc, collection, serverTimestamp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
 
     const firebaseConfig = {
       apiKey:            'AIzaSyCamqnt0bNUD9uz1N5BbCuQjSkWLSpPqlU',
@@ -1687,7 +1858,7 @@
 
     const auth = getAuth(app);
     // 최근 검색 기록 동기화용 Firestore (콘솔에서 Firestore 활성화 + users 규칙 배포 시 동작)
-    try { window.koausDb = getFirestore(app); window.koausFs = { doc, getDoc, setDoc }; } catch (e) { /* Firestore 미설정 무시 */ }
+    try { window.koausDb = getFirestore(app); window.koausFs = { doc, getDoc, setDoc, addDoc, collection, serverTimestamp }; } catch (e) { /* Firestore 미설정 무시 */ }
 
     // ── Auth Modal ──
     const authOverlay = document.getElementById('authOverlay');

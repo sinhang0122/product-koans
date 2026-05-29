@@ -116,6 +116,14 @@ service cloud.firestore {
       allow delete: if isSignedIn() && resource.data.uid == request.auth.uid;
     }
 
+    // ── 신고(reports) — 로그인 사용자가 생성만 가능, 읽기/수정/삭제는 운영자(콘솔) 전용 ──
+    match /reports/{reportId} {
+      allow create: if isSignedIn()
+                       && reqStr('reason', 1, 1000)
+                       && data().reporterUid == request.auth.uid;
+      allow read, update, delete: if false;
+    }
+
     // ── 그 외 모든 경로: 기본 거부 ──
     match /{document=**} {
       allow read, write: if false;

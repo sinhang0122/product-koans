@@ -1198,6 +1198,83 @@ select.filter-mini-input {
 .detail-delete-btn { color: var(--red); }
 .detail-delete-btn:hover { border-color: var(--red); background: rgba(220,38,38,0.06); }
 
+/* ── 상세보기: 주소 행 (복사 + 길찾기 + 스트릿뷰) ── */
+.post-detail-addr { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.post-detail-addr:empty { display: none; }
+.detail-addr-text { font-size: 13px; color: var(--text-primary); font-weight: 600; }
+.detail-addr-copy {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; padding: 0; background: none;
+  border: 1px solid var(--border); border-radius: var(--r-sm);
+  color: var(--text-secondary); cursor: pointer; transition: all 0.12s;
+}
+.detail-addr-copy:hover { border-color: var(--text-primary); color: var(--text-primary); }
+.detail-addr-link {
+  display: inline-flex; align-items: center; gap: 4px; padding: 6px 11px;
+  background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--r-sm);
+  font-size: 12px; font-weight: 600; color: var(--text-secondary); text-decoration: none; transition: all 0.12s;
+}
+.detail-addr-link:hover { border-color: var(--text-primary); color: var(--text-primary); }
+
+/* ── 상세보기: 신고 / 공유 툴바 ── */
+.post-detail-tools { display: flex; align-items: center; gap: 8px; padding-top: 4px; }
+.detail-tool-btn {
+  display: inline-flex; align-items: center; gap: 4px; padding: 8px 14px;
+  background: none; border: 1px solid var(--border); border-radius: var(--r-md);
+  font-family: var(--font); font-size: 12.5px; font-weight: 600; color: var(--text-secondary);
+  cursor: pointer; transition: all 0.12s;
+}
+.detail-tool-btn:hover { border-color: var(--text-primary); color: var(--text-primary); }
+.detail-tool-btn--report:hover { border-color: var(--red); color: var(--red); }
+.detail-share-wrap { position: relative; margin-left: auto; }
+.detail-share-menu {
+  position: absolute; right: 0; bottom: calc(100% + 6px); z-index: 30;
+  background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--r-md);
+  box-shadow: 0 10px 28px rgba(0,0,0,.22); padding: 4px; min-width: 160px; display: none;
+}
+.detail-share-menu.show { display: block; }
+.detail-share-menu button {
+  display: block; width: 100%; text-align: left; padding: 9px 12px;
+  background: none; border: none; border-radius: var(--r-sm); cursor: pointer;
+  font-family: var(--font); font-size: 13px; color: var(--text-primary); transition: background 0.12s;
+}
+.detail-share-menu button:hover { background: var(--bg-elevated); }
+
+/* ── 신고 모달 ── */
+.report-overlay {
+  position: fixed; inset: 0; z-index: 2200; background: rgba(0,0,0,.55);
+  display: none; align-items: center; justify-content: center; padding: 20px;
+}
+.report-overlay.open { display: flex; }
+.report-modal {
+  background: var(--bg-base); border: 1px solid var(--border); border-radius: var(--r-xl);
+  width: 100%; max-width: 420px; max-height: 88vh; overflow-y: auto; padding: 24px;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.2);
+}
+.report-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.report-title { font-size: 17px; font-weight: 800; color: var(--text-primary); }
+.report-close { background: none; border: none; cursor: pointer; font-size: 20px; color: var(--text-muted); padding: 4px; }
+.report-close:hover { color: var(--text-primary); }
+.report-desc { font-size: 12.5px; color: var(--text-muted); line-height: 1.5; margin-bottom: 14px; }
+.report-reasons { display: flex; flex-direction: column; gap: 10px; }
+.report-reason {
+  display: flex; align-items: center; gap: 10px; cursor: pointer;
+  font-size: 14px; color: var(--text-primary);
+}
+.report-reason input { accent-color: var(--accent); width: 18px; height: 18px; cursor: pointer; }
+.report-etc { margin-top: 10px; min-height: 70px; }
+.report-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; }
+
+/* ── 토스트 알림 ── */
+.koaus-toast {
+  position: fixed; left: 50%; bottom: 32px; transform: translateX(-50%) translateY(20px);
+  z-index: 3000; background: var(--text-primary); color: var(--bg-base);
+  padding: 12px 22px; border-radius: 999px; font-size: 13px; font-weight: 700;
+  box-shadow: 0 8px 28px rgba(0,0,0,.28); opacity: 0; pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease; max-width: 90vw; text-align: center;
+}
+.koaus-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
 /* 마이페이지 '내가 쓴 글' 액션 버튼 — 'Living' 태그와 동일한 직사각형 박스 */
 .mypage-item-actions { display: flex; gap: 8px; align-items: center; margin-left: auto; }
 .mp-edit, .mp-del {
