@@ -590,6 +590,7 @@
           <label class="write-check"><input type="checkbox" data-type="short"> 단기 (2주~4주)</label>
           <label class="write-check"><input type="checkbox" data-type="mid"> 중단기 (1달~2달)</label>
           <label class="write-check"><input type="checkbox" data-type="long"> 장기 (2달 이상)</label>
+          <label class="write-check"><input type="checkbox" data-type="any"> 기간 상관 없음</label>
         </div>
       </div>
 
@@ -605,12 +606,13 @@
       </div>
 
       <div class="write-field">
-        <span class="write-label">성별 조건 Gender<span class="required-mark">*</span></span>
-        <div class="write-opts" id="wGender">
-          <label class="write-opt"><input type="radio" name="wGenderR" value="male"> 남</label>
-          <label class="write-opt"><input type="radio" name="wGenderR" value="female"> 여</label>
-          <label class="write-opt"><input type="radio" name="wGenderR" value="any"> 성별 무관</label>
-        </div>
+        <label class="write-label" for="wGender">성별 조건 Gender</label>
+        <select class="write-input" id="wGender">
+          <option value="">선택 안 함</option>
+          <option value="male">남</option>
+          <option value="female">여</option>
+          <option value="any">성별 무관</option>
+        </select>
       </div>
 
       <div class="write-field">
@@ -800,6 +802,7 @@
       short:       { ko: '단기',   desc: '2주~4주' },
       mid:         { ko: '중단기', desc: '1달~2달' },
       long:        { ko: '장기',   desc: '2달 이상' },
+      any:         { ko: '기간 상관 없음', desc: '' },
     };
     const STATE_NAMES = { nsw:'NSW', vic:'VIC', qld:'QLD', wa:'WA', sa:'SA', tas:'TAS', act:'ACT', nt:'NT' };
     const MODE_LABELS = { offer: '방 올리기', find: '방 구하기' };
@@ -944,7 +947,7 @@
       document.getElementById('wPropType').value = '';
       ['wParking','wPet','wKids','wAirCon'].forEach(id => { document.getElementById(id).checked = false; });
       document.querySelectorAll('#wTypes input, #wRoomTypes input').forEach(c => { c.checked = false; });
-      document.querySelectorAll('#wGender input').forEach(r => { r.checked = false; });
+      document.getElementById('wGender').value = '';
       document.getElementById('wDisclaimer').checked = false;
     }
     // 로그인 사용자 닉네임 (작성자 고정값)
@@ -983,7 +986,7 @@
       document.getElementById('wPrice').value    = p.price || '';
       const roomSet = new Set(Array.isArray(p.roomTypes) ? p.roomTypes : (p.roomType ? [p.roomType] : []));
       document.querySelectorAll('#wRoomTypes input').forEach(c => { c.checked = roomSet.has(c.dataset.room); });
-      document.querySelectorAll('#wGender input').forEach(r => { r.checked = (r.value === p.gender); });
+      document.getElementById('wGender').value = p.gender || '';
       document.getElementById('wAvailDate').value = p.availableDate || '';
       document.getElementById('wBathroom').value = p.bathroom || 'shared';
       document.getElementById('wParking').checked = !!p.parking;
@@ -1062,14 +1065,14 @@
         // ── 방 올리기: 구조화 양식 (주거형태 제외 필수) ──
         const types     = [...document.querySelectorAll('#wTypes input:checked')].map(c => c.dataset.type);
         const roomTypes = [...document.querySelectorAll('#wRoomTypes input:checked')].map(c => c.dataset.room);
-        const gender    = (document.querySelector('#wGender input:checked') || {}).value || '';
+        const gender    = document.getElementById('wGender').value;  // 선택 사항
         const availableDate = document.getElementById('wAvailDate').value;
         const address  = document.getElementById('wAddress').value.trim();
         const priceVal = document.getElementById('wPrice').value.trim();
         const propType = document.getElementById('wPropType').value;  // 선택 사항
         const bathroom = document.getElementById('wBathroom').value;
 
-        if (!title || !address || !priceVal || !bathroom || !gender || !availableDate || !contactRaw || !body) {
+        if (!title || !address || !priceVal || !bathroom || !availableDate || !contactRaw || !body) {
           alert('모든 필수 항목을 올바르게 입력해 주세요.');
           return;
         }
