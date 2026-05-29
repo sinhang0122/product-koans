@@ -897,19 +897,34 @@
       if (!arr.length) { box.innerHTML = ''; return; }
       box.innerHTML =
         '<div class="recent-head"><span class="recent-label">최근 검색</span>' +
-        '<button type="button" class="recent-clear" id="recentClearBtn">지우기</button></div>' +
+        '<button type="button" class="recent-clear" id="recentClearBtn">전체 지우기</button></div>' +
         '<div class="recent-chips">' + arr.map((s, i) =>
-          `<button type="button" class="recent-chip" data-idx="${i}">${escHtml(searchLabel(s))}</button>`).join('') + '</div>';
+          `<span class="recent-chip">
+             <button type="button" class="recent-chip-main" data-idx="${i}">${escHtml(searchLabel(s))}</button>
+             <button type="button" class="recent-chip-x" data-idx="${i}" aria-label="이 검색 기록 삭제">✕</button>
+           </span>`).join('') + '</div>';
       box.querySelector('#recentClearBtn').addEventListener('click', clearRecentSearches);
-      box.querySelectorAll('.recent-chip').forEach(chip => {
-        chip.addEventListener('click', () => {
-          const s = loadRecentSearches()[parseInt(chip.dataset.idx, 10)];
+      box.querySelectorAll('.recent-chip-main').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const s = loadRecentSearches()[parseInt(btn.dataset.idx, 10)];
           if (!s) return;
           ffRegion.value = s.region || ''; fbPrice.value = s.price || '';
           fbRoom.value = s.room || ''; fbDuration.value = s.dur || '';
           runSearch(false);  // 원클릭: 즉시 검색 (중복 저장 안 함)
         });
       });
+      box.querySelectorAll('.recent-chip-x').forEach(btn => {
+        btn.addEventListener('click', e => { e.stopPropagation(); removeRecentSearch(parseInt(btn.dataset.idx, 10)); });
+      });
+    }
+    // 개별 최근 검색 삭제 — 해당 항목만 제거 후 localStorage/Firestore 업데이트
+    function removeRecentSearch(idx) {
+      const arr = loadRecentSearches();
+      if (idx < 0 || idx >= arr.length) return;
+      arr.splice(idx, 1);
+      saveRecentSearches(arr);
+      syncRecentToFirestore(arr);  // 해당 데이터만 빠진 배열로 Firestore 업데이트
+      renderRecentSearches();
     }
     // 최근 검색 전체 삭제 — UI 즉시 비움 + localStorage 제거 + Firestore []로 업데이트
     function clearRecentSearches() {

@@ -731,8 +731,11 @@
       renderList();
     }));
 
-    // ── 닉네임 변경 (검증 + 중복 방지) ──
-    const NICK_RE = /^[a-zA-Z가-힣]{3,12}$/;
+    // ── 닉네임 변경 (검증 + 금지어 + 중복 방지) ──
+    // 3~12자 · 한글/영문/숫자 조합 (숫자 단독 불가: 최소 1개의 한글/영문 포함)
+    const NICK_RE = /^(?=.*[a-zA-Z가-힣])[a-zA-Z가-힣0-9]{3,12}$/;
+    // 관리자 사칭 방지 금지어 (대소문자 무시, 부분 포함도 차단)
+    const RESERVED_NICKS = ['운영', '관리', 'admin', 'KoAus', '대표'];
     const THREE_MONTHS = 1000 * 60 * 60 * 24 * 90;
     const nickError = () => document.getElementById('mpNickError');
     function showNickError(msg) { nickError().textContent = msg; }
@@ -789,12 +792,19 @@
     async function saveNickname() {
       const nick = document.getElementById('mpNickInput').value.trim();
       if (!NICK_RE.test(nick)) {
-        showNickError('닉네임은 3~12자의 한글, 영문만 사용 가능합니다.');
+        showNickError('닉네임은 3~12자의 한글, 영문, 숫자 조합만 가능합니다. (숫자 단독 불가)');
+        return;
+      }
+      // 관리자 사칭 방지 금지어 — 일부라도 포함되면 차단 (대소문자 무시)
+      const low = nick.toLowerCase();
+      if (RESERVED_NICKS.some(w => low.includes(w.toLowerCase()))) {
+        showNickError('해당 닉네임은 관리자 사칭 방지를 위해 사용할 수 없습니다.');
         return;
       }
       const saveBtn = document.getElementById('mpNickSave');
       saveBtn.disabled = true;
       try {
+        // 금지어·정규식 통과 시에만 Firestore 중복 검사
         if (await isNicknameTaken(nick)) {
           showNickError('이미 사용 중인 닉네임입니다.');
           return;
