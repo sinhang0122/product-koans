@@ -1060,6 +1060,47 @@ select.write-input {
 .accom-filter-btn:hover { border-color: var(--text-muted); color: var(--text-primary); }
 .accom-filter-btn.has-filter { border-color: var(--accent); color: var(--accent); }
 
+/* ── 쉐어 3대 핵심 필터 바 (PC: 가로 / 모바일: 아코디언) ── */
+.accom-filters { margin-bottom: 18px; }
+.filters-toggle {
+  display: none; width: 100%; align-items: center; justify-content: space-between;
+  padding: 11px 16px; background: var(--bg-surface);
+  border: 1px solid var(--border); border-radius: var(--r-md);
+  color: var(--text-primary); font-family: var(--font); font-size: 14px; font-weight: 700; cursor: pointer;
+}
+.filters-arrow { flex-shrink: 0; transition: transform 0.25s ease; }
+.accom-filters.open .filters-arrow { transform: rotate(180deg); }
+.filters-body { display: flex; gap: 12px; align-items: flex-end; }
+.filter-item { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+.filter-mini-label { font-size: 12px; font-weight: 600; color: var(--text-secondary); }
+.filter-mini-input {
+  width: 100%; padding: 9px 12px; background: var(--bg-input);
+  border: 1px solid var(--border); border-radius: var(--r-md);
+  color: var(--text-primary); font-family: var(--font); font-size: 14px; outline: none;
+  transition: border-color 0.15s;
+}
+.filter-mini-input:focus { border-color: var(--border-focus); }
+select.filter-mini-input {
+  appearance: none; -webkit-appearance: none; cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23000000' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 12px center; padding-right: 34px;
+}
+:root[data-theme="dark"] select.filter-mini-input {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+}
+@media (max-width: 768px) {
+  .filters-toggle { display: flex; }
+  .filters-body {
+    flex-direction: column; align-items: stretch; gap: 10px;
+    max-height: 0; overflow: hidden; transition: max-height 0.3s ease, padding 0.3s ease; padding: 0;
+  }
+  .accom-filters.open .filters-body { max-height: 420px; padding-top: 12px; }
+}
+/* 상세 설명 textarea가 우측 단 남는 세로 공간을 유연하게 채움 */
+.write-field--grow { flex: 1; }
+.write-field--grow .write-textarea { flex: 1; min-height: 96px; }
+@media (max-width: 768px) { .write-field--grow { flex: none; } }
+
 /* ── Accom Cards ── */
 .accom-grid {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px;

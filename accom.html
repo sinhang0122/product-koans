@@ -451,11 +451,43 @@
       </div>
       <span class="board-count" id="boardCount">총 0건</span>
       <div class="accom-ctrl-actions">
-        <button class="accom-filter-btn" id="filterModalBtn">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
-          상세 필터
-        </button>
         <button class="board-write-btn" id="writeBtnOpen">+ 글쓰기</button>
+      </div>
+    </div>
+
+    <!-- 3대 핵심 필터 (PC: 가로 / 모바일: 아코디언) -->
+    <div class="accom-filters" id="accomFilters">
+      <button class="filters-toggle" id="filtersToggle" type="button" aria-expanded="false">
+        <span>상세 필터</span>
+        <svg class="filters-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <div class="filters-body" id="filtersBody">
+        <div class="filter-item">
+          <label class="filter-mini-label" for="fbPrice">주당 쉐어비 (최대 $999)</label>
+          <input class="filter-mini-input" id="fbPrice" type="number" min="0" max="999" placeholder="최대 금액 $" />
+        </div>
+        <div class="filter-item">
+          <label class="filter-mini-label" for="fbRoom">방 형태</label>
+          <select class="filter-mini-input" id="fbRoom">
+            <option value="">전체</option>
+            <option value="master">마스터룸</option>
+            <option value="second">세컨룸</option>
+            <option value="single">독방</option>
+            <option value="living_share">거실쉐어</option>
+            <option value="sunroom">썬룸</option>
+          </select>
+        </div>
+        <div class="filter-item">
+          <label class="filter-mini-label" for="fbDuration">숙박 기간</label>
+          <select class="filter-mini-input" id="fbDuration">
+            <option value="">전체</option>
+            <option value="ultra_short">초단기 (1일~2주)</option>
+            <option value="short">단기 (2주~4주)</option>
+            <option value="mid">중단기 (1달~2달)</option>
+            <option value="long">장기 (2달 이상)</option>
+            <option value="any">기간 상관 없음</option>
+          </select>
+        </div>
       </div>
     </div>
 
@@ -472,80 +504,6 @@
     </div>
 
   </main>
-
-  <!-- ── Filter Modal ── -->
-  <div class="filter-overlay" id="filterOverlay">
-    <div class="filter-modal">
-      <div class="filter-modal-header">
-        <span class="filter-modal-title">상세 필터 <em>Filters</em></span>
-        <button class="filter-modal-close" id="filterModalClose">✕</button>
-      </div>
-
-      <div class="filter-section">
-        <label class="filter-section-label">Property Type</label>
-        <div class="filter-pills" id="filterPropTypes">
-          <button class="filter-pill active" data-prop="">All</button>
-          <button class="filter-pill" data-prop="house">House</button>
-          <button class="filter-pill" data-prop="apartment">Apartment</button>
-          <button class="filter-pill" data-prop="townhouse">Townhouse</button>
-          <button class="filter-pill" data-prop="villa">Villa</button>
-          <button class="filter-pill" data-prop="unit">Unit</button>
-        </div>
-      </div>
-
-      <div class="filter-section">
-        <label class="filter-section-label">숙박 기간 Duration (중복 선택)</label>
-        <div class="filter-checks" id="filterTypes">
-          <label class="filter-check"><input type="checkbox" data-type="ultra_short"> 초단기 (1일~2주)</label>
-          <label class="filter-check"><input type="checkbox" data-type="short"> 단기 (2주~4주)</label>
-          <label class="filter-check"><input type="checkbox" data-type="mid"> 중단기 (1달~2달)</label>
-          <label class="filter-check"><input type="checkbox" data-type="long"> 장기 (2달 이상)</label>
-        </div>
-      </div>
-
-      <div class="filter-section">
-        <label class="filter-section-label">Max Price / wk</label>
-        <div class="filter-price-row">
-          <span>$</span>
-          <input type="number" id="filterPrice" value="9999" min="0" max="9999" placeholder="9999" />
-          <span>/wk</span>
-        </div>
-      </div>
-
-      <div class="filter-section">
-        <label class="filter-section-label">Room Type</label>
-        <div class="filter-pills" id="filterRoomType">
-          <button class="filter-pill active" data-room="">All</button>
-          <button class="filter-pill" data-room="single">Single Room</button>
-          <button class="filter-pill" data-room="share">Share Room</button>
-        </div>
-      </div>
-
-      <div class="filter-section">
-        <label class="filter-section-label">Bathroom</label>
-        <div class="filter-pills" id="filterBathroom">
-          <button class="filter-pill active" data-bath="">All</button>
-          <button class="filter-pill" data-bath="ensuite">Ensuite</button>
-          <button class="filter-pill" data-bath="shared">Shared</button>
-        </div>
-      </div>
-
-      <div class="filter-section">
-        <label class="filter-section-label">Options</label>
-        <div class="filter-checks">
-          <label class="filter-check"><input type="checkbox" id="fParking"> 🅿 Parking</label>
-          <label class="filter-check"><input type="checkbox" id="fPet"> 🐾 Pet Friendly</label>
-          <label class="filter-check"><input type="checkbox" id="fKids"> 👶 Kids OK</label>
-          <label class="filter-check"><input type="checkbox" id="fAirCon"> ❄ Air Con</label>
-        </div>
-      </div>
-
-      <div class="filter-modal-actions">
-        <button class="filter-reset-btn" id="filterResetBtn">초기화 Reset</button>
-        <button class="filter-apply-btn" id="filterApplyBtn">적용하기 Apply</button>
-      </div>
-    </div>
-  </div>
 
   <!-- ── Write Modal ── -->
   <div class="write-overlay" id="writeOverlay">
@@ -567,7 +525,7 @@
             <input class="write-input" id="wAddress" type="text" placeholder="예: Strathfield, NSW 또는 1 Park St, Sydney" />
           </div>
           <div class="write-field offer-only">
-            <label class="write-label" for="wPrice">주당 렌트비 Price / wk ($)<span class="required-mark">*</span></label>
+            <label class="write-label" for="wPrice">주당 쉐어비 Price / wk ($)<span class="required-mark">*</span></label>
             <input class="write-input" id="wPrice" type="number" placeholder="숫자만 입력" min="0" />
           </div>
           <div class="write-field offer-only">
@@ -590,20 +548,16 @@
               <label class="write-opt"><input type="checkbox" data-type="any"> 기간 상관 없음</label>
             </div>
           </div>
+          <div class="write-field offer-only">
+            <label class="write-label" for="wContact">연락처 및 카카오톡 Contact</label>
+            <input class="write-input" id="wContact" type="text" placeholder="연락처 또는 오픈채팅 링크 입력" maxlength="200" />
+          </div>
         </div>
 
         <div class="write-col">
           <div class="write-field offer-only">
             <label class="write-label" for="wAvailDate">입주 가능한 날 Available Date</label>
             <input class="write-input" id="wAvailDate" type="date" />
-          </div>
-          <div class="write-field offer-only">
-            <label class="write-label" for="wBathroom">욕실 Bathroom</label>
-            <select class="write-input" id="wBathroom">
-              <option value="">선택 안 함</option>
-              <option value="shared">Shared (공용)</option>
-              <option value="ensuite">Ensuite (개인)</option>
-            </select>
           </div>
           <div class="write-field offer-only">
             <label class="write-label" for="wGender">성별 조건 Gender</label>
@@ -623,13 +577,9 @@
               <label class="write-opt"><input type="checkbox" id="wAirCon"> ❄ 에어컨</label>
             </div>
           </div>
-          <div class="write-field">
-            <label class="write-label" for="wBody" id="wBodyLabel">상세 설명 및 연락처 Comments</label>
-            <textarea class="write-textarea" id="wBody" placeholder="상세 설명 및 연락처를 입력해 주세요."></textarea>
-          </div>
-          <div class="write-field offer-only">
-            <label class="write-label" for="wKakao">카카오톡 오픈채팅 링크 KakaoTalk</label>
-            <input class="write-input" id="wKakao" type="url" placeholder="https://open.kakao.com/... (선택)" maxlength="200" />
+          <div class="write-field write-field--grow">
+            <label class="write-label" for="wBody" id="wBodyLabel">상세 설명 Comments</label>
+            <textarea class="write-textarea" id="wBody" placeholder="자세한 조건·시설·환경 등을 적어주세요"></textarea>
           </div>
         </div>
       </div>
@@ -743,7 +693,6 @@
     document.addEventListener('keydown', e => {
       if (e.key === 'Escape') {
         closeSb();
-        closeFilterModal();
         closeWriteModal();
       }
     });
@@ -791,9 +740,6 @@
     const urlMode      = new URLSearchParams(location.search).get('mode');
     // URL ?mode=offer | seek(=find). 페이지 내 탭으로도 전환
     let activeMode     = (urlMode === 'find' || urlMode === 'seek') ? 'find' : 'offer';
-    let activePropType = '';
-    let activeRoomType = '';
-    let activeBathroom = '';
     let currentPage    = 1;
     // 한 번에 20개씩만 렌더(페이지네이션). 향후 Firestore 전환 시:
     //   query(collection(db,'accom_posts'), orderBy('id','desc'), limit(PER_PAGE))
@@ -823,7 +769,7 @@
       // 방 구하기(find): 자유 양식 — 지도/필터 숨기고 깔끔한 리스트만
       const isFind = mode === 'find';
       const vt = document.getElementById('viewToggle');
-      const fb = document.getElementById('filterModalBtn');
+      const fb = document.getElementById('accomFilters');
       if (vt) vt.style.display = isFind ? 'none' : '';
       if (fb) fb.style.display = isFind ? 'none' : '';
       if (isFind) switchView('list');
@@ -831,79 +777,28 @@
       renderAll();
     }
 
-    // ── Filter Modal ──
-    const filterOverlay = document.getElementById('filterOverlay');
+    // ── 3대 핵심 필터 (주당 쉐어비 ≤ $999 / 방 형태 / 숙박 기간) — 실시간 필터링 ──
+    const fbPrice    = document.getElementById('fbPrice');
+    const fbRoom     = document.getElementById('fbRoom');
+    const fbDuration = document.getElementById('fbDuration');
 
-    document.getElementById('filterModalBtn').addEventListener('click', () => {
-      filterOverlay.classList.add('open');
-      document.body.style.overflow = 'hidden';
+    function liveFilter() { currentPage = 1; renderAll(); }
+
+    // 주당 쉐어비: 최대 $999로 자동 보정
+    fbPrice.addEventListener('input', () => {
+      const v = parseInt(fbPrice.value, 10);
+      if (Number.isFinite(v) && v > 999) fbPrice.value = '999';
+      liveFilter();
     });
-    document.getElementById('filterModalClose').addEventListener('click', closeFilterModal);
-    filterOverlay.addEventListener('click', e => { if (e.target === filterOverlay) closeFilterModal(); });
+    fbRoom.addEventListener('change', liveFilter);
+    fbDuration.addEventListener('change', liveFilter);
 
-    function closeFilterModal() {
-      filterOverlay.classList.remove('open');
-      document.body.style.overflow = '';
-    }
-
-    // Filter pill handlers (update state only; render on Apply)
-    document.querySelectorAll('#filterPropTypes .filter-pill').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('#filterPropTypes .filter-pill').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        activePropType = btn.dataset.prop;
-      });
+    // 모바일 아코디언: '상세 필터 ▼' 클릭 시 펼침/접힘
+    document.getElementById('filtersToggle').addEventListener('click', () => {
+      const el = document.getElementById('accomFilters');
+      const open = el.classList.toggle('open');
+      document.getElementById('filtersToggle').setAttribute('aria-expanded', open ? 'true' : 'false');
     });
-    document.querySelectorAll('#filterRoomType .filter-pill').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('#filterRoomType .filter-pill').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        activeRoomType = btn.dataset.room;
-      });
-    });
-    document.querySelectorAll('#filterBathroom .filter-pill').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('#filterBathroom .filter-pill').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        activeBathroom = btn.dataset.bath;
-      });
-    });
-
-    document.getElementById('filterApplyBtn').addEventListener('click', () => {
-      currentPage = 1;
-      closeFilterModal();
-      renderAll();
-      updateFilterBtnState();
-    });
-
-    document.getElementById('filterResetBtn').addEventListener('click', () => {
-      activePropType = '';
-      activeRoomType = '';
-      activeBathroom = '';
-      document.querySelectorAll('#filterPropTypes .filter-pill').forEach((b, i) => b.classList.toggle('active', i === 0));
-      document.querySelectorAll('#filterRoomType .filter-pill').forEach((b, i) => b.classList.toggle('active', i === 0));
-      document.querySelectorAll('#filterBathroom .filter-pill').forEach((b, i) => b.classList.toggle('active', i === 0));
-      document.getElementById('filterPrice').value = '9999';
-      document.querySelectorAll('#filterTypes input').forEach(c => { c.checked = false; });
-      ['fParking','fPet','fKids','fAirCon'].forEach(id => { document.getElementById(id).checked = false; });
-      renderAll();
-      updateFilterBtnState();
-      closeFilterModal();
-    });
-
-    // 필터에서 체크된 숙박 기간 배열
-    function getFilterTypes() {
-      return [...document.querySelectorAll('#filterTypes input:checked')].map(c => c.dataset.type);
-    }
-
-    function updateFilterBtnState() {
-      const maxPrice = parseInt(document.getElementById('filterPrice').value) || 9999;
-      const hasFilter = activePropType || activeRoomType || activeBathroom || maxPrice < 9999 ||
-        getFilterTypes().length ||
-        document.getElementById('fParking').checked || document.getElementById('fPet').checked ||
-        document.getElementById('fKids').checked   || document.getElementById('fAirCon').checked;
-      document.getElementById('filterModalBtn').classList.toggle('has-filter', !!hasFilter);
-    }
 
     // ── Write Modal ──
     const writeOverlay = document.getElementById('writeOverlay');
@@ -923,11 +818,10 @@
       document.getElementById('writeBtnSubmit').textContent = isEdit ? '수정 완료' : '등록하기';
     }
     function resetWriteForm() {
-      ['wTitle','wAddress','wPrice','wBody','wAvailDate','wKakao'].forEach(id => { document.getElementById(id).value = ''; });
+      ['wTitle','wAddress','wPrice','wBody','wAvailDate','wContact'].forEach(id => { document.getElementById(id).value = ''; });
       ['wParking','wPet','wKids','wAirCon'].forEach(id => { document.getElementById(id).checked = false; });
       document.querySelectorAll('#wTypes input, #wRoomTypes input').forEach(c => { c.checked = false; });
       document.getElementById('wGender').value = '';
-      document.getElementById('wBathroom').value = '';
       document.getElementById('wDisclaimer').checked = false;
     }
     // 로그인 사용자 닉네임 (작성자 고정값)
@@ -944,10 +838,10 @@
       const isFind = activeMode === 'find';
       document.querySelectorAll('.offer-only').forEach(el => { el.style.display = isFind ? 'none' : ''; });
       document.getElementById('writeGrid').classList.toggle('write-grid--find', isFind);
-      document.getElementById('wBodyLabel').textContent = isFind ? '자유 코멘트 Comments' : '상세 설명 및 연락처 Comments';
+      document.getElementById('wBodyLabel').textContent = isFind ? '자유 코멘트 Comments' : '상세 설명 Comments';
       document.getElementById('wBody').placeholder = isFind
         ? '구하는 조건·예산·기간·연락처 등을 자유롭게 적어주세요'
-        : '상세 설명 및 연락처를 입력해 주세요.';
+        : '자세한 조건·시설·환경 등을 적어주세요';
     }
     function openWriteModal() {
       editingId = null;
@@ -967,9 +861,8 @@
       const roomSet = new Set(Array.isArray(p.roomTypes) ? p.roomTypes : (p.roomType ? [p.roomType] : []));
       document.querySelectorAll('#wRoomTypes input').forEach(c => { c.checked = roomSet.has(c.dataset.room); });
       document.getElementById('wGender').value = p.gender || '';
-      document.getElementById('wBathroom').value = p.bathroom || '';
       document.getElementById('wAvailDate').value = p.availableDate || '';
-      document.getElementById('wKakao').value = p.kakao || '';
+      document.getElementById('wContact').value = p.contact || '';
       document.getElementById('wParking').checked = !!p.parking;
       document.getElementById('wPet').checked     = !!p.petFriendly;
       document.getElementById('wKids').checked    = !!p.kidsInHouse;
@@ -1037,20 +930,19 @@
         const types     = [...document.querySelectorAll('#wTypes input:checked')].map(c => c.dataset.type);
         const roomTypes = [...document.querySelectorAll('#wRoomTypes input:checked')].map(c => c.dataset.room);
         const gender    = document.getElementById('wGender').value;
-        const bathroom  = document.getElementById('wBathroom').value;
         const availableDate = document.getElementById('wAvailDate').value;
-        const kakao     = document.getElementById('wKakao').value.trim();
+        const contact   = document.getElementById('wContact').value.trim();
         const address  = document.getElementById('wAddress').value.trim();
         const priceVal = document.getElementById('wPrice').value.trim();
 
         if (!title || !address || !priceVal) {
-          alert('제목, 주소, 주당 렌트비는 필수 입력 항목입니다.');
+          alert('제목, 주소, 주당 쉐어비는 필수 입력 항목입니다.');
           return;
         }
         const price = parseInt(priceVal, 10);
-        if (!(price > 0)) { alert('주당 렌트비를 숫자로 올바르게 입력해 주세요.'); return; }
+        if (!(price > 0)) { alert('주당 쉐어비를 숫자로 올바르게 입력해 주세요.'); return; }
         fields = {
-          mode: 'offer', types, title, body, address, price, roomTypes, gender, bathroom, availableDate, kakao,
+          mode: 'offer', types, title, body, address, price, roomTypes, gender, availableDate, contact,
           parking:     document.getElementById('wParking').checked,
           petFriendly: document.getElementById('wPet').checked,
           kidsInHouse: document.getElementById('wKids').checked,
@@ -1138,8 +1030,6 @@
       rooms.forEach(r => { if (ROOM_LABELS[r]) tags.push('🛏 ' + ROOM_LABELS[r]); });
       if (p.gender && GENDER_LABELS[p.gender]) tags.push('👤 ' + GENDER_LABELS[p.gender]);
       if (p.availableDate) tags.push('🗓 입주 ' + p.availableDate);
-      if (p.bathroom === 'ensuite') tags.push('🚿 개인욕실 (Ensuite)');
-      else if (p.bathroom === 'shared') tags.push('🚿 공용욕실 (Shared)');
       if (p.parking)     tags.push('🅿 주차 가능');
       if (p.petFriendly) tags.push('🐾 반려동물 가능');
       if (p.kidsInHouse) tags.push('👶 아이 있는 집');
@@ -1218,12 +1108,10 @@
 
     // ── Filter ──
     function applyFilters(posts) {
-      const maxPrice = parseInt(document.getElementById('filterPrice').value) || 9999;
-      const fParking = document.getElementById('fParking').checked;
-      const fPet     = document.getElementById('fPet').checked;
-      const fKids    = document.getElementById('fKids').checked;
-      const fAirCon  = document.getElementById('fAirCon').checked;
-      const fTypes   = getFilterTypes();  // 체크된 숙박 기간(배열)
+      const pv = parseInt(fbPrice.value, 10);
+      const maxPrice = (Number.isFinite(pv) && pv > 0) ? Math.min(pv, 999) : Infinity;  // 최대 $999
+      const room = fbRoom.value;       // '' = 전체
+      const dur  = fbDuration.value;   // '' = 전체
       return posts.filter(p => {
         // 주(State)별 분리: 현재 주가 지정된 경우 같은 주의 글만 노출
         if (currentState && (p.state || '') !== currentState) return false;
@@ -1233,22 +1121,18 @@
         if (areaBounds) {
           if (!(p.lat && p.lng) || !areaBounds.contains({ lat: p.lat, lng: p.lng })) return false;
         }
-        // 숙박 기간 교집합: 필터에 체크된 기간 중 하나라도 글의 기간 배열에 포함되어야 노출
-        if (fTypes.length) {
-          const pTypes = Array.isArray(p.types) ? p.types : (p.type ? [p.type] : []);
-          if (!fTypes.some(t => pTypes.includes(t))) return false;
-        }
-        if (activePropType && p.propType !== activePropType) return false;
+        // 주당 쉐어비: 최대 금액 이하만
         if (p.price && p.price > maxPrice) return false;
-        if (activeRoomType) {
+        // 방 형태: 선택 시 글의 방형태 배열에 포함되어야 노출
+        if (room) {
           const pRooms = Array.isArray(p.roomTypes) ? p.roomTypes : (p.roomType ? [p.roomType] : []);
-          if (!pRooms.includes(activeRoomType)) return false;
+          if (!pRooms.includes(room)) return false;
         }
-        if (activeBathroom && p.bathroom !== activeBathroom) return false;
-        if (fParking  && !p.parking)     return false;
-        if (fPet      && !p.petFriendly) return false;
-        if (fKids     && !p.kidsInHouse) return false;
-        if (fAirCon   && !p.airCon)      return false;
+        // 숙박 기간: 선택 시 글의 기간 배열에 포함되어야 노출
+        if (dur) {
+          const pTypes = Array.isArray(p.types) ? p.types : (p.type ? [p.type] : []);
+          if (!pTypes.includes(dur)) return false;
+        }
         return true;
       });
     }
@@ -1379,15 +1263,15 @@
 
       document.getElementById('detailBody').textContent = p.body;
       const contactEl = document.getElementById('detailContact');
-      let contactHtml = p.contact ? `📞 연락처: <strong>${escHtml(p.contact)}</strong>` : '';
-      if (p.kakao) {
-        // 안전: http(s) 링크만 a태그로, 그 외는 텍스트로 (javascript: 등 차단)
-        const safe = /^https?:\/\//i.test(p.kakao);
-        contactHtml += `${contactHtml ? '<br>' : ''}💬 ` + (safe
-          ? `<a href="${escHtml(p.kakao)}" target="_blank" rel="noopener noreferrer">카카오톡 오픈채팅</a>`
-          : escHtml(p.kakao));
+      if (p.contact) {
+        // 연락처가 http(s) 링크면 클릭 가능한 a태그(오픈채팅 등), 그 외는 텍스트 (javascript: 등 차단)
+        const isLink = /^https?:\/\//i.test(p.contact);
+        contactEl.innerHTML = '📞 연락처: ' + (isLink
+          ? `<a href="${escHtml(p.contact)}" target="_blank" rel="noopener noreferrer">${escHtml(p.contact)}</a>`
+          : `<strong>${escHtml(p.contact)}</strong>`);
+      } else {
+        contactEl.innerHTML = '';
       }
-      contactEl.innerHTML = contactHtml;
 
       // 본인 글이면 수정/삭제 버튼 노출
       const actEl = document.getElementById('detailActions');
