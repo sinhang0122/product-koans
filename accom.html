@@ -895,8 +895,12 @@
       const box = document.getElementById('recentSearches');
       const arr = loadRecentSearches();
       if (!arr.length) { box.innerHTML = ''; return; }
-      box.innerHTML = '<span class="recent-label">최근 검색</span>' + arr.map((s, i) =>
-        `<button type="button" class="recent-chip" data-idx="${i}">${escHtml(searchLabel(s))}</button>`).join('');
+      box.innerHTML =
+        '<div class="recent-head"><span class="recent-label">최근 검색</span>' +
+        '<button type="button" class="recent-clear" id="recentClearBtn">지우기</button></div>' +
+        '<div class="recent-chips">' + arr.map((s, i) =>
+          `<button type="button" class="recent-chip" data-idx="${i}">${escHtml(searchLabel(s))}</button>`).join('') + '</div>';
+      box.querySelector('#recentClearBtn').addEventListener('click', clearRecentSearches);
       box.querySelectorAll('.recent-chip').forEach(chip => {
         chip.addEventListener('click', () => {
           const s = loadRecentSearches()[parseInt(chip.dataset.idx, 10)];
@@ -906,6 +910,12 @@
           runSearch(false);  // 원클릭: 즉시 검색 (중복 저장 안 함)
         });
       });
+    }
+    // 최근 검색 전체 삭제 — UI 즉시 비움 + localStorage 제거 + Firestore []로 업데이트
+    function clearRecentSearches() {
+      localStorage.removeItem(RECENT_SEARCH_KEY());
+      syncRecentToFirestore([]);
+      renderRecentSearches();
     }
     // Firestore best-effort (콘솔에서 Firestore 활성화 + users 규칙 배포 시 동작)
     async function syncRecentToFirestore(arr) {

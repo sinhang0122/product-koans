@@ -106,6 +106,16 @@ service cloud.firestore {
       allow read, write: if isSignedIn() && request.auth.uid == uid;
     }
 
+    // ── 닉네임 예약(중복 방지) — 로그인 사용자는 존재 여부 확인 가능,
+    //    예약/삭제는 본인(uid) 소유만. create는 문서가 없을 때만(고유성). ──
+    match /nicknames/{nick} {
+      allow get:    if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid;
+      allow update: if isSignedIn() && resource.data.uid == request.auth.uid
+                       && request.resource.data.uid == request.auth.uid;
+      allow delete: if isSignedIn() && resource.data.uid == request.auth.uid;
+    }
+
     // ── 그 외 모든 경로: 기본 거부 ──
     match /{document=**} {
       allow read, write: if false;

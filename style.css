@@ -586,8 +586,16 @@ body {
 }
 .board-write-btn--ghost:hover { opacity: 1; border-color: var(--text-primary); background: var(--bg-elevated); }
 /* 최근 검색 기록 칩 */
-.recent-searches { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 10px; }
-.recent-label { font-size: 11px; font-weight: 700; color: var(--text-muted); margin-right: 2px; }
+.recent-searches { margin-top: 12px; }
+.recent-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 7px; }
+.recent-label { font-size: 11px; font-weight: 700; color: var(--text-muted); }
+.recent-clear {
+  background: none; border: none; cursor: pointer; padding: 2px 4px;
+  font-family: var(--font); font-size: 11px; font-weight: 600; color: var(--text-muted);
+  text-decoration: underline; transition: color 0.12s;
+}
+.recent-clear:hover { color: var(--text-primary); }
+.recent-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .recent-chip {
   padding: 6px 11px; background: var(--bg-elevated); border: 1px solid var(--border);
   border-radius: 999px; color: var(--text-secondary); font-family: var(--font);
@@ -1484,6 +1492,9 @@ select.filter-mini-input {
 .mypage-edit-btn:hover, .mypage-photo-btn:hover { color: var(--text-primary); border-color: var(--text-muted); }
 .mypage-email { font-size: 13px; color: var(--text-muted); }
 .mypage-nick-note { font-size: 11px; color: var(--text-muted); margin-top: 8px; line-height: 1.5; }
+.mypage-nick-edit { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 4px; }
+.mypage-nick-edit .auth-input { width: auto; flex: 1 1 180px; min-width: 0; max-width: 260px; }
+.mypage-nick-actions { display: flex; gap: 6px; flex-shrink: 0; }
 .mypage-tabs { display: flex; border-bottom: 2px solid var(--border); }
 .mypage-tab {
   flex: 1; padding: 13px 12px; background: none; border: none; border-bottom: 3px solid transparent;
