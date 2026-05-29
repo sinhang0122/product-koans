@@ -2,7 +2,7 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.13.0/fireba
 import { getAnalytics } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-analytics.js';
 import {
   getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut,
-  createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile,
+  createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, sendEmailVerification,
 } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
 import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app-check.js';
 
@@ -133,16 +133,35 @@ function authErrMsg(code) {
 }
 
 // Email sign-up
+// 가입 버튼 활성화: 이용약관 동의 + reCAPTCHA 통과
+const authAgree = document.getElementById('authAgree');
+const authSignupBtn = document.getElementById('authSignupSubmit');
+let recaptchaOK = false;
+function updateSignupBtn() { authSignupBtn.disabled = !(authAgree.checked && recaptchaOK); }
+if (authAgree) authAgree.addEventListener('change', updateSignupBtn);
+window.onKoausRecaptcha = () => { recaptchaOK = true; updateSignupBtn(); };
+window.onKoausRecaptchaExpired = () => { recaptchaOK = false; updateSignupBtn(); };
+const tosOverlay = document.getElementById('tosOverlay');
+document.getElementById('authTosLink').addEventListener('click', () => tosOverlay.classList.add('open'));
+document.getElementById('tosClose').addEventListener('click', () => tosOverlay.classList.remove('open'));
+document.getElementById('tosConfirm').addEventListener('click', () => tosOverlay.classList.remove('open'));
+tosOverlay.addEventListener('click', e => { if (e.target === tosOverlay) tosOverlay.classList.remove('open'); });
+
 document.getElementById('authSignupSubmit').addEventListener('click', async () => {
   const email = document.getElementById('authSignupEmail').value.trim();
   const pw    = document.getElementById('authSignupPw').value;
   const pw2   = document.getElementById('authSignupPwConfirm').value;
   const errEl = document.getElementById('authSignupError');
+  if (!authAgree.checked) { errEl.textContent = '이용약관에 동의해 주세요.'; return; }
   if (!email || !pw) { errEl.textContent = '이메일과 비밀번호를 입력해 주세요.'; return; }
+  if (!/^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/.test(pw)) { errEl.textContent = '비밀번호는 8자 이상이며 영문·숫자·특수문자를 각각 1개 이상 포함해야 합니다.'; return; }
   if (pw !== pw2)    { errEl.textContent = '비밀번호가 일치하지 않습니다.'; return; }
+  if (typeof grecaptcha !== 'undefined' && !grecaptcha.getResponse()) { errEl.textContent = "'로봇이 아닙니다' 인증을 완료해 주세요."; return; }
   try {
-    await createUserWithEmailAndPassword(auth, email, pw);
+    const cred = await createUserWithEmailAndPassword(auth, email, pw);
+    try { await sendEmailVerification(cred.user); } catch (e) {}
     closeAuthModal();
+    alert('가입이 완료되었습니다. 인증 메일을 보냈으니 메일함을 확인해 주세요.');
   } catch (e) { errEl.textContent = authErrMsg(e.code); }
 });
 

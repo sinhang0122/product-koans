@@ -16,6 +16,8 @@
     })();
   </script>
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3691720629746826" crossorigin="anonymous"></script>
+  <!-- Google reCAPTCHA v2 (회원가입 봇 차단) -->
+  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </head>
 <body>
 
@@ -458,7 +460,7 @@
 
     <!-- List View -->
     <div id="listView">
-      <div id="postGrid" class="accom-grid"></div>
+      <div id="postGrid" class="accom-grid accom-grid--compact"></div>
       <div class="pagination" id="pagination"></div>
     </div>
 
@@ -736,6 +738,41 @@
     </div>
   </div>
 
+  <!-- ── 이용약관 모달 ── -->
+  <div class="report-overlay" id="tosOverlay">
+    <div class="report-modal">
+      <div class="report-header">
+        <span class="report-title">이용약관 및 개인정보처리방침</span>
+        <button class="report-close" id="tosClose" type="button">✕</button>
+      </div>
+      <div class="tos-body">
+        <p><strong>제1조 (목적)</strong><br>본 약관은 KoAus(이하 "서비스")가 제공하는 호주 한인 커뮤니티 정보 공유 서비스의 이용 조건을 규정합니다.</p>
+        <p><strong>제2조 (정보 공유의 책임)</strong><br>서비스는 이용자 간 정보 공유 공간만을 제공하며, 직거래로 인해 발생하는 모든 법적·금전적 분쟁과 책임은 거래 당사자에게 있습니다.</p>
+        <p><strong>제3조 (금지 행위)</strong><br>허위 매물, 사기, 욕설·비방, 스팸, 타인 사칭 등은 금지되며 위반 시 게시물 삭제·이용 제한될 수 있습니다.</p>
+        <p><strong>제4조 (개인정보 처리)</strong><br>회원가입 시 이메일·인증 정보가 수집되며, 서비스 제공 목적 외에는 사용되지 않습니다. 작성한 게시물의 연락처 등 공개 정보는 이용자 본인의 책임 하에 게시됩니다.</p>
+        <p class="tos-note">※ 본 약관은 베타 서비스용 요약본이며, 정식 약관으로 대체될 수 있습니다.</p>
+      </div>
+      <div class="report-actions">
+        <button class="filter-apply-btn" id="tosConfirm" type="button">확인</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 이메일 인증 필요 모달 (글쓰기 소프트 게이트) ── -->
+  <div class="report-overlay" id="verifyOverlay">
+    <div class="report-modal">
+      <div class="report-header">
+        <span class="report-title">✉️ 이메일 인증 필요</span>
+        <button class="report-close" id="verifyClose" type="button">✕</button>
+      </div>
+      <p class="verify-modal-msg">게시글을 작성하려면 이메일 인증이 필요합니다. 메일함을 확인해 주세요.</p>
+      <div class="report-actions">
+        <button class="filter-reset-btn" id="verifyResendBtn" type="button">인증 메일 재전송</button>
+        <button class="filter-apply-btn" id="verifyOkBtn" type="button">확인</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ── Auth Modal ── -->
   <div class="auth-overlay" id="authOverlay">
     <div class="auth-modal">
@@ -779,8 +816,17 @@
           <label class="auth-label" for="authSignupPwConfirm">비밀번호 확인</label>
           <input class="auth-input" id="authSignupPwConfirm" type="password" placeholder="비밀번호 재입력" autocomplete="new-password" />
         </div>
+        <!-- reCAPTCHA v2: 실제 운영 시 data-sitekey를 발급받은 키로 교체 (현재는 Google 공식 테스트 키) -->
+        <div class="auth-recaptcha">
+          <div class="g-recaptcha" data-sitekey="6LcUgAItAAAAAElFzz2TQxoCSR0uSPvcVS4N6PiO"
+               data-callback="onKoausRecaptcha" data-expired-callback="onKoausRecaptchaExpired"></div>
+        </div>
+        <label class="auth-agree">
+          <input type="checkbox" id="authAgree">
+          <span><button type="button" class="auth-tos-link" id="authTosLink">이용약관 및 개인정보처리방침</button>에 동의합니다 <em>(필수)</em></span>
+        </label>
         <div class="auth-error" id="authSignupError"></div>
-        <button class="auth-submit" id="authSignupSubmit">회원가입</button>
+        <button class="auth-submit" id="authSignupSubmit" disabled>회원가입</button>
       </div>
 
       <div class="auth-divider">또는</div>
@@ -1065,7 +1111,25 @@
 
     let editingId = null;  // 수정 중인 글 id (null이면 새 글)
 
-    document.getElementById('writeBtnOpen').addEventListener('click',   () => openWriteModal());
+    // 글쓰기 버튼 클릭 시에만 이메일 인증 검사 (소프트 게이트)
+    const verifyOverlay = document.getElementById('verifyOverlay');
+    const openVerifyModal  = () => verifyOverlay.classList.add('open');
+    const closeVerifyModal = () => verifyOverlay.classList.remove('open');
+    document.getElementById('verifyClose').addEventListener('click', closeVerifyModal);
+    document.getElementById('verifyOkBtn').addEventListener('click', closeVerifyModal);
+    verifyOverlay.addEventListener('click', e => { if (e.target === verifyOverlay) closeVerifyModal(); });
+    document.getElementById('verifyResendBtn').addEventListener('click', async () => {
+      const u = window.koausAuth && window.koausAuth.user;
+      if (!u) return;
+      try { await sendEmailVerification(u); alert('인증 메일이 재전송되었습니다.'); }
+      catch (e) { alert('잠시 후 다시 시도해 주세요.'); }
+    });
+    document.getElementById('writeBtnOpen').addEventListener('click',   () => {
+      const u = window.koausAuth && window.koausAuth.user;
+      if (!u) { alert('글을 작성하려면 로그인이 필요합니다.'); window.koausAuth && window.koausAuth.openAuthModal(); return; }
+      if (!u.emailVerified) { openVerifyModal(); return; }
+      openWriteModal();
+    });
     document.getElementById('writeBtnClose').addEventListener('click',  closeWriteModal);
     document.getElementById('writeBtnCancel').addEventListener('click', closeWriteModal);
     writeOverlay.addEventListener('click', e => { if (e.target === writeOverlay) closeWriteModal(); });
@@ -1501,32 +1565,37 @@
       const start = (currentPage - 1) * PER_PAGE;
       const pageItems = sorted.slice(start, start + PER_PAGE);
       grid.innerHTML = pageItems.map(p => {
-        const saved = isSaved(p.id);
+        const saved  = isSaved(p.id);
+        const isFind = (p.mode || 'offer') === 'find';
+        // 칩 (방형태 / 성별 / 숙박기간) — 방 올리기만
+        let chips = '';
+        if (!isFind) {
+          const cs = [];
+          const rooms = Array.isArray(p.roomTypes) ? p.roomTypes : (p.roomType ? [p.roomType] : []);
+          rooms.forEach(r => { if (ROOM_LABELS[r]) cs.push('🛏 ' + ROOM_LABELS[r]); });
+          if (p.gender && GENDER_LABELS[p.gender]) cs.push('👤 ' + GENDER_LABELS[p.gender]);
+          const ds = Array.isArray(p.types) ? p.types : (p.type ? [p.type] : []);
+          ds.forEach(t => { if (TYPE_LABELS[t]) cs.push('📅 ' + TYPE_LABELS[t].ko); });
+          chips = cs.map(c => `<span class="accom-tag">${escHtml(c)}</span>`).join('');
+        }
+        const priceHtml = isFind
+          ? '<span class="accom-card-find">방 구하기</span>'
+          : (p.price ? `<span class="accom-price">$${p.price}<small>/wk</small></span>` : '<span class="accom-card-find">가격 협의</span>');
+        const sub = isFind ? (p.body || '') : (p.address || '');
         return `
         <div class="accom-card${isMine(p) ? ' my-post-highlight' : ''}" data-id="${p.id}">
-          <div class="accom-card-header">
-            <div class="accom-card-badges">
-              <span class="accom-type-badge accom-type-badge--offering">${MODE_LABELS[p.mode] || '방 올리기'}</span>
-              <span class="accom-badge">${propTypeLabel(p.propType)}</span>
-            </div>
-            <div class="accom-card-hd-right">
-              ${p.price ? `<span class="accom-price">$${p.price}<span style="font-size:12px;font-weight:500">/wk</span></span>` : ''}
+          <div class="accom-card-thumb">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          </div>
+          <div class="accom-card-info">
+            <div class="accom-card-line1">
+              ${priceHtml}
               <button class="bookmark-btn${saved ? ' is-saved' : ''}" data-id="${p.id}" title="저장한 글" aria-label="저장">${saved ? '★' : '☆'}</button>
             </div>
+            <div class="accom-card-title2">${escHtml(p.title)}</div>
+            ${sub ? `<div class="accom-card-sub">${isFind ? '' : '📍 '}${escHtml(sub)}</div>` : ''}
+            ${chips ? `<div class="accom-card-chips">${chips}</div>` : ''}
           </div>
-          <div class="accom-card-title">${escHtml(p.title)}</div>
-          ${p.address ? `<div class="accom-card-addr">📍 ${escHtml(p.address)}</div>` : ''}
-          <div class="accom-card-tags">
-            ${filterTags(p).map(t => `<span class="accom-tag">${escHtml(t)}</span>`).join('')}
-          </div>
-          <div class="accom-card-footer">
-            <span>${authorLabel(p)}</span>
-            <span>${p.date}${p.time ? ' ' + p.time : ''}</span>
-          </div>
-          ${isMine(p) ? `<div class="card-actions">
-            <button class="mp-edit card-edit" data-id="${p.id}">수정</button>
-            <button class="mp-del card-del" data-id="${p.id}">삭제</button>
-          </div>` : ''}
         </div>`;
       }).join('');
 
@@ -2000,7 +2069,7 @@
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
     import {
       getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged,
-      createUserWithEmailAndPassword, signInWithEmailAndPassword,
+      createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification,
     } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
     import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app-check.js';
     import { getFirestore, doc, getDoc, setDoc, addDoc, collection, serverTimestamp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
@@ -2085,16 +2154,47 @@
     }
 
     // Email sign-up
+    // 가입 버튼 활성화 조건: 이용약관 동의 + reCAPTCHA 통과
+    const authAgree = document.getElementById('authAgree');
+    const authSignupBtn = document.getElementById('authSignupSubmit');
+    let recaptchaOK = false;
+    function updateSignupBtn() { authSignupBtn.disabled = !(authAgree.checked && recaptchaOK); }
+    authAgree.addEventListener('change', updateSignupBtn);
+    // reCAPTCHA v2 콜백 (위젯 data-callback에서 호출 — 전역 노출 필요)
+    window.onKoausRecaptcha = () => { recaptchaOK = true; updateSignupBtn(); };
+    window.onKoausRecaptchaExpired = () => { recaptchaOK = false; updateSignupBtn(); };
+    // 이용약관 모달
+    const tosOverlay = document.getElementById('tosOverlay');
+    const openTos  = () => { tosOverlay.classList.add('open'); };
+    const closeTos = () => { tosOverlay.classList.remove('open'); };
+    document.getElementById('authTosLink').addEventListener('click', openTos);
+    document.getElementById('tosClose').addEventListener('click', closeTos);
+    document.getElementById('tosConfirm').addEventListener('click', closeTos);
+    tosOverlay.addEventListener('click', e => { if (e.target === tosOverlay) closeTos(); });
+
     document.getElementById('authSignupSubmit').addEventListener('click', async () => {
       const email = document.getElementById('authSignupEmail').value.trim();
       const pw    = document.getElementById('authSignupPw').value;
       const pw2   = document.getElementById('authSignupPwConfirm').value;
       const errEl = document.getElementById('authSignupError');
+      if (!authAgree.checked) { errEl.textContent = '이용약관에 동의해 주세요.'; return; }
       if (!email || !pw) { errEl.textContent = '이메일과 비밀번호를 입력해 주세요.'; return; }
+      // 비밀번호: 8자 이상 + 영문·숫자·특수문자 각 1개 이상
+      if (!/^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/.test(pw)) {
+        errEl.textContent = '비밀번호는 8자 이상이며 영문·숫자·특수문자를 각각 1개 이상 포함해야 합니다.';
+        return;
+      }
       if (pw !== pw2)    { errEl.textContent = '비밀번호가 일치하지 않습니다.'; return; }
+      // reCAPTCHA 통과 확인
+      if (typeof grecaptcha !== 'undefined' && !grecaptcha.getResponse()) {
+        errEl.textContent = "'로봇이 아닙니다' 인증을 완료해 주세요."; return;
+      }
       try {
-        await createUserWithEmailAndPassword(auth, email, pw);
+        // 소프트 게이트: 가입 후 로그아웃하지 않고 로그인 상태 유지 + 인증 메일 1회 발송
+        const cred = await createUserWithEmailAndPassword(auth, email, pw);
+        try { await sendEmailVerification(cred.user); } catch (e) {}
         hardCloseAuthModal();
+        alert('가입이 완료되었습니다. 인증 메일을 보냈으니 메일함을 확인해 주세요. (글쓰기 시 인증이 필요합니다)');
       } catch (e) { errEl.textContent = authErrMsg(e.code); }
     });
 
