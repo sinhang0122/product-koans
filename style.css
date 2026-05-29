@@ -580,6 +580,21 @@ body {
   cursor: pointer; transition: opacity 0.15s, transform 0.1s;
 }
 .board-write-btn:hover { opacity: 0.85; transform: translateY(-1px); }
+/* 상세 필터 버튼 — 글쓰기와 동일 크기, 아웃라인으로 구분 */
+.board-write-btn--ghost {
+  background: none; color: var(--text-primary); border: 1px solid var(--border);
+}
+.board-write-btn--ghost:hover { opacity: 1; border-color: var(--text-primary); background: var(--bg-elevated); }
+/* 최근 검색 기록 칩 */
+.recent-searches { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 10px; }
+.recent-label { font-size: 11px; font-weight: 700; color: var(--text-muted); margin-right: 2px; }
+.recent-chip {
+  padding: 6px 11px; background: var(--bg-elevated); border: 1px solid var(--border);
+  border-radius: 999px; color: var(--text-secondary); font-family: var(--font);
+  font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.12s;
+  max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.recent-chip:hover { border-color: var(--text-primary); color: var(--text-primary); }
 
 .post-list-table {
   background: var(--bg-surface); border: 1px solid var(--border);

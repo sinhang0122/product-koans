@@ -101,6 +101,11 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    // ── 사용자 문서 (최근 검색 기록 등) — 본인만 읽기/쓰기 ──
+    match /users/{uid} {
+      allow read, write: if isSignedIn() && request.auth.uid == uid;
+    }
+
     // ── 그 외 모든 경로: 기본 거부 ──
     match /{document=**} {
       allow read, write: if false;

@@ -451,43 +451,8 @@
       </div>
       <span class="board-count" id="boardCount">총 0건</span>
       <div class="accom-ctrl-actions">
+        <button class="board-write-btn board-write-btn--ghost" id="filterModalBtn">상세 필터</button>
         <button class="board-write-btn" id="writeBtnOpen">+ 글쓰기</button>
-      </div>
-    </div>
-
-    <!-- 3대 핵심 필터 (PC: 가로 / 모바일: 아코디언) -->
-    <div class="accom-filters" id="accomFilters">
-      <button class="filters-toggle" id="filtersToggle" type="button" aria-expanded="false">
-        <span>상세 필터</span>
-        <svg class="filters-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-      </button>
-      <div class="filters-body" id="filtersBody">
-        <div class="filter-item">
-          <label class="filter-mini-label" for="fbPrice">주당 쉐어비 (최대 $999)</label>
-          <input class="filter-mini-input" id="fbPrice" type="number" min="0" max="999" placeholder="최대 금액 $" />
-        </div>
-        <div class="filter-item">
-          <label class="filter-mini-label" for="fbRoom">방 형태</label>
-          <select class="filter-mini-input" id="fbRoom">
-            <option value="">전체</option>
-            <option value="master">마스터룸</option>
-            <option value="second">세컨룸</option>
-            <option value="single">독방</option>
-            <option value="living_share">거실쉐어</option>
-            <option value="sunroom">썬룸</option>
-          </select>
-        </div>
-        <div class="filter-item">
-          <label class="filter-mini-label" for="fbDuration">숙박 기간</label>
-          <select class="filter-mini-input" id="fbDuration">
-            <option value="">전체</option>
-            <option value="ultra_short">초단기 (1일~2주)</option>
-            <option value="short">단기 (2주~4주)</option>
-            <option value="mid">중단기 (1달~2달)</option>
-            <option value="long">장기 (2달 이상)</option>
-            <option value="any">기간 상관 없음</option>
-          </select>
-        </div>
       </div>
     </div>
 
@@ -504,6 +469,59 @@
     </div>
 
   </main>
+
+  <!-- ── 상세 필터 모달 ── -->
+  <div class="filter-overlay" id="filterOverlay">
+    <div class="filter-modal">
+      <div class="filter-modal-header">
+        <span class="filter-modal-title">상세 필터 <em>Search</em></span>
+        <button class="filter-modal-close" id="filterModalClose">✕</button>
+      </div>
+
+      <div class="filter-section">
+        <label class="filter-section-label" for="ffRegion">검색할 지역 Region</label>
+        <div class="addr-ac">
+          <input class="write-input" id="ffRegion" type="text" autocomplete="off" placeholder="지역·도로명 검색 (예: Strathfield NSW)" />
+          <ul class="addr-suggest" id="ffRegionSuggest"></ul>
+        </div>
+        <div class="recent-searches" id="recentSearches"></div>
+      </div>
+
+      <div class="filter-section">
+        <label class="filter-section-label" for="fbPrice">주당 쉐어비 (최대 $999)</label>
+        <input class="write-input" id="fbPrice" type="number" min="0" max="999" placeholder="최대 금액 $" />
+      </div>
+
+      <div class="filter-section">
+        <label class="filter-section-label" for="fbRoom">방 형태 Room Type</label>
+        <select class="write-input" id="fbRoom">
+          <option value="">전체</option>
+          <option value="master">마스터룸</option>
+          <option value="second">세컨룸</option>
+          <option value="single">독방</option>
+          <option value="living_share">거실쉐어</option>
+          <option value="sunroom">썬룸</option>
+        </select>
+      </div>
+
+      <div class="filter-section">
+        <label class="filter-section-label" for="fbDuration">숙박 기간 Duration</label>
+        <select class="write-input" id="fbDuration">
+          <option value="">전체</option>
+          <option value="ultra_short">초단기 (1일~2주)</option>
+          <option value="short">단기 (2주~4주)</option>
+          <option value="mid">중단기 (1달~2달)</option>
+          <option value="long">장기 (2달 이상)</option>
+          <option value="any">기간 상관 없음</option>
+        </select>
+      </div>
+
+      <div class="filter-modal-actions">
+        <button class="filter-reset-btn" id="filterResetBtn">초기화</button>
+        <button class="filter-apply-btn" id="filterApplyBtn">적용하기</button>
+      </div>
+    </div>
+  </div>
 
   <!-- ── Write Modal ── -->
   <div class="write-overlay" id="writeOverlay">
@@ -772,7 +790,7 @@
       // 방 구하기(find): 자유 양식 — 지도/필터 숨기고 깔끔한 리스트만
       const isFind = mode === 'find';
       const vt = document.getElementById('viewToggle');
-      const fb = document.getElementById('accomFilters');
+      const fb = document.getElementById('filterModalBtn');
       if (vt) vt.style.display = isFind ? 'none' : '';
       if (fb) fb.style.display = isFind ? 'none' : '';
       if (isFind) switchView('list');
@@ -780,28 +798,140 @@
       renderAll();
     }
 
-    // ── 3대 핵심 필터 (주당 쉐어비 ≤ $999 / 방 형태 / 숙박 기간) — 실시간 필터링 ──
-    const fbPrice    = document.getElementById('fbPrice');
+    // ── 상세 필터 모달 (지역 / 주당 쉐어비 ≤ $999 / 방 형태 / 숙박 기간) ──
+    const fbPrice    = document.getElementById('fbPrice');     // applyFilters가 참조
     const fbRoom     = document.getElementById('fbRoom');
     const fbDuration = document.getElementById('fbDuration');
-
-    function liveFilter() { currentPage = 1; renderAll(); }
+    const ffRegion   = document.getElementById('ffRegion');
+    const filterOverlay = document.getElementById('filterOverlay');
 
     // 주당 쉐어비: 최대 $999로 자동 보정
     fbPrice.addEventListener('input', () => {
       const v = parseInt(fbPrice.value, 10);
       if (Number.isFinite(v) && v > 999) fbPrice.value = '999';
-      liveFilter();
     });
-    fbRoom.addEventListener('change', liveFilter);
-    fbDuration.addEventListener('change', liveFilter);
 
-    // 모바일 아코디언: '상세 필터 ▼' 클릭 시 펼침/접힘
-    document.getElementById('filtersToggle').addEventListener('click', () => {
-      const el = document.getElementById('accomFilters');
-      const open = el.classList.toggle('open');
-      document.getElementById('filtersToggle').setAttribute('aria-expanded', open ? 'true' : 'false');
+    function openFilterModal() {
+      renderRecentSearches();
+      filterOverlay.classList.add('open');
+      document.body.style.overflow = 'hidden';
+      loadMapScript();           // Places(지역 자동완성) 로드 보장
+      initRegionAutocomplete();  // 이미 로드돼 있으면 즉시 연결
+    }
+    function closeFilterModal() {
+      filterOverlay.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+    document.getElementById('filterModalBtn').addEventListener('click', openFilterModal);
+    document.getElementById('filterModalClose').addEventListener('click', closeFilterModal);
+    filterOverlay.addEventListener('click', e => { if (e.target === filterOverlay) closeFilterModal(); });
+
+    // 적용하기: 최근 검색 저장 → (지역 있으면) 지도 이동 + 영역 필터 → 리스트 갱신
+    document.getElementById('filterApplyBtn').addEventListener('click', () => runSearch(true));
+    document.getElementById('filterResetBtn').addEventListener('click', () => {
+      ffRegion.value = ''; fbPrice.value = ''; fbRoom.value = ''; fbDuration.value = '';
+      areaBounds = null; currentPage = 1;
+      const asb = document.getElementById('areaSearchBtn'); if (asb) asb.classList.remove('show');
+      renderAll();
+      closeFilterModal();
     });
+
+    function runSearch(save) {
+      currentPage = 1;
+      const region = ffRegion.value.trim();
+      if (save) { addRecentSearch({ region, price: fbPrice.value, room: fbRoom.value, dur: fbDuration.value }); }
+      closeFilterModal();
+      if (region) {
+        loadMapScript();
+        switchView('map');
+        geocode(region).then(coords => {
+          if (coords) { pendingSearchCenter = coords; applyPendingCenter(); }
+          else { areaBounds = null; renderAll(); }
+        });
+      } else {
+        areaBounds = null;  // 지역 미입력 → 지역(영역) 필터 해제
+        renderAll();
+      }
+    }
+
+    // 검색된 지역으로 지도 중심을 스무스하게 이동 + 이동 후 영역(bounds) 기준 필터
+    let pendingSearchCenter = null;
+    function applyPendingCenter() {
+      if (!pendingSearchCenter || !mapReady || !map) return;  // 맵 로딩 중이면 initMap에서 재시도
+      const c = pendingSearchCenter; pendingSearchCenter = null;
+      programmaticMove = true;
+      map.panTo({ lat: c.lat, lng: c.lng });
+      map.setZoom(13);
+      google.maps.event.addListenerOnce(map, 'idle', () => {
+        areaBounds = map.getBounds();
+        programmaticMove = false;
+        currentPage = 1;
+        renderAll();
+      });
+    }
+
+    // ── 최근 검색 기록 (localStorage 우선 + Firestore best-effort 동기화) ──
+    const RECENT_SEARCH_KEY = () => 'koaus-recent-searches-' + ((window.koausAuth && window.koausAuth.user && window.koausAuth.user.uid) || 'guest');
+    function loadRecentSearches() { try { return JSON.parse(localStorage.getItem(RECENT_SEARCH_KEY()) || '[]'); } catch { return []; } }
+    function saveRecentSearches(arr) { localStorage.setItem(RECENT_SEARCH_KEY(), JSON.stringify(arr.slice(0, 5))); }
+    function searchLabel(s) {
+      const parts = [];
+      if (s.region) parts.push(s.region);
+      if (s.price)  parts.push('≤$' + s.price);
+      if (s.room && ROOM_LABELS[s.room]) parts.push(ROOM_LABELS[s.room]);
+      if (s.dur && TYPE_LABELS[s.dur])   parts.push(TYPE_LABELS[s.dur].ko);
+      return parts.join(' · ') || '전체';
+    }
+    function addRecentSearch(s) {
+      if (!s.region && !s.price && !s.room && !s.dur) return;  // 빈 검색은 저장 안 함
+      const label = searchLabel(s);
+      let arr = loadRecentSearches().filter(x => searchLabel(x) !== label);
+      arr.unshift(s);
+      arr = arr.slice(0, 5);
+      saveRecentSearches(arr);
+      syncRecentToFirestore(arr);  // best-effort
+    }
+    function renderRecentSearches() {
+      const box = document.getElementById('recentSearches');
+      const arr = loadRecentSearches();
+      if (!arr.length) { box.innerHTML = ''; return; }
+      box.innerHTML = '<span class="recent-label">최근 검색</span>' + arr.map((s, i) =>
+        `<button type="button" class="recent-chip" data-idx="${i}">${escHtml(searchLabel(s))}</button>`).join('');
+      box.querySelectorAll('.recent-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+          const s = loadRecentSearches()[parseInt(chip.dataset.idx, 10)];
+          if (!s) return;
+          ffRegion.value = s.region || ''; fbPrice.value = s.price || '';
+          fbRoom.value = s.room || ''; fbDuration.value = s.dur || '';
+          runSearch(false);  // 원클릭: 즉시 검색 (중복 저장 안 함)
+        });
+      });
+    }
+    // Firestore best-effort (콘솔에서 Firestore 활성화 + users 규칙 배포 시 동작)
+    async function syncRecentToFirestore(arr) {
+      try {
+        const u = window.koausAuth && window.koausAuth.user;
+        if (!u || !window.koausDb || !window.koausFs) return;
+        const { doc, setDoc } = window.koausFs;
+        await setDoc(doc(window.koausDb, 'users', u.uid), { recentSearches: arr }, { merge: true });
+      } catch (e) { /* Firestore 미설정 시 무시 (localStorage로 동작) */ }
+    }
+    async function pullRecentFromFirestore() {
+      try {
+        const u = window.koausAuth && window.koausAuth.user;
+        if (!u || !window.koausDb || !window.koausFs) return;
+        const { doc, getDoc } = window.koausFs;
+        const snap = await getDoc(doc(window.koausDb, 'users', u.uid));
+        if (snap.exists() && Array.isArray(snap.data().recentSearches)) {
+          saveRecentSearches(snap.data().recentSearches);
+          if (filterOverlay.classList.contains('open')) renderRecentSearches();
+        }
+      } catch (e) {}
+    }
+    window.addEventListener('koausAuthReady', pullRecentFromFirestore);
+
+    // 지역 검색창 자동완성 (글쓰기 주소와 동일 로직 재사용)
+    function initRegionAutocomplete() { wireAutocomplete('ffRegion', 'ffRegionSuggest'); }
 
     // ── Write Modal ──
     const writeOverlay = document.getElementById('writeOverlay');
@@ -899,14 +1029,16 @@
     });
 
     // ── 주소 자동완성 (Google Places) — 도로명/지역명만으로도 선택 가능 (번지수 불필요) ──
-    let acService = null, acWired = false;
-    function initAddressAutocomplete() {
-      if (acWired) return;
+    let acService = null;
+    const acWired = new Set();
+    function wireAutocomplete(inputId, listId) {
+      if (acWired.has(inputId)) return;
       if (!(window.google && google.maps && google.maps.places && google.maps.places.AutocompleteService)) return;
-      acService = new google.maps.places.AutocompleteService();
-      acWired = true;
-      const input = document.getElementById('wAddress');
-      const list  = document.getElementById('wAddressSuggest');
+      if (!acService) acService = new google.maps.places.AutocompleteService();
+      const input = document.getElementById(inputId);
+      const list  = document.getElementById(listId);
+      if (!input || !list) return;
+      acWired.add(inputId);
       let timer = null;
       const hide = () => { list.classList.remove('show'); list.innerHTML = ''; };
       input.addEventListener('input', () => {
@@ -935,6 +1067,11 @@
       });
       input.addEventListener('keydown', e => { if (e.key === 'Escape') hide(); });
       document.addEventListener('click', e => { if (!e.target.closest('.addr-ac')) hide(); });
+    }
+    // 글쓰기 주소 + 필터 지역 검색창 모두 연결
+    function initAddressAutocomplete() {
+      wireAutocomplete('wAddress', 'wAddressSuggest');
+      wireAutocomplete('ffRegion', 'ffRegionSuggest');
     }
 
     // 주소 텍스트 → 좌표 변환 (google.maps.Geocoder 우선, 실패 시 REST 폴백)
@@ -1408,7 +1545,8 @@
         map.addListener('dragend', showAreaBtn);
         map.addListener('zoom_changed', showAreaBtn);
         updateMapMarkers(applyFilters(loadPosts()));
-        initAddressAutocomplete();  // Places 로드 완료 → 주소 자동완성 연결
+        initAddressAutocomplete();  // Places 로드 완료 → 주소/지역 자동완성 연결
+        applyPendingCenter();       // 지역 검색이 맵 로딩보다 먼저였다면 지금 이동
       };
       const script   = document.createElement('script');
       script.src     = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_KEY}&libraries=places&loading=async&callback=initMap`;
@@ -1497,6 +1635,7 @@
       createUserWithEmailAndPassword, signInWithEmailAndPassword,
     } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
     import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app-check.js';
+    import { getFirestore, doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
 
     const firebaseConfig = {
       apiKey:            'AIzaSyCamqnt0bNUD9uz1N5BbCuQjSkWLSpPqlU',
@@ -1522,6 +1661,8 @@
     }
 
     const auth = getAuth(app);
+    // 최근 검색 기록 동기화용 Firestore (콘솔에서 Firestore 활성화 + users 규칙 배포 시 동작)
+    try { window.koausDb = getFirestore(app); window.koausFs = { doc, getDoc, setDoc }; } catch (e) { /* Firestore 미설정 무시 */ }
 
     // ── Auth Modal ──
     const authOverlay = document.getElementById('authOverlay');
