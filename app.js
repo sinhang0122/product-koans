@@ -142,10 +142,16 @@ if (authAgree) authAgree.addEventListener('change', updateSignupBtn);
 window.onKoausRecaptcha = () => { recaptchaOK = true; updateSignupBtn(); };
 window.onKoausRecaptchaExpired = () => { recaptchaOK = false; updateSignupBtn(); };
 const tosOverlay = document.getElementById('tosOverlay');
+const privacyOverlay = document.getElementById('privacyOverlay');
+const closeTermsModal = ov => ov.classList.remove('open');
 document.getElementById('authTosLink').addEventListener('click', () => tosOverlay.classList.add('open'));
-document.getElementById('tosClose').addEventListener('click', () => tosOverlay.classList.remove('open'));
-document.getElementById('tosConfirm').addEventListener('click', () => tosOverlay.classList.remove('open'));
-tosOverlay.addEventListener('click', e => { if (e.target === tosOverlay) tosOverlay.classList.remove('open'); });
+document.getElementById('authPrivacyLink').addEventListener('click', () => privacyOverlay.classList.add('open'));
+document.getElementById('tosClose').addEventListener('click', () => closeTermsModal(tosOverlay));
+document.getElementById('tosConfirm').addEventListener('click', () => closeTermsModal(tosOverlay));
+document.getElementById('privacyClose').addEventListener('click', () => closeTermsModal(privacyOverlay));
+document.getElementById('privacyConfirm').addEventListener('click', () => closeTermsModal(privacyOverlay));
+tosOverlay.addEventListener('click', e => { if (e.target === tosOverlay) closeTermsModal(tosOverlay); });
+privacyOverlay.addEventListener('click', e => { if (e.target === privacyOverlay) closeTermsModal(privacyOverlay); });
 
 document.getElementById('authSignupSubmit').addEventListener('click', async () => {
   const email = document.getElementById('authSignupEmail').value.trim();

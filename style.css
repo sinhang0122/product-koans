@@ -805,7 +805,13 @@ select.write-input {
   font-size: 26px; line-height: 1; color: var(--text-primary); border-radius: var(--r-sm);
 }
 .rea-back:hover { background: var(--bg-elevated); }
-.rea-nav-title { font-size: 14px; font-weight: 700; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rea-nav-title { flex: 1; min-width: 0; font-size: 14px; font-weight: 700; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rea-nav-close {
+  width: 34px; height: 34px; flex-shrink: 0; border: none; background: none; cursor: pointer;
+  font-size: 17px; line-height: 1; color: var(--text-secondary); border-radius: var(--r-sm);
+  display: flex; align-items: center; justify-content: center;
+}
+.rea-nav-close:hover { background: var(--bg-elevated); color: var(--text-primary); }
 /* 콘텐츠 */
 .rea-content { padding: 18px 20px 20px; display: flex; flex-direction: column; gap: 6px; }
 .rea-status { font-size: 12.5px; color: var(--text-muted); font-weight: 600; }
