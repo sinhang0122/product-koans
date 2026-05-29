@@ -1285,13 +1285,13 @@ select.write-input {
 /* 숙박기간·방형태·옵션 공통 — 컴팩트 인라인 칩(세로 높이 최소화, 한 줄 다닥다닥) · B&W */
 .write-opts { display: flex; flex-wrap: wrap; gap: 8px; }
 .write-opt {
-  display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
-  padding: 6px 10px; border: 1px solid var(--border); border-radius: var(--r-sm);
+  display: inline-flex; align-items: center; gap: 7px; white-space: nowrap;
+  padding: 5px 11px; border: 1px solid var(--border); border-radius: var(--r-sm);
   font-size: 12.5px; font-weight: 500; color: var(--text-primary);
   cursor: pointer; transition: border-color 0.15s, background 0.15s;
 }
 .write-opt:hover { border-color: var(--border-focus); }
-.write-opt input { accent-color: var(--accent); width: 16px; height: 16px; cursor: pointer; flex-shrink: 0; }
+.write-opt input { accent-color: var(--accent); width: 19px; height: 19px; cursor: pointer; flex-shrink: 0; }
 
 /* 모바일/태블릿(≤768px): 2단 → 1단 스택 (폼 찌그러짐 방지) */
 @media (max-width: 768px) {

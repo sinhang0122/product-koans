@@ -570,9 +570,6 @@
             <label class="write-label" for="wPrice">주당 렌트비 Price / wk ($)<span class="required-mark">*</span></label>
             <input class="write-input" id="wPrice" type="number" placeholder="숫자만 입력" min="0" />
           </div>
-        </div>
-
-        <div class="write-col">
           <div class="write-field offer-only">
             <span class="write-label">방 형태 Room Type (중복 선택 가능)</span>
             <div class="write-opts" id="wRoomTypes">
@@ -593,9 +590,20 @@
               <label class="write-opt"><input type="checkbox" data-type="any"> 기간 상관 없음</label>
             </div>
           </div>
+        </div>
+
+        <div class="write-col">
           <div class="write-field offer-only">
             <label class="write-label" for="wAvailDate">입주 가능한 날 Available Date</label>
             <input class="write-input" id="wAvailDate" type="date" />
+          </div>
+          <div class="write-field offer-only">
+            <label class="write-label" for="wBathroom">욕실 Bathroom</label>
+            <select class="write-input" id="wBathroom">
+              <option value="">선택 안 함</option>
+              <option value="shared">Shared (공용)</option>
+              <option value="ensuite">Ensuite (개인)</option>
+            </select>
           </div>
           <div class="write-field offer-only">
             <label class="write-label" for="wGender">성별 조건 Gender</label>
@@ -616,8 +624,12 @@
             </div>
           </div>
           <div class="write-field">
-            <label class="write-label" for="wBody" id="wBodyLabel">상세 설명 Comments</label>
+            <label class="write-label" for="wBody" id="wBodyLabel">상세 설명 및 연락처 Comments</label>
             <textarea class="write-textarea" id="wBody" placeholder="상세 설명 및 연락처를 입력해 주세요."></textarea>
+          </div>
+          <div class="write-field offer-only">
+            <label class="write-label" for="wKakao">카카오톡 오픈채팅 링크 KakaoTalk</label>
+            <input class="write-input" id="wKakao" type="url" placeholder="https://open.kakao.com/... (선택)" maxlength="200" />
           </div>
         </div>
       </div>
@@ -911,10 +923,11 @@
       document.getElementById('writeBtnSubmit').textContent = isEdit ? '수정 완료' : '등록하기';
     }
     function resetWriteForm() {
-      ['wTitle','wAddress','wPrice','wBody','wAvailDate'].forEach(id => { document.getElementById(id).value = ''; });
+      ['wTitle','wAddress','wPrice','wBody','wAvailDate','wKakao'].forEach(id => { document.getElementById(id).value = ''; });
       ['wParking','wPet','wKids','wAirCon'].forEach(id => { document.getElementById(id).checked = false; });
       document.querySelectorAll('#wTypes input, #wRoomTypes input').forEach(c => { c.checked = false; });
       document.getElementById('wGender').value = '';
+      document.getElementById('wBathroom').value = '';
       document.getElementById('wDisclaimer').checked = false;
     }
     // 로그인 사용자 닉네임 (작성자 고정값)
@@ -931,7 +944,7 @@
       const isFind = activeMode === 'find';
       document.querySelectorAll('.offer-only').forEach(el => { el.style.display = isFind ? 'none' : ''; });
       document.getElementById('writeGrid').classList.toggle('write-grid--find', isFind);
-      document.getElementById('wBodyLabel').textContent = isFind ? '자유 코멘트 Comments' : '상세 설명 Comments';
+      document.getElementById('wBodyLabel').textContent = isFind ? '자유 코멘트 Comments' : '상세 설명 및 연락처 Comments';
       document.getElementById('wBody').placeholder = isFind
         ? '구하는 조건·예산·기간·연락처 등을 자유롭게 적어주세요'
         : '상세 설명 및 연락처를 입력해 주세요.';
@@ -954,7 +967,9 @@
       const roomSet = new Set(Array.isArray(p.roomTypes) ? p.roomTypes : (p.roomType ? [p.roomType] : []));
       document.querySelectorAll('#wRoomTypes input').forEach(c => { c.checked = roomSet.has(c.dataset.room); });
       document.getElementById('wGender').value = p.gender || '';
+      document.getElementById('wBathroom').value = p.bathroom || '';
       document.getElementById('wAvailDate').value = p.availableDate || '';
+      document.getElementById('wKakao').value = p.kakao || '';
       document.getElementById('wParking').checked = !!p.parking;
       document.getElementById('wPet').checked     = !!p.petFriendly;
       document.getElementById('wKids').checked    = !!p.kidsInHouse;
@@ -1022,7 +1037,9 @@
         const types     = [...document.querySelectorAll('#wTypes input:checked')].map(c => c.dataset.type);
         const roomTypes = [...document.querySelectorAll('#wRoomTypes input:checked')].map(c => c.dataset.room);
         const gender    = document.getElementById('wGender').value;
+        const bathroom  = document.getElementById('wBathroom').value;
         const availableDate = document.getElementById('wAvailDate').value;
+        const kakao     = document.getElementById('wKakao').value.trim();
         const address  = document.getElementById('wAddress').value.trim();
         const priceVal = document.getElementById('wPrice').value.trim();
 
@@ -1033,7 +1050,7 @@
         const price = parseInt(priceVal, 10);
         if (!(price > 0)) { alert('주당 렌트비를 숫자로 올바르게 입력해 주세요.'); return; }
         fields = {
-          mode: 'offer', types, title, body, address, price, roomTypes, gender, availableDate,
+          mode: 'offer', types, title, body, address, price, roomTypes, gender, bathroom, availableDate, kakao,
           parking:     document.getElementById('wParking').checked,
           petFriendly: document.getElementById('wPet').checked,
           kidsInHouse: document.getElementById('wKids').checked,
@@ -1362,7 +1379,15 @@
 
       document.getElementById('detailBody').textContent = p.body;
       const contactEl = document.getElementById('detailContact');
-      contactEl.innerHTML = p.contact ? `📞 연락처: <strong>${escHtml(p.contact)}</strong>` : '';
+      let contactHtml = p.contact ? `📞 연락처: <strong>${escHtml(p.contact)}</strong>` : '';
+      if (p.kakao) {
+        // 안전: http(s) 링크만 a태그로, 그 외는 텍스트로 (javascript: 등 차단)
+        const safe = /^https?:\/\//i.test(p.kakao);
+        contactHtml += `${contactHtml ? '<br>' : ''}💬 ` + (safe
+          ? `<a href="${escHtml(p.kakao)}" target="_blank" rel="noopener noreferrer">카카오톡 오픈채팅</a>`
+          : escHtml(p.kakao));
+      }
+      contactEl.innerHTML = contactHtml;
 
       // 본인 글이면 수정/삭제 버튼 노출
       const actEl = document.getElementById('detailActions');
