@@ -16,6 +16,8 @@
     })();
   </script>
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3691720629746826" crossorigin="anonymous"></script>
+  <!-- Google reCAPTCHA v2 (회원가입 봇 차단) -->
+  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </head>
 <body>
 
@@ -26,7 +28,7 @@
       <span class="topbar-tagline"><b>Korea&nbsp;-&nbsp;Australia</b><span class="topbar-tagline-div">|</span>호주 한인 커뮤니티의 새로운 기준</span>
     </a>
     <div class="topbar-actions">
-      <a href="index.html" class="topbar-login-btn" id="topbarLoginBtn">로그인</a>
+      <button type="button" class="topbar-login-btn" id="topbarLoginBtn">로그인</button>
       <button class="topbar-theme-btn" id="themeToggleBtn" type="button" aria-label="테마 변경" title="테마 변경 (Light / Dark)">
         <svg class="ico-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
         <svg class="ico-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
@@ -84,10 +86,10 @@
           <div class="accord-subgroup">
             <button class="accord-sublabel sub-toggle" type="button"><span>Auto</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
-            <a href="auto.html?state=nsw&amp;category=used-car" class="accord-link accord-link--sub">중고차 (Buy &amp; Sell)</a>
-            <a href="auto.html?state=nsw&amp;category=mechanic" class="accord-link accord-link--sub">정비 및 인스펙션</a>
-            <a href="auto.html?state=nsw&amp;category=emergency" class="accord-link accord-link--sub">긴급출동 및 견인</a>
-            <a href="auto.html?state=nsw&amp;category=rental" class="accord-link accord-link--sub">렌트카</a>
+            <a href="auto.html?state=nsw&amp;category=rental" class="accord-link accord-link--sub">렌트카 (Rental)</a>
+            <a href="auto.html?state=nsw&amp;category=inspection" class="accord-link accord-link--sub">동행 인스펙션·긴급출동</a>
+            <a href="auto.html?state=nsw&amp;category=maintenance" class="accord-link accord-link--sub">정비소</a>
+            <a href="auto.html?state=nsw&amp;category=towing" class="accord-link accord-link--sub">견인</a>
             </div>
           </div>
         </div>
@@ -123,10 +125,10 @@
           <div class="accord-subgroup">
             <button class="accord-sublabel sub-toggle" type="button"><span>Auto</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
-            <a href="auto.html?state=vic&amp;category=used-car" class="accord-link accord-link--sub">중고차 (Buy &amp; Sell)</a>
-            <a href="auto.html?state=vic&amp;category=mechanic" class="accord-link accord-link--sub">정비 및 인스펙션</a>
-            <a href="auto.html?state=vic&amp;category=emergency" class="accord-link accord-link--sub">긴급출동 및 견인</a>
-            <a href="auto.html?state=vic&amp;category=rental" class="accord-link accord-link--sub">렌트카</a>
+            <a href="auto.html?state=vic&amp;category=rental" class="accord-link accord-link--sub">렌트카 (Rental)</a>
+            <a href="auto.html?state=vic&amp;category=inspection" class="accord-link accord-link--sub">동행 인스펙션·긴급출동</a>
+            <a href="auto.html?state=vic&amp;category=maintenance" class="accord-link accord-link--sub">정비소</a>
+            <a href="auto.html?state=vic&amp;category=towing" class="accord-link accord-link--sub">견인</a>
             </div>
           </div>
         </div>
@@ -162,10 +164,10 @@
           <div class="accord-subgroup">
             <button class="accord-sublabel sub-toggle" type="button"><span>Auto</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
-            <a href="auto.html?state=qld&amp;category=used-car" class="accord-link accord-link--sub">중고차 (Buy &amp; Sell)</a>
-            <a href="auto.html?state=qld&amp;category=mechanic" class="accord-link accord-link--sub">정비 및 인스펙션</a>
-            <a href="auto.html?state=qld&amp;category=emergency" class="accord-link accord-link--sub">긴급출동 및 견인</a>
-            <a href="auto.html?state=qld&amp;category=rental" class="accord-link accord-link--sub">렌트카</a>
+            <a href="auto.html?state=qld&amp;category=rental" class="accord-link accord-link--sub">렌트카 (Rental)</a>
+            <a href="auto.html?state=qld&amp;category=inspection" class="accord-link accord-link--sub">동행 인스펙션·긴급출동</a>
+            <a href="auto.html?state=qld&amp;category=maintenance" class="accord-link accord-link--sub">정비소</a>
+            <a href="auto.html?state=qld&amp;category=towing" class="accord-link accord-link--sub">견인</a>
             </div>
           </div>
         </div>
@@ -201,10 +203,10 @@
           <div class="accord-subgroup">
             <button class="accord-sublabel sub-toggle" type="button"><span>Auto</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
-            <a href="auto.html?state=wa&amp;category=used-car" class="accord-link accord-link--sub">중고차 (Buy &amp; Sell)</a>
-            <a href="auto.html?state=wa&amp;category=mechanic" class="accord-link accord-link--sub">정비 및 인스펙션</a>
-            <a href="auto.html?state=wa&amp;category=emergency" class="accord-link accord-link--sub">긴급출동 및 견인</a>
-            <a href="auto.html?state=wa&amp;category=rental" class="accord-link accord-link--sub">렌트카</a>
+            <a href="auto.html?state=wa&amp;category=rental" class="accord-link accord-link--sub">렌트카 (Rental)</a>
+            <a href="auto.html?state=wa&amp;category=inspection" class="accord-link accord-link--sub">동행 인스펙션·긴급출동</a>
+            <a href="auto.html?state=wa&amp;category=maintenance" class="accord-link accord-link--sub">정비소</a>
+            <a href="auto.html?state=wa&amp;category=towing" class="accord-link accord-link--sub">견인</a>
             </div>
           </div>
         </div>
@@ -240,10 +242,10 @@
           <div class="accord-subgroup">
             <button class="accord-sublabel sub-toggle" type="button"><span>Auto</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
-            <a href="auto.html?state=sa&amp;category=used-car" class="accord-link accord-link--sub">중고차 (Buy &amp; Sell)</a>
-            <a href="auto.html?state=sa&amp;category=mechanic" class="accord-link accord-link--sub">정비 및 인스펙션</a>
-            <a href="auto.html?state=sa&amp;category=emergency" class="accord-link accord-link--sub">긴급출동 및 견인</a>
-            <a href="auto.html?state=sa&amp;category=rental" class="accord-link accord-link--sub">렌트카</a>
+            <a href="auto.html?state=sa&amp;category=rental" class="accord-link accord-link--sub">렌트카 (Rental)</a>
+            <a href="auto.html?state=sa&amp;category=inspection" class="accord-link accord-link--sub">동행 인스펙션·긴급출동</a>
+            <a href="auto.html?state=sa&amp;category=maintenance" class="accord-link accord-link--sub">정비소</a>
+            <a href="auto.html?state=sa&amp;category=towing" class="accord-link accord-link--sub">견인</a>
             </div>
           </div>
         </div>
@@ -279,10 +281,10 @@
           <div class="accord-subgroup">
             <button class="accord-sublabel sub-toggle" type="button"><span>Auto</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
-            <a href="auto.html?state=tas&amp;category=used-car" class="accord-link accord-link--sub">중고차 (Buy &amp; Sell)</a>
-            <a href="auto.html?state=tas&amp;category=mechanic" class="accord-link accord-link--sub">정비 및 인스펙션</a>
-            <a href="auto.html?state=tas&amp;category=emergency" class="accord-link accord-link--sub">긴급출동 및 견인</a>
-            <a href="auto.html?state=tas&amp;category=rental" class="accord-link accord-link--sub">렌트카</a>
+            <a href="auto.html?state=tas&amp;category=rental" class="accord-link accord-link--sub">렌트카 (Rental)</a>
+            <a href="auto.html?state=tas&amp;category=inspection" class="accord-link accord-link--sub">동행 인스펙션·긴급출동</a>
+            <a href="auto.html?state=tas&amp;category=maintenance" class="accord-link accord-link--sub">정비소</a>
+            <a href="auto.html?state=tas&amp;category=towing" class="accord-link accord-link--sub">견인</a>
             </div>
           </div>
         </div>
@@ -318,10 +320,10 @@
           <div class="accord-subgroup">
             <button class="accord-sublabel sub-toggle" type="button"><span>Auto</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
-            <a href="auto.html?state=act&amp;category=used-car" class="accord-link accord-link--sub">중고차 (Buy &amp; Sell)</a>
-            <a href="auto.html?state=act&amp;category=mechanic" class="accord-link accord-link--sub">정비 및 인스펙션</a>
-            <a href="auto.html?state=act&amp;category=emergency" class="accord-link accord-link--sub">긴급출동 및 견인</a>
-            <a href="auto.html?state=act&amp;category=rental" class="accord-link accord-link--sub">렌트카</a>
+            <a href="auto.html?state=act&amp;category=rental" class="accord-link accord-link--sub">렌트카 (Rental)</a>
+            <a href="auto.html?state=act&amp;category=inspection" class="accord-link accord-link--sub">동행 인스펙션·긴급출동</a>
+            <a href="auto.html?state=act&amp;category=maintenance" class="accord-link accord-link--sub">정비소</a>
+            <a href="auto.html?state=act&amp;category=towing" class="accord-link accord-link--sub">견인</a>
             </div>
           </div>
         </div>
@@ -357,10 +359,10 @@
           <div class="accord-subgroup">
             <button class="accord-sublabel sub-toggle" type="button"><span>Auto</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
-            <a href="auto.html?state=nt&amp;category=used-car" class="accord-link accord-link--sub">중고차 (Buy &amp; Sell)</a>
-            <a href="auto.html?state=nt&amp;category=mechanic" class="accord-link accord-link--sub">정비 및 인스펙션</a>
-            <a href="auto.html?state=nt&amp;category=emergency" class="accord-link accord-link--sub">긴급출동 및 견인</a>
-            <a href="auto.html?state=nt&amp;category=rental" class="accord-link accord-link--sub">렌트카</a>
+            <a href="auto.html?state=nt&amp;category=rental" class="accord-link accord-link--sub">렌트카 (Rental)</a>
+            <a href="auto.html?state=nt&amp;category=inspection" class="accord-link accord-link--sub">동행 인스펙션·긴급출동</a>
+            <a href="auto.html?state=nt&amp;category=maintenance" class="accord-link accord-link--sub">정비소</a>
+            <a href="auto.html?state=nt&amp;category=towing" class="accord-link accord-link--sub">견인</a>
             </div>
           </div>
         </div>
@@ -378,57 +380,234 @@
       <a href="powerball.html" class="sidebar-exchange-link">🎱 파워볼 당첨 번호 →</a>
     </div>
   </aside>
+
   <main class="page-container">
 
     <div class="page-header">
       <div>
-        <h1 class="page-title" id="autoTitle">🚗 Auto</h1>
-        <p class="page-subtitle" id="autoSubtitle">자동차 종합 서비스 게시판</p>
+        <h1 class="page-title" id="boardTitle">🚗 Auto</h1>
+        <p class="page-subtitle" id="boardSubtitle">자동차 종합 서비스 게시판</p>
       </div>
       <a href="index.html" class="page-back">← 홈으로</a>
     </div>
 
-    <!-- 4대 통합 카테고리 탭 -->
-    <div class="auto-tabs" id="autoTabs">
-      <button class="auto-tab active" data-cat="used-car">중고차 <em>Buy &amp; Sell</em></button>
-      <button class="auto-tab" data-cat="mechanic">정비·인스펙션 <em>Mechanic</em></button>
-      <button class="auto-tab" data-cat="emergency">긴급출동·견인 <em>Emergency</em></button>
-      <button class="auto-tab" data-cat="rental">렌트카 <em>Rental</em></button>
+    <div class="adsense-wrap">
+      <ins class="adsbygoogle"
+           style="display:block"
+           data-ad-client="ca-pub-3691720629746826"
+           data-ad-slot="auto"
+           data-ad-format="auto"
+           data-full-width-responsive="true"></ins>
+      <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
     </div>
 
-    <div class="board-toolbar">
+    <!-- Auto 4대 카테고리 탭 -->
+    <div class="accom-main-tabs auto-cat-tabs" id="autoTabs">
+      <button class="accom-tab active" data-cat="rental">렌트카 <em>Rental</em></button>
+      <button class="accom-tab" data-cat="inspection">동행 인스펙션·긴급출동 <em>Inspection</em></button>
+      <button class="accom-tab" data-cat="maintenance">정비소 <em>Maintenance</em></button>
+      <button class="accom-tab" data-cat="towing">견인 <em>Towing</em></button>
+    </div>
+
+    <!-- Controls -->
+    <div class="accom-controls">
+      <div class="view-toggle" id="viewToggle">
+        <button class="view-btn active" id="viewListBtn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          List View
+        </button>
+        <button class="view-btn" id="viewMapBtn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+          Map View
+        </button>
+      </div>
       <span class="board-count" id="boardCount">총 0건</span>
-      <button class="board-write-btn" id="writeBtnOpen">+ 글쓰기</button>
+      <div class="accom-ctrl-actions">
+        <button class="board-write-btn board-write-btn--ghost" id="filterModalBtn">상세 필터</button>
+        <button class="board-write-btn" id="writeBtnOpen">+ 글쓰기</button>
+      </div>
     </div>
 
-    <div id="postList" class="accom-grid accom-grid--compact"></div>
-    <div class="pagination" id="pagination"></div>
+    <!-- List View -->
+    <div id="listView">
+      <div id="postGrid" class="accom-grid accom-grid--compact"></div>
+      <div class="pagination" id="pagination"></div>
+    </div>
+
+    <!-- Map View -->
+    <div id="mapView" style="display:none;">
+      <button class="area-search-btn" id="areaSearchBtn">이 지역 매물 검색하기</button>
+      <div id="accomMap"></div>
+    </div>
+
+    <!-- 견인: 호주 로컬 견인 서비스 외부 링크 안내 (견인 카테고리에서만, 화면 최하단 노출) -->
+    <div class="auto-tow-banner" id="towBanner" style="display:none;">
+      <span class="auto-tow-text">※ 야간/새벽 등 긴급 상황 시 호주 로컬 견인 서비스 이용하기</span>
+      <a class="auto-tow-btn" href="https://www.google.com/maps/search/towing+service+near+me/" target="_blank" rel="noopener noreferrer">🚨 가까운 견인 서비스 찾기 <span class="auto-tow-arrow">›</span></a>
+    </div>
 
   </main>
+
+  <!-- ── 상세 필터 모달 ── -->
+  <div class="filter-overlay" id="filterOverlay">
+    <div class="filter-modal">
+      <div class="filter-modal-header">
+        <span class="filter-modal-title">상세 필터 <em>Search</em></span>
+        <button class="filter-modal-close" id="filterModalClose">✕</button>
+      </div>
+
+      <!-- 렌트카 필터 (글쓰기 필드 연동) -->
+      <div class="cat-filter" data-filter="rental">
+        <div class="filter-section">
+          <label class="filter-section-label" for="ffRegion">판매/대여 지역 Region</label>
+          <input class="write-input" id="ffRegion" type="text" autocomplete="off" placeholder="지역명 검색 (예: Strathfield NSW)" />
+        </div>
+        <div class="filter-section">
+          <label class="filter-section-label" for="ffBrand">브랜드 Brand</label>
+          <input class="write-input" id="ffBrand" type="text" placeholder="예: Toyota, Hyundai" />
+        </div>
+        <div class="filter-section">
+          <label class="filter-section-label" for="ffMaxPrice">최대 가격 (총액 $)</label>
+          <input class="write-input" id="ffMaxPrice" type="number" min="0" placeholder="최대 금액 $" />
+        </div>
+        <div class="filter-section">
+          <label class="filter-section-label" for="ffMaxMileage">최대 주행거리 (km)</label>
+          <input class="write-input" id="ffMaxMileage" type="number" min="0" placeholder="최대 km" />
+        </div>
+        <div class="filter-section">
+          <label class="filter-section-label" for="ffMinYear">최소 연식 (년식)</label>
+          <input class="write-input" id="ffMinYear" type="number" min="1950" max="2100" placeholder="예: 2015" />
+        </div>
+      </div>
+
+      <!-- 동행 인스펙션·긴급출동 필터 (비용 기준) -->
+      <div class="cat-filter" data-filter="inspection">
+        <div class="filter-section">
+          <label class="filter-section-label" for="ffMaxInsp">인스펙션 비용 최대 ($)</label>
+          <input class="write-input" id="ffMaxInsp" type="number" min="0" placeholder="최대 금액 $" />
+        </div>
+        <div class="filter-section">
+          <label class="filter-section-label" for="ffMaxEmer">긴급출동 비용 최대 ($)</label>
+          <input class="write-input" id="ffMaxEmer" type="number" min="0" placeholder="최대 금액 $" />
+        </div>
+      </div>
+
+      <div class="filter-section">
+        <div class="recent-searches" id="recentSearches"></div>
+      </div>
+
+      <div class="filter-modal-actions">
+        <button class="filter-reset-btn" id="filterResetBtn">초기화</button>
+        <button class="filter-apply-btn" id="filterApplyBtn">적용하기</button>
+      </div>
+    </div>
+  </div>
 
   <!-- ── Write Modal ── -->
   <div class="write-overlay" id="writeOverlay">
     <div class="write-modal write-modal--tall">
       <div class="write-modal-header">
-        <div class="write-modal-title" id="writeTitle">글쓰기 <em>Write Post</em></div>
+        <div class="write-modal-title">글쓰기 <em>Write Post</em></div>
+        <span class="write-author-badge">작성자 : <b id="wAuthorName">-</b></span>
         <button class="write-modal-close" id="writeBtnClose">✕</button>
       </div>
-      <div class="write-field">
-        <label class="write-label" for="wTitle">제목 Title<span class="required-mark">*</span></label>
-        <input class="write-input" id="wTitle" type="text" placeholder="제목을 입력하세요" maxlength="80" />
+
+      <!-- ── 렌트카(Rental) 글쓰기 폼 ── -->
+      <div class="write-grid cat-form" data-form="rental">
+        <div class="write-col">
+          <div class="write-field">
+            <label class="write-label" for="rTitle">제목 Title<span class="required-mark">*</span></label>
+            <input class="write-input" id="rTitle" type="text" placeholder="예: 2016 Toyota Corolla 판매" maxlength="80" />
+          </div>
+          <div class="write-field">
+            <label class="write-label" for="rBrand">브랜드 Brand</label>
+            <input class="write-input" id="rBrand" type="text" placeholder="예: Toyota" maxlength="40" />
+          </div>
+          <div class="write-field">
+            <label class="write-label" for="rModel">모델 Model</label>
+            <input class="write-input" id="rModel" type="text" placeholder="예: Corolla" maxlength="40" />
+          </div>
+          <div class="write-field">
+            <label class="write-label" for="rYear">연식 Year</label>
+            <input class="write-input" id="rYear" type="number" min="1950" max="2100" placeholder="예: 2016" />
+          </div>
+          <div class="write-field">
+            <label class="write-label" for="rMileage">주행거리 Mileage (km)</label>
+            <input class="write-input" id="rMileage" type="number" min="0" placeholder="예: 85000" />
+          </div>
+        </div>
+        <div class="write-col">
+          <div class="write-field">
+            <label class="write-label" for="rRwc">RWC 유무 Roadworthy</label>
+            <select class="write-input" id="rRwc">
+              <option value="">선택 안 함</option>
+              <option value="yes">RWC 있음</option>
+              <option value="no">RWC 없음</option>
+            </select>
+          </div>
+          <div class="write-field">
+            <label class="write-label" for="rRego">REGO 만료일 Rego Expiry</label>
+            <input class="write-input" id="rRego" type="date" />
+          </div>
+          <div class="write-field">
+            <label class="write-label" for="rPrice">가격 Price (총액 $)</label>
+            <input class="write-input" id="rPrice" type="number" min="0" placeholder="숫자만 입력" />
+          </div>
+          <div class="write-field">
+            <label class="write-label" for="rRegion">판매/대여 지역 Region</label>
+            <input class="write-input" id="rRegion" type="text" placeholder="예: Strathfield NSW" maxlength="80" />
+          </div>
+          <div class="write-field">
+            <label class="write-label" for="rContact">연락처 Contact</label>
+            <input class="write-input" id="rContact" type="text" placeholder="연락처 또는 오픈채팅 링크" maxlength="200" />
+          </div>
+        </div>
+        <div class="write-field write-field--grow" style="grid-column:1/-1;">
+          <label class="write-label" for="rBody">코멘트 Comments</label>
+          <textarea class="write-textarea" id="rBody" placeholder="차량 상태·옵션·거래 조건 등을 자유롭게 적어주세요"></textarea>
+        </div>
       </div>
-      <div class="write-field">
-        <label class="write-label" for="wBody">상세 내용 Comments<span class="required-mark">*</span></label>
-        <textarea class="write-textarea" id="wBody" placeholder="차량 정보, 가격, 조건 등을 자유롭게 적어주세요"></textarea>
+
+      <!-- ── 동행 인스펙션·긴급출동(Inspection) 글쓰기 폼 ── -->
+      <div class="write-grid cat-form" data-form="inspection" style="display:none;">
+        <div class="write-col">
+          <div class="write-field">
+            <label class="write-label" for="iName">메카닉 이름 / 업체명<span class="required-mark">*</span></label>
+            <input class="write-input" id="iName" type="text" placeholder="예: 데이브 모터스 / John's Mechanic" maxlength="80" />
+          </div>
+          <div class="write-field">
+            <label class="write-label" for="iContact">연락처 Contact</label>
+            <input class="write-input" id="iContact" type="text" placeholder="연락처 또는 오픈채팅 링크" maxlength="200" />
+          </div>
+          <div class="write-field">
+            <label class="write-label" for="iRegion">활동 가능 지역/위치 Region</label>
+            <input class="write-input" id="iRegion" type="text" placeholder="예: Sydney 전역, Inner West" maxlength="80" />
+          </div>
+          <div class="write-field">
+            <label class="write-label" for="iTime">동행 가능 시간대 Available Time</label>
+            <input class="write-input" id="iTime" type="text" placeholder="예: 평일 09:00~18:00, 주말 협의" maxlength="80" />
+          </div>
+        </div>
+        <div class="write-col">
+          <div class="write-field">
+            <label class="write-svc">
+              <input type="checkbox" id="iInspOn" checked> <b>동행 인스펙션 제공</b>
+            </label>
+            <input class="write-input" id="iInspPrice" type="number" min="0" placeholder="인스펙션 비용 ($)" />
+          </div>
+          <div class="write-field">
+            <label class="write-svc">
+              <input type="checkbox" id="iEmerOn"> <b>긴급출동 제공</b>
+            </label>
+            <input class="write-input" id="iEmerPrice" type="number" min="0" placeholder="긴급출동 비용 ($)" />
+          </div>
+          <div class="write-field write-field--grow">
+            <label class="write-label" for="iBody">코멘트 Comments</label>
+            <textarea class="write-textarea" id="iBody" placeholder="경력·전문 차종·서비스 범위 등을 적어주세요"></textarea>
+          </div>
+        </div>
       </div>
-      <div class="write-field">
-        <label class="write-label" for="wAuthor">작성자 Author</label>
-        <input class="write-input" id="wAuthor" type="text" placeholder="닉네임" maxlength="20" />
-      </div>
-      <div class="write-field">
-        <label class="write-label" for="wContact">연락처 Contact<span class="required-mark">*</span></label>
-        <input class="write-input" id="wContact" type="tel" placeholder="예: 0412345678 (호주 10자리)" maxlength="20" />
-      </div>
+
       <div class="write-field">
         <label class="disclaimer-check">
           <input type="checkbox" id="wDisclaimer">
@@ -436,6 +615,7 @@
         </label>
       </div>
 
+      <p class="auth-error" id="wError"></p>
       <div class="write-modal-actions">
         <button class="write-cancel-btn" id="writeBtnCancel">취소</button>
         <button class="write-submit-btn" id="writeBtnSubmit">등록하기</button>
@@ -443,16 +623,191 @@
     </div>
   </div>
 
-  <!-- ── Detail Modal ── -->
-  <div class="post-detail-overlay" id="detailOverlay">
-    <div class="post-detail-card">
-      <div class="post-detail-header">
-        <div class="post-detail-title" id="detailTitle"></div>
-        <button class="post-detail-close" id="detailClose">✕</button>
+  <!-- ── 글 등록 문의하기 모달 (정비소/견인 — 관리자 등록 요청) ── -->
+  <div class="report-overlay" id="inquiryOverlay">
+    <div class="report-modal">
+      <div class="report-header">
+        <span class="report-title" id="inquiryTitle">📝 글 등록 문의하기</span>
+        <button class="report-close" id="inquiryClose" type="button" aria-label="닫기">✕</button>
       </div>
-      <div class="post-detail-meta" id="detailMeta"></div>
-      <div class="post-detail-body" id="detailBody"></div>
-      <div class="post-detail-contact" id="detailContact"></div>
+      <p class="report-desc" id="inquiryDesc">업체 정보를 남겨 주시면 관리자가 확인 후 등록해 드립니다. (관리자 검수 후 게시)</p>
+      <div class="write-field">
+        <label class="write-label" for="iqName">업체명 / 메카닉 이름<span class="required-mark">*</span></label>
+        <input class="write-input" id="iqName" type="text" placeholder="업체명 또는 메카닉 이름" maxlength="80" />
+      </div>
+      <div class="write-field">
+        <label class="write-label" for="iqContact">연락처<span class="required-mark">*</span></label>
+        <input class="write-input" id="iqContact" type="text" placeholder="전화번호 또는 카카오톡" maxlength="100" />
+      </div>
+      <div class="write-field">
+        <label class="write-label" for="iqEmail">회신 이메일</label>
+        <input class="write-input" id="iqEmail" type="email" placeholder="회신받을 이메일 (선택)" maxlength="120" />
+      </div>
+      <div class="write-field">
+        <label class="write-label" for="iqMsg">문의 내용</label>
+        <textarea class="write-textarea" id="iqMsg" placeholder="서비스 지역·요금·소개 등을 적어주세요"></textarea>
+      </div>
+      <p class="auth-error" id="iqError"></p>
+      <div class="report-actions">
+        <button class="filter-reset-btn" id="inquiryCancel" type="button">취소</button>
+        <button class="filter-apply-btn" id="inquirySubmit" type="button">문의 전송</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Post Detail Modal (Realestate 스타일) ── -->
+  <div class="post-detail-overlay" id="detailOverlay">
+    <div class="post-detail-card rea-detail">
+     <div class="rea-scroll">
+      <!-- Hero 사진 영역 (Placeholder) -->
+      <div class="rea-hero">
+        <div class="rea-hero-ph">
+          <svg width="54" height="54" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        </div>
+        <div class="rea-hero-top">
+          <button class="rea-ovl-btn" id="detailSaveBtn" type="button" aria-label="저장">☆</button>
+          <div class="rea-share-wrap">
+            <button class="rea-ovl-btn" id="detailShareBtn" type="button" aria-label="공유하기">🔗</button>
+            <div class="detail-share-menu" id="detailShareMenu">
+              <button type="button" data-share="kakao">💬 카카오톡 공유</button>
+              <button type="button" data-share="facebook">📘 페이스북 공유</button>
+              <button type="button" data-share="copy">🔗 링크 복사</button>
+            </div>
+          </div>
+        </div>
+        <div class="rea-hero-counter">1 / 5</div>
+      </div>
+
+      <!-- Sticky 네비 헤더 -->
+      <div class="rea-navbar">
+        <button class="rea-back" id="detailClose" type="button" aria-label="뒤로가기">‹</button>
+        <span class="rea-nav-title" id="detailNavTitle"></span>
+        <button class="rea-nav-close" id="detailCloseX" type="button" aria-label="닫기">✕</button>
+      </div>
+
+      <div class="rea-content">
+        <div class="rea-status" id="detailStatus"></div>
+        <div class="rea-price" id="detailPrice"></div>
+        <div class="rea-addr-row">
+          <span class="rea-addr" id="detailAddrText"></span>
+          <button class="detail-addr-copy" id="detailAddrCopy" type="button" title="주소 복사" aria-label="주소 복사">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          </button>
+        </div>
+        <div class="rea-summary" id="detailSummary"></div>
+
+        <div class="rea-section" id="detailLocation" style="display:none;">
+          <h3 class="rea-subtitle">Location</h3>
+          <div class="rea-map-wrap">
+            <div class="detail-mini-map" id="detailMiniMap"></div>
+            <button class="rea-map-expand" id="detailMapExpand" type="button" aria-label="지도 확대">⛶</button>
+          </div>
+          <div class="rea-loc-btns">
+            <a class="rea-loc-btn" id="detailDirBtn" target="_blank" rel="noopener noreferrer">
+              <span>📍 길찾기 <em>See travel times</em></span><span class="rea-loc-arrow">›</span></a>
+            <a class="rea-loc-btn" id="detailSvBtn" target="_blank" rel="noopener noreferrer">
+              <span>🛣️ 스트릿뷰 <em>Street View</em></span><span class="rea-loc-arrow">›</span></a>
+          </div>
+        </div>
+
+        <div class="rea-section">
+          <h3 class="rea-subtitle">Description</h3>
+          <div class="rea-desc" id="detailBody"></div>
+          <button class="rea-more" id="detailMore" type="button" style="display:none;">더보기 ›</button>
+        </div>
+
+        <div class="rea-section" id="detailFeaturesSec" style="display:none;">
+          <h3 class="rea-subtitle">Property features</h3>
+          <ul class="rea-features" id="detailFeatures"></ul>
+        </div>
+
+        <div class="rea-owner-actions" id="detailActions"></div>
+
+        <button class="rea-report" id="detailReportBtn" type="button">🚨 신고하기</button>
+      </div>
+     </div><!-- /rea-scroll -->
+
+      <!-- Sticky 하단 액션바 -->
+      <div class="rea-actionbar">
+        <button class="rea-contact-btn" id="detailContactBtn" type="button">연락처 보기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 지도 전체화면 확대 모달 ── -->
+  <div class="map-expand-overlay" id="mapExpandOverlay">
+    <div class="map-expand-canvas" id="mapExpandCanvas"></div>
+    <button class="map-expand-close" id="mapExpandClose" type="button" aria-label="지도 닫기">✕</button>
+    <div class="map-fab-group">
+      <a class="map-fab" id="mapFabDir" target="_blank" rel="noopener noreferrer" title="길찾기 (대중교통)" aria-label="길찾기">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M21.71 11.29l-9-9a1 1 0 0 0-1.42 0l-9 9a1 1 0 0 0 0 1.42l9 9a1 1 0 0 0 1.42 0l9-9a1 1 0 0 0 0-1.42zM14 14.5V12h-4v3H8v-4a1 1 0 0 1 1-1h5V7.5l3.5 3.5z"/></svg>
+      </a>
+      <a class="map-fab" id="mapFabSv" target="_blank" rel="noopener noreferrer" title="스트릿뷰" aria-label="스트릿뷰">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2.5"/><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/></svg>
+      </a>
+    </div>
+  </div>
+
+  <!-- ── 신고하기 모달 ── -->
+  <div class="report-overlay" id="reportOverlay">
+    <div class="report-modal">
+      <div class="report-header">
+        <span class="report-title">🚨 게시글 신고</span>
+        <button class="report-close" id="reportClose" type="button">✕</button>
+      </div>
+      <p class="report-desc">신고 사유를 선택해 주세요. 접수된 내용은 운영팀이 검토합니다.</p>
+      <div class="report-reasons" id="reportReasons">
+        <label class="report-reason"><input type="radio" name="reportReason" value="허위 매물 및 잘못된 정보"> 허위 매물 및 잘못된 정보</label>
+        <label class="report-reason"><input type="radio" name="reportReason" value="보증금/렌트비 사기 의심"> 보증금/렌트비 사기 의심</label>
+        <label class="report-reason"><input type="radio" name="reportReason" value="욕설, 비방 및 부적절한 내용"> 욕설, 비방 및 부적절한 내용</label>
+        <label class="report-reason"><input type="radio" name="reportReason" value="상업적 스팸 및 도배성 글"> 상업적 스팸 및 도배성 글</label>
+        <label class="report-reason"><input type="radio" name="reportReason" value="기타"> 기타 (직접 입력)</label>
+      </div>
+      <textarea class="report-etc write-input" id="reportEtc" placeholder="기타 사유를 입력해 주세요" style="display:none;"></textarea>
+      <p class="auth-error" id="reportError"></p>
+      <div class="report-actions">
+        <button class="filter-reset-btn" id="reportCancel" type="button">취소</button>
+        <button class="filter-apply-btn" id="reportSubmit" type="button">제출</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 이용약관 모달 ── -->
+  <div class="report-overlay" id="tosOverlay">
+    <div class="report-modal">
+      <div class="report-header">
+        <span class="report-title">이용약관 (Terms and Conditions)</span>
+        <button class="report-close" id="tosClose" type="button" aria-label="닫기">✕</button>
+      </div>
+      <div class="tos-body">
+        <p><strong>제1조 (목적 및 동의 - Introduction &amp; Acceptance)</strong><br>본 약관은 KoAus(이하 "서비스")가 제공하는 호주 한인 커뮤니티 정보 공유 서비스의 이용 조건을 규정합니다. 본 서비스에 접속하거나 이용함으로써 사용자는 본 약관에 동의하는 것으로 간주되며, 동의하지 않으실 경우 서비스를 이용하실 수 없습니다.</p>
+        <p><strong>제2조 (정보 공유 및 플랫폼의 면책 - Venue &amp; Limitation of Liability)</strong><br>서비스는 이용자 간 정보(구인구직, 쉐어하우스, 중고거래 등) 공유 공간만을 제공하는 온라인 플랫폼(Venue)입니다. 거래 및 계약의 당사자는 사용자 본인이며, 직거래나 정보 활용으로 인해 발생하는 모든 법적·금전적 분쟁과 직간접적 손실에 대해 당사는 법이 허용하는 최대 한도 내에서 책임을 지지 않습니다. 본 서비스는 호주 소비자법(ACL)이 보장하는 소비자 권리를 제한하지 않으며, 당사는 거래 일체에 개입하거나 보장하지 않습니다.</p>
+        <p><strong>제3조 (금지 행위 및 행동 규범 - User Conduct &amp; Online Safety Act)</strong><br>허위 매물, 사기성 정보, 욕설·비방, 타인 사칭, 봇(Bot)을 이용한 스팸 등은 엄격히 금지됩니다. 모든 사용자는 호주의 온라인 안전법 2021(Online Safety Act 2021)을 준수해야 하며, 위반 시 게시물은 사전 통보 없이 즉시 삭제되고 서비스 이용 제한 및 계정이 영구 정지될 수 있습니다.</p>
+        <p><strong>제4조 (준거법 - Governing Law)</strong><br>본 약관은 호주 퀸즐랜드(Queensland)주의 법률을 따르며, 본 웹사이트와 관련된 모든 분쟁은 퀸즐랜드주 법원의 관할에 속합니다.</p>
+        <p class="tos-note">※ 본 약관은 베타 서비스용 요약본이며, 서비스 고도화에 따라 정식 약관으로 대체될 수 있습니다.</p>
+      </div>
+      <div class="report-actions">
+        <button class="filter-apply-btn" id="tosConfirm" type="button">확인</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 개인정보처리방침 모달 ── -->
+  <div class="report-overlay" id="privacyOverlay">
+    <div class="report-modal">
+      <div class="report-header">
+        <span class="report-title">개인정보처리방침 (Privacy Policy)</span>
+        <button class="report-close" id="privacyClose" type="button" aria-label="닫기">✕</button>
+      </div>
+      <div class="tos-body">
+        <p><strong>제1조 (개인정보 수집의 원칙 - Collection)</strong><br>당사는 호주 개인정보보호법 1988(Privacy Act 1988) 및 호주 개인정보보호원칙(APPs)을 엄격히 준수합니다. 회원 가입, 보안 인증, 고객 지원 시 이름, 이메일 주소, 접속 IP 등 서비스 제공에 꼭 필요한 최소한의 정보만 수집합니다. 보안 및 봇 차단을 위해 Google reCAPTCHA가 기기 정보를 수집할 수 있습니다.</p>
+        <p><strong>제2조 (정보의 사용 목적 - Use of Information)</strong><br>수집된 개인정보 및 인증 정보는 웹사이트 계정 관리, 커뮤니티 게시판 이용 권한 부여, 고객 지원 응대, 스팸 봇 차단 및 플랫폼 보안 유지 등 서비스 제공 목적 외에는 절대 사용되지 않습니다. 작성한 게시물의 연락처 등 공개 정보는 이용자 본인의 책임 하에 게시됩니다.</p>
+        <p><strong>제3조 (데이터 보안 및 해외 이전 - Data Security &amp; Overseas Disclosure)</strong><br>당사는 수집된 데이터를 안전한 클라우드 서버(Firebase)에 보관합니다. 서비스 제공을 위해 데이터가 호주 외의 국가(미국 등)에 위치한 서버에 저장되거나 처리될 수 있습니다. 무단 접근을 막기 위한 최선의 보안 조치를 취하고 있으며, 심각한 데이터 유출 발생 시 필수 데이터 유출 통지(NDB) 제도에 따라 사용자 및 호주 정보보호위원회(OAIC)에 통보합니다.</p>
+        <p><strong>제4조 (사용자의 권리 - User Rights)</strong><br>사용자는 언제든지 자신의 개인정보에 대한 열람을 요청하거나 프로필을 통해 수정할 수 있습니다. 개인정보 파기 또는 계정 삭제를 원하실 경우 고객센터를 통해 요청하실 수 있으며, 관련 법령에 따라 신속히 파기 절차를 진행합니다.</p>
+      </div>
+      <div class="report-actions">
+        <button class="filter-apply-btn" id="privacyConfirm" type="button">확인</button>
+      </div>
     </div>
   </div>
 
@@ -461,7 +816,7 @@
     <div class="report-modal">
       <div class="report-header">
         <span class="report-title">✉️ 이메일 인증 필요</span>
-        <button class="report-close" id="verifyClose" type="button" aria-label="닫기">✕</button>
+        <button class="report-close" id="verifyClose" type="button">✕</button>
       </div>
       <p class="verify-modal-msg">게시글을 작성하려면 이메일 인증이 필요합니다. 메일함을 확인해 주세요.</p>
       <div class="report-actions">
@@ -471,10 +826,83 @@
     </div>
   </div>
 
+  <!-- ── Auth Modal ── -->
+  <div class="auth-overlay" id="authOverlay">
+    <div class="auth-modal">
+      <button class="auth-close" id="authClose" aria-label="닫기">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+      <div class="auth-title">◈ KoAus 계정</div>
+      <div class="auth-subtitle">로그인하여 게시판을 자유롭게 이용해 보세요</div>
+      <div class="auth-tabs">
+        <button class="auth-tab active" data-auth-tab="login">로그인</button>
+        <button class="auth-tab" data-auth-tab="signup">회원가입</button>
+      </div>
+
+      <!-- 로그인 폼 -->
+      <div id="authLoginForm">
+        <div class="auth-field">
+          <label class="auth-label" for="authLoginEmail">이메일</label>
+          <input class="auth-input" id="authLoginEmail" type="email" placeholder="email@example.com" autocomplete="email" />
+        </div>
+        <div class="auth-field">
+          <label class="auth-label" for="authLoginPw">비밀번호</label>
+          <input class="auth-input" id="authLoginPw" type="password" placeholder="비밀번호 입력" autocomplete="current-password" />
+        </div>
+        <div class="auth-error" id="authLoginError"></div>
+        <button class="auth-submit" id="authLoginSubmit">로그인</button>
+      </div>
+
+      <!-- 회원가입 폼 -->
+      <div id="authSignupForm" style="display:none">
+        <div class="auth-field">
+          <label class="auth-label" for="authSignupEmail">이메일</label>
+          <input class="auth-input" id="authSignupEmail" type="email" placeholder="email@example.com" autocomplete="email" />
+        </div>
+        <div class="auth-field">
+          <label class="auth-label" for="authSignupPw">비밀번호</label>
+          <input class="auth-input" id="authSignupPw" type="password" placeholder="6자 이상" autocomplete="new-password" />
+        </div>
+        <div class="auth-field">
+          <label class="auth-label" for="authSignupPwConfirm">비밀번호 확인</label>
+          <input class="auth-input" id="authSignupPwConfirm" type="password" placeholder="비밀번호 재입력" autocomplete="new-password" />
+        </div>
+        <!-- reCAPTCHA v2: 실제 운영 시 data-sitekey를 발급받은 키로 교체 (현재는 Google 공식 테스트 키) -->
+        <div class="auth-recaptcha">
+          <div class="g-recaptcha" data-sitekey="6LcUgAItAAAAAElFzz2TQxoCSR0uSPvcVS4N6PiO"
+               data-callback="onKoausRecaptcha" data-expired-callback="onKoausRecaptchaExpired"></div>
+        </div>
+        <label class="auth-agree">
+          <input type="checkbox" id="authAgree">
+          <span><button type="button" class="auth-tos-link" id="authTosLink">이용약관</button> 및 <button type="button" class="auth-tos-link" id="authPrivacyLink">개인정보처리방침</button> 동의 <em>(필수)</em></span>
+        </label>
+        <div class="auth-error" id="authSignupError"></div>
+        <button class="auth-submit" id="authSignupSubmit" disabled>회원가입</button>
+      </div>
+
+      <div class="auth-divider">또는</div>
+
+      <button class="auth-google" id="authGoogle">
+        <svg width="18" height="18" viewBox="0 0 48 48">
+          <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+          <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+          <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+          <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+        </svg>
+        Google 계정으로 로그인
+      </button>
+    </div>
+  </div>
+
   <footer class="site-footer"><p>KoAus &mdash; 호주 한인 포털 &nbsp;·&nbsp; 2026</p></footer>
 
   <script>
-    // ── Sidebar / Theme ──
+    // ── 구글 클라우드 API 키 ──
+    const GOOGLE_MAPS_KEY = 'AIzaSyDwogQ55V0-JqZ-ZYRTpYgNZWOdp_-5vOQ';
+
+    // ── Sidebar ──
     const hBtn = document.getElementById('hamburgerBtn');
     const cBtn = document.getElementById('sidebarCloseBtn');
     const sb   = document.getElementById('sidebar');
@@ -484,17 +912,23 @@
     hBtn.addEventListener('click', openSb);
     cBtn.addEventListener('click', closeSb);
     ov.addEventListener('click', closeSb);
-    document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeSb(); writeOverlay.classList.remove('open'); document.getElementById('detailOverlay').classList.remove('open'); } });
-    document.querySelectorAll(".accord-item, .accord-subgroup").forEach(it => it.classList.remove("open"));
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        closeSb();
+        closeWriteModal();
+      }
+    });
+    // 초기 상태: 모든 아코디언 강제 닫힘 (펼침 방지)
+    document.querySelectorAll('.accord-item, .accord-subgroup').forEach(it => it.classList.remove('open'));
     // Depth 2 (대분류) 토글 — 클릭 시 해당 소분류 컨테이너만 열고/닫음 (소분류 링크는 그대로 라우팅)
-    document.querySelectorAll(".sub-toggle").forEach(t => t.addEventListener("click", () => t.closest(".accord-subgroup").classList.toggle("open")));
-    document.querySelectorAll(".accord-header").forEach(btn => {
-      btn.addEventListener("click", () => {
-        const item = btn.closest(".accord-item");
-        const willOpen = !item.classList.contains("open");
+    document.querySelectorAll('.sub-toggle').forEach(t => t.addEventListener('click', () => t.closest('.accord-subgroup').classList.toggle('open')));
+    document.querySelectorAll('.accord-header').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const item = btn.closest('.accord-item');
+        const willOpen = !item.classList.contains('open');
         // 한 번에 하나만 — 열려있는 다른 카테고리는 닫기
-        document.querySelectorAll(".accord-item.open").forEach(o => { if (o !== item) o.classList.remove("open"); });
-        item.classList.toggle("open", willOpen);
+        document.querySelectorAll('.accord-item.open').forEach(o => { if (o !== item) o.classList.remove('open'); });
+        item.classList.toggle('open', willOpen);
       });
     });
     function applyTheme(t) {
@@ -506,137 +940,1296 @@
     if (themeToggleBtn) themeToggleBtn.addEventListener('click', () => applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'));
     applyTheme(localStorage.getItem('koaus-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
 
-    // ── Auto 게시판 (4대 통합 카테고리) ──
-    const CAT_LABELS = {
-      'used-car':  '중고차 (Buy & Sell)',
-      'mechanic':  '정비 및 인스펙션',
-      'emergency': '긴급출동 및 견인',
-      'rental':    '렌트카',
+    // ── Data ──
+    const STORE_KEY    = 'koaus-auto-posts';
+    const SEED_VERSION = '2026-05-auto-v2';   // SAMPLES 변경 시 localStorage 재시드용
+    const SAMPLES = [];
+
+    // ── State ──
+    // 숙박 기간(Duration) 분류 — 중복 선택 가능(배열)
+    const TYPE_ORDER  = ['ultra_short', 'short', 'mid', 'long'];
+    const TYPE_LABELS = {
+      ultra_short: { ko: '초단기', desc: '1일~2주' },
+      short:       { ko: '단기',   desc: '2주~4주' },
+      mid:         { ko: '중단기', desc: '1달~2달' },
+      long:        { ko: '장기',   desc: '2달 이상' },
+      any:         { ko: '기간 상관 없음', desc: '' },
     };
-    // 구 8개 카테고리 → 4개 그룹 매핑 (기존 데이터·링크 호환)
-    const CAT_GROUP = {
-      'used-car':'used-car', 'inspection':'mechanic', 'repair':'mechanic', 'quote':'mechanic',
-      'mechanic':'mechanic', 'emergency':'emergency', 'tow':'emergency', 'rental':'rental', 'lift':'rental',
-    };
-    const groupOf = c => CAT_GROUP[c] || 'used-car';
     const STATE_NAMES = { nsw:'NSW', vic:'VIC', qld:'QLD', wa:'WA', sa:'SA', tas:'TAS', act:'ACT', nt:'NT' };
-    const params   = new URLSearchParams(location.search);
-    const stateKey = (params.get('state') || '').toLowerCase();
-    const STORE_KEY = 'koaus-auto-posts';  // 단일 컬렉션, category 속성으로 구분
-    let activeCategory = groupOf(params.get('category'));  // 진입 시 ?category를 4그룹으로 매핑 (기본 used-car)
-    const PER_PAGE = 20;
-    let currentPage = 1;
 
-    function updateAutoTitle() {
-      document.getElementById('autoTitle').textContent = '🚗 ' + (STATE_NAMES[stateKey] ? STATE_NAMES[stateKey] + ' ' : '') + CAT_LABELS[activeCategory];
-      document.getElementById('autoSubtitle').textContent = 'Auto · ' + CAT_LABELS[activeCategory] + ' 게시판';
+    // ── Auto 4대 카테고리 ──
+    const CAT_LABELS = { rental:'렌트카', inspection:'동행 인스펙션·긴급출동', maintenance:'정비소', towing:'견인' };
+    const CAT_EN     = { rental:'Rental', inspection:'Inspection', maintenance:'Maintenance', towing:'Towing' };
+    // 카테고리별 동작: map(지도뷰 토글 노출), write('user'=직접 글쓰기 / 'inquiry'=관리자 등록 문의), filter(필터 그룹)
+    const CAT_CFG = {
+      rental:      { map:false, write:'user',    filter:'rental' },
+      inspection:  { map:false, write:'user',    filter:'inspection' },
+      maintenance: { map:true,  write:'inquiry', filter:'none' },
+      towing:      { map:true,  write:'inquiry', filter:'none' },
+    };
+    const ADMIN_EMAIL = 'admin@thekoaus.com';  // 글 등록 문의 수신 주소 (운영 시 교체)
+    // 구 카테고리/링크 → 신 4그룹 매핑 (기존 햄버거 링크·데이터 호환)
+    const CAT_GROUP = {
+      rental:'rental', lift:'rental',
+      inspection:'inspection',
+      maintenance:'maintenance', mechanic:'maintenance', repair:'maintenance', quote:'maintenance', 'used-car':'maintenance',
+      towing:'towing', tow:'towing', emergency:'towing',
+    };
+    const groupOf = c => CAT_GROUP[c] || 'rental';
+
+    const currentState = (new URLSearchParams(location.search).get('state') || '').toLowerCase();
+    // URL ?category= → 4그룹으로 매핑 (기본 rental). 페이지 내 탭으로도 전환
+    let activeCategory = groupOf(new URLSearchParams(location.search).get('category'));
+    const activeMode   = 'offer';  // Auto는 단일 모드 (accom의 방올리기/구하기 미사용)
+    let currentPage    = 1;
+    // 한 번에 20개씩만 렌더(페이지네이션). 향후 Firestore 전환 시:
+    //   query(collection(db,'accom_posts'), orderBy('id','desc'), limit(PER_PAGE))
+    //   다음 페이지는 startAfter(lastDoc) 커서로만 추가 조회 → read 비용 최소화.
+    const PER_PAGE     = 20;
+
+    // ── 카테고리 탭 전환 (렌트카 / 동행 인스펙션 / 정비 / 긴급출동·견인) ──
+    document.querySelectorAll('#autoTabs .accom-tab').forEach(btn => {
+      btn.addEventListener('click', () => switchCategory(btn.dataset.cat));
+    });
+
+    function updateBoardTitle() {
+      const st = STATE_NAMES[currentState];
+      document.getElementById('boardTitle').textContent = `🚗 ${st ? st + ' ' : ''}${CAT_LABELS[activeCategory]}`;
+      document.getElementById('boardSubtitle').textContent = `Auto · ${st ? st + ' · ' : ''}${CAT_LABELS[activeCategory]} 게시판`;
     }
 
-    function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-    function loadAll() { try { return JSON.parse(localStorage.getItem(STORE_KEY) || '[]'); } catch { return []; } }
-    function saveAll(arr) { localStorage.setItem(STORE_KEY, JSON.stringify(arr)); }
-    // 현재 활성 탭(그룹) 글만 필터링 (구 카테고리는 그룹으로 매핑해 비교)
-    function loadPosts() { return loadAll().filter(p => groupOf(p.category) === activeCategory); }
-
-    // 탭 전환
-    function setActiveCategory(cat) {
+    function switchCategory(cat) {
       if (!CAT_LABELS[cat]) return;
-      activeCategory = cat; currentPage = 1;
-      document.querySelectorAll('#autoTabs .auto-tab').forEach(t => t.classList.toggle('active', t.dataset.cat === cat));
-      updateAutoTitle();
-      renderPosts();
+      activeCategory = cat;
+      currentPage = 1;
+      areaBounds = null;       // 탭 전환 시 지역(지도) 검색 초기화
+      activeFilter = {};       // 탭 전환 시 상세 필터 초기화
+      clearFilterInputs();
+      const asb = document.getElementById('areaSearchBtn');
+      if (asb) asb.classList.remove('show');
+      document.querySelectorAll('#autoTabs .accom-tab').forEach(b => b.classList.toggle('active', b.dataset.cat === cat));
+      const cfg = CAT_CFG[cat];
+      // 지도 뷰 토글: 정비소/견인만 노출, 렌트카·인스펙션은 List 단독
+      const vt = document.getElementById('viewToggle');
+      if (vt) vt.style.display = cfg.map ? '' : 'none';
+      if (!cfg.map) switchView('list');
+      // 상세 필터 버튼: 렌트카/인스펙션만 노출
+      const fb = document.getElementById('filterModalBtn');
+      if (fb) fb.style.display = (cfg.filter === 'none') ? 'none' : '';
+      // 글쓰기 버튼: 정비소/견인은 직접 글쓰기 차단 → '글 등록 문의하기'
+      const wb = document.getElementById('writeBtnOpen');
+      if (wb) wb.textContent = (cfg.write === 'inquiry') ? '글 등록 문의하기' : '+ 글쓰기';
+      // 견인 카테고리에서만 하단 외부 견인 서비스 안내 배너 노출
+      const tb = document.getElementById('towBanner');
+      if (tb) tb.style.display = (cat === 'towing') ? '' : 'none';
+      updateBoardTitle();
+      renderAll();
     }
-    document.querySelectorAll('#autoTabs .auto-tab').forEach(t => t.addEventListener('click', () => setActiveCategory(t.dataset.cat)));
 
-    function renderPosts() {
-      const all = loadPosts().slice().sort((a, b) => b.id - a.id);
-      document.getElementById('boardCount').textContent = '총 ' + all.length + '건';
-      const list = document.getElementById('postList');
-      const pager = document.getElementById('pagination');
-      if (!all.length) { list.innerHTML = '<div class="post-empty">아직 등록된 글이 없습니다. 첫 글을 작성해보세요!</div>'; pager.innerHTML = ''; return; }
-      const totalPages = Math.max(1, Math.ceil(all.length / PER_PAGE));
-      if (currentPage > totalPages) currentPage = totalPages;
-      const start = (currentPage - 1) * PER_PAGE;
-      const items = all.slice(start, start + PER_PAGE);
-      list.innerHTML = items.map(p => {
-        const region = STATE_NAMES[p.state] || '';
-        const snip = (p.body || '').replace(/\s+/g, ' ').trim();
-        return '<div class="accom-card" data-id="' + p.id + '">'
-          + '<div class="accom-card-thumb"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l1.5-4.5A2 2 0 0 1 8.4 7h7.2a2 2 0 0 1 1.9 1.5L19 13"/><path d="M3 13h18v4a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1v-1H6v1a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><circle cx="7.5" cy="15.5" r="1"/><circle cx="16.5" cy="15.5" r="1"/></svg></div>'
-          + '<div class="accom-card-info">'
-          +   '<div class="auto-card-title">' + escHtml(p.title) + '</div>'
-          +   (snip ? '<div class="auto-card-snip">' + escHtml(snip) + '</div>' : '')
-          +   '<div class="auto-card-meta">' + (region ? '📍 ' + region + ' · ' : '') + '👤 ' + escHtml(p.author || '익명') + ' · 🗓 ' + p.date + (p.time ? ' ' + p.time : '') + '</div>'
-          + '</div>'
-          + '</div>';
-      }).join('');
-      list.querySelectorAll('.accom-card').forEach(row => row.addEventListener('click', () => openDetail(row.dataset.id)));
-      pager.innerHTML = '';
-      if (totalPages > 1) {
-        for (let i = 1; i <= totalPages; i++) pager.innerHTML += '<button class="pagination-btn' + (i === currentPage ? ' active' : '') + '" data-page="' + i + '">' + i + '</button>';
-        pager.querySelectorAll('.pagination-btn').forEach(b => b.addEventListener('click', () => { currentPage = parseInt(b.dataset.page); renderPosts(); window.scrollTo({ top: 0, behavior: 'smooth' }); }));
+    // ── 상세 필터 모달 (카테고리별 필드) ──
+    const filterOverlay = document.getElementById('filterOverlay');
+    let activeFilter = {};  // applyFilters가 참조하는 현재 적용 필터
+    const _fv  = id => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
+    const _set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
+
+    function showCatFilter() {
+      document.querySelectorAll('#filterOverlay .cat-filter').forEach(g => {
+        g.style.display = (g.dataset.filter === activeCategory) ? '' : 'none';
+      });
+    }
+    function currentFilter() {
+      if (activeCategory === 'rental') return {
+        cat:'rental', region:_fv('ffRegion'), brand:_fv('ffBrand'),
+        maxPrice:_fv('ffMaxPrice'), maxMileage:_fv('ffMaxMileage'), minYear:_fv('ffMinYear'),
+      };
+      if (activeCategory === 'inspection') return { cat:'inspection', maxInsp:_fv('ffMaxInsp'), maxEmer:_fv('ffMaxEmer') };
+      return { cat: activeCategory };
+    }
+    function applyFilterValues(s) {
+      if (!s) return;
+      if (s.cat === 'rental') { _set('ffRegion',s.region); _set('ffBrand',s.brand); _set('ffMaxPrice',s.maxPrice); _set('ffMaxMileage',s.maxMileage); _set('ffMinYear',s.minYear); }
+      else if (s.cat === 'inspection') { _set('ffMaxInsp',s.maxInsp); _set('ffMaxEmer',s.maxEmer); }
+    }
+    function clearFilterInputs() {
+      ['ffRegion','ffBrand','ffMaxPrice','ffMaxMileage','ffMinYear','ffMaxInsp','ffMaxEmer'].forEach(id => _set(id,''));
+    }
+
+    function openFilterModal() {
+      showCatFilter();
+      renderRecentSearches();
+      filterOverlay.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeFilterModal() {
+      filterOverlay.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+    document.getElementById('filterModalBtn').addEventListener('click', openFilterModal);
+    document.getElementById('filterModalClose').addEventListener('click', closeFilterModal);
+    filterOverlay.addEventListener('click', e => { if (e.target === filterOverlay) closeFilterModal(); });
+
+    document.getElementById('filterApplyBtn').addEventListener('click', () => runSearch(true));
+    document.getElementById('filterResetBtn').addEventListener('click', () => {
+      clearFilterInputs(); activeFilter = {}; currentPage = 1;
+      renderAll(); closeFilterModal();
+    });
+
+    function runSearch(save) {
+      currentPage = 1;
+      activeFilter = currentFilter();
+      if (save) addRecentSearch(activeFilter);
+      closeFilterModal();
+      renderAll();
+    }
+
+    // 검색된 지역으로 지도 중심을 스무스하게 이동 + 이동 후 영역(bounds) 기준 필터
+    let pendingSearchCenter = null;
+    function applyPendingCenter() {
+      if (!pendingSearchCenter || !mapReady || !map) return;  // 맵 로딩 중이면 initMap에서 재시도
+      const c = pendingSearchCenter; pendingSearchCenter = null;
+      programmaticMove = true;
+      map.panTo({ lat: c.lat, lng: c.lng });
+      map.setZoom(13);
+      google.maps.event.addListenerOnce(map, 'idle', () => {
+        areaBounds = map.getBounds();
+        programmaticMove = false;
+        currentPage = 1;
+        renderAll();
+      });
+    }
+
+    // ── 최근 검색 기록 (localStorage 우선 + Firestore best-effort 동기화) ──
+    const RECENT_SEARCH_KEY = () => 'koaus-recent-searches-' + ((window.koausAuth && window.koausAuth.user && window.koausAuth.user.uid) || 'guest');
+    function loadRecentSearches() { try { return JSON.parse(localStorage.getItem(RECENT_SEARCH_KEY()) || '[]'); } catch { return []; } }
+    function saveRecentSearches(arr) { localStorage.setItem(RECENT_SEARCH_KEY(), JSON.stringify(arr.slice(0, 5))); }
+    function searchLabel(s) {
+      const parts = [];
+      if (s.cat === 'rental') {
+        if (s.region)     parts.push(s.region);
+        if (s.brand)      parts.push(s.brand);
+        if (s.maxPrice)   parts.push('≤$' + s.maxPrice);
+        if (s.maxMileage) parts.push('≤' + s.maxMileage + 'km');
+        if (s.minYear)    parts.push(s.minYear + '년~');
+      } else if (s.cat === 'inspection') {
+        if (s.maxInsp) parts.push('인스펙션 ≤$' + s.maxInsp);
+        if (s.maxEmer) parts.push('출동 ≤$' + s.maxEmer);
+      }
+      return parts.join(' · ') || '전체';
+    }
+    function addRecentSearch(s) {
+      if (searchLabel(s) === '전체') return;  // 빈 검색은 저장 안 함
+      const label = searchLabel(s);
+      let arr = loadRecentSearches().filter(x => searchLabel(x) !== label);
+      arr.unshift(s);
+      arr = arr.slice(0, 8);
+      saveRecentSearches(arr);
+      syncRecentToFirestore(arr);  // best-effort
+    }
+    function renderRecentSearches() {
+      const box = document.getElementById('recentSearches');
+      if (!box) return;
+      // 현재 카테고리의 최근 검색만 노출
+      const arr = loadRecentSearches().map((s, i) => ({ s, i })).filter(x => (x.s.cat || 'rental') === activeCategory);
+      if (!arr.length) { box.innerHTML = ''; return; }
+      box.innerHTML =
+        '<div class="recent-head"><span class="recent-label">최근 검색</span>' +
+        '<button type="button" class="recent-clear" id="recentClearBtn">전체 지우기</button></div>' +
+        '<div class="recent-chips">' + arr.map(({ s, i }) =>
+          `<span class="recent-chip">
+             <button type="button" class="recent-chip-main" data-idx="${i}">${escHtml(searchLabel(s))}</button>
+             <button type="button" class="recent-chip-x" data-idx="${i}" aria-label="이 검색 기록 삭제">✕</button>
+           </span>`).join('') + '</div>';
+      box.querySelector('#recentClearBtn').addEventListener('click', clearRecentSearches);
+      box.querySelectorAll('.recent-chip-main').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const s = loadRecentSearches()[parseInt(btn.dataset.idx, 10)];
+          if (!s) return;
+          applyFilterValues(s);
+          runSearch(false);  // 원클릭: 즉시 적용 (중복 저장 안 함)
+        });
+      });
+      box.querySelectorAll('.recent-chip-x').forEach(btn => {
+        btn.addEventListener('click', e => { e.stopPropagation(); removeRecentSearch(parseInt(btn.dataset.idx, 10)); });
+      });
+    }
+    // 개별 최근 검색 삭제 — 해당 항목만 제거 후 localStorage/Firestore 업데이트
+    function removeRecentSearch(idx) {
+      const arr = loadRecentSearches();
+      if (idx < 0 || idx >= arr.length) return;
+      arr.splice(idx, 1);
+      saveRecentSearches(arr);
+      syncRecentToFirestore(arr);  // 해당 데이터만 빠진 배열로 Firestore 업데이트
+      renderRecentSearches();
+    }
+    // 최근 검색 전체 삭제 — UI 즉시 비움 + localStorage 제거 + Firestore []로 업데이트
+    function clearRecentSearches() {
+      localStorage.removeItem(RECENT_SEARCH_KEY());
+      syncRecentToFirestore([]);
+      renderRecentSearches();
+    }
+    // Firestore best-effort (콘솔에서 Firestore 활성화 + users 규칙 배포 시 동작)
+    async function syncRecentToFirestore(arr) {
+      try {
+        const u = window.koausAuth && window.koausAuth.user;
+        if (!u || !window.koausDb || !window.koausFs) return;
+        const { doc, setDoc } = window.koausFs;
+        await setDoc(doc(window.koausDb, 'users', u.uid), { recentSearches: arr }, { merge: true });
+      } catch (e) { /* Firestore 미설정 시 무시 (localStorage로 동작) */ }
+    }
+    async function pullRecentFromFirestore() {
+      try {
+        const u = window.koausAuth && window.koausAuth.user;
+        if (!u || !window.koausDb || !window.koausFs) return;
+        const { doc, getDoc } = window.koausFs;
+        const snap = await getDoc(doc(window.koausDb, 'users', u.uid));
+        if (snap.exists() && Array.isArray(snap.data().recentSearches)) {
+          saveRecentSearches(snap.data().recentSearches);
+          if (filterOverlay.classList.contains('open')) renderRecentSearches();
+        }
+      } catch (e) {}
+    }
+    window.addEventListener('koausAuthReady', pullRecentFromFirestore);
+
+    // 지역 검색창 자동완성 (글쓰기 주소와 동일 로직 재사용)
+    function initRegionAutocomplete() { wireAutocomplete('ffRegion', 'ffRegionSuggest'); }
+
+    // ── Write Modal ──
+    const writeOverlay = document.getElementById('writeOverlay');
+
+    let editingId = null;  // 수정 중인 글 id (null이면 새 글)
+
+    // 글쓰기 버튼 클릭 시에만 이메일 인증 검사 (소프트 게이트)
+    const verifyOverlay = document.getElementById('verifyOverlay');
+    const openVerifyModal  = () => verifyOverlay.classList.add('open');
+    const closeVerifyModal = () => verifyOverlay.classList.remove('open');
+    document.getElementById('verifyClose').addEventListener('click', closeVerifyModal);
+    document.getElementById('verifyOkBtn').addEventListener('click', closeVerifyModal);
+    verifyOverlay.addEventListener('click', e => { if (e.target === verifyOverlay) closeVerifyModal(); });
+    document.getElementById('verifyResendBtn').addEventListener('click', async () => {
+      const u = window.koausAuth && window.koausAuth.user;
+      if (!u) return;
+      try { await sendEmailVerification(u); alert('인증 메일이 재전송되었습니다.'); }
+      catch (e) { alert('잠시 후 다시 시도해 주세요.'); }
+    });
+    document.getElementById('writeBtnOpen').addEventListener('click',   () => {
+      // 정비소/견인: 일반 유저 직접 글쓰기 차단 → 관리자 등록 문의 모달
+      if (CAT_CFG[activeCategory].write === 'inquiry') { openInquiryModal(); return; }
+      const u = window.koausAuth && window.koausAuth.user;
+      if (!u) { alert('글을 작성하려면 로그인이 필요합니다.'); window.koausAuth && window.koausAuth.openAuthModal(); return; }
+      if (!u.emailVerified) { openVerifyModal(); return; }
+      openWriteModal();
+    });
+
+    // ── 글 등록 문의 모달 (정비소/견인) ──
+    const inquiryOverlay = document.getElementById('inquiryOverlay');
+    function openInquiryModal() {
+      document.getElementById('inquiryTitle').textContent = `📝 ${CAT_LABELS[activeCategory]} 등록 문의`;
+      ['iqName','iqContact','iqEmail','iqMsg'].forEach(id => { document.getElementById(id).value = ''; });
+      document.getElementById('iqError').textContent = '';
+      inquiryOverlay.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeInquiryModal() { inquiryOverlay.classList.remove('open'); document.body.style.overflow = ''; }
+    document.getElementById('inquiryClose').addEventListener('click', closeInquiryModal);
+    document.getElementById('inquiryCancel').addEventListener('click', closeInquiryModal);
+    inquiryOverlay.addEventListener('click', e => { if (e.target === inquiryOverlay) closeInquiryModal(); });
+    document.getElementById('inquirySubmit').addEventListener('click', () => {
+      const name    = document.getElementById('iqName').value.trim();
+      const contact = document.getElementById('iqContact').value.trim();
+      const email   = document.getElementById('iqEmail').value.trim();
+      const msg     = document.getElementById('iqMsg').value.trim();
+      const err     = document.getElementById('iqError');
+      err.textContent = '';
+      if (!name || !contact) { err.textContent = '업체명과 연락처를 입력해 주세요.'; return; }
+      if (hasProfanity(name) || hasProfanity(msg)) { err.textContent = '부적절한 단어가 포함되어 있습니다.'; return; }
+      const subject = `[KoAus ${CAT_LABELS[activeCategory]}] 등록 문의 - ${name}`;
+      const bodyText = [
+        `카테고리: ${CAT_LABELS[activeCategory]} (${STATE_NAMES[currentState] || '전 지역'})`,
+        `업체명/이름: ${name}`, `연락처: ${contact}`, `회신 이메일: ${email || '-'}`,
+        '', '문의 내용:', msg || '-',
+      ].join('\n');
+      try {
+        if (window.koausDb && window.koausFs) {
+          const { addDoc, collection, serverTimestamp } = window.koausFs;
+          addDoc(collection(window.koausDb, 'listing_inquiries'), {
+            category: activeCategory, state: currentState, name, contact, email, message: msg, createdAt: serverTimestamp(),
+          }).catch(() => {});
+        }
+      } catch (e) {}
+      window.location.href = `mailto:${ADMIN_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(bodyText)}`;
+      closeInquiryModal();
+      showToast('문의가 접수되었습니다. 관리자 검토 후 등록됩니다.');
+    });
+    document.getElementById('writeBtnClose').addEventListener('click',  closeWriteModal);
+    document.getElementById('writeBtnCancel').addEventListener('click', closeWriteModal);
+    writeOverlay.addEventListener('click', e => { if (e.target === writeOverlay) closeWriteModal(); });
+
+    function setWriteMode(mode) {
+      const isEdit = mode === 'edit';
+      document.querySelector('.write-modal-title').innerHTML = isEdit
+        ? '글 수정 <em>Edit Post</em>'
+        : `글쓰기 <em>${CAT_LABELS[activeCategory]}</em>`;
+      document.getElementById('writeBtnSubmit').textContent = isEdit ? '수정 완료' : '등록하기';
+    }
+    // 카테고리별 글쓰기 폼 표시 (rental / inspection)
+    function showCatForm() {
+      document.querySelectorAll('#writeOverlay .cat-form').forEach(f => {
+        f.style.display = (f.dataset.form === activeCategory) ? '' : 'none';
+      });
+      syncInspPriceDisabled();
+    }
+    // 인스펙션: 서비스 제공 체크 해제 시 해당 가격 입력 비활성화(회색 처리)
+    function syncInspPriceDisabled() {
+      const insp = document.getElementById('iInspOn'), inspP = document.getElementById('iInspPrice');
+      const emer = document.getElementById('iEmerOn'), emerP = document.getElementById('iEmerPrice');
+      if (insp && inspP) { inspP.disabled = !insp.checked; if (!insp.checked) inspP.value = ''; }
+      if (emer && emerP) { emerP.disabled = !emer.checked; if (!emer.checked) emerP.value = ''; }
+    }
+    document.getElementById('iInspOn').addEventListener('change', syncInspPriceDisabled);
+    document.getElementById('iEmerOn').addEventListener('change', syncInspPriceDisabled);
+
+    function resetWriteForm() {
+      ['rTitle','rBrand','rModel','rYear','rMileage','rRwc','rRego','rPrice','rRegion','rContact','rBody',
+       'iName','iContact','iRegion','iTime','iInspPrice','iEmerPrice','iBody'].forEach(id => {
+        const el = document.getElementById(id); if (el) el.value = '';
+      });
+      document.getElementById('iInspOn').checked = true;
+      document.getElementById('iEmerOn').checked = false;
+      document.getElementById('wDisclaimer').checked = false;
+      syncInspPriceDisabled();
+    }
+    // 로그인 사용자 닉네임 (작성자 고정값)
+    function currentNickname() {
+      const u = window.koausAuth && window.koausAuth.user;
+      return localStorage.getItem('koaus-nickname') || u?.displayName?.split(' ')[0] || u?.email?.split('@')[0] || '';
+    }
+    function openWriteModal() {
+      editingId = null;
+      setWriteMode('create');
+      showCatForm();
+      document.getElementById('wAuthorName').textContent = currentNickname() || '-';  // 헤더 작성자 배지
+      writeOverlay.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+    function openWriteModalForEdit(p) {
+      editingId = p.id;
+      const cat = groupOf(p.category);
+      if (cat === 'rental') {
+        _set('rTitle', p.title); _set('rBrand', p.brand); _set('rModel', p.model);
+        _set('rYear', p.year); _set('rMileage', p.mileage); _set('rRwc', p.rwc);
+        _set('rRego', p.regoExpiry); _set('rPrice', p.price); _set('rRegion', p.region);
+        _set('rContact', p.contact); _set('rBody', p.body);
+      } else if (cat === 'inspection') {
+        _set('iName', p.title); _set('iContact', p.contact); _set('iRegion', p.region); _set('iTime', p.timeSlot);
+        document.getElementById('iInspOn').checked = !!p.inspectionAvailable;
+        document.getElementById('iEmerOn').checked = !!p.emergencyAvailable;
+        _set('iInspPrice', p.inspectionPrice); _set('iEmerPrice', p.emergencyPrice);
+        _set('iBody', p.body);
+      }
+      document.getElementById('wAuthorName').textContent = p.author || currentNickname() || '-';
+      setWriteMode('edit');
+      showCatForm();
+      document.getElementById('detailOverlay').classList.remove('open');
+      writeOverlay.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeWriteModal() {
+      writeOverlay.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    document.getElementById('writeBtnSubmit').addEventListener('click', () => {
+      // 로그인 필수: 미로그인 시 로그인 모달을 띄우고, 로그인 직후 등록을 이어서 진행
+      if (!window.koausAuth || !window.koausAuth.user) {
+        alert('글을 등록하려면 로그인이 필요합니다.');
+        if (window.koausAuth) {
+          window.koausAuth.afterLogin = submitPost;  // 로그인 성공 시 자동 재시도
+          window.koausAuth.openAuthModal();
+        }
+        return;
+      }
+      submitPost();
+    });
+
+    // ── 주소 자동완성 (Google Places) — 도로명/지역명만으로도 선택 가능 (번지수 불필요) ──
+    let acService = null;
+    const acWired = new Set();
+    function wireAutocomplete(inputId, listId) {
+      if (acWired.has(inputId)) return;
+      if (!(window.google && google.maps && google.maps.places && google.maps.places.AutocompleteService)) return;
+      if (!acService) acService = new google.maps.places.AutocompleteService();
+      const input = document.getElementById(inputId);
+      const list  = document.getElementById(listId);
+      if (!input || !list) return;
+      acWired.add(inputId);
+      let timer = null;
+      const hide = () => { list.classList.remove('show'); list.innerHTML = ''; };
+      input.addEventListener('input', () => {
+        const q = input.value.trim();
+        clearTimeout(timer);
+        if (q.length < 2) { hide(); return; }
+        timer = setTimeout(() => {
+          // types: 'geocode' → 상세 주소 + 도로명/지역명 모두 추천 (호주 한정)
+          acService.getPlacePredictions({ input: q, componentRestrictions: { country: 'au' }, types: ['geocode'] }, (preds, status) => {
+            if (status !== google.maps.places.PlacesServiceStatus.OK || !preds || !preds.length) { hide(); return; }
+            list.innerHTML = preds.slice(0, 6).map(p => {
+              const sf   = p.structured_formatting || {};
+              const main = escHtml(sf.main_text || p.description);
+              const sec  = sf.secondary_text ? `<span class="addr-sub">${escHtml(sf.secondary_text)}</span>` : '';
+              return `<li data-desc="${escHtml(p.description)}">📍 ${main} ${sec}</li>`;
+            }).join('');
+            list.classList.add('show');
+          });
+        }, 250);
+      });
+      list.addEventListener('click', e => {
+        const li = e.target.closest('li');
+        if (!li) return;
+        input.value = li.dataset.desc;  // 번지수 없는 도로명/지역명도 그대로 인정
+        hide();
+      });
+      input.addEventListener('keydown', e => { if (e.key === 'Escape') hide(); });
+      document.addEventListener('click', e => { if (!e.target.closest('.addr-ac')) hide(); });
+    }
+    // 글쓰기 주소 + 필터 지역 검색창 모두 연결
+    function initAddressAutocomplete() {
+      wireAutocomplete('wAddress', 'wAddressSuggest');
+      wireAutocomplete('ffRegion', 'ffRegionSuggest');
+    }
+
+    // 주소 텍스트 → 좌표 변환 (google.maps.Geocoder 우선, 실패 시 REST 폴백)
+    function geocode(address) {
+      return new Promise(resolve => {
+        if (window.google && google.maps && google.maps.Geocoder) {
+          new google.maps.Geocoder().geocode({ address }, (results, status) => {
+            if (status === 'OK' && results && results[0]) {
+              const loc = results[0].geometry.location;
+              resolve({ lat: loc.lat(), lng: loc.lng() });
+            } else {
+              resolve(null);
+            }
+          });
+        } else {
+          geocodeAddress(address).then(resolve).catch(() => resolve(null));
+        }
+      });
+    }
+
+    async function submitPost() {
+      const user = window.koausAuth && window.koausAuth.user;
+      if (!user) { window.koausAuth && window.koausAuth.openAuthModal(); return; }
+      const wErr = document.getElementById('wError');
+      wErr.textContent = '';
+
+      let fields;
+      if (activeCategory === 'rental') {
+        const title = _fv('rTitle'), body = _fv('rBody');
+        if (hasProfanity(title) || hasProfanity(body)) { wErr.textContent = '부적절한 단어가 포함되어 있습니다.'; return; }
+        if (!title) { alert('제목을 입력해 주세요.'); return; }
+        const priceVal = _fv('rPrice');
+        fields = {
+          title, body,
+          brand:      _fv('rBrand'),
+          model:      _fv('rModel'),
+          year:       _fv('rYear'),
+          mileage:    _fv('rMileage'),
+          rwc:        _fv('rRwc'),
+          regoExpiry: _fv('rRego'),
+          price:      priceVal ? parseInt(priceVal, 10) : 0,
+          region:     _fv('rRegion'),
+          contact:    _fv('rContact'),
+        };
+      } else if (activeCategory === 'inspection') {
+        const title = _fv('iName'), body = _fv('iBody');
+        if (hasProfanity(title) || hasProfanity(body)) { wErr.textContent = '부적절한 단어가 포함되어 있습니다.'; return; }
+        if (!title) { alert('메카닉 이름(또는 업체명)을 입력해 주세요.'); return; }
+        const inspOn = document.getElementById('iInspOn').checked;
+        const emerOn = document.getElementById('iEmerOn').checked;
+        if (!inspOn && !emerOn) { alert('동행 인스펙션·긴급출동 중 최소 하나의 서비스를 선택해 주세요.'); return; }
+        fields = {
+          title, body,
+          contact:  _fv('iContact'),
+          region:   _fv('iRegion'),
+          timeSlot: _fv('iTime'),
+          inspectionAvailable: inspOn,
+          inspectionPrice: inspOn ? (parseInt(_fv('iInspPrice'), 10) || 0) : 0,
+          emergencyAvailable: emerOn,
+          emergencyPrice: emerOn ? (parseInt(_fv('iEmerPrice'), 10) || 0) : 0,
+        };
+      } else {
+        return;  // 정비소/견인은 직접 글쓰기 불가 (관리자 등록 문의)
+      }
+
+      // 면책 조항 동의 필수
+      if (!document.getElementById('wDisclaimer').checked) { alert('등록을 위해 면책 조항에 동의해 주세요.'); return; }
+
+      const nick = currentNickname() || user.displayName?.split(' ')[0] || user.email?.split('@')[0] || '사용자';
+      const now = new Date();
+      const pad = n => String(n).padStart(2, '0');
+      const date = `${pad(now.getMonth() + 1)}/${pad(now.getDate())}`;
+      const time = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+
+      const posts = loadPosts();
+      if (editingId != null) {
+        const idx = posts.findIndex(x => String(x.id) === String(editingId));
+        if (idx < 0) { editingId = null; return; }
+        Object.assign(posts[idx], fields);
+        savePosts(posts);
+        recordMyPost(posts[idx]);
+        editingId = null;
+      } else {
+        const target = {
+          id: Date.now(), state: currentState, category: activeCategory, isPremium: false,
+          author: nick, uid: user.uid || '', email: user.email || '',
+          authorUid: user.uid || '', authorEmail: user.email || '',
+          date, time, ...fields,
+        };
+        posts.push(target);
+        savePosts(posts);
+        recordMyPost(target);
+      }
+
+      currentPage = 1;
+      setWriteMode('create');
+      renderAll();
+      closeWriteModal();
+      resetWriteForm();
+    }
+
+    // ── Helpers ──
+    function escHtml(s) {
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+    function propTypeLabel(t) {
+      return { house:'House', apartment:'Apartment', townhouse:'Townhouse', villa:'Villa', unit:'Unit' }[t] || 'Property';
+    }
+    const ROOM_LABELS = { master:'마스터룸', second:'세컨룸', single:'독방', living_share:'거실쉐어', sunroom:'썬룸', share:'쉐어' };
+    const GENDER_LABELS = { male:'남', female:'여', any:'성별 무관' };
+    // 욕설/금칙어 필터 — 제목/상세 설명/닉네임 검사용 (부분 포함 시 차단)
+    const BAD_WORDS = ['시발','씨발','시팔','씨팔','씨발년','개새끼','새끼','병신','지랄','존나','좆','좆같','니미','닥쳐','꺼져','엿먹어','미친놈','미친년','썅','등신','후레','보지','자지','걸레','창녀','fuck','fucking','fuck you','shit','bitch','asshole','bastard','dick','cunt','motherfucker','slut','whore','retard'];
+    function hasProfanity(text) {
+      if (!text) return false;
+      const low = String(text).toLowerCase().replace(/\s+/g, '');
+      return BAD_WORDS.some(w => low.includes(w.toLowerCase().replace(/\s+/g, '')));
+    }
+    // 게시글의 상세 필터 항목들을 태그 텍스트 배열로
+    function filterTags(p) {
+      const tags = [];
+      const ptypes = Array.isArray(p.types) ? p.types : (p.type ? [p.type] : []);
+      ptypes.forEach(t => { if (TYPE_LABELS[t]) tags.push('📅 ' + TYPE_LABELS[t].ko); });
+      if (p.propType) tags.push(propTypeLabel(p.propType));
+      const rooms = Array.isArray(p.roomTypes) ? p.roomTypes : (p.roomType ? [p.roomType] : []);
+      rooms.forEach(r => { if (ROOM_LABELS[r]) tags.push('🛏 ' + ROOM_LABELS[r]); });
+      if (p.gender && GENDER_LABELS[p.gender]) tags.push('👤 ' + GENDER_LABELS[p.gender]);
+      if (p.availableDate) tags.push('🗓 입주 ' + p.availableDate);
+      if (p.parking)     tags.push('🅿 주차 가능');
+      if (p.petFriendly) tags.push('🐾 반려동물 가능');
+      if (p.kidsInHouse) tags.push('👶 아이 있는 집');
+      if (p.airCon)      tags.push('❄ 에어컨');
+      return tags;
+    }
+    function loadPosts() {
+      const ver = localStorage.getItem(STORE_KEY + '-v');
+      const raw = localStorage.getItem(STORE_KEY);
+      if (raw && ver === SEED_VERSION) {
+        const posts = JSON.parse(raw);
+        // 기존 데이터 맵핑: mode(방올리기/구하기) 및 types(기간 배열) 보정
+        let migrated = false;
+        posts.forEach(p => {
+          if (!p.mode) { p.mode = p.postType === 'looking' ? 'find' : 'offer'; migrated = true; }
+          if (!Array.isArray(p.types)) { p.types = p.type ? [p.type] : ['short']; migrated = true; }
+          if (!Array.isArray(p.roomTypes)) { p.roomTypes = p.roomType ? [p.roomType] : []; migrated = true; }
+        });
+        if (migrated) localStorage.setItem(STORE_KEY, JSON.stringify(posts));
+        return posts;
+      }
+      // 시드 버전이 바뀌면 최신 테스트 데이터로 재시드
+      localStorage.setItem(STORE_KEY, JSON.stringify(SAMPLES));
+      localStorage.setItem(STORE_KEY + '-v', SEED_VERSION);
+      return SAMPLES;
+    }
+    function savePosts(posts) { localStorage.setItem(STORE_KEY, JSON.stringify(posts)); }
+
+    // ── 저장(북마크) / 최근 본 글 / 내가 쓴 글 (마이페이지 연동) ──
+    const SAVED_KEY   = 'koaus-saved-posts';
+    const RECENT_KEY  = 'koaus-recent-posts';
+    const MYPOSTS_KEY = 'koaus-my-posts';
+    const BOARD       = 'auto';
+
+    function readJSON(key) { try { return JSON.parse(localStorage.getItem(key) || '[]'); } catch { return []; } }
+    function isSaved(id)   { return readJSON(SAVED_KEY).some(s => s.board === BOARD && String(s.id) === String(id)); }
+    function toggleSaved(p) {
+      const saved = readJSON(SAVED_KEY);
+      const idx = saved.findIndex(s => s.board === BOARD && String(s.id) === String(p.id));
+      if (idx >= 0) saved.splice(idx, 1);
+      else saved.unshift({ board: BOARD, id: p.id, title: p.title, author: p.author, authorEmail: p.authorEmail || '', date: p.date, time: p.time || '', price: p.price || 0 });
+      localStorage.setItem(SAVED_KEY, JSON.stringify(saved));
+    }
+    function recordRecent(p) {
+      let recent = readJSON(RECENT_KEY).filter(r => !(r.board === BOARD && String(r.id) === String(p.id)));
+      recent.unshift({ board: BOARD, id: p.id, title: p.title, author: p.author, authorEmail: p.authorEmail || '', date: p.date, time: p.time || '' });
+      localStorage.setItem(RECENT_KEY, JSON.stringify(recent.slice(0, 30)));
+    }
+    function recordMyPost(p) {
+      const mine = readJSON(MYPOSTS_KEY).filter(r => !(r.board === BOARD && String(r.id) === String(p.id)));
+      mine.unshift({ board: BOARD, id: p.id, title: p.title, state: p.state || '', author: p.author, authorEmail: p.authorEmail || '', date: p.date, time: p.time || '' });
+      localStorage.setItem(MYPOSTS_KEY, JSON.stringify(mine));
+    }
+    function removeRecord(key, id) {
+      localStorage.setItem(key, JSON.stringify(readJSON(key).filter(r => !(r.board === BOARD && String(r.id) === String(id)))));
+    }
+    // 현재 로그인 사용자가 작성한 글인지 — 닉네임이 아닌 고유 식별자(uid/email)로 판별
+    function isMine(p) {
+      const u = window.koausAuth && window.koausAuth.user;
+      if (!u) return false;
+      const puid  = p.uid   || p.authorUid;
+      const pmail = p.email || p.authorEmail;
+      if (u.uid && puid && u.uid === puid) return true;
+      if (u.email && pmail && u.email === pmail) return true;
+      return false;
+    }
+    function maskEmailPrefix(email) {
+      if (!email) return '';
+      const local = String(email).split('@')[0];
+      return escHtml(local.slice(0, 4)) + '***';
+    }
+    function authorLabel(p) {
+      const masked = p.authorEmail ? ` (${maskEmailPrefix(p.authorEmail)})` : '';
+      return escHtml(p.author) + masked;
+    }
+
+    // ── Filter ──
+    function applyFilters(posts) {
+      const f = activeFilter || {};
+      const num = v => { const n = parseInt(v, 10); return Number.isFinite(n) ? n : null; };
+      return posts.filter(p => {
+        // 주(State)별 분리: 현재 주가 지정된 경우 같은 주의 글만 노출
+        if (currentState && (p.state || '') !== currentState) return false;
+        // 카테고리(렌트카/인스펙션/정비소/견인)별 분리
+        if (groupOf(p.category) !== activeCategory) return false;
+        // 관리자 프리미엄 글: 어떠한 상세 필터/지도 범위에서도 항상 노출 (최상단 고정은 정렬에서 처리)
+        if (p.isPremium) return true;
+        // '이 지역 검색'(지도) 활성 시: 지도 범위 내 좌표만 (정비소/견인)
+        if (areaBounds) {
+          if (!(p.lat && p.lng) || !areaBounds.contains({ lat: p.lat, lng: p.lng })) return false;
+        }
+        if (f.cat === 'rental') {
+          if (f.region && !(`${p.region || ''} ${p.title || ''}`.toLowerCase().includes(f.region.toLowerCase()))) return false;
+          if (f.brand && !(`${p.brand || ''}`.toLowerCase().includes(f.brand.toLowerCase()))) return false;
+          const mp = num(f.maxPrice);   if (mp !== null && p.price && p.price > mp) return false;
+          const mm = num(f.maxMileage); if (mm !== null && p.mileage && parseInt(p.mileage, 10) > mm) return false;
+          const my = num(f.minYear);    if (my !== null && p.year && parseInt(p.year, 10) < my) return false;
+        } else if (f.cat === 'inspection') {
+          const mi = num(f.maxInsp);
+          if (mi !== null && !(p.inspectionAvailable && p.inspectionPrice && p.inspectionPrice <= mi)) return false;
+          const me = num(f.maxEmer);
+          if (me !== null && !(p.emergencyAvailable && p.emergencyPrice && p.emergencyPrice <= me)) return false;
+        }
+        return true;
+      });
+    }
+
+    // ── View Toggle ──
+    let currentView = 'list';
+    document.getElementById('viewListBtn').addEventListener('click', () => switchView('list'));
+    document.getElementById('viewMapBtn').addEventListener('click',  () => switchView('map'));
+
+    function switchView(v) {
+      currentView = v;
+      document.getElementById('viewListBtn').classList.toggle('active', v === 'list');
+      document.getElementById('viewMapBtn').classList.toggle('active',  v === 'map');
+      document.getElementById('listView').style.display = v === 'list' ? '' : 'none';
+      document.getElementById('mapView').style.display  = v === 'map'  ? '' : 'none';
+      if (v === 'map') {
+        loadMapScript();
+        if (mapReady) updateMapMarkers(applyFilters(loadPosts()));
       }
     }
 
-    function openDetail(id) {
-      const p = loadPosts().find(x => String(x.id) === String(id));
-      if (!p) return;
-      document.getElementById('detailTitle').textContent = p.title;
-      document.getElementById('detailMeta').innerHTML = '<span>' + escHtml(p.author || '익명') + '</span><span>' + p.date + (p.time ? ' ' + p.time : '') + '</span>';
-      document.getElementById('detailBody').textContent = p.body;
-      document.getElementById('detailContact').textContent = p.contact ? '📞 연락처: ' + p.contact : '';
-      document.getElementById('detailOverlay').classList.add('open');
+    // ── Render ──
+    function renderAll() {
+      const posts    = loadPosts();
+      const filtered = applyFilters(posts);
+      document.getElementById('boardCount').textContent = `총 ${filtered.length}건`;
+      // 관리자 지정 프리미엄(isPremium) 글을 작성 시간과 무관하게 최상단 고정.
+      // 프리미엄끼리·일반끼리는 각각 최신순(id 내림차순)으로 정렬.
+      const sorted = filtered.slice().sort((a, b) => {
+        const pa = a.isPremium ? 1 : 0, pb = b.isPremium ? 1 : 0;
+        if (pa !== pb) return pb - pa;
+        return b.id - a.id;
+      });
+      const totalPages = Math.max(1, Math.ceil(sorted.length / PER_PAGE));
+      if (currentPage > totalPages) currentPage = totalPages;
+      renderListView(sorted, totalPages);
+      if (currentView === 'map' && mapReady) updateMapMarkers(filtered);
     }
-    document.getElementById('detailClose').addEventListener('click', () => document.getElementById('detailOverlay').classList.remove('open'));
-    document.getElementById('detailOverlay').addEventListener('click', e => { if (e.target === e.currentTarget) document.getElementById('detailOverlay').classList.remove('open'); });
 
-    // ── Write ──
-    const writeOverlay = document.getElementById('writeOverlay');
-    // 글쓰기 소프트 게이트: 로그인 + 이메일 인증 검사
-    document.getElementById('writeBtnOpen').addEventListener('click', () => {
-      const u = window.koausAuth && window.koausAuth.user;
-      if (!u) { alert('글을 작성하려면 로그인이 필요합니다. 홈에서 로그인 후 이용해 주세요.'); location.href = 'index.html'; return; }
-      if (!u.emailVerified) { document.getElementById('verifyOverlay').classList.add('open'); return; }
-      writeOverlay.classList.add('open');
+    // ── 카테고리별 카드 렌더러 ──
+    // 렌트카: 쉐어(accom)와 동일 크기 세로형 카드 (가격 총액 $, 본인글 파란 테두리, 북마크)
+    function rentalCardHtml(p) {
+      const saved = isSaved(p.id);
+      const priceHtml = p.price ? `<span class="accom-price">$${escHtml(String(p.price))}</span>` : '<span class="accom-card-find">가격 협의</span>';
+      const cs = [];
+      const bm = [p.brand, p.model].filter(Boolean).join(' ');
+      if (bm) cs.push('🚗 ' + bm);
+      if (p.year) cs.push('📅 ' + p.year + '년');
+      if (p.mileage) cs.push('🛣 ' + Number(p.mileage).toLocaleString() + 'km');
+      if (p.rwc === 'yes') cs.push('✅ RWC 있음'); else if (p.rwc === 'no') cs.push('RWC 없음');
+      if (p.regoExpiry) cs.push('🗓 REGO ' + p.regoExpiry);
+      const chips = cs.map(c => `<span class="accom-tag">${escHtml(c)}</span>`).join('');
+      return `
+        <div class="accom-card${isMine(p) ? ' my-post-highlight' : ''}${p.isPremium ? ' is-premium' : ''}" data-id="${p.id}">
+          <div class="accom-card-thumb">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l1.5-4.5A2 2 0 0 1 8.4 7h7.2a2 2 0 0 1 1.9 1.5L19 13"/><path d="M3 13h18v4a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1v-1H6v1a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><circle cx="7.5" cy="15.5" r="1"/><circle cx="16.5" cy="15.5" r="1"/></svg>
+          </div>
+          <div class="accom-card-info">
+            <div class="accom-card-line1">
+              ${priceHtml}
+              <button class="bookmark-btn${saved ? ' is-saved' : ''}" data-id="${p.id}" title="저장한 글" aria-label="저장">${saved ? '★' : '☆'}</button>
+            </div>
+            <div class="accom-card-title2">${p.isPremium ? '<span class="insp-ad-badge">AD</span> ' : ''}${escHtml(p.title)}</div>
+            ${p.region ? `<div class="accom-card-sub">📍 ${escHtml(p.region)}</div>` : ''}
+            ${chips ? `<div class="accom-card-chips">${chips}</div>` : ''}
+          </div>
+        </div>`;
+    }
+    // 3/5 높이 컴팩트 카드 (인스펙션/정비소/견인 공용)
+    const _field = (icon, text) => `<span class="auto-li-field">${icon} ${escHtml(String(text))}</span>`;
+    function autoMiniCard(p, fieldsHtml, btnLabel) {
+      const badge = p.isPremium ? '<span class="insp-ad-badge">AD</span>' : '';
+      return `
+        <div class="auto-li${p.isPremium ? ' is-premium' : ''}${isMine(p) ? ' my-post-highlight' : ''}" data-id="${p.id}">
+          <div class="auto-li-main">
+            <div class="auto-li-name-row">${badge}<span class="auto-li-name">${escHtml(p.title || '업체')}</span></div>
+            <div class="auto-li-meta">${fieldsHtml}</div>
+          </div>
+          <button class="auto-li-btn" data-id="${p.id}" type="button">${btnLabel}</button>
+        </div>`;
+    }
+    function inspectionCardHtml(p) {
+      const f = [_field('📞', p.contact || '연락처 문의')];
+      if (p.inspectionAvailable) f.push(_field('🔧', '인스펙션 $' + (p.inspectionPrice || '협의')));
+      if (p.emergencyAvailable)  f.push(_field('🚨', '긴급출동 $' + (p.emergencyPrice || '협의')));
+      if (p.region)   f.push(_field('📍', p.region));
+      if (p.timeSlot) f.push(_field('🕒', p.timeSlot));
+      return autoMiniCard(p, f.join(''), '예약·문의');
+    }
+    function maintenanceCardHtml(p) {
+      const f = [_field('📞', p.contact || '연락처 문의')];
+      if (p.price) f.push(_field('💲', '$' + p.price));
+      if (p.region || p.address) f.push(_field('📍', p.region || p.address));
+      return autoMiniCard(p, f.join(''), '문의하기');
+    }
+    function towingCardHtml(p) {
+      const f = [_field('📞', p.contact || '연락처 문의')];
+      if (p.price) f.push(_field('💲', '기본요금 $' + p.price));
+      if (p.region || p.address) f.push(_field('📍', p.region || p.address));
+      return autoMiniCard(p, f.join(''), '문의하기');
+    }
+    const CARD_RENDERERS = { rental: rentalCardHtml, inspection: inspectionCardHtml, maintenance: maintenanceCardHtml, towing: towingCardHtml };
+
+    function renderListView(sorted, totalPages) {
+      const grid  = document.getElementById('postGrid');
+      const pager = document.getElementById('pagination');
+      if (!sorted.length) {
+        grid.innerHTML = '<div class="post-empty">아직 등록된 글이 없습니다.</div>';
+        pager.innerHTML = '';
+        return;
+      }
+      const start = (currentPage - 1) * PER_PAGE;
+      const pageItems = sorted.slice(start, start + PER_PAGE);
+      const renderer = CARD_RENDERERS[activeCategory] || rentalCardHtml;
+      grid.innerHTML = pageItems.map(renderer).join('');
+
+      // 카드 클릭 → 상세 (렌트카 카드 + 컴팩트 카드 공통)
+      grid.querySelectorAll('.accom-card, .auto-li').forEach(card => {
+        card.addEventListener('click', () => openDetail(card.dataset.id));
+      });
+      // 컴팩트 카드 예약·문의 버튼 → 상세
+      grid.querySelectorAll('.auto-li-btn').forEach(btn => {
+        btn.addEventListener('click', e => { e.stopPropagation(); openDetail(btn.dataset.id); });
+      });
+      // 북마크 (렌트카 카드)
+      grid.querySelectorAll('.bookmark-btn').forEach(btn => {
+        btn.addEventListener('click', e => {
+          e.stopPropagation();
+          const p = loadPosts().find(x => String(x.id) === String(btn.dataset.id));
+          if (!p) return;
+          toggleSaved(p);
+          renderAll();
+        });
+      });
+
+      pager.innerHTML = '';
+      if (totalPages > 1) {
+        for (let i = 1; i <= totalPages; i++) {
+          pager.innerHTML += `<button class="pagination-btn${i === currentPage ? ' active' : ''}" data-page="${i}">${i}</button>`;
+        }
+        pager.querySelectorAll('.pagination-btn').forEach(b => {
+          b.addEventListener('click', () => {
+            currentPage = parseInt(b.dataset.page);
+            renderAll();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          });
+        });
+      }
+    }
+
+    let currentDetailPost = null;
+    function openDetail(id) {
+      const posts = loadPosts();
+      const p = posts.find(x => String(x.id) === String(id));
+      if (!p) return;
+      currentDetailPost = p;
+
+      document.getElementById('detailNavTitle').textContent = p.title;
+      const cat = groupOf(p.category);
+      // 상태 (카테고리)
+      document.getElementById('detailStatus').innerHTML =
+        `⚪ ${escHtml(CAT_LABELS[cat] || 'Auto')}${p.isPremium ? ' <span class="rea-dot">•</span> ⭐ 추천' : ''}`;
+      // 가격 (총액 $ — 주당 표기 제거)
+      let priceHtml;
+      if (cat === 'inspection') {
+        const parts = [];
+        if (p.inspectionAvailable) parts.push(`인스펙션 $${p.inspectionPrice || '협의'}`);
+        if (p.emergencyAvailable)  parts.push(`긴급출동 $${p.emergencyPrice || '협의'}`);
+        priceHtml = parts.length ? escHtml(parts.join('  ·  ')) : '<span class="rea-price-na">비용 협의</span>';
+      } else {
+        priceHtml = p.price ? `$${escHtml(String(p.price))}` : '<span class="rea-price-na">가격 협의</span>';
+      }
+      document.getElementById('detailPrice').innerHTML = priceHtml;
+      // 지역/주소 + 복사
+      const addrText = document.getElementById('detailAddrText');
+      const addrCopy = document.getElementById('detailAddrCopy');
+      const loc = p.region || p.address || '';
+      if (loc) {
+        addrText.textContent = '📍 ' + loc;
+        addrCopy.style.display = '';
+        addrCopy.onclick = () => copyAddress(loc);
+      } else { addrText.textContent = '지역 미등록'; addrCopy.style.display = 'none'; }
+
+      // 핵심 요약 칩 (카테고리별)
+      const sum = [];
+      if (cat === 'rental') {
+        const bm = [p.brand, p.model].filter(Boolean).join(' '); if (bm) sum.push('🚗 ' + bm);
+        if (p.year) sum.push('📅 ' + p.year + '년');
+        if (p.mileage) sum.push('🛣 ' + Number(p.mileage).toLocaleString() + 'km');
+        if (p.rwc === 'yes') sum.push('✅ RWC 있음'); else if (p.rwc === 'no') sum.push('RWC 없음');
+        if (p.regoExpiry) sum.push('🗓 REGO ' + p.regoExpiry);
+        if (p.contact) sum.push('📞 ' + p.contact);
+      } else if (cat === 'inspection') {
+        if (p.contact)  sum.push('📞 ' + p.contact);
+        if (p.timeSlot) sum.push('🕒 ' + p.timeSlot);
+      } else {
+        if (p.contact) sum.push('📞 ' + p.contact);
+      }
+      document.getElementById('detailSummary').innerHTML = sum.map(s => `<span class="rea-chip">${escHtml(s)}</span>`).join('');
+
+      // Description (+ 더보기)
+      const bodyEl = document.getElementById('detailBody');
+      const moreBtn = document.getElementById('detailMore');
+      bodyEl.textContent = p.body || '';
+      bodyEl.classList.remove('expanded');
+      moreBtn.textContent = '더보기 ›';
+      moreBtn.onclick = () => { const e = bodyEl.classList.toggle('expanded'); moreBtn.textContent = e ? '접기 ‹' : '더보기 ›'; };
+      requestAnimationFrame(() => {
+        moreBtn.style.display = (bodyEl.scrollHeight > bodyEl.clientHeight + 4) ? '' : 'none';
+      });
+
+      // Property features 섹션은 Auto에서 미사용 → 숨김
+      document.getElementById('detailFeaturesSec').style.display = 'none';
+
+      // 저장(★) 토글
+      const saveBtn = document.getElementById('detailSaveBtn');
+      const setStar = () => { const on = isSaved(p.id); saveBtn.textContent = on ? '★' : '☆'; saveBtn.classList.toggle('saved', on); };
+      setStar();
+      saveBtn.onclick = () => { toggleSaved(p); setStar(); renderAll(); };
+
+      // 본인 글: 수정/삭제
+      const actEl = document.getElementById('detailActions');
+      if (isMine(p)) {
+        actEl.innerHTML = `<button class="detail-edit-btn" id="detailEditBtn">수정하기</button><button class="detail-delete-btn" id="detailDeleteBtn">삭제하기</button>`;
+        document.getElementById('detailEditBtn').onclick   = () => openWriteModalForEdit(p);
+        document.getElementById('detailDeleteBtn').onclick = () => deletePost(p.id);
+        actEl.style.display = 'flex';
+      } else { actEl.innerHTML = ''; actEl.style.display = 'none'; }
+
+      // 하단 연락처 버튼
+      const cbtn = document.getElementById('detailContactBtn');
+      if (p.contact) {
+        const isLink = /^https?:\/\//i.test(p.contact);
+        cbtn.disabled = false;
+        if (isLink) { cbtn.textContent = '💬 카카오톡으로 연락하기'; cbtn.onclick = () => window.open(p.contact, '_blank', 'noopener'); }
+        else { cbtn.textContent = '📞 연락처 보기'; cbtn.onclick = () => copyText(p.contact, `연락처: ${p.contact}`); }
+      } else { cbtn.textContent = '연락처 미등록'; cbtn.disabled = true; cbtn.onclick = null; }
+
+      setupDetailLocation(p);
+      recordRecent(p);
+      document.getElementById('detailOverlay').classList.add('open');
+      const rc = document.querySelector('.rea-content'); if (rc) rc.scrollTop = 0;
+    }
+
+    function deletePost(id) {
+      if (!confirm('정말 이 게시글을 삭제하시겠습니까?')) return;
+      savePosts(loadPosts().filter(x => String(x.id) !== String(id)));
+      removeRecord(MYPOSTS_KEY, id);
+      removeRecord(SAVED_KEY, id);
+      removeRecord(RECENT_KEY, id);
+      document.getElementById('detailOverlay').classList.remove('open');
+      renderAll();
+    }
+
+    const closeDetail = () => document.getElementById('detailOverlay').classList.remove('open');
+    document.getElementById('detailClose').addEventListener('click', closeDetail);
+    document.getElementById('detailCloseX').addEventListener('click', closeDetail);
+    document.getElementById('detailOverlay').addEventListener('click', e => {
+      if (e.target === e.currentTarget) document.getElementById('detailOverlay').classList.remove('open');
     });
-    document.getElementById('writeBtnClose').addEventListener('click', () => writeOverlay.classList.remove('open'));
-    document.getElementById('writeBtnCancel').addEventListener('click', () => writeOverlay.classList.remove('open'));
-    writeOverlay.addEventListener('click', e => { if (e.target === writeOverlay) writeOverlay.classList.remove('open'); });
 
-    document.getElementById('writeBtnSubmit').addEventListener('click', () => {
-      const title = document.getElementById('wTitle').value.trim();
-      const body  = document.getElementById('wBody').value.trim();
-      const contactRaw = document.getElementById('wContact').value.trim();
-      // 필수 항목 빈 칸 검증
-      if (!title || !body || !contactRaw) { alert('모든 필수 항목을 올바르게 입력해 주세요.'); return; }
-      // 호주 전화번호 10자리 검증
-      const phone = contactRaw.replace(/[-\s]/g, '');
-      if (!/^0\d{9}$/.test(phone)) { alert('올바른 호주 전화번호 10자리를 입력해 주세요. (예: 0412345678)'); return; }
-      // 면책 조항 동의 필수
-      if (!document.getElementById('wDisclaimer').checked) { alert('등록을 위해 면책 조항에 동의해 주세요.'); return; }
-      const author = document.getElementById('wAuthor').value.trim() || '익명';
-      const d = new Date();
-      const pad = n => String(n).padStart(2, '0');
-      const date = pad(d.getMonth() + 1) + '/' + pad(d.getDate());
-      const time = pad(d.getHours()) + ':' + pad(d.getMinutes());
-      const all = loadAll();
-      all.push({ id: Date.now(), title, body, author, contact: phone, state: stateKey, category: activeCategory, date, time });
-      saveAll(all);
-      writeOverlay.classList.remove('open');
-      ['wTitle','wBody','wAuthor','wContact'].forEach(id => { document.getElementById(id).value = ''; });
-      document.getElementById('wDisclaimer').checked = false;
+    // ── 토스트 알림 ──
+    function showToast(msg) {
+      let t = document.getElementById('koausToast');
+      if (!t) { t = document.createElement('div'); t.id = 'koausToast'; t.className = 'koaus-toast'; document.body.appendChild(t); }
+      t.textContent = msg;
+      t.classList.add('show');
+      clearTimeout(t._timer);
+      t._timer = setTimeout(() => t.classList.remove('show'), 2000);
+    }
+    // ── 클립보드 복사 (Clipboard API + 폴백) ──
+    function copyText(text, okMsg) {
+      const done = () => showToast(okMsg);
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, () => fallbackCopy(text, done));
+      } else { fallbackCopy(text, done); }
+    }
+    function fallbackCopy(text, cb) {
+      const ta = document.createElement('textarea');
+      ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); cb && cb(); } catch (e) {}
+      document.body.removeChild(ta);
+    }
+    function copyAddress(addr) { copyText(addr, '주소가 복사되었습니다.'); }
+
+    // ── 공유하기 (모바일: 네이티브 / PC: 드롭다운) ──
+    const shareMenu = document.getElementById('detailShareMenu');
+    function shareUrl() { return location.href; }
+    document.getElementById('detailShareBtn').addEventListener('click', e => {
+      e.stopPropagation();
+      const p = currentDetailPost; if (!p) return;
+      const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+      if (isMobile && navigator.share) {
+        navigator.share({ title: 'KoAus Auto', text: `[KoAus Auto] ${p.title}`, url: shareUrl() }).catch(() => {});
+      } else {
+        shareMenu.classList.toggle('show');
+      }
+    });
+    shareMenu.addEventListener('click', e => {
+      const btn = e.target.closest('button'); if (!btn) return;
+      const url = shareUrl();
+      const kind = btn.dataset.share;
+      if (kind === 'facebook') {
+        window.open('https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(url), '_blank', 'noopener');
+      } else if (kind === 'copy') {
+        copyText(url, '링크가 복사되었습니다.');
+      } else if (kind === 'kakao') {
+        // 카카오 SDK 미탑재 → 링크 복사 폴백 (붙여넣기로 공유)
+        copyText(url, '링크를 복사했어요. 카카오톡에 붙여넣어 공유하세요.');
+      }
+      shareMenu.classList.remove('show');
+    });
+    document.addEventListener('click', e => { if (!e.target.closest('.detail-share-wrap')) shareMenu.classList.remove('show'); });
+
+    // ── 신고하기 모달 ──
+    let reportingPostId = null;
+    const reportOverlay = document.getElementById('reportOverlay');
+    document.getElementById('detailReportBtn').addEventListener('click', () => {
+      const p = currentDetailPost; if (!p) return;
+      reportingPostId = p.id;
+      document.querySelectorAll('input[name="reportReason"]').forEach(r => { r.checked = false; });
+      document.getElementById('reportEtc').value = '';
+      document.getElementById('reportEtc').style.display = 'none';
+      document.getElementById('reportError').textContent = '';
+      reportOverlay.classList.add('open');
+    });
+    function closeReport() { reportOverlay.classList.remove('open'); }
+    document.getElementById('reportClose').addEventListener('click', closeReport);
+    document.getElementById('reportCancel').addEventListener('click', closeReport);
+    reportOverlay.addEventListener('click', e => { if (e.target === reportOverlay) closeReport(); });
+    document.querySelectorAll('input[name="reportReason"]').forEach(r => {
+      r.addEventListener('change', () => {
+        document.getElementById('reportEtc').style.display = (r.value === '기타' && r.checked) ? '' : 'none';
+      });
+    });
+    document.getElementById('reportSubmit').addEventListener('click', async () => {
+      const errEl = document.getElementById('reportError');
+      const sel = document.querySelector('input[name="reportReason"]:checked');
+      if (!sel) { errEl.textContent = '신고 사유를 선택해 주세요.'; return; }
+      const user = window.koausAuth && window.koausAuth.user;
+      if (!user) { errEl.textContent = '신고하려면 로그인이 필요합니다.'; window.koausAuth && window.koausAuth.openAuthModal(); return; }
+      let reason = sel.value;
+      if (reason === '기타') {
+        const etc = document.getElementById('reportEtc').value.trim();
+        if (!etc) { errEl.textContent = '기타 사유를 입력해 주세요.'; return; }
+        reason = '기타: ' + etc;
+      }
+      const btn = document.getElementById('reportSubmit'); btn.disabled = true;
+      try {
+        if (window.koausDb && window.koausFs) {
+          const { addDoc, collection, serverTimestamp } = window.koausFs;
+          await addDoc(collection(window.koausDb, 'reports'), {
+            postId: String(reportingPostId), board: 'auto', reason,
+            reporterUid: user.uid || '', reporterEmail: user.email || '', createdAt: serverTimestamp(),
+          });
+        }
+      } catch (e) { /* Firestore 미설정 시에도 접수 처리 */ }
+      finally { btn.disabled = false; }
+      closeReport();
+      showToast('신고가 접수되었습니다. 검토 후 조치하겠습니다.');
+    });
+
+    // ── 상세보기 Location 미니맵 + 전체화면 확대 모달 ──
+    let detailCoords = null, detailAddr = '';
+    let miniMapObj = null, miniMarker = null, expandMapObj = null, expandMarker = null;
+    // google.maps 준비될 때까지 대기 후 콜백 (보드/상세 어느 쪽이 로드하든 동작)
+    function whenMapsReady(cb) {
+      if (window.google && google.maps && google.maps.Map) { cb(); return; }
+      loadMapScript();
+      const iv = setInterval(() => {
+        if (window.google && google.maps && google.maps.Map) { clearInterval(iv); cb(); }
+      }, 150);
+      setTimeout(() => clearInterval(iv), 8000);
+    }
+    async function setupDetailLocation(p) {
+      const sec = document.getElementById('detailLocation');
+      if (!p.address) { sec.style.display = 'none'; detailCoords = null; return; }
+      sec.style.display = '';
+      detailAddr = p.address;
+      // 길찾기 / 스트릿뷰 리스트 버튼 외부 링크
+      document.getElementById('detailDirBtn').href =
+        `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(p.address)}&travelmode=transit`;
+      const setSvHref = () => {
+        document.getElementById('detailSvBtn').href = detailCoords
+          ? `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${detailCoords.lat},${detailCoords.lng}`
+          : `https://www.google.com/maps?q=${encodeURIComponent(p.address)}&layer=c`;
+      };
+      detailCoords = (p.lat && p.lng) ? { lat: p.lat, lng: p.lng } : null;
+      setSvHref();
+      if (!detailCoords) {            // 좌표 없으면 주소로 지오코딩 (best-effort)
+        loadMapScript();
+        detailCoords = await geocode(p.address);
+        setSvHref();
+      }
+      const el = document.getElementById('detailMiniMap');
+      if (!detailCoords) { el.innerHTML = '<div class="map-empty">지도 위치를 찾을 수 없습니다.</div>'; return; }
+      const c = detailCoords;
+      whenMapsReady(() => {
+        if (!miniMapObj) {
+          miniMapObj = new google.maps.Map(el, {
+            center: c, zoom: 15, disableDefaultUI: true, gestureHandling: 'none', clickableIcons: false,
+          });
+        } else {
+          google.maps.event.trigger(miniMapObj, 'resize');
+          miniMapObj.setCenter(c); miniMapObj.setZoom(15);
+        }
+        if (miniMarker) miniMarker.setMap(null);
+        miniMarker = new google.maps.Marker({ position: c, map: miniMapObj });
+      });
+    }
+
+    const mapExpandOverlay = document.getElementById('mapExpandOverlay');
+    function openMapExpand() {
+      if (!detailCoords) { showToast('지도 위치를 찾을 수 없습니다.'); return; }
+      // 플로팅 버튼 외부 링크 세팅
+      document.getElementById('mapFabDir').href =
+        `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(detailAddr)}&travelmode=transit`;
+      document.getElementById('mapFabSv').href =
+        `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${detailCoords.lat},${detailCoords.lng}`;
+      mapExpandOverlay.classList.add('open');
+      document.body.style.overflow = 'hidden';
+      whenMapsReady(() => {
+        const el = document.getElementById('mapExpandCanvas');
+        if (!expandMapObj) {
+          expandMapObj = new google.maps.Map(el, {
+            center: detailCoords, zoom: 16, mapTypeControl: false, streetViewControl: false, fullscreenControl: false,
+          });
+        }
+        // 모달 표시 후 컨테이너 크기가 잡히면 리사이즈 + 중심 재설정
+        setTimeout(() => {
+          google.maps.event.trigger(expandMapObj, 'resize');
+          expandMapObj.setCenter(detailCoords); expandMapObj.setZoom(16);
+          if (expandMarker) expandMarker.setMap(null);
+          expandMarker = new google.maps.Marker({ position: detailCoords, map: expandMapObj });
+        }, 120);
+      });
+    }
+    function closeMapExpand() { mapExpandOverlay.classList.remove('open'); document.body.style.overflow = ''; }
+    document.getElementById('detailMapExpand').addEventListener('click', openMapExpand);
+    document.getElementById('mapExpandClose').addEventListener('click', closeMapExpand);
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && mapExpandOverlay.classList.contains('open')) closeMapExpand(); });
+
+    // ── Google Maps ──
+    let mapReady   = false;
+    let mapLoading = false;
+    let map        = null;
+    let infoWindow = null;
+    let markers    = [];
+    let areaBounds = null;        // '이 지역 검색' 활성 경계 (null이면 전체)
+    let programmaticMove = false; // 글 등록 후 자동 이동 시 버튼 노출 억제
+
+    // '이 지역 매물 검색하기' 버튼: 현재 지도 범위로 리스트·마커 필터
+    document.getElementById('areaSearchBtn').addEventListener('click', () => {
+      if (!map) return;
+      areaBounds = map.getBounds();
+      document.getElementById('areaSearchBtn').classList.remove('show');
       currentPage = 1;
-      renderPosts();
+      renderAll();
     });
 
-    setActiveCategory(activeCategory);  // 초기 탭 활성화 + 타이틀 + 렌더
-  </script>
+    // 주(State)별 지도 중심/축척. URL ?state=nsw 등으로 진입 시 해당 주의 주요 도시로 중심 이동.
+    const STATE_VIEWS = {
+      nsw: { center: { lat: -33.8688, lng: 151.2093 }, zoom: 11 },  // 시드니
+      vic: { center: { lat: -37.8136, lng: 144.9631 }, zoom: 11 },  // 멜버른
+      qld: { center: { lat: -27.4698, lng: 153.0251 }, zoom: 11 },  // 브리즈번
+      wa:  { center: { lat: -31.9523, lng: 115.8613 }, zoom: 11 },  // 퍼스
+      sa:  { center: { lat: -34.9285, lng: 138.6007 }, zoom: 11 },  // 애들레이드
+      nt:  { center: { lat: -12.4634, lng: 130.8456 }, zoom: 11 },  // 다윈
+      tas: { center: { lat: -42.8821, lng: 147.3272 }, zoom: 11 },  // 호바트
+      act: { center: { lat: -35.2809, lng: 149.1300 }, zoom: 11 },  // 캔버라
+    };
+    const AUS_VIEW        = { center: { lat: -25.2744, lng: 133.7751 }, zoom: 4 };  // 전국
+    const urlState        = (new URLSearchParams(location.search).get('state') || '').toLowerCase();
+    const activeStateView = STATE_VIEWS[urlState] || AUS_VIEW;
 
-  <!-- ── Firebase Auth (글쓰기 소프트 게이트용) ── -->
+    function loadMapScript() {
+      if (mapReady || mapLoading) return;
+      if (GOOGLE_MAPS_KEY === 'YOUR_API_KEY') {
+        document.getElementById('accomMap').innerHTML =
+          '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-muted);font-size:14px;">Google Maps API 키를 설정해 주세요 (accom.html 내 GOOGLE_MAPS_KEY)</div>';
+        return;
+      }
+      mapLoading = true;
+      window.initMap = function () {
+        map = new google.maps.Map(document.getElementById('accomMap'), {
+          center: activeStateView.center,
+          zoom: activeStateView.zoom,
+          mapTypeControl: false,
+          streetViewControl: false,
+          fullscreenControl: false,
+        });
+        infoWindow = new google.maps.InfoWindow();
+        mapReady   = true;
+        mapLoading = false;
+        // 지도 이동/확대 감지 → '이 지역 검색' 버튼 노출 (프로그램적 이동은 제외)
+        const showAreaBtn = () => { if (!programmaticMove) document.getElementById('areaSearchBtn').classList.add('show'); };
+        map.addListener('dragend', showAreaBtn);
+        map.addListener('zoom_changed', showAreaBtn);
+        updateMapMarkers(applyFilters(loadPosts()));
+        initAddressAutocomplete();  // Places 로드 완료 → 주소/지역 자동완성 연결
+        applyPendingCenter();       // 지역 검색이 맵 로딩보다 먼저였다면 지금 이동
+      };
+      const script   = document.createElement('script');
+      script.src     = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_KEY}&libraries=places&loading=async&callback=initMap`;
+      script.async   = true;
+      script.defer   = true;
+      script.onerror = () => {
+        document.getElementById('accomMap').innerHTML =
+          '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-muted);font-size:14px;">지도를 불러올 수 없습니다. API 키를 확인해 주세요.</div>';
+      };
+      document.head.appendChild(script);
+    }
+
+    function updateMapMarkers(filteredPosts) {
+      if (!map) return;
+      markers.forEach(m => m.setMap(null));
+      markers = [];
+      const bounds = new google.maps.LatLngBounds();
+      let hasCoord  = false;
+
+      filteredPosts.forEach(p => {
+        if (!p.lat || !p.lng) return;
+        const marker = new google.maps.Marker({
+          position: { lat: p.lat, lng: p.lng },
+          map,
+          title: p.title,
+          icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 10,
+            fillColor: '#000000',
+            fillOpacity: 1,
+            strokeColor: '#ffffff',
+            strokeWeight: 2,
+          },
+        });
+        marker.addListener('click', () => {
+          const iwTags = filterTags(p).map(t =>
+            `<span style="display:inline-block;font-size:10px;color:#000;background:#fff;border:1px solid #000;border-radius:999px;padding:1px 7px;margin:2px 3px 0 0;white-space:nowrap;">${escHtml(t)}</span>`
+          ).join('');
+          infoWindow.setContent(`
+            <div style="font-family:'Urbanist','Noto Sans KR',sans-serif;max-width:240px;padding:4px 0;">
+              <div style="font-weight:700;font-size:13px;line-height:1.4;margin-bottom:6px;">${escHtml(p.title)}</div>
+              ${p.address ? `<div style="font-size:12px;color:#000;margin-bottom:4px;">📍 ${escHtml(p.address)}</div>` : ''}
+              ${p.price   ? `<div style="font-size:15px;font-weight:800;color:#000;">$${p.price}</div>` : ''}
+              <div style="font-size:11px;color:#000;margin-top:4px;">${escHtml(p.author)} · ${p.date}</div>
+              ${iwTags ? `<div style="margin-top:6px;line-height:1.7;">${iwTags}</div>` : ''}
+            </div>`);
+          infoWindow.open(map, marker);
+        });
+        markers.push(marker);
+        bounds.extend({ lat: p.lat, lng: p.lng });
+        hasCoord = true;
+      });
+      // 중심은 initMap(주별 도시) 및 글 등록 시 지오코딩 좌표로 제어 — 여기선 마커만 갱신.
+    }
+
+    // ── Geocoding (for future use) ──
+    async function geocodeAddress(address) {
+      try {
+        const res  = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${GOOGLE_MAPS_KEY}`);
+        const data = await res.json();
+        if (data.status === 'OK' && data.results.length > 0) {
+          return data.results[0].geometry.location;
+        }
+      } catch (e) {
+        console.error('Geocoding 오류:', e);
+      }
+      return null;
+    }
+
+    // 마이페이지 등에서 ?edit=<id>로 진입 시, 로그인 확인 후 본인 글이면 수정 폼 자동 오픈
+    window.addEventListener('koausAuthReady', () => {
+      const editId = new URLSearchParams(location.search).get('edit');
+      if (!editId) return;
+      const p = loadPosts().find(x => String(x.id) === String(editId));
+      if (p && isMine(p)) openWriteModalForEdit(p);
+    }, { once: true });
+
+    // ── 관리자 프리미엄(상단 고정) 지정 헬퍼 ──
+    // 콘솔에서 호출: koausSetPremium(글ID, true)  /  해제: koausSetPremium(글ID, false)
+    window.koausSetPremium = function (id, on = true) {
+      const posts = loadPosts();
+      const p = posts.find(x => String(x.id) === String(id));
+      if (!p) { console.warn('[KoAus] 해당 ID의 글을 찾을 수 없습니다:', id); return; }
+      p.isPremium = !!on;
+      savePosts(posts);
+      currentPage = 1;
+      renderAll();
+      console.log('[KoAus] isPremium =', p.isPremium, '| id:', id, '| title:', p.title);
+    };
+
+    switchCategory(activeCategory);  // URL ?category= 반영 + 초기 렌더/타이틀
+</script>
+
+  <!-- ── Firebase Auth (로그인 모달 + 로그인 상태) ── -->
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
-    import { getAuth, onAuthStateChanged, sendEmailVerification } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
+    import {
+      getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged,
+      createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification,
+    } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
     import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app-check.js';
+    import { getFirestore, doc, getDoc, setDoc, addDoc, collection, serverTimestamp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
+
     const firebaseConfig = {
       apiKey:            'AIzaSyCamqnt0bNUD9uz1N5BbCuQjSkWLSpPqlU',
       authDomain:        'koaus-f564c.firebaseapp.com',
@@ -646,35 +2239,186 @@
       appId:             '1:663988594088:web:ef30c2fd557407b00b299d',
       measurementId:     'G-DERZ9MTKPL',
     };
-    const app = initializeApp(firebaseConfig);
+
+    const app  = initializeApp(firebaseConfig);
+
+    // ── App Check (reCAPTCHA v3) — 봇·외부 스크립트의 백엔드(인증/DB) 접근 차단 ──
+    // 사이트 키 발급: Firebase 콘솔 > App Check > 앱 등록(reCAPTCHA v3 공급자)
+    // 키를 채우면 자동 활성화됨. (placeholder 상태에서는 운영 사이트를 깨뜨리지 않도록 건너뜀)
     const APP_CHECK_SITE_KEY = 'TODO: 키 입력';
     if (APP_CHECK_SITE_KEY && !APP_CHECK_SITE_KEY.startsWith('TODO')) {
-      initializeAppCheck(app, { provider: new ReCaptchaV3Provider(APP_CHECK_SITE_KEY), isTokenAutoRefreshEnabled: true });
+      initializeAppCheck(app, {
+        provider: new ReCaptchaV3Provider(APP_CHECK_SITE_KEY),
+        isTokenAutoRefreshEnabled: true,
+      });
     }
+
     const auth = getAuth(app);
-    window.koausAuth = {
-      user: null,
-      sendVerification: async () => { if (auth.currentUser) await sendEmailVerification(auth.currentUser); },
+    // 최근 검색 기록 동기화용 Firestore (콘솔에서 Firestore 활성화 + users 규칙 배포 시 동작)
+    try { window.koausDb = getFirestore(app); window.koausFs = { doc, getDoc, setDoc, addDoc, collection, serverTimestamp }; } catch (e) { /* Firestore 미설정 무시 */ }
+
+    // ── Auth Modal ──
+    const authOverlay = document.getElementById('authOverlay');
+    let _authOpenedAt = 0;
+
+    const openAuthModal = () => {
+      _authOpenedAt = Date.now();
+      authOverlay.classList.add('open');
+      document.body.style.overflow = 'hidden';
     };
+    const hardCloseAuthModal = () => {
+      authOverlay.classList.remove('open');
+      document.body.style.overflow = '';
+      clearAuthErrors();
+    };
+    const softCloseAuthModal = () => {
+      if (Date.now() - _authOpenedAt < 300) return;
+      hardCloseAuthModal();
+    };
+
+    document.getElementById('authClose').addEventListener('click', hardCloseAuthModal);
+    authOverlay.addEventListener('click', e => { if (e.target === authOverlay) softCloseAuthModal(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') softCloseAuthModal(); });
+
+    // Tabs
+    document.querySelectorAll('.auth-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const target = tab.dataset.authTab;
+        document.getElementById('authLoginForm').style.display  = target === 'login'  ? '' : 'none';
+        document.getElementById('authSignupForm').style.display = target === 'signup' ? '' : 'none';
+        clearAuthErrors();
+      });
+    });
+
+    function clearAuthErrors() {
+      document.getElementById('authLoginError').textContent  = '';
+      document.getElementById('authSignupError').textContent = '';
+    }
+    function authErrMsg(code) {
+      const map = {
+        'auth/email-already-in-use': '이미 사용 중인 이메일입니다.',
+        'auth/invalid-email':        '유효하지 않은 이메일입니다.',
+        'auth/weak-password':        '비밀번호는 6자 이상이어야 합니다.',
+        'auth/wrong-password':       '비밀번호가 틀렸습니다.',
+        'auth/user-not-found':       '등록되지 않은 이메일입니다.',
+        'auth/invalid-credential':   '이메일 또는 비밀번호가 올바르지 않습니다.',
+        'auth/too-many-requests':    '잠시 후 다시 시도해 주세요.',
+      };
+      return map[code] || '오류가 발생했습니다. 다시 시도해 주세요.';
+    }
+
+    // Email sign-up
+    // 가입 버튼 활성화 조건: 이용약관 동의 + reCAPTCHA 통과
+    const authAgree = document.getElementById('authAgree');
+    const authSignupBtn = document.getElementById('authSignupSubmit');
+    let recaptchaOK = false;
+    function updateSignupBtn() { authSignupBtn.disabled = !(authAgree.checked && recaptchaOK); }
+    authAgree.addEventListener('change', updateSignupBtn);
+    // reCAPTCHA v2 콜백 (위젯 data-callback에서 호출 — 전역 노출 필요)
+    window.onKoausRecaptcha = () => { recaptchaOK = true; updateSignupBtn(); };
+    window.onKoausRecaptchaExpired = () => { recaptchaOK = false; updateSignupBtn(); };
+    // 이용약관 / 개인정보처리방침 모달 (각각)
+    const tosOverlay = document.getElementById('tosOverlay');
+    const privacyOverlay = document.getElementById('privacyOverlay');
+    // 모달 닫기 (history 조작 없음)
+    function closeTermsModal(ov) { if (ov) { ov.classList.remove('open'); } else { tosOverlay.classList.remove('open'); privacyOverlay.classList.remove('open'); } }
+    // 열기: 모바일 뒤로가기/스와이프로 모달만 닫히도록 history 항목 추가
+    function openTermsModal(ov) { ov.classList.add('open'); history.pushState({ koausTerms: true }, ''); }
+    // 사용자가 X/확인/바깥클릭으로 닫을 때: 모달 닫고 push한 history 소비
+    function userCloseTerms(ov) { closeTermsModal(ov); if (history.state && history.state.koausTerms) history.back(); }
+    document.getElementById('authTosLink').addEventListener('click', () => openTermsModal(tosOverlay));
+    document.getElementById('authPrivacyLink').addEventListener('click', () => openTermsModal(privacyOverlay));
+    document.getElementById('tosClose').addEventListener('click', () => userCloseTerms(tosOverlay));
+    document.getElementById('tosConfirm').addEventListener('click', () => userCloseTerms(tosOverlay));
+    document.getElementById('privacyClose').addEventListener('click', () => userCloseTerms(privacyOverlay));
+    document.getElementById('privacyConfirm').addEventListener('click', () => userCloseTerms(privacyOverlay));
+    tosOverlay.addEventListener('click', e => { if (e.target === tosOverlay) userCloseTerms(tosOverlay); });
+    privacyOverlay.addEventListener('click', e => { if (e.target === privacyOverlay) userCloseTerms(privacyOverlay); });
+    // 뒤로가기(popstate) → 열려있는 약관 모달만 닫음 (페이지 이탈 방지)
+    window.addEventListener('popstate', () => closeTermsModal());
+
+    document.getElementById('authSignupSubmit').addEventListener('click', async () => {
+      const email = document.getElementById('authSignupEmail').value.trim();
+      const pw    = document.getElementById('authSignupPw').value;
+      const pw2   = document.getElementById('authSignupPwConfirm').value;
+      const errEl = document.getElementById('authSignupError');
+      if (!authAgree.checked) { errEl.textContent = '이용약관에 동의해 주세요.'; return; }
+      if (!email || !pw) { errEl.textContent = '이메일과 비밀번호를 입력해 주세요.'; return; }
+      // 비밀번호: 8자 이상 + 영문·숫자·특수문자 각 1개 이상
+      if (!/^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/.test(pw)) {
+        errEl.textContent = '비밀번호는 8자 이상이며 영문·숫자·특수문자를 각각 1개 이상 포함해야 합니다.';
+        return;
+      }
+      if (pw !== pw2)    { errEl.textContent = '비밀번호가 일치하지 않습니다.'; return; }
+      // reCAPTCHA 통과 확인
+      if (typeof grecaptcha !== 'undefined' && !grecaptcha.getResponse()) {
+        errEl.textContent = "'로봇이 아닙니다' 인증을 완료해 주세요."; return;
+      }
+      try {
+        // 소프트 게이트: 가입 후 로그아웃하지 않고 로그인 상태 유지 + 인증 메일 1회 발송
+        const cred = await createUserWithEmailAndPassword(auth, email, pw);
+        try { await sendEmailVerification(cred.user); } catch (e) {}
+        hardCloseAuthModal();
+        alert('가입이 완료되었습니다. 인증 메일을 보냈으니 메일함을 확인해 주세요. (글쓰기 시 인증이 필요합니다)');
+      } catch (e) { errEl.textContent = authErrMsg(e.code); }
+    });
+
+    // Email sign-in
+    document.getElementById('authLoginSubmit').addEventListener('click', async () => {
+      const email = document.getElementById('authLoginEmail').value.trim();
+      const pw    = document.getElementById('authLoginPw').value;
+      const errEl = document.getElementById('authLoginError');
+      if (!email || !pw) { errEl.textContent = '이메일과 비밀번호를 입력해 주세요.'; return; }
+      try {
+        await signInWithEmailAndPassword(auth, email, pw);
+        hardCloseAuthModal();
+      } catch (e) { errEl.textContent = authErrMsg(e.code); }
+    });
+
+    // Google sign-in
+    document.getElementById('authGoogle').addEventListener('click', () => {
+      const provider = new GoogleAuthProvider();
+      signInWithPopup(auth, provider)
+        .then(hardCloseAuthModal)
+        .catch(error => {
+          console.error('Google 로그인 에러:', error);
+          const msg = error.code === 'auth/unauthorized-domain'
+            ? '현재 도메인이 Firebase에 등록되지 않았습니다. (콘솔 승인 도메인 확인)'
+            : (error.code === 'auth/popup-blocked' ? '팝업이 차단되었습니다. 팝업을 허용해 주세요.'
+            : authErrMsg(error.code));
+          document.getElementById('authLoginError').textContent = msg;
+        });
+    });
+
+    // ── Shared login state (inline script가 참조) ──
+    window.koausAuth = { user: null, openAuthModal, afterLogin: null };
+
     const loginBtn = document.getElementById('topbarLoginBtn');
+    loginBtn.addEventListener('click', () => {
+      if (window.koausAuth.user) window.location.href = 'mypage.html';
+      else openAuthModal();
+    });
+
     onAuthStateChanged(auth, user => {
       window.koausAuth.user = user;
-      if (loginBtn) {
-        if (user) {
-          const nick = localStorage.getItem('koaus-nickname') || user.displayName?.split(' ')[0] || user.email?.split('@')[0] || '계정';
-          loginBtn.textContent = nick; loginBtn.setAttribute('href', 'mypage.html');
-        } else { loginBtn.textContent = '로그인'; loginBtn.setAttribute('href', 'index.html'); }
+      if (user) {
+        const nick = localStorage.getItem('koaus-nickname') || user.displayName?.split(' ')[0] || user.email?.split('@')[0] || '계정';
+        loginBtn.textContent = nick;
+        loginBtn.title = '내 계정 (마이페이지)';
+        renderAll();  // 본인 글 하이라이트 반영
+        window.dispatchEvent(new Event('koausAuthReady'));
+        // 로그인 직후 보류된 등록 작업 이어서 실행
+        if (typeof window.koausAuth.afterLogin === 'function') {
+          const cb = window.koausAuth.afterLogin;
+          window.koausAuth.afterLogin = null;
+          setTimeout(cb, 0);
+        }
+      } else {
+        loginBtn.textContent = '로그인';
+        loginBtn.title = '로그인 / 회원가입';
       }
-    });
-    // 인증 필요 모달 닫기 / 재전송
-    const verifyOverlay = document.getElementById('verifyOverlay');
-    const closeVerify = () => verifyOverlay.classList.remove('open');
-    document.getElementById('verifyClose').addEventListener('click', closeVerify);
-    document.getElementById('verifyOkBtn').addEventListener('click', closeVerify);
-    verifyOverlay.addEventListener('click', e => { if (e.target === verifyOverlay) closeVerify(); });
-    document.getElementById('verifyResendBtn').addEventListener('click', async () => {
-      try { await window.koausAuth.sendVerification(); alert('인증 메일이 재전송되었습니다.'); }
-      catch (e) { alert('잠시 후 다시 시도해 주세요.'); }
     });
   </script>
 </body>

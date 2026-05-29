@@ -1350,6 +1350,74 @@ select.filter-mini-input {
 .auto-card-title { font-size: 15px; font-weight: 800; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .auto-card-snip { font-size: 12.5px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .auto-card-meta { font-size: 11.5px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ── Auto: 긴급출동·견인 외부 견인 서비스 안내 배너 ── */
+.auto-tow-banner {
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;
+  padding: 14px 16px; margin-bottom: 16px;
+  background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--r-lg);
+}
+.auto-tow-text { font-size: 13px; font-weight: 600; color: var(--text-secondary); line-height: 1.4; }
+.auto-tow-btn {
+  flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px;
+  padding: 10px 16px; background: var(--accent); color: var(--accent-text);
+  border-radius: 999px; font-family: var(--font); font-size: 13px; font-weight: 800;
+  text-decoration: none; white-space: nowrap; transition: opacity 0.15s;
+}
+.auto-tow-btn:hover { opacity: 0.85; }
+.auto-tow-arrow { font-size: 16px; line-height: 1; }
+
+/* ── Auto 컴팩트 카드 (인스펙션/정비소/견인 — 쉐어 카드의 약 3/5 높이) ── */
+@property --koaus-prem-angle { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
+.auto-li {
+  position: relative; display: flex; align-items: center; gap: 12px;
+  padding: 10px 14px; background: var(--bg-surface);
+  border: 1px solid var(--border); border-radius: var(--r-md);
+  cursor: pointer; transition: border-color 0.15s, box-shadow 0.15s;
+}
+.auto-li:hover { border-color: var(--text-muted); box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+.auto-li-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.auto-li-name-row { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.auto-li-name {
+  font-size: 14.5px; font-weight: 800; color: var(--text-primary);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.auto-li-meta { display: flex; flex-wrap: wrap; gap: 2px 12px; }
+.auto-li-field {
+  font-size: 12px; color: var(--text-secondary);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
+}
+.auto-li-btn {
+  flex-shrink: 0; padding: 8px 14px; background: var(--accent); color: var(--accent-text);
+  border: none; border-radius: 999px; font-family: var(--font); font-size: 12.5px; font-weight: 800;
+  cursor: pointer; white-space: nowrap; transition: opacity 0.15s;
+}
+.auto-li-btn:hover { opacity: 0.85; }
+.insp-ad-badge {
+  flex-shrink: 0; font-size: 10px; font-weight: 800; letter-spacing: 0.06em;
+  color: var(--bg-surface); background: var(--text-primary);
+  padding: 1px 6px; border-radius: 4px;
+}
+
+/* 인스펙션 글쓰기: 서비스 제공 토글 + 미제공 시 가격 비활성(회색) */
+.write-svc { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; color: var(--text-primary); margin-bottom: 6px; cursor: pointer; }
+.write-svc input { width: 16px; height: 16px; }
+.write-input:disabled { background: var(--bg-elevated); color: var(--text-muted); cursor: not-allowed; opacity: 0.55; }
+
+/* 프리미엄(관리자 상단 고정): 은회색 그라데이션이 회전하는 고급 테두리 (컬러 배제, B&W) */
+.auto-li.is-premium, .accom-card.is-premium { position: relative; border-color: transparent; }
+.auto-li.is-premium::before, .accom-card.is-premium::before {
+  content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1.5px;
+  background: conic-gradient(from var(--koaus-prem-angle),
+    rgba(140,140,140,0.12), #8a8a8a, #f2f2f2, #ffffff, #9a9a9a, rgba(140,140,140,0.12));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  animation: koaus-prem-rotate 4s linear infinite;
+  pointer-events: none;
+}
+@keyframes koaus-prem-rotate { to { --koaus-prem-angle: 360deg; } }
+@media (prefers-reduced-motion: reduce) { .auto-li.is-premium::before, .accom-card.is-premium::before { animation: none; } }
 .accom-card-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .accom-card-hd-right { display: flex; align-items: center; gap: 10px; }
 .bookmark-btn {
