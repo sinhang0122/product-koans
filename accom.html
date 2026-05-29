@@ -632,6 +632,13 @@
       <div class="post-detail-tags" id="detailTags"></div>
       <div class="post-detail-body" id="detailBody"></div>
       <div class="post-detail-contact" id="detailContact"></div>
+      <div class="post-detail-location" id="detailLocation" style="display:none;">
+        <div class="detail-loc-head">
+          <span class="detail-loc-title">Location</span>
+          <button class="detail-loc-expand" id="detailMapExpand" type="button">⛶ 지도 확대</button>
+        </div>
+        <div class="detail-mini-map" id="detailMiniMap"></div>
+      </div>
       <div class="post-detail-tools">
         <button class="detail-tool-btn detail-tool-btn--report" id="detailReportBtn" type="button">🚨 신고하기</button>
         <div class="detail-share-wrap">
@@ -644,6 +651,20 @@
         </div>
       </div>
       <div class="post-detail-actions" id="detailActions"></div>
+    </div>
+  </div>
+
+  <!-- ── 지도 전체화면 확대 모달 ── -->
+  <div class="map-expand-overlay" id="mapExpandOverlay">
+    <div class="map-expand-canvas" id="mapExpandCanvas"></div>
+    <button class="map-expand-close" id="mapExpandClose" type="button" aria-label="지도 닫기">✕</button>
+    <div class="map-fab-group">
+      <a class="map-fab" id="mapFabDir" target="_blank" rel="noopener noreferrer" title="길찾기 (대중교통)" aria-label="길찾기">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M21.71 11.29l-9-9a1 1 0 0 0-1.42 0l-9 9a1 1 0 0 0 0 1.42l9 9a1 1 0 0 0 1.42 0l9-9a1 1 0 0 0 0-1.42zM14 14.5V12h-4v3H8v-4a1 1 0 0 1 1-1h5V7.5l3.5 3.5z"/></svg>
+      </a>
+      <a class="map-fab" id="mapFabSv" target="_blank" rel="noopener noreferrer" title="스트릿뷰" aria-label="스트릿뷰">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2.5"/><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/></svg>
+      </a>
     </div>
   </div>
 
@@ -1562,6 +1583,7 @@
         actEl.style.display = 'none';
       }
 
+      setupDetailLocation(p);
       recordRecent(p);
       document.getElementById('detailOverlay').classList.add('open');
     }
@@ -1683,6 +1705,76 @@
       closeReport();
       showToast('신고가 접수되었습니다. 검토 후 조치하겠습니다.');
     });
+
+    // ── 상세보기 Location 미니맵 + 전체화면 확대 모달 ──
+    let detailCoords = null, detailAddr = '';
+    let miniMapObj = null, miniMarker = null, expandMapObj = null, expandMarker = null;
+    // google.maps 준비될 때까지 대기 후 콜백 (보드/상세 어느 쪽이 로드하든 동작)
+    function whenMapsReady(cb) {
+      if (window.google && google.maps && google.maps.Map) { cb(); return; }
+      loadMapScript();
+      const iv = setInterval(() => {
+        if (window.google && google.maps && google.maps.Map) { clearInterval(iv); cb(); }
+      }, 150);
+      setTimeout(() => clearInterval(iv), 8000);
+    }
+    async function setupDetailLocation(p) {
+      const sec = document.getElementById('detailLocation');
+      if (!p.address) { sec.style.display = 'none'; detailCoords = null; return; }
+      sec.style.display = '';
+      detailAddr = p.address;
+      detailCoords = (p.lat && p.lng) ? { lat: p.lat, lng: p.lng } : null;
+      if (!detailCoords) {            // 좌표 없으면 주소로 지오코딩 (best-effort)
+        loadMapScript();
+        detailCoords = await geocode(p.address);
+      }
+      const el = document.getElementById('detailMiniMap');
+      if (!detailCoords) { el.innerHTML = '<div class="map-empty">지도 위치를 찾을 수 없습니다.</div>'; return; }
+      const c = detailCoords;
+      whenMapsReady(() => {
+        if (!miniMapObj) {
+          miniMapObj = new google.maps.Map(el, {
+            center: c, zoom: 15, disableDefaultUI: true, gestureHandling: 'none', clickableIcons: false,
+          });
+        } else {
+          google.maps.event.trigger(miniMapObj, 'resize');
+          miniMapObj.setCenter(c); miniMapObj.setZoom(15);
+        }
+        if (miniMarker) miniMarker.setMap(null);
+        miniMarker = new google.maps.Marker({ position: c, map: miniMapObj });
+      });
+    }
+
+    const mapExpandOverlay = document.getElementById('mapExpandOverlay');
+    function openMapExpand() {
+      if (!detailCoords) { showToast('지도 위치를 찾을 수 없습니다.'); return; }
+      // 플로팅 버튼 외부 링크 세팅
+      document.getElementById('mapFabDir').href =
+        `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(detailAddr)}&travelmode=transit`;
+      document.getElementById('mapFabSv').href =
+        `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${detailCoords.lat},${detailCoords.lng}`;
+      mapExpandOverlay.classList.add('open');
+      document.body.style.overflow = 'hidden';
+      whenMapsReady(() => {
+        const el = document.getElementById('mapExpandCanvas');
+        if (!expandMapObj) {
+          expandMapObj = new google.maps.Map(el, {
+            center: detailCoords, zoom: 16, mapTypeControl: false, streetViewControl: false, fullscreenControl: false,
+          });
+        }
+        // 모달 표시 후 컨테이너 크기가 잡히면 리사이즈 + 중심 재설정
+        setTimeout(() => {
+          google.maps.event.trigger(expandMapObj, 'resize');
+          expandMapObj.setCenter(detailCoords); expandMapObj.setZoom(16);
+          if (expandMarker) expandMarker.setMap(null);
+          expandMarker = new google.maps.Marker({ position: detailCoords, map: expandMapObj });
+        }, 120);
+      });
+    }
+    function closeMapExpand() { mapExpandOverlay.classList.remove('open'); document.body.style.overflow = ''; }
+    document.getElementById('detailMapExpand').addEventListener('click', openMapExpand);
+    document.getElementById('mapExpandClose').addEventListener('click', closeMapExpand);
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && mapExpandOverlay.classList.contains('open')) closeMapExpand(); });
 
     // ── Google Maps ──
     let mapReady   = false;

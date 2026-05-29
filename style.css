@@ -1275,6 +1275,55 @@ select.filter-mini-input {
 }
 .koaus-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+/* ── 상세보기 Location 미니맵 ── */
+.post-detail-location { display: flex; flex-direction: column; gap: 8px; }
+.detail-loc-head { display: flex; align-items: center; justify-content: space-between; }
+.detail-loc-title { font-size: 13px; font-weight: 800; color: var(--text-primary); letter-spacing: 0.02em; }
+.detail-loc-expand {
+  display: inline-flex; align-items: center; gap: 5px; padding: 6px 12px;
+  background: none; border: 1px solid var(--border); border-radius: var(--r-sm);
+  font-family: var(--font); font-size: 12px; font-weight: 600; color: var(--text-secondary);
+  cursor: pointer; transition: all 0.12s;
+}
+.detail-loc-expand:hover { border-color: var(--text-primary); color: var(--text-primary); }
+.detail-mini-map {
+  width: 100%; height: 170px; border-radius: var(--r-md); overflow: hidden;
+  border: 1px solid var(--border); background: var(--bg-elevated);
+}
+.map-empty { display: flex; align-items: center; justify-content: center; height: 100%; font-size: 13px; color: var(--text-muted); }
+
+/* ── 지도 전체화면 확대 모달 ── */
+.map-expand-overlay {
+  position: fixed; inset: 0; z-index: 2400; background: var(--bg-base);
+  display: none;
+}
+.map-expand-overlay.open { display: block; }
+.map-expand-canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.map-expand-close {
+  position: absolute; top: 16px; right: 16px; z-index: 5;
+  width: 44px; height: 44px; border-radius: 50%;
+  background: var(--bg-surface); border: 1px solid var(--border); color: var(--text-primary);
+  font-size: 20px; line-height: 1; cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0,0,0,.22); transition: background 0.12s;
+}
+.map-expand-close:hover { background: var(--bg-elevated); }
+.map-fab-group {
+  position: absolute; right: 16px; bottom: 24px; z-index: 5;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.map-fab {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 52px; height: 52px; border-radius: 50%;
+  background: var(--bg-surface); border: 1px solid var(--border); color: var(--text-primary);
+  box-shadow: 0 4px 16px rgba(0,0,0,.22); cursor: pointer; text-decoration: none;
+  transition: background 0.12s, transform 0.1s;
+}
+.map-fab:hover { background: var(--bg-elevated); transform: translateY(-1px); }
+@media (max-width: 768px) {
+  .map-expand-close { top: 12px; right: 12px; }
+  .map-fab-group { right: 12px; bottom: 18px; }
+}
+
 /* 마이페이지 '내가 쓴 글' 액션 버튼 — 'Living' 태그와 동일한 직사각형 박스 */
 .mypage-item-actions { display: flex; gap: 8px; align-items: center; margin-left: auto; }
 .mp-edit, .mp-del {
