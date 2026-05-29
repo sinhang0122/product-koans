@@ -620,37 +620,81 @@
     </div>
   </div>
 
-  <!-- ── Post Detail Modal ── -->
+  <!-- ── Post Detail Modal (Realestate 스타일) ── -->
   <div class="post-detail-overlay" id="detailOverlay">
-    <div class="post-detail-card">
-      <div class="post-detail-header">
-        <div class="post-detail-title" id="detailTitle"></div>
-        <button class="post-detail-close" id="detailClose">✕</button>
-      </div>
-      <div class="post-detail-meta" id="detailMeta"></div>
-      <div class="post-detail-addr" id="detailAddrRow"></div>
-      <div class="post-detail-tags" id="detailTags"></div>
-      <div class="post-detail-body" id="detailBody"></div>
-      <div class="post-detail-contact" id="detailContact"></div>
-      <div class="post-detail-location" id="detailLocation" style="display:none;">
-        <div class="detail-loc-head">
-          <span class="detail-loc-title">Location</span>
-          <button class="detail-loc-expand" id="detailMapExpand" type="button">⛶ 지도 확대</button>
+    <div class="post-detail-card rea-detail">
+     <div class="rea-scroll">
+      <!-- Hero 사진 영역 (Placeholder) -->
+      <div class="rea-hero">
+        <div class="rea-hero-ph">
+          <svg width="54" height="54" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
         </div>
-        <div class="detail-mini-map" id="detailMiniMap"></div>
-      </div>
-      <div class="post-detail-tools">
-        <button class="detail-tool-btn detail-tool-btn--report" id="detailReportBtn" type="button">🚨 신고하기</button>
-        <div class="detail-share-wrap">
-          <button class="detail-tool-btn" id="detailShareBtn" type="button">🔗 공유하기</button>
-          <div class="detail-share-menu" id="detailShareMenu">
-            <button type="button" data-share="kakao">💬 카카오톡 공유</button>
-            <button type="button" data-share="facebook">📘 페이스북 공유</button>
-            <button type="button" data-share="copy">🔗 링크 복사</button>
+        <div class="rea-hero-top">
+          <button class="rea-ovl-btn" id="detailSaveBtn" type="button" aria-label="저장">☆</button>
+          <div class="rea-share-wrap">
+            <button class="rea-ovl-btn" id="detailShareBtn" type="button" aria-label="공유하기">🔗</button>
+            <div class="detail-share-menu" id="detailShareMenu">
+              <button type="button" data-share="kakao">💬 카카오톡 공유</button>
+              <button type="button" data-share="facebook">📘 페이스북 공유</button>
+              <button type="button" data-share="copy">🔗 링크 복사</button>
+            </div>
           </div>
         </div>
+        <div class="rea-hero-counter">1 / 5</div>
       </div>
-      <div class="post-detail-actions" id="detailActions"></div>
+
+      <!-- Sticky 네비 헤더 -->
+      <div class="rea-navbar">
+        <button class="rea-back" id="detailClose" type="button" aria-label="뒤로가기">‹</button>
+        <span class="rea-nav-title" id="detailNavTitle"></span>
+      </div>
+
+      <div class="rea-content">
+        <div class="rea-status" id="detailStatus"></div>
+        <div class="rea-price" id="detailPrice"></div>
+        <div class="rea-addr-row">
+          <span class="rea-addr" id="detailAddrText"></span>
+          <button class="detail-addr-copy" id="detailAddrCopy" type="button" title="주소 복사" aria-label="주소 복사">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          </button>
+        </div>
+        <div class="rea-summary" id="detailSummary"></div>
+
+        <div class="rea-section" id="detailLocation" style="display:none;">
+          <h3 class="rea-subtitle">Location</h3>
+          <div class="rea-map-wrap">
+            <div class="detail-mini-map" id="detailMiniMap"></div>
+            <button class="rea-map-expand" id="detailMapExpand" type="button" aria-label="지도 확대">⛶</button>
+          </div>
+          <div class="rea-loc-btns">
+            <a class="rea-loc-btn" id="detailDirBtn" target="_blank" rel="noopener noreferrer">
+              <span>📍 길찾기 <em>See travel times</em></span><span class="rea-loc-arrow">›</span></a>
+            <a class="rea-loc-btn" id="detailSvBtn" target="_blank" rel="noopener noreferrer">
+              <span>🛣️ 스트릿뷰 <em>Street View</em></span><span class="rea-loc-arrow">›</span></a>
+          </div>
+        </div>
+
+        <div class="rea-section">
+          <h3 class="rea-subtitle">Description</h3>
+          <div class="rea-desc" id="detailBody"></div>
+          <button class="rea-more" id="detailMore" type="button" style="display:none;">더보기 ›</button>
+        </div>
+
+        <div class="rea-section" id="detailFeaturesSec" style="display:none;">
+          <h3 class="rea-subtitle">Property features</h3>
+          <ul class="rea-features" id="detailFeatures"></ul>
+        </div>
+
+        <div class="rea-owner-actions" id="detailActions"></div>
+
+        <button class="rea-report" id="detailReportBtn" type="button">🚨 신고하기</button>
+      </div>
+     </div><!-- /rea-scroll -->
+
+      <!-- Sticky 하단 액션바 -->
+      <div class="rea-actionbar">
+        <button class="rea-contact-btn" id="detailContactBtn" type="button">연락처 보기</button>
+      </div>
     </div>
   </div>
 
@@ -1533,59 +1577,85 @@
       const p = posts.find(x => String(x.id) === String(id));
       if (!p) return;
       currentDetailPost = p;
-      document.getElementById('detailTitle').textContent = p.title;
-      document.getElementById('detailMeta').innerHTML =
-        `<span>${authorLabel(p)}</span><span>${p.date}${p.time ? ' ' + p.time : ''}</span>` +
-        (p.price   ? `<span>$${p.price}/wk</span>` : '');
-      // 주소 행: 복사 + 길찾기 + 스트릿뷰 (외부 링크 아웃링크)
-      const addrRow = document.getElementById('detailAddrRow');
+
+      document.getElementById('detailNavTitle').textContent = p.title;
+      // 상태 + 입주 가능일
+      document.getElementById('detailStatus').innerHTML =
+        `⚪ 쉐어 <span class="rea-dot">•</span> 입주 가능일: <strong>${escHtml(p.availableDate || '협의')}</strong>`;
+      // 가격 (Huge Bold)
+      document.getElementById('detailPrice').innerHTML = p.price
+        ? `$${p.price} <span class="rea-price-unit">per week</span>`
+        : '<span class="rea-price-na">가격 협의</span>';
+      // 주소 + 복사
+      const addrText = document.getElementById('detailAddrText');
+      const addrCopy = document.getElementById('detailAddrCopy');
       if (p.address) {
-        const dirUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(p.address)}&travelmode=transit`;
-        const svUrl  = (p.lat && p.lng)
-          ? `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${p.lat},${p.lng}`
-          : `https://www.google.com/maps?q=${encodeURIComponent(p.address)}&layer=c`;
-        addrRow.innerHTML =
-          `<span class="detail-addr-text">📍 ${escHtml(p.address)}</span>` +
-          `<button class="detail-addr-copy" id="detailAddrCopy" type="button" title="주소 복사" aria-label="주소 복사">` +
-          `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>` +
-          `<a class="detail-addr-link" href="${dirUrl}" target="_blank" rel="noopener noreferrer">📍 길찾기</a>` +
-          `<a class="detail-addr-link" href="${svUrl}" target="_blank" rel="noopener noreferrer">🛣️ 스트릿뷰</a>`;
-        document.getElementById('detailAddrCopy').onclick = () => copyAddress(p.address);
-        addrRow.style.display = 'flex';
-      } else { addrRow.innerHTML = ''; addrRow.style.display = 'none'; }
-      // 상세 필터 항목들을 태그로 렌더링
-      document.getElementById('detailTags').innerHTML =
-        filterTags(p).map(t => `<span class="post-detail-tag">${escHtml(t)}</span>`).join('');
+        addrText.textContent = '📍 ' + p.address;
+        addrCopy.style.display = '';
+        addrCopy.onclick = () => copyAddress(p.address);
+      } else { addrText.textContent = '주소 미등록'; addrCopy.style.display = 'none'; }
 
-      document.getElementById('detailBody').textContent = p.body;
-      const contactEl = document.getElementById('detailContact');
-      if (p.contact) {
-        // 연락처가 http(s) 링크면 클릭 가능한 a태그(오픈채팅 등), 그 외는 텍스트 (javascript: 등 차단)
-        const isLink = /^https?:\/\//i.test(p.contact);
-        contactEl.innerHTML = '📞 연락처: ' + (isLink
-          ? `<a href="${escHtml(p.contact)}" target="_blank" rel="noopener noreferrer">${escHtml(p.contact)}</a>`
-          : `<strong>${escHtml(p.contact)}</strong>`);
-      } else {
-        contactEl.innerHTML = '';
-      }
+      // 핵심 요약 칩 (방형태 / 성별 / 숙박기간)
+      const sum = [];
+      const rooms = Array.isArray(p.roomTypes) ? p.roomTypes : (p.roomType ? [p.roomType] : []);
+      rooms.forEach(r => { if (ROOM_LABELS[r]) sum.push('🛏 ' + ROOM_LABELS[r]); });
+      if (p.gender && GENDER_LABELS[p.gender]) sum.push('👤 ' + GENDER_LABELS[p.gender]);
+      const durs = Array.isArray(p.types) ? p.types : (p.type ? [p.type] : []);
+      durs.forEach(t => { if (TYPE_LABELS[t]) sum.push('📅 ' + TYPE_LABELS[t].ko); });
+      document.getElementById('detailSummary').innerHTML = sum.map(s => `<span class="rea-chip">${escHtml(s)}</span>`).join('');
 
-      // 본인 글이면 수정/삭제 버튼 노출
+      // Description (+ 더보기)
+      const bodyEl = document.getElementById('detailBody');
+      const moreBtn = document.getElementById('detailMore');
+      bodyEl.textContent = p.body || '';
+      bodyEl.classList.remove('expanded');
+      moreBtn.textContent = '더보기 ›';
+      moreBtn.onclick = () => { const e = bodyEl.classList.toggle('expanded'); moreBtn.textContent = e ? '접기 ‹' : '더보기 ›'; };
+      requestAnimationFrame(() => {
+        moreBtn.style.display = (bodyEl.scrollHeight > bodyEl.clientHeight + 4) ? '' : 'none';
+      });
+
+      // Property features (옵션)
+      const feats = [];
+      if (p.parking)     feats.push('주차 가능');
+      if (p.petFriendly) feats.push('반려동물 가능');
+      if (p.kidsInHouse) feats.push('아이 있는 집');
+      if (p.airCon)      feats.push('에어컨');
+      const featSec = document.getElementById('detailFeaturesSec');
+      if (feats.length) {
+        document.getElementById('detailFeatures').innerHTML = feats.map(f =>
+          `<li class="rea-feat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>${escHtml(f)}</li>`).join('');
+        featSec.style.display = '';
+      } else { featSec.style.display = 'none'; }
+
+      // 저장(★) 토글
+      const saveBtn = document.getElementById('detailSaveBtn');
+      const setStar = () => { const on = isSaved(p.id); saveBtn.textContent = on ? '★' : '☆'; saveBtn.classList.toggle('saved', on); };
+      setStar();
+      saveBtn.onclick = () => { toggleSaved(p); setStar(); renderAll(); };
+
+      // 본인 글: 수정/삭제
       const actEl = document.getElementById('detailActions');
       if (isMine(p)) {
-        actEl.innerHTML = `
-          <button class="detail-edit-btn" id="detailEditBtn">수정하기</button>
-          <button class="detail-delete-btn" id="detailDeleteBtn">삭제하기</button>`;
+        actEl.innerHTML = `<button class="detail-edit-btn" id="detailEditBtn">수정하기</button><button class="detail-delete-btn" id="detailDeleteBtn">삭제하기</button>`;
         document.getElementById('detailEditBtn').onclick   = () => openWriteModalForEdit(p);
         document.getElementById('detailDeleteBtn').onclick = () => deletePost(p.id);
         actEl.style.display = 'flex';
-      } else {
-        actEl.innerHTML = '';
-        actEl.style.display = 'none';
-      }
+      } else { actEl.innerHTML = ''; actEl.style.display = 'none'; }
+
+      // 하단 연락처 버튼
+      const cbtn = document.getElementById('detailContactBtn');
+      if (p.contact) {
+        const isLink = /^https?:\/\//i.test(p.contact);
+        cbtn.disabled = false;
+        if (isLink) { cbtn.textContent = '💬 카카오톡으로 연락하기'; cbtn.onclick = () => window.open(p.contact, '_blank', 'noopener'); }
+        else { cbtn.textContent = '📞 연락처 보기'; cbtn.onclick = () => copyText(p.contact, `연락처: ${p.contact}`); }
+      } else { cbtn.textContent = '연락처 미등록'; cbtn.disabled = true; cbtn.onclick = null; }
 
       setupDetailLocation(p);
       recordRecent(p);
       document.getElementById('detailOverlay').classList.add('open');
+      const rc = document.querySelector('.rea-content'); if (rc) rc.scrollTop = 0;
     }
 
     function deletePost(id) {
@@ -1723,10 +1793,20 @@
       if (!p.address) { sec.style.display = 'none'; detailCoords = null; return; }
       sec.style.display = '';
       detailAddr = p.address;
+      // 길찾기 / 스트릿뷰 리스트 버튼 외부 링크
+      document.getElementById('detailDirBtn').href =
+        `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(p.address)}&travelmode=transit`;
+      const setSvHref = () => {
+        document.getElementById('detailSvBtn').href = detailCoords
+          ? `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${detailCoords.lat},${detailCoords.lng}`
+          : `https://www.google.com/maps?q=${encodeURIComponent(p.address)}&layer=c`;
+      };
       detailCoords = (p.lat && p.lng) ? { lat: p.lat, lng: p.lng } : null;
+      setSvHref();
       if (!detailCoords) {            // 좌표 없으면 주소로 지오코딩 (best-effort)
         loadMapScript();
         detailCoords = await geocode(p.address);
+        setSvHref();
       }
       const el = document.getElementById('detailMiniMap');
       if (!detailCoords) { el.innerHTML = '<div class="map-empty">지도 위치를 찾을 수 없습니다.</div>'; return; }

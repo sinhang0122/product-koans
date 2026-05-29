@@ -762,6 +762,120 @@ select.write-input {
 .post-detail-contact:empty { display: none; }
 
 /* ════════════════════════════════════════════════════════════════════════
+   상세보기 — Realestate 스타일 (B&W)
+════════════════════════════════════════════════════════════════════════ */
+.rea-detail {
+  padding: 0; gap: 0; max-width: 480px; overflow: hidden;
+  max-height: calc(100vh - 80px); display: flex; flex-direction: column;
+}
+.rea-scroll { flex: 1 1 auto; overflow-y: auto; min-height: 0; }
+/* Hero 사진 영역 (Placeholder) */
+.rea-hero {
+  position: relative; width: 100%; aspect-ratio: 16 / 9;
+  background:
+    repeating-linear-gradient(45deg, var(--bg-elevated) 0 14px, transparent 14px 28px),
+    linear-gradient(160deg, var(--bg-card), var(--bg-elevated));
+  display: flex; align-items: center; justify-content: center;
+  border-bottom: 1px solid var(--border);
+}
+.rea-hero-ph { color: var(--text-muted); opacity: 0.7; }
+.rea-hero-top { position: absolute; top: 12px; right: 12px; display: flex; gap: 8px; z-index: 2; }
+.rea-ovl-btn {
+  width: 38px; height: 38px; border-radius: 50%;
+  background: var(--bg-surface); border: 1px solid var(--border); color: var(--text-primary);
+  font-size: 16px; line-height: 1; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+  box-shadow: 0 2px 10px rgba(0,0,0,.18); transition: background 0.12s;
+}
+.rea-ovl-btn:hover { background: var(--bg-elevated); }
+.rea-ovl-btn.saved { color: var(--accent); }
+.rea-share-wrap { position: relative; }
+.rea-share-wrap .detail-share-menu { top: calc(100% + 6px); }
+.rea-hero-counter {
+  position: absolute; right: 12px; bottom: 12px; z-index: 2;
+  padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700;
+  background: rgba(0,0,0,.6); color: #fff;
+}
+/* Sticky 네비 헤더 */
+.rea-navbar {
+  position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: 6px;
+  padding: 10px 14px; background: var(--bg-surface); border-bottom: 1px solid var(--border);
+}
+.rea-back {
+  width: 34px; height: 34px; flex-shrink: 0; border: none; background: none; cursor: pointer;
+  font-size: 26px; line-height: 1; color: var(--text-primary); border-radius: var(--r-sm);
+}
+.rea-back:hover { background: var(--bg-elevated); }
+.rea-nav-title { font-size: 14px; font-weight: 700; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* 콘텐츠 */
+.rea-content { padding: 18px 20px 20px; display: flex; flex-direction: column; gap: 6px; }
+.rea-status { font-size: 12.5px; color: var(--text-muted); font-weight: 600; }
+.rea-status .rea-dot { margin: 0 4px; }
+.rea-price { font-size: 34px; font-weight: 900; color: var(--text-primary); line-height: 1.1; letter-spacing: -0.02em; margin: 2px 0 4px; }
+.rea-price-unit { font-size: 15px; font-weight: 600; color: var(--text-muted); }
+.rea-price-na { font-size: 22px; font-weight: 800; color: var(--text-secondary); }
+.rea-addr-row { display: flex; align-items: center; gap: 8px; }
+.rea-addr { font-size: 14px; color: var(--text-secondary); font-weight: 600; flex: 1; min-width: 0; }
+.rea-summary { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
+.rea-chip {
+  padding: 7px 12px; background: var(--bg-elevated); border: 1px solid var(--border);
+  border-radius: 999px; font-size: 12.5px; font-weight: 600; color: var(--text-primary);
+}
+/* 섹션 공통 */
+.rea-section { padding-top: 18px; margin-top: 16px; border-top: 1px solid var(--border-subtle); display: flex; flex-direction: column; gap: 10px; }
+.rea-subtitle { font-size: 15px; font-weight: 800; color: var(--text-primary); letter-spacing: 0.01em; }
+/* 미니맵 */
+.rea-map-wrap { position: relative; }
+.rea-map-wrap .detail-mini-map { width: 100%; height: 180px; border-radius: var(--r-lg); border: 1px solid var(--border); overflow: hidden; }
+.rea-map-expand {
+  position: absolute; top: 10px; right: 10px; z-index: 2;
+  width: 34px; height: 34px; border-radius: var(--r-sm);
+  background: var(--bg-surface); border: 1px solid var(--border); color: var(--text-primary);
+  font-size: 15px; cursor: pointer; box-shadow: 0 2px 10px rgba(0,0,0,.18);
+}
+.rea-map-expand:hover { background: var(--bg-elevated); }
+/* 길찾기 / 스트릿뷰 리스트 버튼 */
+.rea-loc-btns { display: flex; flex-direction: column; gap: 8px; }
+.rea-loc-btn {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 14px 16px; background: var(--bg-elevated); border: 1px solid var(--border);
+  border-radius: var(--r-md); color: var(--text-primary); text-decoration: none;
+  font-size: 14px; font-weight: 700; transition: border-color 0.12s, background 0.12s;
+}
+.rea-loc-btn em { font-style: normal; font-size: 12px; font-weight: 500; color: var(--text-muted); margin-left: 4px; }
+.rea-loc-btn:hover { border-color: var(--text-primary); }
+.rea-loc-arrow { color: var(--text-muted); font-size: 18px; }
+/* 설명 (더보기) */
+.rea-desc { font-size: 15px; color: var(--text-primary); line-height: 1.8; white-space: pre-wrap; word-break: break-word;
+  max-height: 150px; overflow: hidden; }
+.rea-desc.expanded { max-height: none; }
+.rea-more { align-self: flex-start; background: none; border: none; cursor: pointer; padding: 4px 0;
+  font-family: var(--font); font-size: 13px; font-weight: 700; color: var(--text-secondary); }
+.rea-more:hover { color: var(--text-primary); }
+/* 옵션 (체크리스트) */
+.rea-features { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.rea-feat { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--text-primary); }
+.rea-feat svg { color: var(--accent); flex-shrink: 0; }
+/* 본인 글 액션 + 신고 */
+.rea-owner-actions { display: none; gap: 8px; margin-top: 16px; }
+.rea-report { align-self: flex-start; margin-top: 14px; background: none; border: none; cursor: pointer;
+  font-family: var(--font); font-size: 12.5px; font-weight: 600; color: var(--text-muted); }
+.rea-report:hover { color: var(--red); }
+/* 하단 고정 액션바 */
+.rea-actionbar { flex-shrink: 0; padding: 12px 16px; background: var(--bg-surface); border-top: 1px solid var(--border); }
+.rea-contact-btn {
+  width: 100%; padding: 15px; border-radius: var(--r-md); cursor: pointer;
+  background: var(--accent); color: var(--accent-text); border: 1px solid var(--accent);
+  font-family: var(--font); font-size: 15px; font-weight: 800; transition: all 0.15s;
+}
+.rea-contact-btn:hover:not(:disabled) { background: var(--bg-surface); color: var(--text-primary); }
+.rea-contact-btn:disabled { background: var(--bg-elevated); color: var(--text-muted); border-color: var(--border); cursor: default; }
+/* 모바일: 풀스크린 (쉐어 상세 .rea-detail 한정 — 렌트 등 다른 모달 영향 없음) */
+@media (max-width: 768px) {
+  .post-detail-overlay:has(.rea-detail) { padding: 0; align-items: stretch; }
+  .rea-detail { max-width: 100%; max-height: 100vh; height: 100vh; border-radius: 0; border: none; }
+}
+
+/* ════════════════════════════════════════════════════════════════════════
    Footer v2
 ════════════════════════════════════════════════════════════════════════ */
 .site-footer {
