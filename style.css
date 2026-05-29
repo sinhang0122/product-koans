@@ -1293,12 +1293,14 @@ select.write-input {
 .write-opt:hover { border-color: var(--border-focus); }
 .write-opt input { accent-color: var(--accent); width: 16px; height: 16px; cursor: pointer; flex-shrink: 0; }
 
+/* 모바일/태블릿(≤768px): 2단 → 1단 스택 (폼 찌그러짐 방지) */
+@media (max-width: 768px) {
+  .write-grid { grid-template-columns: 1fr; gap: 0; }
+}
 @media (max-width: 640px) {
   .write-field--row { flex-direction: column; }
   .accom-grid { grid-template-columns: 1fr; }
   .accom-tab { font-size: 13px; padding: 12px 10px; }
-  /* 좁은 화면: 2단 → 1단으로 스택, 모달 여백 축소 */
-  .write-grid { grid-template-columns: 1fr; gap: 0; }
   .write-overlay { padding: 12px; }
   .write-modal { padding: 22px 16px; }
 }
