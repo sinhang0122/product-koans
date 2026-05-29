@@ -1062,15 +1062,22 @@ select.write-input {
 
 /* ── 쉐어 3대 핵심 필터 바 (PC: 가로 / 모바일: 아코디언) ── */
 .accom-filters { margin-bottom: 18px; }
+/* '상세 필터 ▼' 토글 — 모든 화면에서 노출, 클릭 시 필터 펼침/접힘 */
 .filters-toggle {
-  display: none; width: 100%; align-items: center; justify-content: space-between;
+  display: flex; width: 100%; align-items: center; justify-content: space-between;
   padding: 11px 16px; background: var(--bg-surface);
   border: 1px solid var(--border); border-radius: var(--r-md);
   color: var(--text-primary); font-family: var(--font); font-size: 14px; font-weight: 700; cursor: pointer;
 }
 .filters-arrow { flex-shrink: 0; transition: transform 0.25s ease; }
 .accom-filters.open .filters-arrow { transform: rotate(180deg); }
-.filters-body { display: flex; gap: 12px; align-items: flex-end; }
+/* 기본은 접힘, .open일 때만 펼침 (PC=가로 / 모바일=세로) */
+.filters-body {
+  display: flex; gap: 12px; align-items: flex-end;
+  max-height: 0; overflow: hidden; padding: 0;
+  transition: max-height 0.3s ease, padding 0.3s ease;
+}
+.accom-filters.open .filters-body { max-height: 200px; padding-top: 12px; }
 .filter-item { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
 .filter-mini-label { font-size: 12px; font-weight: 600; color: var(--text-secondary); }
 .filter-mini-input {
@@ -1089,16 +1096,30 @@ select.filter-mini-input {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
 }
 @media (max-width: 768px) {
-  .filters-toggle { display: flex; }
-  .filters-body {
-    flex-direction: column; align-items: stretch; gap: 10px;
-    max-height: 0; overflow: hidden; transition: max-height 0.3s ease, padding 0.3s ease; padding: 0;
-  }
-  .accom-filters.open .filters-body { max-height: 420px; padding-top: 12px; }
+  .filters-body { flex-direction: column; align-items: stretch; gap: 10px; }
+  .accom-filters.open .filters-body { max-height: 480px; padding-top: 12px; }
 }
 /* 상세 설명 textarea가 우측 단 남는 세로 공간을 유연하게 채움 */
 .write-field--grow { flex: 1; }
 .write-field--grow .write-textarea { flex: 1; min-height: 96px; }
+
+/* ── 주소 자동완성 드롭다운 (Google Places 스타일, B&W) ── */
+.addr-ac { position: relative; }
+.addr-suggest {
+  position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 60;
+  list-style: none; margin: 0; padding: 4px;
+  background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--r-md);
+  max-height: 248px; overflow-y: auto;
+  box-shadow: 0 10px 28px rgba(0,0,0,.22); display: none;
+}
+.addr-suggest.show { display: block; }
+.addr-suggest li {
+  padding: 10px 12px; border-radius: var(--r-sm); cursor: pointer;
+  font-size: 13px; color: var(--text-primary);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.addr-suggest li:hover, .addr-suggest li.active { background: var(--bg-elevated); }
+.addr-suggest li .addr-sub { color: var(--text-muted); font-size: 11px; margin-left: 4px; }
 @media (max-width: 768px) { .write-field--grow { flex: none; } }
 
 /* ── Accom Cards ── */

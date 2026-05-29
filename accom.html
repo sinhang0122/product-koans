@@ -522,7 +522,10 @@
           </div>
           <div class="write-field offer-only">
             <label class="write-label" for="wAddress">주소 Address<span class="required-mark">*</span></label>
-            <input class="write-input" id="wAddress" type="text" placeholder="예: Strathfield, NSW 또는 1 Park St, Sydney" />
+            <div class="addr-ac">
+              <input class="write-input" id="wAddress" type="text" autocomplete="off" placeholder="도로명·지역명만 입력해도 OK (예: Coronation Dr, Green Valley NSW)" />
+              <ul class="addr-suggest" id="wAddressSuggest"></ul>
+            </div>
           </div>
           <div class="write-field offer-only">
             <label class="write-label" for="wPrice">주당 쉐어비 Price / wk ($)<span class="required-mark">*</span></label>
@@ -849,6 +852,8 @@
       setTypeChecks([]);  // 기간 체크 초기화
       applyWriteModeUI();
       document.getElementById('wAuthorName').textContent = currentNickname() || '-';  // 헤더 작성자 배지
+      loadMapScript();              // Places(주소 자동완성) 미리 로드
+      initAddressAutocomplete();    // 이미 로드돼 있으면 즉시 연결
       writeOverlay.classList.add('open');
       document.body.style.overflow = 'hidden';
     }
@@ -892,6 +897,45 @@
       }
       submitPost();
     });
+
+    // ── 주소 자동완성 (Google Places) — 도로명/지역명만으로도 선택 가능 (번지수 불필요) ──
+    let acService = null, acWired = false;
+    function initAddressAutocomplete() {
+      if (acWired) return;
+      if (!(window.google && google.maps && google.maps.places && google.maps.places.AutocompleteService)) return;
+      acService = new google.maps.places.AutocompleteService();
+      acWired = true;
+      const input = document.getElementById('wAddress');
+      const list  = document.getElementById('wAddressSuggest');
+      let timer = null;
+      const hide = () => { list.classList.remove('show'); list.innerHTML = ''; };
+      input.addEventListener('input', () => {
+        const q = input.value.trim();
+        clearTimeout(timer);
+        if (q.length < 2) { hide(); return; }
+        timer = setTimeout(() => {
+          // types: 'geocode' → 상세 주소 + 도로명/지역명 모두 추천 (호주 한정)
+          acService.getPlacePredictions({ input: q, componentRestrictions: { country: 'au' }, types: ['geocode'] }, (preds, status) => {
+            if (status !== google.maps.places.PlacesServiceStatus.OK || !preds || !preds.length) { hide(); return; }
+            list.innerHTML = preds.slice(0, 6).map(p => {
+              const sf   = p.structured_formatting || {};
+              const main = escHtml(sf.main_text || p.description);
+              const sec  = sf.secondary_text ? `<span class="addr-sub">${escHtml(sf.secondary_text)}</span>` : '';
+              return `<li data-desc="${escHtml(p.description)}">📍 ${main} ${sec}</li>`;
+            }).join('');
+            list.classList.add('show');
+          });
+        }, 250);
+      });
+      list.addEventListener('click', e => {
+        const li = e.target.closest('li');
+        if (!li) return;
+        input.value = li.dataset.desc;  // 번지수 없는 도로명/지역명도 그대로 인정
+        hide();
+      });
+      input.addEventListener('keydown', e => { if (e.key === 'Escape') hide(); });
+      document.addEventListener('click', e => { if (!e.target.closest('.addr-ac')) hide(); });
+    }
 
     // 주소 텍스트 → 좌표 변환 (google.maps.Geocoder 우선, 실패 시 REST 폴백)
     function geocode(address) {
@@ -1364,9 +1408,10 @@
         map.addListener('dragend', showAreaBtn);
         map.addListener('zoom_changed', showAreaBtn);
         updateMapMarkers(applyFilters(loadPosts()));
+        initAddressAutocomplete();  // Places 로드 완료 → 주소 자동완성 연결
       };
       const script   = document.createElement('script');
-      script.src     = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_KEY}&loading=async&callback=initMap`;
+      script.src     = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_KEY}&libraries=places&loading=async&callback=initMap`;
       script.async   = true;
       script.defer   = true;
       script.onerror = () => {
