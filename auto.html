@@ -26,7 +26,7 @@
       <span class="topbar-tagline"><b>Korea&nbsp;-&nbsp;Australia</b><span class="topbar-tagline-div">|</span>호주 한인 커뮤니티의 새로운 기준</span>
     </a>
     <div class="topbar-actions">
-      <a href="index.html" class="topbar-login-btn">로그인</a>
+      <a href="index.html" class="topbar-login-btn" id="topbarLoginBtn">로그인</a>
       <button class="topbar-theme-btn" id="themeToggleBtn" type="button" aria-label="테마 변경" title="테마 변경 (Light / Dark)">
         <svg class="ico-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
         <svg class="ico-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
@@ -420,20 +420,20 @@
       <a href="index.html" class="page-back">← 홈으로</a>
     </div>
 
+    <!-- 4대 통합 카테고리 탭 -->
+    <div class="auto-tabs" id="autoTabs">
+      <button class="auto-tab active" data-cat="used-car">중고차 <em>Buy &amp; Sell</em></button>
+      <button class="auto-tab" data-cat="mechanic">정비·인스펙션 <em>Mechanic</em></button>
+      <button class="auto-tab" data-cat="emergency">긴급출동·견인 <em>Emergency</em></button>
+      <button class="auto-tab" data-cat="rental">렌트카 <em>Rental</em></button>
+    </div>
+
     <div class="board-toolbar">
       <span class="board-count" id="boardCount">총 0건</span>
       <button class="board-write-btn" id="writeBtnOpen">+ 글쓰기</button>
     </div>
 
-    <div class="post-list-table">
-      <div class="post-list-head">
-        <span class="post-num">번호</span>
-        <span class="post-title">제목</span>
-        <span class="post-author">작성자</span>
-        <span class="post-date">날짜</span>
-      </div>
-      <div id="postList"></div>
-    </div>
+    <div id="postList" class="accom-grid accom-grid--compact"></div>
     <div class="pagination" id="pagination"></div>
 
   </main>
@@ -488,6 +488,21 @@
     </div>
   </div>
 
+  <!-- ── 이메일 인증 필요 모달 (글쓰기 소프트 게이트) ── -->
+  <div class="report-overlay" id="verifyOverlay">
+    <div class="report-modal">
+      <div class="report-header">
+        <span class="report-title">✉️ 이메일 인증 필요</span>
+        <button class="report-close" id="verifyClose" type="button" aria-label="닫기">✕</button>
+      </div>
+      <p class="verify-modal-msg">게시글을 작성하려면 이메일 인증이 필요합니다. 메일함을 확인해 주세요.</p>
+      <div class="report-actions">
+        <button class="filter-reset-btn" id="verifyResendBtn" type="button">인증 메일 재전송</button>
+        <button class="filter-apply-btn" id="verifyOkBtn" type="button">확인</button>
+      </div>
+    </div>
+  </div>
+
   <footer class="site-footer"><p>KoAus &mdash; 호주 한인 포털 &nbsp;·&nbsp; 2026</p></footer>
 
   <script>
@@ -523,36 +538,47 @@
     if (themeToggleBtn) themeToggleBtn.addEventListener('click', () => applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'));
     applyTheme(localStorage.getItem('koaus-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
 
-    // ── Auto 게시판 ──
-    const CATEGORIES = {
-      'used-car':   '중고차 판매',
-      'inspection': '동행 인스펙션',
-      'repair':     '수리',
-      'quote':      '견적',
-      'rental':     '렌트카',
-      'lift':       '리프트 (카풀)',
-      'emergency':  '긴급출동',
-      'tow':        '견인',
+    // ── Auto 게시판 (4대 통합 카테고리) ──
+    const CAT_LABELS = {
+      'used-car':  '중고차 (Buy & Sell)',
+      'mechanic':  '정비 및 인스펙션',
+      'emergency': '긴급출동 및 견인',
+      'rental':    '렌트카',
     };
+    // 구 8개 카테고리 → 4개 그룹 매핑 (기존 데이터·링크 호환)
+    const CAT_GROUP = {
+      'used-car':'used-car', 'inspection':'mechanic', 'repair':'mechanic', 'quote':'mechanic',
+      'mechanic':'mechanic', 'emergency':'emergency', 'tow':'emergency', 'rental':'rental', 'lift':'rental',
+    };
+    const groupOf = c => CAT_GROUP[c] || 'used-car';
     const STATE_NAMES = { nsw:'NSW', vic:'VIC', qld:'QLD', wa:'WA', sa:'SA', tas:'TAS', act:'ACT', nt:'NT' };
     const params   = new URLSearchParams(location.search);
-    const category = CATEGORIES[params.get('category')] ? params.get('category') : 'used-car';
     const stateKey = (params.get('state') || '').toLowerCase();
     const STORE_KEY = 'koaus-auto-posts';  // 단일 컬렉션, category 속성으로 구분
-    // 한 번에 20개씩만 렌더(페이지네이션). 향후 Firestore 전환 시:
-    //   query(collection(db,'auto_posts'), where('category','==',category), orderBy('id','desc'), limit(PER_PAGE))
-    //   다음 페이지는 startAfter(lastDoc) 커서로만 추가 조회 → read 비용 최소화.
+    let activeCategory = groupOf(params.get('category'));  // 진입 시 ?category를 4그룹으로 매핑 (기본 used-car)
     const PER_PAGE = 20;
     let currentPage = 1;
 
-    document.getElementById('autoTitle').textContent = '🚗 ' + (STATE_NAMES[stateKey] ? STATE_NAMES[stateKey] + ' ' : '') + CATEGORIES[category];
-    document.getElementById('autoSubtitle').textContent = 'Auto · ' + CATEGORIES[category] + ' 게시판';
+    function updateAutoTitle() {
+      document.getElementById('autoTitle').textContent = '🚗 ' + (STATE_NAMES[stateKey] ? STATE_NAMES[stateKey] + ' ' : '') + CAT_LABELS[activeCategory];
+      document.getElementById('autoSubtitle').textContent = 'Auto · ' + CAT_LABELS[activeCategory] + ' 게시판';
+    }
 
     function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
     function loadAll() { try { return JSON.parse(localStorage.getItem(STORE_KEY) || '[]'); } catch { return []; } }
     function saveAll(arr) { localStorage.setItem(STORE_KEY, JSON.stringify(arr)); }
-    // 현재 카테고리 글만 필터링
-    function loadPosts() { return loadAll().filter(p => p.category === category); }
+    // 현재 활성 탭(그룹) 글만 필터링 (구 카테고리는 그룹으로 매핑해 비교)
+    function loadPosts() { return loadAll().filter(p => groupOf(p.category) === activeCategory); }
+
+    // 탭 전환
+    function setActiveCategory(cat) {
+      if (!CAT_LABELS[cat]) return;
+      activeCategory = cat; currentPage = 1;
+      document.querySelectorAll('#autoTabs .auto-tab').forEach(t => t.classList.toggle('active', t.dataset.cat === cat));
+      updateAutoTitle();
+      renderPosts();
+    }
+    document.querySelectorAll('#autoTabs .auto-tab').forEach(t => t.addEventListener('click', () => setActiveCategory(t.dataset.cat)));
 
     function renderPosts() {
       const all = loadPosts().slice().sort((a, b) => b.id - a.id);
@@ -564,15 +590,19 @@
       if (currentPage > totalPages) currentPage = totalPages;
       const start = (currentPage - 1) * PER_PAGE;
       const items = all.slice(start, start + PER_PAGE);
-      list.innerHTML = items.map((p, i) =>
-        '<div class="post-row" data-id="' + p.id + '" style="cursor:pointer">'
-        + '<span class="post-num">' + (all.length - (start + i)) + '</span>'
-        + '<span class="post-title" style="color:var(--text-primary);font-weight:500;">' + escHtml(p.title) + '</span>'
-        + '<span class="post-author">' + escHtml(p.author || '익명') + '</span>'
-        + '<span class="post-date">' + p.date + (p.time ? ' ' + p.time : '') + '</span>'
-        + '</div>'
-      ).join('');
-      list.querySelectorAll('.post-row').forEach(row => row.addEventListener('click', () => openDetail(row.dataset.id)));
+      list.innerHTML = items.map(p => {
+        const region = STATE_NAMES[p.state] || '';
+        const snip = (p.body || '').replace(/\s+/g, ' ').trim();
+        return '<div class="accom-card" data-id="' + p.id + '">'
+          + '<div class="accom-card-thumb"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l1.5-4.5A2 2 0 0 1 8.4 7h7.2a2 2 0 0 1 1.9 1.5L19 13"/><path d="M3 13h18v4a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1v-1H6v1a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><circle cx="7.5" cy="15.5" r="1"/><circle cx="16.5" cy="15.5" r="1"/></svg></div>'
+          + '<div class="accom-card-info">'
+          +   '<div class="auto-card-title">' + escHtml(p.title) + '</div>'
+          +   (snip ? '<div class="auto-card-snip">' + escHtml(snip) + '</div>' : '')
+          +   '<div class="auto-card-meta">' + (region ? '📍 ' + region + ' · ' : '') + '👤 ' + escHtml(p.author || '익명') + ' · 🗓 ' + p.date + (p.time ? ' ' + p.time : '') + '</div>'
+          + '</div>'
+          + '</div>';
+      }).join('');
+      list.querySelectorAll('.accom-card').forEach(row => row.addEventListener('click', () => openDetail(row.dataset.id)));
       pager.innerHTML = '';
       if (totalPages > 1) {
         for (let i = 1; i <= totalPages; i++) pager.innerHTML += '<button class="pagination-btn' + (i === currentPage ? ' active' : '') + '" data-page="' + i + '">' + i + '</button>';
@@ -594,7 +624,13 @@
 
     // ── Write ──
     const writeOverlay = document.getElementById('writeOverlay');
-    document.getElementById('writeBtnOpen').addEventListener('click', () => writeOverlay.classList.add('open'));
+    // 글쓰기 소프트 게이트: 로그인 + 이메일 인증 검사
+    document.getElementById('writeBtnOpen').addEventListener('click', () => {
+      const u = window.koausAuth && window.koausAuth.user;
+      if (!u) { alert('글을 작성하려면 로그인이 필요합니다. 홈에서 로그인 후 이용해 주세요.'); location.href = 'index.html'; return; }
+      if (!u.emailVerified) { document.getElementById('verifyOverlay').classList.add('open'); return; }
+      writeOverlay.classList.add('open');
+    });
     document.getElementById('writeBtnClose').addEventListener('click', () => writeOverlay.classList.remove('open'));
     document.getElementById('writeBtnCancel').addEventListener('click', () => writeOverlay.classList.remove('open'));
     writeOverlay.addEventListener('click', e => { if (e.target === writeOverlay) writeOverlay.classList.remove('open'); });
@@ -616,7 +652,7 @@
       const date = pad(d.getMonth() + 1) + '/' + pad(d.getDate());
       const time = pad(d.getHours()) + ':' + pad(d.getMinutes());
       const all = loadAll();
-      all.push({ id: Date.now(), title, body, author, contact: phone, state: stateKey, category, date, time });
+      all.push({ id: Date.now(), title, body, author, contact: phone, state: stateKey, category: activeCategory, date, time });
       saveAll(all);
       writeOverlay.classList.remove('open');
       ['wTitle','wBody','wAuthor','wContact'].forEach(id => { document.getElementById(id).value = ''; });
@@ -625,7 +661,53 @@
       renderPosts();
     });
 
-    renderPosts();
+    setActiveCategory(activeCategory);  // 초기 탭 활성화 + 타이틀 + 렌더
+  </script>
+
+  <!-- ── Firebase Auth (글쓰기 소프트 게이트용) ── -->
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
+    import { getAuth, onAuthStateChanged, sendEmailVerification } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
+    import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app-check.js';
+    const firebaseConfig = {
+      apiKey:            'AIzaSyCamqnt0bNUD9uz1N5BbCuQjSkWLSpPqlU',
+      authDomain:        'koaus-f564c.firebaseapp.com',
+      projectId:         'koaus-f564c',
+      storageBucket:     'koaus-f564c.firebasestorage.app',
+      messagingSenderId: '663988594088',
+      appId:             '1:663988594088:web:ef30c2fd557407b00b299d',
+      measurementId:     'G-DERZ9MTKPL',
+    };
+    const app = initializeApp(firebaseConfig);
+    const APP_CHECK_SITE_KEY = 'TODO: 키 입력';
+    if (APP_CHECK_SITE_KEY && !APP_CHECK_SITE_KEY.startsWith('TODO')) {
+      initializeAppCheck(app, { provider: new ReCaptchaV3Provider(APP_CHECK_SITE_KEY), isTokenAutoRefreshEnabled: true });
+    }
+    const auth = getAuth(app);
+    window.koausAuth = {
+      user: null,
+      sendVerification: async () => { if (auth.currentUser) await sendEmailVerification(auth.currentUser); },
+    };
+    const loginBtn = document.getElementById('topbarLoginBtn');
+    onAuthStateChanged(auth, user => {
+      window.koausAuth.user = user;
+      if (loginBtn) {
+        if (user) {
+          const nick = localStorage.getItem('koaus-nickname') || user.displayName?.split(' ')[0] || user.email?.split('@')[0] || '계정';
+          loginBtn.textContent = nick; loginBtn.setAttribute('href', 'mypage.html');
+        } else { loginBtn.textContent = '로그인'; loginBtn.setAttribute('href', 'index.html'); }
+      }
+    });
+    // 인증 필요 모달 닫기 / 재전송
+    const verifyOverlay = document.getElementById('verifyOverlay');
+    const closeVerify = () => verifyOverlay.classList.remove('open');
+    document.getElementById('verifyClose').addEventListener('click', closeVerify);
+    document.getElementById('verifyOkBtn').addEventListener('click', closeVerify);
+    verifyOverlay.addEventListener('click', e => { if (e.target === verifyOverlay) closeVerify(); });
+    document.getElementById('verifyResendBtn').addEventListener('click', async () => {
+      try { await window.koausAuth.sendVerification(); alert('인증 메일이 재전송되었습니다.'); }
+      catch (e) { alert('잠시 후 다시 시도해 주세요.'); }
+    });
   </script>
 </body>
 </html>
