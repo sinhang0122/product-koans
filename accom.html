@@ -580,23 +580,23 @@
 
       <div class="write-field">
         <label class="write-label" for="wPrice">주당 렌트비 Price / wk ($)<span class="required-mark">*</span></label>
-        <input class="write-input" id="wPrice" type="number" placeholder="200" min="0" />
+        <input class="write-input" id="wPrice" type="number" placeholder="숫자만 입력" min="0" />
       </div>
 
       <div class="write-field">
-        <span class="write-label">숙박 기간 Duration (중복 선택)<span class="required-mark">*</span></span>
-        <div class="write-checks" id="wTypes">
-          <label class="write-check"><input type="checkbox" data-type="ultra_short"> 초단기 (1일~2주)</label>
-          <label class="write-check"><input type="checkbox" data-type="short"> 단기 (2주~4주)</label>
-          <label class="write-check"><input type="checkbox" data-type="mid"> 중단기 (1달~2달)</label>
-          <label class="write-check"><input type="checkbox" data-type="long"> 장기 (2달 이상)</label>
-          <label class="write-check"><input type="checkbox" data-type="any"> 기간 상관 없음</label>
+        <span class="write-label">숙박 기간 Duration (중복 선택 가능)<span class="required-mark">*</span></span>
+        <div class="write-opts" id="wTypes">
+          <label class="write-opt"><input type="checkbox" data-type="ultra_short"> 초단기 (1일~2주)</label>
+          <label class="write-opt"><input type="checkbox" data-type="short"> 단기 (2주~4주)</label>
+          <label class="write-opt"><input type="checkbox" data-type="mid"> 중단기 (1달~2달)</label>
+          <label class="write-opt"><input type="checkbox" data-type="long"> 장기 (2달 이상)</label>
+          <label class="write-opt"><input type="checkbox" data-type="any"> 기간 상관 없음</label>
         </div>
       </div>
 
       <div class="write-field">
-        <span class="write-label">방 형태 Room Type (중복 선택)<span class="required-mark">*</span></span>
-        <div class="write-opts" id="wRoomTypes">
+        <span class="write-label">방 형태 Room Type (중복 선택 가능)<span class="required-mark">*</span></span>
+        <div class="write-opts write-opts--row" id="wRoomTypes">
           <label class="write-opt"><input type="checkbox" data-room="master"> 마스터룸</label>
           <label class="write-opt"><input type="checkbox" data-room="second"> 세컨룸</label>
           <label class="write-opt"><input type="checkbox" data-room="single"> 독방</label>
