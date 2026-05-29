@@ -552,105 +552,96 @@
     <div class="write-modal write-modal--tall">
       <div class="write-modal-header">
         <div class="write-modal-title">글쓰기 <em>Write Post</em></div>
+        <span class="write-author-badge">작성자 : <b id="wAuthorName">-</b></span>
         <button class="write-modal-close" id="writeBtnClose">✕</button>
       </div>
 
-      <div class="write-field">
-        <label class="write-label" for="wTitle">제목 Title<span class="required-mark">*</span></label>
-        <input class="write-input" id="wTitle" type="text" placeholder="예: 멜번 Box Hill 싱글룸 · 주 $210" maxlength="80" />
-      </div>
+      <div class="write-grid" id="writeGrid">
+        <div class="write-col">
+          <div class="write-field">
+            <label class="write-label" for="wTitle">제목 Title<span class="required-mark">*</span></label>
+            <input class="write-input" id="wTitle" type="text" placeholder="예: 멜번 Box Hill 싱글룸 · 주 $210" maxlength="80" />
+          </div>
+          <div class="write-field offer-only">
+            <label class="write-label" for="wPropType">주거 형태 Property</label>
+            <select class="write-input" id="wPropType">
+              <option value="">선택 안 함</option>
+              <option value="house">House</option>
+              <option value="apartment">Apartment</option>
+              <option value="townhouse">Townhouse</option>
+              <option value="villa">Villa</option>
+              <option value="unit">Unit</option>
+            </select>
+          </div>
+          <div class="write-field offer-only">
+            <label class="write-label" for="wBathroom">욕실 Bathroom</label>
+            <select class="write-input" id="wBathroom">
+              <option value="shared">Shared (공용)</option>
+              <option value="ensuite">Ensuite (개인)</option>
+            </select>
+          </div>
+          <div class="write-field offer-only">
+            <span class="write-label">방 형태 Room Type (중복 선택 가능)</span>
+            <div class="write-opts" id="wRoomTypes">
+              <label class="write-opt"><input type="checkbox" data-room="master"> 마스터룸</label>
+              <label class="write-opt"><input type="checkbox" data-room="second"> 세컨룸</label>
+              <label class="write-opt"><input type="checkbox" data-room="single"> 독방</label>
+              <label class="write-opt"><input type="checkbox" data-room="living_share"> 거실쉐어</label>
+              <label class="write-opt"><input type="checkbox" data-room="sunroom"> 썬룸</label>
+            </div>
+          </div>
+          <div class="write-field offer-only">
+            <span class="write-label">옵션 Options</span>
+            <div class="write-opts">
+              <label class="write-opt"><input type="checkbox" id="wParking"> 🅿 주차</label>
+              <label class="write-opt"><input type="checkbox" id="wPet"> 🐾 반려동물</label>
+              <label class="write-opt"><input type="checkbox" id="wKids"> 👶 아이</label>
+              <label class="write-opt"><input type="checkbox" id="wAirCon"> ❄ 에어컨</label>
+            </div>
+          </div>
+        </div>
 
-      <div id="offerFields">
-      <div class="write-field">
-        <label class="write-label" for="wAddress">주소 Address<span class="required-mark">*</span></label>
-        <input class="write-input" id="wAddress" type="text" placeholder="예: Strathfield, NSW 또는 1 Park St, Sydney" />
-      </div>
-
-      <div class="write-field">
-        <label class="write-label" for="wPropType">주거 형태 Property</label>
-        <select class="write-input" id="wPropType">
-          <option value="">선택 안 함</option>
-          <option value="house">House</option>
-          <option value="apartment">Apartment</option>
-          <option value="townhouse">Townhouse</option>
-          <option value="villa">Villa</option>
-          <option value="unit">Unit</option>
-        </select>
-      </div>
-
-      <div class="write-field">
-        <label class="write-label" for="wPrice">주당 렌트비 Price / wk ($)<span class="required-mark">*</span></label>
-        <input class="write-input" id="wPrice" type="number" placeholder="숫자만 입력" min="0" />
-      </div>
-
-      <div class="write-field">
-        <span class="write-label">숙박 기간 Duration (중복 선택 가능)<span class="required-mark">*</span></span>
-        <div class="write-opts" id="wTypes">
-          <label class="write-opt"><input type="checkbox" data-type="ultra_short"> 초단기 (1일~2주)</label>
-          <label class="write-opt"><input type="checkbox" data-type="short"> 단기 (2주~4주)</label>
-          <label class="write-opt"><input type="checkbox" data-type="mid"> 중단기 (1달~2달)</label>
-          <label class="write-opt"><input type="checkbox" data-type="long"> 장기 (2달 이상)</label>
-          <label class="write-opt"><input type="checkbox" data-type="any"> 기간 상관 없음</label>
+        <div class="write-col">
+          <div class="write-field offer-only">
+            <label class="write-label" for="wAddress">주소 Address<span class="required-mark">*</span></label>
+            <input class="write-input" id="wAddress" type="text" placeholder="예: Strathfield, NSW 또는 1 Park St, Sydney" />
+          </div>
+          <div class="write-field offer-only">
+            <label class="write-label" for="wPrice">주당 렌트비 Price / wk ($)<span class="required-mark">*</span></label>
+            <input class="write-input" id="wPrice" type="number" placeholder="숫자만 입력" min="0" />
+          </div>
+          <div class="write-field offer-only">
+            <label class="write-label" for="wGender">성별 조건 Gender</label>
+            <select class="write-input" id="wGender">
+              <option value="">선택 안 함</option>
+              <option value="male">남</option>
+              <option value="female">여</option>
+              <option value="any">성별 무관</option>
+            </select>
+          </div>
+          <div class="write-field offer-only">
+            <label class="write-label" for="wAvailDate">입주 가능한 날 Available Date</label>
+            <input class="write-input" id="wAvailDate" type="date" />
+          </div>
+          <div class="write-field offer-only">
+            <span class="write-label">숙박 기간 Duration (중복 선택 가능)</span>
+            <div class="write-opts" id="wTypes">
+              <label class="write-opt"><input type="checkbox" data-type="ultra_short"> 초단기 (1일~2주)</label>
+              <label class="write-opt"><input type="checkbox" data-type="short"> 단기 (2주~4주)</label>
+              <label class="write-opt"><input type="checkbox" data-type="mid"> 중단기 (1달~2달)</label>
+              <label class="write-opt"><input type="checkbox" data-type="long"> 장기 (2달 이상)</label>
+              <label class="write-opt"><input type="checkbox" data-type="any"> 기간 상관 없음</label>
+            </div>
+          </div>
+          <div class="write-field">
+            <label class="write-label" for="wBody" id="wBodyLabel">상세 설명 Comments</label>
+            <textarea class="write-textarea" id="wBody" placeholder="방 크기, 포함 내역, 입주 가능 날짜 등"></textarea>
+          </div>
         </div>
       </div>
 
       <div class="write-field">
-        <span class="write-label">방 형태 Room Type (중복 선택 가능)<span class="required-mark">*</span></span>
-        <div class="write-opts write-opts--row" id="wRoomTypes">
-          <label class="write-opt"><input type="checkbox" data-room="master"> 마스터룸</label>
-          <label class="write-opt"><input type="checkbox" data-room="second"> 세컨룸</label>
-          <label class="write-opt"><input type="checkbox" data-room="single"> 독방</label>
-          <label class="write-opt"><input type="checkbox" data-room="living_share"> 거실쉐어</label>
-          <label class="write-opt"><input type="checkbox" data-room="sunroom"> 썬룸</label>
-        </div>
-      </div>
-
-      <div class="write-field">
-        <label class="write-label" for="wGender">성별 조건 Gender</label>
-        <select class="write-input" id="wGender">
-          <option value="">선택 안 함</option>
-          <option value="male">남</option>
-          <option value="female">여</option>
-          <option value="any">성별 무관</option>
-        </select>
-      </div>
-
-      <div class="write-field">
-        <label class="write-label" for="wBathroom">욕실 Bathroom<span class="required-mark">*</span></label>
-        <select class="write-input" id="wBathroom">
-          <option value="shared">Shared (공용)</option>
-          <option value="ensuite">Ensuite (개인)</option>
-        </select>
-      </div>
-
-      <div class="write-field">
-        <label class="write-label" for="wAvailDate">입주 가능한 날 Available Date<span class="required-mark">*</span></label>
-        <input class="write-input" id="wAvailDate" type="date" />
-      </div>
-
-      <div class="write-field">
-        <span class="write-label">옵션 Options</span>
-        <div class="write-checks">
-          <label class="write-check"><input type="checkbox" id="wParking"> 🅿 주차 가능</label>
-          <label class="write-check"><input type="checkbox" id="wPet"> 🐾 반려동물 가능</label>
-          <label class="write-check"><input type="checkbox" id="wKids"> 👶 아이 있는 집</label>
-          <label class="write-check"><input type="checkbox" id="wAirCon"> ❄ 에어컨 있음</label>
-        </div>
-      </div>
-      </div><!-- /offerFields -->
-
-      <div class="write-field">
-        <label class="write-label" for="wBody" id="wBodyLabel">상세 설명 Comments<span class="required-mark">*</span></label>
-        <textarea class="write-textarea" id="wBody" placeholder="방 크기, 가격, 포함 내역, 입주 가능 날짜 등 자세히 적어주세요"></textarea>
-      </div>
-
-      <div class="write-field">
-        <label class="write-label" for="wAuthor">작성자 Author</label>
-        <input class="write-input" id="wAuthor" type="text" placeholder="로그인 후 자동 입력" maxlength="20" readonly />
-      </div>
-
-      <div class="write-field">
-        <label class="write-label" for="wContact">연락처 Contact<span class="required-mark">*</span></label>
+        <label class="write-label" for="wContact">연락처 Contact</label>
         <input class="write-input" id="wContact" type="tel" placeholder="예: 0412345678 (호주 10자리)" maxlength="20" />
       </div>
 
@@ -943,7 +934,7 @@
       document.getElementById('writeBtnSubmit').textContent = isEdit ? '수정 완료' : '등록하기';
     }
     function resetWriteForm() {
-      ['wTitle','wAddress','wPrice','wBody','wAuthor','wContact','wAvailDate'].forEach(id => { document.getElementById(id).value = ''; });
+      ['wTitle','wAddress','wPrice','wBody','wContact','wAvailDate'].forEach(id => { document.getElementById(id).value = ''; });
       document.getElementById('wPropType').value = '';
       ['wParking','wPet','wKids','wAirCon'].forEach(id => { document.getElementById(id).checked = false; });
       document.querySelectorAll('#wTypes input, #wRoomTypes input').forEach(c => { c.checked = false; });
@@ -962,18 +953,19 @@
     // 모드에 따라 글쓰기 폼 표시 (방 구하기 = 자유 양식: 제목/코멘트/연락처만)
     function applyWriteModeUI() {
       const isFind = activeMode === 'find';
-      document.getElementById('offerFields').style.display = isFind ? 'none' : '';
-      document.getElementById('wBodyLabel').innerHTML = (isFind ? '자유 코멘트 Comments' : '상세 설명 Comments') + '<span class="required-mark">*</span>';
+      document.querySelectorAll('.offer-only').forEach(el => { el.style.display = isFind ? 'none' : ''; });
+      document.getElementById('writeGrid').classList.toggle('write-grid--find', isFind);
+      document.getElementById('wBodyLabel').textContent = isFind ? '자유 코멘트 Comments' : '상세 설명 Comments';
       document.getElementById('wBody').placeholder = isFind
         ? '구하는 조건·예산·기간·자기소개 등을 자유롭게 적어주세요'
-        : '방 크기, 가격, 포함 내역, 입주 가능 날짜 등 자세히 적어주세요';
+        : '방 크기, 포함 내역, 입주 가능 날짜 등';
     }
     function openWriteModal() {
       editingId = null;
       setWriteMode('create');
       setTypeChecks([]);  // 기간 체크 초기화
       applyWriteModeUI();
-      document.getElementById('wAuthor').value = currentNickname();  // 작성자 자동 입력(읽기 전용)
+      document.getElementById('wAuthorName').textContent = currentNickname() || '-';  // 헤더 작성자 배지
       writeOverlay.classList.add('open');
       document.body.style.overflow = 'hidden';
     }
@@ -994,7 +986,7 @@
       document.getElementById('wKids').checked    = !!p.kidsInHouse;
       document.getElementById('wAirCon').checked  = !!p.airCon;
       document.getElementById('wBody').value     = p.body || '';
-      document.getElementById('wAuthor').value   = p.author || '';
+      document.getElementById('wAuthorName').textContent = p.author || currentNickname() || '-';
       document.getElementById('wContact').value  = p.contact || '';
       setWriteMode('edit');
       applyWriteModeUI();
@@ -1049,42 +1041,37 @@
 
       let fields, coords = null;
 
-      if (isFind) {
-        // ── 방 구하기: 자유 양식 (제목 / 코멘트 / 연락처만) ──
-        if (!title || !body || !contactRaw) {
-          alert('모든 필수 항목을 올바르게 입력해 주세요.');
-          return;
-        }
-        const phone = contactRaw.replace(/[-\s]/g, '');
+      // 연락처는 선택 사항 — 입력했을 때만 호주 전화번호 형식 검증
+      let phone = '';
+      if (contactRaw) {
+        phone = contactRaw.replace(/[-\s]/g, '');
         if (!/^0\d{9}$/.test(phone)) {
-          alert('올바른 호주 전화번호 10자리를 입력해 주세요. (예: 0412345678)');
+          alert('연락처를 입력하셨다면 호주 전화번호 10자리 형식으로 적어주세요. (예: 0412345678)');
           return;
         }
+      }
+
+      if (isFind) {
+        // ── 방 구하기: 자유 양식 — 제목만 필수 ──
+        if (!title) { alert('제목을 입력해 주세요.'); return; }
         fields = { mode: 'find', title, body, contact: phone };
       } else {
-        // ── 방 올리기: 구조화 양식 (주거형태 제외 필수) ──
+        // ── 방 올리기: 제목 · 주소 · 주당 렌트비만 필수, 나머지는 선택 ──
         const types     = [...document.querySelectorAll('#wTypes input:checked')].map(c => c.dataset.type);
         const roomTypes = [...document.querySelectorAll('#wRoomTypes input:checked')].map(c => c.dataset.room);
-        const gender    = document.getElementById('wGender').value;  // 선택 사항
+        const gender    = document.getElementById('wGender').value;
         const availableDate = document.getElementById('wAvailDate').value;
         const address  = document.getElementById('wAddress').value.trim();
         const priceVal = document.getElementById('wPrice').value.trim();
-        const propType = document.getElementById('wPropType').value;  // 선택 사항
+        const propType = document.getElementById('wPropType').value;
         const bathroom = document.getElementById('wBathroom').value;
 
-        if (!title || !address || !priceVal || !bathroom || !availableDate || !contactRaw || !body) {
-          alert('모든 필수 항목을 올바르게 입력해 주세요.');
+        if (!title || !address || !priceVal) {
+          alert('제목, 주소, 주당 렌트비는 필수 입력 항목입니다.');
           return;
         }
         const price = parseInt(priceVal, 10);
-        if (!(price > 0)) { alert('모든 필수 항목을 올바르게 입력해 주세요.'); return; }
-        if (types.length === 0) { alert('숙박 기간을 1개 이상 선택해 주세요.'); return; }
-        if (roomTypes.length === 0) { alert('방 형태를 1개 이상 선택해 주세요.'); return; }
-        const phone = contactRaw.replace(/[-\s]/g, '');
-        if (!/^0\d{9}$/.test(phone)) {
-          alert('올바른 호주 전화번호 10자리를 입력해 주세요. (예: 0412345678)');
-          return;
-        }
+        if (!(price > 0)) { alert('주당 렌트비를 숫자로 올바르게 입력해 주세요.'); return; }
         fields = {
           mode: 'offer', types, title, body, address, price, propType, roomTypes, gender, availableDate, bathroom,
           parking:     document.getElementById('wParking').checked,
@@ -1093,10 +1080,8 @@
           airCon:      document.getElementById('wAirCon').checked,
           contact: phone,
         };
-        if (address) {
-          loadMapScript();  // Geocoder 사용을 위해 Maps 스크립트 로드 보장
-          coords = await geocode(address);
-        }
+        loadMapScript();  // Geocoder 사용을 위해 Maps 스크립트 로드 보장
+        coords = await geocode(address);
       }
 
       // ── 면책 조항 동의 필수 ──
@@ -1105,8 +1090,7 @@
         return;
       }
 
-      const nick = document.getElementById('wAuthor').value.trim()
-        || localStorage.getItem('koaus-nickname')
+      const nick = currentNickname()
         || user.displayName?.split(' ')[0] || user.email?.split('@')[0] || '사용자';
       const now = new Date();
       const pad = n => String(n).padStart(2, '0');
