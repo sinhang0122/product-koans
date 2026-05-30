@@ -147,7 +147,7 @@ function closeTermsModal(ov) { if (ov) { ov.classList.remove('open'); } else { t
 function openTermsModal(ov) { ov.classList.add('open'); history.pushState({ koausTerms: true }, ''); }
 function userCloseTerms(ov) { closeTermsModal(ov); if (history.state && history.state.koausTerms) history.back(); }
 document.getElementById('authTosLink').addEventListener('click', () => openTermsModal(tosOverlay));
-document.getElementById('authPrivacyLink').addEventListener('click', () => openTermsModal(privacyOverlay));
+// 가입 모달의 '개인정보처리방침' 링크는 이제 privacy.html을 새 탭으로 여는 <a>이므로 핸들러 불필요
 // 푸터 이용약관 → 가입 모달의 약관 팝업 재사용 (개인정보처리방침은 privacy.html 독립 페이지로 라우팅)
 const footerTosLink = document.getElementById('footerTosLink');
 if (footerTosLink) footerTosLink.addEventListener('click', e => { e.preventDefault(); openTermsModal(tosOverlay); });
