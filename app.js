@@ -148,6 +148,11 @@ function openTermsModal(ov) { ov.classList.add('open'); history.pushState({ koau
 function userCloseTerms(ov) { closeTermsModal(ov); if (history.state && history.state.koausTerms) history.back(); }
 document.getElementById('authTosLink').addEventListener('click', () => openTermsModal(tosOverlay));
 document.getElementById('authPrivacyLink').addEventListener('click', () => openTermsModal(privacyOverlay));
+// 푸터 약관 링크 → 가입 모달과 동일 약관 팝업 재사용
+const footerTosLink = document.getElementById('footerTosLink');
+if (footerTosLink) footerTosLink.addEventListener('click', e => { e.preventDefault(); openTermsModal(tosOverlay); });
+const footerPrivacyLink = document.getElementById('footerPrivacyLink');
+if (footerPrivacyLink) footerPrivacyLink.addEventListener('click', e => { e.preventDefault(); openTermsModal(privacyOverlay); });
 document.getElementById('tosClose').addEventListener('click', () => userCloseTerms(tosOverlay));
 document.getElementById('tosConfirm').addEventListener('click', () => userCloseTerms(tosOverlay));
 document.getElementById('privacyClose').addEventListener('click', () => userCloseTerms(privacyOverlay));

@@ -426,9 +426,9 @@
       <p>현재 본 플랫폼은 <strong>호주 달러(AUD)와 한국 원화(KRW)</strong> 간의 송금 비교 서비스를 최우선으로 최적화하여 지원하고 있습니다. 다른 통화 쌍의 어플 비교 기능은 추후 업데이트 예정입니다.</p>
     </div>
 
-    <p class="exchange-updated" id="exchangeUpdated"></p>
+    <p class="exchange-updated" id="exchangeUpdated">기준일: 2026. 05. 30. (토) · 실시간 API 연동 준비 중</p>
 
-    <p class="exchange-disclaimer">※ 제공되는 환율은 단순 참고용 매매기준율이며, 실제 송금 시 업체별 적용 환율이 다를 수 있습니다. <em>(*어플기준입니다)</em></p>
+    <p class="exchange-disclaimer">※ 제공되는 환율은 단순 참고용 매매기준율이며, 실제 송금 시 업체별 적용 환율이 다를 수 있습니다 <em>(*어플 기준)</em></p>
 
   </main>
 
@@ -467,9 +467,6 @@
     if (themeToggleBtn) themeToggleBtn.addEventListener('click', () => applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'));
     applyTheme(localStorage.getItem('koaus-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
 
-    const today = new Date().toLocaleDateString('ko-KR', { year:'numeric', month:'2-digit', day:'2-digit', weekday:'short' });
-    document.getElementById('exchangeUpdated').textContent = `기준일: ${today} · 실시간 API 연동 준비 중`;
-
     // ── 지원 통화 목록 (AUD↔KRW 외에는 fallback 안내) ──
     const CURRENCIES = [
       { code:'AUD', name:'호주 달러' },
@@ -486,7 +483,7 @@
     const APPS = [
       {
         key:'wirebarley', name:'WireBarley', nameKo:'와이어바일리', rate:1052,
-        fee:'A$1 이하', feeNote:'정액 수수료', tagline:'수수료 최저 수준',
+        fee:'금액 구간별', feeNote:'A$1.49 / A$1.29 / A$0.99', tagline:'수수료 최저 수준',
         url:'https://www.wirebarley.com',
         limits: {
           'AUD-KRW': { min:100,   max:6200,    currency:'AUD' },
@@ -513,10 +510,10 @@
         },
       },
       {
-        key:'remitree', name:'Remitree', nameKo:'레미트리', rate:1048,
-        fee:'프로모션 환율 적용', feeNote:'신규 첫 송금 혜택', tagline:'10~15분 송금',
+        key:'remitree', name:'Remitree', nameKo:'리미트리', rate:1048,
+        fee:'프로모션 환율', feeNote:'신규 첫 송금 혜택', tagline:'10~15분 송금',
         url:'https://remitree.com',
-        badges:['⚡ 송금 10~15분', '🎁 신규 첫 $1,000 수수료 무료 & 프로모션 환율'],
+        benefits:['송금 소요시간 10~15분', '신규 첫 A$1,000 수수료 무료 + 프로모션 환율'],
         limits: {
           'AUD-KRW': { min:1, max:45000, currency:'AUD' },
           'KRW-AUD': null,  // KRW→AUD 미지원
@@ -565,9 +562,19 @@
       return { ok:true };
     }
 
+    // 어플별 동적 수수료 (WireBarley AUD→KRW 구간별)
+    function computeFee(app, amount, dir) {
+      if (app.key === 'wirebarley' && dir === 'AUD-KRW' && amount >= 100) {
+        if (amount <= 999)  return { text:'A$1.49', note:'100~999 AUD 구간' };
+        if (amount <= 2999) return { text:'A$1.29', note:'1,000~2,999 AUD 구간' };
+        if (amount <= 6200) return { text:'A$0.99', note:'3,000~6,200 AUD 구간' };
+      }
+      return { text: app.fee, note: app.feeNote };
+    }
+
     function renderCard(app, amount, dir) {
       const lim = app.limits[dir];
-      // 방향 미지원 (예: Remitree KRW→AUD)
+      // 방향 미지원 (예: 리미트리 KRW→AUD)
       if (lim === null) {
         return `
           <div class="exchange-card is-disabled" data-app="${app.key}">
@@ -577,6 +584,7 @@
             </div>
             <div class="exchange-app-sub">${escHtml(app.nameKo)}</div>
             <div class="exchange-unsupported">${escHtml(app.unsupportedMsg || '이 방향은 지원하지 않습니다.')}</div>
+            <a class="exchange-link" href="${app.url}" target="_blank" rel="noopener">앱 바로가기 →</a>
           </div>`;
       }
       const v = validate(amount, lim);
@@ -587,12 +595,13 @@
       const rateHtml = dir === 'AUD-KRW'
         ? `<span class="exchange-rate">${app.rate.toLocaleString()}</span><span class="exchange-unit">원 / AUD</span>`
         : `<span class="exchange-rate">${(1/app.rate).toFixed(6)}</span><span class="exchange-unit">AUD / 원</span>`;
-      const limTxt = `한도: ${formatLimit(lim.min, lim.currency)} ~ ${lim.max ? formatLimit(lim.max, lim.currency) : '제한 없음'}`
+      const limTxt = `최소 ${formatLimit(lim.min, lim.currency)} · 최대 ${lim.max ? formatLimit(lim.max, lim.currency) : '제한 없음'}`
         + (lim.maxNote ? ` · ${lim.maxNote}` : '')
         + (lim.dailyMaxNote ? ` · ${lim.dailyMaxNote}` : '');
       const errHtml = (!v.ok && v.err) ? `<div class="exchange-err">${escHtml(v.err)}</div>` : '';
-      const badgesHtml = app.badges
-        ? `<div class="exchange-badges">${app.badges.map(b=>`<span class="exchange-badge">${escHtml(b)}</span>`).join('')}</div>`
+      const fee = computeFee(app, amount, dir);
+      const benefitsHtml = app.benefits
+        ? `<div class="exchange-benefits">${app.benefits.map(b => `<div class="exchange-benefit-row">· ${escHtml(b)}</div>`).join('')}</div>`
         : '';
       return `
         <div class="exchange-card${app.best ? ' exchange-card--best' : ''}" data-app="${app.key}">
@@ -604,9 +613,9 @@
           <div class="exchange-rate-row">${rateHtml}</div>
           ${resHtml}
           <div class="exchange-lim-row">${escHtml(limTxt)}</div>
-          <div class="exchange-fee-row"><span>수수료 ${escHtml(app.fee)}</span><span>·</span><span>${escHtml(app.feeNote)}</span></div>
+          <div class="exchange-fee-row"><span>수수료 ${escHtml(fee.text)}</span><span>·</span><span>${escHtml(fee.note)}</span></div>
           ${errHtml}
-          ${badgesHtml}
+          ${benefitsHtml}
           <a class="exchange-link" href="${app.url}" target="_blank" rel="noopener">앱 바로가기 →</a>
         </div>`;
     }

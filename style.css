@@ -369,30 +369,39 @@ body {
   flex: 1;
 }
 
-/* 메인 단축 바 (날렵한 가로 리스트 바 — 2개 핵심 기능 바로가기) */
+/* 메인 단축 카드 (5:5 균등 그리드 · 동일 타이틀 폰트 · 넉넉한 여백) */
 .home-shortcuts {
-  display: flex; flex-direction: column; gap: 10px;
-  margin: 28px auto 8px; width: 100%;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 18px;
+  margin: 32px auto 8px; width: 100%;
 }
 .home-shortcut {
-  display: flex; align-items: center; justify-content: space-between; gap: 14px;
-  padding: 16px 22px; width: 100%;
-  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-md);
+  position: relative; display: flex; flex-direction: column; gap: 10px;
+  padding: 40px 32px; min-height: 200px;
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-lg);
   color: var(--text-primary); text-decoration: none;
   transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
 }
 .home-shortcut:hover {
   border-color: var(--text-primary);
-  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-}
-.home-shortcut-label {
-  font-size: 16px; font-weight: 800; color: var(--text-primary); letter-spacing: -0.005em;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.07);
 }
 .home-shortcut-arrow {
-  flex-shrink: 0; font-size: 18px; font-weight: 700; color: var(--text-muted);
+  position: absolute; top: 24px; right: 28px;
+  font-size: 20px; font-weight: 800; color: var(--text-muted);
   transition: color 0.15s, transform 0.15s;
 }
 .home-shortcut:hover .home-shortcut-arrow { color: var(--text-primary); transform: translateX(4px); }
+.home-shortcut-label {
+  font-size: 24px; font-weight: 900; color: var(--text-primary); letter-spacing: -0.015em; line-height: 1.2;
+}
+.home-shortcut-desc {
+  font-size: 13.5px; font-weight: 500; color: var(--text-secondary); line-height: 1.6; letter-spacing: -0.005em;
+}
+@media (max-width: 640px) {
+  .home-shortcuts { grid-template-columns: 1fr; gap: 14px; }
+  .home-shortcut { padding: 32px 24px; min-height: 160px; }
+  .home-shortcut-label { font-size: 22px; }
+}
 
 /* Notice Board */
 .notice-section {}
@@ -518,6 +527,8 @@ body {
    Exchange Sub-page Cards
 ════════════════════════════════════════════════════════════════════════ */
 .exchange-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+/* 계산기 페이지: 4개 어플 카드 한 줄 강제 (좁은 화면은 가로 스크롤) */
+#exchangeGrid { grid-template-columns: repeat(4, minmax(220px, 1fr)); gap: 12px; overflow-x: auto; padding-bottom: 4px; }
 .exchange-card {
   background: var(--bg-card); border: 1px solid var(--border);
   border-radius: var(--r-lg); padding: 22px 20px;
@@ -525,7 +536,7 @@ body {
   transition: transform 0.15s;
 }
 .exchange-card:hover { transform: translateY(-2px); }
-.exchange-card--best { border-color: var(--accent); }
+.exchange-card--best { border: 2px solid var(--text-primary); }
 .exchange-app-name { font-size: 16px; font-weight: 800; color: var(--text-primary); }
 .exchange-app-sub  { font-size: 12px; color: var(--text-muted); }
 .exchange-rate-row { display: flex; align-items: baseline; gap: 6px; }
@@ -564,11 +575,15 @@ body {
 .exchange-card-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .exchange-result-row { font-size: 13px; color: var(--text-secondary); padding: 8px 10px; background: var(--bg-elevated); border-radius: var(--r-sm); }
 .exchange-result-row strong { font-size: 15px; font-weight: 900; color: var(--text-primary); font-variant-numeric: tabular-nums; margin-left: 6px; }
-.exchange-lim-row { font-size: 11.5px; color: var(--text-muted); line-height: 1.45; }
-.exchange-err { font-size: 12.5px; font-weight: 700; color: var(--text-primary); background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 8px 10px; line-height: 1.45; }
-.exchange-badges { display: flex; flex-wrap: wrap; gap: 5px; }
-.exchange-badge { font-size: 11px; font-weight: 700; color: var(--text-primary); background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 999px; padding: 3px 9px; }
-.exchange-link { font-size: 12px; color: var(--text-primary); font-weight: 700; text-decoration: none; border-bottom: 1px solid var(--border); width: fit-content; padding-bottom: 1px; }
+.exchange-lim-row { font-size: 12px; font-weight: 800; color: var(--text-primary); line-height: 1.5; padding: 8px 10px; background: var(--bg-elevated); border-radius: var(--r-sm); }
+.exchange-err { font-size: 13px; font-weight: 900; color: var(--bg-card); background: var(--text-primary); border-radius: var(--r-sm); padding: 10px 12px; line-height: 1.4; letter-spacing: -0.005em; }
+.exchange-benefits { display: flex; flex-direction: column; gap: 3px; }
+.exchange-benefit-row { font-size: 12px; font-weight: 600; color: var(--text-primary); line-height: 1.5; }
+.exchange-link {
+  margin-top: auto; align-self: flex-end;
+  font-size: 12px; color: var(--text-primary); font-weight: 800; text-decoration: none;
+  border-bottom: 1px solid var(--border); padding: 2px 0;
+}
 .exchange-link:hover { border-bottom-color: var(--text-primary); }
 
 .exchange-card.is-disabled { opacity: 0.7; }
@@ -1007,6 +1022,8 @@ select.write-input {
   .post-list-table--jobs .post-list-head > *:last-child,
   .post-list-table--jobs .post-row > *:last-child { display: flex; align-items: center; justify-content: center; }
   .exchange-grid { grid-template-columns: 1fr; }
+  /* 계산기 페이지 4-카드는 모바일에서도 한 줄 유지(가로 스크롤) */
+  #exchangeGrid { grid-template-columns: repeat(4, minmax(200px, 1fr)); }
   .calc-input-row { gap: 8px; }
   .notice-date { display: none; }
 }
