@@ -417,6 +417,9 @@
       </div>
     </div>
 
+    <!-- 실시간 매매기준율 (API 수신 후 표시) -->
+    <div class="exchange-live-rate" id="liveRate">1 AUD = — KRW · 실시간 매매기준율 로딩 중…</div>
+
     <!-- 어플 비교 리스트 -->
     <div class="exchange-grid" id="exchangeGrid"></div>
 
@@ -572,7 +575,8 @@
       return { text: app.fee, note: app.feeNote };
     }
 
-    // 미니멀 카드: 어플명(+Best) / 동적 결과 / 동적 에러 / 앱 바로가기만
+    // 카드: 소개글 + 적용환율 + 결과(예상수령액) + 수수료 + 동적 에러 + 앱 바로가기
+    // 정적 "최소~최대" 한도 행은 표시하지 않고, 한도 검증은 에러 메시지로만 부각.
     function renderCard(app, amount, dir) {
       const lim = app.limits[dir];
       // 방향 미지원 (예: 리미트리 KRW→AUD)
@@ -583,6 +587,7 @@
               <span class="exchange-app-name">${escHtml(app.name)}</span>
               <span class="exchange-disabled-badge">미지원</span>
             </div>
+            <div class="exchange-app-sub">${escHtml(app.nameKo)}</div>
             <div class="exchange-unsupported">${escHtml(app.unsupportedMsg || '이 방향은 지원하지 않습니다.')}</div>
             <a class="exchange-link" href="${app.url}" target="_blank" rel="noopener">앱 바로가기 →</a>
           </div>`;
@@ -590,17 +595,28 @@
       const v = validate(amount, lim);
       const res = v.ok && amount > 0 ? calcResult(amount, app, dir) : null;
       const resHtml = res !== null
-        ? `<div class="exchange-result-row"><strong>${dir==='AUD-KRW' ? fmtKRW(res) : fmtAUD(res)}</strong></div>`
+        ? `<div class="exchange-result-row">예상 수령액 <strong>${dir==='AUD-KRW' ? fmtKRW(res) : fmtAUD(res)}</strong></div>`
         : '';
+      const rateHtml = dir === 'AUD-KRW'
+        ? `<span class="exchange-rate">${app.rate.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span><span class="exchange-unit">원 / AUD</span>`
+        : `<span class="exchange-rate">${(1/app.rate).toFixed(6)}</span><span class="exchange-unit">AUD / 원</span>`;
       const errHtml = (!v.ok && v.err) ? `<div class="exchange-err">${escHtml(v.err)}</div>` : '';
+      const fee = computeFee(app, amount, dir);
+      const benefitsHtml = app.benefits
+        ? `<div class="exchange-benefits">${app.benefits.map(b => `<div class="exchange-benefit-row">· ${escHtml(b)}</div>`).join('')}</div>`
+        : '';
       return `
         <div class="exchange-card${app.best ? ' exchange-card--best' : ''}" data-app="${app.key}">
           <div class="exchange-card-head">
             <span class="exchange-app-name">${escHtml(app.name)}</span>
             ${app.best ? '<span class="exchange-best-badge">Best</span>' : ''}
           </div>
+          <div class="exchange-app-sub">${escHtml(app.nameKo)} · ${escHtml(app.tagline)}</div>
+          <div class="exchange-rate-row">${rateHtml}</div>
           ${resHtml}
+          <div class="exchange-fee-row"><span>수수료 ${escHtml(fee.text)}</span><span>·</span><span>${escHtml(fee.note)}</span></div>
           ${errHtml}
+          ${benefitsHtml}
           <a class="exchange-link" href="${app.url}" target="_blank" rel="noopener">앱 바로가기 →</a>
         </div>`;
     }
@@ -644,13 +660,26 @@
       } catch (e) {}
       return null;
     }
+    function setLiveRateBadge(rate, ok) {
+      const el = document.getElementById('liveRate');
+      if (!el) return;
+      if (ok && rate) {
+        el.textContent = `1 AUD = ${rate.toLocaleString(undefined, { maximumFractionDigits: 2 })} KRW · 실시간 매매기준율 (open.er-api.com)`;
+        el.classList.add('is-live');
+      } else {
+        el.textContent = '1 AUD = ' + (APPS[0].rate || '—').toLocaleString() + ' KRW · 폴백 환율 (API 미수신)';
+        el.classList.remove('is-live');
+      }
+    }
     async function initRates() {
       render();  // 폴백(하드코딩) 환율로 1차 즉시 렌더
+      setLiveRateBadge(APPS[0].rate, false);
       const live = await fetchLiveRate();
-      if (!live) return;  // 실패 시 폴백 유지
+      if (!live) { setLiveRateBadge(null, false); return; }  // 실패 시 폴백 유지
       // 각 어플별 스프레드 (Mock — 추후 실 데이터로 교체)
       const SPREAD = { wirebarley: 1.000, wise: 1.0008, sentbe: 0.996, remitree: 0.9995 };
       APPS.forEach(a => { if (SPREAD[a.key]) a.rate = +(live * SPREAD[a.key]).toFixed(2); });
+      setLiveRateBadge(live, true);
       render();
     }
     initRates();

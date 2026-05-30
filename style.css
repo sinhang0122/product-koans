@@ -530,6 +530,13 @@ body {
 /* 계산기 페이지: 4개 어플 카드 동일 가로폭으로 한 줄 (가로 스크롤 금지) */
 #exchangeGrid { grid-template-columns: repeat(4, 1fr); gap: 10px; overflow: visible; padding: 0; }
 #exchangeGrid .exchange-card { padding: 14px 12px; gap: 8px; min-width: 0; }
+/* 실시간 매매기준율 배지 (API 수신 결과를 화면에 노출) */
+.exchange-live-rate {
+  margin: 0 0 12px; padding: 10px 14px;
+  background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--r-md);
+  font-size: 13px; font-weight: 700; color: var(--text-secondary); text-align: center; letter-spacing: -0.005em;
+}
+.exchange-live-rate.is-live { background: var(--text-primary); color: var(--bg-card); border-color: var(--text-primary); font-weight: 800; }
 .exchange-card {
   background: var(--bg-card); border: 1px solid var(--border);
   border-radius: var(--r-lg); padding: 22px 20px;
