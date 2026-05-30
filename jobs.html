@@ -459,7 +459,7 @@
       </div>
       <div class="write-field">
         <label class="write-label" for="wContact">연락처 Contact<span class="required-mark">*</span></label>
-        <input class="write-input" id="wContact" type="tel" placeholder="예: 0412345678 (호주 10자리)" maxlength="20" />
+        <input class="write-input" id="wContact" type="text" placeholder="전화번호 / 카카오톡 오픈챗 / 이메일 등" maxlength="100" />
       </div>
       <div class="write-modal-actions">
         <button class="write-cancel-btn" id="writeBtnCancel">취소</button>
@@ -755,70 +755,114 @@
     document.getElementById('writeBtnOpen').addEventListener('click', guardedOpenWrite);
     document.getElementById('writeBtnCancel').addEventListener('click', () => writeOverlay.classList.remove('open'));
     writeOverlay.addEventListener('click', e => { if (e.target === writeOverlay) writeOverlay.classList.remove('open'); });
-    document.getElementById('writeBtnSubmit').addEventListener('click', () => {
-      if (!window.koausAuth || !window.koausAuth.user) {
-        alert('로그인이 필요한 서비스입니다.');
-        if (window.koausAuth) {
-          window.koausAuth.afterLogin = submitPost;  // 로그인 직후 자동 재시도
-          window.koausAuth.openAuthModal();
+    document.getElementById('writeBtnSubmit').addEventListener('click', e => {
+      // 폼 reload·기본 동작 차단 (button type 미지정 환경 대비)
+      if (e && e.preventDefault) e.preventDefault();
+      try {
+        if (!window.koausAuth || !window.koausAuth.user) {
+          alert('로그인이 필요한 서비스입니다.');
+          if (window.koausAuth) {
+            window.koausAuth.afterLogin = submitPost;  // 로그인 직후 자동 재시도
+            window.koausAuth.openAuthModal();
+          }
+          return;
         }
-        return;
+        submitPost();
+      } catch (err) {
+        console.error('❌ 글쓰기 핸들러 크래시: ', err);
+        alert('글 등록 처리 중 오류: ' + (err.message || err));
       }
-      submitPost();
     });
 
     function submitPost() {
-      const user = window.koausAuth && window.koausAuth.user;
-      if (!user) { window.koausAuth && window.koausAuth.openAuthModal(); return; }
-      const postType = document.querySelector('input[name="wPostType"]:checked')?.value || 'hiring';
-      const title = document.getElementById('wTitle').value.trim();
-      const body  = document.getElementById('wBody').value.trim();
-      const contactRaw = document.getElementById('wContact').value.trim();
+      try {
+        // ── 0) Auth 상태 재확인 (race 조건 방어) ──
+        const user = window.koausAuth && window.koausAuth.user;
+        if (!user) {
+          console.warn('[jobs] submitPost — 미로그인 상태에서 호출됨');
+          alert('로그인이 필요한 서비스입니다.');
+          if (window.koausAuth && window.koausAuth.openAuthModal) window.koausAuth.openAuthModal();
+          return;
+        }
 
-      // ── 필수 항목 빈 칸 검증 ──
-      if (!title || !body || !contactRaw) {
-        alert('제목 · 내용 · 연락처를 모두 입력해 주세요.');
-        return;
-      }
-      // 연락처: 자유 형식 허용 (호주 전화 / 카카오톡 / 이메일 / URL 등)
-      const contact = contactRaw.replace(/\s+/g, ' ').trim();
-      const nick = document.getElementById('wAuthor').value.trim()
-        || localStorage.getItem('koaus-nickname') || user.displayName?.split(' ')[0] || user.email?.split('@')[0] || '사용자';
-      const d = new Date();
-      const pad = n => String(n).padStart(2, '0');
-      const date = `${pad(d.getMonth() + 1)}/${pad(d.getDate())}`;
-      const time = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
-      const posts = loadPosts();
-      if (editingId != null) {
-        const idx = posts.findIndex(x => String(x.id) === String(editingId));
-        if (idx >= 0) {
-          Object.assign(posts[idx], { postType, title, body, contact });
-          savePosts(posts);
-          recordMyPost(posts[idx]);
+        // ── 1) DOM 요소 존재 검증 ──
+        const elTitle   = document.getElementById('wTitle');
+        const elBody    = document.getElementById('wBody');
+        const elContact = document.getElementById('wContact');
+        const elAuthor  = document.getElementById('wAuthor');
+        const radioType = document.querySelector('input[name="wPostType"]:checked');
+        if (!elTitle || !elBody || !elContact) {
+          console.error('❌ 글쓰기 폼 DOM 누락: wTitle/wBody/wContact 일부가 없습니다.');
+          alert('글쓰기 폼을 불러오지 못했습니다. 페이지를 새로고침 후 다시 시도해 주세요.');
+          return;
         }
-        editingId = null;
-      } else {
-        const post = { id: Date.now(), postType, title, body, state: currentState, author: nick, uid: user.uid || '', email: user.email || '', authorUid: user.uid || '', authorEmail: user.email || '', contact, date, time };
-        posts.push(post);
-        savePosts(posts);
-        recordMyPost(post);
-        console.log('[KoAus] 구인구직 글 저장 — uid:', post.uid, '| email:', post.email, '| id:', post.id);
-        // Firestore에도 저장 (실시간 다기기 반영) — 실패 시 사용자에게 명확히 알림
-        if (window.koausJobs && window.koausJobs.write) {
-          window.koausJobs.write(post)
-            .then(() => console.log('[jobs] Firestore 저장 성공'))
-            .catch(err => {
-              console.error('[jobs] Firestore 저장 실패', err);
-              alert('서버 저장 실패: ' + (err.code || err.message) + '\n글은 본인 기기에는 표시됩니다. Firestore 규칙 배포 여부를 확인해 주세요.');
-            });
+        const postType = (radioType && radioType.value) || 'hiring';
+        const title    = elTitle.value.trim();
+        const body     = elBody.value.trim();
+        const contactRaw = elContact.value.trim();
+
+        // ── 2) 필수 항목 빈 칸 검증 ──
+        if (!title || !body || !contactRaw) {
+          alert('제목 · 내용 · 연락처를 모두 입력해 주세요.');
+          return;
+        }
+        // 연락처: 자유 형식 허용 (호주 전화 / 카카오톡 / 이메일 / URL 등)
+        const contact = contactRaw.replace(/\s+/g, ' ').trim();
+        const nick = (elAuthor && elAuthor.value.trim())
+          || localStorage.getItem('koaus-nickname')
+          || user.displayName?.split(' ')[0]
+          || user.email?.split('@')[0]
+          || '사용자';
+        const d = new Date();
+        const pad = n => String(n).padStart(2, '0');
+        const date = `${pad(d.getMonth() + 1)}/${pad(d.getDate())}`;
+        const time = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+
+        // ── 3) 로컬 저장 (Firestore 실패해도 본인 기기에는 보임) ──
+        const posts = loadPosts();
+        if (editingId != null) {
+          const idx = posts.findIndex(x => String(x.id) === String(editingId));
+          if (idx >= 0) {
+            Object.assign(posts[idx], { postType, title, body, contact });
+            savePosts(posts);
+            recordMyPost(posts[idx]);
+          }
+          editingId = null;
         } else {
-          console.warn('[jobs] window.koausJobs 미초기화 — Firestore 모듈 로드 확인 필요');
+          const post = {
+            id: Date.now(), postType, title, body,
+            state: currentState, author: nick,
+            uid: user.uid || '', email: user.email || '',
+            authorUid: user.uid || '', authorEmail: user.email || '',
+            contact, date, time,
+          };
+          posts.push(post);
+          savePosts(posts);
+          recordMyPost(post);
+
+          // ── 4) Firestore 전송 (컬렉션: jobs_posts) ──
+          console.log('🚀 Firestore 전송 시도 데이터: ', post);
+          if (window.koausJobs && window.koausJobs.write) {
+            window.koausJobs.write(post)
+              .then(ref => console.log('✅ Firestore 저장 성공 docId =', ref && ref.id))
+              .catch(error => {
+                console.error('❌ Firestore 전송 실패 원인: ', error);
+                alert('서버 저장 실패\n코드: ' + (error.code || '-') + '\n메시지: ' + (error.message || error) + '\n\n글은 본인 기기에는 표시됩니다. Firestore 콘솔에서 규칙 배포 여부와 jobs_posts 컬렉션 권한을 확인해 주세요.');
+              });
+          } else {
+            console.error('❌ window.koausJobs 미초기화 — Firestore 모듈 로드 순서를 확인하세요');
+            alert('Firestore 연결이 아직 준비되지 않았습니다. 잠시 후 다시 시도해 주세요.');
+          }
         }
+
+        setWriteMode('create');
+        writeOverlay.classList.remove('open');
+        ['wTitle','wBody','wAuthor','wContact'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+        switchTab(postType);
+      } catch (error) {
+        console.error('❌ submitPost 예외: ', error);
+        alert('글 등록 중 오류가 발생했습니다.\n' + (error.message || error));
       }
-      setWriteMode('create');
-      writeOverlay.classList.remove('open');
-      ['wTitle','wBody','wAuthor','wContact'].forEach(id => { document.getElementById(id).value = ''; });
-      switchTab(postType);
     }
 
     // 마이페이지 등에서 ?edit=<id>로 진입 시, 로그인 확인 후 본인 글이면 수정 폼 자동 오픈
@@ -1147,20 +1191,32 @@
     // ── Firestore: jobs_posts 컬렉션 (구인구직 글 실시간 저장/구독) ──
     const db = getFirestore(app);
 
-    // 글쓰기 인라인 스크립트에서 사용할 write 헬퍼 (uid + email + createdAt 강제 주입)
+    // 글쓰기 인라인 스크립트에서 사용할 write 헬퍼
+    // 컬렉션은 무조건 'jobs_posts' (Firestore rules의 /jobs_posts/{postId}와 일치)
     window.koausJobs = {
       write: async (post) => {
         const u = auth.currentUser;
-        if (!u) throw new Error('로그인 필요');
+        if (!u) {
+          console.error('❌ Firestore 전송 실패 원인: auth.currentUser 가 null — 로그인이 풀린 상태');
+          throw Object.assign(new Error('로그인 필요'), { code: 'auth/not-signed-in' });
+        }
         const payload = {
           ...post,
-          uid:   u.uid,
+          uid:   u.uid,                 // ownerOnCreate 규칙용 (필수)
           email: u.email || '',
           authorUid:   u.uid,
           authorEmail: u.email || '',
           createdAt: serverTimestamp(),
         };
-        return addDoc(collection(db, 'jobs_posts'), payload);
+        console.log('🚀 Firestore 전송 시도 데이터: ', payload, '| collection=jobs_posts | uid=', u.uid);
+        try {
+          const ref = await addDoc(collection(db, 'jobs_posts'), payload);
+          console.log('✅ Firestore addDoc 성공 — docId =', ref.id);
+          return ref;
+        } catch (error) {
+          console.error('❌ Firestore 전송 실패 원인: ', error);
+          throw error;
+        }
       },
     };
 
