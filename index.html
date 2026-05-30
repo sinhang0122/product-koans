@@ -417,6 +417,11 @@
       </a>
     </section>
 
+    <!-- 관리자 등록 광고 배너 (Firestore ads 컬렉션 — 활성 광고가 있을 때만 노출) -->
+    <a class="koaus-ad-slot" id="adSlot" target="_blank" rel="noopener" style="display:none;">
+      <img class="koaus-ad-img" id="adImg" alt="" />
+    </a>
+
     <div class="adsense-wrap">
       <ins class="adsbygoogle"
            style="display:block"
@@ -635,6 +640,21 @@
           if (a) a.textContent = text;
           if (b) b.textContent = text;
         }, err => console.warn('[home] notices 구독 실패 — 기본 문구 유지', err));
+      } catch (e) {}
+      // 관리자 등록 광고 배너 (ads 컬렉션 — 가장 최근 활성 광고를 노출)
+      try {
+        onSnapshot(query(collection(db, 'ads'), orderBy('createdAt', 'desc'), limit(20)), snap => {
+          const items = snap.docs.map(d => d.data()).filter(a => a && a.image && a.link && a.active !== false);
+          const slot = document.getElementById('adSlot');
+          const img  = document.getElementById('adImg');
+          if (!slot || !img) return;
+          if (!items.length) { slot.style.display = 'none'; return; }
+          const pick = items[Math.floor(Math.random() * items.length)];  // 활성 광고 중 랜덤 노출
+          img.src = pick.image;
+          img.alt = pick.alt || '광고 배너';
+          slot.href = pick.link;
+          slot.style.display = '';
+        }, err => console.warn('[home] ads 구독 실패', err));
       } catch (e) {}
       // 광고주 마퀴 (sponsors)
       try {

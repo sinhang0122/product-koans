@@ -407,6 +407,15 @@
       <button class="accom-tab" data-cat="towing">견인 <em>Towing</em></button>
     </div>
 
+    <!-- 인스펙션 카테고리 전용: 파트너 유치 CTA 배너 (인스펙션 활성화 시에만 노출) -->
+    <div class="partner-cta" id="inspectionCTA" style="display:none;">
+      <div class="partner-cta-text">
+        <div class="partner-cta-title">인스펙션·긴급출동 업체 등록 문의하기</div>
+        <div class="partner-cta-sub">KoAus 파트너로 등록되면 해당 주 사용자에게 즉시 노출됩니다.</div>
+      </div>
+      <button class="partner-cta-btn" id="inspectionCtaBtn" type="button">문의하기 →</button>
+    </div>
+
     <!-- Controls -->
     <div class="accom-controls">
       <div class="view-toggle" id="viewToggle">
@@ -1007,20 +1016,11 @@
       if (asb) asb.classList.remove('show');
       document.querySelectorAll('#autoTabs .accom-tab').forEach(b => b.classList.toggle('active', b.dataset.cat === cat));
       const cfg = CAT_CFG[cat];
-      // 지도 뷰: 정비소는 맵+리스트 동시 노출 (토글 숨김),
-      //         견인은 토글로 선택 가능, 렌트카·인스펙션은 List 단독
+      // 지도 뷰 토글: 정비소/견인 모두 List/Map 전환 버튼 노출 (직접 선택), 그 외는 List 단독
       const vt = document.getElementById('viewToggle');
-      const listEl = document.getElementById('listView');
-      const mapEl  = document.getElementById('mapView');
-      if (cat === 'maintenance') {
-        if (vt) vt.style.display = 'none';
-        if (listEl) listEl.style.display = '';
-        if (mapEl)  mapEl.style.display  = '';
-        if (typeof loadMapScript === 'function') loadMapScript();
-      } else {
-        if (vt) vt.style.display = cfg.map ? '' : 'none';
-        if (!cfg.map) switchView('list');
-      }
+      if (vt) vt.style.display = cfg.map ? '' : 'none';
+      if (!cfg.map) switchView('list');
+      else          switchView('list');  // 진입 시 기본은 List, 사용자가 Map으로 토글 가능
       // 상세 필터 버튼: 렌트카/인스펙션만 노출
       const fb = document.getElementById('filterModalBtn');
       if (fb) fb.style.display = (cfg.filter === 'none') ? 'none' : '';
@@ -1030,9 +1030,16 @@
       // 견인 카테고리에서만 하단 외부 견인 서비스 안내 배너 노출
       const tb = document.getElementById('towBanner');
       if (tb) tb.style.display = (cat === 'towing') ? '' : 'none';
+      // 인스펙션 카테고리에서만 파트너 유치 CTA 노출 (유저 글쓰기는 별도 허용)
+      const ic = document.getElementById('inspectionCTA');
+      if (ic) ic.style.display = (cat === 'inspection') ? '' : 'none';
       updateBoardTitle();
       renderAll();
     }
+    // 인스펙션 CTA 버튼 → 관리자 등록 문의 모달 열기
+    document.addEventListener('click', e => {
+      if (e.target && e.target.id === 'inspectionCtaBtn') openInquiryModal();
+    });
 
     // ── 상세 필터 모달 (카테고리별 필드) ──
     const filterOverlay = document.getElementById('filterOverlay');

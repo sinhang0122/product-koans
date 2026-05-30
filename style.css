@@ -1759,6 +1759,21 @@ select.filter-mini-input {
 .pagination-btn:disabled:hover { border-color: var(--border); color: inherit; }
 
 /* ── 법무·유학 파트너 디렉토리 (points.html — B&W) ── */
+.partner-page-title {
+  font-family: var(--font); font-size: 32px; font-weight: 900; letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+@media (max-width: 640px) { .partner-page-title { font-size: 26px; } }
+
+/* ── 관리자 등록 광고 배너 (홈 ad slot) ── */
+.koaus-ad-slot {
+  display: block; width: 100%; max-width: 100%; margin: 16px 0;
+  border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden;
+  background: var(--bg-card); text-decoration: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.koaus-ad-slot:hover { border-color: var(--text-primary); box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+.koaus-ad-img { display: block; width: 100%; height: auto; max-height: 200px; object-fit: cover; }
 .partner-cta {
   display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;
   background: var(--text-primary); color: var(--bg-card); border-radius: var(--r-lg);
