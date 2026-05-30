@@ -2057,6 +2057,8 @@
     }, { once: true });
 
     switchMode(activeMode);  // URL ?mode= 반영 + 초기 렌더/타이틀
+    // Firestore services 컬렉션이 갱신되면 현재 모드 리스트 즉시 재렌더
+    window.addEventListener('koaus-services-updated', () => renderAll());
   </script>
 
   <!-- ── Firebase Auth (로그인 모달 + 로그인 상태) ── -->
@@ -2258,6 +2260,48 @@
         loginBtn.title = '로그인 / 회원가입';
       }
     });
+  </script>
+
+  <!-- ── Firestore services 컬렉션 실시간 구독 (쉐어하우스 관리자 글 자동 노출) ── -->
+  <script type="module">
+    import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
+    import { getFirestore, collection, query, orderBy, limit, onSnapshot } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
+    const firebaseConfig = {
+      apiKey:'AIzaSyCamqnt0bNUD9uz1N5BbCuQjSkWLSpPqlU', authDomain:'koaus-f564c.firebaseapp.com',
+      projectId:'koaus-f564c', storageBucket:'koaus-f564c.firebasestorage.app',
+      messagingSenderId:'663988594088', appId:'1:663988594088:web:ef30c2fd557407b00b299d',
+    };
+    const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+    let db; try { db = getFirestore(app); } catch (e) { console.warn('[accom] Firestore 미초기화', e); }
+    if (db) {
+      const STORE = 'koaus-accom-posts';
+      try {
+        onSnapshot(query(collection(db, 'services'), orderBy('createdAt', 'desc'), limit(20)), snap => {
+          const fsItems = snap.docs
+            .map(d => ({ _fsDocId: d.id, ...d.data() }))
+            .filter(s => s.category === 'accom');
+          fsItems.forEach(s => {
+            if (s.createdAt && s.createdAt.toMillis) {
+              const d = s.createdAt.toDate(); const p = n => String(n).padStart(2,'0');
+              s.id   = s.createdAt.toMillis();
+              s.date = `${p(d.getMonth()+1)}/${p(d.getDate())}`;
+              s.time = `${p(d.getHours())}:${p(d.getMinutes())}`;
+            } else { s.id = Date.now(); }
+            s.adminPost = true;
+            s.address   = s.address || s.region;
+            s.tagline   = s.tagline || s.summary;
+            // accom 호환 필수 필드
+            s.mode = 'offer';
+            if (!Array.isArray(s.types))     s.types     = ['any'];
+            if (!Array.isArray(s.roomTypes)) s.roomTypes = [];
+          });
+          const cur = (() => { try { return JSON.parse(localStorage.getItem(STORE) || '[]'); } catch { return []; } })();
+          const merged = cur.filter(p => !p._fsDocId).concat(fsItems);
+          localStorage.setItem(STORE, JSON.stringify(merged));
+          window.dispatchEvent(new Event('koaus-services-updated'));
+        }, err => console.warn('[accom] services 구독 실패', err));
+      } catch (e) { console.warn('[accom] Firestore services subscribe 실패', e); }
+    }
   </script>
 </body>
 </html>

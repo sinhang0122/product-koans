@@ -417,6 +417,8 @@ body {
   background: var(--accent); color: var(--accent-text);
   border-radius: 3px; flex-shrink: 0;
 }
+.notice-badge--sponsor { background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--text-primary); }
+.sponsor-row { padding-top: 0; margin-top: -4px; }
 .notice-marquee { flex: 1; min-width: 0; overflow: hidden; }
 .notice-track {
   display: inline-flex; width: max-content;

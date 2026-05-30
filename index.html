@@ -393,9 +393,19 @@
       <div class="notice-row">
         <span class="notice-badge">Notice</span>
         <div class="notice-marquee">
-          <div class="notice-track">
-            <span class="notice-text">숙소 · 구인구직 · 차량 게시판을 자유롭게 이용해 보세요 · Google 계정으로 간편 로그인 가능합니다 · KoAus는 호주 한인 커뮤니티의 새로운 기준을 만들어 갑니다</span>
-            <span class="notice-text" aria-hidden="true">숙소 · 구인구직 · 차량 게시판을 자유롭게 이용해 보세요 · Google 계정으로 간편 로그인 가능합니다 · KoAus는 호주 한인 커뮤니티의 새로운 기준을 만들어 갑니다</span>
+          <div class="notice-track" id="noticeTrack">
+            <span class="notice-text" id="noticeTextA">숙소 · 구인구직 · 차량 게시판을 자유롭게 이용해 보세요 · Google 계정으로 간편 로그인 가능합니다 · KoAus는 호주 한인 커뮤니티의 새로운 기준을 만들어 갑니다</span>
+            <span class="notice-text" id="noticeTextB" aria-hidden="true">숙소 · 구인구직 · 차량 게시판을 자유롭게 이용해 보세요 · Google 계정으로 간편 로그인 가능합니다 · KoAus는 호주 한인 커뮤니티의 새로운 기준을 만들어 갑니다</span>
+          </div>
+        </div>
+      </div>
+      <!-- 광고주 마퀴 (Firestore sponsors 컬렉션 — 광고주 있을 때만 노출) -->
+      <div class="notice-row sponsor-row" id="sponsorRow" style="display:none;">
+        <span class="notice-badge notice-badge--sponsor">Sponsor</span>
+        <div class="notice-marquee">
+          <div class="notice-track" id="sponsorTrack">
+            <span class="notice-text" id="sponsorTextA"></span>
+            <span class="notice-text" id="sponsorTextB" aria-hidden="true"></span>
           </div>
         </div>
       </div>
@@ -604,5 +614,51 @@
   </div>
 
   <script type="module" src="app.js"></script>
+
+  <!-- ── Firestore 실시간 공지/광고주 마퀴 ── -->
+  <script type="module">
+    import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
+    import { getFirestore, collection, query, orderBy, limit, onSnapshot } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
+    const firebaseConfig = {
+      apiKey: 'AIzaSyCamqnt0bNUD9uz1N5BbCuQjSkWLSpPqlU',
+      authDomain: 'koaus-f564c.firebaseapp.com',
+      projectId: 'koaus-f564c',
+      storageBucket: 'koaus-f564c.firebasestorage.app',
+      messagingSenderId: '663988594088',
+      appId: '1:663988594088:web:ef30c2fd557407b00b299d',
+      measurementId: 'G-DERZ9MTKPL',
+    };
+    const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+    let db; try { db = getFirestore(app); } catch (e) { console.warn('[home] Firestore 미초기화', e); }
+    if (db) {
+      const SEP = '  ·  ';
+      // 공지사항 마퀴 (notices)
+      try {
+        onSnapshot(query(collection(db, 'notices'), orderBy('createdAt', 'desc'), limit(20)), snap => {
+          const items = snap.docs.map(d => d.data()).filter(n => n && n.text);
+          if (!items.length) return;  // 비어있으면 기본 문구 유지
+          const text = items.map(n => n.link ? `${n.text}` : n.text).join(SEP);
+          const a = document.getElementById('noticeTextA');
+          const b = document.getElementById('noticeTextB');
+          if (a) a.textContent = text;
+          if (b) b.textContent = text;
+        }, err => console.warn('[home] notices 구독 실패 — 기본 문구 유지', err));
+      } catch (e) {}
+      // 광고주 마퀴 (sponsors)
+      try {
+        onSnapshot(query(collection(db, 'sponsors'), orderBy('createdAt', 'desc'), limit(20)), snap => {
+          const items = snap.docs.map(d => d.data()).filter(s => s && s.name);
+          const row = document.getElementById('sponsorRow');
+          if (!items.length) { if (row) row.style.display = 'none'; return; }
+          const text = items.map(s => s.link ? `${s.name} →` : s.name).join(SEP);
+          const a = document.getElementById('sponsorTextA');
+          const b = document.getElementById('sponsorTextB');
+          if (a) a.textContent = text;
+          if (b) b.textContent = text;
+          if (row) row.style.display = '';
+        }, err => console.warn('[home] sponsors 구독 실패', err));
+      } catch (e) {}
+    }
+  </script>
 </body>
 </html>

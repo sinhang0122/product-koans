@@ -413,7 +413,10 @@
     <section class="admin-section">
       <h2 class="admin-section-title">① 공지사항 등록 (Notice)</h2>
       <form class="admin-form" id="noticeForm">
-        <div class="admin-field"><label class="admin-label" for="noticeText">공지 텍스트</label><input class="admin-input" id="noticeText" type="text" placeholder="홈 상단 마퀴에 표시될 공지 내용" maxlength="200" /></div>
+        <div class="admin-row">
+          <div class="admin-field"><label class="admin-label" for="noticeText">공지 텍스트</label><input class="admin-input" id="noticeText" type="text" placeholder="홈 상단 마퀴에 표시될 공지 내용" maxlength="200" /></div>
+          <div class="admin-field"><label class="admin-label" for="noticeLink">링크 URL (선택)</label><input class="admin-input" id="noticeLink" type="url" placeholder="https://" /></div>
+        </div>
         <div class="admin-actions"><button class="admin-submit" type="submit">공지 등록</button></div>
         <p class="admin-note" id="noticeNote"></p>
       </form>
@@ -512,16 +515,35 @@
     const themeToggleBtn = document.getElementById('themeToggleBtn');
     if (themeToggleBtn) themeToggleBtn.addEventListener('click', () => applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'));
     applyTheme(localStorage.getItem('koaus-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+  </script>
 
-    // ════════════════════════════════════════════════════════════════════
-    // KoAus(코오스) Admin — 공지/광고주/서비스 게시글 로컬 저장 + 관리 리스트
-    // ════════════════════════════════════════════════════════════════════
-    const KEYS = {
-      notice:  'koaus-admin-notices',
-      adv:     'koaus-admin-ads',
-      auto:    'koaus-auto-posts',     // 정비소/인스펙션/렌트카/견인 공용
-      accom:   'koaus-accom-posts',    // 쉐어하우스
+  <!-- ════════════════════════════════════════════════════════════════════
+       KoAus(코오스) Admin — Firebase Firestore 실시간 데이터베이스 연동
+       ・ 컬렉션: notices / sponsors / services
+       ・ 익명 로그인 → 인증된 사용자만 쓰기 (Firestore 규칙)
+       ・ onSnapshot 실시간 구독 → 등록/삭제 즉시 화면 반영
+       ════════════════════════════════════════════════════════════════════ -->
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
+    import { getAuth, signInAnonymously, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
+    import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, query, orderBy, limit, serverTimestamp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
+
+    const firebaseConfig = {
+      apiKey:            'AIzaSyCamqnt0bNUD9uz1N5BbCuQjSkWLSpPqlU',
+      authDomain:        'koaus-f564c.firebaseapp.com',
+      projectId:         'koaus-f564c',
+      storageBucket:     'koaus-f564c.firebasestorage.app',
+      messagingSenderId: '663988594088',
+      appId:             '1:663988594088:web:ef30c2fd557407b00b299d',
+      measurementId:     'G-DERZ9MTKPL',
     };
+    const app  = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db   = getFirestore(app);
+
+    // 익명 로그인 (보안 규칙: 인증된 사용자만 쓰기 허용)
+    try { await signInAnonymously(auth); } catch (e) { console.warn('[admin] 익명 로그인 실패', e); }
+
     const CAT_LABEL = {
       maintenance: '정비소', inspection: '동행 인스펙션·긴급출동',
       rental: '렌트카', towing: '견인', accom: '쉐어하우스',
@@ -529,146 +551,138 @@
     const STATE_LABEL = { nsw:'NSW', vic:'VIC', qld:'QLD', wa:'WA', sa:'SA', tas:'TAS', act:'ACT', nt:'NT' };
     const $ = id => document.getElementById(id);
     const escHtml = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    const loadArr = k => { try { return JSON.parse(localStorage.getItem(k) || '[]'); } catch { return []; } };
-    const saveArr = (k, a) => localStorage.setItem(k, JSON.stringify(a));
-    const flash = (el, msg, ok) => { el.textContent = msg; el.className = 'admin-note ' + (ok ? 'admin-note--ok' : 'admin-note--err'); setTimeout(() => { el.textContent=''; el.className='admin-note'; }, 3000); };
-    const stamp = () => { const d = new Date(); const pad = n => String(n).padStart(2,'0'); return { date: `${pad(d.getMonth()+1)}/${pad(d.getDate())}`, time: `${pad(d.getHours())}:${pad(d.getMinutes())}` }; };
+    const flash = (el, msg, ok) => { el.textContent = msg; el.className = 'admin-note ' + (ok ? 'admin-note--ok' : 'admin-note--err'); setTimeout(() => { el.textContent=''; el.className='admin-note'; }, 3500); };
+    const fmtDate = ts => {
+      try { const d = ts && ts.toDate ? ts.toDate() : new Date(ts || Date.now());
+        const p = n => String(n).padStart(2,'0');
+        return `${p(d.getMonth()+1)}/${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+      } catch { return ''; }
+    };
+    const errMsg = '저장 실패 — Firebase 콘솔에서 Firestore 활성화 + firestore.rules 배포가 필요합니다.';
 
-    // ── ① 공지사항 ──
-    $('noticeForm').addEventListener('submit', e => {
+    // ── ① 공지사항 등록 (notices 컬렉션) ──
+    $('noticeForm').addEventListener('submit', async e => {
       e.preventDefault();
       const text = $('noticeText').value.trim();
+      const link = ($('noticeLink') && $('noticeLink').value.trim()) || '';
       if (!text) { flash($('noticeNote'), '공지 텍스트를 입력해 주세요.', false); return; }
-      const arr = loadArr(KEYS.notice);
-      arr.unshift({ id: Date.now(), text, ...stamp() });
-      saveArr(KEYS.notice, arr);
-      $('noticeText').value = '';
-      renderNotices();
-      flash($('noticeNote'), '공지 등록 완료', true);
-      alert('성공적으로 등록되었습니다!');
+      try {
+        await addDoc(collection(db, 'notices'), { text, link, createdAt: serverTimestamp() });
+        $('noticeText').value = '';
+        if ($('noticeLink')) $('noticeLink').value = '';
+        flash($('noticeNote'), '공지 등록 완료 (Firestore 실시간 반영)', true);
+        alert('성공적으로 등록되었습니다!');
+      } catch (err) {
+        console.error('[admin] notice 저장 실패', err);
+        flash($('noticeNote'), errMsg, false);
+      }
     });
-    function renderNotices() {
-      const arr = loadArr(KEYS.notice);
-      $('noticeList').innerHTML = arr.length ? arr.map(n =>
-        `<div class="admin-item"><span class="admin-item-main">${escHtml(n.text)}</span><span class="admin-item-meta">${n.date} ${n.time}</span><button class="admin-del" data-key="notice" data-id="${n.id}">삭제</button></div>`
-      ).join('') : '<div class="admin-empty">등록된 공지가 없습니다.</div>';
-    }
 
-    // ── ② 광고주 ──
-    $('advForm').addEventListener('submit', e => {
+    // ── ② 광고주 등록 (sponsors 컬렉션) ──
+    $('advForm').addEventListener('submit', async e => {
       e.preventDefault();
       const name = $('advName').value.trim();
       const link = $('advLink').value.trim();
       if (!name) { flash($('advNote'), '광고주명을 입력해 주세요.', false); return; }
-      const arr = loadArr(KEYS.adv);
-      arr.unshift({ id: Date.now(), name, link, memo: $('advMemo').value.trim(), ...stamp() });
-      saveArr(KEYS.adv, arr);
-      $('advForm').reset();
-      renderAds();
-      flash($('advNote'), '광고주 등록 완료', true);
-      alert('성공적으로 등록되었습니다!');
-    });
-    function renderAds() {
-      const arr = loadArr(KEYS.adv);
-      $('advList').innerHTML = arr.length ? arr.map(a =>
-        `<div class="admin-item">
-          <span class="admin-item-main">${escHtml(a.name)}${a.link ? ` · <a href="${escHtml(a.link)}" target="_blank" rel="noopener">${escHtml(a.link)}</a>` : ''}</span>
-          <span class="admin-item-meta">${escHtml(a.memo||'')} · ${a.date} ${a.time}</span>
-          <button class="admin-del" data-key="adv" data-id="${a.id}">삭제</button>
-        </div>`
-      ).join('') : '<div class="admin-empty">등록된 광고주가 없습니다.</div>';
-    }
-
-    // ── ③ 서비스 게시글 (정비소/인스펙션/렌트카/견인/쉐어하우스) ──
-    function storeKeyForCat(cat) { return cat === 'accom' ? KEYS.accom : KEYS.auto; }
-
-    $('serviceForm').addEventListener('submit', e => {
-      e.preventDefault();
-      const cat   = $('svCat').value;
-      const title = $('svTitle').value.trim();
-      if (!title) { flash($('svNote'), '업체명/제목을 입력해 주세요.', false); return; }
-      const region  = $('svRegion').value.trim();
-      const contact = $('svContact').value.trim();
-      const summary = $('svSummary').value.trim();
-      const body    = $('svBody').value.trim();
-      const state   = $('svState').value;     // '' = 전 지역
-      const premium = $('svPremium').checked;
-      const post = {
-        id: Date.now(),
-        category: cat,
-        title,
-        region,
-        address: region,   // 지도 위치 폴백
-        tagline: summary,  // accom 카드에서 nameKo · tagline 으로 사용
-        summary,
-        body,
-        contact,
-        state,
-        author: '관리자',
-        adminPost: true,
-        isPremium: premium,
-        ...stamp(),
-        // accom 호환 (쉐어하우스 카테고리에서 모드/타입 기본값)
-        ...(cat === 'accom' ? { mode: 'offer', types: ['any'], roomTypes: [] } : {}),
-      };
-      const STORE = storeKeyForCat(cat);
-      const arr = loadArr(STORE);
-      arr.push(post);
-      saveArr(STORE, arr);
-      $('serviceForm').reset();
-      $('svPremium').checked = true;
-      renderServiceList();
-      flash($('svNote'), `[${CAT_LABEL[cat]}] 등록 완료 — 해당 카테고리 페이지에 즉시 노출`, true);
-      alert('성공적으로 등록되었습니다!');
-    });
-
-    function renderServiceList() {
-      // 관리자 게시글만 모아 보여줌 (auto + accom 통합)
-      const items = [];
-      loadArr(KEYS.auto).forEach(p => { if (p.adminPost) items.push({ ...p, _store: 'auto' }); });
-      loadArr(KEYS.accom).forEach(p => { if (p.adminPost) items.push({ ...p, _store: 'accom', category: 'accom' }); });
-      items.sort((a, b) => b.id - a.id);
-      const html = items.length ? items.map(p => `
-        <div class="admin-post-row${p.isPremium ? ' is-pinned' : ''}">
-          <div class="admin-post-meta">
-            <span class="admin-post-cat">${escHtml(CAT_LABEL[p.category] || p.category || '-')}</span>
-            <span class="admin-post-state">${escHtml(p.state ? (STATE_LABEL[p.state] || p.state) : '전 지역')}</span>
-            ${p.isPremium ? '<span class="admin-post-pin">📌 PIN</span>' : ''}
-          </div>
-          <div class="admin-post-title">${escHtml(p.title || '-')}</div>
-          ${p.region   ? `<div class="admin-post-sub">📍 ${escHtml(p.region)}</div>`   : ''}
-          ${p.summary  ? `<div class="admin-post-sub">${escHtml(p.summary)}</div>`     : ''}
-          ${p.contact  ? `<div class="admin-post-sub">📞 ${escHtml(p.contact)}</div>`  : ''}
-          <div class="admin-post-actions">
-            <span class="admin-post-time">${p.date || ''} ${p.time || ''}</span>
-            <button class="admin-del" data-key="service" data-store="${p._store}" data-id="${p.id}">삭제</button>
-          </div>
-        </div>`).join('') : '<div class="admin-empty">등록된 관리자 게시글이 없습니다.</div>';
-      $('svList').innerHTML = html;
-    }
-
-    // ── 삭제 위임 (공지/광고주/서비스 공통) ──
-    document.addEventListener('click', e => {
-      const btn = e.target.closest('.admin-del'); if (!btn) return;
-      const key = btn.dataset.key;
-      const id  = String(btn.dataset.id);
-      if (!confirm('정말 삭제하시겠습니까?')) return;
-      if (key === 'notice') {
-        saveArr(KEYS.notice, loadArr(KEYS.notice).filter(x => String(x.id) !== id));
-        renderNotices();
-      } else if (key === 'adv') {
-        saveArr(KEYS.adv, loadArr(KEYS.adv).filter(x => String(x.id) !== id));
-        renderAds();
-      } else if (key === 'service') {
-        const STORE = btn.dataset.store === 'accom' ? KEYS.accom : KEYS.auto;
-        saveArr(STORE, loadArr(STORE).filter(x => String(x.id) !== id));
-        renderServiceList();
+      try {
+        await addDoc(collection(db, 'sponsors'), { name, link, memo: $('advMemo').value.trim(), createdAt: serverTimestamp() });
+        $('advForm').reset();
+        flash($('advNote'), '광고주 등록 완료 (Firestore 실시간 반영)', true);
+        alert('성공적으로 등록되었습니다!');
+      } catch (err) {
+        console.error('[admin] sponsor 저장 실패', err);
+        flash($('advNote'), errMsg, false);
       }
     });
 
-    renderNotices();
-    renderAds();
-    renderServiceList();
+    // ── ③ 서비스 게시글 등록 (services 컬렉션) ──
+    $('serviceForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const cat = $('svCat').value;
+      const title = $('svTitle').value.trim();
+      if (!title) { flash($('svNote'), '업체명/제목을 입력해 주세요.', false); return; }
+      const payload = {
+        category: cat, title,
+        region:  $('svRegion').value.trim(),
+        summary: $('svSummary').value.trim(),
+        body:    $('svBody').value.trim(),
+        contact: $('svContact').value.trim(),
+        state:   $('svState').value,
+        isPremium: $('svPremium').checked,
+        adminPost: true,
+        author: '관리자',
+        createdAt: serverTimestamp(),
+      };
+      try {
+        await addDoc(collection(db, 'services'), payload);
+        $('serviceForm').reset();
+        $('svPremium').checked = true;
+        flash($('svNote'), `[${CAT_LABEL[cat]}] 등록 완료 — 해당 카테고리 페이지에 실시간 노출`, true);
+        alert('성공적으로 등록되었습니다!');
+      } catch (err) {
+        console.error('[admin] service 저장 실패', err);
+        flash($('svNote'), errMsg, false);
+      }
+    });
+
+    // ── 실시간 리스트 구독 (onSnapshot) ──
+    function subscribeList(colName, listEl, renderRow) {
+      try {
+        const q = query(collection(db, colName), orderBy('createdAt', 'desc'), limit(20));
+        onSnapshot(q, snap => {
+          const arr = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+          listEl.innerHTML = arr.length ? arr.map(renderRow).join('') : '<div class="admin-empty">등록된 항목이 없습니다.</div>';
+        }, err => {
+          console.warn(`[admin] ${colName} 구독 실패`, err);
+          listEl.innerHTML = '<div class="admin-empty">Firestore 미연결 — Firebase 콘솔에서 데이터베이스 생성 + firestore.rules 배포가 필요합니다.</div>';
+        });
+      } catch (e) {
+        listEl.innerHTML = '<div class="admin-empty">Firestore 초기화 실패 (네트워크/SDK 오류)</div>';
+      }
+    }
+
+    subscribeList('notices', $('noticeList'), n =>
+      `<div class="admin-item">
+        <span class="admin-item-main">${escHtml(n.text)}${n.link ? ` · <a href="${escHtml(n.link)}" target="_blank" rel="noopener">${escHtml(n.link)}</a>` : ''}</span>
+        <span class="admin-item-meta">${fmtDate(n.createdAt)}</span>
+        <button class="admin-del" data-col="notices" data-id="${n.id}">삭제</button>
+      </div>`);
+
+    subscribeList('sponsors', $('advList'), a =>
+      `<div class="admin-item">
+        <span class="admin-item-main">${escHtml(a.name)}${a.link ? ` · <a href="${escHtml(a.link)}" target="_blank" rel="noopener">${escHtml(a.link)}</a>` : ''}</span>
+        <span class="admin-item-meta">${escHtml(a.memo||'')} · ${fmtDate(a.createdAt)}</span>
+        <button class="admin-del" data-col="sponsors" data-id="${a.id}">삭제</button>
+      </div>`);
+
+    subscribeList('services', $('svList'), p => `
+      <div class="admin-post-row${p.isPremium ? ' is-pinned' : ''}">
+        <div class="admin-post-meta">
+          <span class="admin-post-cat">${escHtml(CAT_LABEL[p.category] || p.category || '-')}</span>
+          <span class="admin-post-state">${escHtml(p.state ? (STATE_LABEL[p.state] || p.state) : '전 지역')}</span>
+          ${p.isPremium ? '<span class="admin-post-pin">📌 PIN</span>' : ''}
+        </div>
+        <div class="admin-post-title">${escHtml(p.title || '-')}</div>
+        ${p.region   ? `<div class="admin-post-sub">📍 ${escHtml(p.region)}</div>`   : ''}
+        ${p.summary  ? `<div class="admin-post-sub">${escHtml(p.summary)}</div>`     : ''}
+        ${p.contact  ? `<div class="admin-post-sub">📞 ${escHtml(p.contact)}</div>`  : ''}
+        <div class="admin-post-actions">
+          <span class="admin-post-time">${fmtDate(p.createdAt)}</span>
+          <button class="admin-del" data-col="services" data-id="${p.id}">삭제</button>
+        </div>
+      </div>`);
+
+    // ── 삭제 위임 (Firestore 문서 삭제) ──
+    document.addEventListener('click', async e => {
+      const btn = e.target.closest('.admin-del'); if (!btn) return;
+      if (!confirm('정말 삭제하시겠습니까?')) return;
+      try {
+        await deleteDoc(doc(db, btn.dataset.col, btn.dataset.id));
+      } catch (err) {
+        console.error('[admin] 삭제 실패', err);
+        alert('삭제 실패 — Firestore 권한/규칙을 확인해 주세요.');
+      }
+    });
   </script>
 </body>
 </html>
