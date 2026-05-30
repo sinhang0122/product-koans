@@ -1229,7 +1229,10 @@
     // ── 글 등록 문의 모달 (정비소/견인) ──
     const inquiryOverlay = document.getElementById('inquiryOverlay');
     function openInquiryModal() {
-      document.getElementById('inquiryTitle').textContent = `📝 ${CAT_LABELS[activeCategory]} 등록 문의`;
+      // 정비소: 파트너 유치 임팩트 카피 / 그 외: 일반 등록 문의 타이틀
+      document.getElementById('inquiryTitle').textContent = (activeCategory === 'maintenance')
+        ? '🔧 내 정비소를 KoAus에 등록하세요!'
+        : `📝 ${CAT_LABELS[activeCategory]} 등록 문의`;
       ['iqName','iqContact','iqEmail','iqMsg'].forEach(id => { document.getElementById(id).value = ''; });
       document.getElementById('iqError').textContent = '';
       inquiryOverlay.classList.add('open');
@@ -2461,7 +2464,9 @@
             s.tagline   = s.tagline || s.summary;
           });
           const cur = (() => { try { return JSON.parse(localStorage.getItem(STORE) || '[]'); } catch { return []; } })();
-          const merged = cur.filter(p => !p._fsDocId).concat(fsItems);
+          const localOnly = cur.filter(p => !p._fsDocId);
+          const fsIds = new Set(fsItems.map(x => String(x.id)));
+          const merged = localOnly.filter(p => !fsIds.has(String(p.id))).concat(fsItems);
           localStorage.setItem(STORE, JSON.stringify(merged));
           window.dispatchEvent(new Event('koaus-services-updated'));
         }, err => console.warn('[auto] services 구독 실패', err));

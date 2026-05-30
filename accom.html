@@ -2296,7 +2296,9 @@
             if (!Array.isArray(s.roomTypes)) s.roomTypes = [];
           });
           const cur = (() => { try { return JSON.parse(localStorage.getItem(STORE) || '[]'); } catch { return []; } })();
-          const merged = cur.filter(p => !p._fsDocId).concat(fsItems);
+          const localOnly = cur.filter(p => !p._fsDocId);
+          const fsIds = new Set(fsItems.map(x => String(x.id)));
+          const merged = localOnly.filter(p => !fsIds.has(String(p.id))).concat(fsItems);
           localStorage.setItem(STORE, JSON.stringify(merged));
           window.dispatchEvent(new Event('koaus-services-updated'));
         }, err => console.warn('[accom] services 구독 실패', err));

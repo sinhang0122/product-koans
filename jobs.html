@@ -590,7 +590,7 @@
     // 한 번에 20개씩만 렌더(페이지네이션). 향후 Firestore 전환 시:
     //   query(collection(db,'jobs_posts'), orderBy('id','desc'), limit(PER_PAGE))
     //   다음 페이지는 startAfter(lastDoc) 커서로만 추가 조회 → read 비용 최소화.
-    const PER_PAGE = 20;
+    const PER_PAGE = 10;
     document.getElementById('tabHiring').addEventListener('click', () => switchTab('hiring'));
     document.getElementById('tabSeeking').addEventListener('click', () => switchTab('seeking'));
     function switchTab(tab) {
@@ -655,13 +655,21 @@
         });
       });
 
+      // ── 페이지네이션: [Prev] [1] [2] ... [Next] ──
       pager.innerHTML = '';
       if (totalPages > 1) {
+        const parts = [];
+        parts.push(`<button class="pagination-btn pagination-nav" data-page="${currentPage - 1}"${currentPage === 1 ? ' disabled' : ''}>‹ Prev</button>`);
         for (let i = 1; i <= totalPages; i++) {
-          pager.innerHTML += `<button class="pagination-btn${i === currentPage ? ' active' : ''}" data-page="${i}">${i}</button>`;
+          parts.push(`<button class="pagination-btn${i === currentPage ? ' active' : ''}" data-page="${i}">${i}</button>`);
         }
+        parts.push(`<button class="pagination-btn pagination-nav" data-page="${currentPage + 1}"${currentPage === totalPages ? ' disabled' : ''}>Next ›</button>`);
+        pager.innerHTML = parts.join('');
         pager.querySelectorAll('.pagination-btn').forEach(b => b.addEventListener('click', () => {
-          currentPage = parseInt(b.dataset.page);
+          if (b.disabled) return;
+          const target = parseInt(b.dataset.page, 10);
+          if (!Number.isFinite(target) || target < 1 || target > totalPages) return;
+          currentPage = target;
           renderPosts();
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }));
@@ -744,7 +752,11 @@
     });
     function guardedOpenWrite() {
       const u = window.koausAuth && window.koausAuth.user;
-      if (!u) { alert('글을 작성하려면 로그인이 필요합니다.'); window.koausAuth && window.koausAuth.openAuthModal(); return; }
+      if (!u) {
+        alert('로그인이 필요한 서비스입니다.');
+        if (window.koausAuth && window.koausAuth.openAuthModal) window.koausAuth.openAuthModal();
+        return;
+      }
       if (!u.emailVerified) { verifyOverlay.classList.add('open'); return; }
       openWriteModal();
     }
@@ -753,7 +765,7 @@
     writeOverlay.addEventListener('click', e => { if (e.target === writeOverlay) writeOverlay.classList.remove('open'); });
     document.getElementById('writeBtnSubmit').addEventListener('click', () => {
       if (!window.koausAuth || !window.koausAuth.user) {
-        alert('글을 등록하려면 로그인이 필요합니다.');
+        alert('로그인이 필요한 서비스입니다.');
         if (window.koausAuth) {
           window.koausAuth.afterLogin = submitPost;  // 로그인 직후 자동 재시도
           window.koausAuth.openAuthModal();
@@ -1173,7 +1185,10 @@
           return { ...data, id: id || Date.now(), date, time, _fsDocId: d.id };
         });
         let cur = []; try { cur = JSON.parse(localStorage.getItem(STORE) || '[]'); } catch {}
-        const merged = cur.filter(p => !p._fsDocId).concat(fsItems);
+        // 1) 기존에 미러된 fs 항목 제거 / 2) 로컬 항목 중 Firestore에 같은 id로 들어온 것 제거 (중복 카드 방지)
+        const localOnly = cur.filter(p => !p._fsDocId);
+        const fsIds = new Set(fsItems.map(x => String(x.id)));
+        const merged = localOnly.filter(p => !fsIds.has(String(p.id))).concat(fsItems);
         localStorage.setItem(STORE, JSON.stringify(merged));
         window.dispatchEvent(new Event('koaus-jobs-updated'));
       }, err => console.warn('[jobs] jobs_posts 구독 실패', err));
