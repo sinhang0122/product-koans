@@ -473,6 +473,21 @@
 
   <footer class="site-footer"><p>KoAus &mdash; 호주 한인 포털 &nbsp;·&nbsp; 2026</p></footer>
 
+  <!-- ── 이메일 인증 필요 모달 (글쓰기 소프트 게이트) — inline script가 참조하므로 script 앞에 위치 ── -->
+  <div class="report-overlay" id="verifyOverlay">
+    <div class="report-modal">
+      <div class="report-header">
+        <span class="report-title">✉️ 이메일 인증 필요</span>
+        <button class="report-close" id="verifyClose" type="button" aria-label="닫기">✕</button>
+      </div>
+      <p class="verify-modal-msg">게시글을 작성하려면 이메일 인증이 필요합니다. 가입 시 보내드린 인증 메일함을 확인해 주세요.</p>
+      <div class="report-actions">
+        <button class="filter-reset-btn" id="verifyResendBtn" type="button">인증 메일 재전송</button>
+        <button class="filter-apply-btn" id="verifyOkBtn" type="button">확인</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     // 안전 attach 헬퍼: 요소가 없으면 console.warn만 찍고 진행 — null.addEventListener 크래시 방지
     function safeOn(id, ev, fn) {
@@ -876,20 +891,7 @@
   </script>
 
   <!-- ── Auth Modal ── -->
-  <!-- ── 이메일 인증 필요 모달 (글쓰기 소프트 게이트) ── -->
-  <div class="report-overlay" id="verifyOverlay">
-    <div class="report-modal">
-      <div class="report-header">
-        <span class="report-title">✉️ 이메일 인증 필요</span>
-        <button class="report-close" id="verifyClose" type="button">✕</button>
-      </div>
-      <p class="verify-modal-msg">게시글을 작성하려면 이메일 인증이 필요합니다. 메일함을 확인해 주세요.</p>
-      <div class="report-actions">
-        <button class="filter-reset-btn" id="verifyResendBtn" type="button">인증 메일 재전송</button>
-        <button class="filter-apply-btn" id="verifyOkBtn" type="button">확인</button>
-      </div>
-    </div>
-  </div>
+  <!-- (이메일 인증 모달은 inline script 앞으로 이동 — 중복 제거) -->
 
   <!-- ── 이용약관 모달 ── -->
   <div class="report-overlay" id="tosOverlay">
