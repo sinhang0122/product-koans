@@ -329,13 +329,13 @@ body {
 ════════════════════════════════════════════════════════════════════════ */
 .page-container {
   width: 100%; max-width: 900px;
-  margin: 0 auto; padding: 32px 24px 64px;
-  display: flex; flex-direction: column; gap: 22px;
+  margin: 0 auto; padding: 14px 24px 64px;     /* 게시판 상단 여백을 탭-구분선 간격(~14px) 수준으로 압축 */
+  display: flex; flex-direction: column; gap: 12px;
 }
 .page-header {
   display: flex; align-items: flex-start;
   justify-content: space-between; flex-wrap: wrap; gap: 12px;
-  padding-bottom: 16px; border-bottom: 1px solid var(--border);
+  padding-bottom: 10px; border-bottom: 1px solid var(--border);
 }
 .page-title { font-size: 26px; font-weight: 900; color: var(--text-primary); letter-spacing: -0.5px; }
 .page-subtitle { font-size: 14px; color: var(--text-secondary); margin-top: 4px; }
@@ -1144,7 +1144,7 @@ select.write-input {
    Responsive
 ════════════════════════════════════════════════════════════════════════ */
 @media (max-width: 640px) {
-  .page-container { padding: 22px 16px 48px; gap: 16px; }
+  .page-container { padding: 12px 16px 48px; gap: 10px; }
   .page-title { font-size: 22px; }
   .home-main { padding: 24px 16px 60px; }
   .calc-section { padding: 20px; }
@@ -1441,7 +1441,8 @@ select.write-input {
 
 /* ── Main Tabs ── */
 .accom-main-tabs {
-  display: flex; border-bottom: 2px solid var(--border); margin-bottom: 20px;
+  display: flex; border-bottom: 2px solid var(--border);
+  margin-top: 0; margin-bottom: 12px;  /* 상단은 page-container gap 만큼만, 하단도 타이트하게 */
 }
 .accom-tab {
   flex: 1; padding: 14px 20px; background: none; border: none;
