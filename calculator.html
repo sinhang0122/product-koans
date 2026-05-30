@@ -415,18 +415,17 @@
           </div>
         </div>
       </div>
-      <!-- 기준 환율 입력창 (API 매매기준율 자동 채움 · 직접 입력으로 덮어쓰기) -->
-      <div class="exchange-base-row">
-        <label class="exchange-field-label" for="baseRateInput">기준 환율 (1 AUD = ? KRW)</label>
-        <div class="exchange-base-inner">
-          <input class="exchange-amount-input" id="baseRateInput" type="number" step="0.01" min="0" placeholder="API 매매기준율 자동 입력" />
-          <button class="exchange-base-reset" id="baseRateReset" type="button" title="API 매매기준율로 재설정">↻ API</button>
-        </div>
-      </div>
     </div>
 
-    <!-- API 매매기준율 (API 수신 후 표시) -->
-    <div class="exchange-live-rate" id="liveRate">1 AUD = — KRW (API 매매기준율 로딩 중…)</div>
+    <!-- API 매매기준율 + 기준 환율 직접 입력 (한 카드, Flex 좌우 정렬) -->
+    <div class="exchange-live-rate" id="liveRate">
+      <span class="exchange-live-text" id="liveText">1 AUD = — KRW (API 매매기준율 로딩 중…)</span>
+      <label class="exchange-live-input-wrap">
+        <span class="exchange-live-input-label">기준 환율</span>
+        <input class="exchange-live-input" id="baseRateInput" type="number" step="0.01" min="0" placeholder="자동" />
+        <span class="exchange-live-input-unit">KRW</span>
+      </label>
+    </div>
 
     <!-- 어플 비교 리스트 -->
     <div class="exchange-grid" id="exchangeGrid"></div>
@@ -439,7 +438,7 @@
 
     <p class="exchange-updated" id="exchangeUpdated">기준일: 2026. 05. 30. (토) 매매기준율</p>
 
-    <p class="exchange-disclaimer">※ 무료 API는 하루 1번만 갱신됩니다.<br>각 어플을 비교하며 비교한 날 기준 정확한 차이를 입력했지만 각 어플이 기준으로 삼는 매매기준율이 상이하고 실시간으로 조금씩 다르므로, 기준 금액 입력 시 약 ±0.4불 내외의 오차가 발생할 수 있습니다.<br>※ 제공되는 환율은 단순 참고용 매매기준율이며, 실제 송금 시 업체별 적용 환율이 다를 수 있습니다 <em>(*어플 기준)</em> 또 프로모션, 이벤트 등을 통해 수수료 발생이 하지 않을 수도 있습니다</p>
+    <p class="exchange-disclaimer">※ 무료 API는 하루 1번만 갱신됩니다.<br>※ 각 어플을 비교하며 비교한 날 기준 정확한 차이를 입력했지만 각 어플이 기준으로 삼는 매매기준율이 상이하고 실시간으로 조금씩 다르므로, 기준 금액 입력 시 약 ±0.4불 내외의 오차가 발생할 수 있습니다.<br>※ 제공되는 환율은 단순 참고용 매매기준율이며, 실제 송금 시 업체별 적용 환율이 다를 수 있습니다 <em>(*어플 기준)</em> 또 프로모션, 이벤트 등을 통해 수수료 발생이 하지 않을 수도 있습니다</p>
 
   </main>
 
@@ -577,8 +576,11 @@
       if (!amount || amount <= 0) return null;
       const rate = effectiveRate(app);
       if (dir === 'AUD-KRW') {
-        // 와이어바일리: 입력 금액에서 자동 -10 AUD 차감 후 적용 환율을 곱함
-        if (app.key === 'wirebarley') return Math.max(0, amount - WIREBARLEY_FEE_AUD) * rate;
+        // 와이어바일리: (amount − 10) × rate — 차감을 괄호로 강제 묶음 (수식 우선순위 고정)
+        if (app.key === 'wirebarley') {
+          const net = (amount - WIREBARLEY_FEE_AUD);  // 10 AUD 정액 차감 (괄호로 우선순위 명시)
+          return (net > 0 ? net : 0) * rate;
+        }
         // 와이즈: 기준 환율과 100% 동일하게, 추가 차감/가산 없이
         if (app.key === 'wise')       return amount * rate;
         // 센트비: 적용 환율(-9.5원) × (입력금액 − 송금방식별 수수료)
@@ -695,18 +697,11 @@
       if (sentbeSel) sentbeSel.addEventListener('change', e => { sentbeSpeed = e.target.value; render(); });
     }
 
-    // 기준 환율 직접 입력 — 즉시 baseRate 덮어쓰고 재계산
+    // 기준 환율 직접 입력 — 즉시 baseRate 덮어쓰고 재계산 (리셋 버튼 없음 · 하루 1회 갱신이라 불필요)
     const baseRateInput = document.getElementById('baseRateInput');
-    const baseRateReset = document.getElementById('baseRateReset');
     baseRateInput.addEventListener('input', () => {
       const v = parseFloat(baseRateInput.value);
       baseRate = (v > 0) ? v : (apiBaseRate || APPS[0].rate);
-      render();
-    });
-    baseRateReset.addEventListener('click', () => {
-      if (!apiBaseRate) return;
-      baseRate = apiBaseRate;
-      baseRateInput.value = apiBaseRate.toFixed(2);
       render();
     });
 
@@ -730,14 +725,15 @@
       return null;
     }
     function setLiveRateBadge(rate, ok) {
-      const el = document.getElementById('liveRate');
-      if (!el) return;
+      const card = document.getElementById('liveRate');
+      const txt  = document.getElementById('liveText');
+      if (!card || !txt) return;
       if (ok && rate) {
-        el.textContent = `1 AUD = ${rate.toLocaleString(undefined, { maximumFractionDigits: 2 })} KRW (API 매매기준율 · open.er-api.com)`;
-        el.classList.add('is-live');
+        txt.textContent = `1 AUD = ${rate.toLocaleString(undefined, { maximumFractionDigits: 2 })} KRW (API 매매기준율 · open.er-api.com)`;
+        card.classList.add('is-live');
       } else {
-        el.textContent = '1 AUD = ' + (APPS[0].rate || '—').toLocaleString() + ' KRW (폴백 환율 · API 미수신)';
-        el.classList.remove('is-live');
+        txt.textContent = '1 AUD = ' + (APPS[0].rate || '—').toLocaleString() + ' KRW (폴백 환율 · API 미수신)';
+        card.classList.remove('is-live');
       }
     }
     // API 타임스탬프 → "2026. 05. 30. (토) 오전 12:00" 한글 포맷 (브라우저 로컬 TZ)

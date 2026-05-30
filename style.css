@@ -530,25 +530,32 @@ body {
 /* 계산기 페이지: 4개 어플 카드 동일 가로폭으로 한 줄 (가로 스크롤 금지) */
 #exchangeGrid { grid-template-columns: repeat(4, 1fr); gap: 10px; overflow: visible; padding: 0; }
 #exchangeGrid .exchange-card { padding: 14px 12px; gap: 8px; min-width: 0; }
-/* 실시간 매매기준율 배지 (API 수신 결과를 화면에 노출) */
+/* API 매매기준율 + 기준 환율 입력: 한 카드 안에 좌우 정렬 (Flex space-between) */
 .exchange-live-rate {
+  display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;
   margin: 0 0 12px; padding: 10px 14px;
   background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--r-md);
-  font-size: 13px; font-weight: 700; color: var(--text-secondary); text-align: center; letter-spacing: -0.005em;
 }
-.exchange-live-rate.is-live { background: var(--text-primary); color: var(--bg-card); border-color: var(--text-primary); font-weight: 800; }
-
-/* 기준 환율 입력 행 (API 매매기준율 자동 채움 + 사용자 덮어쓰기) */
-.exchange-base-row { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border); }
-.exchange-base-inner { display: flex; gap: 8px; align-items: stretch; }
-.exchange-base-inner .exchange-amount-input { flex: 1; min-width: 0; text-align: right; font-size: 15px; }
-.exchange-base-reset {
-  flex-shrink: 0; padding: 10px 14px;
-  background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--r-sm);
-  font-family: var(--font); font-size: 12px; font-weight: 800; color: var(--text-primary); cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
+.exchange-live-text {
+  flex: 1 1 auto; min-width: 0;
+  font-size: 13px; font-weight: 700; color: var(--text-secondary); letter-spacing: -0.005em;
 }
-.exchange-base-reset:hover { border-color: var(--text-primary); background: var(--bg-elevated); }
+.exchange-live-rate.is-live { background: var(--text-primary); border-color: var(--text-primary); }
+.exchange-live-rate.is-live .exchange-live-text { color: var(--bg-card); font-weight: 800; }
+.exchange-live-input-wrap {
+  flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 6px; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--r-sm);
+}
+.exchange-live-input-label {
+  font-size: 11px; font-weight: 700; color: var(--text-muted); letter-spacing: 0.04em; white-space: nowrap;
+}
+.exchange-live-input {
+  width: 92px; padding: 5px 8px; background: transparent; border: none;
+  font-family: var(--font); font-size: 13px; font-weight: 800; color: var(--text-primary); text-align: right;
+  outline: none;
+}
+.exchange-live-input-unit { font-size: 11px; font-weight: 700; color: var(--text-muted); }
+/* 다크/반전 시에도 입력 박스 자체는 흰 배경 유지 → 가독성 확보 */
 
 /* 센트비 송금 방식 셀렉트 */
 .exchange-speed { display: flex; flex-direction: column; gap: 4px; }
