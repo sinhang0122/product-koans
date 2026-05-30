@@ -18,9 +18,34 @@
   </script>
 
 
+  <script type="module" src="marquee.js"></script>
+
 </head>
 <body>
   <main style="min-height:60vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:48px 24px;font-family:'Urbanist','Noto Sans KR',sans-serif;color:var(--text-primary);background:var(--bg-page);">
+    <!-- 전광판(Marquee) · Firestore global_ticker — 좌측 [Notice|광고주] 고정 + 우측 [광고내용] 우→좌 흐름 (marquee.js) -->
+    <section class="notice-section">
+      <div class="notice-row" id="tickerRow">
+        <div class="ticker-fixed">
+          <span class="notice-badge">Notice</span>
+          <span class="ticker-sep">|</span>
+          <span class="ticker-sponsor" id="tickerSponsor">KoAus</span>
+          <span class="ticker-sep">|</span>
+        </div>
+        <div class="ticker-viewport">
+          <div class="ticker-track" id="tickerTrack">
+            <a class="ticker-item" id="tickerItem" rel="noopener noreferrer">
+              <span class="ticker-content" id="tickerContent">숙소 · 구인구직 · 차량 · 환전 게시판을 자유롭게 이용해 보세요 · KoAus는 호주 한인 커뮤니티의 새로운 기준을 만들어 갑니다</span>
+              <span class="ticker-arrow" id="tickerArrow" aria-hidden="true"></span>
+            </a>
+          </div>
+        </div>
+        <div class="ticker-nav-group">
+          <button type="button" class="ticker-nav" id="tickerPrev" aria-label="이전 배너">‹</button>
+          <button type="button" class="ticker-nav" id="tickerNext" aria-label="다음 배너">›</button>
+        </div>
+      </div>
+    </section>
     <h1 style="font-size:22px;font-weight:900;margin:0;">환율 계산기로 이동합니다…</h1>
     <p style="font-size:14px;color:var(--text-secondary);margin:0;">자동으로 이동되지 않으면 아래 링크를 눌러 주세요.</p>
     <a href="calculator.html" style="font-size:14px;font-weight:800;color:var(--text-primary);text-decoration:none;border-bottom:1px solid var(--border);padding-bottom:1px;">→ calculator.html</a>
