@@ -1029,7 +1029,17 @@
       activeFilter = {};       // 탭 전환 시 상세 필터 초기화
       clearFilterInputs();
       const asb = document.getElementById('areaSearchBtn');
-      if (asb) asb.classList.remove('show');
+      if (asb) {
+        asb.classList.remove('show');
+        // 카테고리별 영역 검색 버튼 라벨 (정비소·견인은 '매물' 대신 카테고리 명칭 사용)
+        const ASB_TEXT = {
+          rental: '이 지역 매물 검색하기',
+          inspection: '이 지역 매물 검색하기',
+          maintenance: '이 지역 정비소 검색',
+          towing: '이 지역 견인 검색',
+        };
+        asb.textContent = ASB_TEXT[cat] || '이 지역 매물 검색하기';
+      }
       document.querySelectorAll('#autoTabs .accom-tab').forEach(b => b.classList.toggle('active', b.dataset.cat === cat));
       const cfg = CAT_CFG[cat];
       // 지도 뷰 토글: 정비소/견인 모두 List/Map 전환 버튼 노출 (직접 선택), 그 외는 List 단독
