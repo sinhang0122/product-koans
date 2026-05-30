@@ -8,6 +8,20 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;800;900&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
+  <!-- 관리자 접근 비밀번호 게이트 (body 렌더 전 실행) -->
+  <script>
+    (function () {
+      if (sessionStorage.getItem('koaus-admin-authed') === '1') return;
+      const ADMIN_PW = '01_22shinKA@';
+      const input = window.prompt('관리자 비밀번호를 입력하세요.');
+      if (input === ADMIN_PW) {
+        sessionStorage.setItem('koaus-admin-authed', '1');
+      } else {
+        alert('접근 거부되었습니다.');
+        location.replace('index.html');
+      }
+    })();
+  </script>
   <script>
     (function () {
       const saved = localStorage.getItem('koaus-theme');
@@ -520,8 +534,9 @@
       arr.unshift({ id: Date.now(), text, ...stamp() });
       saveArr(KEYS.notice, arr);
       $('noticeText').value = '';
-      flash($('noticeNote'), '공지 등록 완료', true);
       renderNotices();
+      flash($('noticeNote'), '공지 등록 완료', true);
+      alert('성공적으로 등록되었습니다!');
     });
     function renderNotices() {
       const arr = loadArr(KEYS.notice);
@@ -540,8 +555,9 @@
       arr.unshift({ id: Date.now(), name, link, memo: $('advMemo').value.trim(), ...stamp() });
       saveArr(KEYS.adv, arr);
       $('advForm').reset();
-      flash($('advNote'), '광고주 등록 완료', true);
       renderAds();
+      flash($('advNote'), '광고주 등록 완료', true);
+      alert('성공적으로 등록되었습니다!');
     });
     function renderAds() {
       const arr = loadArr(KEYS.adv);
@@ -592,8 +608,9 @@
       saveArr(STORE, arr);
       $('serviceForm').reset();
       $('svPremium').checked = true;
-      flash($('svNote'), `[${CAT_LABEL[cat]}] 등록 완료 — 해당 카테고리 페이지에 즉시 노출`, true);
       renderServiceList();
+      flash($('svNote'), `[${CAT_LABEL[cat]}] 등록 완료 — 해당 카테고리 페이지에 즉시 노출`, true);
+      alert('성공적으로 등록되었습니다!');
     });
 
     function renderServiceList() {
