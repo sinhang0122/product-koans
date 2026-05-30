@@ -449,6 +449,18 @@
         <label class="write-label" for="wContact">연락처 (선택)</label>
         <input class="write-input" id="wContact" type="text" placeholder="이메일 또는 전화번호" maxlength="60" />
       </div>
+      <!-- 사진 첨부 (최대 6장, 클라이언트 압축 후 Firebase Storage 업로드) -->
+      <div class="write-field">
+        <label class="write-label">사진 첨부 Photos <em style="font-style:normal;color:var(--text-muted);font-size:11px;">최대 6장 · 자동 압축됩니다</em></label>
+        <div class="photo-upload">
+          <input type="file" id="wPhotoInput" accept="image/*" multiple hidden />
+          <button type="button" class="photo-add-btn" id="wPhotoAddBtn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            <span>사진 추가</span>
+          </button>
+          <div class="photo-thumbs" id="wPhotoThumbs"></div>
+        </div>
+      </div>
       <div class="write-modal-actions">
         <button class="write-cancel-btn" id="writeBtnCancel">취소</button>
         <button class="write-submit-btn" id="writeBtnSubmit">등록하기</button>
@@ -524,13 +536,19 @@
       document.getElementById('boardCount').textContent = `총 ${posts.length}건`;
       const list = document.getElementById('postList');
       if (!posts.length) { list.innerHTML = '<div class="post-empty">등록된 글이 없습니다. 첫 글을 작성해보세요!</div>'; return; }
-      list.innerHTML = posts.slice().reverse().map((p, i) => `
+      list.innerHTML = posts.slice().reverse().map((p, i) => {
+        const hasImg = Array.isArray(p.imageUrls) && p.imageUrls.length;
+        const thumb = hasImg
+          ? `<img src="${escHtml(p.imageUrls[0])}" alt="" loading="lazy" style="width:48px;height:36px;object-fit:cover;border-radius:4px;margin-right:8px;border:1px solid var(--border);" />`
+          : '';
+        return `
         <div class="post-row" data-id="${p.id}" style="cursor:pointer">
           <span class="post-num">${posts.length - i}</span>
-          <span class="post-title" style="color:var(--text-primary);font-weight:500;">${escHtml(p.title)}</span>
+          <span class="post-title" style="color:var(--text-primary);font-weight:500;display:flex;align-items:center;">${thumb}${escHtml(p.title)}</span>
           <span class="post-author">${escHtml(p.author)}</span>
           <span class="post-date">${p.date}</span>
-        </div>`).join('');
+        </div>`;
+      }).join('');
       list.querySelectorAll('.post-row').forEach(row => row.addEventListener('click', () => openDetail(row.dataset.id)));
     }
     function openDetail(id) {
@@ -539,7 +557,11 @@
       if (!p) return;
       document.getElementById('detailTitle').textContent = p.title;
       document.getElementById('detailMeta').innerHTML = `<span>${escHtml(p.author)}</span><span>${p.date}</span>`;
-      document.getElementById('detailBody').textContent = p.body;
+      const bodyEl = document.getElementById('detailBody');
+      const gallery = (Array.isArray(p.imageUrls) && p.imageUrls.length)
+        ? `<div class="post-detail-gallery">${p.imageUrls.map(u => `<img src="${escHtml(u)}" alt="" loading="lazy" />`).join('')}</div>`
+        : '';
+      bodyEl.innerHTML = gallery + `<div>${escHtml(p.body)}</div>`;
       const contactEl = document.getElementById('detailContact');
       contactEl.innerHTML = p.contact ? `📞 연락처: <strong>${escHtml(p.contact)}</strong>` : '';
       document.getElementById('detailOverlay').classList.add('open');
@@ -550,7 +572,42 @@
     document.getElementById('writeBtnOpen').addEventListener('click', () => writeOverlay.classList.add('open'));
     document.getElementById('writeBtnCancel').addEventListener('click', () => writeOverlay.classList.remove('open'));
     writeOverlay.addEventListener('click', e => { if (e.target === writeOverlay) writeOverlay.classList.remove('open'); });
-    document.getElementById('writeBtnSubmit').addEventListener('click', () => {
+    // 사진 첨부 (최대 6장) — 모달 열릴 때마다 reset
+    const MAX_PHOTOS = 6;
+    let pendingPhotoFiles = [];
+    function renderPhotoThumbs() {
+      const box = document.getElementById('wPhotoThumbs');
+      const addBtn = document.getElementById('wPhotoAddBtn');
+      if (!box) return;
+      box.innerHTML = pendingPhotoFiles.map((p, i) =>
+        `<div class="photo-thumb"><img src="${p.preview}" alt="사진 ${i+1}"><button type="button" class="photo-thumb-x" data-idx="${i}" aria-label="삭제">✕</button></div>`
+      ).join('');
+      box.querySelectorAll('.photo-thumb-x').forEach(b => b.addEventListener('click', () => {
+        pendingPhotoFiles.splice(Number(b.dataset.idx), 1);
+        renderPhotoThumbs();
+      }));
+      if (addBtn) addBtn.style.display = pendingPhotoFiles.length >= MAX_PHOTOS ? 'none' : '';
+    }
+    document.getElementById('writeBtnOpen').addEventListener('click', () => { pendingPhotoFiles = []; renderPhotoThumbs(); });
+    const wPhotoBtn = document.getElementById('wPhotoAddBtn');
+    const wPhotoIn  = document.getElementById('wPhotoInput');
+    if (wPhotoBtn && wPhotoIn) {
+      wPhotoBtn.addEventListener('click', () => wPhotoIn.click());
+      wPhotoIn.addEventListener('change', async () => {
+        const files = Array.from(wPhotoIn.files || []);
+        for (const f of files) {
+          if (pendingPhotoFiles.length >= MAX_PHOTOS) { alert(`사진은 최대 ${MAX_PHOTOS}장까지 첨부 가능합니다.`); break; }
+          try {
+            const preview = window.koausPhotos ? await window.koausPhotos.thumbDataURL(f, 240) : URL.createObjectURL(f);
+            pendingPhotoFiles.push({ file: f, preview });
+          } catch (e) { console.warn('썸네일 생성 실패', e); }
+        }
+        wPhotoIn.value = '';
+        renderPhotoThumbs();
+      });
+    }
+
+    document.getElementById('writeBtnSubmit').addEventListener('click', async () => {
       const title = document.getElementById('wTitle').value.trim();
       const body  = document.getElementById('wBody').value.trim();
       const author = document.getElementById('wAuthor').value.trim() || '익명';
@@ -560,13 +617,48 @@
       const posts = loadPosts();
       const d = new Date();
       const date = `${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
-      posts.push({ id: Date.now(), title, body, author, contact, date });
+      const id = Date.now();
+      let imageUrls = [];
+      if (pendingPhotoFiles.length && window.koausPhotos) {
+        const wsb = document.getElementById('writeBtnSubmit');
+        wsb.disabled = true; wsb.textContent = `사진 업로드 중… 0/${pendingPhotoFiles.length}`;
+        try {
+          imageUrls = await window.koausPhotos.uploadPostImages(
+            window.koausPhotos.app, `post_images/car-rent/${id}`,
+            pendingPhotoFiles.map(p => p.file),
+            { maxDim: 1200, quality: 0.7, onProgress: (i, total) => { wsb.textContent = `사진 업로드 중… ${i}/${total}`; } }
+          );
+        } catch (e) { console.warn('[car-rent] 사진 업로드 실패', e); }
+        finally { wsb.disabled = false; wsb.textContent = '등록하기'; }
+      }
+      posts.push({ id, title, body, author, contact, date, imageUrls });
       savePosts(posts);
       renderPosts();
+      pendingPhotoFiles = [];
       writeOverlay.classList.remove('open');
       ['wTitle','wBody','wAuthor','wContact'].forEach(id => { document.getElementById(id).value = ''; });
     });
     renderPosts();
+  </script>
+
+  <!-- Firebase Storage (사진 업로드용) — compress.js 통해 window.koausPhotos 노출 -->
+  <script type="module">
+    import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
+    import('./compress.js').then(mod => {
+      const firebaseConfig = {
+        apiKey: 'AIzaSyCamqnt0bNUD9uz1N5BbCuQjSkWLSpPqlU',
+        authDomain: 'koaus-f564c.firebaseapp.com',
+        projectId: 'koaus-f564c',
+        storageBucket: 'koaus-f564c.firebasestorage.app',
+        messagingSenderId: '663988594088',
+        appId: '1:663988594088:web:ef30c2fd557407b00b299d',
+      };
+      const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+      window.koausPhotos = {
+        compressImage: mod.compressImage, thumbDataURL: mod.thumbDataURL,
+        uploadPostImages: mod.uploadPostImages, app,
+      };
+    }).catch(e => console.warn('[car-rent] compress.js 로드 실패', e));
   </script>
 </body>
 </html>

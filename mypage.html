@@ -604,6 +604,7 @@
     } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
     import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app-check.js';
     import { getFirestore, doc, getDoc, setDoc, deleteDoc } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
+    import { compressImage, uploadCompressed } from './compress.js';
 
     const firebaseConfig = {
       apiKey:            'AIzaSyCamqnt0bNUD9uz1N5BbCuQjSkWLSpPqlU',
@@ -908,7 +909,45 @@
     document.getElementById('mpNickCancel').addEventListener('click', closeNickEdit);
     document.getElementById('mpNickSave').addEventListener('click', saveNickname);
     document.getElementById('mpNickInput').addEventListener('keydown', e => { if (e.key === 'Enter') saveNickname(); });
-    document.getElementById('mpPhotoBtn').addEventListener('click', () => alert('이미지 업로드는 준비 중입니다.'));
+    // 프로필 사진 — 1장, 클라이언트 압축(max 500px, q 0.7) → Storage 'profile_images/{uid}/avatar.jpg'
+    (function bindProfilePhoto() {
+      const btn = document.getElementById('mpPhotoBtn');
+      if (!btn) return;
+      const fileInput = document.createElement('input');
+      fileInput.type = 'file'; fileInput.accept = 'image/*'; fileInput.className = 'profile-photo-input';
+      document.body.appendChild(fileInput);
+      btn.addEventListener('click', () => {
+        const u = window.koausAuth && window.koausAuth.user;
+        if (!u) { alert('로그인이 필요합니다.'); return; }
+        fileInput.click();
+      });
+      fileInput.addEventListener('change', async () => {
+        const u = window.koausAuth && window.koausAuth.user;
+        const f = fileInput.files && fileInput.files[0];
+        fileInput.value = '';
+        if (!u || !f) return;
+        const orig = btn.textContent;
+        btn.disabled = true; btn.textContent = '업로드 중…';
+        try {
+          const url = await uploadCompressed(
+            app, `profile_images/${u.uid}/avatar.jpg`, f,
+            { maxDim: 500, quality: 0.7, mimeType: 'image/jpeg' }
+          );
+          // users 문서에 photoURL 저장
+          await setDoc(doc(db, 'users', u.uid), { photoURL: url }, { merge: true });
+          // UI 즉시 반영
+          const av = document.getElementById('mpAvatar');
+          if (av) av.innerHTML = `<img src="${url}" alt="프로필 사진" />`;
+          localStorage.setItem('koaus-photo-url', url);
+          alert('프로필 사진이 변경되었습니다.');
+        } catch (e) {
+          console.warn('[mypage] 프로필 사진 업로드 실패', e);
+          alert('업로드에 실패했습니다. 잠시 후 다시 시도해 주세요.');
+        } finally {
+          btn.disabled = false; btn.textContent = orig;
+        }
+      });
+    })();
     document.getElementById('mypageLoginBtn').addEventListener('click', openAuthModal);
 
     const tlb = document.getElementById('topbarLoginBtn');
@@ -923,7 +962,23 @@
       if (user) {
         const nick = localStorage.getItem('koaus-nickname') || user.displayName?.split(' ')[0] || user.email?.split('@')[0] || '사용자';
         document.getElementById('mpName').textContent = nick;
-        document.getElementById('mpAvatar').textContent = (nick[0] || '?').toUpperCase();
+        const av = document.getElementById('mpAvatar');
+        // Firestore users/<uid> 에 저장된 photoURL 우선, 없으면 첫 글자 이니셜
+        const cachedPhoto = localStorage.getItem('koaus-photo-url');
+        if (cachedPhoto) {
+          av.innerHTML = `<img src="${cachedPhoto}" alt="프로필 사진" />`;
+        } else {
+          av.textContent = (nick[0] || '?').toUpperCase();
+        }
+        try {
+          getDoc(doc(db, 'users', user.uid)).then(snap => {
+            const data = snap && snap.exists() ? snap.data() : null;
+            if (data && data.photoURL) {
+              av.innerHTML = `<img src="${data.photoURL}" alt="프로필 사진" />`;
+              localStorage.setItem('koaus-photo-url', data.photoURL);
+            }
+          });
+        } catch (_) {}
         document.getElementById('mpEmail').textContent = user.email || '';
         loginReq.style.display = 'none';
         prof.style.display = ''; tabs.style.display = ''; list.style.display = '';

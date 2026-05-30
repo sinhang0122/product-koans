@@ -1592,6 +1592,59 @@ select.filter-mini-input {
   background: repeating-linear-gradient(45deg, var(--bg-elevated) 0 8px, transparent 8px 16px), var(--bg-card);
   display: flex; align-items: center; justify-content: center; color: var(--text-muted);
 }
+.accom-card-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* 글쓰기 모달 사진 첨부 영역 (accom·car-rent 공통) */
+.photo-upload {
+  display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start;
+  padding: 8px; border: 1px dashed var(--border); border-radius: var(--r-sm); background: var(--bg-card);
+}
+.photo-add-btn {
+  display: inline-flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 4px; width: 84px; height: 84px;
+  background: var(--bg-base); color: var(--text-secondary);
+  border: 1px solid var(--border); border-radius: var(--r-sm); cursor: pointer;
+  font-family: inherit; font-size: 11px; font-weight: 700;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+.photo-add-btn:hover { background: var(--text-primary); color: var(--bg-base); border-color: var(--text-primary); }
+.photo-thumbs { display: flex; flex-wrap: wrap; gap: 8px; }
+.photo-thumb {
+  position: relative; width: 84px; height: 84px; border-radius: var(--r-sm); overflow: hidden;
+  border: 1px solid var(--border); background: var(--bg-card);
+}
+.photo-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.photo-thumb-x {
+  position: absolute; top: 2px; right: 2px;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: rgba(0,0,0,0.78); color: #fff; border: none; cursor: pointer;
+  font-size: 12px; font-weight: 800; line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+}
+.photo-thumb-x:hover { background: #000; }
+
+/* 마이페이지 프로필 사진 (mpAvatar 안 img + 원형 크롭) */
+.mypage-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 50%; }
+.profile-photo-input { display: none; }
+
+/* 상세 모달 — 첨부 사진 갤러리 */
+.detail-hero-gallery {
+  position: absolute; inset: 0;
+  display: flex; overflow-x: auto; scroll-snap-type: x mandatory;
+  background: var(--bg-card);
+}
+.detail-hero-gallery img {
+  flex: 0 0 100%; height: 100%; object-fit: cover; scroll-snap-align: start;
+}
+/* 게시판 상세(car-rent 등) 단순 모달 갤러리 — 그리드 */
+.post-detail-gallery {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 8px; margin-bottom: 14px;
+}
+.post-detail-gallery img {
+  width: 100%; aspect-ratio: 4/3; object-fit: cover;
+  border-radius: var(--r-sm); border: 1px solid var(--border); display: block;
+}
 .accom-card-info { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 3px; }
 .accom-card-line1 { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .accom-card-find { font-size: 14px; font-weight: 800; color: var(--text-secondary); }
