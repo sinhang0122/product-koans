@@ -15,7 +15,6 @@
       if ((saved ?? sys) === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
     })();
   </script>
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3691720629746826" crossorigin="anonymous"></script>
   <!-- Google reCAPTCHA v2 (회원가입 봇 차단) -->
   <script src="https://www.google.com/recaptcha/api.js" async defer></script>
   <!-- Google tag (gtag.js) -->
@@ -389,15 +388,6 @@
       <a href="index.html" class="page-back">← 홈으로</a>
     </div>
 
-    <div class="adsense-wrap">
-      <ins class="adsbygoogle"
-           style="display:block"
-           data-ad-client="ca-pub-3691720629746826"
-           data-ad-slot="auto"
-           data-ad-format="auto"
-           data-full-width-responsive="true"></ins>
-      <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
-    </div>
 
     <div class="accom-main-tabs">
       <button class="accom-tab active" id="tabHiring">
@@ -484,6 +474,13 @@
   <footer class="site-footer"><p>KoAus &mdash; 호주 한인 포털 &nbsp;·&nbsp; 2026</p></footer>
 
   <script>
+    // 안전 attach 헬퍼: 요소가 없으면 console.warn만 찍고 진행 — null.addEventListener 크래시 방지
+    function safeOn(id, ev, fn) {
+      const el = document.getElementById(id);
+      if (!el) { console.warn('[jobs] 요소 누락:', id); return null; }
+      el.addEventListener(ev, fn);
+      return el;
+    }
     const hBtn = document.getElementById('hamburgerBtn');
     const cBtn = document.getElementById('sidebarCloseBtn');
     const sb   = document.getElementById('sidebar');
@@ -583,8 +580,8 @@
     //   query(collection(db,'jobs_posts'), orderBy('id','desc'), limit(PER_PAGE))
     //   다음 페이지는 startAfter(lastDoc) 커서로만 추가 조회 → read 비용 최소화.
     const PER_PAGE = 10;
-    document.getElementById('tabHiring').addEventListener('click', () => switchTab('hiring'));
-    document.getElementById('tabSeeking').addEventListener('click', () => switchTab('seeking'));
+    safeOn('tabHiring',  'click', () => switchTab('hiring'));
+    safeOn('tabSeeking', 'click', () => switchTab('seeking'));
     function switchTab(tab) {
       activeTab = tab;
       currentPage = 1;
@@ -704,8 +701,8 @@
       document.getElementById('detailOverlay').classList.remove('open');
       renderPosts();
     }
-    document.getElementById('detailClose').addEventListener('click', () => { document.getElementById('detailOverlay').classList.remove('open'); });
-    document.getElementById('detailOverlay').addEventListener('click', e => { if (e.target === e.currentTarget) document.getElementById('detailOverlay').classList.remove('open'); });
+    safeOn('detailClose', 'click', () => { const ov = document.getElementById('detailOverlay'); if (ov) ov.classList.remove('open'); });
+    safeOn('detailOverlay', 'click', e => { if (e.target === e.currentTarget) e.currentTarget.classList.remove('open'); });
     const writeOverlay = document.getElementById('writeOverlay');
     let editingId = null;  // 수정 중인 글 id
 
@@ -733,10 +730,10 @@
     // 글쓰기 이메일 인증 게이트 (소프트 게이트)
     const verifyOverlay = document.getElementById('verifyOverlay');
     const closeVerifyModal = () => verifyOverlay.classList.remove('open');
-    document.getElementById('verifyClose').addEventListener('click', closeVerifyModal);
-    document.getElementById('verifyOkBtn').addEventListener('click', closeVerifyModal);
-    verifyOverlay.addEventListener('click', e => { if (e.target === verifyOverlay) closeVerifyModal(); });
-    document.getElementById('verifyResendBtn').addEventListener('click', async () => {
+    safeOn('verifyClose', 'click', closeVerifyModal);
+    safeOn('verifyOkBtn', 'click', closeVerifyModal);
+    if (verifyOverlay) verifyOverlay.addEventListener('click', e => { if (e.target === verifyOverlay) closeVerifyModal(); });
+    safeOn('verifyResendBtn', 'click', async () => {
       const u = window.koausAuth && window.koausAuth.user;
       if (!u) return;
       try { await sendEmailVerification(u); alert('인증 메일이 재전송되었습니다.'); }
@@ -752,10 +749,10 @@
       if (!u.emailVerified) { verifyOverlay.classList.add('open'); return; }
       openWriteModal();
     }
-    document.getElementById('writeBtnOpen').addEventListener('click', guardedOpenWrite);
-    document.getElementById('writeBtnCancel').addEventListener('click', () => writeOverlay.classList.remove('open'));
-    writeOverlay.addEventListener('click', e => { if (e.target === writeOverlay) writeOverlay.classList.remove('open'); });
-    document.getElementById('writeBtnSubmit').addEventListener('click', e => {
+    safeOn('writeBtnOpen', 'click', guardedOpenWrite);
+    safeOn('writeBtnCancel', 'click', () => { if (writeOverlay) writeOverlay.classList.remove('open'); });
+    if (writeOverlay) writeOverlay.addEventListener('click', e => { if (e.target === writeOverlay) writeOverlay.classList.remove('open'); });
+    safeOn('writeBtnSubmit', 'click', e => {
       // 폼 reload·기본 동작 차단 (button type 미지정 환경 대비)
       if (e && e.preventDefault) e.preventDefault();
       try {
@@ -1164,17 +1161,18 @@
     window.koausAuth = { user: null, openAuthModal, afterLogin: null };
 
     const loginBtn = document.getElementById('topbarLoginBtn');
-    loginBtn.addEventListener('click', () => {
-      if (window.koausAuth.user) window.location.href = 'mypage.html';
-      else openAuthModal();
-    });
+    if (loginBtn) {
+      loginBtn.addEventListener('click', () => {
+        if (window.koausAuth.user) window.location.href = 'mypage.html';
+        else openAuthModal();
+      });
+    } else { console.warn('[jobs] topbarLoginBtn 요소 없음'); }
 
     onAuthStateChanged(auth, user => {
       window.koausAuth.user = user;
       if (user) {
         const nick = localStorage.getItem('koaus-nickname') || user.displayName?.split(' ')[0] || user.email?.split('@')[0] || '계정';
-        loginBtn.textContent = nick;
-        loginBtn.title = '내 계정 (마이페이지)';
+        if (loginBtn) { loginBtn.textContent = nick; loginBtn.title = '내 계정 (마이페이지)'; }
         renderPosts();  // 본인 글 하이라이트 반영
         window.dispatchEvent(new Event('koausAuthReady'));
         if (typeof window.koausAuth.afterLogin === 'function') {
@@ -1183,8 +1181,7 @@
           setTimeout(cb, 0);
         }
       } else {
-        loginBtn.textContent = '로그인';
-        loginBtn.title = '로그인 / 회원가입';
+        if (loginBtn) { loginBtn.textContent = '로그인'; loginBtn.title = '로그인 / 회원가입'; }
       }
     });
 
