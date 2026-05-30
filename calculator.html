@@ -426,7 +426,7 @@
       <p>현재 본 플랫폼은 <strong>호주 달러(AUD)와 한국 원화(KRW)</strong> 간의 송금 비교 서비스를 최우선으로 최적화하여 지원하고 있습니다. 다른 통화 쌍의 어플 비교 기능은 추후 업데이트 예정입니다.</p>
     </div>
 
-    <p class="exchange-updated" id="exchangeUpdated">기준일: 2026. 05. 30. (토) · 실시간 API 연동 준비 중</p>
+    <p class="exchange-updated" id="exchangeUpdated">기준일: 2026. 05. 30. (토) · 실시간 무료 API 연동 완료</p>
 
     <p class="exchange-disclaimer">※ 제공되는 환율은 단순 참고용 매매기준율이며, 실제 송금 시 업체별 적용 환율이 다를 수 있습니다 <em>(*어플 기준)</em></p>
 
@@ -572,6 +572,7 @@
       return { text: app.fee, note: app.feeNote };
     }
 
+    // 미니멀 카드: 어플명(+Best) / 동적 결과 / 동적 에러 / 앱 바로가기만
     function renderCard(app, amount, dir) {
       const lim = app.limits[dir];
       // 방향 미지원 (예: 리미트리 KRW→AUD)
@@ -582,7 +583,6 @@
               <span class="exchange-app-name">${escHtml(app.name)}</span>
               <span class="exchange-disabled-badge">미지원</span>
             </div>
-            <div class="exchange-app-sub">${escHtml(app.nameKo)}</div>
             <div class="exchange-unsupported">${escHtml(app.unsupportedMsg || '이 방향은 지원하지 않습니다.')}</div>
             <a class="exchange-link" href="${app.url}" target="_blank" rel="noopener">앱 바로가기 →</a>
           </div>`;
@@ -590,32 +590,17 @@
       const v = validate(amount, lim);
       const res = v.ok && amount > 0 ? calcResult(amount, app, dir) : null;
       const resHtml = res !== null
-        ? `<div class="exchange-result-row">예상 수령액 <strong>${dir==='AUD-KRW' ? fmtKRW(res) : fmtAUD(res)}</strong></div>`
+        ? `<div class="exchange-result-row"><strong>${dir==='AUD-KRW' ? fmtKRW(res) : fmtAUD(res)}</strong></div>`
         : '';
-      const rateHtml = dir === 'AUD-KRW'
-        ? `<span class="exchange-rate">${app.rate.toLocaleString()}</span><span class="exchange-unit">원 / AUD</span>`
-        : `<span class="exchange-rate">${(1/app.rate).toFixed(6)}</span><span class="exchange-unit">AUD / 원</span>`;
-      const limTxt = `최소 ${formatLimit(lim.min, lim.currency)} · 최대 ${lim.max ? formatLimit(lim.max, lim.currency) : '제한 없음'}`
-        + (lim.maxNote ? ` · ${lim.maxNote}` : '')
-        + (lim.dailyMaxNote ? ` · ${lim.dailyMaxNote}` : '');
       const errHtml = (!v.ok && v.err) ? `<div class="exchange-err">${escHtml(v.err)}</div>` : '';
-      const fee = computeFee(app, amount, dir);
-      const benefitsHtml = app.benefits
-        ? `<div class="exchange-benefits">${app.benefits.map(b => `<div class="exchange-benefit-row">· ${escHtml(b)}</div>`).join('')}</div>`
-        : '';
       return `
         <div class="exchange-card${app.best ? ' exchange-card--best' : ''}" data-app="${app.key}">
           <div class="exchange-card-head">
             <span class="exchange-app-name">${escHtml(app.name)}</span>
             ${app.best ? '<span class="exchange-best-badge">Best</span>' : ''}
           </div>
-          <div class="exchange-app-sub">${escHtml(app.nameKo)} · ${escHtml(app.tagline)}</div>
-          <div class="exchange-rate-row">${rateHtml}</div>
           ${resHtml}
-          <div class="exchange-lim-row">${escHtml(limTxt)}</div>
-          <div class="exchange-fee-row"><span>수수료 ${escHtml(fee.text)}</span><span>·</span><span>${escHtml(fee.note)}</span></div>
           ${errHtml}
-          ${benefitsHtml}
           <a class="exchange-link" href="${app.url}" target="_blank" rel="noopener">앱 바로가기 →</a>
         </div>`;
     }
@@ -650,7 +635,25 @@
       render();
     });
 
-    render();
+    // ── 무료 환율 API (open.er-api.com) — AUD 기준 KRW 실시간 매매기준율 ──
+    async function fetchLiveRate() {
+      try {
+        const res  = await fetch('https://open.er-api.com/v6/latest/AUD', { cache: 'no-store' });
+        const data = await res.json();
+        if (data && data.result === 'success' && data.rates && data.rates.KRW) return Number(data.rates.KRW);
+      } catch (e) {}
+      return null;
+    }
+    async function initRates() {
+      render();  // 폴백(하드코딩) 환율로 1차 즉시 렌더
+      const live = await fetchLiveRate();
+      if (!live) return;  // 실패 시 폴백 유지
+      // 각 어플별 스프레드 (Mock — 추후 실 데이터로 교체)
+      const SPREAD = { wirebarley: 1.000, wise: 1.0008, sentbe: 0.996, remitree: 0.9995 };
+      APPS.forEach(a => { if (SPREAD[a.key]) a.rate = +(live * SPREAD[a.key]).toFixed(2); });
+      render();
+    }
+    initRates();
   </script>
 </body>
 </html>

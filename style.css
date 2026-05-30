@@ -369,14 +369,14 @@ body {
   flex: 1;
 }
 
-/* 메인 단축 카드 (5:5 균등 그리드 · 동일 타이틀 폰트 · 넉넉한 여백) */
+/* 메인 단축 카드 (5:5 · 동일 타이틀 폰트 · 세로 3/5 컴팩트) */
 .home-shortcuts {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 18px;
-  margin: 32px auto 8px; width: 100%;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+  margin: 22px auto 4px; width: 100%;
 }
 .home-shortcut {
-  position: relative; display: flex; flex-direction: column; gap: 10px;
-  padding: 40px 32px; min-height: 200px;
+  position: relative; display: flex; flex-direction: column; gap: 6px;
+  padding: 22px 26px; min-height: 120px;
   background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-lg);
   color: var(--text-primary); text-decoration: none;
   transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
@@ -386,21 +386,21 @@ body {
   box-shadow: 0 4px 18px rgba(0,0,0,0.07);
 }
 .home-shortcut-arrow {
-  position: absolute; top: 24px; right: 28px;
-  font-size: 20px; font-weight: 800; color: var(--text-muted);
+  position: absolute; top: 18px; right: 22px;
+  font-size: 18px; font-weight: 800; color: var(--text-muted);
   transition: color 0.15s, transform 0.15s;
 }
 .home-shortcut:hover .home-shortcut-arrow { color: var(--text-primary); transform: translateX(4px); }
 .home-shortcut-label {
-  font-size: 24px; font-weight: 900; color: var(--text-primary); letter-spacing: -0.015em; line-height: 1.2;
+  font-size: 22px; font-weight: 900; color: var(--text-primary); letter-spacing: -0.015em; line-height: 1.2;
 }
 .home-shortcut-desc {
-  font-size: 13.5px; font-weight: 500; color: var(--text-secondary); line-height: 1.6; letter-spacing: -0.005em;
+  font-size: 13px; font-weight: 500; color: var(--text-secondary); line-height: 1.55; letter-spacing: -0.005em;
 }
 @media (max-width: 640px) {
-  .home-shortcuts { grid-template-columns: 1fr; gap: 14px; }
-  .home-shortcut { padding: 32px 24px; min-height: 160px; }
-  .home-shortcut-label { font-size: 22px; }
+  .home-shortcuts { grid-template-columns: 1fr; gap: 12px; }
+  .home-shortcut { padding: 18px 22px; min-height: 96px; }
+  .home-shortcut-label { font-size: 20px; }
 }
 
 /* Notice Board */
@@ -527,8 +527,9 @@ body {
    Exchange Sub-page Cards
 ════════════════════════════════════════════════════════════════════════ */
 .exchange-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
-/* 계산기 페이지: 4개 어플 카드 한 줄 강제 (좁은 화면은 가로 스크롤) */
-#exchangeGrid { grid-template-columns: repeat(4, minmax(220px, 1fr)); gap: 12px; overflow-x: auto; padding-bottom: 4px; }
+/* 계산기 페이지: 4개 어플 카드 동일 가로폭으로 한 줄 (가로 스크롤 금지) */
+#exchangeGrid { grid-template-columns: repeat(4, 1fr); gap: 10px; overflow: visible; padding: 0; }
+#exchangeGrid .exchange-card { padding: 14px 12px; gap: 8px; min-width: 0; }
 .exchange-card {
   background: var(--bg-card); border: 1px solid var(--border);
   border-radius: var(--r-lg); padding: 22px 20px;
@@ -576,7 +577,14 @@ body {
 .exchange-result-row { font-size: 13px; color: var(--text-secondary); padding: 8px 10px; background: var(--bg-elevated); border-radius: var(--r-sm); }
 .exchange-result-row strong { font-size: 15px; font-weight: 900; color: var(--text-primary); font-variant-numeric: tabular-nums; margin-left: 6px; }
 .exchange-lim-row { font-size: 12px; font-weight: 800; color: var(--text-primary); line-height: 1.5; padding: 8px 10px; background: var(--bg-elevated); border-radius: var(--r-sm); }
-.exchange-err { font-size: 13px; font-weight: 900; color: var(--bg-card); background: var(--text-primary); border-radius: var(--r-sm); padding: 10px 12px; line-height: 1.4; letter-spacing: -0.005em; }
+/* 동적 에러 메시지: 카드 안에서 확 튀어나오는 굵은 흑백 반전 박스 */
+.exchange-err {
+  font-size: 14.5px; font-weight: 900; color: var(--bg-card);
+  background: var(--text-primary); border: 2px solid var(--text-primary);
+  border-radius: var(--r-sm); padding: 12px 14px; line-height: 1.35;
+  letter-spacing: -0.01em; text-align: center;
+}
+.exchange-result-row strong { font-size: 17px; font-weight: 900; }
 .exchange-benefits { display: flex; flex-direction: column; gap: 3px; }
 .exchange-benefit-row { font-size: 12px; font-weight: 600; color: var(--text-primary); line-height: 1.5; }
 .exchange-link {
@@ -1022,8 +1030,9 @@ select.write-input {
   .post-list-table--jobs .post-list-head > *:last-child,
   .post-list-table--jobs .post-row > *:last-child { display: flex; align-items: center; justify-content: center; }
   .exchange-grid { grid-template-columns: 1fr; }
-  /* 계산기 페이지 4-카드는 모바일에서도 한 줄 유지(가로 스크롤) */
-  #exchangeGrid { grid-template-columns: repeat(4, minmax(200px, 1fr)); }
+  /* 계산기 4-카드: 모바일은 2x2 그리드로 폴백 (가로 스크롤 금지) */
+  #exchangeGrid { grid-template-columns: repeat(2, 1fr); }
+  #exchangeGrid .exchange-card { padding: 14px 14px; }
   .calc-input-row { gap: 8px; }
   .notice-date { display: none; }
 }
