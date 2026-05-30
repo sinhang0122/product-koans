@@ -17,6 +17,11 @@ service cloud.firestore {
     function isSignedIn() {
       return request.auth != null;
     }
+    // 관리자 — Firebase Admin SDK(setAdmin.js)로 부여한 custom claim {admin: true} 보유 시
+    function isAdmin() {
+      return isSignedIn()
+        && request.auth.token.admin == true;
+    }
     function data() {
       return request.resource.data;
     }
@@ -124,24 +129,26 @@ service cloud.firestore {
       allow read, update, delete: if false;
     }
 
-    // ── 관리자 콘텐츠 (admin.html에서 등록 · 모든 사용자에게 공개 노출) ──
-    // 읽기: 누구나 가능 (홈 마퀴 / 서비스 페이지 실시간 노출)
-    // 쓰기: 인증된 사용자만 (현재는 admin.html 익명 로그인 + 페이지 비밀번호 게이트)
-    //       ※ 운영 강화: 추후 Custom Claims(admin=true) 또는 이메일 화이트리스트로 제한 권장.
+    // ════════════════════════════════════════════════════════════════
+    // 관리자 전용 컬렉션 (notices / sponsors / services)
+    //   - 읽기:  비회원 포함 모든 방문자 허용 (홈/서비스 페이지 실시간 노출용)
+    //   - 쓰기:  custom claim {admin: true} 보유 계정만 (Admin SDK로 부여)
+    //   - 목록:  limit ≤ 20 강제 (요금 폭탄 방어)
+    // ════════════════════════════════════════════════════════════════
 
     // 흐르는 공지사항 (홈 상단 마퀴)
     match /notices/{id} {
       allow read: if true;
-      allow create, update, delete: if isSignedIn()
+      allow create, update, delete: if isAdmin()
                                        && reqStr('text', 1, 500)
                                        && optStr('link', 500);
       allow list: if limitedList();
     }
 
-    // 광고주 (홈 상단 광고 마퀴)
+    // 광고주 / 스폰서 (홈 상단 광고 마퀴)
     match /sponsors/{id} {
       allow read: if true;
-      allow create, update, delete: if isSignedIn()
+      allow create, update, delete: if isAdmin()
                                        && reqStr('name', 1, 200)
                                        && optStr('link', 500)
                                        && optStr('memo', 500);
@@ -151,7 +158,7 @@ service cloud.firestore {
     // 관리자 서비스 게시글 (정비소/인스펙션/렌트카/견인/쉐어하우스 — 카테고리 페이지 자동 노출)
     match /services/{id} {
       allow read: if true;
-      allow create, update, delete: if isSignedIn()
+      allow create, update, delete: if isAdmin()
                                        && reqStr('category', 1, 50)
                                        && reqStr('title', 1, 200)
                                        && optStr('region', 200)

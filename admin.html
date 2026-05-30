@@ -551,10 +551,8 @@
     const auth = getAuth(app);
     const db   = getFirestore(app);
 
-    // ── 관리자 화이트리스트 (사전 가입된 운영자 계정만 통과) ──
-    const ADMIN_EMAILS = ['sinhang0122@gmail.com'];
-    const isAdmin = (user) => !!user && !!user.email && ADMIN_EMAILS.includes(user.email.toLowerCase());
-
+    // 관리자 인증: Firebase Custom Claims {admin: true} 보유 여부로 검증
+    // (setCustomUserClaims는 Admin SDK(setAdmin.js)로만 부여 가능 — 클라이언트 위변조 불가)
     const $ = id => document.getElementById(id);
     const gateEl      = $('adminGate');
     const mainEl      = $('adminMain');
@@ -605,16 +603,30 @@
     gatePwEl.addEventListener('keydown',    e => { if (e.key === 'Enter') gateLoginEl.click(); });
     logoutEl.addEventListener('click', () => signOut(auth));
 
-    // ── 인증 상태 가드: 관리자 이메일이 아닐 때 메인 UI 차단 ──
-    onAuthStateChanged(auth, user => {
-      if (isAdmin(user)) {
-        showAdmin(user);
-      } else if (user) {
-        // 로그인은 됐지만 화이트리스트 외 → 즉시 로그아웃 + 안내
-        const tried = user.email || '(unknown)';
-        signOut(auth).finally(() => showLocked(`관리자 권한이 없는 계정입니다: ${tried}`));
-      } else {
-        showLocked('');
+    // ── 인증 상태 가드 (Custom Claims 검증) ──
+    // 로그인된 사용자의 ID 토큰에서 claims.admin === true 인 경우에만 UI 노출.
+    // 그 외(비로그인 / 일반 사용자) — 알림 후 index.html로 강제 리다이렉트.
+    let _redirecting = false;
+    async function denyAndRedirect(reason) {
+      if (_redirecting) return;
+      _redirecting = true;
+      try { await signOut(auth); } catch (e) {}
+      alert('관리자 권한이 없습니다.');
+      location.replace('index.html');
+    }
+    onAuthStateChanged(auth, async user => {
+      if (!user) { showLocked(''); return; }     // 비로그인 → 로그인 폼 노출
+      try {
+        // 최신 claim 반영을 위해 토큰 강제 새로고침 (직전 setCustomUserClaims 즉시 반영용)
+        const tokenResult = await user.getIdTokenResult(true);
+        if (tokenResult.claims && tokenResult.claims.admin === true) {
+          showAdmin(user);
+        } else {
+          denyAndRedirect('admin claim 없음 — ' + (user.email || ''));
+        }
+      } catch (e) {
+        console.error('[admin] 토큰 검증 실패', e);
+        denyAndRedirect('토큰 검증 실패');
       }
     });
 

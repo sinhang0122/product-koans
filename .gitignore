@@ -1,0 +1,14 @@
+# Mac OS
+.DS_Store
+
+# Local tooling state
+.claude/
+
+# Node / Firebase Admin SDK
+node_modules/
+package-lock.json
+
+# 🔐 Firebase 서비스 계정 키 (절대 커밋 금지)
+service-account-key.json
+*-firebase-adminsdk-*.json
+firebase-adminsdk*.json
