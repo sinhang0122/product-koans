@@ -512,6 +512,55 @@
         </div>
       </div>
 
+      <!-- 정비소 필터 -->
+      <div class="cat-filter" data-filter="maintenance" style="display:none;">
+        <div class="filter-section">
+          <label class="filter-section-label" for="ffMaintRegion">정비소 지역 Region</label>
+          <input class="write-input" id="ffMaintRegion" type="text" autocomplete="off" placeholder="지역명 검색 (예: Auburn NSW)" />
+          <ul class="addr-suggest" id="ffMaintRegionSuggest"></ul>
+        </div>
+        <div class="filter-section">
+          <label class="filter-section-label" for="ffMaintType">정비 종류 Type</label>
+          <select class="write-input" id="ffMaintType">
+            <option value="">전체</option>
+            <option value="general">일반정비 (엔진/오일/브레이크)</option>
+            <option value="body">바디킷·도색·판금</option>
+            <option value="tire">타이어·휠얼라인먼트</option>
+            <option value="electric">전기·배터리·진단</option>
+            <option value="aircon">에어컨·냉각</option>
+            <option value="rwc">RWC·검사</option>
+          </select>
+        </div>
+        <div class="filter-section">
+          <label class="filter-section-label" for="ffMaintHours">운영 시간 Hours</label>
+          <select class="write-input" id="ffMaintHours">
+            <option value="">전체</option>
+            <option value="weekday">평일만</option>
+            <option value="weekend">주말 영업</option>
+            <option value="24h">24시간</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- 견인 필터 -->
+      <div class="cat-filter" data-filter="towing" style="display:none;">
+        <div class="filter-section">
+          <label class="filter-section-label" for="ffTowRegion">활동 지역 Region</label>
+          <input class="write-input" id="ffTowRegion" type="text" autocomplete="off" placeholder="지역명 검색 (예: Sydney NSW)" />
+          <ul class="addr-suggest" id="ffTowRegionSuggest"></ul>
+        </div>
+        <div class="filter-section">
+          <label class="filter-section-label" for="ffTowType">견인 유형 Type</label>
+          <select class="write-input" id="ffTowType">
+            <option value="">전체</option>
+            <option value="emergency24">24시 긴급출동</option>
+            <option value="longhaul">장거리 이동</option>
+            <option value="accident">사고 차량</option>
+            <option value="repo">압류·반환</option>
+          </select>
+        </div>
+      </div>
+
       <div class="filter-section">
         <div class="recent-searches" id="recentSearches"></div>
       </div>
@@ -984,8 +1033,8 @@
     const CAT_CFG = {
       rental:      { map:false, write:'user',    filter:'rental' },
       inspection:  { map:false, write:'user',    filter:'inspection' },
-      maintenance: { map:true,  write:'inquiry', filter:'none' },
-      towing:      { map:true,  write:'inquiry', filter:'none' },
+      maintenance: { map:true,  write:'inquiry', filter:'maintenance' },
+      towing:      { map:true,  write:'inquiry', filter:'towing' },
     };
     const ADMIN_EMAIL = 'admin@thekoaus.com';  // 글 등록 문의 수신 주소 (운영 시 교체)
     // 구 카테고리/링크 → 신 4그룹 매핑 (기존 햄버거 링크·데이터 호환)
@@ -1088,15 +1137,24 @@
         maxPrice:_fv('ffMaxPrice'), maxMileage:_fv('ffMaxMileage'), minYear:_fv('ffMinYear'),
       };
       if (activeCategory === 'inspection') return { cat:'inspection', maxInsp:_fv('ffMaxInsp'), maxEmer:_fv('ffMaxEmer') };
+      if (activeCategory === 'maintenance') return {
+        cat:'maintenance', region:_fv('ffMaintRegion'), mtype:_fv('ffMaintType'), hours:_fv('ffMaintHours'),
+      };
+      if (activeCategory === 'towing') return {
+        cat:'towing', region:_fv('ffTowRegion'), ttype:_fv('ffTowType'),
+      };
       return { cat: activeCategory };
     }
     function applyFilterValues(s) {
       if (!s) return;
-      if (s.cat === 'rental') { _set('ffRegion',s.region); _set('ffBrand',s.brand); _set('ffMaxPrice',s.maxPrice); _set('ffMaxMileage',s.maxMileage); _set('ffMinYear',s.minYear); }
-      else if (s.cat === 'inspection') { _set('ffMaxInsp',s.maxInsp); _set('ffMaxEmer',s.maxEmer); }
+      if (s.cat === 'rental')      { _set('ffRegion',s.region); _set('ffBrand',s.brand); _set('ffMaxPrice',s.maxPrice); _set('ffMaxMileage',s.maxMileage); _set('ffMinYear',s.minYear); }
+      else if (s.cat === 'inspection')  { _set('ffMaxInsp',s.maxInsp); _set('ffMaxEmer',s.maxEmer); }
+      else if (s.cat === 'maintenance') { _set('ffMaintRegion',s.region); _set('ffMaintType',s.mtype); _set('ffMaintHours',s.hours); }
+      else if (s.cat === 'towing')      { _set('ffTowRegion',s.region); _set('ffTowType',s.ttype); }
     }
     function clearFilterInputs() {
-      ['ffRegion','ffBrand','ffMaxPrice','ffMaxMileage','ffMinYear','ffMaxInsp','ffMaxEmer'].forEach(id => _set(id,''));
+      ['ffRegion','ffBrand','ffMaxPrice','ffMaxMileage','ffMinYear','ffMaxInsp','ffMaxEmer',
+       'ffMaintRegion','ffMaintType','ffMaintHours','ffTowRegion','ffTowType'].forEach(id => _set(id,''));
     }
 
     function openFilterModal() {
@@ -1104,6 +1162,11 @@
       renderRecentSearches();
       filterOverlay.classList.add('open');
       document.body.style.overflow = 'hidden';
+      // maintenance/towing 카테고리 진입 시 지역 자동완성 wire
+      if (typeof wireAutocomplete === 'function') {
+        if (activeCategory === 'maintenance') wireAutocomplete('ffMaintRegion', 'ffMaintRegionSuggest');
+        if (activeCategory === 'towing')      wireAutocomplete('ffTowRegion', 'ffTowRegionSuggest');
+      }
     }
     function closeFilterModal() {
       filterOverlay.classList.remove('open');

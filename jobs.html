@@ -420,24 +420,104 @@
       <button class="accom-tab" id="tabSeeking"><span class="tab-text">일 구하기 <em>Find a Job</em></span></button>
     </div>
 
-    <div class="board-toolbar">
+    <!-- 컨트롤 바: List / Map 토글 + 필터 + 글쓰기 -->
+    <div class="accom-controls">
+      <div class="view-toggle" id="viewToggle">
+        <button class="view-btn active" id="viewListBtn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          List View
+        </button>
+        <button class="view-btn" id="viewMapBtn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+          Map View
+        </button>
+      </div>
       <span class="board-count" id="boardCount">총 0건</span>
-      <button class="board-write-btn" id="writeBtnOpen">+ 글쓰기</button>
+      <div class="accom-ctrl-actions">
+        <button class="board-write-btn board-write-btn--ghost" id="filterModalBtn">상세 필터</button>
+        <button class="board-write-btn" id="writeBtnOpen">+ 글쓰기</button>
+      </div>
     </div>
 
-    <div class="post-list-table post-list-table--jobs">
-      <div class="post-list-head">
-        <span class="post-num">번호</span>
-        <span class="post-title">제목</span>
-        <span class="post-author">작성자</span>
-        <span class="post-date">날짜</span>
-        <span class="post-star">저장</span>
+    <!-- List View -->
+    <div id="listView">
+      <div class="post-list-table post-list-table--jobs">
+        <div class="post-list-head">
+          <span class="post-num">번호</span>
+          <span class="post-title">제목</span>
+          <span class="post-author">작성자</span>
+          <span class="post-date">날짜</span>
+          <span class="post-star">저장</span>
+        </div>
+        <div id="postList"></div>
       </div>
-      <div id="postList"></div>
+      <div class="pagination" id="pagination"></div>
     </div>
-    <div class="pagination" id="pagination"></div>
+
+    <!-- Map View -->
+    <div id="mapView" style="display:none;">
+      <button class="area-search-btn" id="areaSearchBtn">이 지역 일 찾기</button>
+      <div id="jobsMap" style="width:100%;height:480px;border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;"></div>
+    </div>
 
   </main>
+
+  <!-- ── 상세 필터 모달 (구인구직) ── -->
+  <div class="filter-overlay" id="filterOverlay">
+    <div class="filter-modal">
+      <div class="filter-modal-header">
+        <span class="filter-modal-title">상세 필터 <em>Search</em></span>
+        <button class="filter-modal-close" id="filterModalClose">✕</button>
+      </div>
+      <div class="filter-section">
+        <label class="filter-section-label" for="ffRegion">근무 지역 Region</label>
+        <input class="write-input" id="ffRegion" type="text" autocomplete="off" placeholder="지역명 검색 (예: Sydney NSW)" />
+        <ul class="addr-suggest" id="ffRegionSuggest"></ul>
+      </div>
+      <div class="filter-section">
+        <label class="filter-section-label" for="ffCategory">직종 Category</label>
+        <select class="write-input" id="ffCategory">
+          <option value="">전체</option>
+          <option value="food">카페·식당</option>
+          <option value="retail">마트·유통·판매</option>
+          <option value="office">사무·관리</option>
+          <option value="construction">건설·도장·청소</option>
+          <option value="logistics">물류·창고·배달</option>
+          <option value="it">IT·디자인</option>
+          <option value="education">교육·과외</option>
+          <option value="beauty">미용·뷰티</option>
+          <option value="other">기타</option>
+        </select>
+      </div>
+      <div class="filter-section">
+        <label class="filter-section-label" for="ffEmpType">근무 형태 Type</label>
+        <select class="write-input" id="ffEmpType">
+          <option value="">전체</option>
+          <option value="fulltime">풀타임</option>
+          <option value="parttime">파트타임</option>
+          <option value="casual">캐주얼</option>
+          <option value="contract">계약직</option>
+        </select>
+      </div>
+      <div class="filter-section">
+        <label class="filter-section-label" for="ffMinPay">최소 급여 (숫자만)</label>
+        <div style="display:flex;gap:8px;">
+          <select class="write-input" id="ffPayUnit" style="flex:0 0 110px;">
+            <option value="hour">시급 이상</option>
+            <option value="year">연봉 이상</option>
+          </select>
+          <input class="write-input" id="ffMinPay" type="number" min="0" placeholder="예: 25" style="flex:1;" />
+        </div>
+      </div>
+      <div class="filter-section">
+        <div class="recent-searches" id="recentSearches"></div>
+      </div>
+      <div class="filter-modal-actions">
+        <button class="filter-reset-btn" id="filterResetBtn">초기화</button>
+        <button class="filter-apply-btn" id="filterApplyBtn">적용하기</button>
+      </div>
+    </div>
+  </div>
 
   <div class="write-overlay" id="writeOverlay">
     <div class="write-modal">
@@ -459,9 +539,54 @@
         <label class="write-label" for="wTitle">제목<span class="required-mark">*</span></label>
         <input class="write-input" id="wTitle" type="text" placeholder="[구인/구직] 직종 · 지역 · 조건 등" maxlength="80" />
       </div>
+      <!-- 직종 -->
+      <div class="write-field">
+        <label class="write-label" for="wCategory">직종 Category</label>
+        <select class="write-input" id="wCategory">
+          <option value="">선택 안 함</option>
+          <option value="food">카페·식당</option>
+          <option value="retail">마트·유통·판매</option>
+          <option value="office">사무·관리</option>
+          <option value="construction">건설·도장·청소</option>
+          <option value="logistics">물류·창고·배달</option>
+          <option value="it">IT·디자인</option>
+          <option value="education">교육·과외</option>
+          <option value="beauty">미용·뷰티</option>
+          <option value="other">기타</option>
+        </select>
+      </div>
+      <!-- 근무 형태 -->
+      <div class="write-field">
+        <label class="write-label" for="wEmpType">근무 형태 Type</label>
+        <select class="write-input" id="wEmpType">
+          <option value="">선택 안 함</option>
+          <option value="fulltime">풀타임 Full-time</option>
+          <option value="parttime">파트타임 Part-time</option>
+          <option value="casual">캐주얼 Casual</option>
+          <option value="contract">계약직 Contract</option>
+        </select>
+      </div>
+      <!-- 급여 (시급/연봉 + 금액) -->
+      <div class="write-field">
+        <label class="write-label">급여 Pay</label>
+        <div style="display:flex;gap:8px;">
+          <select class="write-input" id="wPayUnit" style="flex:0 0 110px;">
+            <option value="hour">시급 / hr</option>
+            <option value="year">연봉 / yr</option>
+            <option value="negotiable">협의</option>
+          </select>
+          <input class="write-input" id="wPayAmount" type="number" min="0" placeholder="금액 (숫자만)" style="flex:1;" />
+        </div>
+      </div>
+      <!-- 주소 + 자동완성 -->
+      <div class="write-field">
+        <label class="write-label" for="wAddress">근무지 주소 Location <em style="font-style:normal;color:var(--text-muted);font-size:11px;">(도로명·지역명을 입력하면 추천이 뜹니다)</em></label>
+        <input class="write-input" id="wAddress" type="text" autocomplete="off" placeholder="예: George St, Sydney NSW" maxlength="200" />
+        <ul class="addr-suggest" id="wAddressSuggest"></ul>
+      </div>
       <div class="write-field">
         <label class="write-label" for="wBody">내용<span class="required-mark">*</span></label>
-        <textarea class="write-textarea" id="wBody" placeholder="모집 인원, 시급, 근무 조건, 위치 등 자세히 적어주세요"></textarea>
+        <textarea class="write-textarea" id="wBody" placeholder="모집 인원, 근무 조건, 우대사항 등 자세히 적어주세요"></textarea>
       </div>
       <div class="write-field">
         <label class="write-label" for="wAuthor">작성자</label>
@@ -834,7 +959,7 @@
       }
     });
 
-    function submitPost() {
+    async function submitPost() {
       try {
         // ── 0) Auth 상태 재확인 (race 조건 방어) ──
         const user = window.koausAuth && window.koausAuth.user;
@@ -846,20 +971,30 @@
         }
 
         // ── 1) DOM 요소 존재 검증 ──
-        const elTitle   = document.getElementById('wTitle');
-        const elBody    = document.getElementById('wBody');
-        const elContact = document.getElementById('wContact');
-        const elAuthor  = document.getElementById('wAuthor');
-        const radioType = document.querySelector('input[name="wPostType"]:checked');
+        const elTitle    = document.getElementById('wTitle');
+        const elBody     = document.getElementById('wBody');
+        const elContact  = document.getElementById('wContact');
+        const elAuthor   = document.getElementById('wAuthor');
+        const elCategory = document.getElementById('wCategory');
+        const elEmpType  = document.getElementById('wEmpType');
+        const elPayUnit  = document.getElementById('wPayUnit');
+        const elPayAmount= document.getElementById('wPayAmount');
+        const elAddress  = document.getElementById('wAddress');
+        const radioType  = document.querySelector('input[name="wPostType"]:checked');
         if (!elTitle || !elBody || !elContact) {
           console.error('❌ 글쓰기 폼 DOM 누락: wTitle/wBody/wContact 일부가 없습니다.');
           alert('글쓰기 폼을 불러오지 못했습니다. 페이지를 새로고침 후 다시 시도해 주세요.');
           return;
         }
-        const postType = (radioType && radioType.value) || 'hiring';
-        const title    = elTitle.value.trim();
-        const body     = elBody.value.trim();
-        const contactRaw = elContact.value.trim();
+        const postType  = (radioType && radioType.value) || 'hiring';
+        const title     = elTitle.value.trim();
+        const body      = elBody.value.trim();
+        const contactRaw= elContact.value.trim();
+        const category  = (elCategory && elCategory.value) || '';
+        const empType   = (elEmpType  && elEmpType.value)  || '';
+        const payUnit   = (elPayUnit  && elPayUnit.value)  || '';
+        const payAmount = (elPayAmount && elPayAmount.value) ? Number(elPayAmount.value) : 0;
+        const address   = (elAddress  && elAddress.value.trim())  || '';
 
         // ── 2) 필수 항목 빈 칸 검증 ──
         if (!title || !body || !contactRaw) {
@@ -878,12 +1013,19 @@
         const date = `${pad(d.getMonth() + 1)}/${pad(d.getDate())}`;
         const time = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 
-        // ── 3) 로컬 저장 (Firestore 실패해도 본인 기기에는 보임) ──
+        // ── 3) 주소 → 좌표 변환 (best-effort, 실패해도 글 저장은 진행) ──
+        let lat = 0, lng = 0;
+        if (address && typeof geocode === 'function') {
+          try { const c = await geocode(address); lat = c.lat; lng = c.lng; }
+          catch (_) { /* 좌표 미수신 시 0,0 — 지도 마커 미표시될 뿐 */ }
+        }
+
+        // ── 4) 로컬 저장 (Firestore 실패해도 본인 기기에는 보임) ──
         const posts = loadPosts();
         if (editingId != null) {
           const idx = posts.findIndex(x => String(x.id) === String(editingId));
           if (idx >= 0) {
-            Object.assign(posts[idx], { postType, title, body, contact });
+            Object.assign(posts[idx], { postType, title, body, contact, category, empType, payUnit, payAmount, address, lat, lng });
             savePosts(posts);
             recordMyPost(posts[idx]);
           }
@@ -895,12 +1037,13 @@
             uid: user.uid || '', email: user.email || '',
             authorUid: user.uid || '', authorEmail: user.email || '',
             contact, date, time,
+            category, empType, payUnit, payAmount, address, lat, lng,
           };
           posts.push(post);
           savePosts(posts);
           recordMyPost(post);
 
-          // ── 4) Firestore 전송 (컬렉션: jobs_posts) ──
+          // ── 5) Firestore 전송 (컬렉션: jobs_posts) ──
           console.log('🚀 Firestore 전송 시도 데이터: ', post);
           if (window.koausJobs && window.koausJobs.write) {
             window.koausJobs.write(post)
@@ -936,6 +1079,236 @@
     switchTab(activeTab);
     // Firestore jobs_posts 갱신 → 현재 탭 리스트 즉시 재렌더
     window.addEventListener('koaus-jobs-updated', () => renderPosts());
+
+    // ════════════════════════════════════════════════════════════════════
+    //  ⬇ accom.html 풀시스템 이식: Maps + Places Autocomplete + 필터 + 검색기록
+    // ════════════════════════════════════════════════════════════════════
+    const GOOGLE_MAPS_KEY = 'AIzaSyDwogQ55V0-JqZ-ZYRTpYgNZWOdp_-5vOQ';
+    let mapScriptLoading = false, mapScriptLoaded = false, acService = null, geocoder = null;
+    function loadMapScript() {
+      if (mapScriptLoaded || mapScriptLoading) return;
+      mapScriptLoading = true;
+      const s = document.createElement('script');
+      s.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_KEY}&libraries=places&callback=initMapJobs`;
+      s.async = true; s.defer = true;
+      document.head.appendChild(s);
+    }
+    function whenMapsReady(cb) {
+      if (window.google && google.maps && google.maps.places) { cb(); return; }
+      loadMapScript();
+      const iv = setInterval(() => {
+        if (window.google && google.maps && google.maps.places) { clearInterval(iv); cb(); }
+      }, 150);
+      setTimeout(() => clearInterval(iv), 8000);
+    }
+
+    // ── 주소 자동완성 (글쓰기 모달 wAddress / 필터 ffRegion 공통) ──
+    function wireAutocomplete(inputId, listId) {
+      const input = document.getElementById(inputId);
+      const list  = document.getElementById(listId);
+      if (!input || !list) return;
+      if (input.dataset.acWired === '1') return;
+      input.dataset.acWired = '1';
+      loadMapScript();
+      const hide = () => list.classList.remove('show');
+      const show = () => list.classList.add('show');
+      let activeIdx = -1, lastPreds = [];
+      input.addEventListener('input', () => {
+        const q = input.value.trim();
+        if (!q) { hide(); return; }
+        if (!(window.google && google.maps && google.maps.places)) return;
+        if (!acService) acService = new google.maps.places.AutocompleteService();
+        acService.getPlacePredictions(
+          { input: q, componentRestrictions: { country: 'au' }, types: ['geocode'] },
+          (preds, status) => {
+            if (status !== google.maps.places.PlacesServiceStatus.OK || !preds || !preds.length) { hide(); return; }
+            lastPreds = preds.slice(0, 6);
+            list.innerHTML = lastPreds.map((p, i) =>
+              `<li data-desc="${p.description.replace(/"/g, '&quot;')}" data-idx="${i}">${p.structured_formatting?.main_text || p.description}<span class="addr-sub">${p.structured_formatting?.secondary_text || ''}</span></li>`
+            ).join('');
+            activeIdx = -1; show();
+          }
+        );
+      });
+      list.addEventListener('mousedown', e => {
+        const li = e.target.closest('li'); if (!li) return;
+        input.value = li.dataset.desc; hide();
+        input.dispatchEvent(new Event('change'));
+      });
+      input.addEventListener('blur', () => setTimeout(hide, 120));
+    }
+    function geocode(address) {
+      return new Promise((resolve, reject) => {
+        whenMapsReady(() => {
+          if (!geocoder) geocoder = new google.maps.Geocoder();
+          geocoder.geocode({ address, componentRestrictions: { country: 'au' } }, (results, status) => {
+            if (status === 'OK' && results && results[0]) {
+              const loc = results[0].geometry.location;
+              resolve({ lat: loc.lat(), lng: loc.lng() });
+            } else reject(new Error('geocode_fail:' + status));
+          });
+        });
+      });
+    }
+
+    // ── Maps View (지도 뷰 + 마커 + 영역 검색) ──
+    const STATE_VIEWS = {
+      nsw: { center:{lat:-33.8688,lng:151.2093}, zoom:11 },
+      vic: { center:{lat:-37.8136,lng:144.9631}, zoom:11 },
+      qld: { center:{lat:-27.4698,lng:153.0251}, zoom:11 },
+      wa:  { center:{lat:-31.9523,lng:115.8613}, zoom:11 },
+      sa:  { center:{lat:-34.9285,lng:138.6007}, zoom:11 },
+      tas: { center:{lat:-42.8821,lng:147.3272}, zoom:11 },
+      act: { center:{lat:-35.2809,lng:149.1300}, zoom:11 },
+      nt:  { center:{lat:-12.4634,lng:130.8456}, zoom:11 },
+    };
+    const AUS_VIEW = { center:{lat:-25.2744,lng:133.7751}, zoom:4 };
+    let jobsMap = null, mapReady = false, jobsMarkers = [], areaBounds = null;
+    window.initMapJobs = function () {
+      mapScriptLoaded = true; mapScriptLoading = false;
+      const el = document.getElementById('jobsMap');
+      if (!el) return;
+      const view = STATE_VIEWS[currentState] || AUS_VIEW;
+      jobsMap = new google.maps.Map(el, { center: view.center, zoom: view.zoom, mapTypeControl: false, streetViewControl: false });
+      mapReady = true;
+      updateMapMarkers();
+    };
+    function updateMapMarkers() {
+      if (!jobsMap || !window.google) return;
+      jobsMarkers.forEach(m => m.setMap(null));
+      jobsMarkers = [];
+      const filtered = applyFilters(loadPosts());
+      filtered.forEach(p => {
+        if (!(p.lat && p.lng)) return;
+        const mk = new google.maps.Marker({ position: { lat:p.lat, lng:p.lng }, map: jobsMap, title: p.title });
+        const iw = new google.maps.InfoWindow({ content: `<div style="font-size:13px;font-weight:700;">${(p.title||'').replace(/</g,'&lt;')}</div>` });
+        mk.addListener('click', () => iw.open(jobsMap, mk));
+        jobsMarkers.push(mk);
+      });
+    }
+
+    // ── 필터 (직종/근무형태/급여/지역) + applyFilters ──
+    let activeFilter = {};
+    function applyFilters(posts) {
+      return posts.filter(p => {
+        if (areaBounds) {
+          if (!(p.lat && p.lng) || !areaBounds.contains({ lat:p.lat, lng:p.lng })) return false;
+        }
+        if (activeFilter.category && p.category !== activeFilter.category) return false;
+        if (activeFilter.empType  && p.empType  !== activeFilter.empType)  return false;
+        if (activeFilter.minPay) {
+          if (!p.payAmount || p.payAmount < activeFilter.minPay) return false;
+          if (activeFilter.payUnit && p.payUnit !== activeFilter.payUnit)  return false;
+        }
+        return true;
+      });
+    }
+
+    // ── 필터 모달 + 검색기록 ──
+    const filterOverlay = document.getElementById('filterOverlay');
+    const JOBS_SEARCH_KEY = () => 'koaus-jobs-search-' + ((window.koausAuth && window.koausAuth.user && window.koausAuth.user.uid) || 'guest');
+    function loadRecent() { try { return JSON.parse(localStorage.getItem(JOBS_SEARCH_KEY()) || '[]'); } catch (_) { return []; } }
+    function saveRecent(arr) { localStorage.setItem(JOBS_SEARCH_KEY(), JSON.stringify(arr.slice(0, 5))); }
+    function addRecentSearch(s) {
+      const arr = loadRecent().filter(x => JSON.stringify(x) !== JSON.stringify(s));
+      arr.unshift(s); saveRecent(arr); renderRecentSearches();
+    }
+    function renderRecentSearches() {
+      const box = document.getElementById('recentSearches'); if (!box) return;
+      const arr = loadRecent();
+      if (!arr.length) { box.innerHTML = '<div class="recent-empty" style="font-size:12px;color:var(--text-muted);">최근 검색 내역이 없습니다.</div>'; return; }
+      box.innerHTML = '<div style="font-size:12px;font-weight:700;color:var(--text-secondary);margin-bottom:6px;">최근 검색</div>' +
+        arr.map((s, i) =>
+          `<button class="recent-chip" data-idx="${i}" type="button" style="margin:2px 4px 2px 0;padding:4px 10px;font-size:12px;border:1px solid var(--border);border-radius:999px;background:var(--bg-card);cursor:pointer;">${[s.region, s.category, s.empType, s.minPay ? '$' + s.minPay + '+' : ''].filter(Boolean).join(' · ')}</button>`
+        ).join('');
+      box.querySelectorAll('.recent-chip').forEach(b => b.addEventListener('click', () => {
+        const s = arr[Number(b.dataset.idx)];
+        document.getElementById('ffRegion').value   = s.region   || '';
+        document.getElementById('ffCategory').value = s.category || '';
+        document.getElementById('ffEmpType').value  = s.empType  || '';
+        document.getElementById('ffPayUnit').value  = s.payUnit  || 'hour';
+        document.getElementById('ffMinPay').value   = s.minPay   || '';
+      }));
+    }
+    function openFilterModal() {
+      if (!filterOverlay) return;
+      filterOverlay.classList.add('open');
+      whenMapsReady(() => wireAutocomplete('ffRegion', 'ffRegionSuggest'));
+      renderRecentSearches();
+    }
+    function closeFilterModal() { if (filterOverlay) filterOverlay.classList.remove('open'); }
+    safeOn('filterModalBtn', 'click', openFilterModal);
+    safeOn('filterModalClose', 'click', closeFilterModal);
+    if (filterOverlay) filterOverlay.addEventListener('click', e => { if (e.target === filterOverlay) closeFilterModal(); });
+    safeOn('filterApplyBtn', 'click', async () => {
+      const region   = document.getElementById('ffRegion').value.trim();
+      const category = document.getElementById('ffCategory').value;
+      const empType  = document.getElementById('ffEmpType').value;
+      const payUnit  = document.getElementById('ffPayUnit').value;
+      const minPay   = Number(document.getElementById('ffMinPay').value) || 0;
+      activeFilter = { region, category, empType, payUnit, minPay };
+      areaBounds = null;
+      if (region) {
+        try { const c = await geocode(region);
+          if (jobsMap) jobsMap.panTo(c);
+        } catch (_) {}
+      }
+      addRecentSearch({ region, category, empType, payUnit, minPay });
+      closeFilterModal();
+      renderPosts();
+      updateMapMarkers();
+    });
+    safeOn('filterResetBtn', 'click', () => {
+      ['ffRegion','ffMinPay'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+      ['ffCategory','ffEmpType'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+      document.getElementById('ffPayUnit').value = 'hour';
+      activeFilter = {}; areaBounds = null;
+      renderPosts(); updateMapMarkers();
+    });
+
+    // ── View 토글 (List / Map) ──
+    function switchView(mode) {
+      const lv = document.getElementById('listView');
+      const mv = document.getElementById('mapView');
+      const lb = document.getElementById('viewListBtn');
+      const mb = document.getElementById('viewMapBtn');
+      if (!lv || !mv) return;
+      if (mode === 'map') {
+        lv.style.display = 'none'; mv.style.display = '';
+        lb && lb.classList.remove('active'); mb && mb.classList.add('active');
+        whenMapsReady(() => { if (!jobsMap) initMapJobs(); else updateMapMarkers(); });
+      } else {
+        lv.style.display = ''; mv.style.display = 'none';
+        lb && lb.classList.add('active'); mb && mb.classList.remove('active');
+      }
+    }
+    safeOn('viewListBtn', 'click', () => switchView('list'));
+    safeOn('viewMapBtn',  'click', () => switchView('map'));
+    safeOn('areaSearchBtn', 'click', () => {
+      if (!jobsMap) return;
+      areaBounds = jobsMap.getBounds();
+      updateMapMarkers();
+      renderPosts();
+    });
+
+    // ── 글쓰기 모달 오픈 시 자동완성 wire ──
+    const origGuard = window.guardedOpenWrite;
+    safeOn('writeBtnOpen', 'click', () => {
+      whenMapsReady(() => wireAutocomplete('wAddress', 'wAddressSuggest'));
+    });
+
+    // renderPosts 에서 filter 적용 (기존 renderPosts 보강 — applyFilters 통과)
+    const _origRender = renderPosts;
+    renderPosts = function () {
+      _origRender.apply(this, arguments);
+      // 추가: 필터 적용된 카운트로 boardCount 보정
+      const cnt = applyFilters(loadPosts()).length;
+      const bc = document.getElementById('boardCount');
+      if (bc) bc.textContent = `총 ${cnt}건`;
+    };
+
+    // 초기 진입 시 Places 미리 로드 (자동완성 응답성)
+    loadMapScript();
   </script>
 
   <!-- ── Auth Modal ── -->
