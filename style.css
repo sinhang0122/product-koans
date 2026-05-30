@@ -515,6 +515,58 @@ body {
 }
 .exchange-updated { font-size: 11px; color: var(--text-muted); text-align: center; }
 
+/* ── 환율 계산기 (양방향 한도 검증 · B&W) ── */
+.exchange-calc { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 18px 16px; margin-bottom: 18px; }
+.exchange-calc-row { display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; }
+.exchange-field { flex: 1 1 240px; min-width: 220px; display: flex; flex-direction: column; gap: 6px; }
+.exchange-field-label { font-size: 12px; font-weight: 700; color: var(--text-secondary); letter-spacing: 0.04em; }
+.exchange-field-inner { display: flex; gap: 8px; }
+.exchange-cur-select {
+  padding: 10px 12px; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--r-sm);
+  font-family: var(--font); font-size: 13px; font-weight: 700; color: var(--text-primary); cursor: pointer;
+}
+.exchange-amount-input {
+  flex: 1; min-width: 0; padding: 10px 12px; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--r-sm);
+  font-family: var(--font); font-size: 16px; font-weight: 800; color: var(--text-primary); text-align: right;
+}
+.exchange-amount-input[readonly] { background: var(--bg-elevated); color: var(--text-secondary); }
+.exchange-swap-btn {
+  flex-shrink: 0; align-self: flex-end; padding: 10px 14px; background: var(--accent); color: var(--accent-text);
+  border: none; border-radius: 999px; font-size: 16px; font-weight: 800; cursor: pointer; transition: opacity 0.15s;
+}
+.exchange-swap-btn:hover { opacity: 0.85; }
+
+.exchange-card-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.exchange-result-row { font-size: 13px; color: var(--text-secondary); padding: 8px 10px; background: var(--bg-elevated); border-radius: var(--r-sm); }
+.exchange-result-row strong { font-size: 15px; font-weight: 900; color: var(--text-primary); font-variant-numeric: tabular-nums; margin-left: 6px; }
+.exchange-lim-row { font-size: 11.5px; color: var(--text-muted); line-height: 1.45; }
+.exchange-err { font-size: 12.5px; font-weight: 700; color: var(--text-primary); background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 8px 10px; line-height: 1.45; }
+.exchange-badges { display: flex; flex-wrap: wrap; gap: 5px; }
+.exchange-badge { font-size: 11px; font-weight: 700; color: var(--text-primary); background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 999px; padding: 3px 9px; }
+.exchange-link { font-size: 12px; color: var(--text-primary); font-weight: 700; text-decoration: none; border-bottom: 1px solid var(--border); width: fit-content; padding-bottom: 1px; }
+.exchange-link:hover { border-bottom-color: var(--text-primary); }
+
+.exchange-card.is-disabled { opacity: 0.7; }
+.exchange-card.is-disabled .exchange-app-name { color: var(--text-muted); }
+.exchange-disabled-badge {
+  font-size: 9px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 3px 8px; border-radius: 999px; background: var(--text-muted); color: var(--accent-text);
+}
+.exchange-unsupported { font-size: 12.5px; color: var(--text-secondary); background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 10px 12px; line-height: 1.5; }
+
+.exchange-fallback {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-lg);
+  padding: 28px 24px; text-align: center;
+}
+.exchange-fallback-title { font-size: 15px; font-weight: 800; color: var(--text-primary); margin-bottom: 10px; }
+.exchange-fallback p { font-size: 13.5px; color: var(--text-secondary); line-height: 1.7; margin: 0; max-width: 640px; margin-left: auto; margin-right: auto; }
+
+.exchange-disclaimer {
+  font-size: 12px; color: var(--text-muted); text-align: center; line-height: 1.6;
+  margin-top: 18px; padding: 14px 16px; border-top: 1px solid var(--border);
+}
+.exchange-disclaimer em { font-style: normal; color: var(--text-secondary); font-weight: 700; }
+
 /* ════════════════════════════════════════════════════════════════════════
    Points Calculator
 ════════════════════════════════════════════════════════════════════════ */
