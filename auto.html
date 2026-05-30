@@ -411,7 +411,10 @@
         <h1 class="page-title" id="boardTitle">🚗 Auto</h1>
         <p class="page-subtitle" id="boardSubtitle">자동차 종합 서비스 게시판</p>
       </div>
-      <a href="index.html" class="page-back">← 홈으로</a>
+      <div class="page-header-actions">
+        <a href="index.html" class="page-back">← 홈으로</a>
+        <a href="contact.html" class="page-inquiry" id="autoInquiryBtn" style="display:none;">문의하기 →</a>
+      </div>
     </div>
 
 
@@ -421,15 +424,6 @@
       <button class="accom-tab" data-cat="inspection">동행 인스펙션·긴급출동 <em>Inspection</em></button>
       <button class="accom-tab" data-cat="maintenance">정비소 <em>Maintenance</em></button>
       <button class="accom-tab" data-cat="towing">견인 <em>Towing</em></button>
-    </div>
-
-    <!-- 인스펙션 카테고리 전용: 파트너 유치 CTA 배너 (인스펙션 활성화 시에만 노출) -->
-    <div class="partner-cta" id="inspectionCTA" style="display:none;">
-      <div class="partner-cta-text">
-        <div class="partner-cta-title">인스펙션·긴급출동 업체 등록 문의하기</div>
-        <div class="partner-cta-sub">KoAus 파트너로 등록되면 해당 주 사용자에게 즉시 노출됩니다.</div>
-      </div>
-      <button class="partner-cta-btn" id="inspectionCtaBtn" type="button">문의하기 →</button>
     </div>
 
     <!-- Controls -->
@@ -468,6 +462,9 @@
       <span class="auto-tow-text">※ 야간/새벽 등 긴급 상황 시 호주 로컬 견인 서비스 이용하기</span>
       <a class="auto-tow-btn" href="https://www.google.com/maps/search/towing+service+near+me/" target="_blank" rel="noopener noreferrer">🚨 가까운 견인 서비스 찾기 <span class="auto-tow-arrow">›</span></a>
     </div>
+
+    <!-- 카테고리별 하단 주의사항 (rental/inspection/maintenance/towing 분기 — JS로 텍스트 갱신) -->
+    <p class="auto-disclaimer" id="autoDisclaimer">※ 이용자 본인의 사정에 따른 실제 차량 대여, 보험 및 계약 조건은 해당 렌트카 업체와 직접 확인해 주세요.</p>
 
   </main>
 
@@ -1050,23 +1047,30 @@
       // 상세 필터 버튼: 렌트카/인스펙션만 노출
       const fb = document.getElementById('filterModalBtn');
       if (fb) fb.style.display = (cfg.filter === 'none') ? 'none' : '';
-      // 글쓰기 버튼: 정비소/견인은 직접 글쓰기 차단 → '글 등록 문의하기'
+      // 글쓰기 버튼: 정비소·견인은 직접 글쓰기 차단 → 버튼 자체 숨김 (홍보 문구·글 등록 문의 버튼 일체 제거)
       const wb = document.getElementById('writeBtnOpen');
-      if (wb) wb.textContent = (cfg.write === 'inquiry') ? '글 등록 문의하기' : '+ 글쓰기';
+      if (wb) {
+        if (cfg.write === 'inquiry') { wb.style.display = 'none'; }
+        else                         { wb.style.display = ''; wb.textContent = '+ 글쓰기'; }
+      }
       // 견인 카테고리에서만 하단 외부 견인 서비스 안내 배너 노출
       const tb = document.getElementById('towBanner');
       if (tb) tb.style.display = (cat === 'towing') ? '' : 'none';
-      // 인스펙션 카테고리에서만 파트너 유치 CTA 노출 (유저 글쓰기는 별도 허용)
-      const ic = document.getElementById('inspectionCTA');
-      if (ic) ic.style.display = (cat === 'inspection') ? '' : 'none';
+      // 페이지 헤더 우측 [문의하기] 버튼: 인스펙션/정비소/견인에서만 노출 (렌트카 제외)
+      const iq = document.getElementById('autoInquiryBtn');
+      if (iq) iq.style.display = (cat === 'rental') ? 'none' : '';
+      // 카테고리별 하단 주의사항 갱신
+      const AUTO_DISCLAIMER = {
+        rental:      '※ 이용자 본인의 사정에 따른 실제 차량 대여, 보험 및 계약 조건은 해당 렌트카 업체와 직접 확인해 주세요.',
+        inspection:  '※ 이용자 본인의 사정에 따른 실제 매물 상태 점검 및 최종 계약 결정은 공인 인스펙션 업체와 직접 확인해 주세요.',
+        maintenance: '※ 이용자 본인의 사정에 따른 실제 차량 정비 내용 및 수리 비용은 해당 정비소와 직접 확인해 주세요.',
+        towing:      '※ 이용자 본인의 사정에 따른 실제 견인 서비스 조건 및 비용은 해당 견인 업체와 직접 확인해 주세요.',
+      };
+      const ad = document.getElementById('autoDisclaimer');
+      if (ad) ad.textContent = AUTO_DISCLAIMER[cat] || '';
       updateBoardTitle();
       renderAll();
     }
-    // 인스펙션 CTA 버튼 → 관리자 등록 문의 모달 열기
-    document.addEventListener('click', e => {
-      if (e.target && e.target.id === 'inspectionCtaBtn') openInquiryModal();
-    });
-
     // ── 상세 필터 모달 (카테고리별 필드) ──
     const filterOverlay = document.getElementById('filterOverlay');
     let activeFilter = {};  // applyFilters가 참조하는 현재 적용 필터
