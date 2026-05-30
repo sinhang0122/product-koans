@@ -657,7 +657,11 @@
           <span class="post-num">${sorted.length - (start + i)}</span>
           <span class="post-title" style="color:var(--text-primary);font-weight:500;">
             <span class="post-title-text">${escHtml(p.title)}</span>
-            ${isMine(p) ? `<span class="row-actions"><button class="mp-edit row-edit" data-id="${p.id}">수정</button><button class="mp-del row-del" data-id="${p.id}">삭제</button></span>` : ''}
+            <span class="post-mini-actions">
+              ${isMine(p) ? `<button class="mini-btn mini-edit" data-id="${p.id}" type="button">수정</button><button class="mini-btn mini-del" data-id="${p.id}" type="button">삭제</button>` : ''}
+              <button class="mini-btn mini-share" data-id="${p.id}" type="button">공유</button>
+              <button class="mini-btn mini-report" data-id="${p.id}" type="button">신고</button>
+            </span>
           </span>
           <span class="post-author">${authorLabel(p)}</span>
           <span class="post-date">${p.date}${p.time ? ' ' + p.time : ''}</span>
@@ -666,14 +670,38 @@
       }).join('');
 
       list.querySelectorAll('.post-row').forEach(row => row.addEventListener('click', () => openDetail(row.dataset.id)));
-      list.querySelectorAll('.row-edit').forEach(btn => btn.addEventListener('click', e => {
+      list.querySelectorAll('.mini-edit').forEach(btn => btn.addEventListener('click', e => {
         e.stopPropagation();
         const p = loadPosts().find(x => String(x.id) === String(btn.dataset.id));
         if (p) openWriteModalForEdit(p);
       }));
-      list.querySelectorAll('.row-del').forEach(btn => btn.addEventListener('click', e => {
+      list.querySelectorAll('.mini-del').forEach(btn => btn.addEventListener('click', e => {
         e.stopPropagation();
         deletePost(btn.dataset.id);
+      }));
+      list.querySelectorAll('.mini-share').forEach(btn => btn.addEventListener('click', async e => {
+        e.stopPropagation();
+        const url = `${location.origin}${location.pathname}?id=${encodeURIComponent(btn.dataset.id)}`;
+        try { await navigator.clipboard.writeText(url); } catch (_) {
+          const ta = document.createElement('textarea'); ta.value = url; document.body.appendChild(ta);
+          ta.select(); try { document.execCommand('copy'); } catch (_) {} ta.remove();
+        }
+        alert('링크가 복사되었습니다.');
+      }));
+      list.querySelectorAll('.mini-report').forEach(btn => btn.addEventListener('click', async e => {
+        e.stopPropagation();
+        const postId = btn.dataset.id;
+        const user = window.koausAuth && window.koausAuth.user;
+        try {
+          if (window.koausDb && window.koausFs && user) {
+            const { addDoc, collection, serverTimestamp } = window.koausFs;
+            await addDoc(collection(window.koausDb, 'reports'), {
+              postId: String(postId), board: 'jobs', reason: '게시글 신고 (카드)',
+              reporterUid: user.uid || '', reporterEmail: user.email || '', createdAt: serverTimestamp(),
+            });
+          }
+        } catch (_) {}
+        alert('신고가 접수되었습니다. 관리자 검토 후 조치됩니다.');
       }));
       list.querySelectorAll('.bookmark-btn').forEach(btn => {
         btn.addEventListener('click', e => {
@@ -1215,6 +1243,9 @@
 
     // ── Firestore: jobs_posts 컬렉션 (구인구직 글 실시간 저장/구독) ──
     const db = getFirestore(app);
+    // 클래식 스크립트(renderPosts 등)에서 reports addDoc 등에 접근하기 위한 노출
+    window.koausDb = db;
+    window.koausFs = { addDoc, collection, serverTimestamp };
 
     // 글쓰기 인라인 스크립트에서 사용할 write 헬퍼
     // 컬렉션은 무조건 'jobs_posts' (Firestore rules의 /jobs_posts/{postId}와 일치)

@@ -470,6 +470,32 @@
 
   <footer class="site-footer"><p>KoAus &mdash; 호주 한인 포털 &nbsp;·&nbsp; 2026</p></footer>
 
+  <!-- Firebase Auth/Firestore — 본인 글 식별(isMine) + 신고(reports addDoc) 용 -->
+  <script type="module">
+    import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
+    import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
+    import { getFirestore, collection, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
+    const firebaseConfig = {
+      apiKey: 'AIzaSyCamqnt0bNUD9uz1N5BbCuQjSkWLSpPqlU',
+      authDomain: 'koaus-f564c.firebaseapp.com',
+      projectId: 'koaus-f564c',
+      storageBucket: 'koaus-f564c.firebasestorage.app',
+      messagingSenderId: '663988594088',
+      appId: '1:663988594088:web:ef30c2fd557407b00b299d',
+      measurementId: 'G-DERZ9MTKPL',
+    };
+    const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    let db; try { db = getFirestore(app); } catch (e) { console.warn('[car-sale] Firestore 미초기화', e); }
+    window.koausAuth = window.koausAuth || { user: null };
+    if (db) { window.koausDb = db; window.koausFs = { addDoc, collection, serverTimestamp }; }
+    onAuthStateChanged(auth, user => {
+      window.koausAuth.user = user;
+      window.dispatchEvent(new Event('koausAuthReady'));
+      if (typeof window.renderPosts === 'function') window.renderPosts();
+    });
+  </script>
+
   <script>
     const hBtn = document.getElementById('hamburgerBtn');
     const cBtn = document.getElementById('sidebarCloseBtn');
@@ -519,19 +545,80 @@
       return SAMPLES;
     }
     function savePosts(posts) { localStorage.setItem(STORE_KEY, JSON.stringify(posts)); }
+    // 본인 글 식별 — 글에 uid 가 저장돼 있고 현재 로그인 유저와 일치할 때만 true
+    function isMine(p) {
+      const u = window.koausAuth && window.koausAuth.user;
+      return !!(u && p && p.uid && p.uid === u.uid);
+    }
+    let editingId = null;  // 편집 모드 추적
     function renderPosts() {
       const posts = loadPosts();
       document.getElementById('boardCount').textContent = `총 ${posts.length}건`;
       const list = document.getElementById('postList');
       if (!posts.length) { list.innerHTML = '<div class="post-empty">등록된 글이 없습니다. 첫 글을 작성해보세요!</div>'; return; }
       list.innerHTML = posts.slice().reverse().map((p, i) => `
-        <div class="post-row" data-id="${p.id}" style="cursor:pointer">
+        <div class="post-row${isMine(p) ? ' my-post-highlight' : ''}" data-id="${p.id}" style="cursor:pointer">
           <span class="post-num">${posts.length - i}</span>
-          <span class="post-title" style="color:var(--text-primary);font-weight:500;">${escHtml(p.title)}</span>
+          <span class="post-title" style="color:var(--text-primary);font-weight:500;">
+            <span class="post-title-text">${escHtml(p.title)}</span>
+            <span class="post-mini-actions">
+              ${isMine(p) ? `<button class="mini-btn mini-edit" data-id="${p.id}" type="button">수정</button><button class="mini-btn mini-del" data-id="${p.id}" type="button">삭제</button>` : ''}
+              <button class="mini-btn mini-share" data-id="${p.id}" type="button">공유</button>
+              <button class="mini-btn mini-report" data-id="${p.id}" type="button">신고</button>
+            </span>
+          </span>
           <span class="post-author">${escHtml(p.author)}</span>
           <span class="post-date">${p.date}</span>
         </div>`).join('');
       list.querySelectorAll('.post-row').forEach(row => row.addEventListener('click', () => openDetail(row.dataset.id)));
+      list.querySelectorAll('.mini-edit').forEach(btn => btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const p = loadPosts().find(x => String(x.id) === String(btn.dataset.id));
+        if (p) openWriteModalForEdit(p);
+      }));
+      list.querySelectorAll('.mini-del').forEach(btn => btn.addEventListener('click', e => {
+        e.stopPropagation();
+        deletePost(btn.dataset.id);
+      }));
+      list.querySelectorAll('.mini-share').forEach(btn => btn.addEventListener('click', async e => {
+        e.stopPropagation();
+        const url = `${location.origin}${location.pathname}?id=${encodeURIComponent(btn.dataset.id)}`;
+        try { await navigator.clipboard.writeText(url); } catch (_) {
+          const ta = document.createElement('textarea'); ta.value = url; document.body.appendChild(ta);
+          ta.select(); try { document.execCommand('copy'); } catch (_) {} ta.remove();
+        }
+        alert('링크가 복사되었습니다.');
+      }));
+      list.querySelectorAll('.mini-report').forEach(btn => btn.addEventListener('click', async e => {
+        e.stopPropagation();
+        const postId = btn.dataset.id;
+        const user = window.koausAuth && window.koausAuth.user;
+        try {
+          if (window.koausDb && window.koausFs && user) {
+            const { addDoc, collection, serverTimestamp } = window.koausFs;
+            await addDoc(collection(window.koausDb, 'reports'), {
+              postId: String(postId), board: 'car-sale', reason: '게시글 신고 (카드)',
+              reporterUid: user.uid || '', reporterEmail: user.email || '', createdAt: serverTimestamp(),
+            });
+          }
+        } catch (_) {}
+        alert('신고가 접수되었습니다. 관리자 검토 후 조치됩니다.');
+      }));
+    }
+    window.renderPosts = renderPosts;  // module 스크립트의 auth 콜백에서 재호출
+    function deletePost(id) {
+      if (!confirm('이 글을 삭제하시겠습니까?')) return;
+      const posts = loadPosts().filter(x => String(x.id) !== String(id));
+      savePosts(posts);
+      renderPosts();
+    }
+    function openWriteModalForEdit(p) {
+      editingId = p.id;
+      document.getElementById('wTitle').value   = p.title || '';
+      document.getElementById('wBody').value    = p.body  || '';
+      document.getElementById('wAuthor').value  = p.author || '';
+      document.getElementById('wContact').value = p.contact || '';
+      writeOverlay.classList.add('open');
     }
     function openDetail(id) {
       const posts = loadPosts();
@@ -547,9 +634,9 @@
     document.getElementById('detailClose').addEventListener('click', () => { document.getElementById('detailOverlay').classList.remove('open'); });
     document.getElementById('detailOverlay').addEventListener('click', e => { if (e.target === e.currentTarget) document.getElementById('detailOverlay').classList.remove('open'); });
     const writeOverlay = document.getElementById('writeOverlay');
-    document.getElementById('writeBtnOpen').addEventListener('click', () => writeOverlay.classList.add('open'));
-    document.getElementById('writeBtnCancel').addEventListener('click', () => writeOverlay.classList.remove('open'));
-    writeOverlay.addEventListener('click', e => { if (e.target === writeOverlay) writeOverlay.classList.remove('open'); });
+    document.getElementById('writeBtnOpen').addEventListener('click', () => { editingId = null; writeOverlay.classList.add('open'); });
+    document.getElementById('writeBtnCancel').addEventListener('click', () => { editingId = null; writeOverlay.classList.remove('open'); });
+    writeOverlay.addEventListener('click', e => { if (e.target === writeOverlay) { editingId = null; writeOverlay.classList.remove('open'); } });
     document.getElementById('writeBtnSubmit').addEventListener('click', () => {
       const title = document.getElementById('wTitle').value.trim();
       const body  = document.getElementById('wBody').value.trim();
@@ -557,11 +644,24 @@
       const contact = document.getElementById('wContact').value.trim();
       if (!title) { alert('제목을 입력해 주세요.'); return; }
       if (!body)  { alert('내용을 입력해 주세요.'); return; }
+      const u = window.koausAuth && window.koausAuth.user;
       const posts = loadPosts();
       const d = new Date();
       const date = `${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
-      posts.push({ id: Date.now(), title, body, author, contact, date });
+      if (editingId != null) {
+        const idx = posts.findIndex(x => String(x.id) === String(editingId));
+        if (idx >= 0) {
+          posts[idx] = { ...posts[idx], title, body, author, contact };
+        }
+      } else {
+        posts.push({
+          id: Date.now(), title, body, author, contact, date,
+          uid:   u && u.uid   ? u.uid   : '',   // 본인 글 식별용
+          email: u && u.email ? u.email : '',
+        });
+      }
       savePosts(posts);
+      editingId = null;
       renderPosts();
       writeOverlay.classList.remove('open');
       ['wTitle','wBody','wAuthor','wContact'].forEach(id => { document.getElementById(id).value = ''; });

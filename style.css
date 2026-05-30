@@ -760,6 +760,25 @@ body {
 .points-total-status { font-size: 13px; font-weight: 600; padding: 4px 12px; border-radius: 999px; }
 .points-total-status--pass { background: var(--green-bg); color: var(--green); border: 1px solid rgba(22,163,74,.3); }
 .points-total-status--fail { background: rgba(220,38,38,.08); color: var(--red); border: 1px solid rgba(220,38,38,.2); }
+/* 가채점 섹션 래퍼 (Visa & Migration 페이지 상단) */
+.points-section {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 24px;
+  margin-bottom: 24px;
+  display: flex; flex-direction: column; gap: 18px;
+}
+.points-section-head { display: flex; flex-direction: column; gap: 4px; }
+.points-section-title { font-size: 20px; font-weight: 900; color: var(--text-primary); letter-spacing: -0.3px; }
+.points-section-sub { font-size: 13px; color: var(--text-secondary); line-height: 1.55; }
+.points-total-hint { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.points-total-right { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.points-disclaimer {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--r-sm); padding: 12px 16px;
+  font-size: 12px; color: var(--text-muted); line-height: 1.65; margin: 0;
+}
 
 /* ════════════════════════════════════════════════════════════════════════
    Community Board
@@ -1628,6 +1647,27 @@ select.filter-mini-input {
 /* 본인 작성 글 강조 (List View) — 파란 테두리 */
 .accom-card.my-post-highlight { border: 2px solid #007BFF !important; }
 .post-row.my-post-highlight { border-left: 4px solid #007BFF !important; background: var(--bg-card); }
+
+/* 카드 미니 액션: 수정·삭제(본인 글 한정) / 공유·신고(모든 글) — 컴팩트 흑백 테마 */
+.post-mini-actions {
+  display: inline-flex; align-items: center; gap: 4px;
+  margin-left: 8px; flex-wrap: wrap;
+}
+.accom-card-info .post-mini-actions { margin-left: 0; margin-top: 8px; }
+.mini-btn {
+  font-family: inherit; font-size: 11px; font-weight: 700; letter-spacing: -0.01em;
+  padding: 3px 8px; border-radius: 3px;
+  background: transparent; color: var(--text-secondary);
+  border: 1px solid var(--border);
+  cursor: pointer; transition: all 0.12s ease;
+  line-height: 1.4; white-space: nowrap;
+}
+.mini-btn:hover { background: var(--text-primary); color: var(--bg-base); border-color: var(--text-primary); }
+.mini-btn:active { transform: scale(0.94); }
+.mini-edit:hover   { background: #007BFF; color: #fff; border-color: #007BFF; }
+.mini-del:hover    { background: var(--red); color: #fff; border-color: var(--red); }
+.mini-report:hover { background: var(--red); color: #fff; border-color: var(--red); }
+.mini-share:hover  { background: var(--text-primary); color: var(--bg-base); border-color: var(--text-primary); }
 
 /* 상세 모달 필터 태그 — 리스트 카드와 동일한 정갈한 사각형 배지 */
 .post-detail-tags { display: flex; flex-wrap: wrap; gap: 7px; }
