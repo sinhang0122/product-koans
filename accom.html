@@ -1485,8 +1485,8 @@
       const room = fbRoom.value;       // '' = 전체
       const dur  = fbDuration.value;   // '' = 전체
       return posts.filter(p => {
-        // 주(State)별 분리: 현재 주가 지정된 경우 같은 주의 글만 노출
-        if (currentState && (p.state || '') !== currentState) return false;
+        // 주(State)별 분리: 관리자 글(state='')은 전 지역 노출, 그 외는 동일 주만 노출
+        if (currentState && p.state && p.state !== currentState) return false;
         // 모드(방 올리기/방 구하기) 분리
         if ((p.mode || 'offer') !== activeMode) return false;
         // '이 지역 검색' 활성 시: 지도 범위(Bounds) 내 좌표만 노출

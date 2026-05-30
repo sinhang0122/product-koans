@@ -1601,7 +1601,8 @@
       const num = v => { const n = parseInt(v, 10); return Number.isFinite(n) ? n : null; };
       return posts.filter(p => {
         // 주(State)별 분리: 현재 주가 지정된 경우 같은 주의 글만 노출
-        if (currentState && (p.state || '') !== currentState) return false;
+        // 주(State)별 분리: 관리자 글(state='')은 전 지역 노출, 그 외는 동일 주만 노출
+        if (currentState && p.state && p.state !== currentState) return false;
         // 카테고리(렌트카/인스펙션/정비소/견인)별 분리
         if (groupOf(p.category) !== activeCategory) return false;
         // 관리자 프리미엄 글: 어떠한 상세 필터/지도 범위에서도 항상 노출 (최상단 고정은 정렬에서 처리)

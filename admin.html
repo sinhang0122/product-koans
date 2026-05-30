@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>관리자 페이지 — KoAus(코오스)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;800;900&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <script>
+    (function () {
+      const saved = localStorage.getItem('koaus-theme');
+      const sys = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      if ((saved ?? sys) === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+    })();
+  </script>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3691720629746826" crossorigin="anonymous"></script>
+</head>
+<body>
+
+  <div class="topbar" id="topbar">
+    <a class="topbar-brand" href="index.html">
+      <span class="topbar-logo-icon"><span class="logo-ks">K/S</span></span>
+      <span class="topbar-logo-text">KoAus</span>
+      <span class="topbar-tagline"><b>Korea&nbsp;-&nbsp;Australia</b><span class="topbar-tagline-div">|</span>호주 한인 커뮤니티의 새로운 기준</span>
+    </a>
+    <div class="topbar-actions">
+      <a href="index.html" class="topbar-login-btn">로그인</a>
+      <button class="topbar-theme-btn" id="themeToggleBtn" type="button" aria-label="테마 변경" title="테마 변경 (Light / Dark)">
+        <svg class="ico-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <svg class="ico-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+      </button>
+      <button class="topbar-menu-btn" id="hamburgerBtn" aria-label="메뉴 열기" aria-expanded="false">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+          <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <aside class="sidebar" id="sidebar" aria-label="사이드 메뉴">
+    <div class="sidebar-header">
+      <span class="sidebar-brand">◈ KoAus</span>
+      <div class="sidebar-header-right">
+        <a href="mypage.html" class="sidebar-acct-top">내 계정</a>
+        <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="닫기">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="accord-item" data-group="nsw">
+        <button class="accord-header">
+          <span>NSW <em>뉴사우스 웨일스 주</em></span>
+          <svg class="accord-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="accord-body">
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Living</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="accom.html?state=nsw" class="accord-link accord-link--sub">쉐어 (Share)</a>
+            <a href="rent.html?state=nsw" class="accord-link accord-link--sub">렌트 (Rent)</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Work</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="jobs.html?state=nsw&amp;tab=post" class="accord-link accord-link--sub">직원 채용 (Post a Job)</a>
+            <a href="jobs.html?state=nsw&amp;tab=find" class="accord-link accord-link--sub">일 구하기 (Find a Job)</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Visa &amp; Migration</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="points.html" class="accord-link accord-link--sub">지역 법무팀</a>
+            <a href="points.html" class="accord-link accord-link--sub">유학팀</a>
+            <a href="points.html" class="accord-link accord-link--sub">기술심사 가채점</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Auto</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="auto.html?state=nsw&amp;category=rental" class="accord-link accord-link--sub">렌트카 (Rental)</a>
+            <a href="auto.html?state=nsw&amp;category=inspection" class="accord-link accord-link--sub">동행 인스펙션·긴급출동</a>
+            <a href="auto.html?state=nsw&amp;category=maintenance" class="accord-link accord-link--sub">정비소</a>
+            <a href="auto.html?state=nsw&amp;category=towing" class="accord-link accord-link--sub">견인</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="accord-item" data-group="vic">
+        <button class="accord-header">
+          <span>VIC <em>빅토리아 주</em></span>
+          <svg class="accord-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="accord-body">
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Living</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="accom.html?state=vic" class="accord-link accord-link--sub">쉐어 (Share)</a>
+            <a href="rent.html?state=vic" class="accord-link accord-link--sub">렌트 (Rent)</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Work</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="jobs.html?state=vic&amp;tab=post" class="accord-link accord-link--sub">직원 채용 (Post a Job)</a>
+            <a href="jobs.html?state=vic&amp;tab=find" class="accord-link accord-link--sub">일 구하기 (Find a Job)</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Visa &amp; Migration</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="points.html" class="accord-link accord-link--sub">지역 법무팀</a>
+            <a href="points.html" class="accord-link accord-link--sub">유학팀</a>
+            <a href="points.html" class="accord-link accord-link--sub">기술심사 가채점</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Auto</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="auto.html?state=vic&amp;category=rental" class="accord-link accord-link--sub">렌트카 (Rental)</a>
+            <a href="auto.html?state=vic&amp;category=inspection" class="accord-link accord-link--sub">동행 인스펙션·긴급출동</a>
+            <a href="auto.html?state=vic&amp;category=maintenance" class="accord-link accord-link--sub">정비소</a>
+            <a href="auto.html?state=vic&amp;category=towing" class="accord-link accord-link--sub">견인</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="accord-item" data-group="qld">
+        <button class="accord-header">
+          <span>QLD <em>퀸즐랜드 주</em></span>
+          <svg class="accord-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="accord-body">
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Living</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="accom.html?state=qld" class="accord-link accord-link--sub">쉐어 (Share)</a>
+            <a href="rent.html?state=qld" class="accord-link accord-link--sub">렌트 (Rent)</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Work</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="jobs.html?state=qld&amp;tab=post" class="accord-link accord-link--sub">직원 채용 (Post a Job)</a>
+            <a href="jobs.html?state=qld&amp;tab=find" class="accord-link accord-link--sub">일 구하기 (Find a Job)</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Visa &amp; Migration</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="points.html" class="accord-link accord-link--sub">지역 법무팀</a>
+            <a href="points.html" class="accord-link accord-link--sub">유학팀</a>
+            <a href="points.html" class="accord-link accord-link--sub">기술심사 가채점</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Auto</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="auto.html?state=qld&amp;category=rental" class="accord-link accord-link--sub">렌트카 (Rental)</a>
+            <a href="auto.html?state=qld&amp;category=inspection" class="accord-link accord-link--sub">동행 인스펙션·긴급출동</a>
+            <a href="auto.html?state=qld&amp;category=maintenance" class="accord-link accord-link--sub">정비소</a>
+            <a href="auto.html?state=qld&amp;category=towing" class="accord-link accord-link--sub">견인</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="accord-item" data-group="wa">
+        <button class="accord-header">
+          <span>WA <em>웨스턴 오스트레일리아 주</em></span>
+          <svg class="accord-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="accord-body">
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Living</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="accom.html?state=wa" class="accord-link accord-link--sub">쉐어 (Share)</a>
+            <a href="rent.html?state=wa" class="accord-link accord-link--sub">렌트 (Rent)</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Work</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="jobs.html?state=wa&amp;tab=post" class="accord-link accord-link--sub">직원 채용 (Post a Job)</a>
+            <a href="jobs.html?state=wa&amp;tab=find" class="accord-link accord-link--sub">일 구하기 (Find a Job)</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Visa &amp; Migration</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="points.html" class="accord-link accord-link--sub">지역 법무팀</a>
+            <a href="points.html" class="accord-link accord-link--sub">유학팀</a>
+            <a href="points.html" class="accord-link accord-link--sub">기술심사 가채점</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Auto</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="auto.html?state=wa&amp;category=rental" class="accord-link accord-link--sub">렌트카 (Rental)</a>
+            <a href="auto.html?state=wa&amp;category=inspection" class="accord-link accord-link--sub">동행 인스펙션·긴급출동</a>
+            <a href="auto.html?state=wa&amp;category=maintenance" class="accord-link accord-link--sub">정비소</a>
+            <a href="auto.html?state=wa&amp;category=towing" class="accord-link accord-link--sub">견인</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="accord-item" data-group="sa">
+        <button class="accord-header">
+          <span>SA <em>사우스 오스트레일리아 주</em></span>
+          <svg class="accord-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="accord-body">
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Living</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="accom.html?state=sa" class="accord-link accord-link--sub">쉐어 (Share)</a>
+            <a href="rent.html?state=sa" class="accord-link accord-link--sub">렌트 (Rent)</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Work</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="jobs.html?state=sa&amp;tab=post" class="accord-link accord-link--sub">직원 채용 (Post a Job)</a>
+            <a href="jobs.html?state=sa&amp;tab=find" class="accord-link accord-link--sub">일 구하기 (Find a Job)</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Visa &amp; Migration</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="points.html" class="accord-link accord-link--sub">지역 법무팀</a>
+            <a href="points.html" class="accord-link accord-link--sub">유학팀</a>
+            <a href="points.html" class="accord-link accord-link--sub">기술심사 가채점</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Auto</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="auto.html?state=sa&amp;category=rental" class="accord-link accord-link--sub">렌트카 (Rental)</a>
+            <a href="auto.html?state=sa&amp;category=inspection" class="accord-link accord-link--sub">동행 인스펙션·긴급출동</a>
+            <a href="auto.html?state=sa&amp;category=maintenance" class="accord-link accord-link--sub">정비소</a>
+            <a href="auto.html?state=sa&amp;category=towing" class="accord-link accord-link--sub">견인</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="accord-item" data-group="tas">
+        <button class="accord-header">
+          <span>TAS <em>태즈메이니아 주</em></span>
+          <svg class="accord-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="accord-body">
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Living</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="accom.html?state=tas" class="accord-link accord-link--sub">쉐어 (Share)</a>
+            <a href="rent.html?state=tas" class="accord-link accord-link--sub">렌트 (Rent)</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Work</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="jobs.html?state=tas&amp;tab=post" class="accord-link accord-link--sub">직원 채용 (Post a Job)</a>
+            <a href="jobs.html?state=tas&amp;tab=find" class="accord-link accord-link--sub">일 구하기 (Find a Job)</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Visa &amp; Migration</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="points.html" class="accord-link accord-link--sub">지역 법무팀</a>
+            <a href="points.html" class="accord-link accord-link--sub">유학팀</a>
+            <a href="points.html" class="accord-link accord-link--sub">기술심사 가채점</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Auto</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="auto.html?state=tas&amp;category=rental" class="accord-link accord-link--sub">렌트카 (Rental)</a>
+            <a href="auto.html?state=tas&amp;category=inspection" class="accord-link accord-link--sub">동행 인스펙션·긴급출동</a>
+            <a href="auto.html?state=tas&amp;category=maintenance" class="accord-link accord-link--sub">정비소</a>
+            <a href="auto.html?state=tas&amp;category=towing" class="accord-link accord-link--sub">견인</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="accord-item" data-group="act">
+        <button class="accord-header">
+          <span>ACT <em>호주 수도 준주</em></span>
+          <svg class="accord-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="accord-body">
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Living</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="accom.html?state=act" class="accord-link accord-link--sub">쉐어 (Share)</a>
+            <a href="rent.html?state=act" class="accord-link accord-link--sub">렌트 (Rent)</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Work</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="jobs.html?state=act&amp;tab=post" class="accord-link accord-link--sub">직원 채용 (Post a Job)</a>
+            <a href="jobs.html?state=act&amp;tab=find" class="accord-link accord-link--sub">일 구하기 (Find a Job)</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Visa &amp; Migration</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="points.html" class="accord-link accord-link--sub">지역 법무팀</a>
+            <a href="points.html" class="accord-link accord-link--sub">유학팀</a>
+            <a href="points.html" class="accord-link accord-link--sub">기술심사 가채점</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Auto</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="auto.html?state=act&amp;category=rental" class="accord-link accord-link--sub">렌트카 (Rental)</a>
+            <a href="auto.html?state=act&amp;category=inspection" class="accord-link accord-link--sub">동행 인스펙션·긴급출동</a>
+            <a href="auto.html?state=act&amp;category=maintenance" class="accord-link accord-link--sub">정비소</a>
+            <a href="auto.html?state=act&amp;category=towing" class="accord-link accord-link--sub">견인</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="accord-item" data-group="nt">
+        <button class="accord-header">
+          <span>NT <em>노던 준주</em></span>
+          <svg class="accord-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="accord-body">
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Living</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="accom.html?state=nt" class="accord-link accord-link--sub">쉐어 (Share)</a>
+            <a href="rent.html?state=nt" class="accord-link accord-link--sub">렌트 (Rent)</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Work</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="jobs.html?state=nt&amp;tab=post" class="accord-link accord-link--sub">직원 채용 (Post a Job)</a>
+            <a href="jobs.html?state=nt&amp;tab=find" class="accord-link accord-link--sub">일 구하기 (Find a Job)</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Visa &amp; Migration</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="points.html" class="accord-link accord-link--sub">지역 법무팀</a>
+            <a href="points.html" class="accord-link accord-link--sub">유학팀</a>
+            <a href="points.html" class="accord-link accord-link--sub">기술심사 가채점</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Auto</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="auto.html?state=nt&amp;category=rental" class="accord-link accord-link--sub">렌트카 (Rental)</a>
+            <a href="auto.html?state=nt&amp;category=inspection" class="accord-link accord-link--sub">동행 인스펙션·긴급출동</a>
+            <a href="auto.html?state=nt&amp;category=maintenance" class="accord-link accord-link--sub">정비소</a>
+            <a href="auto.html?state=nt&amp;category=towing" class="accord-link accord-link--sub">견인</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="accord-foot-group">
+        <a href="emergency.html" class="accord-direct-link"><span>긴급연락처 <em>Emergency Contacts</em></span></a>
+        <a href="calculator.html" class="accord-direct-link"><span>환율 계산 비교 <em>FX Calculator</em></span></a>
+        <a href="contact.html" class="accord-direct-link"><span>광고문의 <em>Ad Inquiry</em></span></a>
+      </div>
+    </nav>
+    <div class="sidebar-footer-nav">
+      <a href="powerball.html" class="sidebar-exchange-link">🎱 파워볼 당첨 번호 →</a>
+    </div>
+  </aside>
+
+  <main class="page-container">
+
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">관리자 페이지</h1>
+        <p class="page-subtitle">KoAus(코오스) Admin · 공지·광고·서비스 게시글 등록 및 관리</p>
+      </div>
+      <a href="index.html" class="page-back">← 홈으로</a>
+    </div>
+
+    <!-- ── ① 공지사항 등록 ── -->
+    <section class="admin-section">
+      <h2 class="admin-section-title">① 공지사항 등록 (Notice)</h2>
+      <form class="admin-form" id="noticeForm">
+        <div class="admin-field"><label class="admin-label" for="noticeText">공지 텍스트</label><input class="admin-input" id="noticeText" type="text" placeholder="홈 상단 마퀴에 표시될 공지 내용" maxlength="200" /></div>
+        <div class="admin-actions"><button class="admin-submit" type="submit">공지 등록</button></div>
+        <p class="admin-note" id="noticeNote"></p>
+      </form>
+      <div class="admin-list" id="noticeList"></div>
+    </section>
+
+    <!-- ── ② 광고주 등록 ── -->
+    <section class="admin-section">
+      <h2 class="admin-section-title">② 광고주 등록 (Advertiser)</h2>
+      <form class="admin-form" id="advForm">
+        <div class="admin-row">
+          <div class="admin-field"><label class="admin-label" for="advName">광고주명</label><input class="admin-input" id="advName" type="text" maxlength="80" /></div>
+          <div class="admin-field"><label class="admin-label" for="advLink">랜딩 URL</label><input class="admin-input" id="advLink" type="url" placeholder="https://" /></div>
+        </div>
+        <div class="admin-field"><label class="admin-label" for="advMemo">메모</label><input class="admin-input" id="advMemo" type="text" maxlength="200" /></div>
+        <div class="admin-actions"><button class="admin-submit" type="submit">광고주 등록</button></div>
+        <p class="admin-note" id="advNote"></p>
+      </form>
+      <div class="admin-list" id="advList"></div>
+    </section>
+
+    <!-- ── ③ 서비스 게시글 등록 (Mechanics & Services) ── -->
+    <section class="admin-section">
+      <h2 class="admin-section-title">③ 서비스 게시글 등록 (Mechanics &amp; Services)</h2>
+      <form class="admin-form" id="serviceForm">
+        <div class="admin-row">
+          <div class="admin-field">
+            <label class="admin-label" for="svCat">카테고리</label>
+            <select class="admin-input" id="svCat">
+              <option value="maintenance">정비소/메카닉 (Maintenance)</option>
+              <option value="inspection">동행 인스펙션·긴급출동 (Inspection)</option>
+              <option value="rental">렌트카 (Rental)</option>
+              <option value="towing">견인 (Towing)</option>
+              <option value="accom">쉐어하우스 (Share House)</option>
+            </select>
+          </div>
+          <div class="admin-field">
+            <label class="admin-label" for="svState">노출 주 (State)</label>
+            <select class="admin-input" id="svState">
+              <option value="">전 지역</option>
+              <option value="nsw">NSW</option><option value="vic">VIC</option><option value="qld">QLD</option><option value="wa">WA</option>
+              <option value="sa">SA</option><option value="tas">TAS</option><option value="act">ACT</option><option value="nt">NT</option>
+            </select>
+          </div>
+        </div>
+        <div class="admin-field"><label class="admin-label" for="svTitle">업체명 / 글 제목<span class="admin-req">*</span></label><input class="admin-input" id="svTitle" type="text" maxlength="80" /></div>
+        <div class="admin-row">
+          <div class="admin-field"><label class="admin-label" for="svRegion">지역 / 위치</label><input class="admin-input" id="svRegion" type="text" placeholder="예: Strathfield NSW" maxlength="120" /></div>
+          <div class="admin-field"><label class="admin-label" for="svContact">연락처 / 연결 링크</label><input class="admin-input" id="svContact" type="text" placeholder="예: 0400 000 000 또는 https://open.kakao.com/..." maxlength="200" /></div>
+        </div>
+        <div class="admin-field"><label class="admin-label" for="svSummary">한 줄 소개 / 주요 서비스</label><input class="admin-input" id="svSummary" type="text" maxlength="120" placeholder="예: 수입차 전문 정비, 보증 수리 가능" /></div>
+        <div class="admin-field"><label class="admin-label" for="svBody">상세 내용</label><textarea class="admin-textarea" id="svBody" placeholder="경력·서비스 범위·가격대·운영시간 등"></textarea></div>
+        <div class="admin-field"><label class="admin-check"><input type="checkbox" id="svPremium" checked> 프리미엄 상단 고정 (Pinned)</label></div>
+        <div class="admin-actions"><button class="admin-submit" type="submit">게시글 등록하기</button></div>
+        <p class="admin-note" id="svNote"></p>
+      </form>
+
+      <h3 class="admin-list-title">등록된 관리자 게시글</h3>
+      <div class="admin-post-list" id="svList"></div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer"><p>KoAus &mdash; 호주 한인 포털 &nbsp;·&nbsp; 2026</p></footer>
+
+  <script>
+    // ── Sidebar ──
+    const hBtn = document.getElementById('hamburgerBtn');
+    const cBtn = document.getElementById('sidebarCloseBtn');
+    const sb   = document.getElementById('sidebar');
+    const ov   = document.getElementById('sidebarOverlay');
+    const openSb  = () => { sb.classList.add('open'); ov.classList.add('open'); document.body.style.overflow='hidden'; hBtn.setAttribute('aria-expanded','true'); };
+    const closeSb = () => { sb.classList.remove('open'); ov.classList.remove('open'); document.body.style.overflow=''; hBtn.setAttribute('aria-expanded','false'); };
+    hBtn.addEventListener('click', openSb);
+    cBtn.addEventListener('click', closeSb);
+    ov.addEventListener('click', closeSb);
+    document.addEventListener('keydown', e => e.key==='Escape' && closeSb());
+    // 초기 상태: 모든 아코디언 강제 닫힘 (펼침 방지)
+    document.querySelectorAll('.accord-item, .accord-subgroup').forEach(it => it.classList.remove('open'));
+    // Depth 2 (대분류) 토글 — 클릭 시 해당 소분류 컨테이너만 열고/닫음 (소분류 링크는 그대로 라우팅)
+    document.querySelectorAll('.sub-toggle').forEach(t => t.addEventListener('click', () => t.closest('.accord-subgroup').classList.toggle('open')));
+    document.querySelectorAll('.accord-header').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const item = btn.closest('.accord-item');
+        const willOpen = !item.classList.contains('open');
+        // 한 번에 하나만 — 열려있는 다른 카테고리는 닫기
+        document.querySelectorAll('.accord-item.open').forEach(o => { if (o !== item) o.classList.remove('open'); });
+        item.classList.toggle('open', willOpen);
+      });
+    });
+    function applyTheme(t) {
+      if (t === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+      else document.documentElement.removeAttribute('data-theme');
+      localStorage.setItem('koaus-theme', t);
+    }
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    if (themeToggleBtn) themeToggleBtn.addEventListener('click', () => applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'));
+    applyTheme(localStorage.getItem('koaus-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+
+    // ════════════════════════════════════════════════════════════════════
+    // KoAus(코오스) Admin — 공지/광고주/서비스 게시글 로컬 저장 + 관리 리스트
+    // ════════════════════════════════════════════════════════════════════
+    const KEYS = {
+      notice:  'koaus-admin-notices',
+      adv:     'koaus-admin-ads',
+      auto:    'koaus-auto-posts',     // 정비소/인스펙션/렌트카/견인 공용
+      accom:   'koaus-accom-posts',    // 쉐어하우스
+    };
+    const CAT_LABEL = {
+      maintenance: '정비소', inspection: '동행 인스펙션·긴급출동',
+      rental: '렌트카', towing: '견인', accom: '쉐어하우스',
+    };
+    const STATE_LABEL = { nsw:'NSW', vic:'VIC', qld:'QLD', wa:'WA', sa:'SA', tas:'TAS', act:'ACT', nt:'NT' };
+    const $ = id => document.getElementById(id);
+    const escHtml = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    const loadArr = k => { try { return JSON.parse(localStorage.getItem(k) || '[]'); } catch { return []; } };
+    const saveArr = (k, a) => localStorage.setItem(k, JSON.stringify(a));
+    const flash = (el, msg, ok) => { el.textContent = msg; el.className = 'admin-note ' + (ok ? 'admin-note--ok' : 'admin-note--err'); setTimeout(() => { el.textContent=''; el.className='admin-note'; }, 3000); };
+    const stamp = () => { const d = new Date(); const pad = n => String(n).padStart(2,'0'); return { date: `${pad(d.getMonth()+1)}/${pad(d.getDate())}`, time: `${pad(d.getHours())}:${pad(d.getMinutes())}` }; };
+
+    // ── ① 공지사항 ──
+    $('noticeForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const text = $('noticeText').value.trim();
+      if (!text) { flash($('noticeNote'), '공지 텍스트를 입력해 주세요.', false); return; }
+      const arr = loadArr(KEYS.notice);
+      arr.unshift({ id: Date.now(), text, ...stamp() });
+      saveArr(KEYS.notice, arr);
+      $('noticeText').value = '';
+      flash($('noticeNote'), '공지 등록 완료', true);
+      renderNotices();
+    });
+    function renderNotices() {
+      const arr = loadArr(KEYS.notice);
+      $('noticeList').innerHTML = arr.length ? arr.map(n =>
+        `<div class="admin-item"><span class="admin-item-main">${escHtml(n.text)}</span><span class="admin-item-meta">${n.date} ${n.time}</span><button class="admin-del" data-key="notice" data-id="${n.id}">삭제</button></div>`
+      ).join('') : '<div class="admin-empty">등록된 공지가 없습니다.</div>';
+    }
+
+    // ── ② 광고주 ──
+    $('advForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const name = $('advName').value.trim();
+      const link = $('advLink').value.trim();
+      if (!name) { flash($('advNote'), '광고주명을 입력해 주세요.', false); return; }
+      const arr = loadArr(KEYS.adv);
+      arr.unshift({ id: Date.now(), name, link, memo: $('advMemo').value.trim(), ...stamp() });
+      saveArr(KEYS.adv, arr);
+      $('advForm').reset();
+      flash($('advNote'), '광고주 등록 완료', true);
+      renderAds();
+    });
+    function renderAds() {
+      const arr = loadArr(KEYS.adv);
+      $('advList').innerHTML = arr.length ? arr.map(a =>
+        `<div class="admin-item">
+          <span class="admin-item-main">${escHtml(a.name)}${a.link ? ` · <a href="${escHtml(a.link)}" target="_blank" rel="noopener">${escHtml(a.link)}</a>` : ''}</span>
+          <span class="admin-item-meta">${escHtml(a.memo||'')} · ${a.date} ${a.time}</span>
+          <button class="admin-del" data-key="adv" data-id="${a.id}">삭제</button>
+        </div>`
+      ).join('') : '<div class="admin-empty">등록된 광고주가 없습니다.</div>';
+    }
+
+    // ── ③ 서비스 게시글 (정비소/인스펙션/렌트카/견인/쉐어하우스) ──
+    function storeKeyForCat(cat) { return cat === 'accom' ? KEYS.accom : KEYS.auto; }
+
+    $('serviceForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const cat   = $('svCat').value;
+      const title = $('svTitle').value.trim();
+      if (!title) { flash($('svNote'), '업체명/제목을 입력해 주세요.', false); return; }
+      const region  = $('svRegion').value.trim();
+      const contact = $('svContact').value.trim();
+      const summary = $('svSummary').value.trim();
+      const body    = $('svBody').value.trim();
+      const state   = $('svState').value;     // '' = 전 지역
+      const premium = $('svPremium').checked;
+      const post = {
+        id: Date.now(),
+        category: cat,
+        title,
+        region,
+        address: region,   // 지도 위치 폴백
+        tagline: summary,  // accom 카드에서 nameKo · tagline 으로 사용
+        summary,
+        body,
+        contact,
+        state,
+        author: '관리자',
+        adminPost: true,
+        isPremium: premium,
+        ...stamp(),
+        // accom 호환 (쉐어하우스 카테고리에서 모드/타입 기본값)
+        ...(cat === 'accom' ? { mode: 'offer', types: ['any'], roomTypes: [] } : {}),
+      };
+      const STORE = storeKeyForCat(cat);
+      const arr = loadArr(STORE);
+      arr.push(post);
+      saveArr(STORE, arr);
+      $('serviceForm').reset();
+      $('svPremium').checked = true;
+      flash($('svNote'), `[${CAT_LABEL[cat]}] 등록 완료 — 해당 카테고리 페이지에 즉시 노출`, true);
+      renderServiceList();
+    });
+
+    function renderServiceList() {
+      // 관리자 게시글만 모아 보여줌 (auto + accom 통합)
+      const items = [];
+      loadArr(KEYS.auto).forEach(p => { if (p.adminPost) items.push({ ...p, _store: 'auto' }); });
+      loadArr(KEYS.accom).forEach(p => { if (p.adminPost) items.push({ ...p, _store: 'accom', category: 'accom' }); });
+      items.sort((a, b) => b.id - a.id);
+      const html = items.length ? items.map(p => `
+        <div class="admin-post-row${p.isPremium ? ' is-pinned' : ''}">
+          <div class="admin-post-meta">
+            <span class="admin-post-cat">${escHtml(CAT_LABEL[p.category] || p.category || '-')}</span>
+            <span class="admin-post-state">${escHtml(p.state ? (STATE_LABEL[p.state] || p.state) : '전 지역')}</span>
+            ${p.isPremium ? '<span class="admin-post-pin">📌 PIN</span>' : ''}
+          </div>
+          <div class="admin-post-title">${escHtml(p.title || '-')}</div>
+          ${p.region   ? `<div class="admin-post-sub">📍 ${escHtml(p.region)}</div>`   : ''}
+          ${p.summary  ? `<div class="admin-post-sub">${escHtml(p.summary)}</div>`     : ''}
+          ${p.contact  ? `<div class="admin-post-sub">📞 ${escHtml(p.contact)}</div>`  : ''}
+          <div class="admin-post-actions">
+            <span class="admin-post-time">${p.date || ''} ${p.time || ''}</span>
+            <button class="admin-del" data-key="service" data-store="${p._store}" data-id="${p.id}">삭제</button>
+          </div>
+        </div>`).join('') : '<div class="admin-empty">등록된 관리자 게시글이 없습니다.</div>';
+      $('svList').innerHTML = html;
+    }
+
+    // ── 삭제 위임 (공지/광고주/서비스 공통) ──
+    document.addEventListener('click', e => {
+      const btn = e.target.closest('.admin-del'); if (!btn) return;
+      const key = btn.dataset.key;
+      const id  = String(btn.dataset.id);
+      if (!confirm('정말 삭제하시겠습니까?')) return;
+      if (key === 'notice') {
+        saveArr(KEYS.notice, loadArr(KEYS.notice).filter(x => String(x.id) !== id));
+        renderNotices();
+      } else if (key === 'adv') {
+        saveArr(KEYS.adv, loadArr(KEYS.adv).filter(x => String(x.id) !== id));
+        renderAds();
+      } else if (key === 'service') {
+        const STORE = btn.dataset.store === 'accom' ? KEYS.accom : KEYS.auto;
+        saveArr(STORE, loadArr(STORE).filter(x => String(x.id) !== id));
+        renderServiceList();
+      }
+    });
+
+    renderNotices();
+    renderAds();
+    renderServiceList();
+  </script>
+</body>
+</html>
