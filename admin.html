@@ -25,6 +25,9 @@
     gtag('config', 'G-9PHEG679SB');
   </script>
 
+  <!-- 전역 실시간 롤링 배너 (Firestore global_ticker 구독) -->
+  <script type="module" src="ticker.js"></script>
+
 </head>
 <body>
 
@@ -500,6 +503,22 @@
       <div class="admin-list" id="adsList"></div>
     </section>
 
+    <!-- ── ⑤ 글로벌 배너 관리 (전역 상단 롤링 배너 — global_ticker) ── -->
+    <section class="admin-section">
+      <h2 class="admin-section-title">⑤ 글로벌 배너 관리 (Global Ticker)</h2>
+      <p style="font-size:12px;color:var(--text-muted);margin:-8px 0 10px;line-height:1.55;">전체 페이지 상단에 [Notice | 광고주 | 내용] 형식으로 자동 회전 노출됩니다. 등록 즉시 라이브 반영, 2초 간격 자동 전환, 클릭 시 새 탭으로 이동.</p>
+      <form class="admin-form" id="tickerForm">
+        <div class="admin-row">
+          <div class="admin-field"><label class="admin-label" for="tkSponsor">광고주명<span class="admin-req">*</span></label><input class="admin-input" id="tkSponsor" type="text" placeholder="예: 데이브 정비소" maxlength="60" /></div>
+          <div class="admin-field"><label class="admin-label" for="tkLink">이동 링크 URL</label><input class="admin-input" id="tkLink" type="url" placeholder="https://광고주.com (선택)" /></div>
+        </div>
+        <div class="admin-field"><label class="admin-label" for="tkContent">광고/공지 내용<span class="admin-req">*</span></label><input class="admin-input" id="tkContent" type="text" placeholder="롤링 배너에 표시될 메시지" maxlength="200" /></div>
+        <div class="admin-actions"><button class="admin-submit" type="submit">배너 등록</button></div>
+        <p class="admin-note" id="tkNote"></p>
+      </form>
+      <div class="admin-list" id="tickerList"></div>
+    </section>
+
   </main>
 
   <footer class="site-footer"><p>KoAus &mdash; 호주 한인 포털 &nbsp;·&nbsp; 2026</p></footer>
@@ -791,6 +810,39 @@
         flash($('adNote'), errMsg, false);
       }
     });
+    // ── ⑤ 글로벌 배너 등록 (global_ticker 컬렉션) ──
+    $('tickerForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const sponsor = $('tkSponsor').value.trim();
+      const content = $('tkContent').value.trim();
+      const linkUrl = $('tkLink').value.trim();
+      if (!sponsor || !content) { flash($('tkNote'), '광고주명과 광고/공지 내용을 입력해 주세요.', false); return; }
+      const u = auth.currentUser;
+      if (!u) { flash($('tkNote'), '로그인이 필요합니다.', false); showLocked(); return; }
+      try {
+        await addDoc(collection(db, 'global_ticker'), {
+          sponsor, content, linkUrl,
+          uid: u.uid, email: u.email,
+          createdAt: serverTimestamp(),
+        });
+        $('tickerForm').reset();
+        flash($('tkNote'), '글로벌 배너 등록 완료 (전 페이지 실시간 반영)', true);
+        alert('성공적으로 등록되었습니다!');
+      } catch (err) {
+        console.error('[admin] global_ticker 저장 실패', err);
+        flash($('tkNote'), errMsg, false);
+      }
+    });
+    subscribeList('global_ticker', $('tickerList'), t =>
+      `<div class="admin-item">
+        <span class="admin-item-main">
+          <strong>${escHtml(t.sponsor || '-')}</strong> &nbsp;|&nbsp; ${escHtml(t.content || '')}
+          ${t.linkUrl ? ` <a href="${escHtml(t.linkUrl)}" target="_blank" rel="noopener" style="opacity:.7;">↗</a>` : ''}
+        </span>
+        <span class="admin-item-meta">${fmtDate(t.createdAt)}</span>
+        <button class="admin-del" data-col="global_ticker" data-id="${t.id}">삭제</button>
+      </div>`);
+
     subscribeList('ads', $('adsList'), a =>
       `<div class="admin-item">
         <span class="admin-item-main">
