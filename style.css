@@ -1757,6 +1757,48 @@ select.filter-mini-input {
 .pagination-btn.pagination-nav { font-weight: 700; letter-spacing: -0.02em; }
 .pagination-btn:disabled { opacity: 0.35; cursor: not-allowed; }
 .pagination-btn:disabled:hover { border-color: var(--border); color: inherit; }
+
+/* ── 법무·유학 파트너 디렉토리 (points.html — B&W) ── */
+.partner-cta {
+  display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;
+  background: var(--text-primary); color: var(--bg-card); border-radius: var(--r-lg);
+  padding: 22px 26px; margin: 14px 0 18px;
+}
+.partner-cta-text { flex: 1; min-width: 220px; }
+.partner-cta-title { font-size: 16px; font-weight: 900; letter-spacing: -0.01em; }
+.partner-cta-sub   { font-size: 12.5px; font-weight: 500; opacity: 0.8; margin-top: 4px; line-height: 1.5; }
+.partner-cta-btn {
+  flex-shrink: 0; padding: 12px 22px; background: var(--bg-card); color: var(--text-primary);
+  border-radius: 999px; font-size: 13.5px; font-weight: 800; text-decoration: none; transition: opacity 0.15s;
+}
+.partner-cta-btn:hover { opacity: 0.88; }
+
+.partner-board { display: grid; grid-template-columns: 1.1fr 1fr; gap: 14px; align-items: stretch; }
+.partner-map-wrap { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; min-height: 320px; }
+.partner-map { width: 100%; height: 100%; min-height: 320px; border: 0; display: block; filter: grayscale(0.4); }
+.partner-list { display: flex; flex-direction: column; gap: 10px; min-height: 320px; }
+
+.partner-card {
+  position: relative; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-md);
+  padding: 14px 16px; display: flex; flex-direction: column; gap: 4px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.partner-card:hover { border-color: var(--text-muted); box-shadow: 0 2px 12px rgba(0,0,0,0.05); }
+.partner-card.is-premium { border-width: 2px; border-color: var(--text-primary); }
+.partner-card-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.partner-card-name { font-size: 15px; font-weight: 800; color: var(--text-primary); }
+.partner-card-badge {
+  font-size: 10px; font-weight: 800; letter-spacing: 0.06em;
+  padding: 2px 8px; background: var(--text-primary); color: var(--bg-card); border-radius: 999px;
+}
+.partner-card-sub  { font-size: 13px; color: var(--text-secondary); font-weight: 600; line-height: 1.5; }
+.partner-card-meta { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+.partner-card-body { font-size: 12.5px; color: var(--text-secondary); line-height: 1.55; margin-top: 4px; }
+
+@media (max-width: 760px) {
+  .partner-board { grid-template-columns: 1fr; }
+  .partner-map-wrap, .partner-map { min-height: 240px; }
+}
 .accom-card-badges { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
 .accom-badge {
   font-size: 10px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase;
