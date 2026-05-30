@@ -8,20 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;800;900&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
-  <!-- 관리자 접근 비밀번호 게이트 (body 렌더 전 실행) -->
-  <script>
-    (function () {
-      if (sessionStorage.getItem('koaus-admin-authed') === '1') return;
-      const ADMIN_PW = '01_22shinKA@';
-      const input = window.prompt('관리자 비밀번호를 입력하세요.');
-      if (input === ADMIN_PW) {
-        sessionStorage.setItem('koaus-admin-authed', '1');
-      } else {
-        alert('접근 거부되었습니다.');
-        location.replace('index.html');
-      }
-    })();
-  </script>
+  <!-- 관리자 접근은 Firebase Auth 로그인(이메일/비밀번호) + 화이트리스트로 제어 (아래 module 스크립트 참조) -->
   <script>
     (function () {
       const saved = localStorage.getItem('koaus-theme');
@@ -399,14 +386,37 @@
     </div>
   </aside>
 
-  <main class="page-container">
+  <!-- ── 관리자 로그인 게이트 (Firebase Auth) ── -->
+  <div class="admin-gate" id="adminGate" style="display:none;">
+    <div class="admin-gate-card">
+      <h2 class="admin-gate-title">관리자 로그인</h2>
+      <p class="admin-gate-sub">KoAus(코오스) 운영자 계정으로만 접근할 수 있습니다.</p>
+      <div class="admin-gate-field">
+        <label class="admin-gate-label" for="adminGateEmail">이메일</label>
+        <input class="admin-gate-input" id="adminGateEmail" type="email" autocomplete="email" placeholder="admin@example.com" />
+      </div>
+      <div class="admin-gate-field">
+        <label class="admin-gate-label" for="adminGatePw">비밀번호</label>
+        <input class="admin-gate-input" id="adminGatePw" type="password" autocomplete="current-password" />
+      </div>
+      <p class="admin-gate-err" id="adminGateErr"></p>
+      <button class="admin-gate-submit" id="adminGateLogin" type="button">로그인</button>
+      <a class="admin-gate-cancel" href="index.html">← 홈으로 돌아가기</a>
+    </div>
+  </div>
+
+  <main class="page-container" id="adminMain" style="display:none;">
 
     <div class="page-header">
       <div>
         <h1 class="page-title">관리자 페이지</h1>
         <p class="page-subtitle">KoAus(코오스) Admin · 공지·광고·서비스 게시글 등록 및 관리</p>
       </div>
-      <a href="index.html" class="page-back">← 홈으로</a>
+      <div class="admin-header-actions">
+        <span class="admin-who" id="adminWho"></span>
+        <button type="button" class="admin-logout" id="adminLogout">로그아웃</button>
+        <a href="index.html" class="page-back">← 홈으로</a>
+      </div>
     </div>
 
     <!-- ── ① 공지사항 등록 ── -->
@@ -525,7 +535,7 @@
        ════════════════════════════════════════════════════════════════════ -->
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
-    import { getAuth, signInAnonymously, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
+    import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
     import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, query, orderBy, limit, serverTimestamp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
 
     const firebaseConfig = {
@@ -541,15 +551,78 @@
     const auth = getAuth(app);
     const db   = getFirestore(app);
 
-    // 익명 로그인 (보안 규칙: 인증된 사용자만 쓰기 허용)
-    try { await signInAnonymously(auth); } catch (e) { console.warn('[admin] 익명 로그인 실패', e); }
+    // ── 관리자 화이트리스트 (사전 가입된 운영자 계정만 통과) ──
+    const ADMIN_EMAILS = ['sinhang0122@gmail.com'];
+    const isAdmin = (user) => !!user && !!user.email && ADMIN_EMAILS.includes(user.email.toLowerCase());
+
+    const $ = id => document.getElementById(id);
+    const gateEl      = $('adminGate');
+    const mainEl      = $('adminMain');
+    const gateEmailEl = $('adminGateEmail');
+    const gatePwEl    = $('adminGatePw');
+    const gateErrEl   = $('adminGateErr');
+    const gateLoginEl = $('adminGateLogin');
+    const whoEl       = $('adminWho');
+    const logoutEl    = $('adminLogout');
+
+    function showLocked(msg) {
+      gateEl.style.display = 'flex';
+      mainEl.style.display = 'none';
+      if (msg) gateErrEl.textContent = msg;
+    }
+    function showAdmin(user) {
+      gateEl.style.display = 'none';
+      mainEl.style.display = '';
+      gateErrEl.textContent = '';
+      gatePwEl.value = '';
+      if (whoEl) whoEl.textContent = user.email;
+    }
+
+    gateLoginEl.addEventListener('click', async () => {
+      const email = gateEmailEl.value.trim();
+      const pw    = gatePwEl.value;
+      gateErrEl.textContent = '';
+      if (!email || !pw) { gateErrEl.textContent = '이메일과 비밀번호를 입력해 주세요.'; return; }
+      gateLoginEl.disabled = true;
+      try {
+        await signInWithEmailAndPassword(auth, email, pw);
+        // 다음 onAuthStateChanged에서 권한 검사 후 자동 진입
+      } catch (e) {
+        const msg = {
+          'auth/invalid-email':        '이메일 형식이 올바르지 않습니다.',
+          'auth/user-not-found':       '등록되지 않은 계정입니다.',
+          'auth/wrong-password':       '비밀번호가 일치하지 않습니다.',
+          'auth/invalid-credential':   '이메일 또는 비밀번호가 올바르지 않습니다.',
+          'auth/too-many-requests':    '잠시 후 다시 시도해 주세요.',
+          'auth/network-request-failed':'네트워크 오류입니다.',
+        }[e.code] || ('로그인 실패: ' + (e.code || e.message));
+        gateErrEl.textContent = msg;
+      } finally {
+        gateLoginEl.disabled = false;
+      }
+    });
+    gateEmailEl.addEventListener('keydown', e => { if (e.key === 'Enter') gateLoginEl.click(); });
+    gatePwEl.addEventListener('keydown',    e => { if (e.key === 'Enter') gateLoginEl.click(); });
+    logoutEl.addEventListener('click', () => signOut(auth));
+
+    // ── 인증 상태 가드: 관리자 이메일이 아닐 때 메인 UI 차단 ──
+    onAuthStateChanged(auth, user => {
+      if (isAdmin(user)) {
+        showAdmin(user);
+      } else if (user) {
+        // 로그인은 됐지만 화이트리스트 외 → 즉시 로그아웃 + 안내
+        const tried = user.email || '(unknown)';
+        signOut(auth).finally(() => showLocked(`관리자 권한이 없는 계정입니다: ${tried}`));
+      } else {
+        showLocked('');
+      }
+    });
 
     const CAT_LABEL = {
       maintenance: '정비소', inspection: '동행 인스펙션·긴급출동',
       rental: '렌트카', towing: '견인', accom: '쉐어하우스',
     };
     const STATE_LABEL = { nsw:'NSW', vic:'VIC', qld:'QLD', wa:'WA', sa:'SA', tas:'TAS', act:'ACT', nt:'NT' };
-    const $ = id => document.getElementById(id);
     const escHtml = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     const flash = (el, msg, ok) => { el.textContent = msg; el.className = 'admin-note ' + (ok ? 'admin-note--ok' : 'admin-note--err'); setTimeout(() => { el.textContent=''; el.className='admin-note'; }, 3500); };
     const fmtDate = ts => {
@@ -566,8 +639,10 @@
       const text = $('noticeText').value.trim();
       const link = ($('noticeLink') && $('noticeLink').value.trim()) || '';
       if (!text) { flash($('noticeNote'), '공지 텍스트를 입력해 주세요.', false); return; }
+      const u = auth.currentUser;
+      if (!u) { gateErrEl.textContent = '로그인이 필요합니다.'; showLocked(); return; }
       try {
-        await addDoc(collection(db, 'notices'), { text, link, createdAt: serverTimestamp() });
+        await addDoc(collection(db, 'notices'), { text, link, createdAt: serverTimestamp(), uid: u.uid, email: u.email });
         $('noticeText').value = '';
         if ($('noticeLink')) $('noticeLink').value = '';
         flash($('noticeNote'), '공지 등록 완료 (Firestore 실시간 반영)', true);
@@ -584,8 +659,10 @@
       const name = $('advName').value.trim();
       const link = $('advLink').value.trim();
       if (!name) { flash($('advNote'), '광고주명을 입력해 주세요.', false); return; }
+      const u = auth.currentUser;
+      if (!u) { gateErrEl.textContent = '로그인이 필요합니다.'; showLocked(); return; }
       try {
-        await addDoc(collection(db, 'sponsors'), { name, link, memo: $('advMemo').value.trim(), createdAt: serverTimestamp() });
+        await addDoc(collection(db, 'sponsors'), { name, link, memo: $('advMemo').value.trim(), createdAt: serverTimestamp(), uid: u.uid, email: u.email });
         $('advForm').reset();
         flash($('advNote'), '광고주 등록 완료 (Firestore 실시간 반영)', true);
         alert('성공적으로 등록되었습니다!');
@@ -601,6 +678,8 @@
       const cat = $('svCat').value;
       const title = $('svTitle').value.trim();
       if (!title) { flash($('svNote'), '업체명/제목을 입력해 주세요.', false); return; }
+      const u = auth.currentUser;
+      if (!u) { gateErrEl.textContent = '로그인이 필요합니다.'; showLocked(); return; }
       const payload = {
         category: cat, title,
         region:  $('svRegion').value.trim(),
@@ -611,6 +690,8 @@
         isPremium: $('svPremium').checked,
         adminPost: true,
         author: '관리자',
+        uid:   u.uid,
+        email: u.email,
         createdAt: serverTimestamp(),
       };
       try {
