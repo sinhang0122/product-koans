@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>차량 렌트 — KoAus</title>
+  <title>오늘의 환율 — KoAus</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;800;900&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet" />
@@ -380,8 +380,8 @@
 
     <div class="page-header">
       <div>
-        <h1 class="page-title">🚙 차량 렌트</h1>
-        <p class="page-subtitle">호주 한인 차량 단기 렌트 게시판 · 기간 / 가격 / 지역 정보를 함께 올려주세요</p>
+        <h1 class="page-title">💸 환율 계산기</h1>
+        <p class="page-subtitle">AUD ↔ KRW 주요 송금 앱 비교 · 방향별 한도/에러를 실시간 검증</p>
       </div>
       <a href="index.html" class="page-back">← 홈으로</a>
     </div>
@@ -396,60 +396,41 @@
       <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
     </div>
 
-    <div class="board-toolbar">
-      <span class="board-count" id="boardCount">총 0건</span>
-      <button class="board-write-btn" id="writeBtnOpen">+ 글쓰기</button>
+    <!-- 계산기: 보내는 통화/금액 ⇄ 받는 통화 -->
+    <div class="exchange-calc">
+      <div class="exchange-calc-row">
+        <div class="exchange-field">
+          <label class="exchange-field-label" for="fromAmount">보내는 금액</label>
+          <div class="exchange-field-inner">
+            <select class="exchange-cur-select" id="fromCur" aria-label="보내는 통화"></select>
+            <input class="exchange-amount-input" id="fromAmount" type="number" min="0" inputmode="decimal" placeholder="0" />
+          </div>
+        </div>
+        <button class="exchange-swap-btn" id="swapBtn" type="button" aria-label="방향 전환">⇅</button>
+        <div class="exchange-field">
+          <label class="exchange-field-label" for="toAmount">받는 금액 (Best 환율 기준 · 참고)</label>
+          <div class="exchange-field-inner">
+            <select class="exchange-cur-select" id="toCur" aria-label="받는 통화"></select>
+            <input class="exchange-amount-input" id="toAmount" type="text" readonly placeholder="0" />
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div class="post-list-table">
-      <div class="post-list-head">
-        <span class="post-num">번호</span>
-        <span class="post-title">제목</span>
-        <span class="post-author">작성자</span>
-        <span class="post-date">날짜</span>
-      </div>
-      <div id="postList"></div>
+    <!-- 어플 비교 리스트 -->
+    <div class="exchange-grid" id="exchangeGrid"></div>
+
+    <!-- 미지원 통화 쌍 안내 -->
+    <div class="exchange-fallback" id="fallbackBox" style="display:none;">
+      <div class="exchange-fallback-title">🛈 안내</div>
+      <p>현재 본 플랫폼은 <strong>호주 달러(AUD)와 한국 원화(KRW)</strong> 간의 송금 비교 서비스를 최우선으로 최적화하여 지원하고 있습니다. 다른 통화 쌍의 어플 비교 기능은 추후 업데이트 예정입니다.</p>
     </div>
+
+    <p class="exchange-updated" id="exchangeUpdated"></p>
+
+    <p class="exchange-disclaimer">※ 제공되는 환율은 단순 참고용 매매기준율이며, 실제 송금 시 업체별 적용 환율이 다를 수 있습니다. <em>(*어플기준입니다)</em></p>
 
   </main>
-
-  <div class="write-overlay" id="writeOverlay">
-    <div class="write-modal">
-      <div class="write-modal-title">✏️ 차량 렌트 글쓰기</div>
-      <div class="write-field">
-        <label class="write-label" for="wTitle">제목</label>
-        <input class="write-input" id="wTitle" type="text" placeholder="차종 · 렌트 기간 · 일/주 가격 등" maxlength="80" />
-      </div>
-      <div class="write-field">
-        <label class="write-label" for="wBody">내용</label>
-        <textarea class="write-textarea" id="wBody" placeholder="차종, 연식, 렌트 가능 기간, 가격, 픽업 위치(지역) 등 자세히 적어주세요"></textarea>
-      </div>
-      <div class="write-field">
-        <label class="write-label" for="wAuthor">작성자</label>
-        <input class="write-input" id="wAuthor" type="text" placeholder="닉네임 또는 이름" maxlength="20" />
-      </div>
-      <div class="write-field">
-        <label class="write-label" for="wContact">연락처 (선택)</label>
-        <input class="write-input" id="wContact" type="text" placeholder="이메일 또는 전화번호" maxlength="60" />
-      </div>
-      <div class="write-modal-actions">
-        <button class="write-cancel-btn" id="writeBtnCancel">취소</button>
-        <button class="write-submit-btn" id="writeBtnSubmit">등록하기</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="post-detail-overlay" id="detailOverlay">
-    <div class="post-detail-card">
-      <div class="post-detail-header">
-        <div class="post-detail-title" id="detailTitle"></div>
-        <button class="post-detail-close" id="detailClose">✕</button>
-      </div>
-      <div class="post-detail-meta" id="detailMeta"></div>
-      <div class="post-detail-body" id="detailBody"></div>
-      <div class="post-detail-contact" id="detailContact"></div>
-    </div>
-  </div>
 
   <footer class="site-footer"><p>KoAus &mdash; 호주 한인 포털 &nbsp;·&nbsp; 2026</p></footer>
 
@@ -486,70 +467,181 @@
     if (themeToggleBtn) themeToggleBtn.addEventListener('click', () => applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'));
     applyTheme(localStorage.getItem('koaus-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
 
-    const STORE_KEY = 'koaus-car-rent-posts';
-    const SEED_VERSION = '2026-05-empty';
-    const SAMPLES = [];
+    const today = new Date().toLocaleDateString('ko-KR', { year:'numeric', month:'2-digit', day:'2-digit', weekday:'short' });
+    document.getElementById('exchangeUpdated').textContent = `기준일: ${today} · 실시간 API 연동 준비 중`;
 
-    function escHtml(s) {
-      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    // ── 지원 통화 목록 (AUD↔KRW 외에는 fallback 안내) ──
+    const CURRENCIES = [
+      { code:'AUD', name:'호주 달러' },
+      { code:'KRW', name:'한국 원화' },
+      { code:'USD', name:'미국 달러' },
+      { code:'JPY', name:'일본 엔' },
+      { code:'EUR', name:'유로' },
+      { code:'GBP', name:'영국 파운드' },
+      { code:'CNY', name:'중국 위안' },
+      { code:'NZD', name:'뉴질랜드 달러' },
+    ];
+
+    // ── 어플 데이터 + 방향별 한도 (실제 어플 한도/에러 메시지 반영) ──
+    const APPS = [
+      {
+        key:'wirebarley', name:'WireBarley', nameKo:'와이어바일리', rate:1052,
+        fee:'A$1 이하', feeNote:'정액 수수료', tagline:'수수료 최저 수준',
+        url:'https://www.wirebarley.com',
+        limits: {
+          'AUD-KRW': { min:100,   max:6200,    currency:'AUD' },
+          'KRW-AUD': { min:10000, max:6750000, currency:'KRW' },
+        },
+      },
+      {
+        key:'wise', name:'Wise', nameKo:'와이즈', rate:1049,
+        fee:'0.45% + A$0.50', feeNote:'비율 수수료', tagline:'중간 환율 적용', best:true,
+        url:'https://wise.com',
+        limits: {
+          'AUD-KRW': { min:1, max:990000, currency:'AUD' },
+          // 821원 미만 입력 시 영어 에러 메시지 그대로 출력
+          'KRW-AUD': { min:821, currency:'KRW', minErrEn:'The smallest amount you can send is 2.17 AUD.' },
+        },
+      },
+      {
+        key:'sentbe', name:'Sentbe', nameKo:'센트비', rate:1044,
+        fee:'A$1.50~2.50', feeNote:'구간별 정액', tagline:'빠른 송금',
+        url:'https://www.sentbe.com',
+        limits: {
+          'AUD-KRW': { min:2,    max:2200,    currency:'AUD', maxNote:'1회 최대 (원화 200만 원 상당)' },
+          'KRW-AUD': { min:5000, max:2000000, currency:'KRW', dailyMaxNote:'1일 최대 1,000만 원' },
+        },
+      },
+      {
+        key:'remitree', name:'Remitree', nameKo:'레미트리', rate:1048,
+        fee:'프로모션 환율 적용', feeNote:'신규 첫 송금 혜택', tagline:'10~15분 송금',
+        url:'https://remitree.com',
+        badges:['⚡ 송금 10~15분', '🎁 신규 첫 $1,000 수수료 무료 & 프로모션 환율'],
+        limits: {
+          'AUD-KRW': { min:1, max:45000, currency:'AUD' },
+          'KRW-AUD': null,  // KRW→AUD 미지원
+        },
+        unsupportedMsg:'본 어플은 호주에서 한국으로의 송금만 지원합니다.',
+      },
+    ];
+
+    const fromCur  = document.getElementById('fromCur');
+    const toCur    = document.getElementById('toCur');
+    const fromAmt  = document.getElementById('fromAmount');
+    const toAmt    = document.getElementById('toAmount');
+    const swapBtn  = document.getElementById('swapBtn');
+    const grid     = document.getElementById('exchangeGrid');
+    const fallback = document.getElementById('fallbackBox');
+
+    function fillCurrencyOptions(sel, def) {
+      sel.innerHTML = CURRENCIES.map(c =>
+        `<option value="${c.code}"${c.code===def?' selected':''}>${c.code} · ${c.name}</option>`
+      ).join('');
     }
-    function loadPosts() {
-      const ver = localStorage.getItem(STORE_KEY + '-v');
-      const raw = localStorage.getItem(STORE_KEY);
-      if (raw && ver === SEED_VERSION) return JSON.parse(raw);
-      localStorage.setItem(STORE_KEY, JSON.stringify(SAMPLES));
-      localStorage.setItem(STORE_KEY + '-v', SEED_VERSION);
-      return SAMPLES;
+    fillCurrencyOptions(fromCur, 'AUD');
+    fillCurrencyOptions(toCur,   'KRW');
+
+    function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+    function fmtKRW(n){ return Math.round(n).toLocaleString('ko-KR') + ' 원'; }
+    function fmtAUD(n){ return 'A$' + (Math.round(n*100)/100).toLocaleString('en-AU', { minimumFractionDigits:2, maximumFractionDigits:2 }); }
+    function formatLimit(v, cur) {
+      if (cur === 'KRW') return Math.round(v).toLocaleString('ko-KR') + ' 원';
+      return 'A$' + Number(v).toLocaleString();
     }
-    function savePosts(posts) { localStorage.setItem(STORE_KEY, JSON.stringify(posts)); }
-    function renderPosts() {
-      const posts = loadPosts();
-      document.getElementById('boardCount').textContent = `총 ${posts.length}건`;
-      const list = document.getElementById('postList');
-      if (!posts.length) { list.innerHTML = '<div class="post-empty">등록된 글이 없습니다. 첫 글을 작성해보세요!</div>'; return; }
-      list.innerHTML = posts.slice().reverse().map((p, i) => `
-        <div class="post-row" data-id="${p.id}" style="cursor:pointer">
-          <span class="post-num">${posts.length - i}</span>
-          <span class="post-title" style="color:var(--text-primary);font-weight:500;">${escHtml(p.title)}</span>
-          <span class="post-author">${escHtml(p.author)}</span>
-          <span class="post-date">${p.date}</span>
-        </div>`).join('');
-      list.querySelectorAll('.post-row').forEach(row => row.addEventListener('click', () => openDetail(row.dataset.id)));
+    function pairKey() { return `${fromCur.value}-${toCur.value}`; }
+    function calcResult(amount, app, dir) {
+      if (!amount || amount <= 0) return null;
+      if (dir === 'AUD-KRW') return amount * app.rate;
+      if (dir === 'KRW-AUD') return amount / app.rate;
+      return null;
     }
-    function openDetail(id) {
-      const posts = loadPosts();
-      const p = posts.find(x => String(x.id) === String(id));
-      if (!p) return;
-      document.getElementById('detailTitle').textContent = p.title;
-      document.getElementById('detailMeta').innerHTML = `<span>${escHtml(p.author)}</span><span>${p.date}</span>`;
-      document.getElementById('detailBody').textContent = p.body;
-      const contactEl = document.getElementById('detailContact');
-      contactEl.innerHTML = p.contact ? `📞 연락처: <strong>${escHtml(p.contact)}</strong>` : '';
-      document.getElementById('detailOverlay').classList.add('open');
+    function validate(amount, lim) {
+      if (!amount || amount <= 0) return { ok:true };
+      if (amount < lim.min) {
+        if (lim.minErrEn) return { ok:false, err: lim.minErrEn };  // Wise: 영어 메시지 그대로
+        return { ok:false, err:`최소 ${formatLimit(lim.min, lim.currency)} 이상 입력하세요.` };
+      }
+      if (lim.max && amount > lim.max) return { ok:false, err:`최대 ${formatLimit(lim.max, lim.currency)}까지 송금 가능합니다.` };
+      return { ok:true };
     }
-    document.getElementById('detailClose').addEventListener('click', () => { document.getElementById('detailOverlay').classList.remove('open'); });
-    document.getElementById('detailOverlay').addEventListener('click', e => { if (e.target === e.currentTarget) document.getElementById('detailOverlay').classList.remove('open'); });
-    const writeOverlay = document.getElementById('writeOverlay');
-    document.getElementById('writeBtnOpen').addEventListener('click', () => writeOverlay.classList.add('open'));
-    document.getElementById('writeBtnCancel').addEventListener('click', () => writeOverlay.classList.remove('open'));
-    writeOverlay.addEventListener('click', e => { if (e.target === writeOverlay) writeOverlay.classList.remove('open'); });
-    document.getElementById('writeBtnSubmit').addEventListener('click', () => {
-      const title = document.getElementById('wTitle').value.trim();
-      const body  = document.getElementById('wBody').value.trim();
-      const author = document.getElementById('wAuthor').value.trim() || '익명';
-      const contact = document.getElementById('wContact').value.trim();
-      if (!title) { alert('제목을 입력해 주세요.'); return; }
-      if (!body)  { alert('내용을 입력해 주세요.'); return; }
-      const posts = loadPosts();
-      const d = new Date();
-      const date = `${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
-      posts.push({ id: Date.now(), title, body, author, contact, date });
-      savePosts(posts);
-      renderPosts();
-      writeOverlay.classList.remove('open');
-      ['wTitle','wBody','wAuthor','wContact'].forEach(id => { document.getElementById(id).value = ''; });
+
+    function renderCard(app, amount, dir) {
+      const lim = app.limits[dir];
+      // 방향 미지원 (예: Remitree KRW→AUD)
+      if (lim === null) {
+        return `
+          <div class="exchange-card is-disabled" data-app="${app.key}">
+            <div class="exchange-card-head">
+              <span class="exchange-app-name">${escHtml(app.name)}</span>
+              <span class="exchange-disabled-badge">미지원</span>
+            </div>
+            <div class="exchange-app-sub">${escHtml(app.nameKo)}</div>
+            <div class="exchange-unsupported">${escHtml(app.unsupportedMsg || '이 방향은 지원하지 않습니다.')}</div>
+          </div>`;
+      }
+      const v = validate(amount, lim);
+      const res = v.ok && amount > 0 ? calcResult(amount, app, dir) : null;
+      const resHtml = res !== null
+        ? `<div class="exchange-result-row">예상 수령액 <strong>${dir==='AUD-KRW' ? fmtKRW(res) : fmtAUD(res)}</strong></div>`
+        : '';
+      const rateHtml = dir === 'AUD-KRW'
+        ? `<span class="exchange-rate">${app.rate.toLocaleString()}</span><span class="exchange-unit">원 / AUD</span>`
+        : `<span class="exchange-rate">${(1/app.rate).toFixed(6)}</span><span class="exchange-unit">AUD / 원</span>`;
+      const limTxt = `한도: ${formatLimit(lim.min, lim.currency)} ~ ${lim.max ? formatLimit(lim.max, lim.currency) : '제한 없음'}`
+        + (lim.maxNote ? ` · ${lim.maxNote}` : '')
+        + (lim.dailyMaxNote ? ` · ${lim.dailyMaxNote}` : '');
+      const errHtml = (!v.ok && v.err) ? `<div class="exchange-err">${escHtml(v.err)}</div>` : '';
+      const badgesHtml = app.badges
+        ? `<div class="exchange-badges">${app.badges.map(b=>`<span class="exchange-badge">${escHtml(b)}</span>`).join('')}</div>`
+        : '';
+      return `
+        <div class="exchange-card${app.best ? ' exchange-card--best' : ''}" data-app="${app.key}">
+          <div class="exchange-card-head">
+            <span class="exchange-app-name">${escHtml(app.name)}</span>
+            ${app.best ? '<span class="exchange-best-badge">Best</span>' : ''}
+          </div>
+          <div class="exchange-app-sub">${escHtml(app.nameKo)} · ${escHtml(app.tagline)}</div>
+          <div class="exchange-rate-row">${rateHtml}</div>
+          ${resHtml}
+          <div class="exchange-lim-row">${escHtml(limTxt)}</div>
+          <div class="exchange-fee-row"><span>수수료 ${escHtml(app.fee)}</span><span>·</span><span>${escHtml(app.feeNote)}</span></div>
+          ${errHtml}
+          ${badgesHtml}
+          <a class="exchange-link" href="${app.url}" target="_blank" rel="noopener">앱 바로가기 →</a>
+        </div>`;
+    }
+
+    function render() {
+      const pair = pairKey();
+      const amt  = parseFloat(fromAmt.value) || 0;
+      const isSupported = (pair === 'AUD-KRW' || pair === 'KRW-AUD');
+
+      // AUD↔KRW 이외: 리스트 비우고 fallback 안내 노출
+      if (!isSupported) {
+        grid.innerHTML = '';
+        fallback.style.display = '';
+        toAmt.value = '';
+        return;
+      }
+      fallback.style.display = 'none';
+
+      // 받는 금액 표시 (Best 환율 기준)
+      const bestApp = APPS.find(a => a.best) || APPS[0];
+      const bestRes = calcResult(amt, bestApp, pair);
+      toAmt.value = bestRes ? (pair==='AUD-KRW' ? fmtKRW(bestRes) : fmtAUD(bestRes)) : '';
+
+      grid.innerHTML = APPS.map(app => renderCard(app, amt, pair)).join('');
+    }
+
+    [fromCur, toCur, fromAmt].forEach(el => { el.addEventListener('input', render); el.addEventListener('change', render); });
+    swapBtn.addEventListener('click', () => {
+      const a = fromCur.value, b = toCur.value;
+      fromCur.value = b; toCur.value = a;
+      fromAmt.value = '';
+      render();
     });
-    renderPosts();
+
+    render();
   </script>
 </body>
 </html>

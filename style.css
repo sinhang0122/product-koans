@@ -369,6 +369,31 @@ body {
   flex: 1;
 }
 
+/* 메인 단축 바 (날렵한 가로 리스트 바 — 2개 핵심 기능 바로가기) */
+.home-shortcuts {
+  display: flex; flex-direction: column; gap: 10px;
+  margin: 28px auto 8px; width: 100%;
+}
+.home-shortcut {
+  display: flex; align-items: center; justify-content: space-between; gap: 14px;
+  padding: 16px 22px; width: 100%;
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-md);
+  color: var(--text-primary); text-decoration: none;
+  transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+}
+.home-shortcut:hover {
+  border-color: var(--text-primary);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+.home-shortcut-label {
+  font-size: 16px; font-weight: 800; color: var(--text-primary); letter-spacing: -0.005em;
+}
+.home-shortcut-arrow {
+  flex-shrink: 0; font-size: 18px; font-weight: 700; color: var(--text-muted);
+  transition: color 0.15s, transform 0.15s;
+}
+.home-shortcut:hover .home-shortcut-arrow { color: var(--text-primary); transform: translateX(4px); }
+
 /* Notice Board */
 .notice-section {}
 .notice-row {
@@ -2016,3 +2041,32 @@ select.filter-mini-input {
   transition: opacity 0.15s;
 }
 .care-empty-btn:hover { opacity: 0.85; }
+
+/* ── 긴급연락처 페이지 (B&W) ── */
+.emerg-section { margin-bottom: 28px; }
+.emerg-section-title {
+  font-size: 14px; font-weight: 800; color: var(--text-primary);
+  letter-spacing: 0.02em; margin: 0 0 10px;
+  padding-bottom: 8px; border-bottom: 1px solid var(--border);
+}
+.emerg-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+}
+.emerg-card {
+  display: flex; flex-direction: column; gap: 4px;
+  padding: 16px 18px;
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-md);
+  color: var(--text-primary); text-decoration: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.emerg-card:hover { border-color: var(--text-primary); box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+.emerg-card--urgent { border-width: 2px; border-color: var(--text-primary); }
+.emerg-card-label { font-size: 12.5px; font-weight: 700; color: var(--text-secondary); }
+.emerg-card-num { font-size: 22px; font-weight: 900; color: var(--text-primary); font-variant-numeric: tabular-nums; letter-spacing: 0.01em; }
+.emerg-card-sub { font-size: 11.5px; color: var(--text-muted); line-height: 1.5; }
+.emerg-disclaimer {
+  font-size: 12px; color: var(--text-muted); text-align: center; line-height: 1.6;
+  margin-top: 18px; padding: 14px 16px; border-top: 1px solid var(--border);
+}
+.emerg-disclaimer strong { color: var(--text-primary); font-weight: 800; }

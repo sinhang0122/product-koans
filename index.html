@@ -368,12 +368,9 @@
         </div>
       </div>
       <div class="accord-foot-group">
-        <a href="care.html" class="accord-direct-link">
-          <span>Care <em>긴급 연락처</em></span>
-        </a>
-        <a href="contact.html" class="accord-direct-link">
-          <span>Ad Inquiry <em>광고 문의</em></span>
-        </a>
+        <a href="emergency.html" class="accord-direct-link"><span>긴급연락처 <em>Emergency Contacts</em></span></a>
+        <a href="calculator.html" class="accord-direct-link"><span>환율 계산 비교 <em>FX Calculator</em></span></a>
+        <a href="contact.html" class="accord-direct-link"><span>광고문의 <em>Ad Inquiry</em></span></a>
       </div>
     </nav>
     <div class="sidebar-footer-nav">
@@ -395,61 +392,16 @@
       </div>
     </section>
 
-    <section class="calc-section">
-      <div class="calc-header">
-        <h2 class="calc-title">환율 계산기</h2>
-      </div>
-      <div class="calc-input-row">
-        <div class="calc-amount-wrap">
-          <input class="calc-input" id="calcAmount" type="number" value="1" min="0" step="any" />
-        </div>
-        <select class="calc-select" id="calcFrom">
-          <option value="aud">AUD</option>
-          <option value="krw">KRW</option>
-          <option value="usd">USD</option>
-          <option value="eur">EUR</option>
-          <option value="jpy">JPY</option>
-          <option value="gbp">GBP</option>
-          <option value="cad">CAD</option>
-          <option value="nzd">NZD</option>
-          <option value="cny">CNY</option>
-          <option value="sgd">SGD</option>
-        </select>
-        <span class="calc-arrow">→</span>
-        <select class="calc-select" id="calcTo">
-          <option value="krw">KRW</option>
-          <option value="aud">AUD</option>
-          <option value="usd">USD</option>
-          <option value="eur">EUR</option>
-          <option value="jpy">JPY</option>
-          <option value="gbp">GBP</option>
-          <option value="cad">CAD</option>
-          <option value="nzd">NZD</option>
-          <option value="cny">CNY</option>
-          <option value="sgd">SGD</option>
-        </select>
-        <button class="calc-swap-btn" id="calcSwap" title="방향 바꾸기">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
-            <path d="M7 16V4m0 0L3 8m4-4 4 4"/><path d="M17 8v12m0 0 4-4m-4 4-4-4"/>
-          </svg>
-        </button>
-      </div>
-      <div class="calc-rate-row">
-        <label class="calc-rate-label" for="calcRate" id="calcRateLabel">기준 환율 (1 AUD)</label>
-        <div class="calc-rate-wrap">
-          <input class="calc-rate-input" id="calcRate" type="number" step="any" min="0" placeholder="기준 환율" />
-          <span class="calc-rate-unit" id="calcRateUnit">KRW</span>
-        </div>
-      </div>
-      <div class="calc-result-row">
-        <span class="calc-result" id="calcResult">—</span>
-        <span class="calc-result-currency" id="calcResultCurrency">KRW</span>
-      </div>
-      <div class="calc-meta">
-        <div class="calc-updated" id="calcUpdated">불러오는 중…</div>
-        <div class="calc-rate-info" id="calcRateInfo"></div>
-      </div>
-      <div class="calc-compare" id="calcCompare" style="display:none;"></div>
+    <!-- 메인 단축 바 (Care · 환율 계산 비교) -->
+    <section class="home-shortcuts" aria-label="핵심 기능 바로가기">
+      <a class="home-shortcut" href="care.html">
+        <span class="home-shortcut-label">Care</span>
+        <span class="home-shortcut-arrow" aria-hidden="true">→</span>
+      </a>
+      <a class="home-shortcut" href="calculator.html">
+        <span class="home-shortcut-label">환율 계산 비교</span>
+        <span class="home-shortcut-arrow" aria-hidden="true">→</span>
+      </a>
     </section>
 
     <div class="adsense-wrap">
