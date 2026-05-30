@@ -601,7 +601,11 @@
     });
     gateEmailEl.addEventListener('keydown', e => { if (e.key === 'Enter') gateLoginEl.click(); });
     gatePwEl.addEventListener('keydown',    e => { if (e.key === 'Enter') gateLoginEl.click(); });
-    logoutEl.addEventListener('click', () => signOut(auth));
+    logoutEl.addEventListener('click', async () => {
+      try { await signOut(auth); } catch (e) {}
+      alert('로그아웃 되었습니다.');
+      location.replace('index.html');
+    });
 
     // ── 인증 상태 가드 (Custom Claims 검증) ──
     // 로그인된 사용자의 ID 토큰에서 claims.admin === true 인 경우에만 UI 노출.
