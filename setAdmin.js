@@ -25,13 +25,21 @@ const SERVICE_ACCOUNT_FILE = './service-account-key.json';
 const ADMIN_EMAIL = 'sinhang0122@gmail.com';
 // ─────────────────────────────────────────────────────────────
 
-const keyPath = path.resolve(__dirname, SERVICE_ACCOUNT_FILE);
-if (!fs.existsSync(keyPath)) {
-  console.error('✗ 서비스 계정 키 파일을 찾을 수 없습니다:', keyPath);
-  console.error('  → setAdmin.js 의 SERVICE_ACCOUNT_FILE 값을 실제 파일명으로 수정하거나,');
-  console.error('    다운로드한 JSON 파일명을 "service-account-key.json" 으로 변경해 주세요.');
+// 명시된 파일이 있으면 우선 사용, 없으면 폴더에서 *-firebase-adminsdk-*.json 자동 감지
+function resolveKeyPath() {
+  const explicit = path.resolve(__dirname, SERVICE_ACCOUNT_FILE);
+  if (fs.existsSync(explicit)) return explicit;
+  const auto = fs.readdirSync(__dirname).find(n => /firebase-adminsdk.*\.json$/i.test(n));
+  return auto ? path.resolve(__dirname, auto) : null;
+}
+const keyPath = resolveKeyPath();
+if (!keyPath) {
+  console.error('✗ 서비스 계정 키 파일을 찾을 수 없습니다.');
+  console.error('  → service-account-key.json 또는 *-firebase-adminsdk-*.json 파일을');
+  console.error('    이 폴더에 배치해 주세요:', __dirname);
   process.exit(1);
 }
+console.log('• 서비스 계정 키 사용:', path.basename(keyPath));
 
 const serviceAccount = require(keyPath);
 admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
