@@ -2132,3 +2132,31 @@ select.filter-mini-input {
   margin-top: 18px; padding: 14px 16px; border-top: 1px solid var(--border);
 }
 .emerg-disclaimer strong { color: var(--text-primary); font-weight: 800; }
+
+/* ── 약관 / 개인정보처리방침 독립 페이지 (B&W) ── */
+.legal-page {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-lg);
+  padding: 32px 36px; max-width: 800px; margin: 0 auto;
+}
+.legal-article { padding: 18px 0; border-bottom: 1px solid var(--border); }
+.legal-article:last-of-type { border-bottom: none; }
+.legal-article-title {
+  font-size: 16px; font-weight: 800; color: var(--text-primary); letter-spacing: -0.005em;
+  margin: 0 0 10px;
+}
+.legal-article p {
+  font-size: 14px; font-weight: 400; color: var(--text-secondary); line-height: 1.75; letter-spacing: -0.003em;
+  margin: 0;
+}
+.legal-meta {
+  margin-top: 18px; padding-top: 18px; border-top: 1px dashed var(--border);
+  display: flex; flex-direction: column; gap: 6px;
+}
+.legal-meta-row { display: flex; gap: 12px; align-items: baseline; flex-wrap: wrap; }
+.legal-meta-label { font-size: 12px; font-weight: 700; color: var(--text-muted); letter-spacing: 0.04em; min-width: 180px; }
+.legal-meta-val { font-size: 13px; font-weight: 700; color: var(--text-primary); text-decoration: none; }
+a.legal-meta-val:hover { border-bottom: 1px solid var(--text-primary); }
+@media (max-width: 640px) {
+  .legal-page { padding: 24px 22px; }
+  .legal-meta-label { min-width: 0; }
+}
