@@ -475,21 +475,6 @@
         <ul class="addr-suggest" id="ffRegionSuggest"></ul>
       </div>
       <div class="filter-section">
-        <label class="filter-section-label" for="ffCategory">직종 Category</label>
-        <select class="write-input" id="ffCategory">
-          <option value="">전체</option>
-          <option value="food">카페·식당</option>
-          <option value="retail">마트·유통·판매</option>
-          <option value="office">사무·관리</option>
-          <option value="construction">건설·도장·청소</option>
-          <option value="logistics">물류·창고·배달</option>
-          <option value="it">IT·디자인</option>
-          <option value="education">교육·과외</option>
-          <option value="beauty">미용·뷰티</option>
-          <option value="other">기타</option>
-        </select>
-      </div>
-      <div class="filter-section">
         <label class="filter-section-label" for="ffEmpType">근무 형태 Type</label>
         <select class="write-input" id="ffEmpType">
           <option value="">전체</option>
@@ -1021,11 +1006,15 @@
         const date = `${pad(d.getMonth() + 1)}/${pad(d.getDate())}`;
         const time = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 
-        // ── 3) 주소 → 좌표 변환 (best-effort, 실패해도 글 저장은 진행) ──
+        // ── 3) 주소 → 좌표: Places Autocomplete 위젯이 미리 채워둔 dataset.lat/lng 우선,
+        //      직접 타이핑 후 선택 안 한 경우 geocode 로 폴백 (best-effort) ──
         let lat = 0, lng = 0;
-        if (address && typeof geocode === 'function') {
+        if (elAddress && elAddress.dataset.lat && elAddress.dataset.lng) {
+          lat = Number(elAddress.dataset.lat);
+          lng = Number(elAddress.dataset.lng);
+        } else if (address && typeof geocode === 'function') {
           try { const c = await geocode(address); lat = c.lat; lng = c.lng; }
-          catch (_) { /* 좌표 미수신 시 0,0 — 지도 마커 미표시될 뿐 */ }
+          catch (_) { /* 좌표 미수신 시 0,0 — 지도 마커 미표시 */ }
         }
 
         // ── 4) 로컬 저장 (Firestore 실패해도 본인 기기에는 보임) ──
@@ -1110,44 +1099,55 @@
       setTimeout(() => clearInterval(iv), 8000);
     }
 
-    // ── 주소 자동완성 (글쓰기 모달 wAddress / 필터 ffRegion 공통) ──
-    function wireAutocomplete(inputId, listId) {
+    // ── 주소 자동완성 (네이티브 Places Autocomplete 위젯) ──
+    // Google 이 자체 dropdown(.pac-container) 을 body 끝에 생성 → write-modal overflow 문제 회피.
+    // place_changed 이벤트에서 lat/lng 을 input.dataset 에 저장하고, wAddress 의 경우 즉시 지도 마커도 표시.
+    function wireAutocomplete(inputId) {
       const input = document.getElementById(inputId);
-      const list  = document.getElementById(listId);
-      if (!input || !list) { console.warn('[jobs:autocomplete] DOM 누락', inputId, listId); return; }
+      if (!input) { console.warn('[jobs:autocomplete] DOM 누락', inputId); return; }
       if (input.dataset.acWired === '1') return;
-      input.dataset.acWired = '1';
       loadMapScript();
-      const hide = () => list.classList.remove('show');
-      const show = () => list.classList.add('show');
-      const runQuery = (q) => {
-        if (!q) { hide(); return; }
-        if (!(window.google && google.maps && google.maps.places && google.maps.places.AutocompleteService)) {
-          console.warn('[jobs:autocomplete] Maps Places API 미준비 — 재시도 대기');
-          whenMapsReady(() => runQuery(q));
+      whenMapsReady(() => {
+        if (input.dataset.acWired === '1') return;
+        if (!(window.google && google.maps && google.maps.places && google.maps.places.Autocomplete)) {
+          console.warn('[jobs:autocomplete] Places API 미준비 — 재시도');
+          setTimeout(() => wireAutocomplete(inputId), 300);
           return;
         }
-        if (!acService) acService = new google.maps.places.AutocompleteService();
-        acService.getPlacePredictions(
-          { input: q, componentRestrictions: { country: 'au' }, types: ['geocode'] },
-          (preds, status) => {
-            if (status !== google.maps.places.PlacesServiceStatus.OK || !preds || !preds.length) { hide(); return; }
-            const top = preds.slice(0, 6);
-            list.innerHTML = top.map((p) =>
-              `<li data-desc="${p.description.replace(/"/g, '&quot;')}">${p.structured_formatting?.main_text || p.description}<span class="addr-sub">${p.structured_formatting?.secondary_text || ''}</span></li>`
-            ).join('');
-            show();
-          }
-        );
-      };
-      input.addEventListener('input', () => runQuery(input.value.trim()));
-      input.addEventListener('focus', () => { const q = input.value.trim(); if (q) runQuery(q); });
-      list.addEventListener('mousedown', e => {
-        const li = e.target.closest('li'); if (!li) return;
-        input.value = li.dataset.desc; hide();
-        input.dispatchEvent(new Event('change'));
+        const ac = new google.maps.places.Autocomplete(input, {
+          componentRestrictions: { country: 'au' },
+          fields: ['formatted_address', 'geometry', 'name'],
+          types: ['geocode'],
+        });
+        ac.addListener('place_changed', () => {
+          const p = ac.getPlace();
+          if (!p || !p.geometry || !p.geometry.location) return;
+          const lat = p.geometry.location.lat();
+          const lng = p.geometry.location.lng();
+          input.value = p.formatted_address || p.name || input.value;
+          input.dataset.lat = String(lat);
+          input.dataset.lng = String(lng);
+          // 글쓰기 모달의 wAddress 선택 시 — 지도에 미리보기 마커 즉시 표시
+          if (inputId === 'wAddress') showPendingMarker(lat, lng);
+        });
+        input.dataset.acWired = '1';
       });
-      input.addEventListener('blur', () => setTimeout(hide, 150));
+    }
+
+    // 글쓰기 중 선택한 주소의 미리보기 마커 (검정 점) — 등록 전에 위치 확인용
+    let pendingMarker = null;
+    function showPendingMarker(lat, lng) {
+      whenMapsReady(() => {
+        if (!jobsMap) { initMapJobs(); }
+        if (!jobsMap) return;
+        if (pendingMarker) pendingMarker.setMap(null);
+        pendingMarker = new google.maps.Marker({
+          position: { lat, lng }, map: jobsMap, title: '선택한 주소',
+          animation: google.maps.Animation.DROP,
+        });
+        jobsMap.panTo({ lat, lng });
+        jobsMap.setZoom(Math.max(14, jobsMap.getZoom() || 11));
+      });
     }
     function geocode(address) {
       return new Promise((resolve, reject) => {
@@ -1210,7 +1210,6 @@
         if (areaBounds) {
           if (!(p.lat && p.lng) || !areaBounds.contains({ lat:p.lat, lng:p.lng })) return false;
         }
-        if (activeFilter.category && p.category !== activeFilter.category) return false;
         if (activeFilter.empType  && p.empType  !== activeFilter.empType)  return false;
         if (activeFilter.minPay) {
           if (!p.payAmount || p.payAmount < activeFilter.minPay) return false;
@@ -1232,19 +1231,48 @@
     function renderRecentSearches() {
       const box = document.getElementById('recentSearches'); if (!box) return;
       const arr = loadRecent();
-      if (!arr.length) { box.innerHTML = '<div class="recent-empty" style="font-size:12px;color:var(--text-muted);">최근 검색 내역이 없습니다.</div>'; return; }
-      box.innerHTML = '<div style="font-size:12px;font-weight:700;color:var(--text-secondary);margin-bottom:6px;">최근 검색</div>' +
-        arr.map((s, i) =>
-          `<button class="recent-chip" data-idx="${i}" type="button" style="margin:2px 4px 2px 0;padding:4px 10px;font-size:12px;border:1px solid var(--border);border-radius:999px;background:var(--bg-card);cursor:pointer;">${[s.region, s.category, s.empType, s.minPay ? '$' + s.minPay + '+' : ''].filter(Boolean).join(' · ')}</button>`
-        ).join('');
+      if (!arr.length) {
+        box.innerHTML = '<div class="recent-empty" style="font-size:12px;color:var(--text-muted);">최근 검색 내역이 없습니다.</div>';
+        return;
+      }
+      // 헤더 + "모두 지우기" 전체 삭제 버튼
+      const header = `
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+          <span style="font-size:12px;font-weight:700;color:var(--text-secondary);">최근 검색</span>
+          <button class="recent-clear-all" type="button" style="font-size:11px;font-weight:700;color:var(--text-muted);background:transparent;border:1px solid var(--border);border-radius:4px;padding:3px 8px;cursor:pointer;">모두 지우기 ✕</button>
+        </div>`;
+      // 각 칩: 라벨 클릭 → 필터 채움 / ✕ 클릭 → 해당 항목만 삭제
+      const chips = arr.map((s, i) => {
+        const label = [s.region, s.empType, s.minPay ? '$' + s.minPay + '+' : ''].filter(Boolean).join(' · ') || '(빈 검색)';
+        return `<span class="recent-chip-wrap" data-idx="${i}" style="display:inline-flex;align-items:center;margin:2px 4px 2px 0;border:1px solid var(--border);border-radius:999px;background:var(--bg-card);overflow:hidden;">
+          <button class="recent-chip" type="button" style="padding:4px 4px 4px 10px;font-size:12px;background:transparent;border:none;cursor:pointer;color:var(--text-primary);">${label}</button>
+          <button class="recent-chip-x" type="button" aria-label="이 항목 삭제" style="padding:4px 8px 4px 4px;font-size:11px;background:transparent;border:none;cursor:pointer;color:var(--text-muted);">✕</button>
+        </span>`;
+      }).join('');
+      box.innerHTML = header + chips;
+      // 칩 라벨 클릭 → 필터 입력 채움
       box.querySelectorAll('.recent-chip').forEach(b => b.addEventListener('click', () => {
-        const s = arr[Number(b.dataset.idx)];
-        document.getElementById('ffRegion').value   = s.region   || '';
-        document.getElementById('ffCategory').value = s.category || '';
-        document.getElementById('ffEmpType').value  = s.empType  || '';
-        document.getElementById('ffPayUnit').value  = s.payUnit  || 'hour';
-        document.getElementById('ffMinPay').value   = s.minPay   || '';
+        const idx = Number(b.closest('.recent-chip-wrap').dataset.idx);
+        const s = arr[idx]; if (!s) return;
+        const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v || ''; };
+        setVal('ffRegion', s.region);
+        setVal('ffEmpType', s.empType);
+        setVal('ffPayUnit', s.payUnit || 'hour');
+        setVal('ffMinPay', s.minPay);
       }));
+      // 개별 ✕ → 해당 항목만 삭제
+      box.querySelectorAll('.recent-chip-x').forEach(b => b.addEventListener('click', () => {
+        const idx = Number(b.closest('.recent-chip-wrap').dataset.idx);
+        const next = loadRecent().filter((_, i) => i !== idx);
+        saveRecent(next);
+        renderRecentSearches();
+      }));
+      // 모두 지우기 ✕
+      const clearAll = box.querySelector('.recent-clear-all');
+      if (clearAll) clearAll.addEventListener('click', () => {
+        localStorage.removeItem(JOBS_SEARCH_KEY());
+        renderRecentSearches();
+      });
     }
     function openFilterModal() {
       if (!filterOverlay) return;
@@ -1258,25 +1286,24 @@
     if (filterOverlay) filterOverlay.addEventListener('click', e => { if (e.target === filterOverlay) closeFilterModal(); });
     safeOn('filterApplyBtn', 'click', async () => {
       const region   = document.getElementById('ffRegion').value.trim();
-      const category = document.getElementById('ffCategory').value;
       const empType  = document.getElementById('ffEmpType').value;
       const payUnit  = document.getElementById('ffPayUnit').value;
       const minPay   = Number(document.getElementById('ffMinPay').value) || 0;
-      activeFilter = { region, category, empType, payUnit, minPay };
+      activeFilter = { region, empType, payUnit, minPay };
       areaBounds = null;
       if (region) {
         try { const c = await geocode(region);
           if (jobsMap) jobsMap.panTo(c);
         } catch (_) {}
       }
-      addRecentSearch({ region, category, empType, payUnit, minPay });
+      addRecentSearch({ region, empType, payUnit, minPay });
       closeFilterModal();
       renderPosts();
       updateMapMarkers();
     });
     safeOn('filterResetBtn', 'click', () => {
       ['ffRegion','ffMinPay'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
-      ['ffCategory','ffEmpType'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+      const ffEt = document.getElementById('ffEmpType'); if (ffEt) ffEt.value = '';
       document.getElementById('ffPayUnit').value = 'hour';
       activeFilter = {}; areaBounds = null;
       renderPosts(); updateMapMarkers();
