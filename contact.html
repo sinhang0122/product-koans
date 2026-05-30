@@ -386,18 +386,19 @@
       <a href="index.html" class="page-back">← 홈으로</a>
     </div>
 
-    <form class="contact-form" id="contactForm" novalidate>
+    <form class="contact-form" id="contactForm" action="https://formspree.io/f/xojbbypv" method="POST" novalidate>
+      <input type="hidden" name="_subject" value="[KoAus 문의하기]" />
       <div class="contact-field">
         <label class="contact-label" for="cSubject">제목</label>
-        <input class="contact-input" id="cSubject" type="text" placeholder="문의 제목을 입력하세요" maxlength="100" />
+        <input class="contact-input" id="cSubject" name="subject" type="text" placeholder="문의 제목을 입력하세요" maxlength="100" />
       </div>
       <div class="contact-field">
         <label class="contact-label" for="cEmail">회신받을 이메일</label>
-        <input class="contact-input" id="cEmail" type="email" placeholder="reply@example.com" autocomplete="email" />
+        <input class="contact-input" id="cEmail" name="email" type="email" placeholder="reply@example.com" autocomplete="email" />
       </div>
       <div class="contact-field">
         <label class="contact-label" for="cBody">내용</label>
-        <textarea class="contact-textarea" id="cBody" placeholder="문의 내용을 자세히 적어주세요"></textarea>
+        <textarea class="contact-textarea" id="cBody" name="message" placeholder="문의 내용을 자세히 적어주세요"></textarea>
       </div>
       <div class="contact-actions">
         <button type="submit" class="contact-submit" id="cSubmit">제출하기</button>
@@ -444,12 +445,15 @@
     applyTheme(localStorage.getItem('koaus-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
 
     // ── Contact form ──
-    document.getElementById('contactForm').addEventListener('submit', e => {
+    // ── Formspree (KoAus 공식: xojbbypv) AJAX 제출 — 페이지 이탈 없이 전송 ──
+    document.getElementById('contactForm').addEventListener('submit', async e => {
       e.preventDefault();
+      const form    = e.target;
       const subject = document.getElementById('cSubject').value.trim();
       const email   = document.getElementById('cEmail').value.trim();
       const body    = document.getElementById('cBody').value.trim();
       const note    = document.getElementById('cNote');
+      const submit  = document.getElementById('cSubmit');
       const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
       if (!subject || !email || !body) {
         note.textContent = '제목 · 이메일 · 내용을 모두 입력해 주세요.';
@@ -461,18 +465,29 @@
         note.className = 'contact-note contact-note--err';
         return;
       }
-
-      // TODO: Firebase Trigger Email 확장 연동 지점
-      // Firestore 'mail' 컬렉션에 문서를 추가하면 자동 발송됩니다.
-      //   addDoc(collection(db, 'mail'), {
-      //     to: 'sinhang0122@gmail.com',
-      //     replyTo: email,
-      //     message: { subject: `[광고문의] ${subject}`, text: body },
-      //   });
-
-      note.textContent = '문의가 접수되었습니다. 빠른 시일 내에 회신드리겠습니다. (현재는 데모 — 메일 발송 연동 예정)';
-      note.className = 'contact-note contact-note--ok';
-      e.target.reset();
+      submit.disabled = true;
+      note.textContent = '전송 중…';
+      note.className = 'contact-note';
+      try {
+        const res = await fetch(form.action, {
+          method: 'POST',
+          body:   new FormData(form),
+          headers: { 'Accept': 'application/json' },
+        });
+        if (res.ok) {
+          note.textContent = '문의가 정상 접수되었습니다. 빠른 시일 내에 회신드리겠습니다.';
+          note.className = 'contact-note contact-note--ok';
+          form.reset();
+        } else {
+          note.textContent = '전송 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.';
+          note.className = 'contact-note contact-note--err';
+        }
+      } catch (err) {
+        note.textContent = '네트워크 오류로 전송에 실패했습니다.';
+        note.className = 'contact-note contact-note--err';
+      } finally {
+        submit.disabled = false;
+      }
     });
   </script>
 </body>
