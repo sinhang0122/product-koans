@@ -405,7 +405,7 @@ body {
   .home-shortcut-label { font-size: 20px; }
 }
 
-/* Notice Board */
+/* Notice Board · 기존 Notice 구역을 재활용한 글로벌 롤링 배너 */
 .notice-section {}
 .notice-row {
   display: flex; align-items: center; gap: 12px;
@@ -417,22 +417,32 @@ body {
   background: var(--accent); color: var(--accent-text);
   border-radius: 3px; flex-shrink: 0;
 }
-.notice-badge--sponsor { background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--text-primary); }
-.sponsor-row { padding-top: 0; margin-top: -4px; }
-.notice-marquee { flex: 1; min-width: 0; overflow: hidden; }
-.notice-track {
-  display: inline-flex; width: max-content;
-  animation: notice-scroll 28s linear infinite;
+/* 양옆 화살표 네비 */
+.ticker-nav {
+  background: transparent; border: none; color: var(--text-secondary);
+  font-size: 22px; line-height: 1; cursor: pointer;
+  padding: 2px 8px; border-radius: 4px; flex-shrink: 0;
+  font-family: 'Urbanist', sans-serif; font-weight: 700;
 }
-.notice-marquee:hover .notice-track { animation-play-state: paused; }
-.notice-text {
+.ticker-nav:hover { background: var(--bg-card); color: var(--text-primary); }
+.ticker-nav:active { transform: scale(0.92); }
+/* 회전 트랙 (단일 슬롯, JS 페이드 전환) */
+.ticker-track { flex: 1; min-width: 0; overflow: hidden; }
+.ticker-item {
+  display: inline-flex; align-items: center; gap: 10px;
+  width: 100%; white-space: nowrap;
   font-size: 14px; color: var(--text-secondary); line-height: 1.5;
-  white-space: nowrap; padding-right: 60px;
+  text-decoration: none;
+  opacity: 1; transition: opacity 0.15s ease;
 }
-@keyframes notice-scroll {
-  from { transform: translateX(0); }
-  to   { transform: translateX(-50%); }
-}
+.ticker-item.is-fading { opacity: 0; }
+.ticker-item[href] { cursor: pointer; }
+.ticker-item[href]:hover { color: var(--text-primary); }
+.ticker-sponsor { font-weight: 800; color: var(--text-primary); flex-shrink: 0; }
+.ticker-sep { color: var(--border); flex-shrink: 0; }
+.ticker-content { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.ticker-arrow { font-size: 11px; opacity: 0.7; flex-shrink: 0; }
+.ticker-arrow:empty { display: none; }
 
 /* Exchange Rate Calculator */
 .calc-section {

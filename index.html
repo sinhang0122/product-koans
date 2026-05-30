@@ -26,8 +26,6 @@
     gtag('config', 'G-9PHEG679SB');
   </script>
 
-  <!-- 전역 실시간 롤링 배너 (Firestore global_ticker 구독) -->
-  <script type="module" src="ticker.js"></script>
 
 </head>
 <body>
@@ -383,25 +381,20 @@
 
   <main class="home-main">
 
+    <!-- 전역 롤링 배너 (Firestore global_ticker — Notice | 광고주 | 광고내용 → 외부링크) -->
     <section class="notice-section">
-      <div class="notice-row">
+      <div class="notice-row ticker-row" id="tickerRow">
+        <button type="button" class="ticker-nav" id="tickerPrev" aria-label="이전 배너">‹</button>
         <span class="notice-badge">Notice</span>
-        <div class="notice-marquee">
-          <div class="notice-track" id="noticeTrack">
-            <span class="notice-text" id="noticeTextA">숙소 · 구인구직 · 차량 게시판을 자유롭게 이용해 보세요 · Google 계정으로 간편 로그인 가능합니다 · KoAus는 호주 한인 커뮤니티의 새로운 기준을 만들어 갑니다</span>
-            <span class="notice-text" id="noticeTextB" aria-hidden="true">숙소 · 구인구직 · 차량 게시판을 자유롭게 이용해 보세요 · Google 계정으로 간편 로그인 가능합니다 · KoAus는 호주 한인 커뮤니티의 새로운 기준을 만들어 갑니다</span>
-          </div>
+        <div class="ticker-track" id="tickerTrack">
+          <a class="ticker-item" id="tickerItem" rel="noopener noreferrer">
+            <span class="ticker-sponsor" id="tickerSponsor">KoAus</span>
+            <span class="ticker-sep">|</span>
+            <span class="ticker-content" id="tickerContent">숙소 · 구인구직 · 차량 게시판을 자유롭게 이용해 보세요 · Google 계정으로 간편 로그인 가능합니다</span>
+            <span class="ticker-arrow" id="tickerArrow" aria-hidden="true"></span>
+          </a>
         </div>
-      </div>
-      <!-- 광고주 마퀴 (Firestore sponsors 컬렉션 — 광고주 있을 때만 노출) -->
-      <div class="notice-row sponsor-row" id="sponsorRow" style="display:none;">
-        <span class="notice-badge notice-badge--sponsor">Sponsor</span>
-        <div class="notice-marquee">
-          <div class="notice-track" id="sponsorTrack">
-            <span class="notice-text" id="sponsorTextA"></span>
-            <span class="notice-text" id="sponsorTextB" aria-hidden="true"></span>
-          </div>
-        </div>
+        <button type="button" class="ticker-nav" id="tickerNext" aria-label="다음 배너">›</button>
       </div>
     </section>
 
@@ -605,7 +598,7 @@
 
   <script type="module" src="app.js"></script>
 
-  <!-- ── Firestore 실시간 공지/광고주 마퀴 ── -->
+  <!-- ── Firestore 실시간: global_ticker 롤링 배너 + ads 광고 슬롯 ── -->
   <script type="module">
     import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
     import { getFirestore, collection, query, orderBy, limit, onSnapshot } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
@@ -620,21 +613,80 @@
     };
     const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
     let db; try { db = getFirestore(app); } catch (e) { console.warn('[home] Firestore 미초기화', e); }
+
+    // ── 기존 Notice 구역을 재활용한 글로벌 롤링 배너 (3배 빠름·호버 일시정지·양옆 화살표) ──
+    const ROTATE_MS = 2000;          // 일반 마퀴 대비 3배 빠른 회전
+    const tickerItems = [];
+    let   tickerIdx   = 0;
+    let   tickerTimer = null;
+    let   tickerPaused = false;
+    const $row      = document.getElementById('tickerRow');
+    const $item     = document.getElementById('tickerItem');
+    const $sponsor  = document.getElementById('tickerSponsor');
+    const $content  = document.getElementById('tickerContent');
+    const $arrow    = document.getElementById('tickerArrow');
+    const $prev     = document.getElementById('tickerPrev');
+    const $next     = document.getElementById('tickerNext');
+
+    function tickerRender() {
+      if (!$item || !$sponsor || !$content || !$arrow) return;
+      const t = tickerItems[tickerIdx];
+      if (!t) return;
+      $item.classList.add('is-fading');
+      setTimeout(() => {
+        $sponsor.textContent = t.sponsor || 'KoAus';
+        $content.textContent = t.content || '';
+        if (t.linkUrl) {
+          $item.setAttribute('href', t.linkUrl);
+          $item.setAttribute('target', '_blank');
+          $arrow.textContent = '↗';
+        } else {
+          $item.removeAttribute('href');
+          $item.removeAttribute('target');
+          $arrow.textContent = '';
+        }
+        $item.classList.remove('is-fading');
+      }, 140);
+    }
+    function tickerStart() {
+      if (tickerTimer) { clearInterval(tickerTimer); tickerTimer = null; }
+      if (tickerItems.length <= 1) return;
+      tickerTimer = setInterval(() => {
+        if (tickerPaused) return;
+        tickerIdx = (tickerIdx + 1) % tickerItems.length;
+        tickerRender();
+      }, ROTATE_MS);
+    }
+    if ($row) {
+      $row.addEventListener('mouseenter', () => { tickerPaused = true;  });
+      $row.addEventListener('mouseleave', () => { tickerPaused = false; });
+    }
+    if ($prev) $prev.addEventListener('click', () => {
+      if (!tickerItems.length) return;
+      tickerIdx = (tickerIdx - 1 + tickerItems.length) % tickerItems.length;
+      tickerRender();
+    });
+    if ($next) $next.addEventListener('click', () => {
+      if (!tickerItems.length) return;
+      tickerIdx = (tickerIdx + 1) % tickerItems.length;
+      tickerRender();
+    });
+
     if (db) {
-      const SEP = '  ·  ';
-      // 공지사항 마퀴 (notices)
+      // global_ticker (admin.html ⑤ 글로벌 배너 관리)
       try {
-        onSnapshot(query(collection(db, 'notices'), orderBy('createdAt', 'desc'), limit(20)), snap => {
-          const items = snap.docs.map(d => d.data()).filter(n => n && n.text);
-          if (!items.length) return;  // 비어있으면 기본 문구 유지
-          const text = items.map(n => n.link ? `${n.text}` : n.text).join(SEP);
-          const a = document.getElementById('noticeTextA');
-          const b = document.getElementById('noticeTextB');
-          if (a) a.textContent = text;
-          if (b) b.textContent = text;
-        }, err => console.warn('[home] notices 구독 실패 — 기본 문구 유지', err));
+        onSnapshot(query(collection(db, 'global_ticker'), orderBy('createdAt', 'desc'), limit(20)), snap => {
+          const next = snap.docs.map(d => d.data()).filter(t => t && t.content);
+          tickerItems.length = 0;
+          next.forEach(t => tickerItems.push(t));
+          if (!tickerItems.length) return;  // 비어있으면 기본 문구 유지
+          if (tickerIdx >= tickerItems.length) tickerIdx = 0;
+          tickerRender();
+          tickerStart();
+        }, err => console.warn('[home] global_ticker 구독 실패 — 기본 문구 유지', err));
       } catch (e) {}
-      // 관리자 등록 광고 배너 (ads 컬렉션 — 가장 최근 활성 광고를 노출)
+
+      // 관리자 등록 광고 배너 (ads — 가장 최근 활성 광고 랜덤 노출)
       try {
         onSnapshot(query(collection(db, 'ads'), orderBy('createdAt', 'desc'), limit(20)), snap => {
           const items = snap.docs.map(d => d.data()).filter(a => a && a.image && a.link && a.active !== false);
@@ -642,26 +694,12 @@
           const img  = document.getElementById('adImg');
           if (!slot || !img) return;
           if (!items.length) { slot.style.display = 'none'; return; }
-          const pick = items[Math.floor(Math.random() * items.length)];  // 활성 광고 중 랜덤 노출
+          const pick = items[Math.floor(Math.random() * items.length)];
           img.src = pick.image;
           img.alt = pick.alt || '광고 배너';
           slot.href = pick.link;
           slot.style.display = '';
         }, err => console.warn('[home] ads 구독 실패', err));
-      } catch (e) {}
-      // 광고주 마퀴 (sponsors)
-      try {
-        onSnapshot(query(collection(db, 'sponsors'), orderBy('createdAt', 'desc'), limit(20)), snap => {
-          const items = snap.docs.map(d => d.data()).filter(s => s && s.name);
-          const row = document.getElementById('sponsorRow');
-          if (!items.length) { if (row) row.style.display = 'none'; return; }
-          const text = items.map(s => s.link ? `${s.name} →` : s.name).join(SEP);
-          const a = document.getElementById('sponsorTextA');
-          const b = document.getElementById('sponsorTextB');
-          if (a) a.textContent = text;
-          if (b) b.textContent = text;
-          if (row) row.style.display = '';
-        }, err => console.warn('[home] sponsors 구독 실패', err));
       } catch (e) {}
     }
   </script>
