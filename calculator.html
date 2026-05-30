@@ -415,10 +415,18 @@
           </div>
         </div>
       </div>
+      <!-- 기준 환율 입력창 (API 매매기준율 자동 채움 · 직접 입력으로 덮어쓰기) -->
+      <div class="exchange-base-row">
+        <label class="exchange-field-label" for="baseRateInput">기준 환율 (1 AUD = ? KRW)</label>
+        <div class="exchange-base-inner">
+          <input class="exchange-amount-input" id="baseRateInput" type="number" step="0.01" min="0" placeholder="API 매매기준율 자동 입력" />
+          <button class="exchange-base-reset" id="baseRateReset" type="button" title="API 매매기준율로 재설정">↻ API</button>
+        </div>
+      </div>
     </div>
 
-    <!-- 실시간 매매기준율 (API 수신 후 표시) -->
-    <div class="exchange-live-rate" id="liveRate">1 AUD = — KRW · 실시간 매매기준율 로딩 중…</div>
+    <!-- API 매매기준율 (API 수신 후 표시) -->
+    <div class="exchange-live-rate" id="liveRate">1 AUD = — KRW (API 매매기준율 로딩 중…)</div>
 
     <!-- 어플 비교 리스트 -->
     <div class="exchange-grid" id="exchangeGrid"></div>
@@ -429,9 +437,9 @@
       <p>현재 본 플랫폼은 <strong>호주 달러(AUD)와 한국 원화(KRW)</strong> 간의 송금 비교 서비스를 최우선으로 최적화하여 지원하고 있습니다. 다른 통화 쌍의 어플 비교 기능은 추후 업데이트 예정입니다.</p>
     </div>
 
-    <p class="exchange-updated" id="exchangeUpdated">기준일: 2026. 05. 30. (토) · 실시간 무료 API 연동 완료</p>
+    <p class="exchange-updated" id="exchangeUpdated">기준일: 2026. 05. 30. (토) 매매기준율</p>
 
-    <p class="exchange-disclaimer">※ 제공되는 환율은 단순 참고용 매매기준율이며, 실제 송금 시 업체별 적용 환율이 다를 수 있습니다 <em>(*어플 기준)</em></p>
+    <p class="exchange-disclaimer">※ 무료 API는 하루 1번만 갱신됩니다.<br>각 어플을 비교하며 비교한 날 기준 정확한 차이를 입력했지만 각 어플이 기준으로 삼는 매매기준율이 상이하고 실시간으로 조금씩 다르므로, 기준 금액 입력 시 약 ±0.4불 내외의 오차가 발생할 수 있습니다.<br>※ 제공되는 환율은 단순 참고용 매매기준율이며, 실제 송금 시 업체별 적용 환율이 다를 수 있습니다 <em>(*어플 기준)</em> 또 프로모션, 이벤트 등을 통해 수수료 발생이 하지 않을 수도 있습니다</p>
 
   </main>
 
@@ -549,10 +557,37 @@
       return 'A$' + Number(v).toLocaleString();
     }
     function pairKey() { return `${fromCur.value}-${toCur.value}`; }
+    // ── 기준 환율 상태 (API 자동 채움 + 사용자 직접 입력으로 덮어쓰기) ──
+    let apiBaseRate = null;        // API 매매기준율 (재설정 버튼용)
+    let baseRate    = APPS[0].rate; // 현재 적용되는 기준 환율 (1 AUD = baseRate KRW)
+    let sentbeSpeed = 'standard';  // 센트비 송금 방식
+    // 센트비 송금 방식별 수수료 (스탠다드 A$2.30~3.50 → 약 2.90 · 익스프레스 A$4.60~7.00 → 약 5.80)
+    const SENTBE_FEE = { standard: 2.90, express: 5.80 };
+    const WIREBARLEY_FEE_AUD = 10;
+    const RATE_OFFSET_KRW    = 9.5;  // Sentbe·리미트리: 기준 환율에서 9.5원 차감
+    // 어플별 적용 환율 (1 AUD 당 KRW)
+    function effectiveRate(app) {
+      if (app.key === 'wirebarley') return baseRate;
+      if (app.key === 'wise')       return baseRate;
+      if (app.key === 'sentbe')     return baseRate - RATE_OFFSET_KRW;
+      if (app.key === 'remitree')   return baseRate - RATE_OFFSET_KRW;
+      return baseRate;
+    }
     function calcResult(amount, app, dir) {
       if (!amount || amount <= 0) return null;
-      if (dir === 'AUD-KRW') return amount * app.rate;
-      if (dir === 'KRW-AUD') return amount / app.rate;
+      const rate = effectiveRate(app);
+      if (dir === 'AUD-KRW') {
+        // 와이어바일리: 입력 금액에서 자동 -10 AUD 차감 후 적용 환율을 곱함
+        if (app.key === 'wirebarley') return Math.max(0, amount - WIREBARLEY_FEE_AUD) * rate;
+        // 와이즈: 기준 환율과 100% 동일하게, 추가 차감/가산 없이
+        if (app.key === 'wise')       return amount * rate;
+        // 센트비: 적용 환율(-9.5원) × (입력금액 − 송금방식별 수수료)
+        if (app.key === 'sentbe')     return Math.max(0, amount - SENTBE_FEE[sentbeSpeed]) * rate;
+        // 리미트리: 적용 환율(-9.5원) × 입력금액 (별도 수수료 차감 없음)
+        if (app.key === 'remitree')   return amount * rate;
+        return amount * rate;
+      }
+      if (dir === 'KRW-AUD') return amount / rate;
       return null;
     }
     function validate(amount, lim) {
@@ -567,11 +602,13 @@
 
     // 어플별 동적 수수료 (WireBarley AUD→KRW 구간별)
     function computeFee(app, amount, dir) {
-      if (app.key === 'wirebarley' && dir === 'AUD-KRW' && amount >= 100) {
-        if (amount <= 999)  return { text:'A$1.49', note:'100~999 AUD 구간' };
-        if (amount <= 2999) return { text:'A$1.29', note:'1,000~2,999 AUD 구간' };
-        if (amount <= 6200) return { text:'A$0.99', note:'3,000~6,200 AUD 구간' };
+      if (dir !== 'AUD-KRW') return { text: app.fee, note: app.feeNote };
+      if (app.key === 'wirebarley') return { text: 'A$10.00', note: '정액 자동 차감' };
+      if (app.key === 'sentbe') {
+        const f = SENTBE_FEE[sentbeSpeed];
+        return { text: 'A$' + f.toFixed(2), note: sentbeSpeed === 'express' ? '익스프레스 송금' : '스탠다드 송금' };
       }
+      // Wise / Remitree: 적용 환율 자체에 차이가 반영되므로 별도 수수료 차감 없음 (정보 표시만)
       return { text: app.fee, note: app.feeNote };
     }
 
@@ -597,9 +634,20 @@
       const resHtml = res !== null
         ? `<div class="exchange-result-row">예상 수령액 <strong>${dir==='AUD-KRW' ? fmtKRW(res) : fmtAUD(res)}</strong></div>`
         : '';
+      const r = effectiveRate(app);
       const rateHtml = dir === 'AUD-KRW'
-        ? `<span class="exchange-rate">${app.rate.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span><span class="exchange-unit">원 / AUD</span>`
-        : `<span class="exchange-rate">${(1/app.rate).toFixed(6)}</span><span class="exchange-unit">AUD / 원</span>`;
+        ? `<span class="exchange-rate">${r.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span><span class="exchange-unit">원 / AUD</span>`
+        : `<span class="exchange-rate">${(1000/r).toFixed(2)}</span><span class="exchange-unit">AUD / 1,000원</span>`;
+      // 센트비 송금 방식 셀렉트 (AUD→KRW 한정)
+      const sentbeSpeedHtml = (app.key === 'sentbe' && dir === 'AUD-KRW')
+        ? `<div class="exchange-speed">
+             <label class="exchange-speed-label" for="sentbeSpeedSel">송금 방식</label>
+             <select class="exchange-speed-select" id="sentbeSpeedSel">
+               <option value="standard"${sentbeSpeed==='standard'?' selected':''}>스탠다드 (수수료 A$2.30~3.50)</option>
+               <option value="express"${sentbeSpeed==='express'?' selected':''}>익스프레스 (수수료 A$4.60~7.00)</option>
+             </select>
+           </div>`
+        : '';
       const errHtml = (!v.ok && v.err) ? `<div class="exchange-err">${escHtml(v.err)}</div>` : '';
       const fee = computeFee(app, amount, dir);
       const benefitsHtml = app.benefits
@@ -615,6 +663,7 @@
           <div class="exchange-rate-row">${rateHtml}</div>
           ${resHtml}
           <div class="exchange-fee-row"><span>수수료 ${escHtml(fee.text)}</span><span>·</span><span>${escHtml(fee.note)}</span></div>
+          ${sentbeSpeedHtml}
           ${errHtml}
           ${benefitsHtml}
           <a class="exchange-link" href="${app.url}" target="_blank" rel="noopener">앱 바로가기 →</a>
@@ -641,7 +690,25 @@
       toAmt.value = bestRes ? (pair==='AUD-KRW' ? fmtKRW(bestRes) : fmtAUD(bestRes)) : '';
 
       grid.innerHTML = APPS.map(app => renderCard(app, amt, pair)).join('');
+      // 센트비 송금 방식 셀렉트 — 매 렌더마다 재바인딩
+      const sentbeSel = document.getElementById('sentbeSpeedSel');
+      if (sentbeSel) sentbeSel.addEventListener('change', e => { sentbeSpeed = e.target.value; render(); });
     }
+
+    // 기준 환율 직접 입력 — 즉시 baseRate 덮어쓰고 재계산
+    const baseRateInput = document.getElementById('baseRateInput');
+    const baseRateReset = document.getElementById('baseRateReset');
+    baseRateInput.addEventListener('input', () => {
+      const v = parseFloat(baseRateInput.value);
+      baseRate = (v > 0) ? v : (apiBaseRate || APPS[0].rate);
+      render();
+    });
+    baseRateReset.addEventListener('click', () => {
+      if (!apiBaseRate) return;
+      baseRate = apiBaseRate;
+      baseRateInput.value = apiBaseRate.toFixed(2);
+      render();
+    });
 
     [fromCur, toCur, fromAmt].forEach(el => { el.addEventListener('input', render); el.addEventListener('change', render); });
     swapBtn.addEventListener('click', () => {
@@ -651,12 +718,14 @@
       render();
     });
 
-    // ── 무료 환율 API (open.er-api.com) — AUD 기준 KRW 실시간 매매기준율 ──
+    // ── 무료 환율 API (open.er-api.com) — AUD 기준 KRW API 매매기준율 ──
     async function fetchLiveRate() {
       try {
         const res  = await fetch('https://open.er-api.com/v6/latest/AUD', { cache: 'no-store' });
         const data = await res.json();
-        if (data && data.result === 'success' && data.rates && data.rates.KRW) return Number(data.rates.KRW);
+        if (data && data.result === 'success' && data.rates && data.rates.KRW) {
+          return { rate: Number(data.rates.KRW), timeUtc: data.time_last_update_utc || null };
+        }
       } catch (e) {}
       return null;
     }
@@ -664,22 +733,51 @@
       const el = document.getElementById('liveRate');
       if (!el) return;
       if (ok && rate) {
-        el.textContent = `1 AUD = ${rate.toLocaleString(undefined, { maximumFractionDigits: 2 })} KRW · 실시간 매매기준율 (open.er-api.com)`;
+        el.textContent = `1 AUD = ${rate.toLocaleString(undefined, { maximumFractionDigits: 2 })} KRW (API 매매기준율 · open.er-api.com)`;
         el.classList.add('is-live');
       } else {
-        el.textContent = '1 AUD = ' + (APPS[0].rate || '—').toLocaleString() + ' KRW · 폴백 환율 (API 미수신)';
+        el.textContent = '1 AUD = ' + (APPS[0].rate || '—').toLocaleString() + ' KRW (폴백 환율 · API 미수신)';
         el.classList.remove('is-live');
       }
     }
+    // API 타임스탬프 → "2026. 05. 30. (토) 오전 12:00" 한글 포맷 (브라우저 로컬 TZ)
+    function formatKoreanDateTime(d) {
+      const yy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      const W  = ['일','월','화','수','목','금','토'][d.getDay()];
+      let h = d.getHours();
+      const min = String(d.getMinutes()).padStart(2, '0');
+      const ampm = h < 12 ? '오전' : '오후';
+      h = h % 12; if (h === 0) h = 12;
+      return `${yy}. ${mm}. ${dd}. (${W}) ${ampm} ${h}:${min}`;
+    }
+    function setUpdatedFromApi(timeUtc) {
+      const el = document.getElementById('exchangeUpdated');
+      if (!el) return;
+      if (timeUtc) {
+        const dt = new Date(timeUtc);
+        if (!isNaN(dt.getTime())) {
+          el.textContent = `기준일: ${formatKoreanDateTime(dt)} 매매기준율`;
+          return;
+        }
+      }
+      el.textContent = '기준일: 2026. 05. 30. (토) 매매기준율';  // 폴백
+    }
     async function initRates() {
-      render();  // 폴백(하드코딩) 환율로 1차 즉시 렌더
+      render();  // 폴백(하드코딩) 기준 환율로 1차 즉시 렌더
       setLiveRateBadge(APPS[0].rate, false);
-      const live = await fetchLiveRate();
-      if (!live) { setLiveRateBadge(null, false); return; }  // 실패 시 폴백 유지
-      // 각 어플별 스프레드 (Mock — 추후 실 데이터로 교체)
-      const SPREAD = { wirebarley: 1.000, wise: 1.0008, sentbe: 0.996, remitree: 0.9995 };
-      APPS.forEach(a => { if (SPREAD[a.key]) a.rate = +(live * SPREAD[a.key]).toFixed(2); });
-      setLiveRateBadge(live, true);
+      const result = await fetchLiveRate();
+      if (!result) { setLiveRateBadge(null, false); return; }  // 실패 시 폴백 유지
+      // API 수신: baseRate를 API 매매기준율로 갱신 (사용자가 직접 입력하지 않은 경우만)
+      apiBaseRate = +result.rate.toFixed(2);
+      const userTouched = baseRateInput.value !== '' && parseFloat(baseRateInput.value) > 0;
+      if (!userTouched) {
+        baseRate = apiBaseRate;
+        baseRateInput.value = apiBaseRate.toFixed(2);
+      }
+      setLiveRateBadge(result.rate, true);
+      setUpdatedFromApi(result.timeUtc);
       render();
     }
     initRates();

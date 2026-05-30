@@ -537,6 +537,26 @@ body {
   font-size: 13px; font-weight: 700; color: var(--text-secondary); text-align: center; letter-spacing: -0.005em;
 }
 .exchange-live-rate.is-live { background: var(--text-primary); color: var(--bg-card); border-color: var(--text-primary); font-weight: 800; }
+
+/* 기준 환율 입력 행 (API 매매기준율 자동 채움 + 사용자 덮어쓰기) */
+.exchange-base-row { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border); }
+.exchange-base-inner { display: flex; gap: 8px; align-items: stretch; }
+.exchange-base-inner .exchange-amount-input { flex: 1; min-width: 0; text-align: right; font-size: 15px; }
+.exchange-base-reset {
+  flex-shrink: 0; padding: 10px 14px;
+  background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--r-sm);
+  font-family: var(--font); font-size: 12px; font-weight: 800; color: var(--text-primary); cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.exchange-base-reset:hover { border-color: var(--text-primary); background: var(--bg-elevated); }
+
+/* 센트비 송금 방식 셀렉트 */
+.exchange-speed { display: flex; flex-direction: column; gap: 4px; }
+.exchange-speed-label { font-size: 11px; font-weight: 700; color: var(--text-muted); letter-spacing: 0.04em; }
+.exchange-speed-select {
+  width: 100%; padding: 6px 8px; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--r-sm);
+  font-family: var(--font); font-size: 11.5px; font-weight: 700; color: var(--text-primary); cursor: pointer;
+}
 .exchange-card {
   background: var(--bg-card); border: 1px solid var(--border);
   border-radius: var(--r-lg); padding: 22px 20px;
