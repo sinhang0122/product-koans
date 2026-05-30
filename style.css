@@ -1452,29 +1452,39 @@ select.write-input {
 }
 .accom-tab {
   flex: 1; background: none; border: none;
-  /* 위쪽(top border)과 아래쪽(bottom border + 활성 보더 3px) 사이의 진짜 정중앙
-     padding-top 17px = padding-bottom 14px + transparent border-bottom 3px → 위·아래 여백 17px 균등 */
-  padding: 17px 20px 14px;
+  /* 한글 폰트 ghost whitespace 영향을 최소화하기 위해 line-height: 1, 텍스트는
+     .tab-text 래퍼로 그룹화하여 외부 button 이 그것을 flex 정중앙에 둠.
+     padding-top 16px = padding-bottom 13px + transparent border-bottom 3px → 위·아래 16px 균등 */
+  padding: 16px 20px 13px;
   border-bottom: 3px solid transparent; margin-bottom: -2px;
-  display: inline-flex; flex-direction: column; align-items: center; justify-content: center;
-  font-family: var(--font); font-size: 15px; font-weight: 700; line-height: 1.2;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font); font-size: 15px; font-weight: 700; line-height: 1;
   color: var(--text-muted); cursor: pointer; text-align: center; transition: color 0.15s;
 }
+/* 한글 메인 + 영문 서브를 단단히 묶는 래퍼 — Bounding Box / margin 초기화 */
+.accom-tab .tab-text {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 3px; margin: 0; padding: 0; line-height: 1;
+}
+.accom-tab .tab-text em,
 .accom-tab em {
-  display: block; font-style: normal; font-size: 11px; font-weight: 500;
-  color: var(--text-muted); margin-top: 2px; letter-spacing: 0.04em; line-height: 1.2;
+  display: block; margin: 0; padding: 0; line-height: 1;
+  font-style: normal; font-size: 11px; font-weight: 500;
+  color: var(--text-muted); letter-spacing: 0.04em;
 }
 .accom-tab.active { color: var(--text-primary); border-bottom-color: var(--accent); }
-.accom-tab.active em { color: var(--text-secondary); }
+.accom-tab.active em,
+.accom-tab.active .tab-text em { color: var(--text-secondary); }
 
 /* Visa 3단 탭 (법무·유학·가채점) — 가로 너비 유지, 세로 높이만 축소 */
 .visa-tabs { margin-bottom: 14px; }
 .visa-tabs .accom-tab {
-  padding: 11px 12px 8px; font-size: 13.5px; line-height: 1.25;
-  flex-direction: row; gap: 6px;  /* 한 줄(메인 + Sub 영문) 가로 + 수직 중앙 (3px 보더 보정 포함) */
+  padding: 10px 12px 7px; font-size: 13.5px; line-height: 1;
 }
-.visa-tabs .accom-tab em {
-  display: inline; margin-left: 0; margin-top: 0; font-size: 10.5px; line-height: 1.25;
+.visa-tabs .tab-text { flex-direction: row; gap: 6px; line-height: 1; }
+.visa-tabs .accom-tab em,
+.visa-tabs .tab-text em {
+  display: inline; margin: 0; padding: 0; font-size: 10.5px; line-height: 1;
 }
 
 /* ── Controls bar ── */
@@ -2123,7 +2133,7 @@ select.filter-mini-input {
 @media (max-width: 640px) {
   .write-field--row { flex-direction: column; }
   .accom-grid { grid-template-columns: 1fr; }
-  .accom-tab { font-size: 13px; padding: 15px 10px 12px; }  /* 모바일도 보더 3px 보정 균등 */
+  .accom-tab { font-size: 13px; padding: 14px 10px 11px; line-height: 1; }  /* 모바일도 보더 3px 보정 + line-height 1 */
   .write-overlay { padding: 12px; }
   .write-modal { padding: 22px 16px; }
 }
