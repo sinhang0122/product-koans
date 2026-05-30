@@ -456,7 +456,7 @@
 
     <!-- Map View -->
     <div id="mapView" style="display:none;">
-      <button class="area-search-btn" id="areaSearchBtn">이 지역 일 찾기</button>
+      <button class="area-search-btn" id="areaSearchBtn">이 지역 잡 구하기</button>
       <div id="jobsMap" style="width:100%;height:480px;border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;"></div>
     </div>
 
@@ -520,8 +520,14 @@
   </div>
 
   <div class="write-overlay" id="writeOverlay">
-    <div class="write-modal">
-      <div class="write-modal-title">✏️ 구인구직 글쓰기</div>
+    <div class="write-modal write-modal--tall">
+      <div class="write-modal-header">
+        <div class="write-modal-title">✏️ 구인구직 글쓰기 <em>Write Job</em></div>
+        <span class="write-author-badge">작성자 : <b id="wAuthorName">-</b></span>
+        <input type="hidden" id="wAuthor" value="" />
+        <button class="write-modal-close" id="writeBtnClose" type="button" aria-label="닫기">✕</button>
+      </div>
+
       <div class="write-field">
         <span class="write-label">게시 유형 Post Type</span>
         <div class="write-posttype-tabs">
@@ -535,67 +541,54 @@
           </label>
         </div>
       </div>
-      <div class="write-field">
-        <label class="write-label" for="wTitle">제목<span class="required-mark">*</span></label>
-        <input class="write-input" id="wTitle" type="text" placeholder="[구인/구직] 직종 · 지역 · 조건 등" maxlength="80" />
-      </div>
-      <!-- 직종 -->
-      <div class="write-field">
-        <label class="write-label" for="wCategory">직종 Category</label>
-        <select class="write-input" id="wCategory">
-          <option value="">선택 안 함</option>
-          <option value="food">카페·식당</option>
-          <option value="retail">마트·유통·판매</option>
-          <option value="office">사무·관리</option>
-          <option value="construction">건설·도장·청소</option>
-          <option value="logistics">물류·창고·배달</option>
-          <option value="it">IT·디자인</option>
-          <option value="education">교육·과외</option>
-          <option value="beauty">미용·뷰티</option>
-          <option value="other">기타</option>
-        </select>
-      </div>
-      <!-- 근무 형태 -->
-      <div class="write-field">
-        <label class="write-label" for="wEmpType">근무 형태 Type</label>
-        <select class="write-input" id="wEmpType">
-          <option value="">선택 안 함</option>
-          <option value="fulltime">풀타임 Full-time</option>
-          <option value="parttime">파트타임 Part-time</option>
-          <option value="casual">캐주얼 Casual</option>
-          <option value="contract">계약직 Contract</option>
-        </select>
-      </div>
-      <!-- 급여 (시급/연봉 + 금액) -->
-      <div class="write-field">
-        <label class="write-label">급여 Pay</label>
-        <div style="display:flex;gap:8px;">
-          <select class="write-input" id="wPayUnit" style="flex:0 0 110px;">
-            <option value="hour">시급 / hr</option>
-            <option value="year">연봉 / yr</option>
-            <option value="negotiable">협의</option>
-          </select>
-          <input class="write-input" id="wPayAmount" type="number" min="0" placeholder="금액 (숫자만)" style="flex:1;" />
+
+      <!-- 5:5 2-col 분할 (Share 와 동일) -->
+      <div class="write-grid">
+        <div class="write-col">
+          <div class="write-field">
+            <label class="write-label" for="wTitle">제목 Title<span class="required-mark">*</span></label>
+            <input class="write-input" id="wTitle" type="text" placeholder="예: 카페 홀 직원 모집 (Strathfield)" maxlength="80" />
+          </div>
+          <div class="write-field">
+            <label class="write-label" for="wEmpType">근무 형태 Type</label>
+            <select class="write-input" id="wEmpType">
+              <option value="">선택 안 함</option>
+              <option value="fulltime">풀타임 Full-time</option>
+              <option value="parttime">파트타임 Part-time</option>
+              <option value="casual">캐주얼 Casual</option>
+              <option value="contract">계약직 Contract</option>
+            </select>
+          </div>
+          <div class="write-field">
+            <label class="write-label">급여 Pay</label>
+            <div style="display:flex;gap:8px;">
+              <select class="write-input" id="wPayUnit" style="flex:0 0 110px;">
+                <option value="hour">시급 / hr</option>
+                <option value="year">연봉 / yr</option>
+                <option value="negotiable">협의</option>
+              </select>
+              <input class="write-input" id="wPayAmount" type="number" min="0" placeholder="금액" style="flex:1;" />
+            </div>
+          </div>
+        </div>
+        <div class="write-col">
+          <div class="write-field">
+            <label class="write-label" for="wAddress">근무지 주소 Location</label>
+            <input class="write-input" id="wAddress" type="text" autocomplete="off" placeholder="" maxlength="200" />
+            <ul class="addr-suggest" id="wAddressSuggest"></ul>
+          </div>
+          <div class="write-field">
+            <label class="write-label" for="wContact">연락처 Contact<span class="required-mark">*</span></label>
+            <input class="write-input" id="wContact" type="text" placeholder="전화번호 / 카카오톡 / 이메일" maxlength="100" />
+          </div>
         </div>
       </div>
-      <!-- 주소 + 자동완성 -->
-      <div class="write-field">
-        <label class="write-label" for="wAddress">근무지 주소 Location <em style="font-style:normal;color:var(--text-muted);font-size:11px;">(도로명·지역명을 입력하면 추천이 뜹니다)</em></label>
-        <input class="write-input" id="wAddress" type="text" autocomplete="off" placeholder="예: George St, Sydney NSW" maxlength="200" />
-        <ul class="addr-suggest" id="wAddressSuggest"></ul>
-      </div>
-      <div class="write-field">
-        <label class="write-label" for="wBody">내용<span class="required-mark">*</span></label>
+
+      <div class="write-field write-field--grow" style="grid-column:1/-1;">
+        <label class="write-label" for="wBody">내용 Comments<span class="required-mark">*</span></label>
         <textarea class="write-textarea" id="wBody" placeholder="모집 인원, 근무 조건, 우대사항 등 자세히 적어주세요"></textarea>
       </div>
-      <div class="write-field">
-        <label class="write-label" for="wAuthor">작성자</label>
-        <input class="write-input" id="wAuthor" type="text" placeholder="닉네임 또는 이름" maxlength="20" />
-      </div>
-      <div class="write-field">
-        <label class="write-label" for="wContact">연락처 Contact<span class="required-mark">*</span></label>
-        <input class="write-input" id="wContact" type="text" placeholder="전화번호 / 카카오톡 오픈챗 / 이메일 등" maxlength="100" />
-      </div>
+
       <div class="write-modal-actions">
         <button class="write-cancel-btn" id="writeBtnCancel">취소</button>
         <button class="write-submit-btn" id="writeBtnSubmit">등록하기</button>
@@ -899,9 +892,18 @@
       document.querySelector('.write-modal-title').textContent = isEdit ? '✏️ 구인구직 글 수정' : '✏️ 구인구직 글쓰기';
       document.getElementById('writeBtnSubmit').textContent = isEdit ? '수정 완료' : '등록하기';
     }
+    function fillAuthorBadge() {
+      const u = window.koausAuth && window.koausAuth.user;
+      const nick = (u && (localStorage.getItem('koaus-nickname') || u.displayName?.split(' ')[0] || u.email?.split('@')[0])) || '사용자';
+      const badge = document.getElementById('wAuthorName');
+      const hidden = document.getElementById('wAuthor');
+      if (badge) badge.textContent = nick;
+      if (hidden) hidden.value = nick;
+    }
     function openWriteModal() {
       editingId = null;
       setWriteMode('create');
+      fillAuthorBadge();
       writeOverlay.classList.add('open');
     }
     function openWriteModalForEdit(p) {
@@ -909,8 +911,13 @@
       document.getElementById(p.postType === 'seeking' ? 'wPostTypeSeeking' : 'wPostTypeHiring').checked = true;
       document.getElementById('wTitle').value   = p.title || '';
       document.getElementById('wBody').value    = p.body || '';
-      document.getElementById('wAuthor').value  = p.author || '';
       document.getElementById('wContact').value = p.contact || '';
+      const elAd = document.getElementById('wAddress');     if (elAd) elAd.value     = p.address    || '';
+      const elEt = document.getElementById('wEmpType');     if (elEt) elEt.value     = p.empType    || '';
+      const elPu = document.getElementById('wPayUnit');     if (elPu) elPu.value     = p.payUnit    || 'hour';
+      const elPa = document.getElementById('wPayAmount');   if (elPa) elPa.value     = p.payAmount || '';
+      document.getElementById('wAuthor').value = p.author || '';
+      const badge = document.getElementById('wAuthorName'); if (badge) badge.textContent = p.author || '-';
       setWriteMode('edit');
       document.getElementById('detailOverlay').classList.remove('open');
       writeOverlay.classList.add('open');
@@ -939,6 +946,7 @@
     }
     safeOn('writeBtnOpen', 'click', guardedOpenWrite);
     safeOn('writeBtnCancel', 'click', () => { if (writeOverlay) writeOverlay.classList.remove('open'); });
+    safeOn('writeBtnClose',  'click', () => { if (writeOverlay) writeOverlay.classList.remove('open'); });
     if (writeOverlay) writeOverlay.addEventListener('click', e => { if (e.target === writeOverlay) writeOverlay.classList.remove('open'); });
     safeOn('writeBtnSubmit', 'click', e => {
       // 폼 reload·기본 동작 차단 (button type 미지정 환경 대비)
@@ -1106,36 +1114,40 @@
     function wireAutocomplete(inputId, listId) {
       const input = document.getElementById(inputId);
       const list  = document.getElementById(listId);
-      if (!input || !list) return;
+      if (!input || !list) { console.warn('[jobs:autocomplete] DOM 누락', inputId, listId); return; }
       if (input.dataset.acWired === '1') return;
       input.dataset.acWired = '1';
       loadMapScript();
       const hide = () => list.classList.remove('show');
       const show = () => list.classList.add('show');
-      let activeIdx = -1, lastPreds = [];
-      input.addEventListener('input', () => {
-        const q = input.value.trim();
+      const runQuery = (q) => {
         if (!q) { hide(); return; }
-        if (!(window.google && google.maps && google.maps.places)) return;
+        if (!(window.google && google.maps && google.maps.places && google.maps.places.AutocompleteService)) {
+          console.warn('[jobs:autocomplete] Maps Places API 미준비 — 재시도 대기');
+          whenMapsReady(() => runQuery(q));
+          return;
+        }
         if (!acService) acService = new google.maps.places.AutocompleteService();
         acService.getPlacePredictions(
           { input: q, componentRestrictions: { country: 'au' }, types: ['geocode'] },
           (preds, status) => {
             if (status !== google.maps.places.PlacesServiceStatus.OK || !preds || !preds.length) { hide(); return; }
-            lastPreds = preds.slice(0, 6);
-            list.innerHTML = lastPreds.map((p, i) =>
-              `<li data-desc="${p.description.replace(/"/g, '&quot;')}" data-idx="${i}">${p.structured_formatting?.main_text || p.description}<span class="addr-sub">${p.structured_formatting?.secondary_text || ''}</span></li>`
+            const top = preds.slice(0, 6);
+            list.innerHTML = top.map((p) =>
+              `<li data-desc="${p.description.replace(/"/g, '&quot;')}">${p.structured_formatting?.main_text || p.description}<span class="addr-sub">${p.structured_formatting?.secondary_text || ''}</span></li>`
             ).join('');
-            activeIdx = -1; show();
+            show();
           }
         );
-      });
+      };
+      input.addEventListener('input', () => runQuery(input.value.trim()));
+      input.addEventListener('focus', () => { const q = input.value.trim(); if (q) runQuery(q); });
       list.addEventListener('mousedown', e => {
         const li = e.target.closest('li'); if (!li) return;
         input.value = li.dataset.desc; hide();
         input.dispatchEvent(new Event('change'));
       });
-      input.addEventListener('blur', () => setTimeout(hide, 120));
+      input.addEventListener('blur', () => setTimeout(hide, 150));
     }
     function geocode(address) {
       return new Promise((resolve, reject) => {
@@ -1172,6 +1184,10 @@
       jobsMap = new google.maps.Map(el, { center: view.center, zoom: view.zoom, mapTypeControl: false, streetViewControl: false });
       mapReady = true;
       updateMapMarkers();
+      // 드래그/줌 시 "이 지역 잡 구하기" 재검색 버튼 노출
+      const asb = document.getElementById('areaSearchBtn');
+      jobsMap.addListener('dragend',     () => { if (asb) asb.classList.add('show'); });
+      jobsMap.addListener('zoom_changed',() => { if (asb) asb.classList.add('show'); });
     };
     function updateMapMarkers() {
       if (!jobsMap || !window.google) return;
@@ -1287,6 +1303,8 @@
     safeOn('areaSearchBtn', 'click', () => {
       if (!jobsMap) return;
       areaBounds = jobsMap.getBounds();
+      const asb = document.getElementById('areaSearchBtn');
+      if (asb) asb.classList.remove('show');
       updateMapMarkers();
       renderPosts();
     });

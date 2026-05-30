@@ -1452,10 +1452,9 @@ select.write-input {
 }
 .accom-tab {
   flex: 1; background: none; border: none;
-  /* 한글 폰트 ghost whitespace 영향을 최소화하기 위해 line-height: 1, 텍스트는
-     .tab-text 래퍼로 그룹화하여 외부 button 이 그것을 flex 정중앙에 둠.
-     padding-top 16px = padding-bottom 13px + transparent border-bottom 3px → 위·아래 16px 균등 */
-  padding: 16px 20px 13px;
+  /* 사장님 요청: 시각적으로 글씨가 살짝 위로 붙도록 padding-top < padding-bottom.
+     위 14 vs 아래 15(+ transparent border 3 = 18) → 위쪽 여백이 미세하게 더 작음 */
+  padding: 14px 20px 15px;
   border-bottom: 3px solid transparent; margin-bottom: -2px;
   display: flex; align-items: center; justify-content: center;
   font-family: var(--font); font-size: 15px; font-weight: 700; line-height: 1;
@@ -1479,12 +1478,13 @@ select.write-input {
 /* Visa 3단 탭 (법무·유학·가채점) — 가로 너비 유지, 세로 높이만 축소 */
 .visa-tabs { margin-bottom: 14px; }
 .visa-tabs .accom-tab {
-  padding: 10px 12px 7px; font-size: 13.5px; line-height: 1;
+  /* 폰트 키움 + column 방향(한글 위, 영문 아래). 위 9 vs 아래 12+3=15 — 살짝 위로 붙음 */
+  padding: 9px 12px 12px; font-size: 15px; line-height: 1.2;
 }
-.visa-tabs .tab-text { flex-direction: row; gap: 6px; line-height: 1; }
+.visa-tabs .tab-text { flex-direction: column; gap: 2px; line-height: 1.2; }
 .visa-tabs .accom-tab em,
 .visa-tabs .tab-text em {
-  display: inline; margin: 0; padding: 0; font-size: 10.5px; line-height: 1;
+  display: block; margin: 0; padding: 0; font-size: 11px; line-height: 1.2; font-weight: 500;
 }
 
 /* ── Controls bar ── */
@@ -2133,7 +2133,7 @@ select.filter-mini-input {
 @media (max-width: 640px) {
   .write-field--row { flex-direction: column; }
   .accom-grid { grid-template-columns: 1fr; }
-  .accom-tab { font-size: 13px; padding: 14px 10px 11px; line-height: 1; }  /* 모바일도 보더 3px 보정 + line-height 1 */
+  .accom-tab { font-size: 13px; padding: 11px 10px 13px; line-height: 1; }  /* 모바일도 글씨 살짝 위로 (위 11 vs 아래 13+3=16) */
   .write-overlay { padding: 12px; }
   .write-modal { padding: 22px 16px; }
 }

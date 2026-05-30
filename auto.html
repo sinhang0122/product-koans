@@ -523,12 +523,11 @@
           <label class="filter-section-label" for="ffMaintType">정비 종류 Type</label>
           <select class="write-input" id="ffMaintType">
             <option value="">전체</option>
-            <option value="general">일반정비 (엔진/오일/브레이크)</option>
-            <option value="body">바디킷·도색·판금</option>
-            <option value="tire">타이어·휠얼라인먼트</option>
-            <option value="electric">전기·배터리·진단</option>
-            <option value="aircon">에어컨·냉각</option>
-            <option value="rwc">RWC·검사</option>
+            <option value="lift">리프트 띄우기</option>
+            <option value="repair">수리</option>
+            <option value="quote">견적</option>
+            <option value="inspect">검사</option>
+            <option value="other">기타</option>
           </select>
         </div>
         <div class="filter-section">
@@ -557,6 +556,8 @@
             <option value="longhaul">장거리 이동</option>
             <option value="accident">사고 차량</option>
             <option value="repo">압류·반환</option>
+            <option value="freight">화물 운송</option>
+            <option value="other">기타</option>
           </select>
         </div>
       </div>
@@ -1032,7 +1033,7 @@
     // 카테고리별 동작: map(지도뷰 토글 노출), write('user'=직접 글쓰기 / 'inquiry'=관리자 등록 문의), filter(필터 그룹)
     const CAT_CFG = {
       rental:      { map:false, write:'user',    filter:'rental' },
-      inspection:  { map:false, write:'user',    filter:'inspection' },
+      inspection:  { map:false, write:'inquiry', filter:'inspection' },
       maintenance: { map:true,  write:'inquiry', filter:'maintenance' },
       towing:      { map:true,  write:'inquiry', filter:'towing' },
     };
