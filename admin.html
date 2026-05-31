@@ -27,6 +27,7 @@
 
 
   <script src="pw-toggle.js" defer></script>
+  <script type="module" src="admin-mark.js"></script>
 </head>
 <body>
 
@@ -413,7 +414,7 @@
     </div>
 
     <!-- ── ① 공지사항 등록 ── -->
-    <section class="admin-section">
+    <section class="admin-section" id="notices">
       <h2 class="admin-section-title">① 공지사항 등록 (Notice)</h2>
       <form class="admin-form" id="noticeForm">
         <div class="admin-row">
@@ -427,7 +428,7 @@
     </section>
 
     <!-- ── ② 광고주 등록 ── -->
-    <section class="admin-section">
+    <section class="admin-section" id="sponsors">
       <h2 class="admin-section-title">② 광고주 등록 (Advertiser)</h2>
       <form class="admin-form" id="advForm">
         <div class="admin-row">
@@ -442,7 +443,7 @@
     </section>
 
     <!-- ── ③ 서비스 게시글 등록 (Mechanics & Services) ── -->
-    <section class="admin-section">
+    <section class="admin-section" id="services">
       <h2 class="admin-section-title">③ 서비스 게시글 등록 (Mechanics &amp; Services)</h2>
       <form class="admin-form" id="serviceForm">
         <div class="admin-row">
@@ -484,7 +485,7 @@
     </section>
 
     <!-- ── ④ 광고 배너 관리 (홈 광고칸에 노출) ── -->
-    <section class="admin-section">
+    <section class="admin-section" id="ads">
       <h2 class="admin-section-title">④ 광고 배너 관리 (Ads)</h2>
       <form class="admin-form" id="adsForm">
         <div class="admin-row">
@@ -503,7 +504,7 @@
     </section>
 
     <!-- ── ⑤ 글로벌 배너 관리 (전역 상단 롤링 배너 — global_ticker) ── -->
-    <section class="admin-section">
+    <section class="admin-section" id="globalTicker">
       <h2 class="admin-section-title">⑤ 글로벌 배너 관리 (Global Ticker)</h2>
       <p style="font-size:12px;color:var(--text-muted);margin:-8px 0 10px;line-height:1.55;">전체 페이지 상단에 [Notice | 광고주 | 내용] 형식으로 자동 회전 노출됩니다. 등록 즉시 라이브 반영, 2초 간격 자동 전환, 클릭 시 새 탭으로 이동.</p>
       <form class="admin-form" id="tickerForm">
@@ -882,5 +883,14 @@
       }
     });
   </script>
+
+  <!-- 관리자 대시보드 플로팅 버튼 — admin.html 진입 시 우하단 고정 -->
+  <a href="#top" class="admin-fab" id="adminDashboardFab" aria-label="관리자 대시보드">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+    </svg>
+    <span>관리자 대시보드</span>
+  </a>
 </body>
 </html>
