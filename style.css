@@ -1648,6 +1648,59 @@ select.filter-mini-input {
 }
 .detail-hero-gallery img { cursor: zoom-in; }
 
+/* ── Segmented controls (Realestate.com.au 스타일 — 방/욕실/주차 등) ── */
+.seg-group {
+  display: flex; flex-wrap: wrap; gap: 0;
+  border: 1px solid var(--text-primary); border-radius: var(--r-sm); overflow: hidden;
+  background: var(--bg-base);
+}
+.seg-btn {
+  flex: 1; min-width: 44px;
+  padding: 8px 10px; font-family: var(--font); font-size: 13px; font-weight: 700;
+  background: var(--bg-base); color: var(--text-primary);
+  border: none; border-right: 1px solid var(--text-primary);
+  cursor: pointer; transition: background 0.12s ease, color 0.12s ease;
+}
+.seg-btn:last-child { border-right: none; }
+.seg-btn:hover { background: var(--bg-card); }
+.seg-btn.active { background: var(--text-primary); color: var(--bg-base); }
+
+/* ── Dual Range Slider (가격 필터 — 양방향) ── */
+.dual-range {
+  position: relative; height: 36px; margin-top: 6px;
+}
+.dual-range-label {
+  margin-left: 8px; font-size: 12px; font-weight: 700; color: var(--text-secondary);
+}
+.dual-range-track {
+  position: absolute; top: 50%; left: 0; right: 0; height: 4px;
+  background: var(--border); border-radius: 2px; transform: translateY(-50%);
+}
+.dual-range-fill {
+  position: absolute; top: 50%; height: 4px;
+  background: var(--text-primary); border-radius: 2px; transform: translateY(-50%);
+  pointer-events: none;
+}
+.dual-range-input {
+  position: absolute; top: 0; left: 0; right: 0; width: 100%; height: 36px;
+  background: transparent; appearance: none; -webkit-appearance: none;
+  pointer-events: none;  /* 트랙 클릭 비활성 — thumb 만 활성 (아래) */
+}
+.dual-range-input::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none; pointer-events: auto;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--bg-base); border: 2px solid var(--text-primary);
+  cursor: grab; box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+}
+.dual-range-input::-moz-range-thumb {
+  pointer-events: auto;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--bg-base); border: 2px solid var(--text-primary);
+  cursor: grab; box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+}
+.dual-range-input::-webkit-slider-runnable-track { background: transparent; }
+.dual-range-input::-moz-range-track { background: transparent; }
+
 /* ── Lightbox (이미지 확대 모달) — 전역 ── */
 .lightbox-overlay {
   position: fixed; inset: 0; z-index: 999999;

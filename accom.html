@@ -472,8 +472,17 @@
       </div>
 
       <div class="filter-section">
-        <label class="filter-section-label" for="fbPrice">주당 쉐어비 (최대 $999)</label>
-        <input class="write-input" id="fbPrice" type="number" min="0" max="999" placeholder="최대 금액 $" />
+        <label class="filter-section-label">주당 쉐어비 Price / wk
+          <span class="dual-range-label" id="filterSharePriceLabel">$0 to $999</span>
+        </label>
+        <div class="dual-range" id="filterSharePriceRange" data-min="0" data-max="999" data-step="10">
+          <div class="dual-range-track"></div>
+          <div class="dual-range-fill" id="filterSharePriceFill"></div>
+          <input class="dual-range-input" type="range" id="fbPriceMin" min="0" max="999" step="10" value="0" />
+          <input class="dual-range-input" type="range" id="fbPriceMax" min="0" max="999" step="10" value="999" />
+          <!-- 호환: 기존 fbPrice 참조 코드가 max 값으로 폴백하도록 hidden 유지 -->
+          <input type="hidden" id="fbPrice" value="999" />
+        </div>
       </div>
 
       <div class="filter-section">
@@ -1574,21 +1583,23 @@
 
     // ── Filter ──
     function applyFilters(posts) {
-      const pv = parseInt(fbPrice.value, 10);
-      const maxPrice = (Number.isFinite(pv) && pv > 0) ? Math.min(pv, 999) : Infinity;  // 최대 $999
+      // Dual Range Slider 기반 가격 필터 — 기존 fbPrice 는 max 값으로 폴백 유지
+      const minEl = document.getElementById('fbPriceMin');
+      const maxEl = document.getElementById('fbPriceMax');
+      const minPrice = minEl ? Number(minEl.value) : 0;
+      const maxPrice = maxEl ? Number(maxEl.value) : 999;
       const room = fbRoom.value;       // '' = 전체
       const dur  = fbDuration.value;   // '' = 전체
       return posts.filter(p => {
-        // 주(State)별 분리: 관리자 글(state='')은 전 지역 노출, 그 외는 동일 주만 노출
         if (currentState && p.state && p.state !== currentState) return false;
-        // 모드(방 올리기/방 구하기) 분리
         if ((p.mode || 'offer') !== activeMode) return false;
-        // '이 지역 검색' 활성 시: 지도 범위(Bounds) 내 좌표만 노출
         if (areaBounds) {
           if (!(p.lat && p.lng) || !areaBounds.contains({ lat: p.lat, lng: p.lng })) return false;
         }
-        // 주당 쉐어비: 최대 금액 이하만
-        if (p.price && p.price > maxPrice) return false;
+        // 가격 범위: minPrice ≤ p.price ≤ maxPrice
+        if (typeof p.price === 'number') {
+          if (p.price < minPrice || p.price > maxPrice) return false;
+        }
         // 방 형태: 선택 시 글의 방형태 배열에 포함되어야 노출
         if (room) {
           const pRooms = Array.isArray(p.roomTypes) ? p.roomTypes : (p.roomType ? [p.roomType] : []);
@@ -2219,6 +2230,36 @@
     switchMode(activeMode);  // URL ?mode= 반영 + 초기 렌더/타이틀
     // Firestore services 컬렉션이 갱신되면 현재 모드 리스트 즉시 재렌더
     window.addEventListener('koaus-services-updated', () => renderAll());
+
+    // Dual Range Slider (쉐어 가격) — 최소·최대 동시 조절 + 라벨 갱신
+    (function bindShareDualRange() {
+      const root = document.getElementById('filterSharePriceRange');
+      if (!root) return;
+      const minIn = document.getElementById('fbPriceMin');
+      const maxIn = document.getElementById('fbPriceMax');
+      const fill  = document.getElementById('filterSharePriceFill');
+      const label = document.getElementById('filterSharePriceLabel');
+      const hidden = document.getElementById('fbPrice');
+      const MIN = Number(root.dataset.min), MAX = Number(root.dataset.max);
+      function paint(ev) {
+        let lo = Number(minIn.value), hi = Number(maxIn.value);
+        if (lo > hi - 10) {
+          if (ev && ev.target === minIn) { lo = hi - 10; minIn.value = lo; }
+          else                            { hi = lo + 10; maxIn.value = hi; }
+        }
+        const a = ((lo - MIN) / (MAX - MIN)) * 100;
+        const b = ((hi - MIN) / (MAX - MIN)) * 100;
+        fill.style.left  = a + '%';
+        fill.style.right = (100 - b) + '%';
+        const hiTxt = hi >= MAX ? `$${MAX}+` : `$${hi}`;
+        label.textContent = `$${lo} to ${hiTxt}`;
+        // 기존 fbPrice 참조 코드 호환 — max 값 mirror
+        if (hidden) hidden.value = hi;
+      }
+      minIn.addEventListener('input', paint);
+      maxIn.addEventListener('input', paint);
+      paint();
+    })();
   </script>
 
   <!-- ── Firebase Auth (로그인 모달 + 로그인 상태) ── -->
