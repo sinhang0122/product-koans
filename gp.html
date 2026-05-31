@@ -541,39 +541,40 @@
       </div>
 
       <div class="filter-section">
-        <label class="filter-section-label">음식 종류 Cuisine · 복수 선택</label>
+        <label class="filter-section-label">진료과 Specialty · 복수 선택</label>
         <div class="trades-chip-grid">
-          <label class="trades-chip"><input type="checkbox" class="rs-fcuisine" value="korean"> 한식</label>
-          <label class="trades-chip"><input type="checkbox" class="rs-fcuisine" value="chinese"> 중식</label>
-          <label class="trades-chip"><input type="checkbox" class="rs-fcuisine" value="japanese"> 일식</label>
-          <label class="trades-chip"><input type="checkbox" class="rs-fcuisine" value="chicken"> 치킨</label>
-          <label class="trades-chip"><input type="checkbox" class="rs-fcuisine" value="bunsik"> 분식</label>
-          <label class="trades-chip"><input type="checkbox" class="rs-fcuisine" value="bbq"> BBQ/구이</label>
-          <label class="trades-chip"><input type="checkbox" class="rs-fcuisine" value="cafe"> 카페</label>
-          <label class="trades-chip"><input type="checkbox" class="rs-fcuisine" value="dessert"> 디저트</label>
-          <label class="trades-chip"><input type="checkbox" class="rs-fcuisine" value="bar"> 주점</label>
-          <label class="trades-chip"><input type="checkbox" class="rs-fcuisine" value="delivery"> 배달</label>
-          <label class="trades-chip"><input type="checkbox" class="rs-fcuisine" value="other"> 기타</label>
+          <label class="trades-chip"><input type="checkbox" class="gp-fspec" value="family"> 가정의학과</label>
+          <label class="trades-chip"><input type="checkbox" class="gp-fspec" value="pediatrics"> 소아과</label>
+          <label class="trades-chip"><input type="checkbox" class="gp-fspec" value="internal"> 내과</label>
+          <label class="trades-chip"><input type="checkbox" class="gp-fspec" value="dermatology"> 피부과</label>
+          <label class="trades-chip"><input type="checkbox" class="gp-fspec" value="ob_gyn"> 산부인과</label>
+          <label class="trades-chip"><input type="checkbox" class="gp-fspec" value="psychiatry"> 정신과/심리</label>
+          <label class="trades-chip"><input type="checkbox" class="gp-fspec" value="dental"> 치과</label>
+          <label class="trades-chip"><input type="checkbox" class="gp-fspec" value="womens"> 여성 건강</label>
+          <label class="trades-chip"><input type="checkbox" class="gp-fspec" value="mens"> 남성 건강</label>
+          <label class="trades-chip"><input type="checkbox" class="gp-fspec" value="travel"> 여행/예방접종</label>
+          <label class="trades-chip"><input type="checkbox" class="gp-fspec" value="other"> 기타</label>
         </div>
       </div>
 
       <div class="filter-section">
-        <label class="filter-section-label" for="rsFStatus">영업 상태 Status</label>
-        <select class="write-input" id="rsFStatus">
+        <label class="filter-section-label" for="gpFAvail">진료 가능 시간 Availability</label>
+        <select class="write-input" id="gpFAvail">
           <option value="">전체</option>
-          <option value="open_now">지금 영업중</option>
-          <option value="delivery_only">배달 가능만</option>
-          <option value="takeaway_only">포장 가능만</option>
+          <option value="open_now">지금 진료중</option>
+          <option value="weekend">주말 진료</option>
+          <option value="evening">저녁 진료(18시 이후)</option>
+          <option value="bulk_billing">Bulk Billing 가능</option>
         </select>
       </div>
 
       <div class="filter-section">
-        <label class="filter-section-label">편의시설 Amenities</label>
+        <label class="filter-section-label">진료 옵션 Options</label>
         <div class="trades-chip-grid">
-          <label class="trades-chip"><input type="checkbox" id="rsFParking"> 🅿 주차</label>
-          <label class="trades-chip"><input type="checkbox" id="rsFDelivery"> 🚚 배달</label>
-          <label class="trades-chip"><input type="checkbox" id="rsFTakeaway"> 📦 포장</label>
-          <label class="trades-chip"><input type="checkbox" id="rsFHalal"> 🌙 할랄·베지</label>
+          <label class="trades-chip"><input type="checkbox" id="gpFKorean">  🇰🇷 한국어 가능</label>
+          <label class="trades-chip"><input type="checkbox" id="gpFTeleHealth"> 💻 텔레헬스</label>
+          <label class="trades-chip"><input type="checkbox" id="gpFParking">  🅿 주차</label>
+          <label class="trades-chip"><input type="checkbox" id="gpFWalkIn">    🚶 워크인(예약 없이)</label>
         </div>
       </div>
 
@@ -1103,8 +1104,8 @@
     // 지역 검색창 자동완성 (글쓰기 주소와 동일 로직 재사용)
     function initRegionAutocomplete() { wireAutocomplete('ffRegion', 'ffRegionSuggest'); }
 
-    // ── Write Modal ──
-    const writeOverlay = document.getElementById('writeOverlay');
+    // ── Write Modal (gp.html: 사용자 직접 글쓰기 모달 없음 — 등록 요청만, no-op 가드) ──
+    const writeOverlay = document.getElementById('writeOverlay') || { addEventListener(){}, classList: { add(){}, remove(){} } };
 
     let editingId = null;  // 수정 중인 글 id (null이면 새 글)
 
@@ -1128,8 +1129,9 @@
       if (!u.emailVerified) { openVerifyModal(); return; }
       openWriteModal();
     });
-    document.getElementById('writeBtnClose').addEventListener('click',  closeWriteModal);
-    document.getElementById('writeBtnCancel').addEventListener('click', closeWriteModal);
+    // gp.html: 글쓰기 모달 마크업 부재 — null-safe 가드
+    (document.getElementById('writeBtnClose')  || { addEventListener(){} }).addEventListener('click', closeWriteModal);
+    (document.getElementById('writeBtnCancel') || { addEventListener(){} }).addEventListener('click', closeWriteModal);
     writeOverlay.addEventListener('click', e => { if (e.target === writeOverlay) closeWriteModal(); });
 
     function setWriteMode(mode) {
@@ -2269,6 +2271,8 @@
     }
 
     function updateMapMarkers(filteredPosts) {
+      // 외부 필터 모듈 (Stage 2 필터 후처리) 에서 호출할 수 있도록 노출
+      window.__koausUpdateMap = updateMapMarkers;
       if (!map) return;
       markers.forEach(m => m.setMap(null));
       markers = [];
@@ -2813,6 +2817,68 @@
     }
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind, { once: true });
     else bind();
+  </script>
+
+  <!-- ── 상세 필터 후처리 (gp: 진료과·진료 가능 시간·진료 옵션) ── -->
+  <script>
+    (function () {
+      const STORE_KEY = 'koaus-gp-posts';
+      function collect() {
+        return {
+          specs:    Array.from(document.querySelectorAll('.gp-fspec:checked')).map(c => c.value),
+          avail:    (document.getElementById('gpFAvail') || {}).value || '',
+          korean:    !!(document.getElementById('gpFKorean')    || {}).checked,
+          teleHealth:!!(document.getElementById('gpFTeleHealth')|| {}).checked,
+          parking:   !!(document.getElementById('gpFParking')   || {}).checked,
+          walkIn:    !!(document.getElementById('gpFWalkIn')    || {}).checked,
+        };
+      }
+      function matches(p, f) {
+        if (f.specs.length) {
+          const ps = Array.isArray(p.specialties) ? p.specialties : [];
+          if (!f.specs.some(s => ps.includes(s))) return false;
+        }
+        if (f.avail === 'bulk_billing' && !p.bulkBilling) return false;
+        // weekend/evening/open_now 은 영업시간 자유 텍스트라 정확한 매칭 어려움 — 무시
+        if (f.korean     && !p.korean)     return false;
+        if (f.teleHealth && !p.teleHealth) return false;
+        if (f.parking    && !p.parking)    return false;
+        if (f.walkIn     && !p.walkIn)     return false;
+        return true;
+      }
+      function readData() { try { return JSON.parse(localStorage.getItem(STORE_KEY) || '[]'); } catch { return []; } }
+      function apply() {
+        const f = collect();
+        const empty = !f.specs.length && !f.avail && !f.korean && !f.teleHealth && !f.parking && !f.walkIn;
+        const data = readData();
+        const filtered = empty ? data : data.filter(p => matches(p, f));
+        const ids = new Set(filtered.map(p => String(p.id)));
+        document.querySelectorAll('#postGrid .accom-card').forEach(card => {
+          card.style.display = empty || ids.has(card.dataset.id) ? '' : 'none';
+        });
+        const cnt = document.getElementById('boardCount');
+        if (cnt) cnt.textContent = '총 ' + (empty ? data.length : filtered.length) + '건';
+        if (typeof window.__koausUpdateMap === 'function') {
+          window.__koausUpdateMap(empty ? data : filtered);
+        }
+      }
+      function bind() {
+        const apply_ = document.getElementById('filterApplyBtn');
+        const reset_ = document.getElementById('filterResetBtn');
+        if (apply_) apply_.addEventListener('click', () => setTimeout(apply, 50));
+        if (reset_) reset_.addEventListener('click', () => {
+          document.querySelectorAll('.gp-fspec').forEach(c => c.checked = false);
+          const av = document.getElementById('gpFAvail'); if (av) av.value = '';
+          ['gpFKorean','gpFTeleHealth','gpFParking','gpFWalkIn'].forEach(id => {
+            const el = document.getElementById(id); if (el) el.checked = false;
+          });
+          setTimeout(apply, 50);
+        });
+        window.addEventListener('koaus-services-updated', () => setTimeout(apply, 100));
+      }
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind, { once: true });
+      else bind();
+    })();
   </script>
 </body>
 </html>

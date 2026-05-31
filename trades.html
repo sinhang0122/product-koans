@@ -2258,6 +2258,8 @@
     }
 
     function updateMapMarkers(filteredPosts) {
+      // 외부 필터 모듈 (Stage 2 필터 후처리) 에서 호출할 수 있도록 노출
+      window.__koausUpdateMap = updateMapMarkers;
       if (!map) return;
       markers.forEach(m => m.setMap(null));
       markers = [];
@@ -2803,6 +2805,73 @@
     }
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind, { once: true });
     else bind();
+  </script>
+
+  <!-- ── 상세 필터 후처리 (trades: 직종·출장비·경력·자격) ── -->
+  <script>
+    (function () {
+      const STORE_KEY = 'koaus-trades-posts';
+      const EXP_ORDER = ['0-2','3-5','6-10','11-20','20+'];
+      function expGte(actual, min) {
+        if (!min) return true;
+        const ai = EXP_ORDER.indexOf(actual);
+        const mi = EXP_ORDER.indexOf(min);
+        if (ai < 0 || mi < 0) return true;
+        return ai >= mi;
+      }
+      function collect() {
+        return {
+          types:    Array.from(document.querySelectorAll('.tr-ftype:checked')).map(c => c.value),
+          maxCallout: (() => { const v = (document.getElementById('trFCallout') || {}).value; const n = Number(v); return v && !isNaN(n) ? n : null; })(),
+          minExp:   (document.getElementById('trFExp') || {}).value || '',
+          licensed: !!(document.getElementById('trFLicensed') || {}).checked,
+          insured:  !!(document.getElementById('trFInsured')  || {}).checked,
+          abn:      !!(document.getElementById('trFABN')      || {}).checked,
+        };
+      }
+      function matches(p, f) {
+        if (f.types.length && !f.types.includes(p.tradeType)) return false;
+        if (f.maxCallout != null && typeof p.callout === 'number' && p.callout > f.maxCallout) return false;
+        if (f.minExp && !expGte(p.experience, f.minExp)) return false;
+        if (f.licensed && !p.licensed) return false;
+        if (f.insured  && !p.insured)  return false;
+        if (f.abn      && !p.abn)      return false;
+        return true;
+      }
+      function readData() { try { return JSON.parse(localStorage.getItem(STORE_KEY) || '[]'); } catch { return []; } }
+      function apply() {
+        const f = collect();
+        const empty = !f.types.length && f.maxCallout == null && !f.minExp && !f.licensed && !f.insured && !f.abn;
+        const data = readData();
+        const filtered = empty ? data : data.filter(p => matches(p, f));
+        const ids = new Set(filtered.map(p => String(p.id)));
+        document.querySelectorAll('#postGrid .accom-card').forEach(card => {
+          card.style.display = empty || ids.has(card.dataset.id) ? '' : 'none';
+        });
+        const cnt = document.getElementById('boardCount');
+        if (cnt) cnt.textContent = '총 ' + (empty ? data.length : filtered.length) + '건';
+        if (typeof window.__koausUpdateMap === 'function') {
+          window.__koausUpdateMap(empty ? data : filtered);
+        }
+      }
+      function bind() {
+        const apply_ = document.getElementById('filterApplyBtn');
+        const reset_ = document.getElementById('filterResetBtn');
+        if (apply_) apply_.addEventListener('click', () => setTimeout(apply, 50));
+        if (reset_) reset_.addEventListener('click', () => {
+          document.querySelectorAll('.tr-ftype').forEach(c => c.checked = false);
+          const ca = document.getElementById('trFCallout'); if (ca) ca.value = '';
+          const ex = document.getElementById('trFExp');     if (ex) ex.value = '';
+          ['trFLicensed','trFInsured','trFABN'].forEach(id => {
+            const el = document.getElementById(id); if (el) el.checked = false;
+          });
+          setTimeout(apply, 50);
+        });
+        window.addEventListener('koaus-services-updated', () => setTimeout(apply, 100));
+      }
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind, { once: true });
+      else bind();
+    })();
   </script>
 </body>
 </html>

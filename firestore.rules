@@ -195,17 +195,64 @@ service cloud.firestore {
       allow list: if limitedList();
     }
 
-    // 관리자 서비스 게시글 (정비소/인스펙션/렌트카/견인/쉐어하우스 — 카테고리 페이지 자동 노출)
+    // ════════════════════════════════════════════════════════════════
+    // services 컬렉션 (Approval Pipeline 도입)
+    //   - 카테고리: maintenance / inspection / rental / towing / accom /
+    //               legal / education / trades / restaurants / gp
+    //   - 읽기: 누구나 허용 (status='approved' 필터는 클라이언트가 강제)
+    //   - 생성: ① admin → status:'approved' 자유
+    //          ② 일반 로그인 유저 → status:'pending' 으로만 생성 가능
+    //                                   (본인 uid·필수 필드 검증)
+    //   - 수정/삭제: admin 전용 (status:'approved' 승인, 반려 삭제)
+    //   - 목록: limit ≤ 50 (승인 대기열·페이지 그리드 모두 수용)
+    // ════════════════════════════════════════════════════════════════
     match /services/{id} {
+      allow get:  if true;
+      allow list: if request.query.limit <= 50;
+
+      allow create: if
+        // ① admin 직접 등록 (status 자유, 보통 'approved')
+        ( isAdmin()
+          && reqStr('category', 1, 50)
+          && reqStr('title', 1, 200)
+          && optStr('region',  500)
+          && optStr('address', 500)
+          && optStr('summary', 500)
+          && optStr('body',   5000)
+          && optStr('contact', 200)
+          && optStr('state',    10)
+          && optStr('status',   30)
+          && optUrlList('imageUrls', 8)
+        )
+        // ② 일반 로그인 유저 등록 요청 — status='pending' 강제 + 본인 uid
+        || ( isSignedIn()
+             && request.resource.data.status == 'pending'
+             && request.resource.data.uid    == request.auth.uid
+             && reqStr('category', 1, 50)
+             && reqStr('title', 1, 200)
+             && reqStr('contact', 1, 200)
+             && optStr('region',  500)
+             && optStr('address', 500)
+             && optStr('summary', 500)
+             && optStr('body',   5000)
+             && optStr('state',    10)
+             && optUrlList('imageUrls', 8)
+           );
+
+      // status='approved' 로 승격 / 반려 삭제는 admin 전용
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    // board_pinned_notices — 게시판 상단 핀공지 (게시판당 1 doc)
+    //   - doc id: accom / rent / jobs / trades / restaurants / gp 등
+    // ════════════════════════════════════════════════════════════════
+    match /board_pinned_notices/{board} {
       allow read: if true;
       allow create, update, delete: if isAdmin()
-                                       && reqStr('category', 1, 50)
-                                       && reqStr('title', 1, 200)
-                                       && optStr('region', 200)
-                                       && optStr('summary', 500)
-                                       && optStr('body', 5000)
-                                       && optStr('contact', 200)
-                                       && optStr('state', 10);
+                                       && reqStr('text', 1, 1000)
+                                       && optStr('board', 30);
       allow list: if limitedList();
     }
 

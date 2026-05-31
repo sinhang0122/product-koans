@@ -488,6 +488,7 @@
       <a href="#pinnedNotices"  class="admin-sidenav-link" data-target="pinnedNotices">⑥ 게시판 핀공지</a>
       <a href="#trades"         class="admin-sidenav-link" data-target="trades">⑦ 기술직 관리</a>
       <a href="#restaurants"    class="admin-sidenav-link" data-target="restaurants">⑧ 한인 식당 관리</a>
+      <a href="#gp"             class="admin-sidenav-link" data-target="gp">⑨ GP 관리</a>
     </nav>
     <div class="admin-body" id="adminBody">
 
@@ -837,6 +838,98 @@
 
       <h3 class="admin-list-title">등록된 한인 식당 게시글</h3>
       <div class="admin-post-list" id="rsList"></div>
+    </section>
+
+    <!-- ── ⑨ GP 관리 (services 컬렉션, category='gp') ── -->
+    <section class="admin-section" id="gp">
+      <h2 class="admin-section-title">⑨ GP 게시글 등록 (Korean-Speaking GP)</h2>
+      <p style="font-size:12px;color:var(--text-muted);margin:-8px 0 10px;line-height:1.55;">한국어 가능 가정의·치과·소아과 등 한인 GP 게시글을 등록합니다. gp.html 페이지의 List/Map View 에 자동 노출되며, 주소는 카드·지도 마커에 동시 매핑됩니다.</p>
+      <form class="admin-form" id="gpForm">
+        <div class="admin-row">
+          <div class="admin-field">
+            <label class="admin-label" for="gpState">노출 주 (State)<span class="admin-req">*</span></label>
+            <select class="admin-input" id="gpState">
+              <option value="">전 지역</option>
+              <option value="nsw">NSW</option><option value="vic">VIC</option><option value="qld">QLD</option><option value="wa">WA</option>
+              <option value="sa">SA</option><option value="tas">TAS</option><option value="act">ACT</option><option value="nt">NT</option>
+            </select>
+          </div>
+          <div class="admin-field">
+            <label class="admin-label" for="gpTitle">클리닉 / 의사 이름<span class="admin-req">*</span></label>
+            <input class="admin-input" id="gpTitle" type="text" maxlength="80" placeholder="예: 강남 패밀리 클리닉" />
+          </div>
+        </div>
+
+        <div class="admin-field">
+          <label class="admin-label">진료과<span class="admin-req">*</span> · 복수 선택</label>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px 12px;margin-top:6px;">
+            <label class="admin-check"><input type="checkbox" class="gp-spec" value="family"> 가정의학과</label>
+            <label class="admin-check"><input type="checkbox" class="gp-spec" value="pediatrics"> 소아과</label>
+            <label class="admin-check"><input type="checkbox" class="gp-spec" value="internal"> 내과</label>
+            <label class="admin-check"><input type="checkbox" class="gp-spec" value="dermatology"> 피부과</label>
+            <label class="admin-check"><input type="checkbox" class="gp-spec" value="ob_gyn"> 산부인과</label>
+            <label class="admin-check"><input type="checkbox" class="gp-spec" value="psychiatry"> 정신과/심리</label>
+            <label class="admin-check"><input type="checkbox" class="gp-spec" value="dental"> 치과</label>
+            <label class="admin-check"><input type="checkbox" class="gp-spec" value="womens"> 여성 건강</label>
+            <label class="admin-check"><input type="checkbox" class="gp-spec" value="mens"> 남성 건강</label>
+            <label class="admin-check"><input type="checkbox" class="gp-spec" value="travel"> 여행/예방접종</label>
+            <label class="admin-check"><input type="checkbox" class="gp-spec" value="other"> 기타</label>
+          </div>
+        </div>
+
+        <div class="admin-row">
+          <div class="admin-field">
+            <label class="admin-label" for="gpHours">진료 시간</label>
+            <input class="admin-input" id="gpHours" type="text" maxlength="120" placeholder="예: 월-금 9:00~18:00, 토 9:00~13:00" />
+          </div>
+          <div class="admin-field">
+            <label class="admin-label" for="gpContact">연락처<span class="admin-req">*</span></label>
+            <input class="admin-input" id="gpContact" type="text" maxlength="200" placeholder="전화 / 예약 링크" />
+          </div>
+        </div>
+
+        <div class="admin-row">
+          <div class="admin-field">
+            <label class="admin-label" for="gpAddress">주소<span class="admin-req">*</span></label>
+            <input class="admin-input" id="gpAddress" type="text" maxlength="200" placeholder="예: Level 1, 100 Pitt St, Sydney NSW 2000" />
+          </div>
+          <div class="admin-field">
+            <label class="admin-label">진료 옵션</label>
+            <div style="display:flex;flex-direction:column;gap:6px;margin-top:6px;">
+              <label class="admin-check"><input type="checkbox" id="gpKorean" checked> 🇰🇷 한국어 가능</label>
+              <label class="admin-check"><input type="checkbox" id="gpTeleHealth"> 💻 텔레헬스</label>
+              <label class="admin-check"><input type="checkbox" id="gpParking"> 🅿 주차 가능</label>
+              <label class="admin-check"><input type="checkbox" id="gpWalkIn"> 🚶 워크인(예약 없이)</label>
+              <label class="admin-check"><input type="checkbox" id="gpBulkBilling"> 💳 Bulk Billing 가능</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="admin-field">
+          <label class="admin-label" for="gpSummary">한 줄 소개</label>
+          <input class="admin-input" id="gpSummary" type="text" maxlength="120" placeholder="예: 한국어 가능 의사 · 가족 단위 진료 · 텔레헬스" />
+        </div>
+
+        <div class="admin-field">
+          <label class="admin-label" for="gpBody">상세 내용</label>
+          <textarea class="admin-textarea" id="gpBody" placeholder="진료 분야·경력·예약 방법·보험 가능 여부 등 자세히 안내해 주세요."></textarea>
+        </div>
+
+        <div class="admin-field">
+          <label class="admin-label" for="gpImage">대표 이미지 URL (선택)</label>
+          <input class="admin-input" id="gpImage" type="url" placeholder="https://...jpg — 카드/지도 InfoWindow 대표 사진" />
+        </div>
+
+        <div class="admin-field">
+          <label class="admin-check"><input type="checkbox" id="gpPremium" checked> 프리미엄 상단 고정 (Pinned)</label>
+        </div>
+
+        <div class="admin-actions"><button class="admin-submit" type="submit">GP 게시글 등록</button></div>
+        <p class="admin-note" id="gpNote"></p>
+      </form>
+
+      <h3 class="admin-list-title">등록된 GP 게시글</h3>
+      <div class="admin-post-list" id="gpList"></div>
     </section>
 
     </div><!-- /.admin-body -->
@@ -1387,6 +1480,91 @@
         ${p.signature ? `<div class="admin-post-sub">⭐ ${escHtml(p.signature)}</div>`  : ''}
         ${p.summary   ? `<div class="admin-post-sub">${escHtml(p.summary)}</div>`       : ''}
         ${p.contact   ? `<div class="admin-post-sub">📞 ${escHtml(p.contact)}</div>`    : ''}
+        <div class="admin-post-actions">
+          <span class="admin-post-time">${fmtDate(p.createdAt)}</span>
+          <button class="admin-del" data-col="services" data-id="${p.id}">삭제</button>
+        </div>
+      </div>`;
+    });
+
+    // ── ⑨ GP 게시글 등록 (services 컬렉션, category='gp') ──
+    const GP_SPEC_LABEL = {
+      family:'가정의학과', pediatrics:'소아과', internal:'내과', dermatology:'피부과',
+      ob_gyn:'산부인과', psychiatry:'정신과/심리', dental:'치과', womens:'여성', mens:'남성',
+      travel:'여행/예방접종', other:'기타',
+    };
+    $('gpForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const state    = $('gpState').value;
+      const title    = $('gpTitle').value.trim();
+      const contact  = $('gpContact').value.trim();
+      const address  = $('gpAddress').value.trim();
+      const specs    = Array.from(document.querySelectorAll('.gp-spec:checked')).map(c => c.value);
+      if (!state || !title || !contact || !address || !specs.length) {
+        flash($('gpNote'), '주·클리닉명·연락처·주소·진료과는 필수 입력입니다.', false); return;
+      }
+      const u = auth.currentUser;
+      if (!u) { flash($('gpNote'), '로그인이 필요합니다.', false); showLocked(); return; }
+      const payload = {
+        category:    'gp',
+        state,
+        title,
+        contact,
+        address,
+        region:      address,
+        specialties: specs,
+        hours:       $('gpHours').value.trim(),
+        korean:      $('gpKorean').checked,
+        teleHealth:  $('gpTeleHealth').checked,
+        parking:     $('gpParking').checked,
+        walkIn:      $('gpWalkIn').checked,
+        bulkBilling: $('gpBulkBilling').checked,
+        summary:     $('gpSummary').value.trim(),
+        tagline:     $('gpSummary').value.trim(),
+        body:        $('gpBody').value.trim(),
+        imageUrls:   $('gpImage').value.trim() ? [$('gpImage').value.trim()] : [],
+        isPremium:   $('gpPremium').checked,
+        adminPost:   true,
+        status:      'approved',  // admin 직접 등록 — 승인 검토 단계 우회
+        author:      '관리자',
+        uid:         u.uid,
+        email:       u.email,
+        createdAt:   serverTimestamp(),
+      };
+      try {
+        await addDoc(collection(db, 'services'), payload);
+        $('gpForm').reset();
+        $('gpPremium').checked = true;
+        $('gpKorean').checked  = true;
+        document.querySelectorAll('.gp-spec').forEach(c => c.checked = false);
+        flash($('gpNote'), `[${specs.map(s => GP_SPEC_LABEL[s]).join('·')}] GP 등록 완료 — gp.html 페이지에 실시간 노출`, true);
+        alert('성공적으로 등록되었습니다!');
+      } catch (err) {
+        console.error('[admin] gp 저장 실패', err);
+        flash($('gpNote'), '❌ 등록 실패: ' + (err.message || err), false);
+      }
+    });
+    subscribeList('services', $('gpList'), p => {
+      if (p.category !== 'gp') return '';
+      const ss = Array.isArray(p.specialties) ? p.specialties.map(s => GP_SPEC_LABEL[s] || s).join(' · ') : '';
+      const opts = [];
+      if (p.korean)      opts.push('🇰🇷 한국어');
+      if (p.teleHealth)  opts.push('💻 텔레헬스');
+      if (p.parking)     opts.push('🅿 주차');
+      if (p.walkIn)      opts.push('🚶 워크인');
+      if (p.bulkBilling) opts.push('💳 Bulk Billing');
+      return `<div class="admin-post-item">
+        <div class="admin-post-meta">
+          ${ss ? `<span class="admin-post-cat">${escHtml(ss)}</span>` : ''}
+          <span class="admin-post-state">${escHtml(p.state ? (STATE_LABEL[p.state] || p.state) : '전 지역')}</span>
+          ${p.isPremium ? '<span class="admin-post-pin">📌 PIN</span>' : ''}
+        </div>
+        <div class="admin-post-title">${escHtml(p.title || '-')}</div>
+        ${p.address ? `<div class="admin-post-sub">📍 ${escHtml(p.address)}</div>` : ''}
+        ${p.hours   ? `<div class="admin-post-sub">🕐 ${escHtml(p.hours)}</div>`   : ''}
+        ${opts.length ? `<div class="admin-post-sub">${opts.join(' · ')}</div>` : ''}
+        ${p.summary ? `<div class="admin-post-sub">${escHtml(p.summary)}</div>` : ''}
+        ${p.contact ? `<div class="admin-post-sub">📞 ${escHtml(p.contact)}</div>` : ''}
         <div class="admin-post-actions">
           <span class="admin-post-time">${fmtDate(p.createdAt)}</span>
           <button class="admin-del" data-col="services" data-id="${p.id}">삭제</button>

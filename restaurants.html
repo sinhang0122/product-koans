@@ -2269,6 +2269,8 @@
     }
 
     function updateMapMarkers(filteredPosts) {
+      // 외부 필터 모듈 (Stage 2 필터 후처리) 에서 호출할 수 있도록 노출
+      window.__koausUpdateMap = updateMapMarkers;
       if (!map) return;
       markers.forEach(m => m.setMap(null));
       markers = [];
@@ -2813,6 +2815,76 @@
     }
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind, { once: true });
     else bind();
+  </script>
+
+  <!-- ── 상세 필터 후처리 (restaurants: 음식 종류·영업 상태·편의시설) ── -->
+  <script>
+    (function () {
+      const STORE_KEY = 'koaus-restaurants-posts';
+      function collect() {
+        return {
+          cuisines: Array.from(document.querySelectorAll('.rs-fcuisine:checked')).map(c => c.value),
+          status:   (document.getElementById('rsFStatus') || {}).value || '',
+          parking:  !!(document.getElementById('rsFParking')  || {}).checked,
+          delivery: !!(document.getElementById('rsFDelivery') || {}).checked,
+          takeaway: !!(document.getElementById('rsFTakeaway') || {}).checked,
+          halal:    !!(document.getElementById('rsFHalal')    || {}).checked,
+        };
+      }
+      function matches(p, f) {
+        if (f.cuisines.length) {
+          const ps = Array.isArray(p.cuisines) ? p.cuisines : [];
+          if (!f.cuisines.some(c => ps.includes(c))) return false;
+        }
+        if (f.status === 'delivery_only' && !p.delivery) return false;
+        if (f.status === 'takeaway_only' && !p.takeaway) return false;
+        // open_now 는 영업시간 자유 텍스트라 정확한 매칭 어려움 — 무시
+        if (f.parking  && !p.parking)  return false;
+        if (f.delivery && !p.delivery) return false;
+        if (f.takeaway && !p.takeaway) return false;
+        if (f.halal    && !p.halal)    return false;
+        return true;
+      }
+      function readData() {
+        try { return JSON.parse(localStorage.getItem(STORE_KEY) || '[]'); } catch { return []; }
+      }
+      function apply() {
+        const f = collect();
+        const empty = !f.cuisines.length && !f.status && !f.parking && !f.delivery && !f.takeaway && !f.halal;
+        const data = readData();
+        const filtered = empty ? data : data.filter(p => matches(p, f));
+        const ids = new Set(filtered.map(p => String(p.id)));
+        // 카드 hide/show
+        document.querySelectorAll('#postGrid .accom-card').forEach(card => {
+          const show = empty || ids.has(card.dataset.id);
+          card.style.display = show ? '' : 'none';
+        });
+        // 카운트
+        const cnt = document.getElementById('boardCount');
+        if (cnt) cnt.textContent = '총 ' + (empty ? data.length : filtered.length) + '건';
+        // 마커 — updateMapMarkers 가 노출됐다면 호출
+        if (typeof window.__koausUpdateMap === 'function') {
+          window.__koausUpdateMap(empty ? data : filtered);
+        }
+      }
+      function bind() {
+        const apply_ = document.getElementById('filterApplyBtn');
+        const reset_ = document.getElementById('filterResetBtn');
+        if (apply_) apply_.addEventListener('click', () => setTimeout(apply, 50));
+        if (reset_) reset_.addEventListener('click', () => {
+          document.querySelectorAll('.rs-fcuisine').forEach(c => c.checked = false);
+          const st = document.getElementById('rsFStatus'); if (st) st.value = '';
+          ['rsFParking','rsFDelivery','rsFTakeaway','rsFHalal'].forEach(id => {
+            const el = document.getElementById(id); if (el) el.checked = false;
+          });
+          setTimeout(apply, 50);
+        });
+        // services 갱신 시 자동 재적용
+        window.addEventListener('koaus-services-updated', () => setTimeout(apply, 100));
+      }
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind, { once: true });
+      else bind();
+    })();
   </script>
 </body>
 </html>
