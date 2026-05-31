@@ -9,20 +9,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;800;900&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
   <script>
-    /* ── admin 경로 자기방어: index.html 이 /admin* 경로로 fallback 서빙된 경우 ──
-       호스팅 측 _redirects 설정 누락·전파 지연 시 안전망. 파일명·디렉토리 단위로만
-       admin 을 판별 (게시글 본문에 'admin' 단어가 들어가도 오탐 없음). */
-    (function () {
-      try {
-        var p = (window.location.pathname || '').toLowerCase();
-        // 정확한 패턴: /admin · /admin/ · /admin.html · /admin.htm · /admin/index.html
-        var ADMIN_RE = /(^|\/)admin(\.html?|\/(index\.html?)?)?$/;
-        if (ADMIN_RE.test(p)) {
-          window.location.replace('/admin.html' + (window.location.search || '') + (window.location.hash || ''));
-          return;  // 이후 index.html 본문 렌더링 중단 (브라우저가 새 location 로드)
-        }
-      } catch (_) {}
-    })();
     (function () {
       const saved = localStorage.getItem('koaus-theme');
       const sys = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
