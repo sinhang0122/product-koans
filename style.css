@@ -1746,6 +1746,15 @@ select.filter-mini-input {
 }
 .rent-detail-text { white-space: pre-line; line-height: 1.65; }
 
+/* ── InfoWindow 우상단 액션(별표·연락완료) 정렬 ── */
+.iw-actions { display: inline-flex; align-items: center; gap: 2px; }
+.iw-star { transition: transform 0.12s ease; }
+.iw-star:hover { transform: scale(1.15); }
+.iw-contact { transition: color 0.12s ease, transform 0.12s ease; }
+.iw-contact:hover { transform: scale(1.1); }
+.iw-contact.contacted { color: #d92626 !important; }
+.iw-contact.contacted svg { stroke: #d92626; }
+
 /* ── 관리자 통합 대시보드 사이드바 (admin.html 전용) ── */
 .admin-shell { display: grid; grid-template-columns: 220px 1fr; gap: 24px; align-items: start; }
 .admin-shell .page-header { grid-column: 1 / -1; }
