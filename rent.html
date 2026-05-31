@@ -624,6 +624,7 @@
               </button>
               <div class="photo-thumbs" id="wPhotoThumbs"></div>
             </div>
+            <p class="duplicate-notice" id="duplicateNotice" hidden>* 안전한 개인정보 보호를 위해 사진은 새로 첨부해 주셔야 합니다.</p>
           </div>
         </div><!-- /좌측 -->
 
@@ -1094,8 +1095,44 @@
       document.getElementById('wAuthor').value = currentNickname();  // 작성자 자동 입력(읽기 전용)
       loadMapScript();              // Places 로드 보장
       wireAutocomplete('wAddress'); // 주소 자동완성 바인딩
+      window.pendingPhotoFiles = []; if (typeof renderPhotoThumbs === 'function') renderPhotoThumbs();
+      applyDuplicateData();         // ?duplicate=1 진입 시 원본 데이터 prefill (이미지 제외)
       writeOverlay.classList.add('open');
       document.body.style.overflow = 'hidden';
+    }
+
+    // 마이페이지 [재업로드] 진입 시 폼 prefill — 사진은 빈 상태 + 빨간 안내
+    function applyDuplicateData() {
+      const notice = document.getElementById('duplicateNotice');
+      if (notice) notice.hidden = true;
+      const raw = localStorage.getItem('koaus-duplicate-rent');
+      if (!raw) return;
+      let d; try { d = JSON.parse(raw); } catch (_) { localStorage.removeItem('koaus-duplicate-rent'); return; }
+      localStorage.removeItem('koaus-duplicate-rent');
+      const set = (id, v) => { const el = document.getElementById(id); if (el && v != null) el.value = v; };
+      const check = (id, v) => { const el = document.getElementById(id); if (el) el.checked = !!v; };
+      const setSeg = (hiddenId, val) => {
+        const t = document.getElementById(hiddenId); if (t) t.value = String(val || '');
+        const grp = document.querySelector(`.seg-group[data-target="${hiddenId}"]`);
+        if (grp) grp.querySelectorAll('.seg-btn').forEach(b => b.classList.toggle('active', (b.dataset.val || '') === String(val || '')));
+      };
+      // 모드 결정 (offer/find)
+      if (d.mode === 'find' || d.mode === 'offer') { activeMode = d.mode; applyWriteModeUI(); }
+      set('wTitle', d.title);
+      set('wAddress', d.address);
+      set('wPropType', d.propType);
+      set('wPrice', d.price);
+      set('wBody',  d.body);
+      set('wContact', d.contact);
+      setTypeChecks(Array.isArray(d.types) ? d.types : []);
+      setSeg('wBedrooms',  d.bedrooms);
+      setSeg('wBathrooms', d.bathrooms);
+      setSeg('wCarSpaces', d.carSpaces);
+      check('wParking', d.parking);
+      check('wPet',     d.petFriendly);
+      check('wKids',    d.kidsInHouse);
+      check('wAirCon',  d.airCon);
+      if (notice) notice.hidden = false;
     }
     function openWriteModalForEdit(p) {
       editingId = p.id;
@@ -1799,12 +1836,16 @@
       return null;
     }
 
-    // 마이페이지 등에서 ?edit=<id>로 진입 시, 로그인 확인 후 본인 글이면 수정 폼 자동 오픈
+    // 마이페이지에서 ?edit=<id>로 진입 시 수정 폼, ?duplicate=1 진입 시 재업로드 prefill
     window.addEventListener('koausAuthReady', () => {
-      const editId = new URLSearchParams(location.search).get('edit');
-      if (!editId) return;
-      const p = loadPosts().find(x => String(x.id) === String(editId));
-      if (p && isMine(p)) openWriteModalForEdit(p);
+      const params = new URLSearchParams(location.search);
+      const editId = params.get('edit');
+      if (editId) {
+        const p = loadPosts().find(x => String(x.id) === String(editId));
+        if (p && isMine(p)) openWriteModalForEdit(p);
+      } else if (params.get('duplicate') === '1' && localStorage.getItem('koaus-duplicate-rent')) {
+        openWriteModal();
+      }
     }, { once: true });
 
     switchMode(activeMode);  // URL ?mode= 반영 + 초기 렌더/타이틀

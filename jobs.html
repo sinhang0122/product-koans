@@ -889,7 +889,27 @@
       editingId = null;
       setWriteMode('create');
       fillAuthorBadge();
+      applyDuplicateData();   // ?duplicate=1 진입 시 원본 데이터 prefill
       writeOverlay.classList.add('open');
+    }
+
+    // 마이페이지 [재업로드] 진입 시 폼 prefill (jobs 는 사진 없음 — 안내문 생략)
+    function applyDuplicateData() {
+      const raw = localStorage.getItem('koaus-duplicate-jobs');
+      if (!raw) return;
+      let d; try { d = JSON.parse(raw); } catch (_) { localStorage.removeItem('koaus-duplicate-jobs'); return; }
+      localStorage.removeItem('koaus-duplicate-jobs');
+      const set = (id, v) => { const el = document.getElementById(id); if (el && v != null) el.value = v; };
+      // postType radio
+      const ptId = (d.postType === 'seeking') ? 'wPostTypeSeeking' : 'wPostTypeHiring';
+      const pt = document.getElementById(ptId); if (pt) pt.checked = true;
+      set('wTitle',     d.title);
+      set('wAddress',   d.address);
+      set('wEmpType',   d.empType);
+      set('wPayUnit',   d.payUnit || 'hour');
+      set('wPayAmount', d.payAmount);
+      set('wContact',   d.contact);
+      set('wBody',      d.body);
     }
     function openWriteModalForEdit(p) {
       editingId = p.id;
@@ -1065,12 +1085,16 @@
       }
     }
 
-    // 마이페이지 등에서 ?edit=<id>로 진입 시, 로그인 확인 후 본인 글이면 수정 폼 자동 오픈
+    // 마이페이지: ?edit=<id> → 수정 폼, ?duplicate=1 → 재업로드 prefill
     window.addEventListener('koausAuthReady', () => {
-      const editId = new URLSearchParams(location.search).get('edit');
-      if (!editId) return;
-      const p = loadPosts().find(x => String(x.id) === String(editId));
-      if (p && isMine(p)) openWriteModalForEdit(p);
+      const params = new URLSearchParams(location.search);
+      const editId = params.get('edit');
+      if (editId) {
+        const p = loadPosts().find(x => String(x.id) === String(editId));
+        if (p && isMine(p)) openWriteModalForEdit(p);
+      } else if (params.get('duplicate') === '1' && localStorage.getItem('koaus-duplicate-jobs')) {
+        guardedOpenWrite();
+      }
     }, { once: true });
 
     switchTab(activeTab);

@@ -619,6 +619,7 @@
           </button>
           <div class="photo-thumbs" id="wPhotoThumbs"></div>
         </div>
+        <p class="duplicate-notice" id="duplicateNotice" hidden>* 안전한 개인정보 보호를 위해 사진은 새로 첨부해 주셔야 합니다.</p>
       </div>
 
       <div class="write-field">
@@ -1215,8 +1216,42 @@
       loadMapScript();              // Places(주소 자동완성) 미리 로드
       initAddressAutocomplete();    // 이미 로드돼 있으면 즉시 연결
       window.pendingPhotoFiles = []; renderPhotoThumbs();  // 사진 첨부 초기화
+      applyDuplicateData();         // ?duplicate=1 진입 시 원본 데이터 prefill (이미지 제외)
       writeOverlay.classList.add('open');
       document.body.style.overflow = 'hidden';
+    }
+
+    // 마이페이지에서 [재업로드] 클릭 후 진입 시 — localStorage 의 원본 데이터로 폼 채움.
+    // 사진은 빈 상태 + 빨간 안내문 노출. 1회용(읽은 후 키 삭제).
+    function applyDuplicateData() {
+      const notice = document.getElementById('duplicateNotice');
+      if (notice) notice.hidden = true;
+      const raw = localStorage.getItem('koaus-duplicate-accom');
+      if (!raw) return;
+      let d; try { d = JSON.parse(raw); } catch (_) { localStorage.removeItem('koaus-duplicate-accom'); return; }
+      localStorage.removeItem('koaus-duplicate-accom');
+      const set = (id, v) => { const el = document.getElementById(id); if (el && v != null) el.value = v; };
+      const check = (id, v) => { const el = document.getElementById(id); if (el) el.checked = !!v; };
+      // 모드(방 올리기/구하기) 결정
+      const mode = (d.mode === 'find') ? 'find' : 'offer';
+      activeMode = mode;
+      applyWriteModeUI();
+      set('wTitle', d.title);
+      set('wAddress', d.address);
+      set('wPrice', d.price);
+      set('wBody',  d.body);
+      set('wContact', d.contact);
+      set('wAvailDate', d.availableDate);
+      set('wGender', d.gender);
+      setTypeChecks(Array.isArray(d.types) ? d.types : []);
+      // 방 형태 체크 (roomTypes)
+      const rooms = new Set(Array.isArray(d.roomTypes) ? d.roomTypes : (d.roomType ? [d.roomType] : []));
+      document.querySelectorAll('#wRoomTypes input').forEach(c => { c.checked = rooms.has(c.dataset.room); });
+      check('wParking',  d.parking);
+      check('wPet',      d.petFriendly);
+      check('wKids',     d.kidsInHouse);
+      check('wAirCon',   d.airCon);
+      if (notice) notice.hidden = false;
     }
     function openWriteModalForEdit(p) {
       editingId = p.id;
@@ -2265,10 +2300,14 @@
 
     // 마이페이지 등에서 ?edit=<id>로 진입 시, 로그인 확인 후 본인 글이면 수정 폼 자동 오픈
     window.addEventListener('koausAuthReady', () => {
-      const editId = new URLSearchParams(location.search).get('edit');
-      if (!editId) return;
-      const p = loadPosts().find(x => String(x.id) === String(editId));
-      if (p && isMine(p)) openWriteModalForEdit(p);
+      const params = new URLSearchParams(location.search);
+      const editId = params.get('edit');
+      if (editId) {
+        const p = loadPosts().find(x => String(x.id) === String(editId));
+        if (p && isMine(p)) openWriteModalForEdit(p);
+      } else if (params.get('duplicate') === '1' && localStorage.getItem('koaus-duplicate-accom')) {
+        openWriteModal();   // duplicate prefill 은 openWriteModal 내부에서 자동 적용
+      }
     }, { once: true });
 
     switchMode(activeMode);  // URL ?mode= 반영 + 초기 렌더/타이틀
