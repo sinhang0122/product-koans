@@ -30,7 +30,6 @@
   <script type="module" src="marquee.js"></script>
 
   <script src="pw-toggle.js" defer></script>
-  <script type="module" src="admin-mark.js"></script>
 </head>
 <body>
 
@@ -443,8 +442,6 @@
       <span class="board-count" id="boardCount">총 0건</span>
       <div class="accom-ctrl-actions">
         <button class="board-write-btn board-write-btn--ghost" id="filterModalBtn">상세 필터</button>
-        <!-- 관리자 전용 컨텍스트 버튼 (현재 카테고리에 따라 텍스트 동적 갱신) -->
-        <a href="admin.html#services" class="admin-btn admin-only" id="adminCatBtn">＋ 글쓰기</a>
         <button class="board-write-btn" id="writeBtnOpen">+ 글쓰기</button>
       </div>
     </div>
@@ -1114,19 +1111,6 @@
       const iq = document.getElementById('autoInquiryBtn');
       if (iq) iq.style.display = (cat === 'rental') ? 'none' : '';
       // 카테고리별 하단 주의사항 갱신
-      // 관리자 컨텍스트 버튼 — 카테고리에 따라 텍스트·링크 갱신 (admin claim 시에만 표시)
-      const ADMIN_CAT_BTN = {
-        rental:      { txt: '＋ 히어로 배너 등록',  href: 'admin.html#ads',      show: true  },
-        inspection:  { txt: '＋ 히어로 배너 등록',  href: 'admin.html#ads',      show: true  },
-        maintenance: { txt: '＋ 글쓰기',              href: 'admin.html#services', show: true  },
-        towing:      { txt: '＋ 글쓰기',              href: 'admin.html#services', show: true  },
-      };
-      const acb = document.getElementById('adminCatBtn');
-      if (acb) {
-        const m = ADMIN_CAT_BTN[cat];
-        if (m) { acb.textContent = m.txt; acb.setAttribute('href', m.href); acb.style.display = ''; }
-        else { acb.style.display = 'none'; }
-      }
       const AUTO_DISCLAIMER = {
         rental:      '※ 이용자 본인의 사정에 따른 실제 차량 대여, 보험 및 계약 조건은 해당 렌트카 업체와 직접 확인해 주세요.',
         inspection:  '※ 이용자 본인의 사정에 따른 실제 매물 상태 점검 및 최종 계약 결정은 공인 인스펙션 업체와 직접 확인해 주세요.',

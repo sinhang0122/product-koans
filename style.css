@@ -1746,6 +1746,38 @@ select.filter-mini-input {
 }
 .rent-detail-text { white-space: pre-line; line-height: 1.65; }
 
+/* ── 관리자 통합 대시보드 사이드바 (admin.html 전용) ── */
+.admin-shell { display: grid; grid-template-columns: 220px 1fr; gap: 24px; align-items: start; }
+.admin-shell .page-header { grid-column: 1 / -1; }
+.admin-sidenav {
+  position: sticky; top: 20px; align-self: start;
+  display: flex; flex-direction: column; gap: 4px;
+  padding: 14px 10px;
+  background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--r-md);
+}
+.admin-sidenav-link {
+  display: block; padding: 10px 12px; font-size: 13.5px; font-weight: 700;
+  color: var(--text-secondary); text-decoration: none; border-radius: var(--r-sm);
+  border-left: 3px solid transparent;
+  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+}
+.admin-sidenav-link:hover { background: var(--bg-card); color: var(--text-primary); }
+.admin-sidenav-link.active {
+  background: var(--text-primary); color: var(--bg-base);
+  border-left-color: var(--accent, #000);
+}
+.admin-body { display: flex; flex-direction: column; gap: 24px; min-width: 0; }
+@media (max-width: 768px) {
+  .admin-shell { grid-template-columns: 1fr; gap: 14px; }
+  .admin-sidenav {
+    position: static; flex-direction: row; flex-wrap: wrap; padding: 8px;
+  }
+  .admin-sidenav-link {
+    padding: 8px 10px; font-size: 12.5px; border-left: none; border-bottom: 2px solid transparent;
+  }
+  .admin-sidenav-link.active { border-bottom-color: var(--bg-base); }
+}
+
 /* ── 관리자 전용 컨텍스트 버튼 (admin claim 보유 시에만 표시) ── */
 .admin-only { display: none !important; }
 body.is-admin .admin-only { display: inline-flex !important; }

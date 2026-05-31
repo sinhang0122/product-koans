@@ -399,7 +399,7 @@
     </div>
   </div>
 
-  <main class="page-container" id="adminMain" style="display:none;">
+  <main class="page-container admin-shell" id="adminMain" style="display:none;">
 
     <div class="page-header">
       <div>
@@ -412,6 +412,16 @@
         <a href="index.html" class="page-back">← 홈으로</a>
       </div>
     </div>
+
+    <!-- 좌측 사이드바 메뉴 (섹션 점프) -->
+    <nav class="admin-sidenav" id="adminSidenav">
+      <a href="#notices"      class="admin-sidenav-link" data-target="notices">① 글로벌 공지 배너</a>
+      <a href="#sponsors"     class="admin-sidenav-link" data-target="sponsors">② 광고주</a>
+      <a href="#services"     class="admin-sidenav-link" data-target="services">③ 서비스 게시글 등록</a>
+      <a href="#ads"          class="admin-sidenav-link" data-target="ads">④ 광고 배너</a>
+      <a href="#globalTicker" class="admin-sidenav-link" data-target="globalTicker">⑤ 글로벌 티커</a>
+    </nav>
+    <div class="admin-body" id="adminBody">
 
     <!-- ── ① 공지사항 등록 ── -->
     <section class="admin-section" id="notices">
@@ -519,6 +529,7 @@
       <div class="admin-list" id="tickerList"></div>
     </section>
 
+    </div><!-- /.admin-body -->
   </main>
 
   <footer class="site-footer"><p>KoAus &mdash; 호주 한인 포털 &nbsp;·&nbsp; 2026</p></footer>
@@ -882,6 +893,27 @@
         alert('삭제 실패 — Firestore 권한/규칙을 확인해 주세요.');
       }
     });
+  </script>
+
+  <!-- 사이드바 active 토글 (해시 점프 + 스크롤 spy) -->
+  <script>
+    (function () {
+      const links = Array.from(document.querySelectorAll('.admin-sidenav-link'));
+      if (!links.length) return;
+      function setActive(id) {
+        links.forEach(a => a.classList.toggle('active', a.dataset.target === id));
+      }
+      // 해시로 첫 활성화
+      setActive((location.hash || '#notices').slice(1));
+      links.forEach(a => a.addEventListener('click', () => setActive(a.dataset.target)));
+      // 스크롤 시 현재 보이는 섹션 활성화
+      const sections = links.map(a => document.getElementById(a.dataset.target)).filter(Boolean);
+      const io = new IntersectionObserver(entries => {
+        const hit = entries.filter(e => e.isIntersecting).sort((a,b)=>b.intersectionRatio-a.intersectionRatio)[0];
+        if (hit && hit.target.id) setActive(hit.target.id);
+      }, { rootMargin: '-30% 0px -50% 0px', threshold: [0, 0.25, 0.5, 1] });
+      sections.forEach(s => io.observe(s));
+    })();
   </script>
 
   <!-- 관리자 대시보드 플로팅 버튼 — admin.html 진입 시 우하단 고정 -->
