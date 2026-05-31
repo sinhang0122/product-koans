@@ -897,6 +897,10 @@ body {
   background: var(--bg-surface); border: 1px solid var(--border);
   border-radius: var(--r-xl); padding: 24px 28px;
   width: 100%; max-width: 720px;
+  max-height: calc(100vh - 40px);   /* 모달 자체가 뷰포트 안에 들어오게 */
+  overflow-y: auto;                  /* 폼 내부만 스크롤 — 바디 스크롤 차단 */
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;      /* 스크롤이 부모(body)로 전파되지 않도록 */
   display: flex; flex-direction: column; gap: 13px;
   transform: translateY(16px); transition: transform 0.2s;
 }
@@ -1171,6 +1175,10 @@ select.write-input {
   .calc-result { font-size: 36px; }
   .post-list-head, .post-row { grid-template-columns: 40px 1fr 80px; }
   .post-list-head > *:last-child, .post-row > *:last-child { display: none; }
+  /* 모바일 카드 폭 최적화 — 화면을 꽉 채우지 않고 좌우 여백 */
+  .accom-grid { padding: 0 12px; gap: 10px; }
+  .accom-card { max-width: 100%; margin-left: 0; margin-right: 0; }
+  .post-list-table { margin-left: 12px; margin-right: 12px; }
   /* Jobs board mobile: num / title / date / star (작성자 숨김) */
   .post-list-table--jobs .post-list-head,
   .post-list-table--jobs .post-row { grid-template-columns: 34px 1fr 76px 32px; }
