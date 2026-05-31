@@ -1222,9 +1222,36 @@
       filtered.forEach(p => {
         if (!(p.lat && p.lng)) return;
         const mk = new google.maps.Marker({ position: { lat:p.lat, lng:p.lng }, map: jobsMap, title: p.title });
-        const iw = new google.maps.InfoWindow({ content: `<div style="font-size:13px;font-weight:700;">${(p.title||'').replace(/</g,'&lt;')}</div>` });
+        const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        const thumb = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#777" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>`;
+        const payTxt = (p.payAmount && p.payUnit !== 'negotiable')
+          ? '$' + p.payAmount + (p.payUnit === 'hour' ? ' / hr' : (p.payUnit === 'year' ? ' / yr' : ''))
+          : '';
+        const iw = new google.maps.InfoWindow({ content: `
+          <div class="iw-card" data-pid="${p.id}" style="display:flex;gap:10px;max-width:270px;padding:4px 2px;cursor:pointer;font-family:'Urbanist','Noto Sans KR',sans-serif;">
+            <div style="flex-shrink:0;width:72px;height:72px;border-radius:6px;overflow:hidden;border:1px solid #000;background:#f5f5f5;display:flex;align-items:center;justify-content:center;">${thumb}</div>
+            <div style="min-width:0;flex:1;">
+              <div style="font-weight:800;font-size:13px;line-height:1.3;color:#000;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${esc(p.title)}</div>
+              ${payTxt ? `<div style="font-size:13px;font-weight:800;color:#000;margin-top:3px;">${payTxt}</div>` : ''}
+              ${p.address ? `<div style="font-size:11px;color:#444;margin-top:3px;">📍 ${esc(p.address)}</div>` : ''}
+              <div style="font-size:10px;color:#666;margin-top:4px;">탭하여 상세 보기 →</div>
+            </div>
+          </div>` });
         mk.addListener('click', () => iw.open(jobsMap, mk));
+        // 카드 클릭 → 상세 모달 오픈 (위임 처리는 _jobsIwInstances 통해)
+        if (!window._jobsIws) window._jobsIws = [];
+        window._jobsIws.push(iw);
         jobsMarkers.push(mk);
+      });
+    }
+    // InfoWindow 위임 click — jobs 페이지 한 번만 등록
+    if (!window._jobsIwBound) {
+      window._jobsIwBound = true;
+      document.addEventListener('click', e => {
+        const card = e.target.closest('.iw-card[data-pid]');
+        if (!card) return;
+        (window._jobsIws || []).forEach(iw => { try { iw.close(); } catch (_) {} });
+        if (typeof openDetail === 'function') openDetail(card.dataset.pid);
       });
     }
 
