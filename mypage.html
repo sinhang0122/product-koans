@@ -445,6 +445,7 @@
       <button class="mypage-tab active" data-mtab="mine">내가 쓴 글</button>
       <button class="mypage-tab" data-mtab="recent">최근 본 글</button>
       <button class="mypage-tab" data-mtab="saved">저장한 글</button>
+      <button class="mypage-tab" data-mtab="contacted">연락한 글</button>
     </div>
 
     <div class="mypage-list" id="mypageList" style="display:none;"></div>
@@ -743,7 +744,7 @@
     const boardHref  = b => b === 'accom' ? 'accom.html' : b === 'rent' ? 'rent.html' : b === 'jobs' ? 'jobs.html' : '#';
 
     let mtab = 'mine';
-    const emptyMsg = { mine: '아직 작성한 글이 없습니다.', recent: '최근 본 글이 없습니다.', saved: '저장한 글이 없습니다.' };
+    const emptyMsg = { mine: '아직 작성한 글이 없습니다.', recent: '최근 본 글이 없습니다.', saved: '저장한 글이 없습니다.', contacted: '연락한 글이 없습니다.' };
     function dataFor(tab) {
       if (tab === 'mine') {
         // 게시판 원본에서 현재 유저(uid/email)의 글만 직접 필터링 — 누락 방지
@@ -761,6 +762,21 @@
         return out.sort((a, b) => b.id - a.id);
       }
       if (tab === 'recent') return readJSON('koaus-recent-posts');
+      if (tab === 'contacted') {
+        // 연락 완료 체크한 글 — 모든 board store에서 ID 매칭 후 카드 데이터 복원
+        const ids = readJSON('koaus_contacted_posts').map(String);
+        if (!ids.length) return [];
+        const idSet = new Set(ids);
+        const out = [];
+        [['accom','koaus-accom-posts'], ['rent','koaus-rent-posts'], ['jobs','koaus-jobs-posts']].forEach(([board, key]) => {
+          readJSON(key).forEach(p => {
+            if (idSet.has(String(p.id))) {
+              out.push({ board, id: p.id, title: p.title, author: p.author, authorEmail: p.email || p.authorEmail || '', date: p.date, time: p.time || '' });
+            }
+          });
+        });
+        return out.sort((a, b) => b.id - a.id);
+      }
       return readJSON('koaus-saved-posts');
     }
     const boardStoreKey = b => b === 'accom' ? 'koaus-accom-posts' : b === 'rent' ? 'koaus-rent-posts' : b === 'jobs' ? 'koaus-jobs-posts' : null;
