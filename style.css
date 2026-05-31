@@ -954,6 +954,23 @@ body {
   background: #2a1414; border-color: #5a2424; color: #f3c2c2;
 }
 :root[data-theme="dark"] .caution-box .caution-title { color: #ff8c8c; }
+/* ── trades/restaurants 필터 칩 그리드 ── */
+.trades-chip-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 6px 8px; margin-top: 6px;
+}
+.trades-chip {
+  display: flex; align-items: center; gap: 6px;
+  padding: 7px 10px; border-radius: 8px;
+  background: var(--card-bg, #fff); border: 1px solid var(--border, #e4e7eb);
+  font-size: 13px; cursor: pointer;
+  transition: background .12s, border-color .12s;
+}
+.trades-chip:hover { background: var(--hover-bg, #f5f7fa); }
+.trades-chip input { accent-color: var(--accent, #2563eb); width: 14px; height: 14px; cursor: pointer; }
+:root[data-theme="dark"] .trades-chip { background: #1d2433; border-color: #2c3346; }
+:root[data-theme="dark"] .trades-chip:hover { background: #252d3f; }
+
 /* ── trades.html 좌상단 문의하기 + 안내 박스 ── */
 .page-header-left { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 0; }
 .page-header-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 6px; }

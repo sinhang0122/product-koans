@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>기술직 (Skilled Trades) — KoAus</title>
+  <title>한인 식당 (Korean Restaurants) — KoAus</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;800;900&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet" />
@@ -513,8 +513,8 @@
 
     <div class="page-header">
       <div class="page-header-left">
-        <h1 class="page-title" id="boardTitle">🔧 호주 한인 기술직 게시판</h1>
-        <p class="page-subtitle" id="boardSubtitle">전기·배관·인테리어·페인팅·핸디맨 등 검증된 한인 기술자 정보</p>
+        <h1 class="page-title" id="boardTitle">🍱 호주 한인 식당 (Korean Restaurants)</h1>
+        <p class="page-subtitle" id="boardSubtitle">주(State) · 음식 종류별 한인 식당 정보 · 검증된 가게만 노출</p>
         <div class="page-header-actions">
           <a href="index.html" class="page-back">← 홈으로</a>
           <a href="contact.html" class="trades-inquiry-btn">✉️ 문의하기</a>
@@ -529,8 +529,18 @@
       등록 신청은 좌측 상단 <a href="contact.html" class="trades-notice-link">[문의하기]</a> 를 통해 보내주세요.</span>
     </div>
 
-    <!-- Controls (List View 전용 — 상세 필터만) -->
+    <!-- Controls (List View + Map View 토글 + 상세 필터) -->
     <div class="accom-controls">
+      <div class="view-toggle" id="viewToggle">
+        <button class="view-btn active" id="viewListBtn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          List View
+        </button>
+        <button class="view-btn" id="viewMapBtn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+          Map View
+        </button>
+      </div>
       <span class="board-count" id="boardCount">총 0건</span>
       <div class="accom-ctrl-actions">
         <button class="board-write-btn board-write-btn--ghost" id="filterModalBtn">상세 필터</button>
@@ -542,6 +552,12 @@
       <div id="pinnedNoticeBox" class="pinned-notice" hidden></div>
       <div id="postGrid" class="accom-grid accom-grid--compact"></div>
       <div class="pagination" id="pagination"></div>
+    </div>
+
+    <!-- Map View -->
+    <div id="mapView" style="display:none;">
+      <button class="area-search-btn" id="areaSearchBtn">이 지역 매물 검색하기</button>
+      <div id="accomMap"></div>
     </div>
 
   </main>
@@ -564,44 +580,39 @@
       </div>
 
       <div class="filter-section">
-        <label class="filter-section-label">직종 종류 Trade Type · 복수 선택</label>
+        <label class="filter-section-label">음식 종류 Cuisine · 복수 선택</label>
         <div class="trades-chip-grid">
-          <label class="trades-chip"><input type="checkbox" class="tr-ftype" value="electrician"> 전기</label>
-          <label class="trades-chip"><input type="checkbox" class="tr-ftype" value="plumber"> 배관</label>
-          <label class="trades-chip"><input type="checkbox" class="tr-ftype" value="painter"> 페인팅</label>
-          <label class="trades-chip"><input type="checkbox" class="tr-ftype" value="tiler"> 타일</label>
-          <label class="trades-chip"><input type="checkbox" class="tr-ftype" value="carpenter"> 목공</label>
-          <label class="trades-chip"><input type="checkbox" class="tr-ftype" value="interior"> 인테리어</label>
-          <label class="trades-chip"><input type="checkbox" class="tr-ftype" value="handyman"> 핸디맨</label>
-          <label class="trades-chip"><input type="checkbox" class="tr-ftype" value="demolition"> 철거</label>
-          <label class="trades-chip"><input type="checkbox" class="tr-ftype" value="landscaping"> 조경</label>
-          <label class="trades-chip"><input type="checkbox" class="tr-ftype" value="other"> 기타</label>
+          <label class="trades-chip"><input type="checkbox" class="rs-fcuisine" value="korean"> 한식</label>
+          <label class="trades-chip"><input type="checkbox" class="rs-fcuisine" value="chinese"> 중식</label>
+          <label class="trades-chip"><input type="checkbox" class="rs-fcuisine" value="japanese"> 일식</label>
+          <label class="trades-chip"><input type="checkbox" class="rs-fcuisine" value="chicken"> 치킨</label>
+          <label class="trades-chip"><input type="checkbox" class="rs-fcuisine" value="bunsik"> 분식</label>
+          <label class="trades-chip"><input type="checkbox" class="rs-fcuisine" value="bbq"> BBQ/구이</label>
+          <label class="trades-chip"><input type="checkbox" class="rs-fcuisine" value="cafe"> 카페</label>
+          <label class="trades-chip"><input type="checkbox" class="rs-fcuisine" value="dessert"> 디저트</label>
+          <label class="trades-chip"><input type="checkbox" class="rs-fcuisine" value="bar"> 주점</label>
+          <label class="trades-chip"><input type="checkbox" class="rs-fcuisine" value="delivery"> 배달</label>
+          <label class="trades-chip"><input type="checkbox" class="rs-fcuisine" value="other"> 기타</label>
         </div>
       </div>
 
       <div class="filter-section">
-        <label class="filter-section-label" for="trFCallout">최대 출장비 Max Callout ($)</label>
-        <input class="write-input" id="trFCallout" type="number" min="0" max="2000" step="10" placeholder="예: 150 (이하만 표시)" />
-      </div>
-
-      <div class="filter-section">
-        <label class="filter-section-label" for="trFExp">최소 경력 Min Experience</label>
-        <select class="write-input" id="trFExp">
+        <label class="filter-section-label" for="rsFStatus">영업 상태 Status</label>
+        <select class="write-input" id="rsFStatus">
           <option value="">전체</option>
-          <option value="0-2">0~2년 이상</option>
-          <option value="3-5">3~5년 이상</option>
-          <option value="6-10">6~10년 이상</option>
-          <option value="11-20">11~20년 이상</option>
-          <option value="20+">20년 이상</option>
+          <option value="open_now">지금 영업중</option>
+          <option value="delivery_only">배달 가능만</option>
+          <option value="takeaway_only">포장 가능만</option>
         </select>
       </div>
 
       <div class="filter-section">
-        <label class="filter-section-label">자격 / 보험 Credentials</label>
+        <label class="filter-section-label">편의시설 Amenities</label>
         <div class="trades-chip-grid">
-          <label class="trades-chip"><input type="checkbox" id="trFLicensed"> 🛡 자격증 보유</label>
-          <label class="trades-chip"><input type="checkbox" id="trFInsured"> 🔒 보험 가입</label>
-          <label class="trades-chip"><input type="checkbox" id="trFABN"> 📄 ABN 보유</label>
+          <label class="trades-chip"><input type="checkbox" id="rsFParking"> 🅿 주차</label>
+          <label class="trades-chip"><input type="checkbox" id="rsFDelivery"> 🚚 배달</label>
+          <label class="trades-chip"><input type="checkbox" id="rsFTakeaway"> 📦 포장</label>
+          <label class="trades-chip"><input type="checkbox" id="rsFHalal"> 🌙 할랄·베지</label>
         </div>
       </div>
 
@@ -912,7 +923,7 @@
     applyTheme(localStorage.getItem('koaus-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
 
     // ── Data ──
-    const STORE_KEY    = 'koaus-trades-posts';
+    const STORE_KEY    = 'koaus-restaurants-posts';
     const SEED_VERSION = '2026-05-empty';   // SAMPLES 변경 시 localStorage 재시드용
     const SAMPLES = [];
 
@@ -940,7 +951,7 @@
     const PER_PAGE     = 20;
 
     // ── 모드 탭 전환 (방 올리기 / 방 구하기) ──
-    // trades.html: modeTabs DOM 없음 — querySelectorAll은 빈 NodeList, forEach no-op으로 안전
+    // restaurants.html: modeTabs DOM 없음 — querySelectorAll 빈 NodeList, forEach no-op
     document.querySelectorAll('#modeTabs .accom-tab').forEach(btn => {
       btn.addEventListener('click', () => switchMode(btn.dataset.mode));
     });
@@ -1149,7 +1160,7 @@
       try { await sendEmailVerification(u); alert('인증 메일이 재전송되었습니다.'); }
       catch (e) { alert('잠시 후 다시 시도해 주세요.'); }
     });
-    // trades.html — 글쓰기 버튼 없음 (관리자 전용 등록). 안전한 no-op 가드.
+    // restaurants.html — 글쓰기 버튼 없음 (관리자 전용 등록). 안전한 no-op 가드.
     (document.getElementById('writeBtnOpen') || { addEventListener(){} }).addEventListener('click', () => {
       const u = window.koausAuth && window.koausAuth.user;
       if (!u) { alert('글을 작성하려면 로그인이 필요합니다.'); window.koausAuth && window.koausAuth.openAuthModal(); return; }
@@ -1497,7 +1508,7 @@
           window.pendingPhotoFiles = [];
           if (wsb) { wsb.disabled = false; wsb.textContent = '등록하기'; }
         } catch (e) {
-          console.error('[accom] 사진 업로드 실패', { code: e && e.code, message: e && e.message, error: e });
+          console.error('\[restaurants\] 사진 업로드 실패', { code: e && e.code, message: e && e.message, error: e });
           alert(`사진 업로드 실패: ${(e && e.code) || 'unknown'}\n${(e && e.message) || ''}\n글은 본인 기기에 저장되었습니다. 수정에서 다시 시도해 주세요.`);
         }
       }
@@ -1654,17 +1665,17 @@
       });
     }
 
-    // ── View Toggle ── (trades.html: List View 전용 — 토글 버튼 없음, no-op 가드)
+    // ── View Toggle ──
     let currentView = 'list';
-    (document.getElementById('viewListBtn') || { addEventListener(){} }).addEventListener('click', () => switchView('list'));
-    (document.getElementById('viewMapBtn')  || { addEventListener(){} }).addEventListener('click', () => switchView('map'));
+    document.getElementById('viewListBtn').addEventListener('click', () => switchView('list'));
+    document.getElementById('viewMapBtn').addEventListener('click',  () => switchView('map'));
 
     function switchView(v) {
       currentView = v;
-      const vl = document.getElementById('viewListBtn'); if (vl) vl.classList.toggle('active', v === 'list');
-      const vm = document.getElementById('viewMapBtn');  if (vm) vm.classList.toggle('active', v === 'map');
-      const lvw = document.getElementById('listView'); if (lvw) lvw.style.display = v === 'list' ? '' : 'none';
-      const mvw = document.getElementById('mapView');  if (mvw) mvw.style.display = v === 'map'  ? '' : 'none';
+      document.getElementById('viewListBtn').classList.toggle('active', v === 'list');
+      document.getElementById('viewMapBtn').classList.toggle('active',  v === 'map');
+      document.getElementById('listView').style.display = v === 'list' ? '' : 'none';
+      document.getElementById('mapView').style.display  = v === 'map'  ? '' : 'none';
       if (v === 'map') {
         loadMapScript();
         if (mapReady) updateMapMarkers(applyFilters(loadPosts()));
@@ -2147,7 +2158,7 @@
         }
         const req = wrap.requestFullscreen || wrap.webkitRequestFullscreen;
         if (req) {
-          req.call(wrap).catch(err => { console.warn('[accom] requestFullscreen 실패', err); });
+          req.call(wrap).catch(err => { console.warn('\[restaurants\] requestFullscreen 실패', err); });
         }
       });
       // 전체화면 진입/이탈 시 지도 리사이즈 트리거
@@ -2463,7 +2474,7 @@
     import('./compress.js').then(mod => {
       window.koausPhotos = { compressImage: mod.compressImage, thumbDataURL: mod.thumbDataURL, uploadPostImages: mod.uploadPostImages, app };
       window.dispatchEvent(new Event('koausPhotosReady'));
-    }).catch(e => console.warn('[accom] compress.js 로드 실패', e));
+    }).catch(e => console.warn('\[restaurants\] compress.js 로드 실패', e));
 
     // ── Auth Modal ──
     const authOverlay = document.getElementById('authOverlay');
@@ -2629,7 +2640,7 @@
     });
   </script>
 
-  <!-- ── Firestore services 컬렉션 실시간 구독 (기술직 관리자 글 자동 노출) ── -->
+  <!-- ── Firestore services 컬렉션 실시간 구독 (쉐어하우스 관리자 글 자동 노출) ── -->
   <script type="module">
     import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
     import { getFirestore, collection, query, orderBy, limit, onSnapshot } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
@@ -2639,15 +2650,14 @@
       messagingSenderId:'663988594088', appId:'1:663988594088:web:ef30c2fd557407b00b299d',
     };
     const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
-    let db; try { db = getFirestore(app); } catch (e) { console.warn('[trades] Firestore 미초기화', e); }
+    let db; try { db = getFirestore(app); } catch (e) { console.warn('\[restaurants\] Firestore 미초기화', e); }
     if (db) {
-      // trades 페이지는 accom의 LocalStorage 패턴을 재활용 (저장 키는 trades 전용으로 분리)
-      const STORE = 'koaus-trades-posts';
+      const STORE = 'koaus-restaurants-posts';
       try {
         onSnapshot(query(collection(db, 'services'), orderBy('createdAt', 'desc'), limit(50)), snap => {
           const fsItems = snap.docs
             .map(d => ({ _fsDocId: d.id, ...d.data() }))
-            .filter(s => s.category === 'trades');
+            .filter(s => s.category === 'restaurants');
           fsItems.forEach(s => {
             if (s.createdAt && s.createdAt.toMillis) {
               const d = s.createdAt.toDate(); const p = n => String(n).padStart(2,'0');
@@ -2663,11 +2673,11 @@
             if (!Array.isArray(s.types))     s.types     = ['any'];
             if (!Array.isArray(s.roomTypes)) s.roomTypes = [];
           });
-          // trades 페이지는 어드민 데이터만 노출 (로컬 사용자 글 없음)
+          // restaurants 페이지는 어드민 데이터만 노출 (로컬 사용자 글 없음)
           localStorage.setItem(STORE, JSON.stringify(fsItems));
           window.dispatchEvent(new Event('koaus-services-updated'));
-        }, err => console.warn('[trades] services 구독 실패', err));
-      } catch (e) { console.warn('[trades] Firestore services subscribe 실패', e); }
+        }, err => console.warn('[restaurants] services 구독 실패', err));
+      } catch (e) { console.warn('\[restaurants\] Firestore services subscribe 실패', e); }
     }
   </script>
 
@@ -2729,7 +2739,7 @@
     })();
   </script>
 
-  <!-- ── 게시판 상단 핀공지 (board_pinned_notices 컬렉션, doc id = 'trades') ── -->
+  <!-- ── 게시판 상단 핀공지 (board_pinned_notices 컬렉션, doc id = 'restaurants') -->
   <script type="module">
     import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
     import { getFirestore, doc, onSnapshot } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
@@ -2744,14 +2754,14 @@
       const box = document.getElementById('pinnedNoticeBox');
       if (!box) return;
       const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/\n/g,'<br>');
-      onSnapshot(doc(db, 'board_pinned_notices', 'trades'), snap => {
+      onSnapshot(doc(db, 'board_pinned_notices', 'restaurants'), snap => {
         const data = snap.exists() ? snap.data() : null;
         if (data && data.text && String(data.text).trim()) {
           box.innerHTML = '<span class="pn-icon" aria-hidden="true">📢</span><div class="pn-body"><strong>공지</strong> · ' + esc(data.text) + '</div>';
           box.hidden = false;
         } else { box.hidden = true; box.innerHTML = ''; }
-      }, err => console.warn('[trades] pinned-notice 구독 실패', err));
-    } catch (e) { console.warn('[trades] pinned-notice 초기화 실패', e); }
+      }, err => console.warn('[restaurants] pinned-notice 구독 실패', err));
+    } catch (e) { console.warn('\[restaurants\] pinned-notice 초기화 실패', e); }
   </script>
 </body>
 </html>
