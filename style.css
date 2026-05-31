@@ -954,6 +954,135 @@ body {
   background: #2a1414; border-color: #5a2424; color: #f3c2c2;
 }
 :root[data-theme="dark"] .caution-box .caution-title { color: #ff8c8c; }
+/* ── KoAus 히어로 배너 (PC Swiper / 모바일 1:3~1:4 카드) ── */
+.koaus-hero {
+  max-width: 1200px;
+  margin: 14px auto 18px;
+  padding: 0 16px;
+}
+.koaus-hero-pc { display: block; }
+.koaus-hero-mobile { display: none; }
+.koaus-hero-pc .swiper {
+  width: 100%;
+  aspect-ratio: 24 / 7;  /* 와이드 히어로 */
+  max-height: 360px;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 28px rgba(15, 23, 42, .14);
+}
+.koaus-hero-pc .swiper-slide {
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; text-align: center;
+  padding: 32px 48px;
+  background-size: cover; background-position: center;
+}
+.koaus-hero-pc .swiper-slide::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(15,23,42,.55) 0%, rgba(15,23,42,.25) 50%, rgba(15,23,42,.55) 100%);
+}
+.koaus-hero-pc .hero-content {
+  position: relative; z-index: 1;
+  max-width: 720px;
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+}
+.koaus-hero-pc .hero-eyebrow {
+  display: inline-block;
+  background: rgba(255,255,255,.18); backdrop-filter: blur(6px);
+  padding: 5px 12px; border-radius: 999px;
+  font-size: 12px; font-weight: 700; letter-spacing: .04em;
+}
+.koaus-hero-pc .hero-title {
+  font-size: clamp(22px, 3vw, 38px);
+  font-weight: 900; line-height: 1.18;
+  text-shadow: 0 2px 12px rgba(0,0,0,.35);
+  margin: 0;
+}
+.koaus-hero-pc .hero-sub {
+  font-size: clamp(13px, 1.4vw, 16px);
+  font-weight: 500; opacity: .95; line-height: 1.5;
+  text-shadow: 0 1px 6px rgba(0,0,0,.3);
+  margin: 0;
+}
+.koaus-hero-pc .hero-cta {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-top: 8px;
+  padding: 9px 18px; border-radius: 999px;
+  background: #fff; color: #0f172a;
+  font-size: 13px; font-weight: 800; text-decoration: none;
+  transition: transform .15s, background .15s;
+}
+.koaus-hero-pc .hero-cta:hover { background: #f1f5f9; transform: translateY(-1px); }
+
+/* Swiper 페이지네이션·네비게이션 컬러 (히어로 한정) */
+.koaus-hero-pc .swiper-pagination-bullet { background: #fff; opacity: .55; width: 8px; height: 8px; }
+.koaus-hero-pc .swiper-pagination-bullet-active { opacity: 1; width: 24px; border-radius: 4px; }
+.koaus-hero-pc .swiper-button-prev,
+.koaus-hero-pc .swiper-button-next {
+  color: #fff; opacity: .8;
+  width: 32px; height: 32px;
+  background: rgba(0,0,0,.25); border-radius: 50%;
+  backdrop-filter: blur(6px);
+  --swiper-navigation-size: 16px;
+}
+.koaus-hero-pc .swiper-button-prev::after,
+.koaus-hero-pc .swiper-button-next::after { font-size: 14px; font-weight: 900; }
+.koaus-hero-pc .swiper-button-prev:hover,
+.koaus-hero-pc .swiper-button-next:hover { opacity: 1; background: rgba(0,0,0,.4); }
+
+/* 모바일 (≤ 767): PC 슬라이더 숨기고 1:3~1:4 카드 노출 */
+@media (max-width: 767px) {
+  .koaus-hero { margin: 10px auto 14px; padding: 0 12px; }
+  .koaus-hero-pc { display: none; }
+  .koaus-hero-mobile { display: block; }
+}
+.koaus-hero-mobile .hero-card {
+  position: relative;
+  display: flex; flex-direction: column; justify-content: center;
+  width: 100%; aspect-ratio: 16 / 5;  /* 약 3.2:1 — 1:3~1:4 범위 */
+  padding: 18px 22px;
+  border-radius: 14px;
+  overflow: hidden;
+  color: #fff; text-align: left;
+  background-size: cover; background-position: center;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, .12);
+}
+.koaus-hero-mobile .hero-card::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(105deg, rgba(15,23,42,.62) 0%, rgba(15,23,42,.28) 100%);
+}
+.koaus-hero-mobile .hero-content {
+  position: relative; z-index: 1;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.koaus-hero-mobile .hero-eyebrow {
+  display: inline-block; align-self: flex-start;
+  background: rgba(255,255,255,.18); backdrop-filter: blur(4px);
+  padding: 3px 9px; border-radius: 999px;
+  font-size: 10.5px; font-weight: 700; letter-spacing: .04em;
+}
+.koaus-hero-mobile .hero-title {
+  font-size: 17px; font-weight: 900; line-height: 1.25;
+  text-shadow: 0 2px 8px rgba(0,0,0,.4);
+  margin: 4px 0 0;
+}
+.koaus-hero-mobile .hero-sub {
+  font-size: 12px; font-weight: 500;
+  text-shadow: 0 1px 4px rgba(0,0,0,.3);
+  opacity: .95; line-height: 1.45; margin: 0;
+}
+
+/* 페이지별 슬라이드 배경 그라데이션 (이미지 없어도 동작) */
+.hero-bg--home1 { background-image: linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #2563eb 100%); }
+.hero-bg--home2 { background-image: linear-gradient(135deg, #134e4a 0%, #047857 60%, #10b981 100%); }
+.hero-bg--home3 { background-image: linear-gradient(135deg, #4c1d95 0%, #7c3aed 50%, #c026d3 100%); }
+.hero-bg--legal1 { background-image: linear-gradient(135deg, #1e1b4b 0%, #312e81 60%, #4338ca 100%); }
+.hero-bg--legal2 { background-image: linear-gradient(135deg, #1f2937 0%, #374151 60%, #6b7280 100%); }
+.hero-bg--legal3 { background-image: linear-gradient(135deg, #0c4a6e 0%, #075985 60%, #0284c7 100%); }
+.hero-bg--edu1 { background-image: linear-gradient(135deg, #831843 0%, #be185d 50%, #ec4899 100%); }
+.hero-bg--edu2 { background-image: linear-gradient(135deg, #14532d 0%, #15803d 60%, #22c55e 100%); }
+.hero-bg--edu3 { background-image: linear-gradient(135deg, #78350f 0%, #b45309 60%, #f59e0b 100%); }
+
 /* ── 6 섹션 공통: 유저 등록 요청 모달 ── */
 .request-overlay {
   position: fixed; inset: 0; z-index: 1000;

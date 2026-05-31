@@ -449,6 +449,54 @@
 
   <main class="home-main">
 
+    <!-- ── KoAus 히어로 배너 (PC: Swiper / 모바일: 1:3~1:4 카드) ── -->
+    <section class="koaus-hero" aria-label="KoAus 히어로 배너">
+      <!-- PC 와이드 슬라이더 (≥768px) -->
+      <div class="koaus-hero-pc">
+        <div class="swiper" id="heroSwiperHome">
+          <div class="swiper-wrapper">
+            <div class="swiper-slide hero-bg--home1">
+              <div class="hero-content">
+                <span class="hero-eyebrow">KoAus · Korea ↔ Australia</span>
+                <h2 class="hero-title">호주 한인 생활의 모든 것, 한 곳에서.</h2>
+                <p class="hero-sub">쉐어·렌트·구인구직·정비·식당·법무·유학 — 검증된 한인 커뮤니티 포털</p>
+                <a class="hero-cta" href="#sectionShortcuts">서비스 둘러보기 →</a>
+              </div>
+            </div>
+            <div class="swiper-slide hero-bg--home2">
+              <div class="hero-content">
+                <span class="hero-eyebrow">실시간 매물 · 지도 보기</span>
+                <h2 class="hero-title">쉐어·렌트, 위치까지 한눈에.</h2>
+                <p class="hero-sub">시드니·멜버른·브리즈번 — 한인 매물을 지도와 사진으로 확인하세요</p>
+                <a class="hero-cta" href="accom.html">쉐어 보러가기 →</a>
+              </div>
+            </div>
+            <div class="swiper-slide hero-bg--home3">
+              <div class="hero-content">
+                <span class="hero-eyebrow">관리자 검증 게시판</span>
+                <h2 class="hero-title">믿을 수 있는 한인 기술자·식당·GP.</h2>
+                <p class="hero-sub">관리자가 직접 검증한 정보만 노출 — 무분별한 광고 zero</p>
+                <a class="hero-cta" href="trades.html">기술직 보러가기 →</a>
+              </div>
+            </div>
+          </div>
+          <div class="swiper-pagination"></div>
+          <div class="swiper-button-prev"></div>
+          <div class="swiper-button-next"></div>
+        </div>
+      </div>
+      <!-- 모바일 단일 카드 (≤767px) -->
+      <div class="koaus-hero-mobile">
+        <div class="hero-card hero-bg--home1">
+          <div class="hero-content">
+            <span class="hero-eyebrow">KoAus</span>
+            <h2 class="hero-title">호주 한인 생활의 모든 것</h2>
+            <p class="hero-sub">쉐어 · 렌트 · 구인 · 정비 · 식당 · GP</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- 전광판(Marquee) · Firestore global_ticker — 좌측 [Notice|광고주] 고정 + 우측 [광고내용] 우→좌 흐름 (marquee.js) -->
     <section class="notice-section">
       <div class="notice-row" id="tickerRow">
@@ -706,6 +754,36 @@
         }, err => console.warn('[home] ads 구독 실패', err));
       } catch (e) {}
     }
+  </script>
+
+  <!-- ── KoAus 히어로 슬라이더 초기화 (PC 전용, ≥768px 에서만 Swiper 활성화) ── -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js" defer></script>
+  <script>
+    (function () {
+      function initHeroSwiper() {
+        const el = document.getElementById('heroSwiperHome');
+        if (!el || typeof window.Swiper !== 'function') return;
+        // PC(≥768px) 에서만 Swiper 초기화 — 모바일은 CSS 로 PC 슬라이더를 숨김
+        try {
+          new window.Swiper(el, {
+            loop: true,
+            speed: 700,
+            autoplay: { delay: 4500, disableOnInteraction: false },
+            pagination: { el: '.koaus-hero-pc .swiper-pagination', clickable: true },
+            navigation: {
+              nextEl: '.koaus-hero-pc .swiper-button-next',
+              prevEl: '.koaus-hero-pc .swiper-button-prev',
+            },
+          });
+        } catch (e) { console.warn('[hero] Swiper 초기화 실패', e); }
+      }
+      if (document.readyState === 'loading') {
+        window.addEventListener('DOMContentLoaded', () => setTimeout(initHeroSwiper, 0), { once: true });
+      } else { setTimeout(initHeroSwiper, 0); }
+      // Swiper CDN 이 늦게 로드되는 경우 대응
+      window.addEventListener('load', initHeroSwiper, { once: true });
+    })();
   </script>
 </body>
 </html>
