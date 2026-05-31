@@ -272,6 +272,7 @@ service cloud.firestore {
       allow read: if true;
       allow create, update, delete: if isAdmin()
                                        && reqStr('text', 1, 1000)
+                                       && optStr('title', 200)
                                        && optStr('board', 30);
       allow list: if limitedList();
     }

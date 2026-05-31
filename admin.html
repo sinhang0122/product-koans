@@ -607,26 +607,35 @@
 
     <!-- ── ⑥ 게시판 상단 핀공지 (board_pinned_notices — 게시판별 1개 doc, setDoc upsert) ── -->
     <section class="admin-section" id="pinnedNotices">
-      <h2 class="admin-section-title">⑥ 게시판 상단 핀공지 (Pinned Notice)</h2>
-      <p style="font-size:12px;color:var(--text-muted);margin:-8px 0 10px;line-height:1.55;">선택한 게시판(쉐어·렌트·구인구직)의 리스트 최상단에 📢 박스로 고정 노출됩니다. 게시판당 1개만 유지(같은 게시판 재등록 시 덮어쓰기), 삭제 즉시 사라집니다.</p>
+      <h2 class="admin-section-title">⑥ 공지사항 관리 (Pinned Notice)</h2>
+      <p style="font-size:12px;color:var(--text-muted);margin:-8px 0 12px;line-height:1.55;">선택한 게시판의 리스트 최상단에 📢 박스로 고정 노출됩니다. 게시판당 1 개만 유지(같은 게시판 재등록 시 덮어쓰기), 삭제 즉시 사라집니다. 전 사이트 상단 마퀴 공지는 위쪽 <a href="#notices" class="admin-sidenav-link" style="color:var(--accent);font-weight:700;text-decoration:underline;">① 글로벌 공지 배너</a> 섹션을 이용하세요.</p>
       <form class="admin-form" id="pinForm">
         <div class="admin-row">
           <div class="admin-field">
-            <label class="admin-label" for="pinBoard">게시판<span class="admin-req">*</span></label>
+            <label class="admin-label" for="pinBoard">공지 대상 게시판<span class="admin-req">*</span></label>
             <select class="admin-input" id="pinBoard">
-              <option value="accom">쉐어 (accom)</option>
-              <option value="rent">렌트 (rent)</option>
-              <option value="jobs">구인구직 (jobs)</option>
+              <option value="accom">🏠 쉐어 (Share)</option>
+              <option value="rent">🏘 렌트 (Rent)</option>
+              <option value="jobs">💼 구인구직 (Work)</option>
+              <option value="restaurants">🍱 한인 식당 (Restaurants)</option>
+              <option value="trades">🔧 기술직 (Trades)</option>
+              <option value="gp">🏥 GP (Korean-Speaking GP)</option>
             </select>
+          </div>
+          <div class="admin-field">
+            <label class="admin-label" for="pinTitle">공지 제목 (선택)</label>
+            <input class="admin-input" id="pinTitle" type="text" maxlength="100" placeholder="예: 신규 등록 정책 안내" />
           </div>
         </div>
         <div class="admin-field">
           <label class="admin-label" for="pinText">공지 내용<span class="admin-req">*</span></label>
-          <textarea class="admin-input" id="pinText" rows="3" maxlength="500" placeholder="해당 게시판 상단에 표시될 고정 공지를 입력하세요" style="min-height:80px;resize:vertical;"></textarea>
+          <textarea class="admin-input" id="pinText" rows="4" maxlength="1000" placeholder="해당 게시판 상단에 표시될 고정 공지를 입력하세요. 줄바꿈은 그대로 반영됩니다." style="min-height:90px;resize:vertical;"></textarea>
         </div>
-        <div class="admin-actions"><button class="admin-submit" type="submit">상단 공지 작성</button></div>
+        <div class="admin-actions"><button class="admin-submit" type="submit">📢 공지사항 등록하기</button></div>
         <p class="admin-note" id="pinNote"></p>
       </form>
+
+      <h3 class="admin-list-title" style="margin-top:18px;">등록된 게시판 공지</h3>
       <div class="admin-list" id="pinList"></div>
     </section>
 
@@ -1272,32 +1281,38 @@
       </div>`);
 
     // ── ⑥ 게시판 핀공지 등록 (board_pinned_notices — doc id = board 이름, setDoc upsert) ──
-    const PIN_BOARD_LABEL = { accom: '쉐어', rent: '렌트', jobs: '구인구직' };
+    const PIN_BOARD_LABEL = {
+      accom: '🏠 쉐어', rent: '🏘 렌트', jobs: '💼 구인구직',
+      restaurants: '🍱 한인 식당', trades: '🔧 기술직', gp: '🏥 GP',
+    };
     $('pinForm').addEventListener('submit', async e => {
       e.preventDefault();
       const board = $('pinBoard').value;
       const text  = $('pinText').value.trim();
-      if (!board || !text) { flash($('pinNote'), '게시판과 공지 내용을 모두 입력해 주세요.', false); return; }
+      const title = ($('pinTitle') && $('pinTitle').value.trim()) || '';
+      if (!board || !text) { flash($('pinNote'), '대상 게시판과 공지 내용을 모두 입력해 주세요.', false); return; }
       const u = auth.currentUser;
       if (!u) { flash($('pinNote'), '로그인이 필요합니다.', false); showLocked(); return; }
       try {
         await setDoc(doc(db, 'board_pinned_notices', board), {
-          board, text,
+          board, title, text,
           uid: u.uid, email: u.email,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
         });
         $('pinForm').reset();
-        flash($('pinNote'), `✅ [${PIN_BOARD_LABEL[board]}] 상단 공지 등록 완료 (해당 게시판 실시간 반영)`, true);
+        flash($('pinNote'), `✅ [${PIN_BOARD_LABEL[board] || board}] 공지 등록 완료 (해당 게시판 실시간 반영)`, true);
       } catch (err) {
         console.error('[admin] board_pinned_notices 저장 실패', err);
         flash($('pinNote'), '❌ 등록 실패: ' + (err.message || err), false);
       }
     });
     subscribeList('board_pinned_notices', $('pinList'), p =>
-      `<div class="admin-item">
-        <span class="admin-item-main">
-          <strong>[${escHtml(PIN_BOARD_LABEL[p.id] || p.id)}]</strong> &nbsp; ${escHtml(p.text || '')}
+      `<div class="admin-item" style="flex-wrap:wrap;">
+        <span class="admin-item-main" style="flex:1;min-width:0;">
+          <strong>[${escHtml(PIN_BOARD_LABEL[p.id] || p.id)}]</strong>
+          ${p.title ? `<strong style="color:var(--text);margin-left:4px;">${escHtml(p.title)}</strong> · ` : ' '}
+          <span style="color:var(--text-muted);">${escHtml((p.text || '').slice(0, 140))}${(p.text || '').length > 140 ? ' …' : ''}</span>
         </span>
         <span class="admin-item-meta">${fmtDate(p.updatedAt || p.createdAt)}</span>
         <button class="admin-del" data-col="board_pinned_notices" data-id="${p.id}">삭제</button>
