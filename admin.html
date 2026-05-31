@@ -895,24 +895,40 @@
     });
   </script>
 
-  <!-- 사이드바 active 토글 (해시 점프 + 스크롤 spy) -->
+  <!-- 사이드바 탭 전환: 클릭한 섹션만 노출, 나머지 숨김 -->
   <script>
     (function () {
-      const links = Array.from(document.querySelectorAll('.admin-sidenav-link'));
-      if (!links.length) return;
-      function setActive(id) {
+      const links    = Array.from(document.querySelectorAll('.admin-sidenav-link'));
+      const sections = Array.from(document.querySelectorAll('.admin-section'));
+      if (!links.length || !sections.length) return;
+
+      const validIds = new Set(sections.map(s => s.id));
+
+      function showSection(id) {
+        if (!validIds.has(id)) id = 'notices';
+        sections.forEach(sec => { sec.style.display = (sec.id === id) ? 'block' : 'none'; });
         links.forEach(a => a.classList.toggle('active', a.dataset.target === id));
+        // 탭 전환 시 상단으로 — 긴 폼이어도 즉시 체감
+        window.scrollTo({ top: 0, behavior: 'auto' });
+        // 해시 동기화 (히스토리 push 안 함)
+        try { history.replaceState(null, '', '#' + id); } catch (_) {}
       }
-      // 해시로 첫 활성화
-      setActive((location.hash || '#notices').slice(1));
-      links.forEach(a => a.addEventListener('click', () => setActive(a.dataset.target)));
-      // 스크롤 시 현재 보이는 섹션 활성화
-      const sections = links.map(a => document.getElementById(a.dataset.target)).filter(Boolean);
-      const io = new IntersectionObserver(entries => {
-        const hit = entries.filter(e => e.isIntersecting).sort((a,b)=>b.intersectionRatio-a.intersectionRatio)[0];
-        if (hit && hit.target.id) setActive(hit.target.id);
-      }, { rootMargin: '-30% 0px -50% 0px', threshold: [0, 0.25, 0.5, 1] });
-      sections.forEach(s => io.observe(s));
+
+      // 초기 진입: hash 우선, 없으면 첫 섹션
+      showSection((location.hash || '#notices').slice(1));
+
+      // 사이드바 클릭 → 탭 전환 (앵커 점프 차단)
+      links.forEach(a => {
+        a.addEventListener('click', e => {
+          e.preventDefault();
+          showSection(a.dataset.target);
+        });
+      });
+
+      // 뒤로/앞으로 버튼 등으로 hash 변경 시 동기화
+      window.addEventListener('hashchange', () => {
+        showSection((location.hash || '#notices').slice(1));
+      });
     })();
   </script>
 
