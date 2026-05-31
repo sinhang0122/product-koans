@@ -37,6 +37,16 @@ service cloud.firestore {
       return !(field in data())
         || (data()[field] is string && data()[field].size() <= maxLen);
     }
+    // 선택 숫자: 없거나 / 있으면 int + 범위 내
+    function optInt(field, minVal, maxVal) {
+      return !(field in data())
+        || (data()[field] is int && data()[field] >= minVal && data()[field] <= maxVal);
+    }
+    // 선택 URL 리스트: 없거나 / list + 길이 제한 (이미지 URL 배열용)
+    function optUrlList(field, maxCount) {
+      return !(field in data())
+        || (data()[field] is list && data()[field].size() <= maxCount);
+    }
     // 목록 조회는 반드시 20개 이하만 — 무한 스캔(read 폭탄) 차단
     function limitedList() {
       return request.query.limit <= 20;
@@ -63,7 +73,16 @@ service cloud.firestore {
         && optStr('contact', 100)
         && optStr('phone', 30)
         && optStr('author', 50)
-        && optStr('email', 200);
+        && optStr('email', 200)
+        // 렌트(rent_posts) — 새 숫자/리스트 필드
+        && optInt('bedrooms',  0, 20)
+        && optInt('bathrooms', 0, 20)
+        && optInt('carSpaces', 0, 20)
+        && optInt('payAmount', 0, 9999999)   // jobs (시급/연봉)
+        && optStr('empType',   30)           // jobs
+        && optStr('payUnit',   20)           // jobs
+        // 사진 URL 배열 (post_images Storage) — 최대 8개로 여유
+        && optUrlList('imageUrls', 8);
     }
 
     // ── 게시판 컬렉션 (현재 localStorage 스토어 → 향후 Firestore 전환 대비) ──

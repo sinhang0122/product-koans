@@ -1086,8 +1086,15 @@
       document.getElementById('wAddress').value  = p.address || '';
       document.getElementById('wPropType').value = p.propType || '';
       document.getElementById('wPrice').value    = p.price || '';
-      document.getElementById('wRoomType').value = p.roomType || 'single';
-      document.getElementById('wBathroom').value = p.bathroom || 'shared';
+      // 신규: bedrooms/bathrooms/carSpaces segmented 동기화 (hidden + 버튼 active)
+      const setSeg = (hiddenId, val) => {
+        const t = document.getElementById(hiddenId); if (t) t.value = String(val || '');
+        const grp = document.querySelector(`.seg-group[data-target="${hiddenId}"]`);
+        if (grp) grp.querySelectorAll('.seg-btn').forEach(b => b.classList.toggle('active', (b.dataset.val || '') === String(val || '')));
+      };
+      setSeg('wBedrooms',  p.bedrooms);
+      setSeg('wBathrooms', p.bathrooms);
+      setSeg('wCarSpaces', p.carSpaces);
       document.getElementById('wParking').checked = !!p.parking;
       document.getElementById('wPet').checked     = !!p.petFriendly;
       document.getElementById('wKids').checked    = !!p.kidsInHouse;
@@ -1095,6 +1102,9 @@
       document.getElementById('wBody').value     = p.body || '';
       document.getElementById('wAuthor').value   = p.author || '';
       document.getElementById('wContact').value  = p.contact || '';
+      // 기존 사진 미리보기 (편집 모드 — Storage URL을 그대로 preview 로 사용)
+      window.pendingPhotoFiles = (Array.isArray(p.imageUrls) ? p.imageUrls : []).map(u => ({ existing: true, url: u, preview: u }));
+      if (typeof renderPhotoThumbs === 'function') renderPhotoThumbs();
       setWriteMode('edit');
       applyWriteModeUI();
       document.getElementById('detailOverlay').classList.remove('open');
@@ -1240,27 +1250,31 @@
         console.log('[KoAus] 렌트 글 저장 — uid:', target.uid, '| email:', target.email, '| id:', target.id);
       }
 
-      // 사진 업로드 (최대 6장, 클라이언트 압축 후 Firebase Storage)
-      if (window.pendingPhotoFiles && window.pendingPhotoFiles.length && window.koausPhotos) {
+      // 사진 처리 (최대 6장) — 기존(existing) URL 은 유지, 새로 추가한 file 만 압축 업로드
+      if (window.pendingPhotoFiles && window.koausPhotos) {
+        const existing = window.pendingPhotoFiles.filter(p => p.existing).map(p => p.url);
+        const newFiles = window.pendingPhotoFiles.filter(p => p.file).map(p => p.file);
         const wsb = document.getElementById('writeBtnSubmit');
-        if (wsb) { wsb.disabled = true; wsb.textContent = `사진 업로드 중… 0/${window.pendingPhotoFiles.length}`; }
-        try {
-          const urls = await window.koausPhotos.uploadPostImages(
-            window.koausPhotos.app, `post_images/rent/${target.id}`,
-            window.pendingPhotoFiles.map(p => p.file),
-            { maxDim: 1200, quality: 0.7, onProgress: (i, total) => { if (wsb) wsb.textContent = `사진 업로드 중… ${i}/${total}`; } }
-          );
-          target.imageUrls = urls;
-          const cur = loadPosts();
-          const idx2 = cur.findIndex(x => String(x.id) === String(target.id));
-          if (idx2 >= 0) { cur[idx2].imageUrls = urls; savePosts(cur); }
-          window.pendingPhotoFiles = [];
-        } catch (e) {
-          console.error('[rent] 사진 업로드 실패', { code: e && e.code, message: e && e.message, error: e });
-          alert(`사진 업로드 실패: ${(e && e.code) || 'unknown'}\n${(e && e.message) || ''}`);
-        } finally {
-          if (wsb) { wsb.disabled = false; wsb.textContent = '등록하기'; }
+        let uploaded = [];
+        if (newFiles.length) {
+          if (wsb) { wsb.disabled = true; wsb.textContent = `사진 업로드 중… 0/${newFiles.length}`; }
+          try {
+            uploaded = await window.koausPhotos.uploadPostImages(
+              window.koausPhotos.app, `post_images/rent/${target.id}`,
+              newFiles,
+              { maxDim: 1200, quality: 0.7, onProgress: (i, total) => { if (wsb) wsb.textContent = `사진 업로드 중… ${i}/${total}`; } }
+            );
+          } catch (e) {
+            console.error('[rent] 사진 업로드 실패', { code: e && e.code, message: e && e.message, error: e });
+            alert(`사진 업로드 실패: ${(e && e.code) || 'unknown'}\n${(e && e.message) || ''}`);
+          }
         }
+        target.imageUrls = [...existing, ...uploaded];
+        const cur = loadPosts();
+        const idx2 = cur.findIndex(x => String(x.id) === String(target.id));
+        if (idx2 >= 0) { cur[idx2].imageUrls = target.imageUrls; savePosts(cur); }
+        window.pendingPhotoFiles = [];
+        if (wsb) { wsb.disabled = false; wsb.textContent = '등록하기'; }
       }
 
       currentPage = 1;
@@ -1455,8 +1469,12 @@
       const pageItems = sorted.slice(start, start + PER_PAGE);
       grid.innerHTML = pageItems.map(p => {
         const saved = isSaved(p.id);
+        const heroImg = (Array.isArray(p.imageUrls) && p.imageUrls.length)
+          ? `<div class="accom-card-hero"><img src="${escHtml(p.imageUrls[0])}" alt="${escHtml(p.title || '')}" loading="lazy" />${p.imageUrls.length > 1 ? `<span class="accom-card-hero-count">📷 ${p.imageUrls.length}</span>` : ''}</div>`
+          : '';
         return `
         <div class="accom-card${isMine(p) ? ' my-post-highlight' : ''}" data-id="${p.id}">
+          ${heroImg}
           <div class="accom-card-header">
             <div class="accom-card-badges">
               <span class="accom-type-badge accom-type-badge--offering">${MODE_LABELS[p.mode] || '방 올리기'}</span>
@@ -1537,7 +1555,30 @@
       document.getElementById('detailTags').innerHTML =
         filterTags(p).map(t => `<span class="post-detail-tag">${escHtml(t)}</span>`).join('');
 
-      document.getElementById('detailBody').textContent = p.body;
+      const bodyEl = document.getElementById('detailBody');
+      const N = Array.isArray(p.imageUrls) ? p.imageUrls.length : 0;
+      const gallery = N ? `
+        <div class="rent-detail-hero">
+          <div class="rent-detail-gallery" id="rentDetailGallery">
+            ${p.imageUrls.map(u => `<img src="${escHtml(u)}" alt="" loading="lazy" data-src="${escHtml(u)}" />`).join('')}
+          </div>
+          <div class="rent-detail-counter" id="rentDetailCounter">1 / ${N}</div>
+        </div>` : '';
+      bodyEl.innerHTML = gallery + `<div class="rent-detail-text">${escHtml(p.body || '')}</div>`;
+      // 갤러리 스크롤 → counter / 이미지 클릭 → lightbox
+      if (N) {
+        const gal = document.getElementById('rentDetailGallery');
+        const counter = document.getElementById('rentDetailCounter');
+        gal.addEventListener('scroll', () => {
+          const w = gal.clientWidth || 1;
+          const idx = Math.min(N, Math.max(1, Math.round(gal.scrollLeft / w) + 1));
+          if (counter) counter.textContent = `${idx} / ${N}`;
+        }, { passive: true });
+        gal.addEventListener('click', e => {
+          const t = e.target.closest('img'); if (!t) return;
+          if (typeof openLightbox === 'function') openLightbox(t.dataset.src || t.src);
+        });
+      }
       const contactEl = document.getElementById('detailContact');
       contactEl.innerHTML = p.contact ? `📞 연락처: <strong>${escHtml(p.contact)}</strong>` : '';
 
@@ -1984,6 +2025,40 @@
         loginBtn.title = '로그인 / 회원가입';
       }
     });
+  </script>
+
+  <!-- ── Lightbox (이미지 확대 모달) — 상세 갤러리 클릭 시 ── -->
+  <div class="lightbox-overlay" id="lightboxOverlay" aria-hidden="true">
+    <button class="lightbox-close" id="lightboxClose" type="button" aria-label="닫기">✕</button>
+    <img class="lightbox-img" id="lightboxImg" src="" alt="확대 이미지" />
+  </div>
+  <script>
+    function openLightbox(src) {
+      const ov = document.getElementById('lightboxOverlay');
+      const img = document.getElementById('lightboxImg');
+      if (!ov || !img || !src) return;
+      img.src = src;
+      ov.classList.add('open');
+      ov.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeLightbox() {
+      const ov = document.getElementById('lightboxOverlay');
+      if (!ov) return;
+      ov.classList.remove('open');
+      ov.setAttribute('aria-hidden', 'true');
+      const img = document.getElementById('lightboxImg');
+      if (img) img.src = '';
+      const stillOpen = document.querySelector('.post-detail-overlay.open, .write-overlay.open, .filter-overlay.open');
+      if (!stillOpen) document.body.style.overflow = '';
+    }
+    (function bindLightbox() {
+      const ov = document.getElementById('lightboxOverlay');
+      const cl = document.getElementById('lightboxClose');
+      if (ov) ov.addEventListener('click', e => { if (e.target === ov) closeLightbox(); });
+      if (cl) cl.addEventListener('click', closeLightbox);
+      document.addEventListener('keydown', e => { if (e.key === 'Escape' && ov && ov.classList.contains('open')) closeLightbox(); });
+    })();
   </script>
 </body>
 </html>
