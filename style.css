@@ -938,6 +938,36 @@ body {
   font-size: 12.5px; line-height: 1.6; color: #64748B;
 }
 .disclaimer-check input { accent-color: var(--accent); width: 17px; height: 17px; flex-shrink: 0; margin-top: 1px; cursor: pointer; }
+/* ── 글쓰기 폼 하단 주의사항·공지 박스 ── */
+.caution-box {
+  margin-top: 6px; padding: 12px 14px; border-radius: 10px;
+  background: #fff5f5; border: 1px solid #fecaca;
+  font-size: 12.5px; line-height: 1.65; color: #7a2828;
+}
+.caution-box .caution-title {
+  display: flex; align-items: center; gap: 6px;
+  font-weight: 700; color: #b91c1c; margin-bottom: 6px; font-size: 13px;
+}
+.caution-box ol { margin: 0; padding-left: 20px; }
+.caution-box ol li { margin: 2px 0; }
+:root[data-theme="dark"] .caution-box {
+  background: #2a1414; border-color: #5a2424; color: #f3c2c2;
+}
+:root[data-theme="dark"] .caution-box .caution-title { color: #ff8c8c; }
+/* ── 게시판 리스트 최상단 핀공지 ── */
+.pinned-notice {
+  display: flex; align-items: flex-start; gap: 10px;
+  margin: 0 0 12px; padding: 12px 14px; border-radius: 10px;
+  background: #fff8d6; border: 1px solid #f5d76e; color: #5b4500;
+  font-size: 13.5px; line-height: 1.55;
+}
+.pinned-notice .pn-icon { font-size: 18px; line-height: 1.2; flex-shrink: 0; }
+.pinned-notice .pn-body { flex: 1; min-width: 0; word-break: break-word; }
+.pinned-notice .pn-body strong { color: #735500; }
+:root[data-theme="dark"] .pinned-notice {
+  background: #2a2310; border-color: #6a5520; color: #f6e4a8;
+}
+:root[data-theme="dark"] .pinned-notice .pn-body strong { color: #ffd86b; }
 .write-input:focus, .write-textarea:focus { border-color: var(--border-focus); }
 .write-textarea { resize: vertical; min-height: 72px; line-height: 1.6; }
 /* select도 input과 동일한 높이 + B&W 화살표로 통일 */
