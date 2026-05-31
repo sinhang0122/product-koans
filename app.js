@@ -6,6 +6,26 @@ import {
 } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
 import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app-check.js';
 
+// ── admin 페이지 전역 가드 ───────────────────────────────────────────
+//  app.js 는 일반 페이지(메인/게시판/마이) 의 UI 부트스트랩 전용.
+//  호스팅 라우팅 폴백(`/admin` → index.html)으로 본 모듈이 admin 경로에서
+//  실행되면 메인 홈 UI 가 떠버리므로, 파일명·디렉토리 단위에서 정확히
+//  admin 경로를 식별해 메인 부트스트랩을 즉시 중단한다.
+//  - admin.html 은 본래 app.js 를 로드하지 않지만, 이중 안전망.
+//  - 게시글 본문에 'admin' 이 들어가도 오탐 없도록 path 단위 정규식.
+(function () {
+  try {
+    const p = (window.location.pathname || '').toLowerCase();
+    const ADMIN_RE = /(^|\/)admin(\.html?|\/(index\.html?)?)?$/;
+    window.koausIsAdminPage = ADMIN_RE.test(p);
+  } catch (_) { window.koausIsAdminPage = false; }
+})();
+if (window.koausIsAdminPage) {
+  console.info('[koaus] admin 경로 감지 — app.js 메인 부트스트랩 건너뜀 (격리)');
+  // ES module 평가 중단 → 아래 메인 UI 초기화 코드가 한 줄도 실행되지 않음
+  throw '[koaus] admin guard: main app skipped';
+}
+
 const firebaseConfig = {
   apiKey:            'AIzaSyCamqnt0bNUD9uz1N5BbCuQjSkWLSpPqlU',
   authDomain:        'koaus-f564c.firebaseapp.com',

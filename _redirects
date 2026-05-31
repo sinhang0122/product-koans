@@ -1,0 +1,35 @@
+# ════════════════════════════════════════════════════════════════════
+#  Cloudflare Pages — Clean URL 라우팅 / SPA 미사용 정적 사이트
+#  ─ 사용자가 `/admin`(확장자 없는) 으로 접근 시 admin.html 을 그대로
+#    서빙(상태 200 유지). index.html 로 fallback 되지 않도록 명시적으로
+#    매핑합니다. /admin/ 트레일링 슬래시도 함께 처리.
+#  ─ 다른 페이지(쉐어/렌트/구인/마이/관리 등)도 Clean URL 호환되도록
+#    `.html` 확장자 자동 매핑.
+#  ─ 본 파일은 Cloudflare Pages 가 자동 감지합니다 (`_redirects`).
+# ════════════════════════════════════════════════════════════════════
+
+# 핵심: admin 경로 폴백 방지 (404 우회 + index.html fallback 차단)
+/admin              /admin.html        200
+/admin/             /admin.html        200
+/admin/index.html   /admin.html        301
+
+# 다른 주요 게시판도 Clean URL 호환
+/accom              /accom.html        200
+/rent               /rent.html         200
+/jobs               /jobs.html         200
+/auto               /auto.html         200
+/trades             /trades.html       200
+/mypage             /mypage.html       200
+/points             /points.html       200
+/care               /care.html         200
+/contact            /contact.html      200
+/emergency          /emergency.html    200
+/calculator         /calculator.html   200
+/exchange           /exchange.html     200
+/powerball          /powerball.html    200
+/privacy            /privacy.html      200
+/car-sale           /car-sale.html     200
+/car-rent           /car-rent.html     200
+
+# 미구현 페이지(메뉴는 존재) — 404 우회 위해 index.html 임시 매핑하지 않음
+# /restaurants, /gp 는 향후 페이지 생성 시까지 자연스러운 404 유지
