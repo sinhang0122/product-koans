@@ -1604,6 +1604,37 @@ select.filter-mini-input {
     min-height: 120px; height: 130px;
   }
   .write-field--grow .write-textarea { min-height: 120px; }
+
+  /* 가로 스크롤 박멸 보강 — 모든 폼 필드 강제 */
+  .write-field, .write-grid, .write-col, .write-modal-header {
+    max-width: 100%; box-sizing: border-box;
+  }
+  .write-modal *, .write-overlay * { max-width: 100%; box-sizing: border-box; }
+  .page-container { max-width: 100%; box-sizing: border-box; }
+
+  /* 모바일 지도 높이 2/3 축소 */
+  #accomMap, #jobsMap { height: 360px !important; min-height: 280px !important; }
+  .partner-map-wrap, .partner-map { min-height: 220px !important; }
+  .rea-map-wrap .detail-mini-map { height: 140px !important; }
+
+  /* 모바일 카드 콤팩트 — 세로 길이 2/3 축소 (썸네일 비율 보호) */
+  .accom-card { padding: 10px 12px; gap: 10px; }
+  .accom-card-thumb { width: 70px; height: 70px; }   /* 비율 1:1 유지 + object-fit: cover */
+  .accom-card-info { gap: 2px; }
+  .accom-card-title2 { font-size: 14px; line-height: 1.3; }
+  .accom-card-sub { font-size: 12.5px; line-height: 1.35; }
+  .accom-card-chips { gap: 4px; }
+  .accom-card-chips .accom-tag { font-size: 11px; padding: 2px 7px; }
+  .post-mini-actions { margin-top: 4px; }
+  .post-mini-actions .mini-btn { font-size: 10.5px; padding: 2px 7px; }
+
+  /* 페이지 헤더: 제목 + 버튼 그룹 한 줄 고정 (인스펙션 등 긴 제목 대응) */
+  .page-header { flex-wrap: nowrap; align-items: center; gap: 8px; }
+  .page-header > div:first-child { min-width: 0; flex: 1; }
+  .page-title { font-size: 18px; line-height: 1.25; }
+  .page-subtitle { font-size: 11.5px; }
+  .page-header-actions { flex-shrink: 0; align-items: stretch; }
+  .page-back, .page-inquiry { font-size: 11.5px; padding: 6px 10px; white-space: nowrap; }
 }
 
 /* ── Accom Cards ── */
