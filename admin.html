@@ -1170,17 +1170,30 @@
     });
 
     // ── 실시간 리스트 구독 (onSnapshot) ──
-    function subscribeList(colName, listEl, renderRow) {
+    // - postFilter: 카테고리별 분류 등 결과 필터링 콜백 (옵션)
+    // - 카테고리가 많은 services 컬렉션 수용 위해 limit 50.
+    // - 렌더 에러가 다른 섹션을 깨뜨리지 않도록 onSnapshot 콜백 전체를 try-catch.
+    function subscribeList(colName, listEl, renderRow, postFilter) {
+      if (!listEl) { console.warn(`[admin] subscribeList: ${colName} listEl 누락`); return; }
       try {
-        const q = query(collection(db, colName), orderBy('createdAt', 'desc'), limit(20));
+        const q = query(collection(db, colName), orderBy('createdAt', 'desc'), limit(50));
         onSnapshot(q, snap => {
-          const arr = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-          listEl.innerHTML = arr.length ? arr.map(renderRow).join('') : '<div class="admin-empty">등록된 항목이 없습니다.</div>';
+          try {
+            let arr = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            if (typeof postFilter === 'function') arr = arr.filter(postFilter);
+            listEl.innerHTML = arr.length
+              ? arr.map(renderRow).join('')
+              : '<div class="admin-empty">등록된 항목이 없습니다.</div>';
+          } catch (renderErr) {
+            console.error(`[admin] ${colName} 렌더 실패`, renderErr);
+            listEl.innerHTML = `<div class="admin-empty">렌더링 오류 — 콘솔(F12) 메시지 확인. 다른 섹션은 정상 작동합니다.</div>`;
+          }
         }, err => {
           console.warn(`[admin] ${colName} 구독 실패`, err);
           listEl.innerHTML = '<div class="admin-empty">Firestore 미연결 — Firebase 콘솔에서 데이터베이스 생성 + firestore.rules 배포가 필요합니다.</div>';
         });
       } catch (e) {
+        console.error(`[admin] ${colName} 구독 초기화 실패`, e);
         listEl.innerHTML = '<div class="admin-empty">Firestore 초기화 실패 (네트워크/SDK 오류)</div>';
       }
     }
@@ -1301,12 +1314,15 @@
         <button class="admin-del" data-col="ads" data-id="${a.id}">삭제</button>
       </div>`);
 
+    // ③ 서비스 — 정비소·동행·렌트카·견인·쉐어·법무·유학 카테고리만 (trades/restaurants/gp 는 ⑦/⑧/⑨ 전용 리스트로 분리)
+    const SV_CATS = new Set(['maintenance','inspection','rental','towing','accom','legal','education']);
     subscribeList('services', $('svList'), p => `
       <div class="admin-post-row${p.isPremium ? ' is-pinned' : ''}">
         <div class="admin-post-meta">
           <span class="admin-post-cat">${escHtml(CAT_LABEL[p.category] || p.category || '-')}</span>
           <span class="admin-post-state">${escHtml(p.state ? (STATE_LABEL[p.state] || p.state) : '전 지역')}</span>
           ${p.isPremium ? '<span class="admin-post-pin">📌 PIN</span>' : ''}
+          ${p.status === 'pending' ? '<span class="admin-post-pin" style="background:#fef3c7;color:#b45309;">⏳ pending</span>' : ''}
         </div>
         <div class="admin-post-title">${escHtml(p.title || '-')}</div>
         ${p.region   ? `<div class="admin-post-sub">📍 ${escHtml(p.region)}</div>`   : ''}
@@ -1316,7 +1332,7 @@
           <span class="admin-post-time">${fmtDate(p.createdAt)}</span>
           <button class="admin-del" data-col="services" data-id="${p.id}">삭제</button>
         </div>
-      </div>`);
+      </div>`, p => SV_CATS.has(p.category));
 
     // ── ⑦ 기술직 게시글 등록 (services 컬렉션, category='trades') ──
     const TRADE_LABEL = {
@@ -1372,7 +1388,6 @@
       }
     });
     subscribeList('services', $('trList'), p => {
-      if (p.category !== 'trades') return '';
       const lic = [];
       if (p.licensed) lic.push('자격증');
       if (p.insured)  lic.push('보험');
@@ -1382,6 +1397,7 @@
           <span class="admin-post-cat">${escHtml(TRADE_LABEL[p.tradeType] || p.tradeType || '-')}</span>
           <span class="admin-post-state">${escHtml(p.state ? (STATE_LABEL[p.state] || p.state) : '전 지역')}</span>
           ${p.isPremium ? '<span class="admin-post-pin">📌 PIN</span>' : ''}
+          ${p.status === 'pending' ? '<span class="admin-post-pin" style="background:#fef3c7;color:#b45309;">⏳ pending</span>' : ''}
         </div>
         <div class="admin-post-title">${escHtml(p.title || '-')}</div>
         ${p.region   ? `<div class="admin-post-sub">📍 ${escHtml(p.region)}</div>`   : ''}
@@ -1394,7 +1410,7 @@
           <button class="admin-del" data-col="services" data-id="${p.id}">삭제</button>
         </div>
       </div>`;
-    });
+    }, p => p.category === 'trades');
 
     // ── ⑧ 한인 식당 게시글 등록 (services 컬렉션, category='restaurants') ──
     const CUISINE_LABEL = {
@@ -1456,7 +1472,6 @@
       }
     });
     subscribeList('services', $('rsList'), p => {
-      if (p.category !== 'restaurants') return '';
       const cs = Array.isArray(p.cuisines) ? p.cuisines.map(c => CUISINE_LABEL[c] || c).join(' · ') : '';
       const amenities = [];
       if (p.parking)  amenities.push('🅿 주차');
@@ -1471,6 +1486,7 @@
           ${cs ? `<span class="admin-post-cat">${escHtml(cs)}</span>` : ''}
           <span class="admin-post-state">${escHtml(p.state ? (STATE_LABEL[p.state] || p.state) : '전 지역')}</span>
           ${p.isPremium ? '<span class="admin-post-pin">📌 PIN</span>' : ''}
+          ${p.status === 'pending' ? '<span class="admin-post-pin" style="background:#fef3c7;color:#b45309;">⏳ pending</span>' : ''}
         </div>
         <div class="admin-post-title">${escHtml(p.title || '-')}</div>
         ${p.address   ? `<div class="admin-post-sub">📍 ${escHtml(p.address)}</div>`   : ''}
@@ -1485,7 +1501,7 @@
           <button class="admin-del" data-col="services" data-id="${p.id}">삭제</button>
         </div>
       </div>`;
-    });
+    }, p => p.category === 'restaurants');
 
     // ── ⑨ GP 게시글 등록 (services 컬렉션, category='gp') ──
     const GP_SPEC_LABEL = {
@@ -1545,7 +1561,6 @@
       }
     });
     subscribeList('services', $('gpList'), p => {
-      if (p.category !== 'gp') return '';
       const ss = Array.isArray(p.specialties) ? p.specialties.map(s => GP_SPEC_LABEL[s] || s).join(' · ') : '';
       const opts = [];
       if (p.korean)      opts.push('🇰🇷 한국어');
@@ -1558,6 +1573,7 @@
           ${ss ? `<span class="admin-post-cat">${escHtml(ss)}</span>` : ''}
           <span class="admin-post-state">${escHtml(p.state ? (STATE_LABEL[p.state] || p.state) : '전 지역')}</span>
           ${p.isPremium ? '<span class="admin-post-pin">📌 PIN</span>' : ''}
+          ${p.status === 'pending' ? '<span class="admin-post-pin" style="background:#fef3c7;color:#b45309;">⏳ pending</span>' : ''}
         </div>
         <div class="admin-post-title">${escHtml(p.title || '-')}</div>
         ${p.address ? `<div class="admin-post-sub">📍 ${escHtml(p.address)}</div>` : ''}
@@ -1570,7 +1586,7 @@
           <button class="admin-del" data-col="services" data-id="${p.id}">삭제</button>
         </div>
       </div>`;
-    });
+    }, p => p.category === 'gp');
 
     // ── 🔴 통합 승인 대기열 (services 컬렉션 status='pending') ──
     const APPROVAL_CAT_LABEL = {
@@ -1586,44 +1602,49 @@
       education:   '📚 유학원',
     };
     try {
-      const apprQ = query(collection(db, 'services'), orderBy('createdAt', 'desc'), limit(100));
+      const apprQ = query(collection(db, 'services'), orderBy('createdAt', 'desc'), limit(50));
       onSnapshot(apprQ, snap => {
-        const pending = snap.docs
-          .map(d => ({ id: d.id, ...d.data() }))
-          .filter(p => p.status === 'pending');
-        const badge = $('approvalBadge');
-        if (badge) badge.textContent = pending.length;
-        const listEl = $('approvalList');
-        if (!listEl) return;
-        if (!pending.length) {
-          listEl.innerHTML = '<div class="admin-empty">대기 중인 등록 요청이 없습니다.</div>';
-          return;
+        try {
+          const pending = snap.docs
+            .map(d => ({ id: d.id, ...d.data() }))
+            .filter(p => p.status === 'pending');
+          const badge = $('approvalBadge');
+          if (badge) badge.textContent = pending.length;
+          const listEl = $('approvalList');
+          if (!listEl) return;
+          if (!pending.length) {
+            listEl.innerHTML = '<div class="admin-empty">대기 중인 등록 요청이 없습니다.</div>';
+            return;
+          }
+          listEl.innerHTML = pending.map(p => {
+            const catLabel = APPROVAL_CAT_LABEL[p.category] || p.category || '-';
+            const stateLabel = p.state ? (STATE_LABEL[p.state] || p.state) : '전 지역';
+            const requester = p.author || (p.email ? p.email.split('@')[0] + '***' : '익명');
+            return `<div class="admin-approval-card" data-id="${p.id}">
+              <div class="admin-approval-head">
+                <span class="admin-approval-cat">${escHtml(catLabel)}</span>
+                <span class="admin-approval-state">${escHtml(stateLabel)}</span>
+                <span class="admin-approval-time">${fmtDate(p.createdAt)}</span>
+              </div>
+              <div class="admin-approval-title">${escHtml(p.title || '-')}</div>
+              ${p.address  ? `<div class="admin-approval-sub">📍 ${escHtml(p.address || p.region || '')}</div>` : ''}
+              ${p.contact  ? `<div class="admin-approval-sub">📞 ${escHtml(p.contact)}</div>`  : ''}
+              ${p.summary  ? `<div class="admin-approval-sub">${escHtml(p.summary)}</div>`     : ''}
+              ${p.body     ? `<div class="admin-approval-sub" style="white-space:pre-line;">${escHtml(p.body.slice(0, 240))}${p.body.length > 240 ? ' …' : ''}</div>` : ''}
+              <div class="admin-approval-meta">요청자: ${escHtml(requester)}</div>
+              <div class="admin-approval-actions">
+                <button class="admin-approve" data-id="${p.id}">✅ 승인</button>
+                <button class="admin-reject"  data-id="${p.id}">❌ 반려(삭제)</button>
+              </div>
+            </div>`;
+          }).join('');
+        } catch (renderErr) {
+          console.error('[admin] 승인 대기열 렌더 실패', renderErr);
+          const listEl = $('approvalList'); if (listEl) listEl.innerHTML = '<div class="admin-empty">대기열 렌더 오류 — 콘솔(F12) 확인. 다른 섹션은 정상 작동합니다.</div>';
         }
-        listEl.innerHTML = pending.map(p => {
-          const catLabel = APPROVAL_CAT_LABEL[p.category] || p.category || '-';
-          const stateLabel = p.state ? (STATE_LABEL[p.state] || p.state) : '전 지역';
-          const requester = p.author || (p.email ? p.email.split('@')[0] + '***' : '익명');
-          return `<div class="admin-approval-card" data-id="${p.id}">
-            <div class="admin-approval-head">
-              <span class="admin-approval-cat">${escHtml(catLabel)}</span>
-              <span class="admin-approval-state">${escHtml(stateLabel)}</span>
-              <span class="admin-approval-time">${fmtDate(p.createdAt)}</span>
-            </div>
-            <div class="admin-approval-title">${escHtml(p.title || '-')}</div>
-            ${p.address  ? `<div class="admin-approval-sub">📍 ${escHtml(p.address || p.region || '')}</div>` : ''}
-            ${p.contact  ? `<div class="admin-approval-sub">📞 ${escHtml(p.contact)}</div>`  : ''}
-            ${p.summary  ? `<div class="admin-approval-sub">${escHtml(p.summary)}</div>`     : ''}
-            ${p.body     ? `<div class="admin-approval-sub" style="white-space:pre-line;">${escHtml(p.body.slice(0, 240))}${p.body.length > 240 ? ' …' : ''}</div>` : ''}
-            <div class="admin-approval-meta">요청자: ${escHtml(requester)}</div>
-            <div class="admin-approval-actions">
-              <button class="admin-approve" data-id="${p.id}">✅ 승인</button>
-              <button class="admin-reject"  data-id="${p.id}">❌ 반려(삭제)</button>
-            </div>
-          </div>`;
-        }).join('');
       }, err => {
         console.warn('[admin] 승인 대기열 구독 실패', err);
-        $('approvalList').innerHTML = '<div class="admin-empty">Firestore 미연결 — 대기열을 불러올 수 없습니다.</div>';
+        const listEl = $('approvalList'); if (listEl) listEl.innerHTML = '<div class="admin-empty">Firestore 미연결 — 대기열을 불러올 수 없습니다.</div>';
       });
     } catch (e) {
       console.warn('[admin] 승인 대기열 초기화 실패', e);
@@ -1678,7 +1699,7 @@
       const validIds = new Set(sections.map(s => s.id));
 
       function showSection(id) {
-        if (!validIds.has(id)) id = 'notices';
+        if (!validIds.has(id)) id = 'approvalQueue';
         sections.forEach(sec => { sec.style.display = (sec.id === id) ? 'block' : 'none'; });
         links.forEach(a => a.classList.toggle('active', a.dataset.target === id));
         // 탭 전환 시 상단으로 — 긴 폼이어도 즉시 체감
@@ -1688,7 +1709,7 @@
       }
 
       // 초기 진입: hash 우선, 없으면 첫 섹션
-      showSection((location.hash || '#notices').slice(1));
+      showSection((location.hash || '#approvalQueue').slice(1));
 
       // 사이드바 클릭 → 탭 전환 (앵커 점프 차단)
       links.forEach(a => {
@@ -1700,7 +1721,7 @@
 
       // 뒤로/앞으로 버튼 등으로 hash 변경 시 동기화
       window.addEventListener('hashchange', () => {
-        showSection((location.hash || '#notices').slice(1));
+        showSection((location.hash || '#approvalQueue').slice(1));
       });
     })();
   </script>
