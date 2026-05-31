@@ -65,13 +65,15 @@
   --orange:         #fb923c;
 }
 
-html { font-size: 16px; scroll-behavior: smooth; }
+html { font-size: 16px; scroll-behavior: smooth; overflow-x: hidden; }
 
 body {
   font-family: var(--font);
   background: var(--bg-base);
   color: var(--text-primary);
   min-height: 100vh;
+  overflow-x: hidden;
+  max-width: 100%;
   display: flex;
   flex-direction: column;
   -webkit-font-smoothing: antialiased;
@@ -1582,6 +1584,20 @@ select.filter-mini-input {
 .addr-suggest li .addr-sub { color: var(--text-muted); font-size: 11px; margin-left: 4px; }
 @media (max-width: 768px) { .write-field--grow { flex: none; } }
 
+/* ── 모바일 글쓰기 폼: 가로 스크롤 차단 + 코멘트 textarea 높이 축소 ── */
+@media (max-width: 768px) {
+  .write-modal, .write-modal--tall {
+    max-width: 100%; box-sizing: border-box;
+  }
+  .write-input, .write-textarea, .write-checks, .toggle-group, .seg-group, .photo-upload {
+    max-width: 100%; box-sizing: border-box;
+  }
+  .write-textarea {
+    min-height: 120px; height: 130px;
+  }
+  .write-field--grow .write-textarea { min-height: 120px; }
+}
+
 /* ── Accom Cards ── */
 /* 리스트 카드 — 기본(렌트 등 공용): 세로 카드 */
 .accom-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
@@ -1838,7 +1854,11 @@ select.filter-mini-input {
 .lightbox-swiper .swiper-button-prev:hover,
 .lightbox-swiper .swiper-button-next:hover { opacity: 1; }
 .lightbox-close {
-  position: fixed; top: 18px; right: 22px; z-index: 10;
+  position: fixed;
+  /* iOS 노치/안드로이드 상태표시줄 회피 — safe-area-inset-top + 30px 보장 */
+  top: calc(env(safe-area-inset-top, 0px) + 30px);
+  right: calc(env(safe-area-inset-right, 0px) + 20px);
+  z-index: 10;
   width: 44px; height: 44px; border-radius: 50%;
   background: #fff; color: #000; border: none;
   font-size: 22px; font-weight: 800; line-height: 1; cursor: pointer;
@@ -1871,8 +1891,8 @@ select.filter-mini-input {
 .fullscreen-btn svg { width: 18px; height: 18px; display: block; }
 /* 부모가 fullscreen 일 때 — 우상단 위치 유지 */
 :fullscreen > .fullscreen-btn { top: 14px; right: 14px; }
-/* accom 상세 모달의 지도에는 기존 ⛶ 버튼(.rea-map-expand)과 충돌 회피 — fullscreen-btn 을 그 좌측에 */
-.rea-map-wrap .fullscreen-btn { right: 54px; }
+/* 지도 우상단 fullscreen 버튼 — 단일 버튼 (rea-map-expand 제거 후) */
+.rea-map-wrap .fullscreen-btn { right: 10px; }
 :fullscreen .rea-map-wrap .fullscreen-btn,
 .rea-map-wrap:fullscreen .fullscreen-btn { right: 14px; }
 .accom-card-info { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 3px; }

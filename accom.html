@@ -682,7 +682,6 @@
           <h3 class="rea-subtitle">Location</h3>
           <div class="rea-map-wrap" id="detailMapWrap">
             <div class="detail-mini-map" id="detailMiniMap"></div>
-            <button class="rea-map-expand" id="detailMapExpand" type="button" aria-label="지도 확대">⛶</button>
             <button class="fullscreen-btn" id="detailMapFullscreenBtn" type="button" aria-label="전체화면">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M4 9V4h5"/><path d="M20 9V4h-5"/><path d="M4 15v5h5"/><path d="M20 15v5h-5"/>
@@ -2139,7 +2138,8 @@
       });
     }
     function closeMapExpand() { mapExpandOverlay.classList.remove('open'); document.body.style.overflow = ''; }
-    document.getElementById('detailMapExpand').addEventListener('click', openMapExpand);
+    const _detailMapExpand = document.getElementById('detailMapExpand');
+    if (_detailMapExpand) _detailMapExpand.addEventListener('click', openMapExpand);
 
     // ── 지도 전체화면 (requestFullscreen 토글) ──
     (function bindMapFullscreen() {
