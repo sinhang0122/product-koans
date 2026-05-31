@@ -4,6 +4,45 @@
 ════════════════════════════════════════════════════════════════════════ */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* ── 모바일 네이티브 앱 경험 (App-like Feel) ── */
+/* 1) 길게 눌러 텍스트 드래그 복사 방지 — input/textarea/contenteditable 만 예외 */
+html, body {
+  -webkit-user-select: none;
+  -ms-user-select: none;
+      user-select: none;
+  /* 링크/이미지 길게 눌렀을 때 iOS 기본 콜아웃 차단 */
+  -webkit-touch-callout: none;
+  /* 탭 시 파란/회색 하이라이트 박스 제거 */
+  -webkit-tap-highlight-color: transparent;
+  /* 끝까지 스크롤 시 고무줄 바운스 차단 */
+  overscroll-behavior-y: none;
+  -webkit-overflow-scrolling: touch;
+}
+/* 입력 가능한 요소는 반드시 선택 허용 — 회원가입/글쓰기/검색 동작 보장 */
+input, textarea, select,
+[contenteditable="true"],
+[contenteditable=""] {
+  -webkit-user-select: text;
+  -ms-user-select: text;
+      user-select: text;
+  -webkit-touch-callout: default;
+}
+/* 의도적으로 텍스트 선택을 허용해야 하는 영역(예: 게시글 본문)에 .koaus-selectable 부여 */
+.koaus-selectable, .koaus-selectable * {
+  -webkit-user-select: text !important;
+  -ms-user-select: text !important;
+      user-select: text !important;
+  -webkit-touch-callout: default !important;
+}
+/* iOS Safe Area 대응 (notch / home indicator) — 기존 컨테이너에 영향 최소 */
+@supports (padding: max(0px)) {
+  body {
+    padding-left:  env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+}
+
+
 /* ── 라이트 모드 (기본) ── */
 :root {
   --bg-base:        #ffffff;
