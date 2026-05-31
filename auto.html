@@ -681,7 +681,7 @@
 
       <div class="write-field">
         <label class="disclaimer-check">
-          <input type="checkbox" id="wDisclaimer" checked>
+          <input type="checkbox" id="wDisclaimer">
           <span>[필수] 본 플랫폼(KoAus)은 사용자 간의 정보 공유 공간만을 제공하며, 직거래로 인해 발생하는 모든 법적, 금전적 분쟁과 책임은 거래 당사자에게 있음에 동의합니다.</span>
         </label>
       </div>
@@ -1408,7 +1408,7 @@
       });
       document.getElementById('iInspOn').checked = true;
       document.getElementById('iEmerOn').checked = false;
-      document.getElementById('wDisclaimer').checked = true;
+      document.getElementById('wDisclaimer').checked = false;
       syncInspPriceDisabled();
     }
     // 로그인 사용자 닉네임 (작성자 고정값)
@@ -1440,6 +1440,8 @@
         _set('iBody', p.body);
       }
       document.getElementById('wAuthorName').textContent = p.author || currentNickname() || '-';
+      // 수정 모드: 기존 글은 이미 동의되어 등록 → 필수 체크 ON 유지
+      const wDcEdit = document.getElementById('wDisclaimer'); if (wDcEdit) wDcEdit.checked = true;
       setWriteMode('edit');
       showCatForm();
       document.getElementById('detailOverlay').classList.remove('open');
@@ -2187,11 +2189,40 @@
     let mapLoading = false;
     let map        = null;
     let infoWindow = null;
-    // InfoWindow 카드 클릭 위임 — .iw-card[data-pid] 클릭 시 상세 페이지 열기
+    // ── 방문(읽음) 마커 상태 — localStorage 'koaus_visited_posts' ──
+    const VISITED_KEY = 'koaus_visited_posts';
+    function visitedIds() { try { return JSON.parse(localStorage.getItem(VISITED_KEY) || '[]'); } catch (_) { return []; } }
+    function isVisited(id) { return visitedIds().includes(String(id)); }
+    function markVisited(id) {
+      const arr = visitedIds(); const s = String(id);
+      if (!arr.includes(s)) { arr.push(s); try { localStorage.setItem(VISITED_KEY, JSON.stringify(arr.slice(-500))); } catch (_) {} }
+    }
+    function markerIcon(id) {
+      const v = isVisited(id);
+      return {
+        path: google.maps.SymbolPath.CIRCLE, scale: 10,
+        fillColor: v ? '#ffffff' : '#000000', fillOpacity: 1,
+        strokeColor: v ? '#000000' : '#ffffff', strokeWeight: 2,
+      };
+    }
+    // InfoWindow 위임 — ⭐(stopPropagation) 우선, 카드는 markVisited + openDetail
     document.addEventListener('click', e => {
+      const star = e.target.closest('.iw-star[data-pid]');
+      if (star) {
+        e.stopPropagation(); e.preventDefault();
+        // auto 의 services 컬렉션은 toggleSaved 가 없을 수 있음 — 안전 호출
+        if (typeof toggleSaved === 'function') {
+          const id = star.dataset.pid;
+          const p = (typeof loadPosts === 'function') ? loadPosts().find(x => String(x.id) === String(id)) : null;
+          if (p) toggleSaved(p);
+        }
+        star.textContent = star.textContent === '★' ? '☆' : '★';
+        return;
+      }
       const card = e.target.closest('.iw-card[data-pid]');
       if (!card) return;
       try { infoWindow && infoWindow.close(); } catch (_) {}
+      markVisited(card.dataset.pid);
       if (typeof openDetail === 'function') openDetail(card.dataset.pid);
     });
     let markers    = [];
@@ -2273,14 +2304,7 @@
           position: { lat: p.lat, lng: p.lng },
           map,
           title: p.title,
-          icon: {
-            path: google.maps.SymbolPath.CIRCLE,
-            scale: 10,
-            fillColor: '#000000',
-            fillOpacity: 1,
-            strokeColor: '#ffffff',
-            strokeWeight: 2,
-          },
+          icon: markerIcon(p.id),
         });
         marker.addListener('click', () => {
           const iwTags = filterTags(p).slice(0, 3).map(t =>
@@ -2290,7 +2314,8 @@
             ? `<img src="${escHtml(p.imageUrls[0])}" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;" />`
             : `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#777" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9 12h6M12 9v6"/></svg>`;
           infoWindow.setContent(`
-            <div class="iw-card" data-pid="${p.id}" style="display:flex;gap:10px;max-width:270px;padding:4px 2px;cursor:pointer;font-family:'Urbanist','Noto Sans KR',sans-serif;">
+            <div class="iw-card" data-pid="${p.id}" style="position:relative;display:flex;gap:10px;max-width:270px;padding:4px 24px 4px 2px;cursor:pointer;font-family:'Urbanist','Noto Sans KR',sans-serif;">
+              <button class="iw-star" data-pid="${p.id}" aria-label="찜하기" style="position:absolute;top:-2px;right:-4px;width:28px;height:28px;border:none;background:transparent;font-size:18px;line-height:1;cursor:pointer;color:#777;padding:0;">☆</button>
               <div style="flex-shrink:0;width:72px;height:72px;border-radius:6px;overflow:hidden;border:1px solid #000;background:#f5f5f5;display:flex;align-items:center;justify-content:center;">${thumb}</div>
               <div style="min-width:0;flex:1;">
                 <div style="font-weight:800;font-size:13px;line-height:1.3;color:#000;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${escHtml(p.title)}</div>
@@ -2299,6 +2324,8 @@
                 <div style="font-size:10px;color:#666;margin-top:4px;">탭하여 상세 보기 →</div>
               </div>
             </div>`);
+          markVisited(p.id);
+          marker.setIcon(markerIcon(p.id));
           infoWindow.open(map, marker);
         });
         markers.push(marker);

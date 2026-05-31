@@ -625,7 +625,7 @@
 
       <div class="write-field">
         <label class="disclaimer-check">
-          <input type="checkbox" id="wDisclaimer" checked>
+          <input type="checkbox" id="wDisclaimer">
           <span>[필수] 본 플랫폼(KoAus)은 사용자 간의 정보 공유 공간만을 제공하며, 직거래로 인해 발생하는 모든 법적, 금전적 분쟁과 책임은 거래 당사자에게 있음에 동의합니다.</span>
         </label>
       </div>
@@ -1186,7 +1186,7 @@
       ['wParking','wPet','wKids','wAirCon'].forEach(id => { document.getElementById(id).checked = false; });
       document.querySelectorAll('#wTypes input, #wRoomTypes input').forEach(c => { c.checked = false; });
       document.getElementById('wGender').value = '';
-      document.getElementById('wDisclaimer').checked = true;
+      document.getElementById('wDisclaimer').checked = false;
     }
     // 로그인 사용자 닉네임 (작성자 고정값)
     function currentNickname() {
@@ -1251,6 +1251,8 @@
       check('wPet',      d.petFriendly);
       check('wKids',     d.kidsInHouse);
       check('wAirCon',   d.airCon);
+      // 재업로드 모드: 필수 체크는 unchecked — 유저가 다시 동의해야 함
+      const wDcDup = document.getElementById('wDisclaimer'); if (wDcDup) wDcDup.checked = false;
       if (notice) notice.hidden = false;
     }
     function openWriteModalForEdit(p) {
@@ -1270,6 +1272,8 @@
       document.getElementById('wAirCon').checked  = !!p.airCon;
       document.getElementById('wBody').value     = p.body || '';
       document.getElementById('wAuthorName').textContent = p.author || currentNickname() || '-';
+      // 수정 모드: 기존 글은 이미 동의해 등록된 것이므로 필수 체크 유지 (체크박스 ON)
+      document.getElementById('wDisclaimer').checked = true;
       setWriteMode('edit');
       applyWriteModeUI();
       document.getElementById('detailOverlay').classList.remove('open');
@@ -1940,6 +1944,8 @@
 
       setupDetailLocation(p);
       recordRecent(p);
+      // 마커 visited 상태 갱신 (이후 마커 색 흰색으로) — markerIcon은 지도가 로드돼 있을 때만
+      if (typeof markVisited === 'function') markVisited(p.id);
       document.getElementById('detailOverlay').classList.add('open');
       const rc = document.querySelector('.rea-content'); if (rc) rc.scrollTop = 0;
     }
@@ -2172,11 +2178,45 @@
     document.addEventListener('keydown', e => { if (e.key === 'Escape' && mapExpandOverlay.classList.contains('open')) closeMapExpand(); });
 
     // ── Google Maps ──
-    // InfoWindow 카드 클릭 위임 — 마커 InfoWindow 안의 .iw-card[data-pid] 클릭 시 상세 페이지 오픈
+    // ── 방문(읽음) 마커 상태 — localStorage 'koaus_visited_posts' ──
+    const VISITED_KEY = 'koaus_visited_posts';
+    function visitedIds() { try { return JSON.parse(localStorage.getItem(VISITED_KEY) || '[]'); } catch (_) { return []; } }
+    function isVisited(id) { return visitedIds().includes(String(id)); }
+    function markVisited(id) {
+      const arr = visitedIds();
+      const s = String(id);
+      if (!arr.includes(s)) {
+        arr.push(s);
+        try { localStorage.setItem(VISITED_KEY, JSON.stringify(arr.slice(-500))); } catch (_) {}
+      }
+    }
+    function markerIcon(id) {
+      const v = isVisited(id);
+      return {
+        path: google.maps.SymbolPath.CIRCLE, scale: 10,
+        fillColor: v ? '#ffffff' : '#000000', fillOpacity: 1,
+        strokeColor: v ? '#000000' : '#ffffff', strokeWeight: 2,
+      };
+    }
+
+    // InfoWindow 위임: ⭐ 별표(stopPropagation) 우선, 카드는 markVisited 후 openDetail
     document.addEventListener('click', e => {
+      const star = e.target.closest('.iw-star[data-pid]');
+      if (star) {
+        e.stopPropagation(); e.preventDefault();
+        const id = star.dataset.pid;
+        const p = (typeof loadPosts === 'function') ? loadPosts().find(x => String(x.id) === String(id)) : null;
+        if (p && typeof toggleSaved === 'function') {
+          toggleSaved(p);
+          star.textContent = isSaved(p.id) ? '★' : '☆';
+          if (typeof renderAll === 'function') renderAll();
+        }
+        return;
+      }
       const card = e.target.closest('.iw-card[data-pid]');
       if (!card) return;
       try { infoWindow && infoWindow.close(); } catch (_) {}
+      markVisited(card.dataset.pid);
       if (typeof openDetail === 'function') openDetail(card.dataset.pid);
     });
     let mapReady   = false;
@@ -2262,14 +2302,7 @@
           position: { lat: p.lat, lng: p.lng },
           map,
           title: p.title,
-          icon: {
-            path: google.maps.SymbolPath.CIRCLE,
-            scale: 10,
-            fillColor: '#000000',
-            fillOpacity: 1,
-            strokeColor: '#ffffff',
-            strokeWeight: 2,
-          },
+          icon: markerIcon(p.id),
         });
         marker.addListener('click', () => {
           const iwTags = filterTags(p).slice(0, 3).map(t =>
@@ -2278,8 +2311,10 @@
           const thumb = (Array.isArray(p.imageUrls) && p.imageUrls.length)
             ? `<img src="${escHtml(p.imageUrls[0])}" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;" />`
             : `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#777" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>`;
+          const starOn = isSaved(p.id);
           infoWindow.setContent(`
-            <div class="iw-card" data-pid="${p.id}" style="display:flex;gap:10px;max-width:270px;padding:4px 2px;cursor:pointer;font-family:'Urbanist','Noto Sans KR',sans-serif;">
+            <div class="iw-card" data-pid="${p.id}" style="position:relative;display:flex;gap:10px;max-width:270px;padding:4px 24px 4px 2px;cursor:pointer;font-family:'Urbanist','Noto Sans KR',sans-serif;">
+              <button class="iw-star" data-pid="${p.id}" aria-label="찜하기" style="position:absolute;top:-2px;right:-4px;width:28px;height:28px;border:none;background:transparent;font-size:18px;line-height:1;cursor:pointer;color:${starOn ? '#000' : '#777'};padding:0;">${starOn ? '★' : '☆'}</button>
               <div style="flex-shrink:0;width:72px;height:72px;border-radius:6px;overflow:hidden;border:1px solid #000;background:#f5f5f5;display:flex;align-items:center;justify-content:center;">${thumb}</div>
               <div style="min-width:0;flex:1;">
                 <div style="font-weight:800;font-size:13px;line-height:1.3;color:#000;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${escHtml(p.title)}</div>
@@ -2288,6 +2323,8 @@
                 <div style="font-size:10px;color:#666;margin-top:4px;">탭하여 상세 보기 →</div>
               </div>
             </div>`);
+          markVisited(p.id);
+          marker.setIcon(markerIcon(p.id));
           infoWindow.open(map, marker);
         });
         markers.push(marker);
