@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>숙소 (쉐어) — KoAus</title>
+  <title>기술직 (Skilled Trades) — KoAus</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;800;900&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet" />
@@ -512,36 +512,28 @@
     </section>
 
     <div class="page-header">
-      <div>
-        <h1 class="page-title" id="boardTitle">🏠 호주 쉐어하우스 게시판</h1>
-        <p class="page-subtitle" id="boardSubtitle">주(State) · 숙박 기간별 쉐어하우스 정보</p>
+      <div class="page-header-left">
+        <h1 class="page-title" id="boardTitle">🔧 호주 한인 기술직 게시판</h1>
+        <p class="page-subtitle" id="boardSubtitle">전기·배관·인테리어·페인팅·핸디맨 등 검증된 한인 기술자 정보</p>
+        <div class="page-header-actions">
+          <a href="index.html" class="page-back">← 홈으로</a>
+          <a href="contact.html" class="trades-inquiry-btn">✉️ 문의하기</a>
+        </div>
       </div>
-      <a href="index.html" class="page-back">← 홈으로</a>
     </div>
 
-
-    <!-- Main Tabs: 방 올리기 / 방 구하기 -->
-    <div class="accom-main-tabs" id="modeTabs">
-      <button class="accom-tab active" data-mode="offer"><span class="tab-text">방 올리기 <em>Offer a Room</em></span></button>
-      <button class="accom-tab" data-mode="find"><span class="tab-text">방 구하기 <em>Find a Room</em></span></button>
+    <!-- 안내 문구: 관리자 직접 등록만 가능 -->
+    <div class="trades-notice">
+      <span class="trades-notice-ico" aria-hidden="true">🛡</span>
+      <span><strong>관리자 검증 게시판</strong> · 무분별한 광고를 막기 위해 관리자가 직접 검증 후 글을 작성합니다.
+      등록 신청은 좌측 상단 <a href="contact.html" class="trades-notice-link">[문의하기]</a> 를 통해 보내주세요.</span>
     </div>
 
-    <!-- Controls -->
+    <!-- Controls (List View 전용 — 상세 필터만) -->
     <div class="accom-controls">
-      <div class="view-toggle" id="viewToggle">
-        <button class="view-btn active" id="viewListBtn">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-          List View
-        </button>
-        <button class="view-btn" id="viewMapBtn">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
-          Map View
-        </button>
-      </div>
       <span class="board-count" id="boardCount">총 0건</span>
       <div class="accom-ctrl-actions">
         <button class="board-write-btn board-write-btn--ghost" id="filterModalBtn">상세 필터</button>
-        <button class="board-write-btn" id="writeBtnOpen">+ 글쓰기</button>
       </div>
     </div>
 
@@ -550,12 +542,6 @@
       <div id="pinnedNoticeBox" class="pinned-notice" hidden></div>
       <div id="postGrid" class="accom-grid accom-grid--compact"></div>
       <div class="pagination" id="pagination"></div>
-    </div>
-
-    <!-- Map View -->
-    <div id="mapView" style="display:none;">
-      <button class="area-search-btn" id="areaSearchBtn">이 지역 매물 검색하기</button>
-      <div id="accomMap"></div>
     </div>
 
   </main>
@@ -632,128 +618,6 @@
     </div>
   </div>
 
-  <!-- ── Write Modal ── -->
-  <div class="write-overlay" id="writeOverlay">
-    <div class="write-modal write-modal--tall">
-      <div class="write-modal-header">
-        <div class="write-modal-title">글쓰기 <em>Write Post</em></div>
-        <span class="write-author-badge">작성자 : <b id="wAuthorName">-</b></span>
-        <button class="write-modal-close" id="writeBtnClose">✕</button>
-      </div>
-
-      <div class="write-grid" id="writeGrid">
-        <div class="write-col">
-          <div class="write-field">
-            <label class="write-label" for="wTitle">제목 Title<span class="required-mark">*</span></label>
-            <input class="write-input" id="wTitle" type="text" placeholder="예: 멜번 Box Hill 싱글룸 · 주 $210" maxlength="80" />
-          </div>
-          <div class="write-field offer-only">
-            <label class="write-label" for="wAddress">주소 Address<span class="required-mark">*</span></label>
-            <div class="addr-ac">
-              <input class="write-input" id="wAddress" type="text" autocomplete="off" placeholder="도로명·지역명만 입력해도 OK (예: Coronation Dr, Green Valley NSW)" />
-              <ul class="addr-suggest" id="wAddressSuggest"></ul>
-            </div>
-          </div>
-          <div class="write-field offer-only">
-            <label class="write-label" for="wPrice">주당 쉐어비 Price / wk ($)<span class="required-mark">*</span></label>
-            <input class="write-input" id="wPrice" type="number" placeholder="숫자만 입력" min="0" />
-          </div>
-          <div class="write-field offer-only">
-            <span class="write-label">방 형태 Room Type (중복 선택 가능)</span>
-            <div class="write-opts" id="wRoomTypes">
-              <label class="write-opt"><input type="checkbox" data-room="master"> 마스터룸</label>
-              <label class="write-opt"><input type="checkbox" data-room="second"> 세컨룸</label>
-              <label class="write-opt"><input type="checkbox" data-room="single"> 독방</label>
-              <label class="write-opt"><input type="checkbox" data-room="living_share"> 거실쉐어</label>
-              <label class="write-opt"><input type="checkbox" data-room="sunroom"> 썬룸</label>
-            </div>
-          </div>
-          <div class="write-field offer-only">
-            <span class="write-label">숙박 기간 Duration (중복 선택 가능)</span>
-            <div class="write-opts" id="wTypes">
-              <label class="write-opt"><input type="checkbox" data-type="ultra_short"> 초단기 (1일~2주)</label>
-              <label class="write-opt"><input type="checkbox" data-type="short"> 단기 (2주~4주)</label>
-              <label class="write-opt"><input type="checkbox" data-type="mid"> 중단기 (1달~2달)</label>
-              <label class="write-opt"><input type="checkbox" data-type="long"> 장기 (2달 이상)</label>
-              <label class="write-opt"><input type="checkbox" data-type="any"> 기간 상관 없음</label>
-            </div>
-          </div>
-          <div class="write-field offer-only">
-            <label class="write-label" for="wContact">연락처 및 카카오톡 Contact</label>
-            <input class="write-input" id="wContact" type="text" placeholder="연락처 또는 오픈채팅 링크 입력" maxlength="200" />
-          </div>
-        </div>
-
-        <div class="write-col">
-          <div class="write-field offer-only">
-            <label class="write-label" for="wAvailDate">입주 가능한 날 Available Date</label>
-            <input class="write-input" id="wAvailDate" type="date" />
-          </div>
-          <div class="write-field offer-only">
-            <label class="write-label" for="wGender">성별 조건 Gender</label>
-            <select class="write-input" id="wGender">
-              <option value="">선택 안 함</option>
-              <option value="male">남</option>
-              <option value="female">여</option>
-              <option value="any">성별 무관</option>
-            </select>
-          </div>
-          <div class="write-field offer-only">
-            <span class="write-label">옵션 Options</span>
-            <div class="write-opts">
-              <label class="write-opt"><input type="checkbox" id="wParking"> 🅿 주차</label>
-              <label class="write-opt"><input type="checkbox" id="wPet"> 🐾 반려동물</label>
-              <label class="write-opt"><input type="checkbox" id="wKids"> 👶 아이</label>
-              <label class="write-opt"><input type="checkbox" id="wAirCon"> ❄ 에어컨</label>
-            </div>
-          </div>
-          <div class="write-field write-field--grow">
-            <label class="write-label" for="wBody" id="wBodyLabel">상세 설명 Comments</label>
-            <textarea class="write-textarea" id="wBody" placeholder="자세한 조건·시설·환경 등을 적어주세요"></textarea>
-          </div>
-        </div>
-      </div>
-
-      <!-- 사진 첨부 (최대 6장, 클라이언트 압축 후 Firebase Storage 업로드) -->
-      <div class="write-field">
-        <label class="write-label">사진 첨부 Photos <em style="font-style:normal;color:var(--text-muted);font-size:11px;">최대 6장 · 자동 압축됩니다</em></label>
-        <div class="photo-upload" id="wPhotoBox">
-          <input type="file" id="wPhotoInput" accept="image/*" multiple hidden />
-          <button type="button" class="photo-add-btn" id="wPhotoAddBtn">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-            <span>사진 추가</span>
-          </button>
-          <div class="photo-thumbs" id="wPhotoThumbs"></div>
-        </div>
-        <p class="duplicate-notice" id="duplicateNotice" hidden>* 안전한 개인정보 보호를 위해 사진은 새로 첨부해 주셔야 합니다.</p>
-      </div>
-
-      <div class="write-field">
-        <label class="disclaimer-check">
-          <input type="checkbox" id="wDisclaimer">
-          <span>[필수] 본 플랫폼(KoAus)은 사용자 간의 정보 공유 공간만을 제공하며, 직거래로 인해 발생하는 모든 법적, 금전적 분쟁과 책임은 거래 당사자에게 있음에 동의합니다.</span>
-        </label>
-      </div>
-
-      <div class="caution-box" aria-label="주의사항 및 공지사항">
-        <div class="caution-title">⚠ 주의사항 및 공지사항</div>
-        <ol>
-          <li>욕설, 혐오 발언 및 타인 비방 금지</li>
-          <li>환전 및 담배 등 호주 내 불법·편법 거래 금지</li>
-          <li>호주 법률 위반 글 또는 타인의 초상권·저작권 침해 사진 업로드 시 무통보 삭제 및 사이트 영구 이용 불가</li>
-          <li>1일 2회 등록 가능 (주소만 살짝 바꾸는 중복 도배 글은 동일 글로 간주하여 제재)</li>
-          <li>단기 렌트·쉐어 거래 시 보증금(Deposit) 사기 및 먹튀에 각별히 주의하세요.</li>
-          <li>상세 정보 없이 외부 메신저(카카오톡 등)로 유도하는 글은 피싱 사기일 확률이 높습니다.</li>
-        </ol>
-      </div>
-
-      <p class="auth-error" id="wError"></p>
-      <div class="write-modal-actions">
-        <button class="write-cancel-btn" id="writeBtnCancel">취소</button>
-        <button class="write-submit-btn" id="writeBtnSubmit">등록하기</button>
-      </div>
-    </div>
-  </div>
 
   <!-- ── Post Detail Modal (Realestate 스타일) ── -->
   <div class="post-detail-overlay" id="detailOverlay">
@@ -1045,7 +909,7 @@
     applyTheme(localStorage.getItem('koaus-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
 
     // ── Data ──
-    const STORE_KEY    = 'koaus-accom-posts';
+    const STORE_KEY    = 'koaus-trades-posts';
     const SEED_VERSION = '2026-05-empty';   // SAMPLES 변경 시 localStorage 재시드용
     const SAMPLES = [];
 
@@ -1073,6 +937,7 @@
     const PER_PAGE     = 20;
 
     // ── 모드 탭 전환 (방 올리기 / 방 구하기) ──
+    // trades.html: modeTabs DOM 없음 — querySelectorAll은 빈 NodeList, forEach no-op으로 안전
     document.querySelectorAll('#modeTabs .accom-tab').forEach(btn => {
       btn.addEventListener('click', () => switchMode(btn.dataset.mode));
     });
@@ -1281,7 +1146,8 @@
       try { await sendEmailVerification(u); alert('인증 메일이 재전송되었습니다.'); }
       catch (e) { alert('잠시 후 다시 시도해 주세요.'); }
     });
-    document.getElementById('writeBtnOpen').addEventListener('click',   () => {
+    // trades.html — 글쓰기 버튼 없음 (관리자 전용 등록). 안전한 no-op 가드.
+    (document.getElementById('writeBtnOpen') || { addEventListener(){} }).addEventListener('click', () => {
       const u = window.koausAuth && window.koausAuth.user;
       if (!u) { alert('글을 작성하려면 로그인이 필요합니다.'); window.koausAuth && window.koausAuth.openAuthModal(); return; }
       if (!u.emailVerified) { openVerifyModal(); return; }
@@ -1785,17 +1651,17 @@
       });
     }
 
-    // ── View Toggle ──
+    // ── View Toggle ── (trades.html: List View 전용 — 토글 버튼 없음, no-op 가드)
     let currentView = 'list';
-    document.getElementById('viewListBtn').addEventListener('click', () => switchView('list'));
-    document.getElementById('viewMapBtn').addEventListener('click',  () => switchView('map'));
+    (document.getElementById('viewListBtn') || { addEventListener(){} }).addEventListener('click', () => switchView('list'));
+    (document.getElementById('viewMapBtn')  || { addEventListener(){} }).addEventListener('click', () => switchView('map'));
 
     function switchView(v) {
       currentView = v;
-      document.getElementById('viewListBtn').classList.toggle('active', v === 'list');
-      document.getElementById('viewMapBtn').classList.toggle('active',  v === 'map');
-      document.getElementById('listView').style.display = v === 'list' ? '' : 'none';
-      document.getElementById('mapView').style.display  = v === 'map'  ? '' : 'none';
+      const vl = document.getElementById('viewListBtn'); if (vl) vl.classList.toggle('active', v === 'list');
+      const vm = document.getElementById('viewMapBtn');  if (vm) vm.classList.toggle('active', v === 'map');
+      const lvw = document.getElementById('listView'); if (lvw) lvw.style.display = v === 'list' ? '' : 'none';
+      const mvw = document.getElementById('mapView');  if (mvw) mvw.style.display = v === 'map'  ? '' : 'none';
       if (v === 'map') {
         loadMapScript();
         if (mapReady) updateMapMarkers(applyFilters(loadPosts()));
@@ -2760,7 +2626,7 @@
     });
   </script>
 
-  <!-- ── Firestore services 컬렉션 실시간 구독 (쉐어하우스 관리자 글 자동 노출) ── -->
+  <!-- ── Firestore services 컬렉션 실시간 구독 (기술직 관리자 글 자동 노출) ── -->
   <script type="module">
     import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
     import { getFirestore, collection, query, orderBy, limit, onSnapshot } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
@@ -2770,14 +2636,15 @@
       messagingSenderId:'663988594088', appId:'1:663988594088:web:ef30c2fd557407b00b299d',
     };
     const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
-    let db; try { db = getFirestore(app); } catch (e) { console.warn('[accom] Firestore 미초기화', e); }
+    let db; try { db = getFirestore(app); } catch (e) { console.warn('[trades] Firestore 미초기화', e); }
     if (db) {
-      const STORE = 'koaus-accom-posts';
+      // trades 페이지는 accom의 LocalStorage 패턴을 재활용 (저장 키는 trades 전용으로 분리)
+      const STORE = 'koaus-trades-posts';
       try {
-        onSnapshot(query(collection(db, 'services'), orderBy('createdAt', 'desc'), limit(20)), snap => {
+        onSnapshot(query(collection(db, 'services'), orderBy('createdAt', 'desc'), limit(50)), snap => {
           const fsItems = snap.docs
             .map(d => ({ _fsDocId: d.id, ...d.data() }))
-            .filter(s => s.category === 'accom');
+            .filter(s => s.category === 'trades');
           fsItems.forEach(s => {
             if (s.createdAt && s.createdAt.toMillis) {
               const d = s.createdAt.toDate(); const p = n => String(n).padStart(2,'0');
@@ -2788,19 +2655,16 @@
             s.adminPost = true;
             s.address   = s.address || s.region;
             s.tagline   = s.tagline || s.summary;
-            // accom 호환 필수 필드
+            // accom 카드 호환 필드 (View 동일 유지)
             s.mode = 'offer';
             if (!Array.isArray(s.types))     s.types     = ['any'];
             if (!Array.isArray(s.roomTypes)) s.roomTypes = [];
           });
-          const cur = (() => { try { return JSON.parse(localStorage.getItem(STORE) || '[]'); } catch { return []; } })();
-          const localOnly = cur.filter(p => !p._fsDocId);
-          const fsIds = new Set(fsItems.map(x => String(x.id)));
-          const merged = localOnly.filter(p => !fsIds.has(String(p.id))).concat(fsItems);
-          localStorage.setItem(STORE, JSON.stringify(merged));
+          // trades 페이지는 어드민 데이터만 노출 (로컬 사용자 글 없음)
+          localStorage.setItem(STORE, JSON.stringify(fsItems));
           window.dispatchEvent(new Event('koaus-services-updated'));
-        }, err => console.warn('[accom] services 구독 실패', err));
-      } catch (e) { console.warn('[accom] Firestore services subscribe 실패', e); }
+        }, err => console.warn('[trades] services 구독 실패', err));
+      } catch (e) { console.warn('[trades] Firestore services subscribe 실패', e); }
     }
   </script>
 
@@ -2862,7 +2726,7 @@
     })();
   </script>
 
-  <!-- ── 게시판 상단 핀공지 (board_pinned_notices 컬렉션, doc id = 'accom') ── -->
+  <!-- ── 게시판 상단 핀공지 (board_pinned_notices 컬렉션, doc id = 'trades') ── -->
   <script type="module">
     import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
     import { getFirestore, doc, onSnapshot } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
@@ -2877,14 +2741,14 @@
       const box = document.getElementById('pinnedNoticeBox');
       if (!box) return;
       const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/\n/g,'<br>');
-      onSnapshot(doc(db, 'board_pinned_notices', 'accom'), snap => {
+      onSnapshot(doc(db, 'board_pinned_notices', 'trades'), snap => {
         const data = snap.exists() ? snap.data() : null;
         if (data && data.text && String(data.text).trim()) {
           box.innerHTML = '<span class="pn-icon" aria-hidden="true">📢</span><div class="pn-body"><strong>공지</strong> · ' + esc(data.text) + '</div>';
           box.hidden = false;
         } else { box.hidden = true; box.innerHTML = ''; }
-      }, err => console.warn('[accom] pinned-notice 구독 실패', err));
-    } catch (e) { console.warn('[accom] pinned-notice 초기화 실패', e); }
+      }, err => console.warn('[trades] pinned-notice 구독 실패', err));
+    } catch (e) { console.warn('[trades] pinned-notice 초기화 실패', e); }
   </script>
 </body>
 </html>
