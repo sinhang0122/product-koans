@@ -680,7 +680,7 @@
 
       <div class="write-field">
         <label class="disclaimer-check">
-          <input type="checkbox" id="wDisclaimer">
+          <input type="checkbox" id="wDisclaimer" checked>
           <span>[필수] 본 플랫폼(KoAus)은 사용자 간의 정보 공유 공간만을 제공하며, 직거래로 인해 발생하는 모든 법적, 금전적 분쟁과 책임은 거래 당사자에게 있음에 동의합니다.</span>
         </label>
       </div>
@@ -1407,7 +1407,7 @@
       });
       document.getElementById('iInspOn').checked = true;
       document.getElementById('iEmerOn').checked = false;
-      document.getElementById('wDisclaimer').checked = false;
+      document.getElementById('wDisclaimer').checked = true;
       syncInspPriceDisabled();
     }
     // 로그인 사용자 닉네임 (작성자 고정값)
@@ -1573,7 +1573,7 @@
       }
 
       // 면책 조항 동의 필수
-      if (!document.getElementById('wDisclaimer').checked) { alert('등록을 위해 면책 조항에 동의해 주세요.'); return; }
+      if (!document.getElementById('wDisclaimer').checked) { alert('필수칸에 체크를 해주셔야 합니다.'); return; }
 
       const nick = currentNickname() || user.displayName?.split(' ')[0] || user.email?.split('@')[0] || '사용자';
       const now = new Date();

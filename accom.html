@@ -604,7 +604,7 @@
 
       <div class="write-field">
         <label class="disclaimer-check">
-          <input type="checkbox" id="wDisclaimer">
+          <input type="checkbox" id="wDisclaimer" checked>
           <span>[필수] 본 플랫폼(KoAus)은 사용자 간의 정보 공유 공간만을 제공하며, 직거래로 인해 발생하는 모든 법적, 금전적 분쟁과 책임은 거래 당사자에게 있음에 동의합니다.</span>
         </label>
       </div>
@@ -1161,7 +1161,7 @@
       ['wParking','wPet','wKids','wAirCon'].forEach(id => { document.getElementById(id).checked = false; });
       document.querySelectorAll('#wTypes input, #wRoomTypes input').forEach(c => { c.checked = false; });
       document.getElementById('wGender').value = '';
-      document.getElementById('wDisclaimer').checked = false;
+      document.getElementById('wDisclaimer').checked = true;
     }
     // 로그인 사용자 닉네임 (작성자 고정값)
     function currentNickname() {
@@ -1387,7 +1387,7 @@
 
       // ── 면책 조항 동의 필수 ──
       if (!document.getElementById('wDisclaimer').checked) {
-        alert('등록을 위해 면책 조항에 동의해 주세요.');
+        alert('필수칸에 체크를 해주셔야 합니다.');
         return;
       }
 
@@ -1448,8 +1448,8 @@
           window.pendingPhotoFiles = [];
           if (wsb) { wsb.disabled = false; wsb.textContent = '등록하기'; }
         } catch (e) {
-          console.warn('[accom] 사진 업로드 실패', e);
-          alert('사진 업로드에 실패했지만 글은 등록되었습니다. 잠시 후 수정에서 다시 시도해 주세요.');
+          console.error('[accom] 사진 업로드 실패', { code: e && e.code, message: e && e.message, error: e });
+          alert(`사진 업로드 실패: ${(e && e.code) || 'unknown'}\n${(e && e.message) || ''}\n글은 본인 기기에 저장되었습니다. 수정에서 다시 시도해 주세요.`);
         }
       }
 

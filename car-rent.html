@@ -628,7 +628,10 @@
             pendingPhotoFiles.map(p => p.file),
             { maxDim: 1200, quality: 0.7, onProgress: (i, total) => { wsb.textContent = `사진 업로드 중… ${i}/${total}`; } }
           );
-        } catch (e) { console.warn('[car-rent] 사진 업로드 실패', e); }
+        } catch (e) {
+          console.error('[car-rent] 사진 업로드 실패', { code: e && e.code, message: e && e.message, error: e });
+          alert(`사진 업로드 실패: ${(e && e.code) || 'unknown'}\n${(e && e.message) || ''}`);
+        }
         finally { wsb.disabled = false; wsb.textContent = '등록하기'; }
       }
       posts.push({ id, title, body, author, contact, date, imageUrls });

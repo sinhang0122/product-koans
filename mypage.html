@@ -941,8 +941,8 @@
           localStorage.setItem('koaus-photo-url', url);
           alert('프로필 사진이 변경되었습니다.');
         } catch (e) {
-          console.warn('[mypage] 프로필 사진 업로드 실패', e);
-          alert('업로드에 실패했습니다. 잠시 후 다시 시도해 주세요.');
+          console.error('[mypage] 프로필 사진 업로드 실패', { code: e && e.code, message: e && e.message, error: e });
+          alert(`사진 업로드 실패: ${(e && e.code) || 'unknown'}\n${(e && e.message) || ''}`);
         } finally {
           btn.disabled = false; btn.textContent = orig;
         }
