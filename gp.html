@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Auto — KoAus</title>
+  <title>GP (한인 한국어 가능 의사) — KoAus</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;800;900&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet" />
@@ -472,26 +472,24 @@
     </section>
 
     <div class="page-header">
-      <div>
-        <h1 class="page-title" id="boardTitle">🚗 Auto</h1>
-        <p class="page-subtitle" id="boardSubtitle">자동차 종합 서비스 게시판</p>
-      </div>
-      <div class="page-header-actions">
-        <a href="index.html" class="page-back">← 홈으로</a>
-        <a href="contact.html" class="page-inquiry" id="autoInquiryBtn" style="display:none;">문의하기 →</a>
+      <div class="page-header-left">
+        <h1 class="page-title" id="boardTitle">🏥 호주 한국어 가능 GP (Korean-Speaking GP)</h1>
+        <p class="page-subtitle" id="boardSubtitle">주(State)별 한국어 가능 GP·진료과 정보 · 검증된 클리닉만 노출</p>
+        <div class="page-header-actions">
+          <a href="index.html" class="page-back">← 홈으로</a>
+          <a href="contact.html" class="trades-inquiry-btn">✉️ 문의하기</a>
+        </div>
       </div>
     </div>
 
-
-    <!-- Auto 4대 카테고리 탭 -->
-    <div class="accom-main-tabs auto-cat-tabs" id="autoTabs">
-      <button class="accom-tab active" data-cat="rental"><span class="tab-text">렌트카 <em>Rental</em></span></button>
-      <button class="accom-tab" data-cat="inspection"><span class="tab-text">동행 및 긴급출동</span></button>
-      <button class="accom-tab" data-cat="maintenance"><span class="tab-text">정비소 <em>Maintenance</em></span></button>
-      <button class="accom-tab" data-cat="towing"><span class="tab-text">견인 <em>Towing</em></span></button>
+    <!-- 안내 문구: 관리자 직접 등록만 가능 -->
+    <div class="trades-notice">
+      <span class="trades-notice-ico" aria-hidden="true">🛡</span>
+      <span><strong>관리자 검증 게시판</strong> · 무분별한 광고를 막기 위해 관리자가 직접 검증 후 글을 작성합니다.
+      등록 신청은 좌측 상단 <a href="contact.html" class="trades-notice-link">[문의하기]</a> 를 통해 보내주세요.</span>
     </div>
 
-    <!-- Controls -->
+    <!-- Controls (List View + Map View 토글 + 상세 필터) -->
     <div class="accom-controls">
       <div class="view-toggle" id="viewToggle">
         <button class="view-btn active" id="viewListBtn">
@@ -506,14 +504,13 @@
       <span class="board-count" id="boardCount">총 0건</span>
       <div class="accom-ctrl-actions">
         <button class="board-write-btn board-write-btn--ghost" id="filterModalBtn">상세 필터</button>
-        <button class="board-write-btn" id="writeBtnOpen">+ 글쓰기</button>
-        <!-- 6 섹션 등록 요청 시스템: 정비소·견인·동행 및 긴급출동에서만 노출 (JS 카테고리 토글) -->
-        <button class="board-write-btn" id="requestBtnOpen" type="button" hidden>+ 등록 요청</button>
+        <button class="board-write-btn" id="requestBtnOpen" type="button">+ 등록 요청</button>
       </div>
     </div>
 
     <!-- List View -->
     <div id="listView">
+      <div id="pinnedNoticeBox" class="pinned-notice" hidden></div>
       <div id="postGrid" class="accom-grid accom-grid--compact"></div>
       <div class="pagination" id="pagination"></div>
     </div>
@@ -523,15 +520,6 @@
       <button class="area-search-btn" id="areaSearchBtn">이 지역 매물 검색하기</button>
       <div id="accomMap"></div>
     </div>
-
-    <!-- 견인: 호주 로컬 견인 서비스 외부 링크 안내 (견인 카테고리에서만, 화면 최하단 노출) -->
-    <div class="auto-tow-banner" id="towBanner" style="display:none;">
-      <span class="auto-tow-text">※ 야간/새벽 등 긴급 상황 시 호주 로컬 견인 서비스 이용하기</span>
-      <a class="auto-tow-btn" href="https://www.google.com/maps/search/towing+service+near+me/" target="_blank" rel="noopener noreferrer">🚨 가까운 견인 서비스 찾기 <span class="auto-tow-arrow">›</span></a>
-    </div>
-
-    <!-- 카테고리별 하단 주의사항 (rental/inspection/maintenance/towing 분기 — JS로 텍스트 갱신) -->
-    <p class="auto-disclaimer" id="autoDisclaimer">※ 이용자 본인의 사정에 따른 실제 차량 대여, 보험 및 계약 조건은 해당 렌트카 업체와 직접 확인해 주세요.</p>
 
   </main>
 
@@ -543,95 +531,60 @@
         <button class="filter-modal-close" id="filterModalClose">✕</button>
       </div>
 
-      <!-- 렌트카 필터 (글쓰기 필드 연동) -->
-      <div class="cat-filter" data-filter="rental">
-        <div class="filter-section">
-          <label class="filter-section-label" for="ffRegion">판매/대여 지역 Region</label>
-          <input class="write-input" id="ffRegion" type="text" autocomplete="off" placeholder="지역명 검색 (예: Strathfield NSW)" />
+      <div class="filter-section">
+        <label class="filter-section-label" for="ffRegion">검색할 지역 Region</label>
+        <div class="addr-ac">
+          <input class="write-input" id="ffRegion" type="text" autocomplete="off" placeholder="지역·도로명 검색 (예: Strathfield NSW)" />
+          <ul class="addr-suggest" id="ffRegionSuggest"></ul>
         </div>
-        <div class="filter-section">
-          <label class="filter-section-label" for="ffBrand">브랜드 Brand</label>
-          <input class="write-input" id="ffBrand" type="text" placeholder="예: Toyota, Hyundai" />
-        </div>
-        <div class="filter-section">
-          <label class="filter-section-label" for="ffMaxPrice">최대 가격 (총액 $)</label>
-          <input class="write-input" id="ffMaxPrice" type="number" min="0" placeholder="최대 금액 $" />
-        </div>
-        <div class="filter-section">
-          <label class="filter-section-label" for="ffMaxMileage">최대 주행거리 (km)</label>
-          <input class="write-input" id="ffMaxMileage" type="number" min="0" placeholder="최대 km" />
-        </div>
-        <div class="filter-section">
-          <label class="filter-section-label" for="ffMinYear">최소 연식 (년식)</label>
-          <input class="write-input" id="ffMinYear" type="number" min="1950" max="2100" placeholder="예: 2015" />
-        </div>
+        <div class="recent-searches" id="recentSearches"></div>
       </div>
 
-      <!-- 동행 및 긴급출동 필터 (비용 기준) -->
-      <div class="cat-filter" data-filter="inspection">
-        <div class="filter-section">
-          <label class="filter-section-label" for="ffMaxInsp">인스펙션 비용 최대 ($)</label>
-          <input class="write-input" id="ffMaxInsp" type="number" min="0" placeholder="최대 금액 $" />
-        </div>
-        <div class="filter-section">
-          <label class="filter-section-label" for="ffMaxEmer">긴급출동 비용 최대 ($)</label>
-          <input class="write-input" id="ffMaxEmer" type="number" min="0" placeholder="최대 금액 $" />
-        </div>
-      </div>
-
-      <!-- 정비소 필터 -->
-      <div class="cat-filter" data-filter="maintenance" style="display:none;">
-        <div class="filter-section">
-          <label class="filter-section-label" for="ffMaintRegion">정비소 지역 Region</label>
-          <input class="write-input" id="ffMaintRegion" type="text" autocomplete="off" placeholder="지역명 검색 (예: Auburn NSW)" />
-          <ul class="addr-suggest" id="ffMaintRegionSuggest"></ul>
-        </div>
-        <div class="filter-section">
-          <label class="filter-section-label" for="ffMaintType">정비 종류 Type</label>
-          <select class="write-input" id="ffMaintType">
-            <option value="">전체</option>
-            <option value="lift">리프트 띄우기</option>
-            <option value="repair">수리</option>
-            <option value="quote">견적</option>
-            <option value="inspect">검사</option>
-            <option value="other">기타</option>
-          </select>
-        </div>
-        <div class="filter-section">
-          <label class="filter-section-label" for="ffMaintHours">운영 시간 Hours</label>
-          <select class="write-input" id="ffMaintHours">
-            <option value="">전체</option>
-            <option value="weekday">평일만</option>
-            <option value="weekend">주말 영업</option>
-            <option value="24h">24시간</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- 견인 필터 -->
-      <div class="cat-filter" data-filter="towing" style="display:none;">
-        <div class="filter-section">
-          <label class="filter-section-label" for="ffTowRegion">활동 지역 Region</label>
-          <input class="write-input" id="ffTowRegion" type="text" autocomplete="off" placeholder="지역명 검색 (예: Sydney NSW)" />
-          <ul class="addr-suggest" id="ffTowRegionSuggest"></ul>
-        </div>
-        <div class="filter-section">
-          <label class="filter-section-label" for="ffTowType">견인 유형 Type</label>
-          <select class="write-input" id="ffTowType">
-            <option value="">전체</option>
-            <option value="emergency24">24시 긴급출동</option>
-            <option value="longhaul">장거리 이동</option>
-            <option value="accident">사고 차량</option>
-            <option value="repo">압류·반환</option>
-            <option value="freight">화물 운송</option>
-            <option value="other">기타</option>
-          </select>
+      <div class="filter-section">
+        <label class="filter-section-label">음식 종류 Cuisine · 복수 선택</label>
+        <div class="trades-chip-grid">
+          <label class="trades-chip"><input type="checkbox" class="rs-fcuisine" value="korean"> 한식</label>
+          <label class="trades-chip"><input type="checkbox" class="rs-fcuisine" value="chinese"> 중식</label>
+          <label class="trades-chip"><input type="checkbox" class="rs-fcuisine" value="japanese"> 일식</label>
+          <label class="trades-chip"><input type="checkbox" class="rs-fcuisine" value="chicken"> 치킨</label>
+          <label class="trades-chip"><input type="checkbox" class="rs-fcuisine" value="bunsik"> 분식</label>
+          <label class="trades-chip"><input type="checkbox" class="rs-fcuisine" value="bbq"> BBQ/구이</label>
+          <label class="trades-chip"><input type="checkbox" class="rs-fcuisine" value="cafe"> 카페</label>
+          <label class="trades-chip"><input type="checkbox" class="rs-fcuisine" value="dessert"> 디저트</label>
+          <label class="trades-chip"><input type="checkbox" class="rs-fcuisine" value="bar"> 주점</label>
+          <label class="trades-chip"><input type="checkbox" class="rs-fcuisine" value="delivery"> 배달</label>
+          <label class="trades-chip"><input type="checkbox" class="rs-fcuisine" value="other"> 기타</label>
         </div>
       </div>
 
       <div class="filter-section">
-        <div class="recent-searches" id="recentSearches"></div>
+        <label class="filter-section-label" for="rsFStatus">영업 상태 Status</label>
+        <select class="write-input" id="rsFStatus">
+          <option value="">전체</option>
+          <option value="open_now">지금 영업중</option>
+          <option value="delivery_only">배달 가능만</option>
+          <option value="takeaway_only">포장 가능만</option>
+        </select>
       </div>
+
+      <div class="filter-section">
+        <label class="filter-section-label">편의시설 Amenities</label>
+        <div class="trades-chip-grid">
+          <label class="trades-chip"><input type="checkbox" id="rsFParking"> 🅿 주차</label>
+          <label class="trades-chip"><input type="checkbox" id="rsFDelivery"> 🚚 배달</label>
+          <label class="trades-chip"><input type="checkbox" id="rsFTakeaway"> 📦 포장</label>
+          <label class="trades-chip"><input type="checkbox" id="rsFHalal"> 🌙 할랄·베지</label>
+        </div>
+      </div>
+
+      <!-- ⚠️ 호환: 기존 accom 필터 JS 가 참조하는 hidden id 들 — null 참조 방지 -->
+      <input type="hidden" id="fbPriceMin" value="0" />
+      <input type="hidden" id="fbPriceMax" value="999" />
+      <input type="hidden" id="fbPriceMinInput" value="0" />
+      <input type="hidden" id="fbPriceMaxInput" value="999" />
+      <input type="hidden" id="fbPrice" value="999" />
+      <input type="hidden" id="fbRoom" value="" />
+      <input type="hidden" id="fbDuration" value="" />
 
       <div class="filter-modal-actions">
         <button class="filter-reset-btn" id="filterResetBtn">초기화</button>
@@ -640,165 +593,14 @@
     </div>
   </div>
 
-  <!-- ── Write Modal ── -->
-  <div class="write-overlay" id="writeOverlay">
-    <div class="write-modal write-modal--tall">
-      <div class="write-modal-header">
-        <div class="write-modal-title">글쓰기 <em>Write Post</em></div>
-        <span class="write-author-badge">작성자 : <b id="wAuthorName">-</b></span>
-        <button class="write-modal-close" id="writeBtnClose">✕</button>
-      </div>
-
-      <!-- ── 렌트카(Rental) 글쓰기 폼 ── -->
-      <div class="write-grid cat-form" data-form="rental">
-        <div class="write-col">
-          <div class="write-field">
-            <label class="write-label" for="rTitle">제목 Title<span class="required-mark">*</span></label>
-            <input class="write-input" id="rTitle" type="text" placeholder="예: 2016 Toyota Corolla 판매" maxlength="80" />
-          </div>
-          <div class="write-field">
-            <label class="write-label" for="rBrand">브랜드 Brand</label>
-            <input class="write-input" id="rBrand" type="text" placeholder="예: Toyota" maxlength="40" />
-          </div>
-          <div class="write-field">
-            <label class="write-label" for="rModel">모델 Model</label>
-            <input class="write-input" id="rModel" type="text" placeholder="예: Corolla" maxlength="40" />
-          </div>
-          <div class="write-field">
-            <label class="write-label" for="rYear">연식 Year</label>
-            <input class="write-input" id="rYear" type="number" min="1950" max="2100" placeholder="예: 2016" />
-          </div>
-          <div class="write-field">
-            <label class="write-label" for="rMileage">주행거리 Mileage (km)</label>
-            <input class="write-input" id="rMileage" type="number" min="0" placeholder="예: 85000" />
-          </div>
-        </div>
-        <div class="write-col">
-          <div class="write-field">
-            <label class="write-label" for="rRwc">RWC 유무 Roadworthy</label>
-            <select class="write-input" id="rRwc">
-              <option value="">선택 안 함</option>
-              <option value="yes">RWC 있음</option>
-              <option value="no">RWC 없음</option>
-            </select>
-          </div>
-          <div class="write-field">
-            <label class="write-label" for="rRego">REGO 만료일 Rego Expiry</label>
-            <input class="write-input" id="rRego" type="date" />
-          </div>
-          <div class="write-field">
-            <label class="write-label" for="rPrice">가격 Price (총액 $)</label>
-            <input class="write-input" id="rPrice" type="number" min="0" placeholder="숫자만 입력" />
-          </div>
-          <div class="write-field">
-            <label class="write-label" for="rRegion">판매/대여 지역 Region</label>
-            <input class="write-input" id="rRegion" type="text" placeholder="예: Strathfield NSW" maxlength="80" />
-          </div>
-          <div class="write-field">
-            <label class="write-label" for="rContact">연락처 Contact</label>
-            <input class="write-input" id="rContact" type="text" placeholder="연락처 또는 오픈채팅 링크" maxlength="200" />
-          </div>
-        </div>
-        <div class="write-field write-field--grow" style="grid-column:1/-1;">
-          <label class="write-label" for="rBody">코멘트 Comments</label>
-          <textarea class="write-textarea" id="rBody" placeholder="차량 상태·옵션·거래 조건 등을 자유롭게 적어주세요"></textarea>
-        </div>
-      </div>
-
-      <!-- ── 동행 및 긴급출동(Inspection) 글쓰기 폼 ── -->
-      <div class="write-grid cat-form" data-form="inspection" style="display:none;">
-        <div class="write-col">
-          <div class="write-field">
-            <label class="write-label" for="iName">메카닉 이름 / 업체명<span class="required-mark">*</span></label>
-            <input class="write-input" id="iName" type="text" placeholder="예: 데이브 모터스 / John's Mechanic" maxlength="80" />
-          </div>
-          <div class="write-field">
-            <label class="write-label" for="iContact">연락처 Contact</label>
-            <input class="write-input" id="iContact" type="text" placeholder="연락처 또는 오픈채팅 링크" maxlength="200" />
-          </div>
-          <div class="write-field">
-            <label class="write-label" for="iRegion">활동 가능 지역/위치 Region</label>
-            <input class="write-input" id="iRegion" type="text" placeholder="예: Sydney 전역, Inner West" maxlength="80" />
-          </div>
-          <div class="write-field">
-            <label class="write-label" for="iTime">동행 가능 시간대 Available Time</label>
-            <input class="write-input" id="iTime" type="text" placeholder="예: 평일 09:00~18:00, 주말 협의" maxlength="80" />
-          </div>
-        </div>
-        <div class="write-col">
-          <div class="write-field">
-            <label class="write-svc">
-              <input type="checkbox" id="iInspOn" checked> <b>동행 인스펙션 제공</b>
-            </label>
-            <input class="write-input" id="iInspPrice" type="number" min="0" placeholder="인스펙션 비용 ($)" />
-          </div>
-          <div class="write-field">
-            <label class="write-svc">
-              <input type="checkbox" id="iEmerOn"> <b>긴급출동 제공</b>
-            </label>
-            <input class="write-input" id="iEmerPrice" type="number" min="0" placeholder="긴급출동 비용 ($)" />
-          </div>
-          <div class="write-field write-field--grow">
-            <label class="write-label" for="iBody">코멘트 Comments</label>
-            <textarea class="write-textarea" id="iBody" placeholder="경력·전문 차종·서비스 범위 등을 적어주세요"></textarea>
-          </div>
-        </div>
-      </div>
-
-      <div class="write-field">
-        <label class="disclaimer-check">
-          <input type="checkbox" id="wDisclaimer">
-          <span>[필수] 본 플랫폼(KoAus)은 사용자 간의 정보 공유 공간만을 제공하며, 직거래로 인해 발생하는 모든 법적, 금전적 분쟁과 책임은 거래 당사자에게 있음에 동의합니다.</span>
-        </label>
-      </div>
-
-      <p class="auth-error" id="wError"></p>
-      <div class="write-modal-actions">
-        <button class="write-cancel-btn" id="writeBtnCancel">취소</button>
-        <button class="write-submit-btn" id="writeBtnSubmit">등록하기</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── 글 등록 문의하기 모달 (정비소/견인 — 관리자 등록 요청) ── -->
-  <div class="report-overlay" id="inquiryOverlay">
-    <div class="report-modal">
-      <div class="report-header">
-        <span class="report-title" id="inquiryTitle">📝 글 등록 문의하기</span>
-        <button class="report-close" id="inquiryClose" type="button" aria-label="닫기">✕</button>
-      </div>
-      <p class="report-desc" id="inquiryDesc">업체 정보를 남겨 주시면 관리자가 확인 후 등록해 드립니다. (관리자 검수 후 게시)</p>
-      <div class="write-field">
-        <label class="write-label" for="iqName">업체명 / 메카닉 이름<span class="required-mark">*</span></label>
-        <input class="write-input" id="iqName" type="text" placeholder="업체명 또는 메카닉 이름" maxlength="80" />
-      </div>
-      <div class="write-field">
-        <label class="write-label" for="iqContact">연락처<span class="required-mark">*</span></label>
-        <input class="write-input" id="iqContact" type="text" placeholder="전화번호 또는 카카오톡" maxlength="100" />
-      </div>
-      <div class="write-field">
-        <label class="write-label" for="iqEmail">회신 이메일</label>
-        <input class="write-input" id="iqEmail" type="email" placeholder="회신받을 이메일 (선택)" maxlength="120" />
-      </div>
-      <div class="write-field">
-        <label class="write-label" for="iqMsg">문의 내용</label>
-        <textarea class="write-textarea" id="iqMsg" placeholder="서비스 지역·요금·소개 등을 적어주세요"></textarea>
-      </div>
-      <p class="auth-error" id="iqError"></p>
-      <div class="report-actions">
-        <button class="filter-reset-btn" id="inquiryCancel" type="button">취소</button>
-        <button class="filter-apply-btn" id="inquirySubmit" type="button">문의 전송</button>
-      </div>
-    </div>
-  </div>
 
   <!-- ── Post Detail Modal (Realestate 스타일) ── -->
   <div class="post-detail-overlay" id="detailOverlay">
     <div class="post-detail-card rea-detail">
      <div class="rea-scroll">
-      <!-- Hero 사진 영역 (Placeholder) -->
-      <div class="rea-hero">
-        <div class="rea-hero-ph">
+      <!-- Hero 사진 영역 (첨부 사진이 있으면 첫 사진, 없으면 placeholder) -->
+      <div class="rea-hero" id="detailHero">
+        <div class="rea-hero-ph" id="detailHeroPh">
           <svg width="54" height="54" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
         </div>
         <div class="rea-hero-top">
@@ -812,7 +614,7 @@
             </div>
           </div>
         </div>
-        <div class="rea-hero-counter">1 / 5</div>
+        <div class="rea-hero-counter" id="detailHeroCounter">1 / 1</div>
       </div>
 
       <!-- Sticky 네비 헤더 -->
@@ -835,9 +637,13 @@
 
         <div class="rea-section" id="detailLocation" style="display:none;">
           <h3 class="rea-subtitle">Location</h3>
-          <div class="rea-map-wrap">
+          <div class="rea-map-wrap" id="detailMapWrap">
             <div class="detail-mini-map" id="detailMiniMap"></div>
-            <button class="rea-map-expand" id="detailMapExpand" type="button" aria-label="지도 확대">⛶</button>
+            <button class="fullscreen-btn" id="detailMapFullscreenBtn" type="button" aria-label="전체화면">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 9V4h5"/><path d="M20 9V4h-5"/><path d="M4 15v5h5"/><path d="M20 15v5h-5"/>
+              </svg>
+            </button>
           </div>
           <div class="rea-loc-btns">
             <a class="rea-loc-btn" id="detailDirBtn" target="_blank" rel="noopener noreferrer">
@@ -1078,8 +884,8 @@
     applyTheme(localStorage.getItem('koaus-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
 
     // ── Data ──
-    const STORE_KEY    = 'koaus-auto-posts';
-    const SEED_VERSION = '2026-05-auto-v2';   // SAMPLES 변경 시 localStorage 재시드용
+    const STORE_KEY    = 'koaus-gp-posts';
+    const SEED_VERSION = '2026-05-empty';   // SAMPLES 변경 시 localStorage 재시드용
     const SAMPLES = [];
 
     // ── State ──
@@ -1093,148 +899,69 @@
       any:         { ko: '기간 상관 없음', desc: '' },
     };
     const STATE_NAMES = { nsw:'NSW', vic:'VIC', qld:'QLD', wa:'WA', sa:'SA', tas:'TAS', act:'ACT', nt:'NT' };
-
-    // ── Auto 4대 카테고리 ──
-    const CAT_LABELS = { rental:'렌트카', inspection:'동행 및 긴급출동', maintenance:'정비소', towing:'견인' };
-    const CAT_EN     = { rental:'Rental', inspection:'Inspection', maintenance:'Maintenance', towing:'Towing' };
-    // 카테고리별 동작: map(지도뷰 토글 노출), write('user'=직접 글쓰기 / 'inquiry'=관리자 등록 문의), filter(필터 그룹)
-    const CAT_CFG = {
-      rental:      { map:false, write:'user',    filter:'rental' },
-      inspection:  { map:false, write:'inquiry', filter:'inspection' },
-      maintenance: { map:true,  write:'inquiry', filter:'maintenance' },
-      towing:      { map:true,  write:'inquiry', filter:'towing' },
-    };
-    const ADMIN_EMAIL = 'admin@thekoaus.com';  // 글 등록 문의 수신 주소 (운영 시 교체)
-    // 구 카테고리/링크 → 신 4그룹 매핑 (기존 햄버거 링크·데이터 호환)
-    const CAT_GROUP = {
-      rental:'rental', lift:'rental',
-      inspection:'inspection',
-      maintenance:'maintenance', mechanic:'maintenance', repair:'maintenance', quote:'maintenance', 'used-car':'maintenance',
-      towing:'towing', tow:'towing', emergency:'towing',
-    };
-    const groupOf = c => CAT_GROUP[c] || 'rental';
+    const MODE_LABELS = { offer: '방 올리기', find: '방 구하기' };
 
     const currentState = (new URLSearchParams(location.search).get('state') || '').toLowerCase();
-    // URL ?category= → 4그룹으로 매핑 (기본 rental). 페이지 내 탭으로도 전환
-    let activeCategory = groupOf(new URLSearchParams(location.search).get('category'));
-    const activeMode   = 'offer';  // Auto는 단일 모드 (accom의 방올리기/구하기 미사용)
+    const urlMode      = new URLSearchParams(location.search).get('mode');
+    // URL ?mode=offer | seek(=find). 페이지 내 탭으로도 전환
+    let activeMode     = (urlMode === 'find' || urlMode === 'seek') ? 'find' : 'offer';
     let currentPage    = 1;
     // 한 번에 20개씩만 렌더(페이지네이션). 향후 Firestore 전환 시:
     //   query(collection(db,'accom_posts'), orderBy('id','desc'), limit(PER_PAGE))
     //   다음 페이지는 startAfter(lastDoc) 커서로만 추가 조회 → read 비용 최소화.
     const PER_PAGE     = 20;
 
-    // ── 카테고리 탭 전환 (렌트카 / 동행 인스펙션 / 정비 / 긴급출동·견인) ──
-    document.querySelectorAll('#autoTabs .accom-tab').forEach(btn => {
-      btn.addEventListener('click', () => switchCategory(btn.dataset.cat));
+    // ── 모드 탭 전환 (방 올리기 / 방 구하기) ──
+    // restaurants.html: modeTabs DOM 없음 — querySelectorAll 빈 NodeList, forEach no-op
+    document.querySelectorAll('#modeTabs .accom-tab').forEach(btn => {
+      btn.addEventListener('click', () => switchMode(btn.dataset.mode));
     });
 
     function updateBoardTitle() {
       const st = STATE_NAMES[currentState];
-      document.getElementById('boardTitle').textContent = `🚗 ${st ? st + ' ' : ''}${CAT_LABELS[activeCategory]}`;
-      document.getElementById('boardSubtitle').textContent = `Auto · ${st ? st + ' · ' : ''}${CAT_LABELS[activeCategory]} 게시판`;
+      const board = '쉐어';
+      document.getElementById('boardTitle').textContent = `🏠 ${st ? st + ' ' : ''}${board} ${MODE_LABELS[activeMode]}`;
+      document.getElementById('boardSubtitle').textContent = `${st ? st + ' · ' : ''}${board} ${MODE_LABELS[activeMode]} 게시판`;
     }
 
-    function switchCategory(cat) {
-      if (!CAT_LABELS[cat]) return;
-      activeCategory = cat;
+    function switchMode(mode) {
+      if (mode !== 'offer' && mode !== 'find') return;
+      activeMode = mode;
       currentPage = 1;
-      areaBounds = null;       // 탭 전환 시 지역(지도) 검색 초기화
-      activeFilter = {};       // 탭 전환 시 상세 필터 초기화
-      clearFilterInputs();
+      areaBounds = null;  // 탭 전환 시 지역 검색 초기화
       const asb = document.getElementById('areaSearchBtn');
-      if (asb) {
-        asb.classList.remove('show');
-        // 카테고리별 영역 검색 버튼 라벨 (정비소·견인은 '매물' 대신 카테고리 명칭 사용)
-        const ASB_TEXT = {
-          rental: '이 지역 매물 검색하기',
-          inspection: '이 지역 매물 검색하기',
-          maintenance: '이 지역 정비소 검색',
-          towing: '이 지역 견인 검색',
-        };
-        asb.textContent = ASB_TEXT[cat] || '이 지역 매물 검색하기';
-      }
-      document.querySelectorAll('#autoTabs .accom-tab').forEach(b => b.classList.toggle('active', b.dataset.cat === cat));
-      const cfg = CAT_CFG[cat];
-      // 지도 뷰 토글: 정비소/견인 모두 List/Map 전환 버튼 노출 (직접 선택), 그 외는 List 단독
+      if (asb) asb.classList.remove('show');
+      document.querySelectorAll('#modeTabs .accom-tab').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+      // 방 구하기(find): 자유 양식 — 지도/필터 숨기고 깔끔한 리스트만
+      const isFind = mode === 'find';
       const vt = document.getElementById('viewToggle');
-      if (vt) vt.style.display = cfg.map ? '' : 'none';
-      if (!cfg.map) switchView('list');
-      else          switchView('list');  // 진입 시 기본은 List, 사용자가 Map으로 토글 가능
-      // 상세 필터 버튼: 렌트카/인스펙션만 노출
       const fb = document.getElementById('filterModalBtn');
-      if (fb) fb.style.display = (cfg.filter === 'none') ? 'none' : '';
-      // 글쓰기 버튼: 정비소·견인은 직접 글쓰기 차단 → 버튼 자체 숨김 (홍보 문구·글 등록 문의 버튼 일체 제거)
-      const wb = document.getElementById('writeBtnOpen');
-      if (wb) {
-        if (cfg.write === 'inquiry') { wb.style.display = 'none'; }
-        else                         { wb.style.display = ''; wb.textContent = '+ 글쓰기'; }
-      }
-      // 견인 카테고리에서만 하단 외부 견인 서비스 안내 배너 노출
-      const tb = document.getElementById('towBanner');
-      if (tb) tb.style.display = (cat === 'towing') ? '' : 'none';
-      // 페이지 헤더 우측 [문의하기] 버튼: 인스펙션/정비소/견인에서만 노출 (렌트카 제외)
-      const iq = document.getElementById('autoInquiryBtn');
-      if (iq) iq.style.display = (cat === 'rental') ? 'none' : '';
-      // 카테고리별 하단 주의사항 갱신
-      const AUTO_DISCLAIMER = {
-        rental:      '※ 이용자 본인의 사정에 따른 실제 차량 대여, 보험 및 계약 조건은 해당 렌트카 업체와 직접 확인해 주세요.',
-        inspection:  '※ 이용자 본인의 사정에 따른 실제 매물 상태 점검 및 최종 계약 결정은 공인 인스펙션 업체와 직접 확인해 주세요.',
-        maintenance: '※ 이용자 본인의 사정에 따른 실제 차량 정비 내용 및 수리 비용은 해당 정비소와 직접 확인해 주세요.',
-        towing:      '※ 이용자 본인의 사정에 따른 실제 견인 서비스 조건 및 비용은 해당 견인 업체와 직접 확인해 주세요.',
-      };
-      const ad = document.getElementById('autoDisclaimer');
-      if (ad) ad.textContent = AUTO_DISCLAIMER[cat] || '';
+      if (vt) vt.style.display = isFind ? 'none' : '';
+      if (fb) fb.style.display = isFind ? 'none' : '';
+      if (isFind) switchView('list');
       updateBoardTitle();
       renderAll();
     }
-    // ── 상세 필터 모달 (카테고리별 필드) ──
-    const filterOverlay = document.getElementById('filterOverlay');
-    let activeFilter = {};  // applyFilters가 참조하는 현재 적용 필터
-    const _fv  = id => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
-    const _set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
 
-    function showCatFilter() {
-      document.querySelectorAll('#filterOverlay .cat-filter').forEach(g => {
-        g.style.display = (g.dataset.filter === activeCategory) ? '' : 'none';
-      });
-    }
-    function currentFilter() {
-      if (activeCategory === 'rental') return {
-        cat:'rental', region:_fv('ffRegion'), brand:_fv('ffBrand'),
-        maxPrice:_fv('ffMaxPrice'), maxMileage:_fv('ffMaxMileage'), minYear:_fv('ffMinYear'),
-      };
-      if (activeCategory === 'inspection') return { cat:'inspection', maxInsp:_fv('ffMaxInsp'), maxEmer:_fv('ffMaxEmer') };
-      if (activeCategory === 'maintenance') return {
-        cat:'maintenance', region:_fv('ffMaintRegion'), mtype:_fv('ffMaintType'), hours:_fv('ffMaintHours'),
-      };
-      if (activeCategory === 'towing') return {
-        cat:'towing', region:_fv('ffTowRegion'), ttype:_fv('ffTowType'),
-      };
-      return { cat: activeCategory };
-    }
-    function applyFilterValues(s) {
-      if (!s) return;
-      if (s.cat === 'rental')      { _set('ffRegion',s.region); _set('ffBrand',s.brand); _set('ffMaxPrice',s.maxPrice); _set('ffMaxMileage',s.maxMileage); _set('ffMinYear',s.minYear); }
-      else if (s.cat === 'inspection')  { _set('ffMaxInsp',s.maxInsp); _set('ffMaxEmer',s.maxEmer); }
-      else if (s.cat === 'maintenance') { _set('ffMaintRegion',s.region); _set('ffMaintType',s.mtype); _set('ffMaintHours',s.hours); }
-      else if (s.cat === 'towing')      { _set('ffTowRegion',s.region); _set('ffTowType',s.ttype); }
-    }
-    function clearFilterInputs() {
-      ['ffRegion','ffBrand','ffMaxPrice','ffMaxMileage','ffMinYear','ffMaxInsp','ffMaxEmer',
-       'ffMaintRegion','ffMaintType','ffMaintHours','ffTowRegion','ffTowType'].forEach(id => _set(id,''));
-    }
+    // ── 상세 필터 모달 (지역 / 주당 쉐어비 ≤ $999 / 방 형태 / 숙박 기간) ──
+    const fbPrice    = document.getElementById('fbPrice');     // applyFilters가 참조
+    const fbRoom     = document.getElementById('fbRoom');
+    const fbDuration = document.getElementById('fbDuration');
+    const ffRegion   = document.getElementById('ffRegion');
+    const filterOverlay = document.getElementById('filterOverlay');
+
+    // 주당 쉐어비: 최대 $999로 자동 보정
+    fbPrice.addEventListener('input', () => {
+      const v = parseInt(fbPrice.value, 10);
+      if (Number.isFinite(v) && v > 999) fbPrice.value = '999';
+    });
 
     function openFilterModal() {
-      showCatFilter();
       renderRecentSearches();
       filterOverlay.classList.add('open');
       document.body.style.overflow = 'hidden';
-      // maintenance/towing 카테고리 진입 시 지역 자동완성 wire
-      if (typeof wireAutocomplete === 'function') {
-        if (activeCategory === 'maintenance') wireAutocomplete('ffMaintRegion', 'ffMaintRegionSuggest');
-        if (activeCategory === 'towing')      wireAutocomplete('ffTowRegion', 'ffTowRegionSuggest');
-      }
+      loadMapScript();           // Places(지역 자동완성) 로드 보장
+      initRegionAutocomplete();  // 이미 로드돼 있으면 즉시 연결
     }
     function closeFilterModal() {
       filterOverlay.classList.remove('open');
@@ -1244,18 +971,32 @@
     document.getElementById('filterModalClose').addEventListener('click', closeFilterModal);
     filterOverlay.addEventListener('click', e => { if (e.target === filterOverlay) closeFilterModal(); });
 
+    // 적용하기: 최근 검색 저장 → (지역 있으면) 지도 이동 + 영역 필터 → 리스트 갱신
     document.getElementById('filterApplyBtn').addEventListener('click', () => runSearch(true));
     document.getElementById('filterResetBtn').addEventListener('click', () => {
-      clearFilterInputs(); activeFilter = {}; currentPage = 1;
-      renderAll(); closeFilterModal();
+      ffRegion.value = ''; fbPrice.value = ''; fbRoom.value = ''; fbDuration.value = '';
+      areaBounds = null; currentPage = 1;
+      const asb = document.getElementById('areaSearchBtn'); if (asb) asb.classList.remove('show');
+      renderAll();
+      closeFilterModal();
     });
 
     function runSearch(save) {
       currentPage = 1;
-      activeFilter = currentFilter();
-      if (save) addRecentSearch(activeFilter);
+      const region = ffRegion.value.trim();
+      if (save) { addRecentSearch({ region, price: fbPrice.value, room: fbRoom.value, dur: fbDuration.value }); }
       closeFilterModal();
-      renderAll();
+      if (region) {
+        loadMapScript();
+        switchView('map');
+        geocode(region).then(coords => {
+          if (coords) { pendingSearchCenter = coords; applyPendingCenter(); }
+          else { areaBounds = null; renderAll(); }
+        });
+      } else {
+        areaBounds = null;  // 지역 미입력 → 지역(영역) 필터 해제
+        renderAll();
+      }
     }
 
     // 검색된 지역으로 지도 중심을 스무스하게 이동 + 이동 후 영역(bounds) 기준 필터
@@ -1280,37 +1021,29 @@
     function saveRecentSearches(arr) { localStorage.setItem(RECENT_SEARCH_KEY(), JSON.stringify(arr.slice(0, 5))); }
     function searchLabel(s) {
       const parts = [];
-      if (s.cat === 'rental') {
-        if (s.region)     parts.push(s.region);
-        if (s.brand)      parts.push(s.brand);
-        if (s.maxPrice)   parts.push('≤$' + s.maxPrice);
-        if (s.maxMileage) parts.push('≤' + s.maxMileage + 'km');
-        if (s.minYear)    parts.push(s.minYear + '년~');
-      } else if (s.cat === 'inspection') {
-        if (s.maxInsp) parts.push('인스펙션 ≤$' + s.maxInsp);
-        if (s.maxEmer) parts.push('출동 ≤$' + s.maxEmer);
-      }
+      if (s.region) parts.push(s.region);
+      if (s.price)  parts.push('≤$' + s.price);
+      if (s.room && ROOM_LABELS[s.room]) parts.push(ROOM_LABELS[s.room]);
+      if (s.dur && TYPE_LABELS[s.dur])   parts.push(TYPE_LABELS[s.dur].ko);
       return parts.join(' · ') || '전체';
     }
     function addRecentSearch(s) {
-      if (searchLabel(s) === '전체') return;  // 빈 검색은 저장 안 함
+      if (!s.region && !s.price && !s.room && !s.dur) return;  // 빈 검색은 저장 안 함
       const label = searchLabel(s);
       let arr = loadRecentSearches().filter(x => searchLabel(x) !== label);
       arr.unshift(s);
-      arr = arr.slice(0, 8);
+      arr = arr.slice(0, 5);
       saveRecentSearches(arr);
       syncRecentToFirestore(arr);  // best-effort
     }
     function renderRecentSearches() {
       const box = document.getElementById('recentSearches');
-      if (!box) return;
-      // 현재 카테고리의 최근 검색만 노출
-      const arr = loadRecentSearches().map((s, i) => ({ s, i })).filter(x => (x.s.cat || 'rental') === activeCategory);
+      const arr = loadRecentSearches();
       if (!arr.length) { box.innerHTML = ''; return; }
       box.innerHTML =
         '<div class="recent-head"><span class="recent-label">최근 검색</span>' +
         '<button type="button" class="recent-clear" id="recentClearBtn">전체 지우기</button></div>' +
-        '<div class="recent-chips">' + arr.map(({ s, i }) =>
+        '<div class="recent-chips">' + arr.map((s, i) =>
           `<span class="recent-chip">
              <button type="button" class="recent-chip-main" data-idx="${i}">${escHtml(searchLabel(s))}</button>
              <button type="button" class="recent-chip-x" data-idx="${i}" aria-label="이 검색 기록 삭제">✕</button>
@@ -1320,8 +1053,9 @@
         btn.addEventListener('click', () => {
           const s = loadRecentSearches()[parseInt(btn.dataset.idx, 10)];
           if (!s) return;
-          applyFilterValues(s);
-          runSearch(false);  // 원클릭: 즉시 적용 (중복 저장 안 함)
+          ffRegion.value = s.region || ''; fbPrice.value = s.price || '';
+          fbRoom.value = s.room || ''; fbDuration.value = s.dur || '';
+          runSearch(false);  // 원클릭: 즉시 검색 (중복 저장 안 함)
         });
       });
       box.querySelectorAll('.recent-chip-x').forEach(btn => {
@@ -1387,57 +1121,12 @@
       try { await sendEmailVerification(u); alert('인증 메일이 재전송되었습니다.'); }
       catch (e) { alert('잠시 후 다시 시도해 주세요.'); }
     });
-    document.getElementById('writeBtnOpen').addEventListener('click',   () => {
-      // 정비소/견인: 일반 유저 직접 글쓰기 차단 → 관리자 등록 문의 모달
-      if (CAT_CFG[activeCategory].write === 'inquiry') { openInquiryModal(); return; }
+    // restaurants.html — 글쓰기 버튼 없음 (관리자 전용 등록). 안전한 no-op 가드.
+    (document.getElementById('writeBtnOpen') || { addEventListener(){} }).addEventListener('click', () => {
       const u = window.koausAuth && window.koausAuth.user;
       if (!u) { alert('글을 작성하려면 로그인이 필요합니다.'); window.koausAuth && window.koausAuth.openAuthModal(); return; }
       if (!u.emailVerified) { openVerifyModal(); return; }
       openWriteModal();
-    });
-
-    // ── 글 등록 문의 모달 (정비소/견인) ──
-    const inquiryOverlay = document.getElementById('inquiryOverlay');
-    function openInquiryModal() {
-      // 정비소: 파트너 유치 임팩트 카피 / 그 외: 일반 등록 문의 타이틀
-      document.getElementById('inquiryTitle').textContent = (activeCategory === 'maintenance')
-        ? '🔧 내 정비소를 KoAus에 등록하세요!'
-        : `📝 ${CAT_LABELS[activeCategory]} 등록 문의`;
-      ['iqName','iqContact','iqEmail','iqMsg'].forEach(id => { document.getElementById(id).value = ''; });
-      document.getElementById('iqError').textContent = '';
-      inquiryOverlay.classList.add('open');
-      document.body.style.overflow = 'hidden';
-    }
-    function closeInquiryModal() { inquiryOverlay.classList.remove('open'); document.body.style.overflow = ''; }
-    document.getElementById('inquiryClose').addEventListener('click', closeInquiryModal);
-    document.getElementById('inquiryCancel').addEventListener('click', closeInquiryModal);
-    inquiryOverlay.addEventListener('click', e => { if (e.target === inquiryOverlay) closeInquiryModal(); });
-    document.getElementById('inquirySubmit').addEventListener('click', () => {
-      const name    = document.getElementById('iqName').value.trim();
-      const contact = document.getElementById('iqContact').value.trim();
-      const email   = document.getElementById('iqEmail').value.trim();
-      const msg     = document.getElementById('iqMsg').value.trim();
-      const err     = document.getElementById('iqError');
-      err.textContent = '';
-      if (!name || !contact) { err.textContent = '업체명과 연락처를 입력해 주세요.'; return; }
-      if (hasProfanity(name) || hasProfanity(msg)) { err.textContent = '부적절한 단어가 포함되어 있습니다.'; return; }
-      const subject = `[KoAus ${CAT_LABELS[activeCategory]}] 등록 문의 - ${name}`;
-      const bodyText = [
-        `카테고리: ${CAT_LABELS[activeCategory]} (${STATE_NAMES[currentState] || '전 지역'})`,
-        `업체명/이름: ${name}`, `연락처: ${contact}`, `회신 이메일: ${email || '-'}`,
-        '', '문의 내용:', msg || '-',
-      ].join('\n');
-      try {
-        if (window.koausDb && window.koausFs) {
-          const { addDoc, collection, serverTimestamp } = window.koausFs;
-          addDoc(collection(window.koausDb, 'listing_inquiries'), {
-            category: activeCategory, state: currentState, name, contact, email, message: msg, createdAt: serverTimestamp(),
-          }).catch(() => {});
-        }
-      } catch (e) {}
-      window.location.href = `mailto:${ADMIN_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(bodyText)}`;
-      closeInquiryModal();
-      showToast('문의가 접수되었습니다. 관리자 검토 후 등록됩니다.');
     });
     document.getElementById('writeBtnClose').addEventListener('click',  closeWriteModal);
     document.getElementById('writeBtnCancel').addEventListener('click', closeWriteModal);
@@ -1447,69 +1136,104 @@
       const isEdit = mode === 'edit';
       document.querySelector('.write-modal-title').innerHTML = isEdit
         ? '글 수정 <em>Edit Post</em>'
-        : `글쓰기 <em>${CAT_LABELS[activeCategory]}</em>`;
+        : `글쓰기 <em>쉐어 · ${MODE_LABELS[activeMode]}</em>`;
       document.getElementById('writeBtnSubmit').textContent = isEdit ? '수정 완료' : '등록하기';
     }
-    // 카테고리별 글쓰기 폼 표시 (rental / inspection)
-    function showCatForm() {
-      document.querySelectorAll('#writeOverlay .cat-form').forEach(f => {
-        f.style.display = (f.dataset.form === activeCategory) ? '' : 'none';
-      });
-      syncInspPriceDisabled();
-    }
-    // 인스펙션: 서비스 제공 체크 해제 시 해당 가격 입력 비활성화(회색 처리)
-    function syncInspPriceDisabled() {
-      const insp = document.getElementById('iInspOn'), inspP = document.getElementById('iInspPrice');
-      const emer = document.getElementById('iEmerOn'), emerP = document.getElementById('iEmerPrice');
-      if (insp && inspP) { inspP.disabled = !insp.checked; if (!insp.checked) inspP.value = ''; }
-      if (emer && emerP) { emerP.disabled = !emer.checked; if (!emer.checked) emerP.value = ''; }
-    }
-    document.getElementById('iInspOn').addEventListener('change', syncInspPriceDisabled);
-    document.getElementById('iEmerOn').addEventListener('change', syncInspPriceDisabled);
-
     function resetWriteForm() {
-      ['rTitle','rBrand','rModel','rYear','rMileage','rRwc','rRego','rPrice','rRegion','rContact','rBody',
-       'iName','iContact','iRegion','iTime','iInspPrice','iEmerPrice','iBody'].forEach(id => {
-        const el = document.getElementById(id); if (el) el.value = '';
-      });
-      document.getElementById('iInspOn').checked = true;
-      document.getElementById('iEmerOn').checked = false;
+      ['wTitle','wAddress','wPrice','wBody','wAvailDate','wContact'].forEach(id => { document.getElementById(id).value = ''; });
+      ['wParking','wPet','wKids','wAirCon'].forEach(id => { document.getElementById(id).checked = false; });
+      document.querySelectorAll('#wTypes input, #wRoomTypes input').forEach(c => { c.checked = false; });
+      document.getElementById('wGender').value = '';
       document.getElementById('wDisclaimer').checked = false;
-      syncInspPriceDisabled();
     }
     // 로그인 사용자 닉네임 (작성자 고정값)
     function currentNickname() {
       const u = window.koausAuth && window.koausAuth.user;
       return localStorage.getItem('koaus-nickname') || u?.displayName?.split(' ')[0] || u?.email?.split('@')[0] || '';
     }
+    function setTypeChecks(arr) {
+      const set = new Set(arr || []);
+      document.querySelectorAll('#wTypes input').forEach(c => { c.checked = set.has(c.dataset.type); });
+    }
+    // 모드에 따라 글쓰기 폼 표시 (방 구하기 = 자유 양식: 제목/코멘트/연락처만)
+    function applyWriteModeUI() {
+      const isFind = activeMode === 'find';
+      document.querySelectorAll('.offer-only').forEach(el => { el.style.display = isFind ? 'none' : ''; });
+      document.getElementById('writeGrid').classList.toggle('write-grid--find', isFind);
+      document.getElementById('wBodyLabel').textContent = isFind ? '자유 코멘트 Comments' : '상세 설명 Comments';
+      document.getElementById('wBody').placeholder = isFind
+        ? '구하는 조건·예산·기간·연락처 등을 자유롭게 적어주세요'
+        : '자세한 조건·시설·환경 등을 적어주세요';
+    }
     function openWriteModal() {
       editingId = null;
       setWriteMode('create');
-      showCatForm();
+      setTypeChecks([]);  // 기간 체크 초기화
+      applyWriteModeUI();
       document.getElementById('wAuthorName').textContent = currentNickname() || '-';  // 헤더 작성자 배지
+      loadMapScript();              // Places(주소 자동완성) 미리 로드
+      initAddressAutocomplete();    // 이미 로드돼 있으면 즉시 연결
+      window.pendingPhotoFiles = []; renderPhotoThumbs();  // 사진 첨부 초기화
+      applyDuplicateData();         // ?duplicate=1 진입 시 원본 데이터 prefill (이미지 제외)
       writeOverlay.classList.add('open');
       document.body.style.overflow = 'hidden';
     }
+
+    // 마이페이지에서 [재업로드] 클릭 후 진입 시 — localStorage 의 원본 데이터로 폼 채움.
+    // 사진은 빈 상태 + 빨간 안내문 노출. 1회용(읽은 후 키 삭제).
+    function applyDuplicateData() {
+      const notice = document.getElementById('duplicateNotice');
+      if (notice) notice.hidden = true;
+      const raw = localStorage.getItem('koaus-duplicate-accom');
+      if (!raw) return;
+      let d; try { d = JSON.parse(raw); } catch (_) { localStorage.removeItem('koaus-duplicate-accom'); return; }
+      localStorage.removeItem('koaus-duplicate-accom');
+      const set = (id, v) => { const el = document.getElementById(id); if (el && v != null) el.value = v; };
+      const check = (id, v) => { const el = document.getElementById(id); if (el) el.checked = !!v; };
+      // 모드(방 올리기/구하기) 결정
+      const mode = (d.mode === 'find') ? 'find' : 'offer';
+      activeMode = mode;
+      applyWriteModeUI();
+      set('wTitle', d.title);
+      set('wAddress', d.address);
+      set('wPrice', d.price);
+      set('wBody',  d.body);
+      set('wContact', d.contact);
+      set('wAvailDate', d.availableDate);
+      set('wGender', d.gender);
+      setTypeChecks(Array.isArray(d.types) ? d.types : []);
+      // 방 형태 체크 (roomTypes)
+      const rooms = new Set(Array.isArray(d.roomTypes) ? d.roomTypes : (d.roomType ? [d.roomType] : []));
+      document.querySelectorAll('#wRoomTypes input').forEach(c => { c.checked = rooms.has(c.dataset.room); });
+      check('wParking',  d.parking);
+      check('wPet',      d.petFriendly);
+      check('wKids',     d.kidsInHouse);
+      check('wAirCon',   d.airCon);
+      // 재업로드 모드: 필수 체크는 unchecked — 유저가 다시 동의해야 함
+      const wDcDup = document.getElementById('wDisclaimer'); if (wDcDup) wDcDup.checked = false;
+      if (notice) notice.hidden = false;
+    }
     function openWriteModalForEdit(p) {
       editingId = p.id;
-      const cat = groupOf(p.category);
-      if (cat === 'rental') {
-        _set('rTitle', p.title); _set('rBrand', p.brand); _set('rModel', p.model);
-        _set('rYear', p.year); _set('rMileage', p.mileage); _set('rRwc', p.rwc);
-        _set('rRego', p.regoExpiry); _set('rPrice', p.price); _set('rRegion', p.region);
-        _set('rContact', p.contact); _set('rBody', p.body);
-      } else if (cat === 'inspection') {
-        _set('iName', p.title); _set('iContact', p.contact); _set('iRegion', p.region); _set('iTime', p.timeSlot);
-        document.getElementById('iInspOn').checked = !!p.inspectionAvailable;
-        document.getElementById('iEmerOn').checked = !!p.emergencyAvailable;
-        _set('iInspPrice', p.inspectionPrice); _set('iEmerPrice', p.emergencyPrice);
-        _set('iBody', p.body);
-      }
+      setTypeChecks(Array.isArray(p.types) ? p.types : (p.type ? [p.type] : []));
+      document.getElementById('wTitle').value    = p.title || '';
+      document.getElementById('wAddress').value  = p.address || '';
+      document.getElementById('wPrice').value    = p.price || '';
+      const roomSet = new Set(Array.isArray(p.roomTypes) ? p.roomTypes : (p.roomType ? [p.roomType] : []));
+      document.querySelectorAll('#wRoomTypes input').forEach(c => { c.checked = roomSet.has(c.dataset.room); });
+      document.getElementById('wGender').value = p.gender || '';
+      document.getElementById('wAvailDate').value = p.availableDate || '';
+      document.getElementById('wContact').value = p.contact || '';
+      document.getElementById('wParking').checked = !!p.parking;
+      document.getElementById('wPet').checked     = !!p.petFriendly;
+      document.getElementById('wKids').checked    = !!p.kidsInHouse;
+      document.getElementById('wAirCon').checked  = !!p.airCon;
+      document.getElementById('wBody').value     = p.body || '';
       document.getElementById('wAuthorName').textContent = p.author || currentNickname() || '-';
-      // 수정 모드: 기존 글은 이미 동의되어 등록 → 필수 체크 ON 유지
-      const wDcEdit = document.getElementById('wDisclaimer'); if (wDcEdit) wDcEdit.checked = true;
+      // 수정 모드: 기존 글은 이미 동의해 등록된 것이므로 필수 체크 유지 (체크박스 ON)
+      document.getElementById('wDisclaimer').checked = true;
       setWriteMode('edit');
-      showCatForm();
+      applyWriteModeUI();
       document.getElementById('detailOverlay').classList.remove('open');
       writeOverlay.classList.add('open');
       document.body.style.overflow = 'hidden';
@@ -1518,6 +1242,43 @@
       writeOverlay.classList.remove('open');
       document.body.style.overflow = '';
     }
+
+    // ── 사진 첨부 (최대 6장) — 클라이언트 압축 후 Firebase Storage 업로드 ──
+    const MAX_PHOTOS = 6;
+    window.pendingPhotoFiles = [];
+    function renderPhotoThumbs() {
+      const box = document.getElementById('wPhotoThumbs');
+      const addBtn = document.getElementById('wPhotoAddBtn');
+      if (!box) return;
+      box.innerHTML = window.pendingPhotoFiles.map((p, i) =>
+        `<div class="photo-thumb"><img src="${p.preview}" alt="사진 ${i+1}"><button type="button" class="photo-thumb-x" data-idx="${i}" aria-label="삭제">✕</button></div>`
+      ).join('');
+      box.querySelectorAll('.photo-thumb-x').forEach(b => b.addEventListener('click', () => {
+        window.pendingPhotoFiles.splice(Number(b.dataset.idx), 1);
+        renderPhotoThumbs();
+      }));
+      if (addBtn) addBtn.style.display = window.pendingPhotoFiles.length >= MAX_PHOTOS ? 'none' : '';
+    }
+    (function bindPhotoInputs() {
+      const input  = document.getElementById('wPhotoInput');
+      const addBtn = document.getElementById('wPhotoAddBtn');
+      if (!input || !addBtn) return;
+      addBtn.addEventListener('click', () => input.click());
+      input.addEventListener('change', async () => {
+        const files = Array.from(input.files || []);
+        for (const f of files) {
+          if (window.pendingPhotoFiles.length >= MAX_PHOTOS) { alert(`사진은 최대 ${MAX_PHOTOS}장까지 첨부 가능합니다.`); break; }
+          try {
+            const preview = window.koausPhotos
+              ? await window.koausPhotos.thumbDataURL(f, 240)
+              : URL.createObjectURL(f);
+            window.pendingPhotoFiles.push({ file: f, preview });
+          } catch (e) { console.warn('썸네일 생성 실패', e); }
+        }
+        input.value = '';
+        renderPhotoThumbs();
+      });
+    })();
 
     document.getElementById('writeBtnSubmit').addEventListener('click', () => {
       // 로그인 필수: 미로그인 시 로그인 모달을 띄우고, 로그인 직후 등록을 이어서 진행
@@ -1599,81 +1360,134 @@
     async function submitPost() {
       const user = window.koausAuth && window.koausAuth.user;
       if (!user) { window.koausAuth && window.koausAuth.openAuthModal(); return; }
+
+      const isFind     = activeMode === 'find';
+      const title      = document.getElementById('wTitle').value.trim();
+      const body       = document.getElementById('wBody').value.trim();
+
+      // 욕설/금칙어 필터 — 제목·상세 설명 검사
       const wErr = document.getElementById('wError');
       wErr.textContent = '';
-
-      let fields;
-      if (activeCategory === 'rental') {
-        const title = _fv('rTitle'), body = _fv('rBody');
-        if (hasProfanity(title) || hasProfanity(body)) { wErr.textContent = '부적절한 단어가 포함되어 있습니다.'; return; }
-        if (!title) { alert('제목을 입력해 주세요.'); return; }
-        const priceVal = _fv('rPrice');
-        fields = {
-          title, body,
-          brand:      _fv('rBrand'),
-          model:      _fv('rModel'),
-          year:       _fv('rYear'),
-          mileage:    _fv('rMileage'),
-          rwc:        _fv('rRwc'),
-          regoExpiry: _fv('rRego'),
-          price:      priceVal ? parseInt(priceVal, 10) : 0,
-          region:     _fv('rRegion'),
-          contact:    _fv('rContact'),
-        };
-      } else if (activeCategory === 'inspection') {
-        const title = _fv('iName'), body = _fv('iBody');
-        if (hasProfanity(title) || hasProfanity(body)) { wErr.textContent = '부적절한 단어가 포함되어 있습니다.'; return; }
-        if (!title) { alert('메카닉 이름(또는 업체명)을 입력해 주세요.'); return; }
-        const inspOn = document.getElementById('iInspOn').checked;
-        const emerOn = document.getElementById('iEmerOn').checked;
-        if (!inspOn && !emerOn) { alert('동행 및 긴급출동 중 최소 하나의 서비스를 선택해 주세요.'); return; }
-        fields = {
-          title, body,
-          contact:  _fv('iContact'),
-          region:   _fv('iRegion'),
-          timeSlot: _fv('iTime'),
-          inspectionAvailable: inspOn,
-          inspectionPrice: inspOn ? (parseInt(_fv('iInspPrice'), 10) || 0) : 0,
-          emergencyAvailable: emerOn,
-          emergencyPrice: emerOn ? (parseInt(_fv('iEmerPrice'), 10) || 0) : 0,
-        };
-      } else {
-        return;  // 정비소/견인은 직접 글쓰기 불가 (관리자 등록 문의)
+      if (hasProfanity(title) || hasProfanity(body)) {
+        wErr.textContent = '부적절한 단어가 포함되어 있습니다.';
+        return;
       }
 
-      // 면책 조항 동의 필수
-      if (!document.getElementById('wDisclaimer').checked) { alert('필수칸에 체크를 해주셔야 합니다.'); return; }
+      let fields, coords = null;
 
-      const nick = currentNickname() || user.displayName?.split(' ')[0] || user.email?.split('@')[0] || '사용자';
+      if (isFind) {
+        // ── 방 구하기: 자유 양식 — 제목만 필수 (연락처는 상세 설명에 자유 기재) ──
+        if (!title) { alert('제목을 입력해 주세요.'); return; }
+        fields = { mode: 'find', title, body };
+      } else {
+        // ── 방 올리기: 제목 · 주소 · 주당 렌트비만 필수, 나머지는 선택 ──
+        const types     = [...document.querySelectorAll('#wTypes input:checked')].map(c => c.dataset.type);
+        const roomTypes = [...document.querySelectorAll('#wRoomTypes input:checked')].map(c => c.dataset.room);
+        const gender    = document.getElementById('wGender').value;
+        const availableDate = document.getElementById('wAvailDate').value;
+        const contact   = document.getElementById('wContact').value.trim();
+        const address  = document.getElementById('wAddress').value.trim();
+        const priceVal = document.getElementById('wPrice').value.trim();
+
+        if (!title || !address || !priceVal) {
+          alert('제목, 주소, 주당 쉐어비는 필수 입력 항목입니다.');
+          return;
+        }
+        const price = parseInt(priceVal, 10);
+        if (!(price > 0)) { alert('주당 쉐어비를 숫자로 올바르게 입력해 주세요.'); return; }
+        fields = {
+          mode: 'offer', types, title, body, address, price, roomTypes, gender, availableDate, contact,
+          parking:     document.getElementById('wParking').checked,
+          petFriendly: document.getElementById('wPet').checked,
+          kidsInHouse: document.getElementById('wKids').checked,
+          airCon:      document.getElementById('wAirCon').checked,
+        };
+        loadMapScript();  // Geocoder 사용을 위해 Maps 스크립트 로드 보장
+        coords = await geocode(address);
+      }
+
+      // ── 면책 조항 동의 필수 ──
+      if (!document.getElementById('wDisclaimer').checked) {
+        alert('필수칸에 체크를 해주셔야 합니다.');
+        return;
+      }
+
+      const nick = currentNickname()
+        || user.displayName?.split(' ')[0] || user.email?.split('@')[0] || '사용자';
       const now = new Date();
       const pad = n => String(n).padStart(2, '0');
       const date = `${pad(now.getMonth() + 1)}/${pad(now.getDate())}`;
       const time = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
 
       const posts = loadPosts();
+      let target;
+
       if (editingId != null) {
+        // ── 수정: 기존 글 업데이트 ──
         const idx = posts.findIndex(x => String(x.id) === String(editingId));
         if (idx < 0) { editingId = null; return; }
-        Object.assign(posts[idx], fields);
+        target = posts[idx];
+        Object.assign(target, fields);
+        if (coords) { target.lat = coords.lat; target.lng = coords.lng; }
         savePosts(posts);
-        recordMyPost(posts[idx]);
+        recordMyPost(target);  // 마이페이지 제목 등 동기화
         editingId = null;
       } else {
-        const target = {
-          id: Date.now(), state: currentState, category: activeCategory, isPremium: false,
-          author: nick, uid: user.uid || '', email: user.email || '',
+        // ── 새 글 작성 ──
+        target = {
+          id: Date.now(), state: currentState,
+          author: nick,
+          uid: user.uid || '', email: user.email || '',
           authorUid: user.uid || '', authorEmail: user.email || '',
-          date, time, ...fields,
+          date, time, lat: null, lng: null, imageUrls: [], ...fields,
         };
+        if (coords) { target.lat = coords.lat; target.lng = coords.lng; }
         posts.push(target);
         savePosts(posts);
         recordMyPost(target);
+        console.log('[KoAus] 숙소 글 저장 — uid:', target.uid, '| email:', target.email, '| id:', target.id);
+      }
+
+      // ── 사진 첨부: 클라이언트 압축 후 Firebase Storage 업로드 → target.imageUrls 저장 ──
+      if (window.pendingPhotoFiles && window.pendingPhotoFiles.length && window.koausPhotos) {
+        try {
+          const wsb = document.getElementById('writeBtnSubmit');
+          if (wsb) { wsb.disabled = true; wsb.textContent = `사진 업로드 중… 0/${window.pendingPhotoFiles.length}`; }
+          const urls = await window.koausPhotos.uploadPostImages(
+            window.koausPhotos.app,
+            `post_images/accom/${target.id}`,
+            window.pendingPhotoFiles.map(p => p.file),
+            { maxDim: 1200, quality: 0.7, onProgress: (i, total) => {
+              if (wsb) wsb.textContent = `사진 업로드 중… ${i}/${total}`;
+            } }
+          );
+          target.imageUrls = urls;
+          // localStorage 갱신
+          const cur = loadPosts();
+          const idx2 = cur.findIndex(x => String(x.id) === String(target.id));
+          if (idx2 >= 0) { cur[idx2].imageUrls = urls; savePosts(cur); }
+          window.pendingPhotoFiles = [];
+          if (wsb) { wsb.disabled = false; wsb.textContent = '등록하기'; }
+        } catch (e) {
+          console.error('\[restaurants\] 사진 업로드 실패', { code: e && e.code, message: e && e.message, error: e });
+          alert(`사진 업로드 실패: ${(e && e.code) || 'unknown'}\n${(e && e.message) || ''}\n글은 본인 기기에 저장되었습니다. 수정에서 다시 시도해 주세요.`);
+        }
       }
 
       currentPage = 1;
       setWriteMode('create');
-      renderAll();
+      renderAll();  // 현재 모드 탭 유지하며 재렌더
       closeWriteModal();
+
+      // 지도 뷰라면 마커 갱신 후 해당 위치로 부드럽게 이동 (프로그램적 이동 → 버튼 억제)
+      if (target.lat && target.lng && mapReady) {
+        programmaticMove = true;
+        updateMapMarkers(applyFilters(loadPosts()));
+        map.setZoom(14);
+        map.panTo({ lat: target.lat, lng: target.lng });
+        setTimeout(() => { programmaticMove = false; }, 600);
+      }
+
       resetWriteForm();
     }
 
@@ -1735,7 +1549,7 @@
     const SAVED_KEY   = 'koaus-saved-posts';
     const RECENT_KEY  = 'koaus-recent-posts';
     const MYPOSTS_KEY = 'koaus-my-posts';
-    const BOARD       = 'auto';
+    const BOARD       = 'accom';
 
     function readJSON(key) { try { return JSON.parse(localStorage.getItem(key) || '[]'); } catch { return []; } }
     function isSaved(id)   { return readJSON(SAVED_KEY).some(s => s.board === BOARD && String(s.id) === String(id)); }
@@ -1781,31 +1595,32 @@
 
     // ── Filter ──
     function applyFilters(posts) {
-      const f = activeFilter || {};
-      const num = v => { const n = parseInt(v, 10); return Number.isFinite(n) ? n : null; };
+      // Dual Range Slider 기반 가격 필터 — 기존 fbPrice 는 max 값으로 폴백 유지
+      const minEl = document.getElementById('fbPriceMin');
+      const maxEl = document.getElementById('fbPriceMax');
+      const minPrice = minEl ? Number(minEl.value) : 0;
+      const maxPrice = maxEl ? Number(maxEl.value) : 999;
+      const room = fbRoom.value;       // '' = 전체
+      const dur  = fbDuration.value;   // '' = 전체
       return posts.filter(p => {
-        // 주(State)별 분리: 현재 주가 지정된 경우 같은 주의 글만 노출
-        // 주(State)별 분리: 관리자 글(state='')은 전 지역 노출, 그 외는 동일 주만 노출
         if (currentState && p.state && p.state !== currentState) return false;
-        // 카테고리(렌트카/인스펙션/정비소/견인)별 분리
-        if (groupOf(p.category) !== activeCategory) return false;
-        // 관리자 프리미엄 글: 어떠한 상세 필터/지도 범위에서도 항상 노출 (최상단 고정은 정렬에서 처리)
-        if (p.isPremium) return true;
-        // '이 지역 검색'(지도) 활성 시: 지도 범위 내 좌표만 (정비소/견인)
+        if ((p.mode || 'offer') !== activeMode) return false;
         if (areaBounds) {
           if (!(p.lat && p.lng) || !areaBounds.contains({ lat: p.lat, lng: p.lng })) return false;
         }
-        if (f.cat === 'rental') {
-          if (f.region && !(`${p.region || ''} ${p.title || ''}`.toLowerCase().includes(f.region.toLowerCase()))) return false;
-          if (f.brand && !(`${p.brand || ''}`.toLowerCase().includes(f.brand.toLowerCase()))) return false;
-          const mp = num(f.maxPrice);   if (mp !== null && p.price && p.price > mp) return false;
-          const mm = num(f.maxMileage); if (mm !== null && p.mileage && parseInt(p.mileage, 10) > mm) return false;
-          const my = num(f.minYear);    if (my !== null && p.year && parseInt(p.year, 10) < my) return false;
-        } else if (f.cat === 'inspection') {
-          const mi = num(f.maxInsp);
-          if (mi !== null && !(p.inspectionAvailable && p.inspectionPrice && p.inspectionPrice <= mi)) return false;
-          const me = num(f.maxEmer);
-          if (me !== null && !(p.emergencyAvailable && p.emergencyPrice && p.emergencyPrice <= me)) return false;
+        // 가격 범위: minPrice ≤ p.price ≤ maxPrice
+        if (typeof p.price === 'number') {
+          if (p.price < minPrice || p.price > maxPrice) return false;
+        }
+        // 방 형태: 선택 시 글의 방형태 배열에 포함되어야 노출
+        if (room) {
+          const pRooms = Array.isArray(p.roomTypes) ? p.roomTypes : (p.roomType ? [p.roomType] : []);
+          if (!pRooms.includes(room)) return false;
+        }
+        // 숙박 기간: 선택 시 글의 기간 배열에 포함되어야 노출
+        if (dur) {
+          const pTypes = Array.isArray(p.types) ? p.types : (p.type ? [p.type] : []);
+          if (!pTypes.includes(dur)) return false;
         }
         return true;
       });
@@ -1833,105 +1648,82 @@
       const posts    = loadPosts();
       const filtered = applyFilters(posts);
       document.getElementById('boardCount').textContent = `총 ${filtered.length}건`;
-      // 관리자 지정 프리미엄(isPremium) 글을 작성 시간과 무관하게 최상단 고정.
-      // 프리미엄끼리·일반끼리는 각각 최신순(id 내림차순)으로 정렬.
-      const sorted = filtered.slice().sort((a, b) => {
-        const pa = a.isPremium ? 1 : 0, pb = b.isPremium ? 1 : 0;
-        if (pa !== pb) return pb - pa;
-        return b.id - a.id;
-      });
+      // 최신 글이 위로 (내림차순)
+      const sorted = filtered.slice().sort((a, b) => b.id - a.id);
       const totalPages = Math.max(1, Math.ceil(sorted.length / PER_PAGE));
       if (currentPage > totalPages) currentPage = totalPages;
       renderListView(sorted, totalPages);
       if (currentView === 'map' && mapReady) updateMapMarkers(filtered);
     }
 
-    // ── 카테고리별 카드 렌더러 ──
-    // 렌트카: 쉐어(accom)와 동일 크기 세로형 카드 (가격 총액 $, 본인글 파란 테두리, 북마크)
-    function rentalCardHtml(p) {
-      const saved = isSaved(p.id);
-      const priceHtml = p.price ? `<span class="accom-price">$${escHtml(String(p.price))}</span>` : '<span class="accom-card-find">가격 협의</span>';
-      const cs = [];
-      const bm = [p.brand, p.model].filter(Boolean).join(' ');
-      if (bm) cs.push('🚗 ' + bm);
-      if (p.year) cs.push('📅 ' + p.year + '년');
-      if (p.mileage) cs.push('🛣 ' + Number(p.mileage).toLocaleString() + 'km');
-      if (p.rwc === 'yes') cs.push('✅ RWC 있음'); else if (p.rwc === 'no') cs.push('RWC 없음');
-      if (p.regoExpiry) cs.push('🗓 REGO ' + p.regoExpiry);
-      const chips = cs.map(c => `<span class="accom-tag">${escHtml(c)}</span>`).join('');
-      return `
-        <div class="accom-card${isMine(p) ? ' my-post-highlight' : ''}${p.isPremium ? ' is-premium' : ''}" data-id="${p.id}">
+    function renderListView(sorted, totalPages) {
+      const grid  = document.getElementById('postGrid');
+      const pager = document.getElementById('pagination');
+      if (!sorted.length) {
+        grid.innerHTML = '<div class="post-empty">아직 등록된 글이 없습니다. 첫 글을 올려보세요!</div>';
+        pager.innerHTML = '';
+        return;
+      }
+      const start = (currentPage - 1) * PER_PAGE;
+      const pageItems = sorted.slice(start, start + PER_PAGE);
+      grid.innerHTML = pageItems.map(p => {
+        const saved  = isSaved(p.id);
+        const isFind = (p.mode || 'offer') === 'find';
+        // 칩 (방형태 / 성별 / 숙박기간) — 방 올리기만
+        let chips = '';
+        if (!isFind) {
+          const cs = [];
+          const rooms = Array.isArray(p.roomTypes) ? p.roomTypes : (p.roomType ? [p.roomType] : []);
+          rooms.forEach(r => { if (ROOM_LABELS[r]) cs.push('🛏 ' + ROOM_LABELS[r]); });
+          if (p.gender && GENDER_LABELS[p.gender]) cs.push('👤 ' + GENDER_LABELS[p.gender]);
+          const ds = Array.isArray(p.types) ? p.types : (p.type ? [p.type] : []);
+          ds.forEach(t => { if (TYPE_LABELS[t]) cs.push('📅 ' + TYPE_LABELS[t].ko); });
+          chips = cs.map(c => `<span class="accom-tag">${escHtml(c)}</span>`).join('');
+        }
+        const priceHtml = isFind
+          ? '<span class="accom-card-find">방 구하기</span>'
+          : (p.price ? `<span class="accom-price">$${p.price}<small>/wk</small></span>` : '<span class="accom-card-find">가격 협의</span>');
+        const sub = isFind ? (p.body || '') : (p.address || '');
+        return `
+        <div class="accom-card${isMine(p) ? ' my-post-highlight' : ''}" data-id="${p.id}">
           <div class="accom-card-thumb">
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l1.5-4.5A2 2 0 0 1 8.4 7h7.2a2 2 0 0 1 1.9 1.5L19 13"/><path d="M3 13h18v4a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1v-1H6v1a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><circle cx="7.5" cy="15.5" r="1"/><circle cx="16.5" cy="15.5" r="1"/></svg>
+            ${(Array.isArray(p.imageUrls) && p.imageUrls.length)
+              ? `<img src="${escHtml(p.imageUrls[0])}" alt="${escHtml(p.title || '')}" loading="lazy" />`
+              : '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>'}
           </div>
           <div class="accom-card-info">
             <div class="accom-card-line1">
               ${priceHtml}
               <button class="bookmark-btn${saved ? ' is-saved' : ''}" data-id="${p.id}" title="저장한 글" aria-label="저장">${saved ? '★' : '☆'}</button>
             </div>
-            <div class="accom-card-title2">${p.isPremium ? '<span class="insp-ad-badge">AD</span> ' : ''}${escHtml(p.title)}</div>
-            ${p.region ? `<div class="accom-card-sub">📍 ${escHtml(p.region)}</div>` : ''}
+            <div class="accom-card-title2">${escHtml(p.title)}</div>
+            ${sub ? `<div class="accom-card-sub">${isFind ? '' : '📍 '}${escHtml(sub)}</div>` : ''}
             ${chips ? `<div class="accom-card-chips">${chips}</div>` : ''}
+            <div class="post-mini-actions">
+              ${isMine(p) ? `<button class="mini-btn mini-edit" data-id="${p.id}" type="button">수정</button><button class="mini-btn mini-del" data-id="${p.id}" type="button">삭제</button>` : ''}
+              <button class="mini-btn mini-share" data-id="${p.id}" type="button">공유</button>
+              <button class="mini-btn mini-report" data-id="${p.id}" type="button">신고</button>
+            </div>
           </div>
         </div>`;
-    }
-    // 3/5 높이 컴팩트 카드 (인스펙션/정비소/견인 공용)
-    const _field = (icon, text) => `<span class="auto-li-field">${icon} ${escHtml(String(text))}</span>`;
-    function autoMiniCard(p, fieldsHtml, btnLabel) {
-      const badge = p.isPremium ? '<span class="insp-ad-badge">AD</span>' : '';
-      return `
-        <div class="auto-li${p.isPremium ? ' is-premium' : ''}${isMine(p) ? ' my-post-highlight' : ''}" data-id="${p.id}">
-          <div class="auto-li-main">
-            <div class="auto-li-name-row">${badge}<span class="auto-li-name">${escHtml(p.title || '업체')}</span></div>
-            <div class="auto-li-meta">${fieldsHtml}</div>
-          </div>
-          <button class="auto-li-btn" data-id="${p.id}" type="button">${btnLabel}</button>
-        </div>`;
-    }
-    function inspectionCardHtml(p) {
-      const f = [_field('📞', p.contact || '연락처 문의')];
-      if (p.inspectionAvailable) f.push(_field('🔧', '인스펙션 $' + (p.inspectionPrice || '협의')));
-      if (p.emergencyAvailable)  f.push(_field('🚨', '긴급출동 $' + (p.emergencyPrice || '협의')));
-      if (p.region)   f.push(_field('📍', p.region));
-      if (p.timeSlot) f.push(_field('🕒', p.timeSlot));
-      return autoMiniCard(p, f.join(''), '예약·문의');
-    }
-    function maintenanceCardHtml(p) {
-      const f = [_field('📞', p.contact || '연락처 문의')];
-      if (p.price) f.push(_field('💲', '$' + p.price));
-      if (p.region || p.address) f.push(_field('📍', p.region || p.address));
-      return autoMiniCard(p, f.join(''), '문의하기');
-    }
-    function towingCardHtml(p) {
-      const f = [_field('📞', p.contact || '연락처 문의')];
-      if (p.price) f.push(_field('💲', '기본요금 $' + p.price));
-      if (p.region || p.address) f.push(_field('📍', p.region || p.address));
-      return autoMiniCard(p, f.join(''), '문의하기');
-    }
-    const CARD_RENDERERS = { rental: rentalCardHtml, inspection: inspectionCardHtml, maintenance: maintenanceCardHtml, towing: towingCardHtml };
+      }).join('');
 
-    function renderListView(sorted, totalPages) {
-      const grid  = document.getElementById('postGrid');
-      const pager = document.getElementById('pagination');
-      if (!sorted.length) {
-        grid.innerHTML = '<div class="post-empty">아직 등록된 글이 없습니다.</div>';
-        pager.innerHTML = '';
-        return;
-      }
-      const start = (currentPage - 1) * PER_PAGE;
-      const pageItems = sorted.slice(start, start + PER_PAGE);
-      const renderer = CARD_RENDERERS[activeCategory] || rentalCardHtml;
-      grid.innerHTML = pageItems.map(renderer).join('');
-
-      // 카드 클릭 → 상세 (렌트카 카드 + 컴팩트 카드 공통)
-      grid.querySelectorAll('.accom-card, .auto-li').forEach(card => {
+      grid.querySelectorAll('.accom-card').forEach(card => {
         card.addEventListener('click', () => openDetail(card.dataset.id));
       });
-      // 컴팩트 카드 예약·문의 버튼 → 상세
-      grid.querySelectorAll('.auto-li-btn').forEach(btn => {
-        btn.addEventListener('click', e => { e.stopPropagation(); openDetail(btn.dataset.id); });
+      grid.querySelectorAll('.card-edit').forEach(btn => {
+        btn.addEventListener('click', e => {
+          e.stopPropagation();
+          const p = loadPosts().find(x => String(x.id) === String(btn.dataset.id));
+          if (p) openWriteModalForEdit(p);
+        });
       });
-      // 북마크 (렌트카 카드)
+      grid.querySelectorAll('.card-del').forEach(btn => {
+        btn.addEventListener('click', e => {
+          e.stopPropagation();
+          deletePost(btn.dataset.id);
+        });
+      });
       grid.querySelectorAll('.bookmark-btn').forEach(btn => {
         btn.addEventListener('click', e => {
           e.stopPropagation();
@@ -1941,6 +1733,40 @@
           renderAll();
         });
       });
+      // 미니 액션: 수정·삭제(본인) / 공유·신고(모든 사용자) — 카드 클릭(상세 열기)과 분리
+      grid.querySelectorAll('.mini-edit').forEach(btn => btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const p = loadPosts().find(x => String(x.id) === String(btn.dataset.id));
+        if (p) openWriteModalForEdit(p);
+      }));
+      grid.querySelectorAll('.mini-del').forEach(btn => btn.addEventListener('click', e => {
+        e.stopPropagation();
+        deletePost(btn.dataset.id);
+      }));
+      grid.querySelectorAll('.mini-share').forEach(btn => btn.addEventListener('click', async e => {
+        e.stopPropagation();
+        const url = `${location.origin}${location.pathname}?id=${encodeURIComponent(btn.dataset.id)}`;
+        try { await navigator.clipboard.writeText(url); } catch (_) { /* 권한 없을 경우 fallback */
+          const ta = document.createElement('textarea'); ta.value = url; document.body.appendChild(ta);
+          ta.select(); try { document.execCommand('copy'); } catch (_) {} ta.remove();
+        }
+        alert('링크가 복사되었습니다.');
+      }));
+      grid.querySelectorAll('.mini-report').forEach(btn => btn.addEventListener('click', async e => {
+        e.stopPropagation();
+        const postId = btn.dataset.id;
+        const user = window.koausAuth && window.koausAuth.user;
+        try {
+          if (window.koausDb && window.koausFs && user) {
+            const { addDoc, collection, serverTimestamp } = window.koausFs;
+            await addDoc(collection(window.koausDb, 'reports'), {
+              postId: String(postId), board: 'accom', reason: '게시글 신고 (카드)',
+              reporterUid: user.uid || '', reporterEmail: user.email || '', createdAt: serverTimestamp(),
+            });
+          }
+        } catch (_) { /* Firestore 실패해도 사용자에겐 접수 안내 */ }
+        alert('신고가 접수되었습니다. 관리자 검토 후 조치됩니다.');
+      }));
 
       pager.innerHTML = '';
       if (totalPages > 1) {
@@ -1964,47 +1790,66 @@
       if (!p) return;
       currentDetailPost = p;
 
-      document.getElementById('detailNavTitle').textContent = p.title;
-      const cat = groupOf(p.category);
-      // 상태 (카테고리)
-      document.getElementById('detailStatus').innerHTML =
-        `⚪ ${escHtml(CAT_LABELS[cat] || 'Auto')}${p.isPremium ? ' <span class="rea-dot">•</span> ⭐ 추천' : ''}`;
-      // 가격 (총액 $ — 주당 표기 제거)
-      let priceHtml;
-      if (cat === 'inspection') {
-        const parts = [];
-        if (p.inspectionAvailable) parts.push(`인스펙션 $${p.inspectionPrice || '협의'}`);
-        if (p.emergencyAvailable)  parts.push(`긴급출동 $${p.emergencyPrice || '협의'}`);
-        priceHtml = parts.length ? escHtml(parts.join('  ·  ')) : '<span class="rea-price-na">비용 협의</span>';
-      } else {
-        priceHtml = p.price ? `$${escHtml(String(p.price))}` : '<span class="rea-price-na">가격 협의</span>';
+      // Hero 영역에 첨부 사진(있을 시) — 가로 스크롤 갤러리 + 카운터 동기화 + 클릭 시 라이트박스
+      const hero = document.getElementById('detailHero');
+      const heroPh = document.getElementById('detailHeroPh');
+      const counter = document.getElementById('detailHeroCounter');
+      if (hero) {
+        const oldGal = hero.querySelector('.detail-hero-img, .detail-hero-gallery');
+        if (oldGal) oldGal.remove();
+        if (Array.isArray(p.imageUrls) && p.imageUrls.length) {
+          const N = p.imageUrls.length;
+          if (heroPh) heroPh.style.display = 'none';
+          if (counter) { counter.textContent = `1 / ${N}`; counter.style.display = ''; }
+          const wrap = document.createElement('div');
+          wrap.className = 'detail-hero-gallery';
+          wrap.innerHTML = p.imageUrls.map(u =>
+            `<img src="${escHtml(u)}" alt="" loading="lazy" data-src="${escHtml(u)}" />`
+          ).join('');
+          hero.appendChild(wrap);
+          // 스크롤 시 현재 인덱스 → counter 갱신
+          wrap.addEventListener('scroll', () => {
+            const w = wrap.clientWidth || 1;
+            const idx = Math.min(N, Math.max(1, Math.round(wrap.scrollLeft / w) + 1));
+            if (counter) counter.textContent = `${idx} / ${N}`;
+          }, { passive: true });
+          // 이미지 클릭 → 라이트박스 (urls 배열 + 클릭한 인덱스)
+          wrap.addEventListener('click', e => {
+            const t = e.target.closest('img'); if (!t) return;
+            const imgs = [...wrap.querySelectorAll('img')];
+            const idx = Math.max(0, imgs.indexOf(t));
+            openLightbox(p.imageUrls, idx);
+          });
+        } else {
+          if (heroPh) heroPh.style.display = '';
+          if (counter) counter.style.display = 'none';
+        }
       }
-      document.getElementById('detailPrice').innerHTML = priceHtml;
-      // 지역/주소 + 복사
+
+      document.getElementById('detailNavTitle').textContent = p.title;
+      // 상태 + 입주 가능일
+      document.getElementById('detailStatus').innerHTML =
+        `⚪ 쉐어 <span class="rea-dot">•</span> 입주 가능일: <strong>${escHtml(p.availableDate || '협의')}</strong>`;
+      // 가격 (Huge Bold)
+      document.getElementById('detailPrice').innerHTML = p.price
+        ? `$${p.price} <span class="rea-price-unit">per week</span>`
+        : '<span class="rea-price-na">가격 협의</span>';
+      // 주소 + 복사
       const addrText = document.getElementById('detailAddrText');
       const addrCopy = document.getElementById('detailAddrCopy');
-      const loc = p.region || p.address || '';
-      if (loc) {
-        addrText.textContent = '📍 ' + loc;
+      if (p.address) {
+        addrText.textContent = '📍 ' + p.address;
         addrCopy.style.display = '';
-        addrCopy.onclick = () => copyAddress(loc);
-      } else { addrText.textContent = '지역 미등록'; addrCopy.style.display = 'none'; }
+        addrCopy.onclick = () => copyAddress(p.address);
+      } else { addrText.textContent = '주소 미등록'; addrCopy.style.display = 'none'; }
 
-      // 핵심 요약 칩 (카테고리별)
+      // 핵심 요약 칩 (방형태 / 성별 / 숙박기간)
       const sum = [];
-      if (cat === 'rental') {
-        const bm = [p.brand, p.model].filter(Boolean).join(' '); if (bm) sum.push('🚗 ' + bm);
-        if (p.year) sum.push('📅 ' + p.year + '년');
-        if (p.mileage) sum.push('🛣 ' + Number(p.mileage).toLocaleString() + 'km');
-        if (p.rwc === 'yes') sum.push('✅ RWC 있음'); else if (p.rwc === 'no') sum.push('RWC 없음');
-        if (p.regoExpiry) sum.push('🗓 REGO ' + p.regoExpiry);
-        if (p.contact) sum.push('📞 ' + p.contact);
-      } else if (cat === 'inspection') {
-        if (p.contact)  sum.push('📞 ' + p.contact);
-        if (p.timeSlot) sum.push('🕒 ' + p.timeSlot);
-      } else {
-        if (p.contact) sum.push('📞 ' + p.contact);
-      }
+      const rooms = Array.isArray(p.roomTypes) ? p.roomTypes : (p.roomType ? [p.roomType] : []);
+      rooms.forEach(r => { if (ROOM_LABELS[r]) sum.push('🛏 ' + ROOM_LABELS[r]); });
+      if (p.gender && GENDER_LABELS[p.gender]) sum.push('👤 ' + GENDER_LABELS[p.gender]);
+      const durs = Array.isArray(p.types) ? p.types : (p.type ? [p.type] : []);
+      durs.forEach(t => { if (TYPE_LABELS[t]) sum.push('📅 ' + TYPE_LABELS[t].ko); });
       document.getElementById('detailSummary').innerHTML = sum.map(s => `<span class="rea-chip">${escHtml(s)}</span>`).join('');
 
       // Description (+ 더보기)
@@ -2018,8 +1863,18 @@
         moreBtn.style.display = (bodyEl.scrollHeight > bodyEl.clientHeight + 4) ? '' : 'none';
       });
 
-      // Property features 섹션은 Auto에서 미사용 → 숨김
-      document.getElementById('detailFeaturesSec').style.display = 'none';
+      // Property features (옵션)
+      const feats = [];
+      if (p.parking)     feats.push('주차 가능');
+      if (p.petFriendly) feats.push('반려동물 가능');
+      if (p.kidsInHouse) feats.push('아이 있는 집');
+      if (p.airCon)      feats.push('에어컨');
+      const featSec = document.getElementById('detailFeaturesSec');
+      if (feats.length) {
+        document.getElementById('detailFeatures').innerHTML = feats.map(f =>
+          `<li class="rea-feat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>${escHtml(f)}</li>`).join('');
+        featSec.style.display = '';
+      } else { featSec.style.display = 'none'; }
 
       // 저장(★) 토글
       const saveBtn = document.getElementById('detailSaveBtn');
@@ -2047,6 +1902,8 @@
 
       setupDetailLocation(p);
       recordRecent(p);
+      // 마커 visited 상태 갱신 (이후 마커 색 흰색으로) — markerIcon은 지도가 로드돼 있을 때만
+      if (typeof markVisited === 'function') markVisited(p.id);
       document.getElementById('detailOverlay').classList.add('open');
       const rc = document.querySelector('.rea-content'); if (rc) rc.scrollTop = 0;
     }
@@ -2101,7 +1958,7 @@
       const p = currentDetailPost; if (!p) return;
       const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
       if (isMobile && navigator.share) {
-        navigator.share({ title: 'KoAus Auto', text: `[KoAus Auto] ${p.title}`, url: shareUrl() }).catch(() => {});
+        navigator.share({ title: 'KoAus 쉐어', text: `[KoAus 쉐어] ${p.title}`, url: shareUrl() }).catch(() => {});
       } else {
         shareMenu.classList.toggle('show');
       }
@@ -2160,7 +2017,7 @@
         if (window.koausDb && window.koausFs) {
           const { addDoc, collection, serverTimestamp } = window.koausFs;
           await addDoc(collection(window.koausDb, 'reports'), {
-            postId: String(reportingPostId), board: 'auto', reason,
+            postId: String(reportingPostId), board: 'accom', reason,
             reporterUid: user.uid || '', reporterEmail: user.email || '', createdAt: serverTimestamp(),
           });
         }
@@ -2246,23 +2103,64 @@
       });
     }
     function closeMapExpand() { mapExpandOverlay.classList.remove('open'); document.body.style.overflow = ''; }
-    document.getElementById('detailMapExpand').addEventListener('click', openMapExpand);
+    const _detailMapExpand = document.getElementById('detailMapExpand');
+    if (_detailMapExpand) _detailMapExpand.addEventListener('click', openMapExpand);
+
+    // ── 지도 전체화면 (requestFullscreen 토글) ──
+    (function bindMapFullscreen() {
+      const btn  = document.getElementById('detailMapFullscreenBtn');
+      const wrap = document.getElementById('detailMapWrap');
+      if (!btn || !wrap) return;
+      btn.addEventListener('click', () => {
+        const fsEl = document.fullscreenElement || document.webkitFullscreenElement;
+        if (fsEl) {
+          (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+          return;
+        }
+        const req = wrap.requestFullscreen || wrap.webkitRequestFullscreen;
+        if (req) {
+          req.call(wrap).catch(err => { console.warn('\[restaurants\] requestFullscreen 실패', err); });
+        }
+      });
+      // 전체화면 진입/이탈 시 지도 리사이즈 트리거
+      const onFsChange = () => {
+        setTimeout(() => {
+          if (miniMapObj && window.google) google.maps.event.trigger(miniMapObj, 'resize');
+          if (detailCoords && miniMapObj) miniMapObj.setCenter(detailCoords);
+        }, 120);
+      };
+      document.addEventListener('fullscreenchange', onFsChange);
+      document.addEventListener('webkitfullscreenchange', onFsChange);
+    })();
     document.getElementById('mapExpandClose').addEventListener('click', closeMapExpand);
     document.addEventListener('keydown', e => { if (e.key === 'Escape' && mapExpandOverlay.classList.contains('open')) closeMapExpand(); });
 
     // ── Google Maps ──
-    let mapReady   = false;
-    let mapLoading = false;
-    let map        = null;
-    let infoWindow = null;
     // ── 방문(읽음) 마커 상태 — localStorage 'koaus_visited_posts' ──
     const VISITED_KEY = 'koaus_visited_posts';
     function visitedIds() { try { return JSON.parse(localStorage.getItem(VISITED_KEY) || '[]'); } catch (_) { return []; } }
     function isVisited(id) { return visitedIds().includes(String(id)); }
     function markVisited(id) {
-      const arr = visitedIds(); const s = String(id);
-      if (!arr.includes(s)) { arr.push(s); try { localStorage.setItem(VISITED_KEY, JSON.stringify(arr.slice(-500))); } catch (_) {} }
+      const arr = visitedIds();
+      const s = String(id);
+      if (!arr.includes(s)) {
+        arr.push(s);
+        try { localStorage.setItem(VISITED_KEY, JSON.stringify(arr.slice(-500))); } catch (_) {}
+      }
     }
+    // ── 연락 완료 상태 — localStorage 'koaus_contacted_posts' ──
+    const CONTACTED_KEY = 'koaus_contacted_posts';
+    function contactedIds() { try { return JSON.parse(localStorage.getItem(CONTACTED_KEY) || '[]'); } catch (_) { return []; } }
+    function isContacted(id) { return contactedIds().includes(String(id)); }
+    function toggleContacted(id) {
+      const arr = contactedIds(); const s = String(id);
+      const idx = arr.indexOf(s);
+      if (idx >= 0) arr.splice(idx, 1); else arr.push(s);
+      try { localStorage.setItem(CONTACTED_KEY, JSON.stringify(arr.slice(-500))); } catch (_) {}
+      return idx < 0;  // true = 새로 contacted
+    }
+    const ICON_BOX     = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>';
+    const ICON_CHECKED = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><polyline points="7 12 11 16 17 8"/></svg>';
     function markerIcon(id) {
       const v = isVisited(id);
       return {
@@ -2271,18 +2169,27 @@
         strokeColor: v ? '#000000' : '#ffffff', strokeWeight: 2,
       };
     }
-    // InfoWindow 위임 — ⭐(stopPropagation) 우선, 카드는 markVisited + openDetail
+
+    // InfoWindow 위임: ⭐ + ☑ 우선(stopPropagation), 카드는 markVisited + openDetail
     document.addEventListener('click', e => {
+      const cb = e.target.closest('.iw-contact[data-pid]');
+      if (cb) {
+        e.stopPropagation(); e.preventDefault();
+        const on = toggleContacted(cb.dataset.pid);
+        cb.classList.toggle('contacted', on);
+        cb.innerHTML = on ? ICON_CHECKED : ICON_BOX;
+        return;
+      }
       const star = e.target.closest('.iw-star[data-pid]');
       if (star) {
         e.stopPropagation(); e.preventDefault();
-        // auto 의 services 컬렉션은 toggleSaved 가 없을 수 있음 — 안전 호출
-        if (typeof toggleSaved === 'function') {
-          const id = star.dataset.pid;
-          const p = (typeof loadPosts === 'function') ? loadPosts().find(x => String(x.id) === String(id)) : null;
-          if (p) toggleSaved(p);
+        const id = star.dataset.pid;
+        const p = (typeof loadPosts === 'function') ? loadPosts().find(x => String(x.id) === String(id)) : null;
+        if (p && typeof toggleSaved === 'function') {
+          toggleSaved(p);
+          star.textContent = isSaved(p.id) ? '★' : '☆';
+          if (typeof renderAll === 'function') renderAll();
         }
-        star.textContent = star.textContent === '★' ? '☆' : '★';
         return;
       }
       const card = e.target.closest('.iw-card[data-pid]');
@@ -2291,6 +2198,10 @@
       markVisited(card.dataset.pid);
       if (typeof openDetail === 'function') openDetail(card.dataset.pid);
     });
+    let mapReady   = false;
+    let mapLoading = false;
+    let map        = null;
+    let infoWindow = null;
     let markers    = [];
     let areaBounds = null;        // '이 지역 검색' 활성 경계 (null이면 전체)
     let programmaticMove = false; // 글 등록 후 자동 이동 시 버튼 노출 억제
@@ -2378,14 +2289,19 @@
           ).join('');
           const thumb = (Array.isArray(p.imageUrls) && p.imageUrls.length)
             ? `<img src="${escHtml(p.imageUrls[0])}" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;" />`
-            : `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#777" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9 12h6M12 9v6"/></svg>`;
+            : `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#777" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>`;
+          const starOn = isSaved(p.id);
+          const cOn = isContacted(p.id);
           infoWindow.setContent(`
-            <div class="iw-card" data-pid="${p.id}" style="position:relative;display:flex;gap:10px;max-width:270px;padding:4px 24px 4px 2px;cursor:pointer;font-family:'Urbanist','Noto Sans KR',sans-serif;">
-              <button class="iw-star" data-pid="${p.id}" aria-label="찜하기" style="position:absolute;top:-2px;right:-4px;width:28px;height:28px;border:none;background:transparent;font-size:18px;line-height:1;cursor:pointer;color:#777;padding:0;">☆</button>
+            <div class="iw-card" data-pid="${p.id}" style="position:relative;display:flex;gap:10px;max-width:270px;padding:4px 56px 4px 2px;cursor:pointer;font-family:'Urbanist','Noto Sans KR',sans-serif;">
+              <div class="iw-actions" style="position:absolute;top:-2px;right:-4px;display:inline-flex;align-items:center;gap:2px;">
+                <button class="iw-star" data-pid="${p.id}" aria-label="찜하기" style="width:28px;height:28px;border:none;background:transparent;font-size:18px;line-height:1;cursor:pointer;color:${starOn ? '#000' : '#777'};padding:0;display:inline-flex;align-items:center;justify-content:center;">${starOn ? '★' : '☆'}</button>
+                <button class="iw-contact ${cOn ? 'contacted' : ''}" data-pid="${p.id}" aria-label="연락 완료 표시" style="width:28px;height:28px;border:none;background:transparent;line-height:1;cursor:pointer;padding:0;display:inline-flex;align-items:center;justify-content:center;color:${cOn ? '#d92626' : '#777'};">${cOn ? ICON_CHECKED : ICON_BOX}</button>
+              </div>
               <div style="flex-shrink:0;width:72px;height:72px;border-radius:6px;overflow:hidden;border:1px solid #000;background:#f5f5f5;display:flex;align-items:center;justify-content:center;">${thumb}</div>
               <div style="min-width:0;flex:1;">
                 <div style="font-weight:800;font-size:13px;line-height:1.3;color:#000;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${escHtml(p.title)}</div>
-                ${p.price ? `<div style="font-size:14px;font-weight:800;color:#000;margin-top:3px;">$${p.price}</div>` : ''}
+                ${p.price ? `<div style="font-size:14px;font-weight:800;color:#000;margin-top:3px;">$${p.price}<span style="font-size:10px;font-weight:500;">/wk</span></div>` : ''}
                 ${iwTags ? `<div style="margin-top:3px;line-height:1.4;">${iwTags}</div>` : ''}
                 <div style="font-size:10px;color:#666;margin-top:4px;">탭하여 상세 보기 →</div>
               </div>
@@ -2417,29 +2333,66 @@
 
     // 마이페이지 등에서 ?edit=<id>로 진입 시, 로그인 확인 후 본인 글이면 수정 폼 자동 오픈
     window.addEventListener('koausAuthReady', () => {
-      const editId = new URLSearchParams(location.search).get('edit');
-      if (!editId) return;
-      const p = loadPosts().find(x => String(x.id) === String(editId));
-      if (p && isMine(p)) openWriteModalForEdit(p);
+      const params = new URLSearchParams(location.search);
+      const editId = params.get('edit');
+      if (editId) {
+        const p = loadPosts().find(x => String(x.id) === String(editId));
+        if (p && isMine(p)) openWriteModalForEdit(p);
+      } else if (params.get('duplicate') === '1' && localStorage.getItem('koaus-duplicate-accom')) {
+        openWriteModal();   // duplicate prefill 은 openWriteModal 내부에서 자동 적용
+      }
     }, { once: true });
 
-    // ── 관리자 프리미엄(상단 고정) 지정 헬퍼 ──
-    // 콘솔에서 호출: koausSetPremium(글ID, true)  /  해제: koausSetPremium(글ID, false)
-    window.koausSetPremium = function (id, on = true) {
-      const posts = loadPosts();
-      const p = posts.find(x => String(x.id) === String(id));
-      if (!p) { console.warn('[KoAus] 해당 ID의 글을 찾을 수 없습니다:', id); return; }
-      p.isPremium = !!on;
-      savePosts(posts);
-      currentPage = 1;
-      renderAll();
-      console.log('[KoAus] isPremium =', p.isPremium, '| id:', id, '| title:', p.title);
-    };
-
-    switchCategory(activeCategory);  // URL ?category= 반영 + 초기 렌더/타이틀
-    // Firestore services 컬렉션이 갱신되면 현재 카테고리 리스트 즉시 재렌더
+    switchMode(activeMode);  // URL ?mode= 반영 + 초기 렌더/타이틀
+    // Firestore services 컬렉션이 갱신되면 현재 모드 리스트 즉시 재렌더
     window.addEventListener('koaus-services-updated', () => renderAll());
-</script>
+
+    // Dual Range Slider + 입력창 양방향 동기화 (쉐어 가격)
+    (function bindShareDualRange() {
+      const root = document.getElementById('filterSharePriceRange');
+      if (!root) return;
+      const minIn  = document.getElementById('fbPriceMin');
+      const maxIn  = document.getElementById('fbPriceMax');
+      const minTxt = document.getElementById('fbPriceMinInput');
+      const maxTxt = document.getElementById('fbPriceMaxInput');
+      const fill   = document.getElementById('filterSharePriceFill');
+      const label  = document.getElementById('filterSharePriceLabel');
+      const hidden = document.getElementById('fbPrice');
+      const MIN = Number(root.dataset.min), MAX = Number(root.dataset.max);
+      const STEP = Number(root.dataset.step) || 10;
+      const clamp = v => Math.min(MAX, Math.max(MIN, Math.round(v / STEP) * STEP));
+      function paint(srcEl) {
+        let lo = Number(minIn.value), hi = Number(maxIn.value);
+        if (lo > hi - STEP) {
+          if (srcEl === minIn || srcEl === minTxt) { lo = hi - STEP; }
+          else                                      { hi = lo + STEP; }
+        }
+        lo = clamp(lo); hi = clamp(hi);
+        minIn.value = lo; maxIn.value = hi;
+        if (minTxt && document.activeElement !== minTxt) minTxt.value = lo;
+        if (maxTxt && document.activeElement !== maxTxt) maxTxt.value = hi;
+        const a = ((lo - MIN) / (MAX - MIN)) * 100;
+        const b = ((hi - MIN) / (MAX - MIN)) * 100;
+        fill.style.left  = a + '%';
+        fill.style.right = (100 - b) + '%';
+        const hiTxt = hi >= MAX ? `$${MAX}+` : `$${hi}`;
+        label.textContent = `$${lo} to ${hiTxt}`;
+        // 기존 fbPrice 참조 코드 호환 — max 값 mirror
+        if (hidden) hidden.value = hi;
+      }
+      minIn.addEventListener('input', e => paint(e.target));
+      maxIn.addEventListener('input', e => paint(e.target));
+      const fromText = e => {
+        const v = clamp(Number(e.target.value) || 0);
+        if (e.target === minTxt) minIn.value = v;
+        else                     maxIn.value = v;
+        paint(e.target);
+      };
+      if (minTxt) { minTxt.addEventListener('input', fromText); minTxt.addEventListener('change', fromText); }
+      if (maxTxt) { maxTxt.addEventListener('input', fromText); maxTxt.addEventListener('change', fromText); }
+      paint();
+    })();
+  </script>
 
   <!-- ── Firebase Auth (로그인 모달 + 로그인 상태) ── -->
   <script type="module">
@@ -2477,6 +2430,12 @@
     const auth = getAuth(app);
     // 최근 검색 기록 동기화용 Firestore (콘솔에서 Firestore 활성화 + users 규칙 배포 시 동작)
     try { window.koausDb = getFirestore(app); window.koausFs = { doc, getDoc, setDoc, addDoc, collection, serverTimestamp }; } catch (e) { /* Firestore 미설정 무시 */ }
+
+    // 사진 첨부 — 클라이언트 압축 + Firebase Storage 업로드 모듈 노출
+    import('./compress.js').then(mod => {
+      window.koausPhotos = { compressImage: mod.compressImage, thumbDataURL: mod.thumbDataURL, uploadPostImages: mod.uploadPostImages, app };
+      window.dispatchEvent(new Event('koausPhotosReady'));
+    }).catch(e => console.warn('\[restaurants\] compress.js 로드 실패', e));
 
     // ── Auth Modal ──
     const authOverlay = document.getElementById('authOverlay');
@@ -2642,7 +2601,7 @@
     });
   </script>
 
-  <!-- ── Firestore services 컬렉션 실시간 구독 (관리자 등록 글 자동 노출) ── -->
+  <!-- ── Firestore services 컬렉션 실시간 구독 (쉐어하우스 관리자 글 자동 노출) ── -->
   <script type="module">
     import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
     import { getFirestore, collection, query, orderBy, limit, onSnapshot } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
@@ -2652,15 +2611,14 @@
       messagingSenderId:'663988594088', appId:'1:663988594088:web:ef30c2fd557407b00b299d',
     };
     const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
-    let db; try { db = getFirestore(app); } catch (e) { console.warn('[auto] Firestore 미초기화', e); }
+    let db; try { db = getFirestore(app); } catch (e) { console.warn('\[restaurants\] Firestore 미초기화', e); }
     if (db) {
-      const AUTO_CATS = ['maintenance','inspection','rental','towing'];
-      const STORE = 'koaus-auto-posts';
+      const STORE = 'koaus-gp-posts';
       try {
-        onSnapshot(query(collection(db, 'services'), orderBy('createdAt', 'desc'), limit(20)), snap => {
+        onSnapshot(query(collection(db, 'services'), orderBy('createdAt', 'desc'), limit(50)), snap => {
           const fsItems = snap.docs
             .map(d => ({ _fsDocId: d.id, ...d.data() }))
-            .filter(s => AUTO_CATS.includes(s.category) && s.status !== 'pending');
+            .filter(s => s.category === 'gp' && s.status !== 'pending');
           fsItems.forEach(s => {
             if (s.createdAt && s.createdAt.toMillis) {
               const d = s.createdAt.toDate(); const p = n => String(n).padStart(2,'0');
@@ -2671,19 +2629,103 @@
             s.adminPost = true;
             s.address   = s.address || s.region;
             s.tagline   = s.tagline || s.summary;
+            // accom 카드 호환 필드 (View 동일 유지)
+            s.mode = 'offer';
+            if (!Array.isArray(s.types))     s.types     = ['any'];
+            if (!Array.isArray(s.roomTypes)) s.roomTypes = [];
           });
-          const cur = (() => { try { return JSON.parse(localStorage.getItem(STORE) || '[]'); } catch { return []; } })();
-          const localOnly = cur.filter(p => !p._fsDocId);
-          const fsIds = new Set(fsItems.map(x => String(x.id)));
-          const merged = localOnly.filter(p => !fsIds.has(String(p.id))).concat(fsItems);
-          localStorage.setItem(STORE, JSON.stringify(merged));
+          // restaurants 페이지는 어드민 데이터만 노출 (로컬 사용자 글 없음)
+          localStorage.setItem(STORE, JSON.stringify(fsItems));
           window.dispatchEvent(new Event('koaus-services-updated'));
-        }, err => console.warn('[auto] services 구독 실패', err));
-      } catch (e) { console.warn('[auto] Firestore services subscribe 실패', e); }
+        }, err => console.warn('[gp] services 구독 실패', err));
+      } catch (e) { console.warn('\[restaurants\] Firestore services subscribe 실패', e); }
     }
   </script>
 
-  <!-- ── 등록 요청 모달 (정비소·견인·동행 및 긴급출동 — services 컬렉션, status='pending') ── -->
+  <!-- ── Lightbox (Swiper 갤러리 — 스와이프 + 카운터) ── -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
+  <div class="lightbox-overlay" id="lightboxOverlay" aria-hidden="true">
+    <button class="lightbox-close" id="lightboxClose" type="button" aria-label="닫기">✕</button>
+    <div class="swiper lightbox-swiper" id="lightboxSwiper">
+      <div class="swiper-wrapper" id="lightboxWrapper"></div>
+      <div class="swiper-button-prev"></div>
+      <div class="swiper-button-next"></div>
+    </div>
+    <div class="lightbox-counter" id="lightboxCounter">1 / 1</div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+  <script>
+    let lightboxSwiper = null;
+    function openLightbox(urls, initialIndex) {
+      const list = Array.isArray(urls) ? urls : (urls ? [urls] : []);
+      if (!list.length) return;
+      const ov = document.getElementById('lightboxOverlay');
+      const wrap = document.getElementById('lightboxWrapper');
+      const counter = document.getElementById('lightboxCounter');
+      if (!ov || !wrap) return;
+      wrap.innerHTML = list.map(u => `<div class="swiper-slide"><img src="${u}" alt="" loading="lazy" /></div>`).join('');
+      ov.classList.add('open');
+      ov.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+      if (lightboxSwiper) { try { lightboxSwiper.destroy(true, true); } catch (_) {} lightboxSwiper = null; }
+      const startIdx = Math.max(0, Math.min(Number(initialIndex) || 0, list.length - 1));
+      if (counter) counter.textContent = `${startIdx + 1} / ${list.length}`;
+      lightboxSwiper = new Swiper('#lightboxSwiper', {
+        initialSlide: startIdx,
+        keyboard: { enabled: true },
+        navigation: { nextEl: '.lightbox-swiper .swiper-button-next', prevEl: '.lightbox-swiper .swiper-button-prev' },
+        on: {
+          slideChange() {
+            if (counter) counter.textContent = `${this.activeIndex + 1} / ${list.length}`;
+          }
+        }
+      });
+    }
+    function closeLightbox() {
+      const ov = document.getElementById('lightboxOverlay');
+      if (!ov) return;
+      ov.classList.remove('open');
+      ov.setAttribute('aria-hidden', 'true');
+      if (lightboxSwiper) { try { lightboxSwiper.destroy(true, true); } catch (_) {} lightboxSwiper = null; }
+      const wrap = document.getElementById('lightboxWrapper'); if (wrap) wrap.innerHTML = '';
+      const stillOpen = document.querySelector('.post-detail-overlay.open, .write-overlay.open, .filter-overlay.open');
+      if (!stillOpen) document.body.style.overflow = '';
+    }
+    (function bindLightbox() {
+      const ov = document.getElementById('lightboxOverlay');
+      const cl = document.getElementById('lightboxClose');
+      if (cl) cl.addEventListener('click', closeLightbox);
+      if (ov) ov.addEventListener('click', e => { if (e.target === ov) closeLightbox(); });
+      document.addEventListener('keydown', e => { if (e.key === 'Escape' && ov && ov.classList.contains('open')) closeLightbox(); });
+    })();
+  </script>
+
+  <!-- ── 게시판 상단 핀공지 (board_pinned_notices 컬렉션, doc id = 'restaurants') -->
+  <script type="module">
+    import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
+    import { getFirestore, doc, onSnapshot } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
+    const cfg = {
+      apiKey:'AIzaSyCamqnt0bNUD9uz1N5BbCuQjSkWLSpPqlU', authDomain:'koaus-f564c.firebaseapp.com',
+      projectId:'koaus-f564c', storageBucket:'koaus-f564c.firebasestorage.app',
+      messagingSenderId:'663988594088', appId:'1:663988594088:web:ef30c2fd557407b00b299d',
+    };
+    try {
+      const app = getApps().length ? getApp() : initializeApp(cfg);
+      const db = getFirestore(app);
+      const box = document.getElementById('pinnedNoticeBox');
+      if (!box) return;
+      const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/\n/g,'<br>');
+      onSnapshot(doc(db, 'board_pinned_notices', 'gp'), snap => {
+        const data = snap.exists() ? snap.data() : null;
+        if (data && data.text && String(data.text).trim()) {
+          box.innerHTML = '<span class="pn-icon" aria-hidden="true">📢</span><div class="pn-body"><strong>공지</strong> · ' + esc(data.text) + '</div>';
+          box.hidden = false;
+        } else { box.hidden = true; box.innerHTML = ''; }
+      }, err => console.warn('[gp] pinned-notice 구독 실패', err));
+    } catch (e) { console.warn('[gp] pinned-notice 초기화 실패', e); }
+  </script>
+
+  <!-- ── 등록 요청 모달 (유저 → services 컬렉션, status='pending') ── -->
   <div class="request-overlay" id="requestOverlay" hidden>
     <div class="request-modal">
       <div class="request-header">
@@ -2692,11 +2734,11 @@
       </div>
       <p class="request-info">⚠ 관리자 검토 후 게시판에 노출됩니다. 허위·광고성 정보 등록 시 영구 차단됩니다.</p>
       <form id="requestForm">
-        <div class="request-field"><label>업체명 / 기사 이름 <span class="required">*</span></label><input type="text" id="rqTitle" maxlength="80" required></div>
-        <div class="request-field"><label>연락처 <span class="required">*</span></label><input type="text" id="rqContact" maxlength="200" placeholder="24시간 가능 여부 포함" required></div>
-        <div class="request-field"><label>주소 / 기준 위치</label><input type="text" id="rqAddress" maxlength="200"></div>
-        <div class="request-field"><label>한 줄 소개</label><input type="text" id="rqSummary" maxlength="120" placeholder="예: 24시간 견인·로드 사이드 · 한인 한국어 응대"></div>
-        <div class="request-field"><label>상세 내용</label><textarea id="rqBody" rows="4" maxlength="2000" placeholder="서비스 범위·요금·운영시간·자격증 등"></textarea></div>
+        <div class="request-field"><label>식당 이름 <span class="required">*</span></label><input type="text" id="rqTitle" maxlength="80" required placeholder="예: 김밥천국 Strathfield"></div>
+        <div class="request-field"><label>연락처 <span class="required">*</span></label><input type="text" id="rqContact" maxlength="200" placeholder="전화번호" required></div>
+        <div class="request-field"><label>주소</label><input type="text" id="rqAddress" maxlength="200" placeholder="예: 8 Albert Rd, Strathfield NSW 2135"></div>
+        <div class="request-field"><label>한 줄 소개</label><input type="text" id="rqSummary" maxlength="120" placeholder="예: 정통 한식 · 가족 식사 추천"></div>
+        <div class="request-field"><label>상세 내용</label><textarea id="rqBody" rows="4" maxlength="2000" placeholder="가게 분위기·메뉴 구성·가격대·운영시간·주차 등"></textarea></div>
         <div class="request-field"><label>대표 이미지 URL (선택)</label><input type="url" id="rqImage" placeholder="https://...jpg"></div>
         <div class="request-actions">
           <button type="button" class="request-cancel-btn" id="rqCancel">취소</button>
@@ -2707,17 +2749,11 @@
     </div>
   </div>
 
-  <script type="module">
+  <script type="module" data-koaus-req-category="gp">
     import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
     import { getFirestore, collection, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
     import { getAuth } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
-    // 카테고리는 URL ?category= 에서 동적 결정 (maintenance / inspection / towing / rental).
-    // 등록 요청 버튼은 정비소·견인·동행 및 긴급출동 3 개에서만 노출.
-    const REQUEST_ENABLED = new Set(['maintenance','inspection','towing']);
-    function getCat() {
-      try { return new URLSearchParams(window.location.search).get('category') || ''; }
-      catch (_) { return ''; }
-    }
+    const REQUEST_CATEGORY = (document.currentScript && document.currentScript.getAttribute('data-koaus-req-category')) || 'restaurants';
     const cfg = {
       apiKey:'AIzaSyCamqnt0bNUD9uz1N5BbCuQjSkWLSpPqlU', authDomain:'koaus-f564c.firebaseapp.com',
       projectId:'koaus-f564c', storageBucket:'koaus-f564c.firebasestorage.app',
@@ -2728,11 +2764,7 @@
     const auth = getAuth(app);
     const $ = id => document.getElementById(id);
     function bind() {
-      const cat = getCat();
-      const open = $('requestBtnOpen');
-      // 6 섹션 (정비소·견인·동행) 에서만 버튼 노출
-      if (open) open.hidden = !REQUEST_ENABLED.has(cat);
-      const ov = $('requestOverlay'), close = $('requestClose'), cancel = $('rqCancel'), form = $('requestForm');
+      const ov = $('requestOverlay'), open = $('requestBtnOpen'), close = $('requestClose'), cancel = $('rqCancel'), form = $('requestForm');
       if (!ov || !open || !form) return;
       const show = () => { ov.hidden = false; document.body.style.overflow = 'hidden'; };
       const hide = () => { ov.hidden = true;  document.body.style.overflow = ''; };
@@ -2750,16 +2782,14 @@
         const note = $('rqNote'); note.classList.remove('is-ok','is-error');
         const u = auth.currentUser;
         if (!u) { note.textContent = '로그인이 필요합니다.'; note.classList.add('is-error'); return; }
-        const currentCat = getCat();
-        if (!REQUEST_ENABLED.has(currentCat)) { note.textContent = '이 카테고리는 등록 요청을 받지 않습니다.'; note.classList.add('is-error'); return; }
         const title = $('rqTitle').value.trim(), contact = $('rqContact').value.trim();
-        if (!title || !contact) { note.textContent = '업체명과 연락처는 필수입니다.'; note.classList.add('is-error'); return; }
+        if (!title || !contact) { note.textContent = '식당 이름과 연락처는 필수입니다.'; note.classList.add('is-error'); return; }
         const address = $('rqAddress').value.trim(), summary = $('rqSummary').value.trim();
         const imageUrl = $('rqImage').value.trim();
         const submit = $('rqSubmit'); if (submit) { submit.disabled = true; submit.textContent = '전송 중…'; }
         try {
           await addDoc(collection(db, 'services'), {
-            category: currentCat,
+            category: REQUEST_CATEGORY,
             title, contact,
             address, region: address,
             summary, tagline: summary,
@@ -2774,7 +2804,7 @@
           form.reset(); hide();
           alert('✅ 등록이 요청되었습니다.\n관리자 검토 후 게시판에 노출됩니다.');
         } catch (err) {
-          console.error('[koaus] auto request submit 실패', err);
+          console.error('[koaus] request submit 실패', err);
           note.textContent = '❌ 등록 실패: ' + (err.message || err); note.classList.add('is-error');
         } finally {
           if (submit) { submit.disabled = false; submit.textContent = '등록 요청 보내기'; }

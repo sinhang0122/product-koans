@@ -30,6 +30,5 @@
 /privacy            /privacy.html      200
 /car-sale           /car-sale.html     200
 /car-rent           /car-rent.html     200
-
-# 미구현 페이지(메뉴는 존재) — 404 우회 위해 index.html 임시 매핑하지 않음
-# /restaurants, /gp 는 향후 페이지 생성 시까지 자연스러운 404 유지
+/restaurants        /restaurants.html  200
+/gp                 /gp.html           200
