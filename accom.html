@@ -1808,10 +1808,12 @@
             const idx = Math.min(N, Math.max(1, Math.round(wrap.scrollLeft / w) + 1));
             if (counter) counter.textContent = `${idx} / ${N}`;
           }, { passive: true });
-          // 이미지 클릭 → 라이트박스
+          // 이미지 클릭 → 라이트박스 (urls 배열 + 클릭한 인덱스)
           wrap.addEventListener('click', e => {
             const t = e.target.closest('img'); if (!t) return;
-            openLightbox(t.dataset.src || t.src);
+            const imgs = [...wrap.querySelectorAll('img')];
+            const idx = Math.max(0, imgs.indexOf(t));
+            openLightbox(p.imageUrls, idx);
           });
         } else {
           if (heroPh) heroPh.style.display = '';
@@ -2536,37 +2538,61 @@
     }
   </script>
 
-  <!-- ── Lightbox (이미지 확대 모달) — 모든 상세 갤러리 공통 ── -->
+  <!-- ── Lightbox (Swiper 기반 갤러리) — 사진만 노출, 좌우 스와이프 ── -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
   <div class="lightbox-overlay" id="lightboxOverlay" aria-hidden="true">
     <button class="lightbox-close" id="lightboxClose" type="button" aria-label="닫기">✕</button>
-    <img class="lightbox-img" id="lightboxImg" src="" alt="확대 이미지" />
+    <div class="swiper lightbox-swiper" id="lightboxSwiper">
+      <div class="swiper-wrapper" id="lightboxWrapper"></div>
+      <div class="swiper-button-prev"></div>
+      <div class="swiper-button-next"></div>
+    </div>
+    <div class="lightbox-counter" id="lightboxCounter">1 / 1</div>
   </div>
+  <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
   <script>
-    function openLightbox(src) {
+    let lightboxSwiper = null;
+    function openLightbox(urls, initialIndex) {
+      const list = Array.isArray(urls) ? urls : (urls ? [urls] : []);
+      if (!list.length) return;
       const ov = document.getElementById('lightboxOverlay');
-      const img = document.getElementById('lightboxImg');
-      if (!ov || !img || !src) return;
-      img.src = src;
+      const wrap = document.getElementById('lightboxWrapper');
+      const counter = document.getElementById('lightboxCounter');
+      if (!ov || !wrap) return;
+      wrap.innerHTML = list.map(u => `<div class="swiper-slide"><img src="${u}" alt="" loading="lazy" /></div>`).join('');
       ov.classList.add('open');
       ov.setAttribute('aria-hidden', 'false');
       document.body.style.overflow = 'hidden';
+      if (lightboxSwiper) { try { lightboxSwiper.destroy(true, true); } catch (_) {} lightboxSwiper = null; }
+      const startIdx = Math.max(0, Math.min(Number(initialIndex) || 0, list.length - 1));
+      if (counter) counter.textContent = `${startIdx + 1} / ${list.length}`;
+      lightboxSwiper = new Swiper('#lightboxSwiper', {
+        initialSlide: startIdx,
+        keyboard: { enabled: true },
+        navigation: { nextEl: '.lightbox-swiper .swiper-button-next', prevEl: '.lightbox-swiper .swiper-button-prev' },
+        on: {
+          slideChange() {
+            if (counter) counter.textContent = `${this.activeIndex + 1} / ${list.length}`;
+          }
+        }
+      });
     }
     function closeLightbox() {
       const ov = document.getElementById('lightboxOverlay');
       if (!ov) return;
       ov.classList.remove('open');
       ov.setAttribute('aria-hidden', 'true');
-      const img = document.getElementById('lightboxImg');
-      if (img) img.src = '';
-      // detail modal 등 다른 overlay 가 열려있는지 확인 후 body scroll 복원
+      if (lightboxSwiper) { try { lightboxSwiper.destroy(true, true); } catch (_) {} lightboxSwiper = null; }
+      const wrap = document.getElementById('lightboxWrapper'); if (wrap) wrap.innerHTML = '';
       const stillOpen = document.querySelector('.post-detail-overlay.open, .write-overlay.open, .filter-overlay.open');
       if (!stillOpen) document.body.style.overflow = '';
     }
     (function bindLightbox() {
       const ov = document.getElementById('lightboxOverlay');
       const cl = document.getElementById('lightboxClose');
-      if (ov) ov.addEventListener('click', e => { if (e.target === ov) closeLightbox(); });
       if (cl) cl.addEventListener('click', closeLightbox);
+      // 배경 클릭 닫기 — swiper 영역(이미지)은 제외, overlay 자체만
+      if (ov) ov.addEventListener('click', e => { if (e.target === ov) closeLightbox(); });
       document.addEventListener('keydown', e => { if (e.key === 'Escape' && ov && ov.classList.contains('open')) closeLightbox(); });
     })();
   </script>

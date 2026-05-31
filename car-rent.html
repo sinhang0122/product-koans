@@ -562,10 +562,11 @@
         ? `<div class="post-detail-gallery">${p.imageUrls.map(u => `<img src="${escHtml(u)}" alt="" loading="lazy" data-src="${escHtml(u)}" />`).join('')}</div>`
         : '';
       bodyEl.innerHTML = gallery + `<div>${escHtml(p.body)}</div>`;
-      // 갤러리 이미지 클릭 → 라이트박스
-      bodyEl.querySelectorAll('.post-detail-gallery img').forEach(img => {
+      // 갤러리 이미지 클릭 → Swiper 라이트박스 (urls + idx)
+      const galleryImgs = [...bodyEl.querySelectorAll('.post-detail-gallery img')];
+      galleryImgs.forEach((img, idx) => {
         img.style.cursor = 'zoom-in';
-        img.addEventListener('click', () => openLightbox(img.dataset.src || img.src));
+        img.addEventListener('click', () => openLightbox(p.imageUrls, idx));
       });
       const contactEl = document.getElementById('detailContact');
       contactEl.innerHTML = p.contact ? `📞 연락처: <strong>${escHtml(p.contact)}</strong>` : '';
@@ -669,28 +670,52 @@
     }).catch(e => console.warn('[car-rent] compress.js 로드 실패', e));
   </script>
 
-  <!-- ── Lightbox (이미지 확대 모달) ── -->
+  <!-- ── Lightbox (Swiper 기반 갤러리) ── -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
   <div class="lightbox-overlay" id="lightboxOverlay" aria-hidden="true">
     <button class="lightbox-close" id="lightboxClose" type="button" aria-label="닫기">✕</button>
-    <img class="lightbox-img" id="lightboxImg" src="" alt="확대 이미지" />
+    <div class="swiper lightbox-swiper" id="lightboxSwiper">
+      <div class="swiper-wrapper" id="lightboxWrapper"></div>
+      <div class="swiper-button-prev"></div>
+      <div class="swiper-button-next"></div>
+    </div>
+    <div class="lightbox-counter" id="lightboxCounter">1 / 1</div>
   </div>
+  <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
   <script>
-    function openLightbox(src) {
+    let lightboxSwiper = null;
+    function openLightbox(urls, initialIndex) {
+      const list = Array.isArray(urls) ? urls : (urls ? [urls] : []);
+      if (!list.length) return;
       const ov = document.getElementById('lightboxOverlay');
-      const img = document.getElementById('lightboxImg');
-      if (!ov || !img || !src) return;
-      img.src = src;
+      const wrap = document.getElementById('lightboxWrapper');
+      const counter = document.getElementById('lightboxCounter');
+      if (!ov || !wrap) return;
+      wrap.innerHTML = list.map(u => `<div class="swiper-slide"><img src="${u}" alt="" loading="lazy" /></div>`).join('');
       ov.classList.add('open');
       ov.setAttribute('aria-hidden', 'false');
       document.body.style.overflow = 'hidden';
+      if (lightboxSwiper) { try { lightboxSwiper.destroy(true, true); } catch (_) {} lightboxSwiper = null; }
+      const startIdx = Math.max(0, Math.min(Number(initialIndex) || 0, list.length - 1));
+      if (counter) counter.textContent = `${startIdx + 1} / ${list.length}`;
+      lightboxSwiper = new Swiper('#lightboxSwiper', {
+        initialSlide: startIdx,
+        keyboard: { enabled: true },
+        navigation: { nextEl: '.lightbox-swiper .swiper-button-next', prevEl: '.lightbox-swiper .swiper-button-prev' },
+        on: {
+          slideChange() {
+            if (counter) counter.textContent = `${this.activeIndex + 1} / ${list.length}`;
+          }
+        }
+      });
     }
     function closeLightbox() {
       const ov = document.getElementById('lightboxOverlay');
       if (!ov) return;
       ov.classList.remove('open');
       ov.setAttribute('aria-hidden', 'true');
-      const img = document.getElementById('lightboxImg');
-      if (img) img.src = '';
+      if (lightboxSwiper) { try { lightboxSwiper.destroy(true, true); } catch (_) {} lightboxSwiper = null; }
+      const wrap = document.getElementById('lightboxWrapper'); if (wrap) wrap.innerHTML = '';
       const stillOpen = document.querySelector('.post-detail-overlay.open, .write-overlay.open');
       if (!stillOpen) document.body.style.overflow = '';
     }
