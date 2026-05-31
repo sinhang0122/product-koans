@@ -194,9 +194,13 @@ body {
   flex-shrink: 0;
 }
 .sidebar-brand {
-  font-size: 26px; font-weight: 900; letter-spacing: -0.5px;
+  display: inline-flex; align-items: center; gap: 10px;
+  font-size: 24px; font-weight: 900; letter-spacing: -0.5px;
   color: #ffffff;
 }
+.sidebar-brand .topbar-logo-icon { width: 30px; height: 30px; }
+.sidebar-brand .logo-ks         { width: 20px; height: 20px; font-size: 8px; }
+.sidebar-brand-text { color: #fff; font-weight: 900; line-height: 1; }
 .sidebar-close-btn {
   width: 34px; height: 34px;
   background: #111; border: 1px solid #222;
