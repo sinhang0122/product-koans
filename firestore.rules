@@ -196,22 +196,42 @@ service cloud.firestore {
     }
 
     // ════════════════════════════════════════════════════════════════
-    // services 컬렉션 (Approval Pipeline 도입)
-    //   - 카테고리: maintenance / inspection / rental / towing / accom /
-    //               legal / education / trades / restaurants / gp
-    //   - 읽기: 누구나 허용 (status='approved' 필터는 클라이언트가 강제)
-    //   - 생성: ① admin → status:'approved' 자유
-    //          ② 일반 로그인 유저 → status:'pending' 으로만 생성 가능
-    //                                   (본인 uid·필수 필드 검증)
-    //   - 수정/삭제: admin 전용 (status:'approved' 승인, 반려 삭제)
-    //   - 목록: limit ≤ 50 (승인 대기열·페이지 그리드 모두 수용)
+    // services 컬렉션 (Approval Pipeline — 모든 6 대 섹션 통합)
+    //   카테고리: maintenance / inspection / rental / towing / accom /
+    //             legal / education / trades / restaurants / gp
+    //
+    //   ── 읽기 (read = get + list) ──
+    //   - admin: 모든 status(pending·approved 무관) 읽기 무제한.
+    //   - 비admin(비로그인 포함): status == 'approved' 인 문서만.
+    //     · doc id 추측 공격 차단: get 시 resource.data.status 검사.
+    //     · list 시 쿼리에 where('status','==','approved') 가 없으면
+    //       pending doc 의 read 룰이 실패해 전체 쿼리 거부 → 클라이언트가
+    //       반드시 where 절 포함 (코드 측에서 보장).
+    //
+    //   ── 생성 (create) ──
+    //   - admin: status 자유 (보통 'approved' 직접 등록).
+    //   - 일반 로그인 유저: status == 'pending' 으로만 생성 가능.
+    //     본인 uid + 필수 필드(category/title/contact) + 길이 제한.
+    //
+    //   ── 수정/삭제 (update/delete) ──
+    //   - admin 전용 (승인은 status='approved' 로 update, 반려는 delete).
+    //
+    //   ── 목록 limit ──
+    //   - 비admin: list 시 limit ≤ 50 강제 (요금 폭탄 방어).
+    //   - admin:   list 시 limit ≤ 200 허용 (대기열 일괄 조회).
     // ════════════════════════════════════════════════════════════════
     match /services/{id} {
-      allow get:  if true;
-      allow list: if request.query.limit <= 50;
+      // 읽기: admin 전체 / 비admin 은 approved 만
+      allow get: if isAdmin()
+                    || resource.data.status == 'approved';
+
+      // list 평가: doc 별 read 룰이 모두 통과해야 전체 쿼리 통과
+      // → 비admin 은 클라이언트에서 where('status','==','approved') 필수
+      allow list: if (isAdmin() && request.query.limit <= 200)
+                     || request.query.limit <= 50;
 
       allow create: if
-        // ① admin 직접 등록 (status 자유, 보통 'approved')
+        // ① admin 직접 등록 (status 자유)
         ( isAdmin()
           && reqStr('category', 1, 50)
           && reqStr('title', 1, 200)
@@ -239,7 +259,7 @@ service cloud.firestore {
              && optUrlList('imageUrls', 8)
            );
 
-      // status='approved' 로 승격 / 반려 삭제는 admin 전용
+      // 승인(status='approved' 변경) / 반려 삭제는 admin 전용
       allow update: if isAdmin();
       allow delete: if isAdmin();
     }

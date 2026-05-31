@@ -2723,7 +2723,7 @@
   <!-- ── Firestore services 컬렉션 실시간 구독 (쉐어하우스 관리자 글 자동 노출) ── -->
   <script type="module">
     import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
-    import { getFirestore, collection, query, orderBy, limit, onSnapshot } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
+    import { getFirestore, collection, query, orderBy, limit, where, onSnapshot } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
     const firebaseConfig = {
       apiKey:'AIzaSyCamqnt0bNUD9uz1N5BbCuQjSkWLSpPqlU', authDomain:'koaus-f564c.firebaseapp.com',
       projectId:'koaus-f564c', storageBucket:'koaus-f564c.firebasestorage.app',
@@ -2734,7 +2734,7 @@
     if (db) {
       const STORE = 'koaus-accom-posts';
       try {
-        onSnapshot(query(collection(db, 'services'), orderBy('createdAt', 'desc'), limit(20)), snap => {
+        onSnapshot(query(collection(db, 'services'), where('status', '==', 'approved'), orderBy('createdAt', 'desc'), limit(20)), snap => {
           const fsItems = snap.docs
             .map(d => ({ _fsDocId: d.id, ...d.data() }))
             .filter(s => s.category === 'accom' && s.status !== 'pending');
