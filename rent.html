@@ -708,19 +708,50 @@
     </div>
   </div>
 
-  <!-- ── Post Detail Modal ── -->
+  <!-- ── Post Detail Modal (쉐어 동일 — Realestate 스타일) ── -->
   <div class="post-detail-overlay" id="detailOverlay">
-    <div class="post-detail-card">
-      <div class="post-detail-header">
-        <div class="post-detail-title" id="detailTitle"></div>
-        <span class="post-detail-author" id="detailAuthor"></span>
-        <button class="post-detail-close" id="detailClose">✕</button>
+    <div class="post-detail-card rea-detail">
+     <div class="rea-scroll">
+      <div class="rea-hero" id="detailHero">
+        <div class="rea-hero-ph" id="detailHeroPh">
+          <svg width="54" height="54" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        </div>
+        <div class="rea-hero-counter" id="detailHeroCounter">1 / 1</div>
       </div>
-      <div class="post-detail-meta" id="detailMeta"></div>
-      <div class="post-detail-tags" id="detailTags"></div>
-      <div class="post-detail-body" id="detailBody"></div>
-      <div class="post-detail-contact" id="detailContact"></div>
-      <div class="post-detail-actions" id="detailActions"></div>
+
+      <div class="rea-navbar">
+        <button class="rea-back" id="detailClose" type="button" aria-label="뒤로가기">‹</button>
+        <span class="rea-nav-title" id="detailNavTitle"></span>
+        <button class="rea-nav-close" id="detailCloseX" type="button" aria-label="닫기">✕</button>
+      </div>
+
+      <div class="rea-content">
+        <div class="rea-price" id="detailPrice"></div>
+        <div class="rea-addr-row">
+          <span class="rea-addr" id="detailAddrText"></span>
+        </div>
+        <div class="rea-summary" id="detailSummary"></div>
+
+        <div class="rea-section" id="detailLocation" style="display:none;">
+          <h3 class="rea-subtitle">Location</h3>
+          <div class="rea-map-wrap" id="detailMapWrap">
+            <div class="detail-mini-map" id="detailMiniMap"></div>
+            <button class="fullscreen-btn" id="detailMapFullscreenBtn" type="button" aria-label="전체화면">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 9V4h5"/><path d="M20 9V4h-5"/><path d="M4 15v5h5"/><path d="M20 15v5h-5"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="rea-section">
+          <h3 class="rea-subtitle">Description</h3>
+          <div class="rea-desc" id="detailBody"></div>
+        </div>
+
+        <div class="rea-owner-actions" id="detailActions"></div>
+      </div>
+     </div>
     </div>
   </div>
 
@@ -1528,56 +1559,82 @@
       }
       const start = (currentPage - 1) * PER_PAGE;
       const pageItems = sorted.slice(start, start + PER_PAGE);
+      // 쉐어(accom) 와이드 카드 형식 — 썸네일 좌측 + 정보 우측
       grid.innerHTML = pageItems.map(p => {
-        const saved = isSaved(p.id);
-        const heroImg = (Array.isArray(p.imageUrls) && p.imageUrls.length)
-          ? `<div class="accom-card-hero"><img src="${escHtml(p.imageUrls[0])}" alt="${escHtml(p.title || '')}" loading="lazy" />${p.imageUrls.length > 1 ? `<span class="accom-card-hero-count">📷 ${p.imageUrls.length}</span>` : ''}</div>`
-          : '';
+        const saved  = isSaved(p.id);
+        const isFind = (p.mode || 'offer') === 'find';
+        const priceHtml = isFind
+          ? '<span class="accom-card-find">매물 구하기</span>'
+          : (p.price ? `<span class="accom-price">$${p.price}<small>/wk</small></span>` : '<span class="accom-card-find">가격 협의</span>');
+        const sub = isFind ? (p.body || '') : (p.address || '');
+        // 칩: propType / bedrooms·bathrooms·carSpaces / 기간
+        const cs = [];
+        if (p.propType) cs.push(`🏠 ${propTypeLabel(p.propType)}`);
+        if (p.bedrooms)  cs.push(`🛏 ${p.bedrooms}`);
+        if (p.bathrooms) cs.push(`🛁 ${p.bathrooms}`);
+        if (p.carSpaces) cs.push(`🅿 ${p.carSpaces}`);
+        (Array.isArray(p.types) ? p.types : []).forEach(t => { if (typeof TYPE_LABELS === 'object' && TYPE_LABELS && TYPE_LABELS[t]) cs.push('📅 ' + (TYPE_LABELS[t].ko || t)); });
+        const chips = cs.map(c => `<span class="accom-tag">${escHtml(c)}</span>`).join('');
         return `
         <div class="accom-card${isMine(p) ? ' my-post-highlight' : ''}" data-id="${p.id}">
-          ${heroImg}
-          <div class="accom-card-header">
-            <div class="accom-card-badges">
-              <span class="accom-type-badge accom-type-badge--offering">${MODE_LABELS[p.mode] || '방 올리기'}</span>
-              <span class="accom-badge">${propTypeLabel(p.propType)}</span>
-            </div>
-            <div class="accom-card-hd-right">
-              ${p.price ? `<span class="accom-price">$${p.price}<span style="font-size:12px;font-weight:500">/wk</span></span>` : ''}
+          <div class="accom-card-thumb">
+            ${(Array.isArray(p.imageUrls) && p.imageUrls.length)
+              ? `<img src="${escHtml(p.imageUrls[0])}" alt="${escHtml(p.title || '')}" loading="lazy" />`
+              : '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>'}
+          </div>
+          <div class="accom-card-info">
+            <div class="accom-card-line1">
+              ${priceHtml}
               <button class="bookmark-btn${saved ? ' is-saved' : ''}" data-id="${p.id}" title="저장한 글" aria-label="저장">${saved ? '★' : '☆'}</button>
             </div>
+            <div class="accom-card-title2">${escHtml(p.title)}</div>
+            ${sub ? `<div class="accom-card-sub">${isFind ? '' : '📍 '}${escHtml(sub)}</div>` : ''}
+            ${chips ? `<div class="accom-card-chips">${chips}</div>` : ''}
+            <div class="post-mini-actions">
+              ${isMine(p) ? `<button class="mini-btn mini-edit" data-id="${p.id}" type="button">수정</button><button class="mini-btn mini-del" data-id="${p.id}" type="button">삭제</button>` : ''}
+              <button class="mini-btn mini-share" data-id="${p.id}" type="button">공유</button>
+              <button class="mini-btn mini-report" data-id="${p.id}" type="button">신고</button>
+            </div>
           </div>
-          <div class="accom-card-title">${escHtml(p.title)}</div>
-          ${p.address ? `<div class="accom-card-addr">📍 ${escHtml(p.address)}</div>` : ''}
-          <div class="accom-card-tags">
-            ${filterTags(p).map(t => `<span class="accom-tag">${escHtml(t)}</span>`).join('')}
-          </div>
-          <div class="accom-card-footer">
-            <span>${authorLabel(p)}</span>
-            <span>${p.date}${p.time ? ' ' + p.time : ''}</span>
-          </div>
-          ${isMine(p) ? `<div class="card-actions">
-            <button class="mp-edit card-edit" data-id="${p.id}">수정</button>
-            <button class="mp-del card-del" data-id="${p.id}">삭제</button>
-          </div>` : ''}
         </div>`;
       }).join('');
 
       grid.querySelectorAll('.accom-card').forEach(card => {
         card.addEventListener('click', () => openDetail(card.dataset.id));
       });
-      grid.querySelectorAll('.card-edit').forEach(btn => {
-        btn.addEventListener('click', e => {
-          e.stopPropagation();
-          const p = loadPosts().find(x => String(x.id) === String(btn.dataset.id));
-          if (p) openWriteModalForEdit(p);
-        });
-      });
-      grid.querySelectorAll('.card-del').forEach(btn => {
-        btn.addEventListener('click', e => {
-          e.stopPropagation();
-          deletePost(btn.dataset.id);
-        });
-      });
+      grid.querySelectorAll('.mini-edit').forEach(btn => btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const p = loadPosts().find(x => String(x.id) === String(btn.dataset.id));
+        if (p) openWriteModalForEdit(p);
+      }));
+      grid.querySelectorAll('.mini-del').forEach(btn => btn.addEventListener('click', e => {
+        e.stopPropagation();
+        deletePost(btn.dataset.id);
+      }));
+      grid.querySelectorAll('.mini-share').forEach(btn => btn.addEventListener('click', async e => {
+        e.stopPropagation();
+        const url = `${location.origin}${location.pathname}?id=${encodeURIComponent(btn.dataset.id)}`;
+        try { await navigator.clipboard.writeText(url); }
+        catch (_) {
+          const ta = document.createElement('textarea'); ta.value = url; document.body.appendChild(ta);
+          ta.select(); try { document.execCommand('copy'); } catch (_) {} ta.remove();
+        }
+        alert('링크가 복사되었습니다.');
+      }));
+      grid.querySelectorAll('.mini-report').forEach(btn => btn.addEventListener('click', async e => {
+        e.stopPropagation();
+        const user = window.koausAuth && window.koausAuth.user;
+        try {
+          if (window.koausDb && window.koausFs && user) {
+            const { addDoc, collection, serverTimestamp } = window.koausFs;
+            await addDoc(collection(window.koausDb, 'reports'), {
+              postId: String(btn.dataset.id), board: 'rent', reason: '게시글 신고 (카드)',
+              reporterUid: user.uid || '', reporterEmail: user.email || '', createdAt: serverTimestamp(),
+            });
+          }
+        } catch (_) {}
+        alert('신고가 접수되었습니다. 관리자 검토 후 조치됩니다.');
+      }));
       grid.querySelectorAll('.bookmark-btn').forEach(btn => {
         btn.addEventListener('click', e => {
           e.stopPropagation();
@@ -1607,62 +1664,101 @@
       const posts = loadPosts();
       const p = posts.find(x => String(x.id) === String(id));
       if (!p) return;
-      document.getElementById('detailTitle').textContent = p.title;
-      const authEl = document.getElementById('detailAuthor');
-      if (authEl) authEl.textContent = authorLabel(p);
-      document.getElementById('detailMeta').innerHTML =
-        `<span>${p.date}${p.time ? ' ' + p.time : ''}</span>` +
-        (p.address ? `<span>📍 ${escHtml(p.address)}</span>` : '') +
-        (p.price   ? `<span>$${p.price}/wk</span>` : '');
-      // 상세 필터 항목들을 태그로 렌더링
-      document.getElementById('detailTags').innerHTML =
-        filterTags(p).map(t => `<span class="post-detail-tag">${escHtml(t)}</span>`).join('');
 
-      const bodyEl = document.getElementById('detailBody');
-      const N = Array.isArray(p.imageUrls) ? p.imageUrls.length : 0;
-      const gallery = N ? `
-        <div class="rent-detail-hero">
-          <div class="rent-detail-gallery" id="rentDetailGallery">
-            ${p.imageUrls.map(u => `<img src="${escHtml(u)}" alt="" loading="lazy" data-src="${escHtml(u)}" />`).join('')}
-          </div>
-          <div class="rent-detail-counter" id="rentDetailCounter">1 / ${N}</div>
-        </div>` : '';
-      bodyEl.innerHTML = gallery + `<div class="rent-detail-text">${escHtml(p.body || '')}</div>`;
-      // 갤러리 스크롤 → counter / 이미지 클릭 → lightbox
-      if (N) {
-        const gal = document.getElementById('rentDetailGallery');
-        const counter = document.getElementById('rentDetailCounter');
-        gal.addEventListener('scroll', () => {
-          const w = gal.clientWidth || 1;
-          const idx = Math.min(N, Math.max(1, Math.round(gal.scrollLeft / w) + 1));
-          if (counter) counter.textContent = `${idx} / ${N}`;
-        }, { passive: true });
-        gal.addEventListener('click', e => {
-          const t = e.target.closest('img'); if (!t) return;
-          const imgs = [...gal.querySelectorAll('img')];
-          const idx = Math.max(0, imgs.indexOf(t));
-          if (typeof openLightbox === 'function') openLightbox(p.imageUrls, idx);
-        });
+      // 네비 헤더 + 가격 + 주소 + 요약 칩
+      document.getElementById('detailNavTitle').textContent = p.title || '';
+      document.getElementById('detailPrice').innerHTML = p.price
+        ? `$${p.price} <span class="rea-price-unit">per week</span>`
+        : '<span class="rea-price-na">가격 협의</span>';
+      document.getElementById('detailAddrText').textContent = p.address || '';
+      const summary = [];
+      if (p.bedrooms)  summary.push(`🛏 ${p.bedrooms}`);
+      if (p.bathrooms) summary.push(`🛁 ${p.bathrooms}`);
+      if (p.carSpaces) summary.push(`🅿 ${p.carSpaces}`);
+      if (p.propType) summary.push(`🏠 ${propTypeLabel(p.propType)}`);
+      (Array.isArray(p.types) ? p.types : []).forEach(t => { if (typeof TYPE_LABELS === 'object' && TYPE_LABELS && TYPE_LABELS[t]) summary.push('📅 ' + (TYPE_LABELS[t].ko || t)); });
+      document.getElementById('detailSummary').innerHTML = summary.map(s => `<span class="rea-chip">${escHtml(s)}</span>`).join('');
+
+      // Hero 사진 갤러리 + 카운터
+      const hero = document.getElementById('detailHero');
+      const heroPh = document.getElementById('detailHeroPh');
+      const counter = document.getElementById('detailHeroCounter');
+      if (hero) {
+        const oldGal = hero.querySelector('.detail-hero-gallery');
+        if (oldGal) oldGal.remove();
+        const N = Array.isArray(p.imageUrls) ? p.imageUrls.length : 0;
+        if (N) {
+          if (heroPh) heroPh.style.display = 'none';
+          if (counter) { counter.textContent = `1 / ${N}`; counter.style.display = ''; }
+          const wrap = document.createElement('div');
+          wrap.className = 'detail-hero-gallery';
+          wrap.innerHTML = p.imageUrls.map(u => `<img src="${escHtml(u)}" alt="" loading="lazy" data-src="${escHtml(u)}" />`).join('');
+          hero.appendChild(wrap);
+          wrap.addEventListener('scroll', () => {
+            const w = wrap.clientWidth || 1;
+            const idx = Math.min(N, Math.max(1, Math.round(wrap.scrollLeft / w) + 1));
+            if (counter) counter.textContent = `${idx} / ${N}`;
+          }, { passive: true });
+          wrap.addEventListener('click', e => {
+            const t = e.target.closest('img'); if (!t) return;
+            const imgs = [...wrap.querySelectorAll('img')];
+            const idx = Math.max(0, imgs.indexOf(t));
+            if (typeof openLightbox === 'function') openLightbox(p.imageUrls, idx);
+          });
+        } else {
+          if (heroPh) heroPh.style.display = '';
+          if (counter) counter.style.display = 'none';
+        }
       }
-      const contactEl = document.getElementById('detailContact');
-      contactEl.innerHTML = p.contact ? `📞 연락처: <strong>${escHtml(p.contact)}</strong>` : '';
 
-      // 본인 글이면 수정/삭제 버튼 노출
+      // Description
+      document.getElementById('detailBody').textContent = p.body || '';
+
+      // Location (좌표 있을 시) — Google Map mini
+      const locSec = document.getElementById('detailLocation');
+      if (p.lat && p.lng && locSec) {
+        locSec.style.display = '';
+        whenMapsReady(() => {
+          const el = document.getElementById('detailMiniMap');
+          if (!el) return;
+          if (!el._mapObj) {
+            el._mapObj = new google.maps.Map(el, {
+              center: { lat: p.lat, lng: p.lng }, zoom: 15,
+              disableDefaultUI: true, gestureHandling: 'greedy', clickableIcons: false,
+            });
+          } else {
+            el._mapObj.setCenter({ lat: p.lat, lng: p.lng });
+            el._mapObj.setZoom(15);
+            google.maps.event.trigger(el._mapObj, 'resize');
+          }
+          if (el._marker) el._marker.setMap(null);
+          el._marker = new google.maps.Marker({ position: { lat: p.lat, lng: p.lng }, map: el._mapObj });
+        });
+      } else if (locSec) {
+        locSec.style.display = 'none';
+      }
+
+      // 본인 글 액션 + 연락처
       const actEl = document.getElementById('detailActions');
+      let html = '';
+      if (p.contact) html += `<p class="rea-contact">📞 연락처: <strong>${escHtml(p.contact)}</strong></p>`;
       if (isMine(p)) {
-        actEl.innerHTML = `
+        html += `<div class="rea-owner-btns">
           <button class="detail-edit-btn" id="detailEditBtn">수정하기</button>
-          <button class="detail-delete-btn" id="detailDeleteBtn">삭제하기</button>`;
-        document.getElementById('detailEditBtn').onclick   = () => openWriteModalForEdit(p);
-        document.getElementById('detailDeleteBtn').onclick = () => deletePost(p.id);
-        actEl.style.display = 'flex';
-      } else {
-        actEl.innerHTML = '';
-        actEl.style.display = 'none';
+          <button class="detail-delete-btn" id="detailDeleteBtn">삭제하기</button>
+        </div>`;
+      }
+      actEl.innerHTML = html;
+      if (isMine(p)) {
+        const ed = document.getElementById('detailEditBtn'); if (ed) ed.onclick = () => openWriteModalForEdit(p);
+        const dl = document.getElementById('detailDeleteBtn'); if (dl) dl.onclick = () => deletePost(p.id);
       }
 
       recordRecent(p);
       document.getElementById('detailOverlay').classList.add('open');
+      document.body.style.overflow = 'hidden';
+      // 콘텐츠 영역 스크롤 최상단
+      const rc = document.querySelector('.rea-content'); if (rc) rc.scrollTop = 0;
     }
 
     function deletePost(id) {
@@ -1675,11 +1771,48 @@
       renderAll();
     }
 
-    document.getElementById('detailClose').addEventListener('click', () =>
-      document.getElementById('detailOverlay').classList.remove('open'));
+    function _closeDetail() {
+      document.getElementById('detailOverlay').classList.remove('open');
+      document.body.style.overflow = '';
+    }
+    const _dc1 = document.getElementById('detailClose');  if (_dc1) _dc1.addEventListener('click', _closeDetail);
+    const _dc2 = document.getElementById('detailCloseX'); if (_dc2) _dc2.addEventListener('click', _closeDetail);
     document.getElementById('detailOverlay').addEventListener('click', e => {
-      if (e.target === e.currentTarget) document.getElementById('detailOverlay').classList.remove('open');
+      if (e.target === e.currentTarget) _closeDetail();
     });
+
+    // whenMapsReady (지도 콜백 대기) — accom 동일 패턴
+    function whenMapsReady(cb) {
+      if (window.google && google.maps && google.maps.Map) { cb(); return; }
+      loadMapScript();
+      const iv = setInterval(() => {
+        if (window.google && google.maps && google.maps.Map) { clearInterval(iv); cb(); }
+      }, 150);
+      setTimeout(() => clearInterval(iv), 8000);
+    }
+
+    // 지도 전체화면 버튼 (detail mini-map)
+    (function bindMapFullscreen() {
+      const btn  = document.getElementById('detailMapFullscreenBtn');
+      const wrap = document.getElementById('detailMapWrap');
+      if (!btn || !wrap) return;
+      btn.addEventListener('click', () => {
+        const fsEl = document.fullscreenElement || document.webkitFullscreenElement;
+        if (fsEl) { (document.exitFullscreen || document.webkitExitFullscreen).call(document); return; }
+        const req = wrap.requestFullscreen || wrap.webkitRequestFullscreen;
+        if (req) req.call(wrap).catch(err => console.warn('[rent] fullscreen 실패', err));
+      });
+      const onFsChange = () => {
+        setTimeout(() => {
+          const el = document.getElementById('detailMiniMap');
+          if (el && el._mapObj && window.google) {
+            google.maps.event.trigger(el._mapObj, 'resize');
+          }
+        }, 120);
+      };
+      document.addEventListener('fullscreenchange', onFsChange);
+      document.addEventListener('webkitfullscreenchange', onFsChange);
+    })();
 
     // ── Google Maps ──
     let mapReady   = false;
