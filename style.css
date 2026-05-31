@@ -1697,6 +1697,21 @@ select.filter-mini-input {
 .seg-btn:hover { background: var(--bg-card); }
 .seg-btn.active { background: var(--text-primary); color: var(--bg-base); }
 
+/* ── 가격 입력창 행 (Dual Range Slider 위 직접 입력 Min/Max) ── */
+.price-input-row {
+  display: flex; align-items: center; gap: 6px; margin: 6px 0 4px;
+}
+.price-input-row .price-prefix { font-size: 13px; font-weight: 800; color: var(--text-primary); }
+.price-input-row .price-sep    { font-size: 13px; font-weight: 700; color: var(--text-muted); padding: 0 2px; }
+.price-input-row .price-num-input {
+  flex: 1; min-width: 0; padding: 7px 10px; font-size: 13px;
+  text-align: right; -moz-appearance: textfield;
+}
+.price-input-row .price-num-input::-webkit-outer-spin-button,
+.price-input-row .price-num-input::-webkit-inner-spin-button {
+  -webkit-appearance: none; margin: 0;
+}
+
 /* ── Dual Range Slider (가격 필터 — 양방향) ── */
 .dual-range {
   position: relative; height: 36px; margin-top: 6px;

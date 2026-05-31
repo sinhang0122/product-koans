@@ -487,16 +487,23 @@
         </div>
       </div>
 
-      <!-- 가격 이중 슬라이더 (Dual Range Slider) — $0 ~ $2000 / 주 -->
+      <!-- 가격: 직접 입력창 2개 + 이중 슬라이더 양방향 동기화 ($0 ~ $9999 / 주) -->
       <div class="filter-section">
         <label class="filter-section-label">Price / wk
-          <span class="dual-range-label" id="filterPriceLabel">$0 to $2000</span>
+          <span class="dual-range-label" id="filterPriceLabel">$0 to $9999</span>
         </label>
-        <div class="dual-range" id="filterPriceRange" data-min="0" data-max="2000" data-step="10">
+        <div class="price-input-row">
+          <span class="price-prefix">$</span>
+          <input class="write-input price-num-input" type="number" id="filterPriceMinInput" min="0" max="9999" step="10" value="0" placeholder="최소" />
+          <span class="price-sep">~</span>
+          <span class="price-prefix">$</span>
+          <input class="write-input price-num-input" type="number" id="filterPriceMaxInput" min="0" max="9999" step="10" value="9999" placeholder="최대" />
+        </div>
+        <div class="dual-range" id="filterPriceRange" data-min="0" data-max="9999" data-step="10">
           <div class="dual-range-track"></div>
           <div class="dual-range-fill" id="filterPriceFill"></div>
-          <input class="dual-range-input" type="range" id="filterPriceMin" min="0" max="2000" step="10" value="0" />
-          <input class="dual-range-input" type="range" id="filterPriceMax" min="0" max="2000" step="10" value="2000" />
+          <input class="dual-range-input" type="range" id="filterPriceMin" min="0" max="9999" step="10" value="0" />
+          <input class="dual-range-input" type="range" id="filterPriceMax" min="0" max="9999" step="10" value="9999" />
         </div>
       </div>
 
@@ -568,100 +575,105 @@
         <input class="write-input" id="wTitle" type="text" placeholder="예: 멜번 Box Hill 싱글룸 · 주 $210" maxlength="80" />
       </div>
 
-      <div id="offerFields">
-      <div class="write-field">
-        <label class="write-label" for="wAddress">주소 Address<span class="required-mark">*</span></label>
-        <input class="write-input" id="wAddress" type="text" placeholder="예: Strathfield, NSW 또는 1 Park St, Sydney" />
-      </div>
+      <!-- 5:5 분할 그리드: 좌(주소/주거형태/가격/옵션/사진) · 우(렌트기간/방·욕실·주차) -->
+      <div id="offerFields" class="write-grid">
+        <div class="write-col">
+          <div class="write-field">
+            <label class="write-label" for="wAddress">주소 Address<span class="required-mark">*</span></label>
+            <input class="write-input" id="wAddress" type="text" placeholder="예: Strathfield, NSW 또는 1 Park St, Sydney" />
+          </div>
 
-      <div class="write-field">
-        <label class="write-label" for="wPropType">주거 형태 Property</label>
-        <select class="write-input" id="wPropType">
-          <option value="">선택 안 함</option>
-          <option value="house">House</option>
-          <option value="apartment">Apartment</option>
-          <option value="townhouse">Townhouse</option>
-          <option value="villa">Villa</option>
-          <option value="unit">Unit</option>
-        </select>
-      </div>
+          <div class="write-field">
+            <label class="write-label" for="wPropType">주거 형태 Property</label>
+            <select class="write-input" id="wPropType">
+              <option value="">선택 안 함</option>
+              <option value="house">House</option>
+              <option value="apartment">Apartment</option>
+              <option value="townhouse">Townhouse</option>
+              <option value="villa">Villa</option>
+              <option value="unit">Unit</option>
+            </select>
+          </div>
 
-      <div class="write-field">
-        <label class="write-label" for="wPrice">주당 렌트비 Price / wk ($)<span class="required-mark">*</span></label>
-        <input class="write-input" id="wPrice" type="number" placeholder="200" min="0" />
-      </div>
+          <div class="write-field">
+            <label class="write-label" for="wPrice">주당 렌트비 Price / wk ($)<span class="required-mark">*</span></label>
+            <input class="write-input" id="wPrice" type="number" placeholder="500" min="0" max="9999" />
+          </div>
 
-      <div class="write-field">
-        <span class="write-label">렌트 기간 Lease Term (중복 선택)<span class="required-mark">*</span></span>
-        <div class="write-checks" id="wTypes">
-          <label class="write-check"><input type="checkbox" data-type="ultra_short"> 초단기 (1개월 이하)</label>
-          <label class="write-check"><input type="checkbox" data-type="short"> 단기 (1개월~6개월)</label>
-          <label class="write-check"><input type="checkbox" data-type="mid"> 중단기 (6개월~12개월)</label>
-          <label class="write-check"><input type="checkbox" data-type="long"> 장기 (1년 이상)</label>
-        </div>
-      </div>
+          <div class="write-field">
+            <span class="write-label">옵션 Options</span>
+            <div class="write-checks">
+              <label class="write-check"><input type="checkbox" id="wParking"> 🅿 주차 가능</label>
+              <label class="write-check"><input type="checkbox" id="wPet"> 🐾 반려동물 가능</label>
+              <label class="write-check"><input type="checkbox" id="wKids"> 👶 아이 있는 집</label>
+              <label class="write-check"><input type="checkbox" id="wAirCon"> ❄ 에어컨 있음</label>
+            </div>
+          </div>
 
-      <!-- 방/욕실/주차 개수 (Bedrooms · Bathrooms · Car Spaces) — segmented -->
-      <div class="write-field">
-        <span class="write-label">방 개수 Bedrooms</span>
-        <div class="seg-group" data-target="wBedrooms">
-          <button type="button" class="seg-btn active" data-val="">Any</button>
-          <button type="button" class="seg-btn" data-val="1">1+</button>
-          <button type="button" class="seg-btn" data-val="2">2+</button>
-          <button type="button" class="seg-btn" data-val="3">3+</button>
-          <button type="button" class="seg-btn" data-val="4">4+</button>
-          <button type="button" class="seg-btn" data-val="5">5+</button>
-        </div>
-        <input type="hidden" id="wBedrooms" value="" />
-      </div>
-      <div class="write-field">
-        <span class="write-label">욕실 개수 Bathrooms</span>
-        <div class="seg-group" data-target="wBathrooms">
-          <button type="button" class="seg-btn active" data-val="">Any</button>
-          <button type="button" class="seg-btn" data-val="1">1+</button>
-          <button type="button" class="seg-btn" data-val="2">2+</button>
-          <button type="button" class="seg-btn" data-val="3">3+</button>
-          <button type="button" class="seg-btn" data-val="4">4+</button>
-          <button type="button" class="seg-btn" data-val="5">5+</button>
-        </div>
-        <input type="hidden" id="wBathrooms" value="" />
-      </div>
-      <div class="write-field">
-        <span class="write-label">주차 가능 Car Spaces</span>
-        <div class="seg-group" data-target="wCarSpaces">
-          <button type="button" class="seg-btn active" data-val="">Any</button>
-          <button type="button" class="seg-btn" data-val="1">1+</button>
-          <button type="button" class="seg-btn" data-val="2">2+</button>
-          <button type="button" class="seg-btn" data-val="3">3+</button>
-          <button type="button" class="seg-btn" data-val="4">4+</button>
-          <button type="button" class="seg-btn" data-val="5">5+</button>
-        </div>
-        <input type="hidden" id="wCarSpaces" value="" />
-      </div>
+          <!-- 사진 첨부 (최대 6장, 클라이언트 압축 후 Firebase Storage 업로드) -->
+          <div class="write-field">
+            <label class="write-label">사진 첨부 Photos <em style="font-style:normal;color:var(--text-muted);font-size:11px;">최대 6장 · 자동 압축됩니다</em></label>
+            <div class="photo-upload">
+              <input type="file" id="wPhotoInput" accept="image/*" multiple hidden />
+              <button type="button" class="photo-add-btn" id="wPhotoAddBtn">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                <span>사진 추가</span>
+              </button>
+              <div class="photo-thumbs" id="wPhotoThumbs"></div>
+            </div>
+          </div>
+        </div><!-- /좌측 -->
 
-      <div class="write-field">
-        <span class="write-label">옵션 Options</span>
-        <div class="write-checks">
-          <label class="write-check"><input type="checkbox" id="wParking"> 🅿 주차 가능</label>
-          <label class="write-check"><input type="checkbox" id="wPet"> 🐾 반려동물 가능</label>
-          <label class="write-check"><input type="checkbox" id="wKids"> 👶 아이 있는 집</label>
-          <label class="write-check"><input type="checkbox" id="wAirCon"> ❄ 에어컨 있음</label>
-        </div>
-      </div>
+        <div class="write-col">
+          <div class="write-field">
+            <span class="write-label">렌트 기간 Lease Term (중복 선택)<span class="required-mark">*</span></span>
+            <div class="write-checks" id="wTypes">
+              <label class="write-check"><input type="checkbox" data-type="ultra_short"> 초단기 (1개월 이하)</label>
+              <label class="write-check"><input type="checkbox" data-type="short"> 단기 (1개월~6개월)</label>
+              <label class="write-check"><input type="checkbox" data-type="mid"> 중단기 (6개월~12개월)</label>
+              <label class="write-check"><input type="checkbox" data-type="long"> 장기 (1년 이상)</label>
+            </div>
+          </div>
 
-      <!-- 사진 첨부 (최대 6장, 클라이언트 압축 후 Firebase Storage 업로드) -->
-      <div class="write-field">
-        <label class="write-label">사진 첨부 Photos <em style="font-style:normal;color:var(--text-muted);font-size:11px;">최대 6장 · 자동 압축됩니다</em></label>
-        <div class="photo-upload">
-          <input type="file" id="wPhotoInput" accept="image/*" multiple hidden />
-          <button type="button" class="photo-add-btn" id="wPhotoAddBtn">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-            <span>사진 추가</span>
-          </button>
-          <div class="photo-thumbs" id="wPhotoThumbs"></div>
-        </div>
-      </div>
-      </div><!-- /offerFields -->
+          <!-- 방/욕실/주차 개수 — segmented -->
+          <div class="write-field">
+            <span class="write-label">방 개수 Bedrooms</span>
+            <div class="seg-group" data-target="wBedrooms">
+              <button type="button" class="seg-btn active" data-val="">Any</button>
+              <button type="button" class="seg-btn" data-val="1">1+</button>
+              <button type="button" class="seg-btn" data-val="2">2+</button>
+              <button type="button" class="seg-btn" data-val="3">3+</button>
+              <button type="button" class="seg-btn" data-val="4">4+</button>
+              <button type="button" class="seg-btn" data-val="5">5+</button>
+            </div>
+            <input type="hidden" id="wBedrooms" value="" />
+          </div>
+          <div class="write-field">
+            <span class="write-label">욕실 개수 Bathrooms</span>
+            <div class="seg-group" data-target="wBathrooms">
+              <button type="button" class="seg-btn active" data-val="">Any</button>
+              <button type="button" class="seg-btn" data-val="1">1+</button>
+              <button type="button" class="seg-btn" data-val="2">2+</button>
+              <button type="button" class="seg-btn" data-val="3">3+</button>
+              <button type="button" class="seg-btn" data-val="4">4+</button>
+              <button type="button" class="seg-btn" data-val="5">5+</button>
+            </div>
+            <input type="hidden" id="wBathrooms" value="" />
+          </div>
+          <div class="write-field">
+            <span class="write-label">주차 공간 Car Spaces</span>
+            <div class="seg-group" data-target="wCarSpaces">
+              <button type="button" class="seg-btn active" data-val="">Any</button>
+              <button type="button" class="seg-btn" data-val="1">1+</button>
+              <button type="button" class="seg-btn" data-val="2">2+</button>
+              <button type="button" class="seg-btn" data-val="3">3+</button>
+              <button type="button" class="seg-btn" data-val="4">4+</button>
+              <button type="button" class="seg-btn" data-val="5">5+</button>
+            </div>
+            <input type="hidden" id="wCarSpaces" value="" />
+          </div>
+        </div><!-- /우측 -->
+      </div><!-- /offerFields .write-grid -->
 
       <div class="write-field">
         <label class="write-label" for="wBody" id="wBodyLabel">상세 설명 Comments<span class="required-mark">*</span></label>
@@ -1765,19 +1777,30 @@
     });
 
     // ════════════════════════════════════════════════════════════════════
-    //  Dual Range Slider (가격 필터)
+    //  Dual Range Slider + 직접 입력창 (Min/Max) 양방향 동기화 (가격 필터)
     // ════════════════════════════════════════════════════════════════════
     (function bindDualRange() {
       const root = document.getElementById('filterPriceRange');
       if (!root) return;
-      const minIn = document.getElementById('filterPriceMin');
-      const maxIn = document.getElementById('filterPriceMax');
-      const fill  = document.getElementById('filterPriceFill');
-      const label = document.getElementById('filterPriceLabel');
+      const minIn  = document.getElementById('filterPriceMin');
+      const maxIn  = document.getElementById('filterPriceMax');
+      const minTxt = document.getElementById('filterPriceMinInput');
+      const maxTxt = document.getElementById('filterPriceMaxInput');
+      const fill   = document.getElementById('filterPriceFill');
+      const label  = document.getElementById('filterPriceLabel');
       const MIN = Number(root.dataset.min), MAX = Number(root.dataset.max);
-      function paint() {
+      const STEP = Number(root.dataset.step) || 10;
+      const clamp = v => Math.min(MAX, Math.max(MIN, Math.round(v / STEP) * STEP));
+      function paint(srcEl) {
         let lo = Number(minIn.value), hi = Number(maxIn.value);
-        if (lo > hi - 10) { if (event && event.target === minIn) { lo = hi - 10; minIn.value = lo; } else { hi = lo + 10; maxIn.value = hi; } }
+        if (lo > hi - STEP) {
+          if (srcEl === minIn || srcEl === minTxt) { lo = hi - STEP; }
+          else                                      { hi = lo + STEP; }
+        }
+        lo = clamp(lo); hi = clamp(hi);
+        minIn.value = lo; maxIn.value = hi;
+        if (minTxt && document.activeElement !== minTxt) minTxt.value = lo;
+        if (maxTxt && document.activeElement !== maxTxt) maxTxt.value = hi;
         const a = ((lo - MIN) / (MAX - MIN)) * 100;
         const b = ((hi - MIN) / (MAX - MIN)) * 100;
         fill.style.left  = a + '%';
@@ -1785,8 +1808,18 @@
         const hiTxt = hi >= MAX ? `$${MAX}+` : `$${hi}`;
         label.textContent = `$${lo} to ${hiTxt}`;
       }
-      minIn.addEventListener('input', paint);
-      maxIn.addEventListener('input', paint);
+      // 슬라이더 → 입력창
+      minIn.addEventListener('input', e => paint(e.target));
+      maxIn.addEventListener('input', e => paint(e.target));
+      // 입력창 → 슬라이더 (실시간 + blur 보정)
+      const fromText = e => {
+        const v = clamp(Number(e.target.value) || 0);
+        if (e.target === minTxt) { minIn.value = v; }
+        else                     { maxIn.value = v; }
+        paint(e.target);
+      };
+      if (minTxt) { minTxt.addEventListener('input', fromText); minTxt.addEventListener('change', fromText); }
+      if (maxTxt) { maxTxt.addEventListener('input', fromText); maxTxt.addEventListener('change', fromText); }
       paint();
     })();
 
