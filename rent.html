@@ -2065,52 +2065,33 @@
     });
   </script>
 
-  <!-- ── Lightbox (Swiper 기반 갤러리) ── -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
+  <!-- ── Lightbox (단일 이미지 확대 모달) ── -->
   <div class="lightbox-overlay" id="lightboxOverlay" aria-hidden="true">
     <button class="lightbox-close" id="lightboxClose" type="button" aria-label="닫기">✕</button>
-    <div class="swiper lightbox-swiper" id="lightboxSwiper">
-      <div class="swiper-wrapper" id="lightboxWrapper"></div>
-      <div class="swiper-button-prev"></div>
-      <div class="swiper-button-next"></div>
-    </div>
+    <img class="lightbox-image" id="lightboxImage" src="" alt="확대 이미지" />
     <div class="lightbox-counter" id="lightboxCounter">1 / 1</div>
   </div>
-  <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
   <script>
-    let lightboxSwiper = null;
     function openLightbox(urls, initialIndex) {
       const list = Array.isArray(urls) ? urls : (urls ? [urls] : []);
       if (!list.length) return;
       const ov = document.getElementById('lightboxOverlay');
-      const wrap = document.getElementById('lightboxWrapper');
+      const img = document.getElementById('lightboxImage');
       const counter = document.getElementById('lightboxCounter');
-      if (!ov || !wrap) return;
-      wrap.innerHTML = list.map(u => `<div class="swiper-slide"><img src="${u}" alt="" loading="lazy" /></div>`).join('');
+      if (!ov || !img) return;
+      const idx = Math.max(0, Math.min(Number(initialIndex) || 0, list.length - 1));
+      img.src = list[idx];
+      if (counter) counter.textContent = `${idx + 1} / ${list.length}`;
       ov.classList.add('open');
       ov.setAttribute('aria-hidden', 'false');
       document.body.style.overflow = 'hidden';
-      if (lightboxSwiper) { try { lightboxSwiper.destroy(true, true); } catch (_) {} lightboxSwiper = null; }
-      const startIdx = Math.max(0, Math.min(Number(initialIndex) || 0, list.length - 1));
-      if (counter) counter.textContent = `${startIdx + 1} / ${list.length}`;
-      lightboxSwiper = new Swiper('#lightboxSwiper', {
-        initialSlide: startIdx,
-        keyboard: { enabled: true },
-        navigation: { nextEl: '.lightbox-swiper .swiper-button-next', prevEl: '.lightbox-swiper .swiper-button-prev' },
-        on: {
-          slideChange() {
-            if (counter) counter.textContent = `${this.activeIndex + 1} / ${list.length}`;
-          }
-        }
-      });
     }
     function closeLightbox() {
       const ov = document.getElementById('lightboxOverlay');
       if (!ov) return;
       ov.classList.remove('open');
       ov.setAttribute('aria-hidden', 'true');
-      if (lightboxSwiper) { try { lightboxSwiper.destroy(true, true); } catch (_) {} lightboxSwiper = null; }
-      const wrap = document.getElementById('lightboxWrapper'); if (wrap) wrap.innerHTML = '';
+      const img = document.getElementById('lightboxImage'); if (img) img.src = '';
       const stillOpen = document.querySelector('.post-detail-overlay.open, .write-overlay.open, .filter-overlay.open');
       if (!stillOpen) document.body.style.overflow = '';
     }
