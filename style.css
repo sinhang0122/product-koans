@@ -1683,70 +1683,98 @@ select.filter-mini-input {
 /* ── Segmented controls (Realestate.com.au 스타일 — 방/욕실/주차 등) ── */
 .seg-group {
   display: flex; flex-wrap: wrap; gap: 0;
-  border: 1px solid var(--text-primary); border-radius: var(--r-sm); overflow: hidden;
+  border: 1.5px solid var(--text-primary); border-radius: var(--r-sm); overflow: hidden;
   background: var(--bg-base);
 }
 .seg-btn {
-  flex: 1; min-width: 44px;
-  padding: 8px 10px; font-family: var(--font); font-size: 13px; font-weight: 700;
+  flex: 1; min-width: 52px;
+  padding: 13px 14px;   /* 큼직한 터치 영역 */
+  font-family: var(--font); font-size: 15px; font-weight: 800; letter-spacing: -0.01em;
   background: var(--bg-base); color: var(--text-primary);
-  border: none; border-right: 1px solid var(--text-primary);
+  border: none; border-right: 1.5px solid var(--text-primary);
   cursor: pointer; transition: background 0.12s ease, color 0.12s ease;
+  line-height: 1;
 }
 .seg-btn:last-child { border-right: none; }
 .seg-btn:hover { background: var(--bg-card); }
 .seg-btn.active { background: var(--text-primary); color: var(--bg-base); }
-
-/* ── 가격 입력창 행 (Dual Range Slider 위 직접 입력 Min/Max) ── */
-.price-input-row {
-  display: flex; align-items: center; gap: 6px; margin: 6px 0 4px;
+@media (max-width: 640px) {
+  .seg-btn { padding: 14px 10px; font-size: 14.5px; min-width: 44px; }
 }
-.price-input-row .price-prefix { font-size: 13px; font-weight: 800; color: var(--text-primary); }
-.price-input-row .price-sep    { font-size: 13px; font-weight: 700; color: var(--text-muted); padding: 0 2px; }
+
+/* ── 가격 입력창 행 (Dual Range Slider 위 직접 입력 Min/Max) — 5:5 한 줄 배치 ── */
+.price-input-row {
+  display: flex; align-items: center; gap: 10px; margin: 8px 0 12px;
+}
+.price-input-row .price-input-cell {
+  flex: 1 1 0; min-width: 0;
+  display: flex; align-items: center; gap: 6px;
+  padding: 0 12px;
+  background: var(--bg-base); border: 1.5px solid var(--border); border-radius: var(--r-sm);
+}
+.price-input-row .price-prefix { font-size: 14px; font-weight: 800; color: var(--text-primary); }
+.price-input-row .price-sep    {
+  flex-shrink: 0; font-size: 14px; font-weight: 800; color: var(--text-muted);
+  padding: 0 4px;
+}
 .price-input-row .price-num-input {
-  flex: 1; min-width: 0; padding: 7px 10px; font-size: 13px;
+  flex: 1; min-width: 0; padding: 10px 0; font-size: 14px; font-weight: 700;
   text-align: right; -moz-appearance: textfield;
+  background: transparent; border: none; outline: none;
 }
 .price-input-row .price-num-input::-webkit-outer-spin-button,
 .price-input-row .price-num-input::-webkit-inner-spin-button {
   -webkit-appearance: none; margin: 0;
 }
 
-/* ── Dual Range Slider (가격 필터 — 양방향) ── */
+/* ── Dual Range Slider (단일 트랙 통합 · 두꺼움 · 큰 thumb) ── */
 .dual-range {
-  position: relative; height: 36px; margin-top: 6px;
+  position: relative; width: 100%; height: 44px; margin: 10px 0 6px;
 }
 .dual-range-label {
-  margin-left: 8px; font-size: 12px; font-weight: 700; color: var(--text-secondary);
+  margin-left: 8px; font-size: 12.5px; font-weight: 800; color: var(--text-secondary);
 }
+/* 외곽(미선택) 트랙 — 옅은 회색 */
 .dual-range-track {
-  position: absolute; top: 50%; left: 0; right: 0; height: 4px;
-  background: var(--border); border-radius: 2px; transform: translateY(-50%);
+  position: absolute; top: 50%; left: 0; right: 0; height: 6px;
+  background: #e0e0e0; border-radius: 3px; transform: translateY(-50%);
 }
+/* 선택 구간(min~max) — 진한 흑색 */
 .dual-range-fill {
-  position: absolute; top: 50%; height: 4px;
-  background: var(--text-primary); border-radius: 2px; transform: translateY(-50%);
+  position: absolute; top: 50%; height: 6px;
+  background: #000; border-radius: 3px; transform: translateY(-50%);
   pointer-events: none;
 }
+/* 두 range input 을 오버레이 — 트랙은 투명, thumb 만 활성 */
 .dual-range-input {
-  position: absolute; top: 0; left: 0; right: 0; width: 100%; height: 36px;
+  position: absolute; top: 0; left: 0; right: 0; width: 100%; height: 44px;
   background: transparent; appearance: none; -webkit-appearance: none;
-  pointer-events: none;  /* 트랙 클릭 비활성 — thumb 만 활성 (아래) */
+  pointer-events: none;
+  margin: 0;
 }
+/* Thumb — 큼직한 흰 원 + 검정 보더 + 그림자 */
 .dual-range-input::-webkit-slider-thumb {
   -webkit-appearance: none; appearance: none; pointer-events: auto;
-  width: 20px; height: 20px; border-radius: 50%;
-  background: var(--bg-base); border: 2px solid var(--text-primary);
-  cursor: grab; box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+  width: 26px; height: 26px; border-radius: 50%;
+  background: #fff; border: 2.5px solid #000;
+  cursor: grab; box-shadow: 0 2px 8px rgba(0,0,0,0.35), 0 1px 2px rgba(0,0,0,0.15);
+  transition: transform 0.12s ease;
 }
+.dual-range-input::-webkit-slider-thumb:hover  { transform: scale(1.05); }
+.dual-range-input::-webkit-slider-thumb:active { cursor: grabbing; transform: scale(1.08); }
 .dual-range-input::-moz-range-thumb {
   pointer-events: auto;
-  width: 20px; height: 20px; border-radius: 50%;
-  background: var(--bg-base); border: 2px solid var(--text-primary);
-  cursor: grab; box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+  width: 26px; height: 26px; border-radius: 50%;
+  background: #fff; border: 2.5px solid #000;
+  cursor: grab; box-shadow: 0 2px 8px rgba(0,0,0,0.35), 0 1px 2px rgba(0,0,0,0.15);
 }
-.dual-range-input::-webkit-slider-runnable-track { background: transparent; }
-.dual-range-input::-moz-range-track { background: transparent; }
+.dual-range-input::-webkit-slider-runnable-track { background: transparent; height: 6px; }
+.dual-range-input::-moz-range-track { background: transparent; height: 6px; }
+/* 다크 모드 대응 — 외곽 트랙을 약간 진하게 (단 채워진 부분은 항상 흑색) */
+[data-theme="dark"] .dual-range-track { background: #3a3a3a; }
+[data-theme="dark"] .dual-range-fill  { background: #fff; }
+[data-theme="dark"] .dual-range-input::-webkit-slider-thumb { background: #fff; border-color: #fff; }
+[data-theme="dark"] .dual-range-input::-moz-range-thumb     { background: #fff; border-color: #fff; }
 
 /* ── Lightbox (Swiper 기반 갤러리 — 사진만 노출) ── */
 .lightbox-overlay {

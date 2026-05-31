@@ -476,11 +476,14 @@
           <span class="dual-range-label" id="filterSharePriceLabel">$0 to $999</span>
         </label>
         <div class="price-input-row">
-          <span class="price-prefix">$</span>
-          <input class="write-input price-num-input" type="number" id="fbPriceMinInput" min="0" max="999" step="10" value="0" placeholder="최소" />
-          <span class="price-sep">~</span>
-          <span class="price-prefix">$</span>
-          <input class="write-input price-num-input" type="number" id="fbPriceMaxInput" min="0" max="999" step="10" value="999" placeholder="최대" />
+          <div class="price-input-cell">
+            <span class="price-prefix">$</span>
+            <input class="price-num-input" type="number" id="fbPriceMinInput" min="0" max="999" step="10" value="0" placeholder="최소" />
+          </div>
+          <div class="price-input-cell">
+            <span class="price-prefix">$</span>
+            <input class="price-num-input" type="number" id="fbPriceMaxInput" min="0" max="999" step="10" value="999" placeholder="최대" />
+          </div>
         </div>
         <div class="dual-range" id="filterSharePriceRange" data-min="0" data-max="999" data-step="10">
           <div class="dual-range-track"></div>
