@@ -479,11 +479,11 @@
 
       <div class="filter-section">
         <label class="filter-section-label">렌트 기간 Lease Term (중복 선택)</label>
-        <div class="filter-checks" id="filterTypes">
-          <label class="filter-check"><input type="checkbox" data-type="ultra_short"> 초단기 (1개월 이하)</label>
-          <label class="filter-check"><input type="checkbox" data-type="short"> 단기 (1개월~6개월)</label>
-          <label class="filter-check"><input type="checkbox" data-type="mid"> 중단기 (6개월~12개월)</label>
-          <label class="filter-check"><input type="checkbox" data-type="long"> 장기 (1년 이상)</label>
+        <div class="toggle-group" id="filterTypes">
+          <label class="toggle-pill"><input type="checkbox" data-type="ultra_short"> 초단기 (1개월 이하)</label>
+          <label class="toggle-pill"><input type="checkbox" data-type="short"> 단기 (1개월~6개월)</label>
+          <label class="toggle-pill"><input type="checkbox" data-type="mid"> 중단기 (6개월~12개월)</label>
+          <label class="toggle-pill"><input type="checkbox" data-type="long"> 장기 (1년 이상)</label>
         </div>
       </div>
 
@@ -550,11 +550,11 @@
 
       <div class="filter-section">
         <label class="filter-section-label">Options</label>
-        <div class="filter-checks">
-          <label class="filter-check"><input type="checkbox" id="fParking"> 🅿 Parking</label>
-          <label class="filter-check"><input type="checkbox" id="fPet"> 🐾 Pet Friendly</label>
-          <label class="filter-check"><input type="checkbox" id="fKids"> 👶 Kids OK</label>
-          <label class="filter-check"><input type="checkbox" id="fAirCon"> ❄ Air Con</label>
+        <div class="toggle-group">
+          <label class="toggle-pill"><input type="checkbox" id="fParking"> 🅿 Parking</label>
+          <label class="toggle-pill"><input type="checkbox" id="fPet"> 🐾 Pet Friendly</label>
+          <label class="toggle-pill"><input type="checkbox" id="fKids"> 👶 Kids OK</label>
+          <label class="toggle-pill"><input type="checkbox" id="fAirCon"> ❄ Air Con</label>
         </div>
       </div>
 
@@ -605,11 +605,11 @@
 
           <div class="write-field">
             <span class="write-label">옵션 Options</span>
-            <div class="write-checks">
-              <label class="write-check"><input type="checkbox" id="wParking"> 🅿 주차 가능</label>
-              <label class="write-check"><input type="checkbox" id="wPet"> 🐾 반려동물 가능</label>
-              <label class="write-check"><input type="checkbox" id="wKids"> 👶 아이 있는 집</label>
-              <label class="write-check"><input type="checkbox" id="wAirCon"> ❄ 에어컨 있음</label>
+            <div class="toggle-group">
+              <label class="toggle-pill"><input type="checkbox" id="wParking"> 🅿 주차 가능</label>
+              <label class="toggle-pill"><input type="checkbox" id="wPet"> 🐾 반려동물 가능</label>
+              <label class="toggle-pill"><input type="checkbox" id="wKids"> 👶 아이 있는 집</label>
+              <label class="toggle-pill"><input type="checkbox" id="wAirCon"> ❄ 에어컨 있음</label>
             </div>
           </div>
 
@@ -630,11 +630,11 @@
         <div class="write-col">
           <div class="write-field">
             <span class="write-label">렌트 기간 Lease Term (중복 선택)<span class="required-mark">*</span></span>
-            <div class="write-checks" id="wTypes">
-              <label class="write-check"><input type="checkbox" data-type="ultra_short"> 초단기 (1개월 이하)</label>
-              <label class="write-check"><input type="checkbox" data-type="short"> 단기 (1개월~6개월)</label>
-              <label class="write-check"><input type="checkbox" data-type="mid"> 중단기 (6개월~12개월)</label>
-              <label class="write-check"><input type="checkbox" data-type="long"> 장기 (1년 이상)</label>
+            <div class="toggle-group" id="wTypes">
+              <label class="toggle-pill"><input type="checkbox" data-type="ultra_short"> 초단기 (1개월 이하)</label>
+              <label class="toggle-pill"><input type="checkbox" data-type="short"> 단기 (1개월~6개월)</label>
+              <label class="toggle-pill"><input type="checkbox" data-type="mid"> 중단기 (6개월~12개월)</label>
+              <label class="toggle-pill"><input type="checkbox" data-type="long"> 장기 (1년 이상)</label>
             </div>
           </div>
 
@@ -712,6 +712,7 @@
     <div class="post-detail-card">
       <div class="post-detail-header">
         <div class="post-detail-title" id="detailTitle"></div>
+        <span class="post-detail-author" id="detailAuthor"></span>
         <button class="post-detail-close" id="detailClose">✕</button>
       </div>
       <div class="post-detail-meta" id="detailMeta"></div>
@@ -1091,6 +1092,8 @@
       setTypeChecks([]);  // 기간 체크 초기화
       applyWriteModeUI();
       document.getElementById('wAuthor').value = currentNickname();  // 작성자 자동 입력(읽기 전용)
+      loadMapScript();              // Places 로드 보장
+      wireAutocomplete('wAddress'); // 주소 자동완성 바인딩
       writeOverlay.classList.add('open');
       document.body.style.overflow = 'hidden';
     }
@@ -1217,8 +1220,14 @@
           contact: phone,
         };
         if (address) {
-          loadMapScript();  // Geocoder 사용을 위해 Maps 스크립트 로드 보장
-          coords = await geocode(address);
+          loadMapScript();
+          // 자동완성에서 선택한 좌표(dataset.lat/lng) 우선, 없으면 geocode 폴백
+          const ai = document.getElementById('wAddress');
+          if (ai && ai.dataset.lat && ai.dataset.lng) {
+            coords = { lat: Number(ai.dataset.lat), lng: Number(ai.dataset.lng) };
+          } else {
+            coords = await geocode(address);
+          }
         }
       }
 
@@ -1562,8 +1571,10 @@
       const p = posts.find(x => String(x.id) === String(id));
       if (!p) return;
       document.getElementById('detailTitle').textContent = p.title;
+      const authEl = document.getElementById('detailAuthor');
+      if (authEl) authEl.textContent = authorLabel(p);
       document.getElementById('detailMeta').innerHTML =
-        `<span>${authorLabel(p)}</span><span>${p.date}${p.time ? ' ' + p.time : ''}</span>` +
+        `<span>${p.date}${p.time ? ' ' + p.time : ''}</span>` +
         (p.address ? `<span>📍 ${escHtml(p.address)}</span>` : '') +
         (p.price   ? `<span>$${p.price}/wk</span>` : '');
       // 상세 필터 항목들을 태그로 렌더링
@@ -1666,6 +1677,36 @@
     const urlState        = (new URLSearchParams(location.search).get('state') || '').toLowerCase();
     const activeStateView = STATE_VIEWS[urlState] || AUS_VIEW;
 
+    // 주소 자동완성 (네이티브 Places Autocomplete 위젯)
+    function whenPlacesReady(cb) {
+      if (window.google && google.maps && google.maps.places && google.maps.places.Autocomplete) { cb(); return; }
+      loadMapScript();
+      const iv = setInterval(() => {
+        if (window.google && google.maps && google.maps.places && google.maps.places.Autocomplete) { clearInterval(iv); cb(); }
+      }, 150);
+      setTimeout(() => clearInterval(iv), 8000);
+    }
+    function wireAutocomplete(inputId) {
+      const input = document.getElementById(inputId);
+      if (!input || input.dataset.acWired === '1') return;
+      whenPlacesReady(() => {
+        if (input.dataset.acWired === '1') return;
+        const ac = new google.maps.places.Autocomplete(input, {
+          componentRestrictions: { country: 'au' },
+          fields: ['formatted_address', 'geometry', 'name'],
+          types: ['geocode'],
+        });
+        ac.addListener('place_changed', () => {
+          const p = ac.getPlace();
+          if (!p || !p.geometry || !p.geometry.location) return;
+          input.value = p.formatted_address || p.name || input.value;
+          input.dataset.lat = String(p.geometry.location.lat());
+          input.dataset.lng = String(p.geometry.location.lng());
+        });
+        input.dataset.acWired = '1';
+      });
+    }
+
     function loadMapScript() {
       if (mapReady || mapLoading) return;
       if (GOOGLE_MAPS_KEY === 'YOUR_API_KEY') {
@@ -1691,7 +1732,7 @@
         updateMapMarkers(applyFilters(loadPosts()));
       };
       const script   = document.createElement('script');
-      script.src     = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_KEY}&loading=async&callback=initMap`;
+      script.src     = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_KEY}&libraries=places&loading=async&callback=initMap`;
       script.async   = true;
       script.defer   = true;
       script.onerror = () => {
