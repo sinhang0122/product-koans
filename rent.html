@@ -1716,7 +1716,7 @@
       }
       mapLoading = true;
       window.initMap = function () {
-        map = new google.maps.Map(document.getElementById('accomMap'), {
+        map = new google.maps.Map(document.getElementById('accomMap'), { gestureHandling: 'greedy',
           center: activeStateView.center,
           zoom: activeStateView.zoom,
           mapTypeControl: false,

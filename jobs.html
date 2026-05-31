@@ -1181,7 +1181,7 @@
       const el = document.getElementById('jobsMap');
       if (!el) return;
       const view = STATE_VIEWS[currentState] || AUS_VIEW;
-      jobsMap = new google.maps.Map(el, { center: view.center, zoom: view.zoom, mapTypeControl: false, streetViewControl: false });
+      jobsMap = new google.maps.Map(el, { gestureHandling: 'greedy', center: view.center, zoom: view.zoom, mapTypeControl: false, streetViewControl: false });
       mapReady = true;
       updateMapMarkers();
       // 드래그/줌 시 "이 지역 잡 구하기" 재검색 버튼 노출

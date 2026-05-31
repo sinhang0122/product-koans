@@ -2065,8 +2065,8 @@
       const c = detailCoords;
       whenMapsReady(() => {
         if (!miniMapObj) {
-          miniMapObj = new google.maps.Map(el, {
-            center: c, zoom: 15, disableDefaultUI: true, gestureHandling: 'none', clickableIcons: false,
+          miniMapObj = new google.maps.Map(el, { gestureHandling: 'greedy',
+            center: c, zoom: 15, disableDefaultUI: true, clickableIcons: false,
           });
         } else {
           google.maps.event.trigger(miniMapObj, 'resize');
@@ -2090,7 +2090,7 @@
       whenMapsReady(() => {
         const el = document.getElementById('mapExpandCanvas');
         if (!expandMapObj) {
-          expandMapObj = new google.maps.Map(el, {
+          expandMapObj = new google.maps.Map(el, { gestureHandling: 'greedy',
             center: detailCoords, zoom: 16, mapTypeControl: false, streetViewControl: false, fullscreenControl: false,
           });
         }
@@ -2177,7 +2177,7 @@
       }
       mapLoading = true;
       window.initMap = function () {
-        map = new google.maps.Map(document.getElementById('accomMap'), {
+        map = new google.maps.Map(document.getElementById('accomMap'), { gestureHandling: 'greedy',
           center: activeStateView.center,
           zoom: activeStateView.zoom,
           mapTypeControl: false,
