@@ -559,9 +559,14 @@
       document.getElementById('detailMeta').innerHTML = `<span>${escHtml(p.author)}</span><span>${p.date}</span>`;
       const bodyEl = document.getElementById('detailBody');
       const gallery = (Array.isArray(p.imageUrls) && p.imageUrls.length)
-        ? `<div class="post-detail-gallery">${p.imageUrls.map(u => `<img src="${escHtml(u)}" alt="" loading="lazy" />`).join('')}</div>`
+        ? `<div class="post-detail-gallery">${p.imageUrls.map(u => `<img src="${escHtml(u)}" alt="" loading="lazy" data-src="${escHtml(u)}" />`).join('')}</div>`
         : '';
       bodyEl.innerHTML = gallery + `<div>${escHtml(p.body)}</div>`;
+      // 갤러리 이미지 클릭 → 라이트박스
+      bodyEl.querySelectorAll('.post-detail-gallery img').forEach(img => {
+        img.style.cursor = 'zoom-in';
+        img.addEventListener('click', () => openLightbox(img.dataset.src || img.src));
+      });
       const contactEl = document.getElementById('detailContact');
       contactEl.innerHTML = p.contact ? `📞 연락처: <strong>${escHtml(p.contact)}</strong>` : '';
       document.getElementById('detailOverlay').classList.add('open');
@@ -662,6 +667,40 @@
         uploadPostImages: mod.uploadPostImages, app,
       };
     }).catch(e => console.warn('[car-rent] compress.js 로드 실패', e));
+  </script>
+
+  <!-- ── Lightbox (이미지 확대 모달) ── -->
+  <div class="lightbox-overlay" id="lightboxOverlay" aria-hidden="true">
+    <button class="lightbox-close" id="lightboxClose" type="button" aria-label="닫기">✕</button>
+    <img class="lightbox-img" id="lightboxImg" src="" alt="확대 이미지" />
+  </div>
+  <script>
+    function openLightbox(src) {
+      const ov = document.getElementById('lightboxOverlay');
+      const img = document.getElementById('lightboxImg');
+      if (!ov || !img || !src) return;
+      img.src = src;
+      ov.classList.add('open');
+      ov.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeLightbox() {
+      const ov = document.getElementById('lightboxOverlay');
+      if (!ov) return;
+      ov.classList.remove('open');
+      ov.setAttribute('aria-hidden', 'true');
+      const img = document.getElementById('lightboxImg');
+      if (img) img.src = '';
+      const stillOpen = document.querySelector('.post-detail-overlay.open, .write-overlay.open');
+      if (!stillOpen) document.body.style.overflow = '';
+    }
+    (function bindLightbox() {
+      const ov = document.getElementById('lightboxOverlay');
+      const cl = document.getElementById('lightboxClose');
+      if (ov) ov.addEventListener('click', e => { if (e.target === ov) closeLightbox(); });
+      if (cl) cl.addEventListener('click', closeLightbox);
+      document.addEventListener('keydown', e => { if (e.key === 'Escape' && ov && ov.classList.contains('open')) closeLightbox(); });
+    })();
   </script>
 </body>
 </html>

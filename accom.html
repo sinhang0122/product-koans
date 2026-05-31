@@ -637,7 +637,7 @@
             </div>
           </div>
         </div>
-        <div class="rea-hero-counter">1 / 5</div>
+        <div class="rea-hero-counter" id="detailHeroCounter">1 / 1</div>
       </div>
 
       <!-- Sticky 네비 헤더 -->
@@ -1767,21 +1767,37 @@
       if (!p) return;
       currentDetailPost = p;
 
-      // Hero 영역에 첨부 사진(있을 시) — 첫 사진을 배경처럼 노출, 나머지는 갤러리로
+      // Hero 영역에 첨부 사진(있을 시) — 가로 스크롤 갤러리 + 카운터 동기화 + 클릭 시 라이트박스
       const hero = document.getElementById('detailHero');
       const heroPh = document.getElementById('detailHeroPh');
+      const counter = document.getElementById('detailHeroCounter');
       if (hero) {
-        // 기존 갤러리 제거 (중복 방지)
         const oldGal = hero.querySelector('.detail-hero-img, .detail-hero-gallery');
         if (oldGal) oldGal.remove();
         if (Array.isArray(p.imageUrls) && p.imageUrls.length) {
+          const N = p.imageUrls.length;
           if (heroPh) heroPh.style.display = 'none';
+          if (counter) { counter.textContent = `1 / ${N}`; counter.style.display = ''; }
           const wrap = document.createElement('div');
           wrap.className = 'detail-hero-gallery';
-          wrap.innerHTML = p.imageUrls.map(u => `<img src="${escHtml(u)}" alt="" loading="lazy" />`).join('');
+          wrap.innerHTML = p.imageUrls.map(u =>
+            `<img src="${escHtml(u)}" alt="" loading="lazy" data-src="${escHtml(u)}" />`
+          ).join('');
           hero.appendChild(wrap);
+          // 스크롤 시 현재 인덱스 → counter 갱신
+          wrap.addEventListener('scroll', () => {
+            const w = wrap.clientWidth || 1;
+            const idx = Math.min(N, Math.max(1, Math.round(wrap.scrollLeft / w) + 1));
+            if (counter) counter.textContent = `${idx} / ${N}`;
+          }, { passive: true });
+          // 이미지 클릭 → 라이트박스
+          wrap.addEventListener('click', e => {
+            const t = e.target.closest('img'); if (!t) return;
+            openLightbox(t.dataset.src || t.src);
+          });
         } else {
           if (heroPh) heroPh.style.display = '';
+          if (counter) counter.style.display = 'none';
         }
       }
 
@@ -2454,6 +2470,41 @@
         }, err => console.warn('[accom] services 구독 실패', err));
       } catch (e) { console.warn('[accom] Firestore services subscribe 실패', e); }
     }
+  </script>
+
+  <!-- ── Lightbox (이미지 확대 모달) — 모든 상세 갤러리 공통 ── -->
+  <div class="lightbox-overlay" id="lightboxOverlay" aria-hidden="true">
+    <button class="lightbox-close" id="lightboxClose" type="button" aria-label="닫기">✕</button>
+    <img class="lightbox-img" id="lightboxImg" src="" alt="확대 이미지" />
+  </div>
+  <script>
+    function openLightbox(src) {
+      const ov = document.getElementById('lightboxOverlay');
+      const img = document.getElementById('lightboxImg');
+      if (!ov || !img || !src) return;
+      img.src = src;
+      ov.classList.add('open');
+      ov.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeLightbox() {
+      const ov = document.getElementById('lightboxOverlay');
+      if (!ov) return;
+      ov.classList.remove('open');
+      ov.setAttribute('aria-hidden', 'true');
+      const img = document.getElementById('lightboxImg');
+      if (img) img.src = '';
+      // detail modal 등 다른 overlay 가 열려있는지 확인 후 body scroll 복원
+      const stillOpen = document.querySelector('.post-detail-overlay.open, .write-overlay.open, .filter-overlay.open');
+      if (!stillOpen) document.body.style.overflow = '';
+    }
+    (function bindLightbox() {
+      const ov = document.getElementById('lightboxOverlay');
+      const cl = document.getElementById('lightboxClose');
+      if (ov) ov.addEventListener('click', e => { if (e.target === ov) closeLightbox(); });
+      if (cl) cl.addEventListener('click', closeLightbox);
+      document.addEventListener('keydown', e => { if (e.key === 'Escape' && ov && ov.classList.contains('open')) closeLightbox(); });
+    })();
   </script>
 </body>
 </html>
