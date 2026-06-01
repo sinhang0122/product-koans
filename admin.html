@@ -1122,13 +1122,20 @@
       location.replace('index.html');
     });
 
-    // ── 인증 상태 가드 (Custom Claims 검증) ──
-    // 로그인된 사용자의 ID 토큰에서 claims.admin === true 인 경우에만 UI 노출.
-    // 그 외(비로그인 / 일반 사용자) — 알림 후 index.html로 강제 리다이렉트.
+    // ── 인증 상태 가드 (이메일 화이트리스트 + Custom Claims 이중 검증) ──
+    //  · Primary: ADMIN_EMAILS 목록 (관리자 지정 이메일) — 코드 내 화이트리스트.
+    //  · Secondary: token.claims.admin === true (setAdmin.js 로 부여된 custom claim).
+    //  · 둘 중 하나라도 만족하면 admin 으로 인정 (운영 편의 + Admin SDK 의존도 감소).
+    //  · 그 외 (비로그인 / 일반 사용자) → 알림 후 index.html 강제 리다이렉트.
+    const ADMIN_EMAILS = [
+      'sinhang0122@gmail.com',  // 운영자 본인
+      'admin@thekoaus.com',     // 공식 운영자 메일
+    ];
     let _redirecting = false;
     async function denyAndRedirect(reason) {
       if (_redirecting) return;
       _redirecting = true;
+      console.warn('[admin] denyAndRedirect:', reason);
       try { await signOut(auth); } catch (e) {}
       alert('관리자 권한이 없습니다.');
       location.replace('index.html');
@@ -1136,11 +1143,19 @@
     onAuthStateChanged(auth, async user => {
       try {
         if (!user) { showLocked(''); return; }     // 비로그인 → 로그인 폼 노출
-        // 최신 claim 반영을 위해 토큰 강제 새로고침 (직전 setCustomUserClaims 즉시 반영용)
-        const tokenResult = await user.getIdTokenResult(true);
-        if (tokenResult.claims && tokenResult.claims.admin === true) {
+        // 1) 이메일 화이트리스트 (최우선) — 빠른 경로
+        const email = (user.email || '').toLowerCase();
+        const isAdminEmail = ADMIN_EMAILS.includes(email);
+        let isAdminClaim = false;
+        // 2) Custom Claim 검증 (네트워크 토큰 갱신 — 실패해도 화이트리스트 통과 시 OK)
+        try {
+          const tokenResult = await user.getIdTokenResult(true);
+          isAdminClaim = !!(tokenResult.claims && tokenResult.claims.admin === true);
+        } catch (tokErr) {
+          console.warn('[admin] 토큰 갱신 실패 — 화이트리스트로 fallback', tokErr);
+        }
+        if (isAdminEmail || isAdminClaim) {
           showAdmin(user);
-          // 인증 후 현재 hash 에 맞는 섹션 즉시 활성화 (showSection 노출되어 있을 때)
           try {
             if (typeof window.__koausAdminShowSection === 'function') {
               const h = (location.hash || '#approvalQueue').slice(1);
@@ -1148,7 +1163,7 @@
             }
           } catch (sErr) { console.warn('[admin] hash 라우팅 재호출 실패', sErr); }
         } else {
-          denyAndRedirect('admin claim 없음 — ' + (user.email || ''));
+          denyAndRedirect(`권한 없음 — email='${email}' (whitelist:${isAdminEmail}, claim:${isAdminClaim})`);
         }
       } catch (e) {
         console.error('[admin] 인증 콜백 실패 — 안전망으로 로그인 폼 표시', e);

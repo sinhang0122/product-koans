@@ -174,7 +174,25 @@ document.getElementById('authSignupSubmit').addEventListener('click', async () =
     try { await sendEmailVerification(cred.user); } catch (e) {}
     closeAuthModal();
     alert('가입이 완료되었습니다. 인증 메일을 보냈으니 메일함을 확인해 주세요.');
-  } catch (e) { errEl.textContent = authErrMsg(e.code); }
+  } catch (e) {
+    // 이메일 중복 등 명확한 사용자 에러 → 텍스트 + 알림(토스트)으로 이중 안내
+    const friendlyMsg = authErrMsg(e.code);
+    if (errEl) errEl.textContent = friendlyMsg;
+    if (e.code === 'auth/email-already-in-use') {
+      alert('이미 가입된 이메일 주소입니다.\n로그인 탭으로 전환하거나 다른 이메일을 사용해 주세요.');
+      // 사용자 편의: 로그인 탭 자동 전환 + 이메일 자동 채움
+      try {
+        const loginTab = document.querySelector('.auth-tab[data-target="login"]');
+        if (loginTab) loginTab.click();
+        const loginEmail = document.getElementById('authLoginEmail');
+        if (loginEmail) loginEmail.value = email;
+      } catch (_) {}
+    } else if (e.code === 'auth/weak-password' || e.code === 'auth/invalid-email') {
+      alert(friendlyMsg);
+    } else {
+      console.warn('[signup] 가입 실패', e.code, e.message);
+    }
+  }
 });
 
 // Email sign-in

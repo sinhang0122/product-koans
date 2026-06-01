@@ -2397,7 +2397,18 @@
         try { await sendEmailVerification(cred.user); } catch (e) {}
         hardCloseAuthModal();
         alert('가입이 완료되었습니다. 인증 메일을 보냈으니 메일함을 확인해 주세요.');
-      } catch (e) { errEl.textContent = authErrMsg(e.code); }
+      } catch (e) {
+        const msg = authErrMsg(e.code);
+        if (errEl) errEl.textContent = msg;
+        if (e.code === 'auth/email-already-in-use') {
+          alert('이미 가입된 이메일 주소입니다.
+로그인 탭으로 전환하거나 다른 이메일을 사용해 주세요.');
+          try {
+            const lt = document.querySelector('.auth-tab[data-target="login"]'); if (lt) lt.click();
+            const le = document.getElementById('authLoginEmail'); if (le) le.value = email;
+          } catch (_) {}
+        }
+      }
     });
 
     // Email sign-in

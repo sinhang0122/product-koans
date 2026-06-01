@@ -17,10 +17,16 @@ service cloud.firestore {
     function isSignedIn() {
       return request.auth != null;
     }
-    // 관리자 — Firebase Admin SDK(setAdmin.js)로 부여한 custom claim {admin: true} 보유 시
+    // 관리자 — Firebase Admin SDK(setAdmin.js)로 부여한 custom claim {admin: true} 보유
+    //         또는 화이트리스트 이메일(token.email) 일치 시 인정 (이중 안전망).
+    //         admin.html 의 ADMIN_EMAILS 와 동기화 필요.
     function isAdmin() {
       return isSignedIn()
-        && request.auth.token.admin == true;
+        && (
+          request.auth.token.admin == true
+          || request.auth.token.email == 'sinhang0122@gmail.com'
+          || request.auth.token.email == 'admin@thekoaus.com'
+        );
     }
     function data() {
       return request.resource.data;
@@ -221,9 +227,11 @@ service cloud.firestore {
     //   - admin:   list 시 limit ≤ 200 허용 (대기열 일괄 조회).
     // ════════════════════════════════════════════════════════════════
     match /services/{id} {
-      // 읽기: admin 전체 / 비admin 은 approved 만
+      // 읽기: admin 전체 / 비admin 은 approved 이거나 공식 인증(isOfficial:true) 글만
+      // (공식 인증 글은 status 와 무관하게 노출 — admin 직권 등록 시 자동 통과)
       allow get: if isAdmin()
-                    || resource.data.status == 'approved';
+                    || resource.data.status == 'approved'
+                    || resource.data.isOfficial == true;
 
       // list 평가: doc 별 read 룰이 모두 통과해야 전체 쿼리 통과
       // → 비admin 은 클라이언트에서 where('status','==','approved') 필수
@@ -244,10 +252,13 @@ service cloud.firestore {
           && optStr('status',   30)
           && optUrlList('imageUrls', 8)
         )
-        // ② 일반 로그인 유저 등록 요청 — status='pending' 강제 + 본인 uid
+        // ② 일반 로그인 유저 등록 요청 — status='pending' 강제 + 본인 uid +
+        //    isOfficial 임의 설정 금지 (필드 자체가 없거나 false 만 허용 → admin 만 부여 가능)
         || ( isSignedIn()
              && request.resource.data.status == 'pending'
              && request.resource.data.uid    == request.auth.uid
+             && ( !('isOfficial' in request.resource.data)
+                  || request.resource.data.isOfficial == false )
              && reqStr('category', 1, 50)
              && reqStr('title', 1, 200)
              && reqStr('contact', 1, 200)
