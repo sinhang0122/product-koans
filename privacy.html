@@ -505,7 +505,10 @@
         <h1 class="page-title">개인정보처리방침</h1>
         <p class="page-subtitle">KoAus(코오스) Privacy Policy · 호주 Privacy Act 1988 및 APPs 준수</p>
       </div>
-      <a href="index.html" class="page-back">← 홈으로</a>
+      <div class="legal-header-actions">
+        <button type="button" class="legal-close-btn" id="legalCloseBtn" aria-label="닫기 — 이전 화면으로 돌아가기" title="닫기">✕</button>
+        <a href="index.html" class="page-back">← 홈으로</a>
+      </div>
     </div>
 
     <article class="legal-page">
@@ -578,6 +581,20 @@
     if (themeToggleBtn) themeToggleBtn.addEventListener('click', () => applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'));
     applyTheme(localStorage.getItem('koaus-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
 
+    // ── 닫기(X) 버튼: 이전 화면(회원가입 모달 등)으로 복귀, 이력 없으면 홈으로 ──
+    (function setupLegalCloseBtn() {
+      const btn = document.getElementById('legalCloseBtn');
+      if (!btn) return;
+      btn.addEventListener('click', () => {
+        try {
+          if (window.history.length > 1 && document.referrer && new URL(document.referrer).origin === location.origin) {
+            window.history.back();
+            return;
+          }
+        } catch (_) {}
+        location.replace('index.html');
+      });
+    })();
   </script>
 </body>
 </html>

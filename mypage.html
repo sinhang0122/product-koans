@@ -674,7 +674,7 @@
         </div>
         <label class="auth-agree">
           <input type="checkbox" id="authAgree">
-          <span><button type="button" class="auth-tos-link" id="authTosLink">이용약관</button> 및 <a href="privacy.html" target="_blank" rel="noopener" class="auth-tos-link">개인정보처리방침</a> 동의 <em>(필수)</em></span>
+          <span><a href="terms.html" target="_blank" rel="noopener" class="auth-tos-link">이용약관</a> 및 <a href="privacy.html" target="_blank" rel="noopener" class="auth-tos-link">개인정보처리방침</a> 동의 <em>(필수)</em></span>
         </label>
         <div class="auth-error" id="authSignupError"></div>
         <button class="auth-submit" id="authSignupSubmit" disabled>회원가입</button>
@@ -783,7 +783,6 @@
     function openTermsModal(ov) { ov.classList.add('open'); history.pushState({ koausTerms: true }, ''); }
     // 사용자가 X/확인/바깥클릭으로 닫을 때: 모달 닫고 push한 history 소비
     function userCloseTerms(ov) { closeTermsModal(ov); if (history.state && history.state.koausTerms) history.back(); }
-    document.getElementById('authTosLink').addEventListener('click', () => openTermsModal(tosOverlay));
     document.getElementById('tosClose').addEventListener('click', () => userCloseTerms(tosOverlay));
     document.getElementById('tosConfirm').addEventListener('click', () => userCloseTerms(tosOverlay));
     document.getElementById('privacyClose').addEventListener('click', () => userCloseTerms(privacyOverlay));

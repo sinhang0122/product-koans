@@ -3798,6 +3798,35 @@ html, body { max-width: 100vw; overflow-x: hidden; }
 }
 .state-hub-card:hover .state-hub-card-arrow { color: var(--text-primary); transform: translateX(3px); transition: transform 0.15s, color 0.15s; }
 
+/* 7-A) 정책 페이지(privacy.html / terms.html) 헤더 우측 액션 + 닫기(X) 버튼 */
+.legal-header-actions {
+  display: flex; flex-direction: column; align-items: stretch; gap: 6px;
+  flex-shrink: 0;
+}
+.legal-close-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 38px; height: 38px;
+  border: 1px solid var(--border);
+  background: var(--bg-surface);
+  border-radius: 999px;
+  font-family: var(--font);
+  font-size: 16px; font-weight: 800; line-height: 1;
+  color: var(--text-secondary); cursor: pointer;
+  transition: border-color 0.12s, color 0.12s, background 0.12s, transform 0.12s;
+  align-self: flex-end;
+}
+.legal-close-btn:hover {
+  border-color: var(--text-primary);
+  color: var(--text-primary);
+  background: var(--bg-elevated);
+  transform: scale(1.05);
+}
+.legal-close-btn:active { transform: scale(0.95); }
+@media (max-width: 640px) {
+  .legal-close-btn { width: 34px; height: 34px; font-size: 15px; }
+  .legal-header-actions { gap: 5px; }
+}
+
 /* 8) 작은 화면에서 모든 카드/이미지/iframe 이 부모 폭을 넘지 못하도록 글로벌 가드 */
 img, iframe, video, canvas, svg, table { max-width: 100%; }
 .accom-card, .care-card, .exchange-card, .home-shortcut, .state-card, .state-hub-card { max-width: 100%; }
