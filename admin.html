@@ -445,8 +445,10 @@
     </div>
   </aside>
 
-  <!-- ── 관리자 로그인 게이트 (Firebase Auth) ── -->
-  <div class="admin-gate" id="adminGate" style="display:none;">
+  <!-- ── 관리자 로그인 게이트 (Firebase Auth) ──
+       initial 'flex' — Firebase 로드 지연/실패에도 로그인 폼은 즉시 노출,
+       빈 화면 방지. onAuthStateChanged 콜백에서 인증 확인 시 자동 hide. -->
+  <div class="admin-gate" id="adminGate" style="display:flex;">
     <div class="admin-gate-card">
       <h2 class="admin-gate-title">관리자 로그인</h2>
       <p class="admin-gate-sub">KoAus(코오스) 운영자 계정으로만 접근할 수 있습니다.</p>
@@ -1074,18 +1076,25 @@
       location.replace('index.html');
     }
     onAuthStateChanged(auth, async user => {
-      if (!user) { showLocked(''); return; }     // 비로그인 → 로그인 폼 노출
       try {
+        if (!user) { showLocked(''); return; }     // 비로그인 → 로그인 폼 노출
         // 최신 claim 반영을 위해 토큰 강제 새로고침 (직전 setCustomUserClaims 즉시 반영용)
         const tokenResult = await user.getIdTokenResult(true);
         if (tokenResult.claims && tokenResult.claims.admin === true) {
           showAdmin(user);
+          // 인증 후 현재 hash 에 맞는 섹션 즉시 활성화 (showSection 노출되어 있을 때)
+          try {
+            if (typeof window.__koausAdminShowSection === 'function') {
+              const h = (location.hash || '#approvalQueue').slice(1);
+              window.__koausAdminShowSection(h);
+            }
+          } catch (sErr) { console.warn('[admin] hash 라우팅 재호출 실패', sErr); }
         } else {
           denyAndRedirect('admin claim 없음 — ' + (user.email || ''));
         }
       } catch (e) {
-        console.error('[admin] 토큰 검증 실패', e);
-        denyAndRedirect('토큰 검증 실패');
+        console.error('[admin] 인증 콜백 실패 — 안전망으로 로그인 폼 표시', e);
+        try { showLocked('로그인이 만료되었습니다. 다시 로그인해 주세요.'); } catch (_) {}
       }
     });
 
@@ -1663,7 +1672,9 @@
         const listEl = $('approvalList'); if (listEl) listEl.innerHTML = '<div class="admin-empty">Firestore 미연결 — 대기열을 불러올 수 없습니다.</div>';
       });
     } catch (e) {
-      console.warn('[admin] 승인 대기열 초기화 실패', e);
+      console.error('[admin] 승인 대기열 초기화 실패 — 다른 섹션은 정상 작동', e);
+      const listEl = $('approvalList');
+      if (listEl) listEl.innerHTML = '<div class="admin-empty">데이터를 불러오는 중 오류가 발생했습니다. (F12 콘솔에서 자세한 메시지를 확인하세요)</div>';
     }
 
     // 승인/반려 위임 핸들러
@@ -1705,40 +1716,54 @@
     });
   </script>
 
-  <!-- 사이드바 탭 전환: 클릭한 섹션만 노출, 나머지 숨김 -->
+  <!-- 사이드바 탭 전환: 클릭한 섹션만 노출, 나머지 숨김 (Firebase 와 무관 — 무조건 작동) -->
   <script>
     (function () {
-      const links    = Array.from(document.querySelectorAll('.admin-sidenav-link'));
-      const sections = Array.from(document.querySelectorAll('.admin-section'));
-      if (!links.length || !sections.length) return;
+      try {
+        const links    = Array.from(document.querySelectorAll('.admin-sidenav-link'));
+        const sections = Array.from(document.querySelectorAll('.admin-section'));
+        if (!links.length || !sections.length) {
+          console.warn('[admin] 사이드바/섹션 마크업 누락 — 탭 전환 skip');
+          return;
+        }
 
-      const validIds = new Set(sections.map(s => s.id));
+        const validIds = new Set(sections.map(s => s.id));
+        const FALLBACK = validIds.has('approvalQueue') ? 'approvalQueue' : (sections[0] && sections[0].id);
 
-      function showSection(id) {
-        if (!validIds.has(id)) id = 'approvalQueue';
-        sections.forEach(sec => { sec.style.display = (sec.id === id) ? 'block' : 'none'; });
-        links.forEach(a => a.classList.toggle('active', a.dataset.target === id));
-        // 탭 전환 시 상단으로 — 긴 폼이어도 즉시 체감
-        window.scrollTo({ top: 0, behavior: 'auto' });
-        // 해시 동기화 (히스토리 push 안 함)
-        try { history.replaceState(null, '', '#' + id); } catch (_) {}
-      }
+        function showSection(id) {
+          try {
+            if (!validIds.has(id)) id = FALLBACK;
+            if (!id) return;
+            sections.forEach(sec => { sec.style.display = (sec.id === id) ? 'block' : 'none'; });
+            links.forEach(a => a.classList.toggle('active', a.dataset.target === id));
+            window.scrollTo({ top: 0, behavior: 'auto' });
+            try { history.replaceState(null, '', '#' + id); } catch (_) {}
+          } catch (e) {
+            console.error('[admin] showSection 실패', e);
+          }
+        }
 
-      // 초기 진입: hash 우선, 없으면 첫 섹션
-      showSection((location.hash || '#approvalQueue').slice(1));
+        // 인증 콜백에서도 호출 가능하도록 전역 노출
+        window.__koausAdminShowSection = showSection;
 
-      // 사이드바 클릭 → 탭 전환 (앵커 점프 차단)
-      links.forEach(a => {
-        a.addEventListener('click', e => {
-          e.preventDefault();
-          showSection(a.dataset.target);
+        // 초기 진입: hash 우선, 없으면 기본 섹션
+        showSection((location.hash || '#' + FALLBACK).slice(1));
+
+        // 사이드바 클릭 — 앵커 점프 차단 + 섹션 전환
+        links.forEach(a => {
+          a.addEventListener('click', e => {
+            e.preventDefault();
+            showSection(a.dataset.target);
+          });
         });
-      });
 
-      // 뒤로/앞으로 버튼 등으로 hash 변경 시 동기화
-      window.addEventListener('hashchange', () => {
-        showSection((location.hash || '#approvalQueue').slice(1));
-      });
+        // 뒤로/앞으로 + 수동 hash 변경 동기화
+        window.addEventListener('hashchange', () => {
+          showSection((location.hash || '#' + FALLBACK).slice(1));
+        });
+      } catch (outerErr) {
+        console.error('[admin] 탭 전환 초기화 실패 — 사이드바 클릭 무반응 가능', outerErr);
+      }
     })();
   </script>
 
