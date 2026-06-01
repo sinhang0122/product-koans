@@ -9,7 +9,7 @@
 //  · admin.html 의 자체 가드와 충돌 없음 (admin-mark.js 는 보조 인프라).
 // ════════════════════════════════════════════════════════════════════
 import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
-import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
+import { getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
 import { getFirestore, doc, updateDoc, deleteDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
 
 const firebaseConfig = {
@@ -28,23 +28,41 @@ const ADMIN_EMAILS = [
 ];
 
 // ── 페이지 진입 즉시 sessionStorage 1차 체크 (Firebase 로딩 전 튕김 방지) ──
-//  · admin.html 로그인 성공 시 sessionStorage 'koaus-admin' = email 저장.
-//  · 다른 페이지 진입 시 이 값을 즉시 읽어 body.is-admin 부여 → CSS 의 admin 전용
-//    버튼이 깜빡임 없이 노출. onAuthStateChanged 결과로 최종 확정 (불일치 시 해제).
+//  · admin.html 로그인 성공 시 두 키 동시 저장
+//    · 'koaus-admin'        = email (이메일 검증용)
+//    · 'isAdminLoggedIn'    = 'true' (불리언 보조 플래그 — Firebase 응답 대기 동안 admin UI 유지)
+//  · 다른 페이지 진입 시 둘 중 하나만 살아있어도 즉시 body.is-admin 부여 → 깜빡임 없음.
+//  · onAuthStateChanged 결과로 최종 확정 (단, 첫 user=null 발화는 grace — 캐시 살아있으면 보류).
+function readAdminCache() {
+  let email = '';
+  let flag  = false;
+  try { email = (sessionStorage.getItem('koaus-admin') || '').toLowerCase(); } catch (_) {}
+  try { flag  = sessionStorage.getItem('isAdminLoggedIn') === 'true'; } catch (_) {}
+  return { email, flag, isCachedAdmin: flag || (!!email && ADMIN_EMAILS.includes(email)) };
+}
+function clearAdminCache() {
+  try { sessionStorage.removeItem('koaus-admin'); } catch (_) {}
+  try { sessionStorage.removeItem('isAdminLoggedIn'); } catch (_) {}
+}
+function writeAdminCache(email) {
+  try { sessionStorage.setItem('koaus-admin', email); } catch (_) {}
+  try { sessionStorage.setItem('isAdminLoggedIn', 'true'); } catch (_) {}
+}
 (function applyAdminFastPath() {
-  try {
-    const cached = (sessionStorage.getItem('koaus-admin') || '').toLowerCase();
-    if (cached && ADMIN_EMAILS.includes(cached)) {
-      window.koausIsAdmin = true;
-      window.koausAdminEmail = cached;
-      if (document.body) document.body.classList.add('is-admin');
-      else document.addEventListener('DOMContentLoaded', () => document.body.classList.add('is-admin'), { once: true });
-    }
-  } catch (_) {}
+  const c = readAdminCache();
+  if (c.isCachedAdmin) {
+    window.koausIsAdmin = true;
+    window.koausAdminEmail = c.email || '';
+    if (document.body) document.body.classList.add('is-admin');
+    else document.addEventListener('DOMContentLoaded', () => document.body.classList.add('is-admin'), { once: true });
+  }
 })();
 
 const app  = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const auth = getAuth(app);
+// 세션 지속성 — 모든 페이지 동일하게 LOCAL (탭/브라우저 닫아도 토큰 유지).
+//  · 페이지 이동 시 IndexedDB 에서 토큰을 동기적으로 복원 → onAuthStateChanged 첫 발화에 user 직진 도착.
+setPersistence(auth, browserLocalPersistence).catch(e => console.warn('[admin-mark] persistence 설정 실패', e));
 let db = null;
 try { db = getFirestore(app); } catch (_) {}
 
@@ -265,13 +283,36 @@ window.__koausRenderBizHoursTable = function (hoursJson) {
   return '<table class="biz-hours-table">' + rows + '</table>';
 };
 
-// ── 인증 상태 추적 ──
+// ── 인증 상태 추적 (튕김 방지: 첫 user=null 발화 grace) ──
+//  · Firebase persistence 복원 도중에는 onAuthStateChanged 가 일시적으로 user=null 로 발화할 수 있다.
+//    이 때 sessionStorage 캐시가 살아있다면 admin UI 를 해제하지 말고 다음 발화(실제 user 도착)를 기다린다.
+//  · 명시적 로그아웃은 admin.html / mypage 등에서 sessionStorage 캐시를 먼저 제거한 뒤 signOut 하므로
+//    여기 user=null 발화 시 캐시가 비어 있다 → 정상 해제.
+let _authFiredOnce = false;
 onAuthStateChanged(auth, async user => {
+  const isFirstFire = !_authFiredOnce;
+  _authFiredOnce = true;
   try {
     if (!user) {
+      const c = readAdminCache();
+      if (c.isCachedAdmin) {
+        // 캐시 살아있음 — persistence 복원 중일 수 있어 해제 보류.
+        //  · 단, 첫 발화 후 8초 안에 user 도착하지 않으면 fallback 으로 해제 (만성 미인증 방지).
+        if (isFirstFire) {
+          setTimeout(() => {
+            try {
+              if (!auth.currentUser && readAdminCache().isCachedAdmin) {
+                console.info('[admin-mark] 8s grace 만료 — Firebase 복원 실패, 캐시 해제');
+                clearAdminCache();
+                setAdminFlag(false); setAdminEmail('');
+              }
+            } catch (_) {}
+          }, 8000);
+        }
+        return;
+      }
       setAdminFlag(false); setAdminEmail('');
-      // 명시적 로그아웃 시 sessionStorage 캐시 제거 (다른 탭과 동기화)
-      try { sessionStorage.removeItem('koaus-admin'); } catch (_) {}
+      clearAdminCache();
       return;
     }
     const email = (user.email || '').toLowerCase();
@@ -284,14 +325,12 @@ onAuthStateChanged(auth, async user => {
     } catch (_) {}
     const isAdmin = isAdminEmail || isAdminClaim;
     setAdminFlag(isAdmin);
-    // sessionStorage 캐시 갱신/제거 — 다음 페이지 fastPath 용
-    try {
-      if (isAdmin) sessionStorage.setItem('koaus-admin', email);
-      else sessionStorage.removeItem('koaus-admin');
-    } catch (_) {}
+    if (isAdmin) writeAdminCache(email);
+    else clearAdminCache();
     if (window.koausIsAdmin) setTimeout(injectCardActions, 100);
   } catch (e) {
     console.warn('[admin-mark] custom claim 조회 실패', e);
-    setAdminFlag(false);
+    // 캐시 살아있으면 일단 admin 유지, 아니면 해제
+    if (!readAdminCache().isCachedAdmin) setAdminFlag(false);
   }
 });

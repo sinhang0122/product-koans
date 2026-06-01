@@ -1138,7 +1138,7 @@
     //  initializeApp 직접 호출 시 'app/duplicate-app' 에러 발생 → 어드민 먹통.
     //  getApps().length 체크 후 기존 app 재사용.
     import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
-    import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
+    import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, setPersistence, browserLocalPersistence } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
     import { getFirestore, collection, addDoc, deleteDoc, doc, setDoc, updateDoc, onSnapshot, query, orderBy, limit, serverTimestamp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
 
     const firebaseConfig = {
@@ -1154,6 +1154,17 @@
     const app  = getApps().length ? getApp() : initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db   = getFirestore(app);
+    // 세션 지속성 — LOCAL (IndexedDB) 명시. 페이지 이동 / 탭 재오픈 시 토큰 자동 복원.
+    //  · admin-mark.js 도 동일 호출 (모든 페이지에서 동일 persistence 유지 — race condition 방어)
+    try { await setPersistence(auth, browserLocalPersistence); }
+    catch (e) { console.warn('[admin] persistence 설정 실패 — IndexedDB 비활성/시크릿 모드 가능', e); }
+
+    // 관리자 화이트리스트 — admin-mark.js / firestore.rules 의 isAdmin() 과 동기화.
+    //  · TDZ 회피 위해 fast-path / onAuthStateChanged 보다 먼저 정의.
+    const ADMIN_EMAILS = [
+      'sinhang0122@gmail.com',  // 운영자 본인
+      'koaus.official@gmail.com',     // 공식 운영자 메일
+    ];
 
     // 관리자 인증: Firebase Custom Claims {admin: true} 보유 여부로 검증
     // (setCustomUserClaims는 Admin SDK(setAdmin.js)로만 부여 가능 — 클라이언트 위변조 불가)
@@ -1179,6 +1190,20 @@
       gatePwEl.value = '';
       if (whoEl) whoEl.textContent = user.email;
     }
+    // ── Fast-path: sessionStorage 캐시 살아있으면 mainEl 을 즉시 노출 (gate 깜빡임 차단) ──
+    //  · onAuthStateChanged 의 첫 발화가 도착하기 전 0.1~0.5s 의 깜빡임을 막는 핵심.
+    //  · 인증 콜백에서 실제 권한 확정 시 showLocked 로 되돌릴 수 있으므로 안전.
+    (function adminFastPath() {
+      try {
+        const flag  = sessionStorage.getItem('isAdminLoggedIn') === 'true';
+        const email = (sessionStorage.getItem('koaus-admin') || '').toLowerCase();
+        if (flag || (email && ADMIN_EMAILS.includes(email))) {
+          gateEl.style.display = 'none';
+          mainEl.style.display = '';
+          if (whoEl && email) whoEl.textContent = email;
+        }
+      } catch (_) {}
+    })();
 
     gateLoginEl.addEventListener('click', async () => {
       const email = gateEmailEl.value.trim();
@@ -1188,6 +1213,11 @@
       gateLoginEl.disabled = true;
       try {
         await signInWithEmailAndPassword(auth, email, pw);
+        // 로그인 성공 즉시 보조 플래그 set — 다음 onAuthStateChanged 까지의 0.1~0.5s 갭에도 admin UI 유지
+        try {
+          sessionStorage.setItem('isAdminLoggedIn', 'true');
+          sessionStorage.setItem('koaus-admin', email.toLowerCase());
+        } catch (_) {}
         // 다음 onAuthStateChanged에서 권한 검사 후 자동 진입
       } catch (e) {
         const msg = {
@@ -1206,37 +1236,77 @@
     gateEmailEl.addEventListener('keydown', e => { if (e.key === 'Enter') gateLoginEl.click(); });
     gatePwEl.addEventListener('keydown',    e => { if (e.key === 'Enter') gateLoginEl.click(); });
     logoutEl.addEventListener('click', async () => {
+      // 명시적 로그아웃: signOut 전에 sessionStorage 캐시를 먼저 비워 admin-mark.js 의 grace 가
+      //  로그아웃을 실수로 admin UI 유지로 오인하지 않도록 한다.
+      try {
+        sessionStorage.removeItem('koaus-admin');
+        sessionStorage.removeItem('isAdminLoggedIn');
+      } catch (_) {}
       try { await signOut(auth); } catch (e) {}
       alert('로그아웃 되었습니다.');
       location.replace('index.html');
     });
 
     // ── 인증 상태 가드 (이메일 화이트리스트 + Custom Claims 이중 검증) ──
-    //  · Primary: ADMIN_EMAILS 목록 (관리자 지정 이메일) — 코드 내 화이트리스트.
+    //  · Primary: ADMIN_EMAILS 목록 (위에서 정의 — fast-path 와 동일 인스턴스).
     //  · Secondary: token.claims.admin === true (setAdmin.js 로 부여된 custom claim).
     //  · 둘 중 하나라도 만족하면 admin 으로 인정 (운영 편의 + Admin SDK 의존도 감소).
     //  · 그 외 (비로그인 / 일반 사용자) → 알림 후 index.html 강제 리다이렉트.
-    const ADMIN_EMAILS = [
-      'sinhang0122@gmail.com',  // 운영자 본인
-      'koaus.official@gmail.com',     // 공식 운영자 메일
-    ];
     let _redirecting = false;
     async function denyAndRedirect(reason) {
       if (_redirecting) return;
       _redirecting = true;
       console.warn('[admin] denyAndRedirect:', reason);
+      try {
+        sessionStorage.removeItem('koaus-admin');
+        sessionStorage.removeItem('isAdminLoggedIn');
+      } catch (_) {}
       try { await signOut(auth); } catch (e) {}
       alert('관리자 권한이 없습니다.');
       location.replace('index.html');
     }
+    function readAdminSessionFlag() {
+      try {
+        const flag = sessionStorage.getItem('isAdminLoggedIn') === 'true';
+        const email = (sessionStorage.getItem('koaus-admin') || '').toLowerCase();
+        return flag || (email && ADMIN_EMAILS.includes(email));
+      } catch (_) { return false; }
+    }
+    // ── 인증 가드 (튕김 방지: 첫 user=null 발화는 sessionStorage 캐시 grace) ──
+    let _adminAuthFiredOnce = false;
+    let _adminGraceTimer    = null;
     onAuthStateChanged(auth, async user => {
+      const isFirstFire = !_adminAuthFiredOnce;
+      _adminAuthFiredOnce = true;
       try {
         if (!user) {
-          // 명시적 로그아웃 시 sessionStorage 캐시 제거 (다른 페이지 fast-path 동기화)
-          try { sessionStorage.removeItem('koaus-admin'); } catch (_) {}
+          // Firebase persistence 복원이 아직 끝나지 않았을 수 있다.
+          //  · 첫 발화 + sessionStorage 캐시 살아있음 → 8s grace (gate 표시 보류)
+          //  · 두 번째 이후 user=null → 정상 로그아웃 흐름
+          if (isFirstFire && readAdminSessionFlag()) {
+            console.info('[admin] 첫 onAuthState user=null — sessionStorage 캐시 살아있어 grace 대기');
+            if (_adminGraceTimer) clearTimeout(_adminGraceTimer);
+            _adminGraceTimer = setTimeout(() => {
+              if (!auth.currentUser) {
+                console.warn('[admin] 8s grace 만료 — Firebase 복원 실패, 로그인 폼 표시');
+                try {
+                  sessionStorage.removeItem('koaus-admin');
+                  sessionStorage.removeItem('isAdminLoggedIn');
+                } catch (_) {}
+                showLocked('세션이 만료되었습니다. 다시 로그인해 주세요.');
+              }
+            }, 8000);
+            return;
+          }
+          try {
+            sessionStorage.removeItem('koaus-admin');
+            sessionStorage.removeItem('isAdminLoggedIn');
+          } catch (_) {}
           showLocked('');
           return;
         }
+        // user 도착 — grace 타이머 취소
+        if (_adminGraceTimer) { clearTimeout(_adminGraceTimer); _adminGraceTimer = null; }
         // 1) 이메일 화이트리스트 (최우선) — 빠른 경로
         const email = (user.email || '').toLowerCase();
         const isAdminEmail = ADMIN_EMAILS.includes(email);
@@ -1250,7 +1320,10 @@
         }
         if (isAdminEmail || isAdminClaim) {
           // 다른 페이지 fast-path 캐시 — 페이지 이동 시 admin-mark.js 가 즉시 인지
-          try { sessionStorage.setItem('koaus-admin', email); } catch (_) {}
+          try {
+            sessionStorage.setItem('koaus-admin', email);
+            sessionStorage.setItem('isAdminLoggedIn', 'true');
+          } catch (_) {}
           showAdmin(user);
           try {
             if (typeof window.__koausAdminShowSection === 'function') {
@@ -1259,7 +1332,10 @@
             }
           } catch (sErr) { console.warn('[admin] hash 라우팅 재호출 실패', sErr); }
         } else {
-          try { sessionStorage.removeItem('koaus-admin'); } catch (_) {}
+          try {
+            sessionStorage.removeItem('koaus-admin');
+            sessionStorage.removeItem('isAdminLoggedIn');
+          } catch (_) {}
           denyAndRedirect(`권한 없음 — email='${email}' (whitelist:${isAdminEmail}, claim:${isAdminClaim})`);
         }
       } catch (e) {
