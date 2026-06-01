@@ -21,7 +21,7 @@ const firebaseApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
 // ── App Check (reCAPTCHA v3) — 봇·외부 스크립트의 백엔드(인증/DB) 접근 차단 ──
 // 사이트 키 발급: Firebase 콘솔 > App Check > 앱 등록(reCAPTCHA v3 공급자)
 // 키를 채우면 자동 활성화됨. (placeholder 상태에서는 운영 사이트를 깨뜨리지 않도록 건너뜀)
-const APP_CHECK_SITE_KEY = 'TODO: 키 입력';
+const APP_CHECK_SITE_KEY = '6LcMRActAAAAALY3ancFhgqgzXbdWogVdb12R1Wf';
 if (APP_CHECK_SITE_KEY && !APP_CHECK_SITE_KEY.startsWith('TODO')) {
   initializeAppCheck(firebaseApp, {
     provider: new ReCaptchaV3Provider(APP_CHECK_SITE_KEY),
