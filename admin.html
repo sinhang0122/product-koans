@@ -1195,7 +1195,9 @@
     //  · 인증 콜백에서 실제 권한 확정 시 showLocked 로 되돌릴 수 있으므로 안전.
     (function adminFastPath() {
       try {
-        const flag  = sessionStorage.getItem('isAdminLoggedIn') === 'true';
+        // 3개 키 중 어느 하나라도 살아있으면 admin UI 보임 ('isAdmin' 1순위)
+        const flag  = sessionStorage.getItem('isAdmin') === 'true'
+                   || sessionStorage.getItem('isAdminLoggedIn') === 'true';
         const email = (sessionStorage.getItem('koaus-admin') || '').toLowerCase();
         if (flag || (email && ADMIN_EMAILS.includes(email))) {
           gateEl.style.display = 'none';
@@ -1214,7 +1216,9 @@
       try {
         await signInWithEmailAndPassword(auth, email, pw);
         // 로그인 성공 즉시 보조 플래그 set — 다음 onAuthStateChanged 까지의 0.1~0.5s 갭에도 admin UI 유지
+        //  · 'isAdmin' (표준) + 'isAdminLoggedIn' (레거시) + 'koaus-admin' (이메일) 3중 동기화
         try {
+          sessionStorage.setItem('isAdmin', 'true');
           sessionStorage.setItem('isAdminLoggedIn', 'true');
           sessionStorage.setItem('koaus-admin', email.toLowerCase());
         } catch (_) {}
@@ -1236,11 +1240,12 @@
     gateEmailEl.addEventListener('keydown', e => { if (e.key === 'Enter') gateLoginEl.click(); });
     gatePwEl.addEventListener('keydown',    e => { if (e.key === 'Enter') gateLoginEl.click(); });
     logoutEl.addEventListener('click', async () => {
-      // 명시적 로그아웃: signOut 전에 sessionStorage 캐시를 먼저 비워 admin-mark.js 의 grace 가
+      // 명시적 로그아웃: signOut 전에 sessionStorage 캐시 3개를 먼저 비워 admin-mark.js 의 grace 가
       //  로그아웃을 실수로 admin UI 유지로 오인하지 않도록 한다.
       try {
         sessionStorage.removeItem('koaus-admin');
         sessionStorage.removeItem('isAdminLoggedIn');
+        sessionStorage.removeItem('isAdmin');
       } catch (_) {}
       try { await signOut(auth); } catch (e) {}
       alert('로그아웃 되었습니다.');
@@ -1260,6 +1265,7 @@
       try {
         sessionStorage.removeItem('koaus-admin');
         sessionStorage.removeItem('isAdminLoggedIn');
+        sessionStorage.removeItem('isAdmin');
       } catch (_) {}
       try { await signOut(auth); } catch (e) {}
       alert('관리자 권한이 없습니다.');
@@ -1267,7 +1273,8 @@
     }
     function readAdminSessionFlag() {
       try {
-        const flag = sessionStorage.getItem('isAdminLoggedIn') === 'true';
+        const flag  = sessionStorage.getItem('isAdmin') === 'true'
+                   || sessionStorage.getItem('isAdminLoggedIn') === 'true';
         const email = (sessionStorage.getItem('koaus-admin') || '').toLowerCase();
         return flag || (email && ADMIN_EMAILS.includes(email));
       } catch (_) { return false; }
@@ -1292,6 +1299,7 @@
                 try {
                   sessionStorage.removeItem('koaus-admin');
                   sessionStorage.removeItem('isAdminLoggedIn');
+                  sessionStorage.removeItem('isAdmin');
                 } catch (_) {}
                 showLocked('세션이 만료되었습니다. 다시 로그인해 주세요.');
               }
@@ -1301,6 +1309,7 @@
           try {
             sessionStorage.removeItem('koaus-admin');
             sessionStorage.removeItem('isAdminLoggedIn');
+            sessionStorage.removeItem('isAdmin');
           } catch (_) {}
           showLocked('');
           return;
@@ -1319,10 +1328,11 @@
           console.warn('[admin] 토큰 갱신 실패 — 화이트리스트로 fallback', tokErr);
         }
         if (isAdminEmail || isAdminClaim) {
-          // 다른 페이지 fast-path 캐시 — 페이지 이동 시 admin-mark.js 가 즉시 인지
+          // 다른 페이지 fast-path 캐시 3중 동기화 — 페이지 이동 시 admin-mark.js 가 즉시 인지
           try {
             sessionStorage.setItem('koaus-admin', email);
             sessionStorage.setItem('isAdminLoggedIn', 'true');
+            sessionStorage.setItem('isAdmin', 'true');
           } catch (_) {}
           showAdmin(user);
           try {
@@ -1335,6 +1345,7 @@
           try {
             sessionStorage.removeItem('koaus-admin');
             sessionStorage.removeItem('isAdminLoggedIn');
+            sessionStorage.removeItem('isAdmin');
           } catch (_) {}
           denyAndRedirect(`권한 없음 — email='${email}' (whitelist:${isAdminEmail}, claim:${isAdminClaim})`);
         }

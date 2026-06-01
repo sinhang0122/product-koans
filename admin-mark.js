@@ -28,25 +28,31 @@ const ADMIN_EMAILS = [
 ];
 
 // ── 페이지 진입 즉시 sessionStorage 1차 체크 (Firebase 로딩 전 튕김 방지) ──
-//  · admin.html 로그인 성공 시 두 키 동시 저장
-//    · 'koaus-admin'        = email (이메일 검증용)
-//    · 'isAdminLoggedIn'    = 'true' (불리언 보조 플래그 — Firebase 응답 대기 동안 admin UI 유지)
-//  · 다른 페이지 진입 시 둘 중 하나만 살아있어도 즉시 body.is-admin 부여 → 깜빡임 없음.
+//  · admin.html 로그인 성공 시 3개 키 동시 저장 — 1순위 부트 패스포트
+//    · 'isAdmin'           = 'true' (표준 보조 플래그 — 가장 짧고 보편적)
+//    · 'isAdminLoggedIn'   = 'true' (레거시 보조 플래그 — 하위 호환)
+//    · 'koaus-admin'       = email (이메일 화이트리스트 검증용)
+//  · 다른 페이지 진입 시 셋 중 하나만 살아있어도 즉시 body.is-admin 부여 → 깜빡임 없음.
 //  · onAuthStateChanged 결과로 최종 확정 (단, 첫 user=null 발화는 grace — 캐시 살아있으면 보류).
 function readAdminCache() {
   let email = '';
   let flag  = false;
   try { email = (sessionStorage.getItem('koaus-admin') || '').toLowerCase(); } catch (_) {}
-  try { flag  = sessionStorage.getItem('isAdminLoggedIn') === 'true'; } catch (_) {}
+  try {
+    flag = sessionStorage.getItem('isAdmin') === 'true'
+        || sessionStorage.getItem('isAdminLoggedIn') === 'true';
+  } catch (_) {}
   return { email, flag, isCachedAdmin: flag || (!!email && ADMIN_EMAILS.includes(email)) };
 }
 function clearAdminCache() {
   try { sessionStorage.removeItem('koaus-admin'); } catch (_) {}
   try { sessionStorage.removeItem('isAdminLoggedIn'); } catch (_) {}
+  try { sessionStorage.removeItem('isAdmin'); } catch (_) {}
 }
 function writeAdminCache(email) {
   try { sessionStorage.setItem('koaus-admin', email); } catch (_) {}
   try { sessionStorage.setItem('isAdminLoggedIn', 'true'); } catch (_) {}
+  try { sessionStorage.setItem('isAdmin', 'true'); } catch (_) {}
 }
 (function applyAdminFastPath() {
   const c = readAdminCache();
@@ -67,6 +73,8 @@ let db = null;
 try { db = getFirestore(app); } catch (_) {}
 
 // 페이지 → LocalStorage 키 매핑 (services doc id 룩업용)
+//  · services 컬렉션 doc 이 있는 카드만 admin 액션바 자동 주입 (없으면 lookupFsDocId 가 null → skip).
+//  · 새 보드 추가 시 여기 한 줄만 추가하면 모든 admin 액션이 자동 작동.
 const PAGE_STORE = {
   'restaurants.html': 'koaus-restaurants-posts',
   'trades.html':      'koaus-trades-posts',
@@ -74,6 +82,10 @@ const PAGE_STORE = {
   'salon.html':       'koaus-salon-posts',
   'auto.html':        'koaus-auto-posts',
   'accom.html':       'koaus-accom-posts',
+  'jobs.html':        'koaus-jobs-posts',
+  'rent.html':        'koaus-rent-posts',
+  'car-sale.html':    'koaus-car-sale-posts',
+  'car-rent.html':    'koaus-car-rent-posts',
 };
 
 function currentStoreKey() {
