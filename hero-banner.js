@@ -51,7 +51,7 @@
     restaurants: {
       gradients: ['hero-bg--edu1', 'hero-bg--edu3'],
       slides: [
-        { eyebrow: '🍱 Korean Restaurants',    title: '검증된 한인 식당, 지도와 함께.',       sub: '한식·중식·치킨·BBQ·카페 — 가격대와 영업시간을 한눈에',            cta: { href: '#postGrid', label: '식당 보기 →' } },
+        { eyebrow: '🍱 Korean Restaurants',    title: '검증된 K-푸드 & 다이닝, 지도와 함께.',       sub: '한식·중식·치킨·BBQ·카페 — 가격대와 영업시간을 한눈에',            cta: { href: '#postGrid', label: '식당 보기 →' } },
         { eyebrow: '편의시설 필터',           title: '주차·배달·포장·할랄 옵션까지.',        sub: '음식 종류 + 편의시설 + 영업 상태로 빠르게 검색',                   cta: null },
       ],
     },
