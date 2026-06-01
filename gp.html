@@ -696,8 +696,9 @@
      </div><!-- /rea-scroll -->
 
       <!-- Sticky 하단 액션바 -->
-      <div class="rea-actionbar">
-        <button class="rea-contact-btn" id="detailContactBtn" type="button">연락처 보기</button>
+      <div class="rea-actionbar" style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="rea-contact-btn" id="detailContactBtn" type="button" style="flex:1;min-width:0;">📞 연락처 보기</button>
+        <a class="rea-contact-btn" href="contact.html?type=owner-verify&amp;board=gp" style="flex:1;min-width:0;background:#1f2937;color:#fff;text-decoration:none;display:flex;align-items:center;justify-content:center;">🛡 사장님 공식 인증하기</a>
       </div>
     </div>
   </div>
@@ -1722,7 +1723,7 @@
               ${priceHtml}
               <button class="bookmark-btn${saved ? ' is-saved' : ''}" data-id="${p.id}" title="저장한 글" aria-label="저장">${saved ? '★' : '☆'}</button>
             </div>
-            <div class="accom-card-title2">${escHtml(p.title)}</div>
+            <div class="accom-card-title2">${escHtml(p.title)}${p.isOfficial ? '<span class="koaus-official-badge">Official</span>' : ''}</div>
             ${sub ? `<div class="accom-card-sub">${isFind ? '' : '📍 '}${escHtml(sub)}</div>` : ''}
             ${chips ? `<div class="accom-card-chips">${chips}</div>` : ''}
             <div class="post-mini-actions">

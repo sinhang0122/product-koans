@@ -1721,7 +1721,7 @@
               ${priceHtml}
               <button class="bookmark-btn${saved ? ' is-saved' : ''}" data-id="${p.id}" title="저장한 글" aria-label="저장">${saved ? '★' : '☆'}</button>
             </div>
-            <div class="accom-card-title2">${escHtml(p.title)}</div>
+            <div class="accom-card-title2">${escHtml(p.title)}${p.isOfficial ? '<span class="koaus-official-badge">Official</span>' : ''}</div>
             ${sub ? `<div class="accom-card-sub">${isFind ? '' : '📍 '}${escHtml(sub)}</div>` : ''}
             ${chips ? `<div class="accom-card-chips">${chips}</div>` : ''}
             <div class="post-mini-actions">
