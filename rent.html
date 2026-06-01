@@ -448,6 +448,7 @@
   </aside>
 
   <main class="page-container">
+    <section class="koaus-hero" data-koaus-hero-cat="rent"></section>
     <!-- 전광판(Marquee) · Firestore global_ticker — 좌측 [Notice|광고주] 고정 + 우측 [광고내용] 우→좌 흐름 (marquee.js) -->
     <section class="notice-section">
       <div class="notice-row" id="tickerRow">
@@ -2510,5 +2511,6 @@
       }, err => console.warn('[rent] pinned-notice 구독 실패', err));
     } catch (e) { console.warn('[rent] pinned-notice 초기화 실패', e); }
   </script>
+  <script src="hero-banner.js" defer></script>
 </body>
 </html>

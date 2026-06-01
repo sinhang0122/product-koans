@@ -455,8 +455,9 @@
       <!-- PC 와이드 슬라이더 (≥768px) -->
       <div class="koaus-hero-pc">
         <div class="swiper" id="heroSwiperHome">
-          <div class="swiper-wrapper">
-            <div class="swiper-slide hero-bg--home1">
+          <div class="swiper-wrapper" data-koaus-hero-slots="home" data-koaus-cap="4">
+            <!-- 슬롯 4 개: 향후 Firestore 인기 광고주 / 클릭률 기반으로 매핑 가능. -->
+            <div class="swiper-slide hero-bg--home1" data-koaus-slot="0">
               <div class="hero-content">
                 <span class="hero-eyebrow">KoAus · Korea ↔ Australia</span>
                 <h2 class="hero-title">호주 한인 생활의 모든 것, 한 곳에서.</h2>
@@ -464,7 +465,7 @@
                 <a class="hero-cta" href="#sectionShortcuts">서비스 둘러보기 →</a>
               </div>
             </div>
-            <div class="swiper-slide hero-bg--home2">
+            <div class="swiper-slide hero-bg--home2" data-koaus-slot="1">
               <div class="hero-content">
                 <span class="hero-eyebrow">실시간 매물 · 지도 보기</span>
                 <h2 class="hero-title">쉐어·렌트, 위치까지 한눈에.</h2>
@@ -472,12 +473,20 @@
                 <a class="hero-cta" href="accom.html">쉐어 보러가기 →</a>
               </div>
             </div>
-            <div class="swiper-slide hero-bg--home3">
+            <div class="swiper-slide hero-bg--home3" data-koaus-slot="2">
               <div class="hero-content">
                 <span class="hero-eyebrow">관리자 검증 게시판</span>
                 <h2 class="hero-title">믿을 수 있는 한인 기술자·식당·GP.</h2>
                 <p class="hero-sub">관리자가 직접 검증한 정보만 노출 — 무분별한 광고 zero</p>
                 <a class="hero-cta" href="trades.html">기술직 보러가기 →</a>
+              </div>
+            </div>
+            <div class="swiper-slide hero-bg--legal3" data-koaus-slot="3">
+              <div class="hero-content">
+                <span class="hero-eyebrow">Visa · 법무 · 유학</span>
+                <h2 class="hero-title">호주 정착부터 비자까지 한 페이지.</h2>
+                <p class="hero-sub">법무법인·유학원 추천 + 기술심사 가채점 도구 무료 제공</p>
+                <a class="hero-cta" href="points.html?cat=legal">상담 시작 →</a>
               </div>
             </div>
           </div>

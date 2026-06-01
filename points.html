@@ -450,8 +450,10 @@
       <!-- PC 슬라이더 — 법무법인 -->
       <div class="koaus-hero-pc" id="heroPcLegal" hidden>
         <div class="swiper" id="heroSwiperLegal">
-          <div class="swiper-wrapper">
-            <div class="swiper-slide hero-bg--legal1">
+          <div class="swiper-wrapper" data-koaus-hero-slots="legal" data-koaus-state-cap="2">
+            <!-- 슬롯 2 개: 향후 Firestore partners(category='legal') 상위 2 개를
+                  state 별로 우선 노출. 현재는 더미 콘텐츠. -->
+            <div class="swiper-slide hero-bg--legal1" data-koaus-slot="0">
               <div class="hero-content">
                 <span class="hero-eyebrow">Legal · 법무 자문</span>
                 <h2 class="hero-title">한인 변호사가 가까이.</h2>
@@ -459,18 +461,11 @@
                 <a class="hero-cta" href="#partnerBoard">지역 법무법인 보기 →</a>
               </div>
             </div>
-            <div class="swiper-slide hero-bg--legal2">
+            <div class="swiper-slide hero-bg--legal2" data-koaus-slot="1">
               <div class="hero-content">
                 <span class="hero-eyebrow">검증된 정보</span>
                 <h2 class="hero-title">관리자 검토 후 노출되는 법률 사무소.</h2>
                 <p class="hero-sub">전문 분야 · 한국어 상담 가능 여부 · 연락처를 한눈에 확인</p>
-              </div>
-            </div>
-            <div class="swiper-slide hero-bg--legal3">
-              <div class="hero-content">
-                <span class="hero-eyebrow">Tip</span>
-                <h2 class="hero-title">상담 전 준비할 서류를 미리 확인하세요.</h2>
-                <p class="hero-sub">각 법인 카드에서 연락처를 누르고 사전 약속을 잡아 보세요</p>
               </div>
             </div>
           </div>
@@ -482,8 +477,9 @@
       <!-- PC 슬라이더 — 유학원 -->
       <div class="koaus-hero-pc" id="heroPcEdu" hidden>
         <div class="swiper" id="heroSwiperEdu">
-          <div class="swiper-wrapper">
-            <div class="swiper-slide hero-bg--edu1">
+          <div class="swiper-wrapper" data-koaus-hero-slots="education" data-koaus-state-cap="2">
+            <!-- 슬롯 2 개: 향후 Firestore partners(category='education') 상위 2 개. -->
+            <div class="swiper-slide hero-bg--edu1" data-koaus-slot="0">
               <div class="hero-content">
                 <span class="hero-eyebrow">Edu · 유학 컨설팅</span>
                 <h2 class="hero-title">호주 캠퍼스로, 한 걸음 더.</h2>
@@ -491,18 +487,11 @@
                 <a class="hero-cta" href="#partnerBoard">지역 유학원 보기 →</a>
               </div>
             </div>
-            <div class="swiper-slide hero-bg--edu2">
+            <div class="swiper-slide hero-bg--edu2" data-koaus-slot="1">
               <div class="hero-content">
                 <span class="hero-eyebrow">학비·기간 비교</span>
                 <h2 class="hero-title">학교마다 다른 조건, 미리 비교하세요.</h2>
                 <p class="hero-sub">학교 추천 · 비자 패키지 · 입학 절차 · 워홀 전환까지</p>
-              </div>
-            </div>
-            <div class="swiper-slide hero-bg--edu3">
-              <div class="hero-content">
-                <span class="hero-eyebrow">Tip</span>
-                <h2 class="hero-title">현지 한국어 상담 가능한 유학원을 만나보세요.</h2>
-                <p class="hero-sub">정규 등록된 교육기관 + 한인 직원 보유 여부 확인</p>
               </div>
             </div>
           </div>
