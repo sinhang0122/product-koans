@@ -1459,6 +1459,55 @@ body.is-admin .koaus-admin-toolbar { display: inline-flex !important; }
   .biz-hours-sel { padding: 6px 8px; font-size: 12.5px; }
 }
 
+/* ── 영업시간 7일 표 (상세 모달) ── */
+.biz-hours-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: var(--surface, #fff);
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 12px;
+  overflow: hidden;
+  font-size: 14px;
+}
+.biz-hours-table tr + tr td { border-top: 1px solid var(--border, #eef0f4); }
+.biz-hours-table td {
+  padding: 10px 14px;
+  vertical-align: middle;
+  line-height: 1.4;
+}
+.biz-hours-table-day {
+  width: 70px;
+  font-weight: 700;
+  color: var(--text, #1f2937);
+  background: var(--surface-subtle, #f8fafc);
+  text-align: center;
+  letter-spacing: 0.5px;
+}
+.biz-hours-table-day--weekend { color: #2563eb; }
+.biz-hours-table tr:last-child .biz-hours-table-day--weekend { color: #dc2626; }
+.biz-hours-table-val {
+  color: var(--text, #111827);
+  font-variant-numeric: tabular-nums;
+}
+.biz-hours-table-val--closed { color: #dc2626; font-weight: 600; }
+.biz-hours-table-val--empty  { color: var(--text-muted, #9ca3af); }
+.biz-hours-note {
+  margin: 0;
+  padding: 10px 14px;
+  background: var(--surface-subtle, #f8fafc);
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 10px;
+  font-size: 14px;
+  color: var(--text, #1f2937);
+  line-height: 1.5;
+}
+:root[data-theme="dark"] .biz-hours-table { background: #1d2433; border-color: #2c3346; }
+:root[data-theme="dark"] .biz-hours-table tr + tr td { border-top-color: #2c3346; }
+:root[data-theme="dark"] .biz-hours-table-day { background: #0f172a; color: #e5e7eb; }
+:root[data-theme="dark"] .biz-hours-table-val { color: #f1f5f9; }
+:root[data-theme="dark"] .biz-hours-note { background: #0f172a; border-color: #2c3346; color: #e5e7eb; }
+
 /* ── admin 운영시간 — 요일 토글 + 시간 select (구버전, 호환 유지) ── */
 .hours-day-row {
   display: flex; flex-wrap: wrap; gap: 6px;

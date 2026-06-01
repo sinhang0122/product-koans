@@ -901,8 +901,7 @@
         e.stopPropagation();
         const postId = btn.dataset.id;
         const user = window.koausAuth && window.koausAuth.user;
-        (function () {
-    try {
+        try {
           if (window.koausDb && window.koausFs && user) {
             const { addDoc, collection, serverTimestamp } = window.koausFs;
             await addDoc(collection(window.koausDb, 'reports'), {

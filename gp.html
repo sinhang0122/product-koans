@@ -693,6 +693,11 @@
           <button class="rea-more" id="detailMore" type="button" style="display:none;">더보기 ›</button>
         </div>
 
+        <div class="rea-section" id="detailHoursSec" style="display:none;">
+          <h3 class="rea-subtitle">진료시간 · Opening Hours</h3>
+          <div id="detailHoursBody"></div>
+        </div>
+
         <div class="rea-section" id="detailFeaturesSec" style="display:none;">
           <h3 class="rea-subtitle">Property features</h3>
           <ul class="rea-features" id="detailFeatures"></ul>
@@ -1114,8 +1119,7 @@
     }
     // Firestore best-effort (콘솔에서 Firestore 활성화 + users 규칙 배포 시 동작)
     async function syncRecentToFirestore(arr) {
-      (function () {
-    try {
+      try {
         const u = window.koausAuth && window.koausAuth.user;
         if (!u || !window.koausDb || !window.koausFs) return;
         const { doc, setDoc } = window.koausFs;
@@ -1899,6 +1903,19 @@
       requestAnimationFrame(() => {
         moreBtn.style.display = (bodyEl.scrollHeight > bodyEl.clientHeight + 4) ? '' : 'none';
       });
+
+      // 진료시간 — 7일 표 (hoursJson 우선, 없으면 hours 텍스트)
+      const hoursSec  = document.getElementById('detailHoursSec');
+      const hoursBody = document.getElementById('detailHoursBody');
+      if (hoursSec && hoursBody) {
+        let hoursHtml = '';
+        if (p.hoursJson && typeof window.__koausRenderBizHoursTable === 'function') {
+          hoursHtml = window.__koausRenderBizHoursTable(p.hoursJson);
+        }
+        if (!hoursHtml && p.hours) hoursHtml = `<p class="biz-hours-note">${escHtml(p.hours)}</p>`;
+        if (hoursHtml) { hoursBody.innerHTML = hoursHtml; hoursSec.style.display = ''; }
+        else { hoursSec.style.display = 'none'; hoursBody.innerHTML = ''; }
+      }
 
       // Property features (옵션)
       const feats = [];

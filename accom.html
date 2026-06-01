@@ -1232,8 +1232,7 @@
     }
     // Firestore best-effort (콘솔에서 Firestore 활성화 + users 규칙 배포 시 동작)
     async function syncRecentToFirestore(arr) {
-      (function () {
-    try {
+      try {
         const u = window.koausAuth && window.koausAuth.user;
         if (!u || !window.koausDb || !window.koausFs) return;
         const { doc, setDoc } = window.koausFs;

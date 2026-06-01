@@ -1016,8 +1016,10 @@
 
         <div class="admin-row">
           <div class="admin-field">
-            <label class="admin-label" for="slHours">영업시간</label>
-            <input class="admin-input" id="slHours" type="text" maxlength="120" placeholder="예: 평일 10:00~20:00, 주말 09:00~18:00" />
+            <label class="admin-label">영업시간 — 요일별 오픈/마감 선택</label>
+            <div class="biz-hours-grid" data-biz-hours="sl"></div>
+            <input type="hidden" id="slHours" value="" />
+            <input type="hidden" id="slHoursJson" value="" />
           </div>
           <div class="admin-field">
             <label class="admin-label" for="slContact">연락처<span class="admin-req">*</span></label>
@@ -1624,6 +1626,11 @@
       if (!u) { flash($('rsNote'), '로그인이 필요합니다.', false); showLocked(); return; }
       const priceLow  = $('rsPriceLow').value.trim();
       const priceHigh = $('rsPriceHigh').value.trim();
+      let rsHoursJson = null;
+      try {
+        const raw = ($('rsHoursJson') && $('rsHoursJson').value) || '';
+        rsHoursJson = raw ? JSON.parse(raw) : null;
+      } catch (_) {}
       const payload = {
         category:  'restaurants',
         state,
@@ -1633,6 +1640,7 @@
         region:    address,
         cuisines,
         hours:     $('rsHours').value.trim(),
+        ...(rsHoursJson ? { hoursJson: rsHoursJson } : {}),
         priceLow:  priceLow  ? Number(priceLow)  : null,
         priceHigh: priceHigh ? Number(priceHigh) : null,
         parking:   $('rsParking').checked,
@@ -1714,6 +1722,11 @@
       }
       const u = auth.currentUser;
       if (!u) { flash($('gpNote'), '로그인이 필요합니다.', false); showLocked(); return; }
+      let gpHoursJson = null;
+      try {
+        const raw = ($('gpHoursJson') && $('gpHoursJson').value) || '';
+        gpHoursJson = raw ? JSON.parse(raw) : null;
+      } catch (_) {}
       const payload = {
         category:    'gp',
         state,
@@ -1723,6 +1736,7 @@
         region:      address,
         specialties: specs,
         hours:       $('gpHours').value.trim(),
+        ...(gpHoursJson ? { hoursJson: gpHoursJson } : {}),
         korean:      $('gpKorean').checked,
         teleHealth:  $('gpTeleHealth').checked,
         parking:     $('gpParking').checked,
@@ -1798,6 +1812,12 @@
       }
       const u = auth.currentUser;
       if (!u) { flash($('slNote'), '로그인이 필요합니다.', false); showLocked(); return; }
+      // 운영시간 — 텍스트 요약 + JSON 모두 저장 (요일별 표 렌더링용)
+      let slHoursJson = null;
+      try {
+        const raw = ($('slHoursJson') && $('slHoursJson').value) || '';
+        slHoursJson = raw ? JSON.parse(raw) : null;
+      } catch (_) {}
       const payload = {
         category:    'salon',
         state,
@@ -1807,6 +1827,7 @@
         region:      address,
         services,
         hours:       $('slHours').value.trim(),
+        ...(slHoursJson ? { hoursJson: slHoursJson } : {}),
         priceCut:    $('slPriceCut').value ? Number($('slPriceCut').value) : null,
         pricePerm:   $('slPricePerm').value ? Number($('slPricePerm').value) : null,
         korean:      $('slKorean').checked,
@@ -1832,6 +1853,7 @@
         $('slPremium').checked = true;
         $('slKorean').checked  = true;
         document.querySelectorAll('.sl-service').forEach(c => c.checked = false);
+        if (typeof window.__koausResetBizHours === 'function') window.__koausResetBizHours('sl');
         flash($('slNote'), `[${services.map(s => SALON_SVC_LABEL[s]).join('·')}] 미용실 등록 완료 — salon.html 페이지에 실시간 노출`, true);
         alert('성공적으로 등록되었습니다!');
       } catch (err) {
@@ -2012,13 +2034,14 @@
         const hidden = document.getElementById(prefix + 'Hours');     if (hidden) hidden.value = '';
         const json   = document.getElementById(prefix + 'HoursJson'); if (json)   json.value   = '';
       }
-      // admin ⑧ restaurants, ⑨ gp 빌드
-      ['rs', 'gp'].forEach(buildGrid);
+      // admin ⑧ restaurants, ⑨ gp, ⑩ salon 빌드
+      ['rs', 'gp', 'sl'].forEach(buildGrid);
       // 폼 reset 시 그리드 초기화
-      ['restForm', 'gpForm'].forEach(fid => {
+      const FORM_PREFIX = { restForm: 'rs', gpForm: 'gp', salonForm: 'sl' };
+      Object.keys(FORM_PREFIX).forEach(fid => {
         const f = document.getElementById(fid);
         if (!f) return;
-        f.addEventListener('reset', () => setTimeout(() => resetGrid(fid === 'restForm' ? 'rs' : 'gp'), 0));
+        f.addEventListener('reset', () => setTimeout(() => resetGrid(FORM_PREFIX[fid]), 0));
       });
       // 외부에서 호출 가능 (사장님 글쓰기 모달 확장 대비)
       window.__koausBuildBizHours = buildGrid;

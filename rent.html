@@ -1471,8 +1471,7 @@
         let uploaded = [];
         if (newFiles.length) {
           if (wsb) { wsb.disabled = true; wsb.textContent = `사진 업로드 중… 0/${newFiles.length}`; }
-          (function () {
-    try {
+          try {
             uploaded = await window.koausPhotos.uploadPostImages(
               window.koausPhotos.app, `post_images/rent/${target.id}`,
               newFiles,

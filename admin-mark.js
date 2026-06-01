@@ -182,6 +182,89 @@ window.addEventListener('koaus-services-updated', () => setTimeout(injectCardAct
 // 페이지 초기 렌더 직후 시도 (카드가 늦게 그려질 수 있어 여러 번 시도)
 [300, 800, 1500, 3000].forEach(ms => setTimeout(injectCardActions, ms));
 
+// ── 7일 영업시간 그리드 빌더 (전역) ──
+//  · admin / 사장님 글쓰기 모달 등 어디서든 호출 가능.
+//  · 호출: window.__koausBuildBizHours(prefix);  // 'rs','gp','sl','rq' 등
+//  · 결과: data-biz-hours="<prefix>" 그리드 안에 월~일 행 자동 생성
+//  · sync: hidden #{prefix}Hours (텍스트) + #{prefix}HoursJson 자동 동기화
+(function setupGlobalBizHours() {
+  const DAYS = [['mon','월'],['tue','화'],['wed','수'],['thu','목'],['fri','금'],['sat','토'],['sun','일']];
+  const TIMES = Array.from({ length: 24 }, (_, i) => String(i + 1).padStart(2, '0') + ':00');
+  function buildGrid(prefix) {
+    const grid = document.querySelector('.biz-hours-grid[data-biz-hours="' + prefix + '"]');
+    if (!grid || grid.__built) return;
+    const options = TIMES.map(t => '<option value="' + t + '">' + t + '</option>').join('');
+    grid.innerHTML = DAYS.map(([k, label]) =>
+      '<div class="biz-hours-row">' +
+        '<span class="biz-hours-day">' + label + '</span>' +
+        '<select class="biz-hours-sel" data-day="' + k + '" data-role="open">' +
+          '<option value="">오픈 ▽</option>' + options +
+          '<option value="closed">휴무</option>' +
+        '</select>' +
+        '<span class="biz-hours-sep">~</span>' +
+        '<select class="biz-hours-sel" data-day="' + k + '" data-role="close">' +
+          '<option value="">마감 ▽</option>' + options +
+        '</select>' +
+      '</div>'
+    ).join('');
+    grid.__built = true;
+    grid.querySelectorAll('select').forEach(s => s.addEventListener('change', () => syncGrid(prefix)));
+  }
+  function syncGrid(prefix) {
+    const grid = document.querySelector('.biz-hours-grid[data-biz-hours="' + prefix + '"]');
+    if (!grid) return;
+    const obj = {};
+    const text = [];
+    DAYS.forEach(([k, label]) => {
+      const op = (grid.querySelector('select[data-day="' + k + '"][data-role="open"]')  || {}).value || '';
+      const cl = (grid.querySelector('select[data-day="' + k + '"][data-role="close"]') || {}).value || '';
+      if (op === 'closed')   { obj[k] = 'closed'; text.push(label + ' 휴무'); }
+      else if (op && cl)     { obj[k] = op + '~' + cl; text.push(label + ' ' + op + '~' + cl); }
+    });
+    const hidden = document.getElementById(prefix + 'Hours');
+    const json   = document.getElementById(prefix + 'HoursJson');
+    if (hidden) hidden.value = text.join(', ');
+    if (json)   json.value   = JSON.stringify(obj);
+  }
+  function resetGrid(prefix) {
+    const grid = document.querySelector('.biz-hours-grid[data-biz-hours="' + prefix + '"]');
+    if (!grid) return;
+    grid.querySelectorAll('select').forEach(s => s.value = '');
+    const hidden = document.getElementById(prefix + 'Hours');     if (hidden) hidden.value = '';
+    const json   = document.getElementById(prefix + 'HoursJson'); if (json)   json.value   = '';
+  }
+  window.__koausBuildBizHours = buildGrid;
+  window.__koausResetBizHours = resetGrid;
+  // 페이지 진입 시 [data-biz-hours] 자동 빌드 (페이지 본체에서 prefix 명시 안 해도 작동)
+  function autoBuildAll() {
+    document.querySelectorAll('.biz-hours-grid[data-biz-hours]').forEach(g => {
+      buildGrid(g.getAttribute('data-biz-hours'));
+    });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', autoBuildAll, { once: true });
+  } else { setTimeout(autoBuildAll, 0); }
+  // 등록 요청 모달이 늦게 visible 되어도 안전 (지연 재시도)
+  [500, 1500].forEach(ms => setTimeout(autoBuildAll, ms));
+})();
+
+// ── 7일 영업시간 표 렌더링 헬퍼 (상세 뷰용) ──
+//  · window.__koausRenderBizHoursTable(hoursJson) — Firestore 의 hoursJson 객체 입력
+//  · 반환: HTML 문자열 (<table class="biz-hours-table">...</table>)
+window.__koausRenderBizHoursTable = function (hoursJson) {
+  const DAY_LABEL = { mon:'월', tue:'화', wed:'수', thu:'목', fri:'금', sat:'토', sun:'일' };
+  if (!hoursJson || typeof hoursJson !== 'object') return '';
+  const rows = ['mon','tue','wed','thu','fri','sat','sun'].map(k => {
+    const v = hoursJson[k];
+    const isWeekend = (k === 'sat' || k === 'sun');
+    const dayCls = isWeekend ? ' biz-hours-table-day--weekend' : '';
+    if (!v) return '<tr><td class="biz-hours-table-day' + dayCls + '">' + DAY_LABEL[k] + '</td><td class="biz-hours-table-val biz-hours-table-val--empty">—</td></tr>';
+    if (v === 'closed') return '<tr><td class="biz-hours-table-day' + dayCls + '">' + DAY_LABEL[k] + '</td><td class="biz-hours-table-val biz-hours-table-val--closed">휴무</td></tr>';
+    return '<tr><td class="biz-hours-table-day' + dayCls + '">' + DAY_LABEL[k] + '</td><td class="biz-hours-table-val">' + String(v) + '</td></tr>';
+  }).join('');
+  return '<table class="biz-hours-table">' + rows + '</table>';
+};
+
 // ── 인증 상태 추적 ──
 onAuthStateChanged(auth, async user => {
   try {
