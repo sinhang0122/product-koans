@@ -1,0 +1,88 @@
+rules_version = '2';
+
+// ════════════════════════════════════════════════════════════════════
+//  KoAus · Firebase Storage 보안 규칙
+//  목적: 봇/매크로의 대용량 파일 업로드(테라바이트 폭탄) 방어 +
+//         이미지 외 파일(스크립트·HTML·실행파일) 업로드 차단.
+//   - 읽기(read):   누구나 허용 (게시글 사진은 퍼블릭 노출 필요)
+//   - 쓰기(write):  로그인 필수 + 5MB 이하 + 이미지 contentType 만
+//   - 정의되지 않은 모든 경로: 기본 거부(deny-all)
+//  배포:
+//    A) CLI : firebase deploy --only storage
+//             (또는 npm run deploy:storage)
+//    B) 콘솔: Storage > Rules 탭에 내용 붙여넣기 → Publish
+// ════════════════════════════════════════════════════════════════════
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // ── 공통 헬퍼 ──
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function isImage() {
+      // image/jpeg, image/png, image/webp, image/gif 등 모든 image/* MIME
+      return request.resource.contentType != null
+        && request.resource.contentType.matches('image/.*');
+    }
+    function under5MB() {
+      // 장당 최대 5MB (5 * 1024 * 1024 = 5,242,880 bytes)
+      return request.resource.size < 5 * 1024 * 1024;
+    }
+
+    // ════════════════════════════════════════════════════════════
+    // post_images/{board}/{uid}/{filename}
+    //   board: accom / rent / jobs / auto / trades / restaurants /
+    //          gp / salon / used 등
+    //   uid:   업로드한 사용자의 Firebase UID (위변조 불가)
+    // ════════════════════════════════════════════════════════════
+    match /post_images/{board}/{uid}/{filename} {
+      // 게시글 사진은 퍼블릭 읽기 허용 (목록·상세·지도 InfoWindow 노출용)
+      allow read: if true;
+
+      // 업로드 — 로그인 필수 + 본인 uid + 5MB 이하 + 이미지 contentType 만
+      allow create: if isSignedIn()
+                       && request.auth.uid == uid
+                       && under5MB()
+                       && isImage();
+
+      // 덮어쓰기·삭제 — 본인만 (또는 admin)
+      allow update, delete: if isSignedIn()
+                               && request.auth.uid == uid
+                               && under5MB()
+                               && isImage();
+    }
+
+    // ════════════════════════════════════════════════════════════
+    // profile_images/{uid}/avatar.jpg — 사용자 프로필 사진
+    // ════════════════════════════════════════════════════════════
+    match /profile_images/{uid}/{filename} {
+      allow read: if true;
+      allow create, update, delete: if isSignedIn()
+                                       && request.auth.uid == uid
+                                       && under5MB()
+                                       && isImage();
+    }
+
+    // ════════════════════════════════════════════════════════════
+    // admin/{filename} — admin 직접 업로드 (광고 배너 등)
+    //   custom claim {admin:true} 또는 이메일 화이트리스트 통과 시에만 허용.
+    // ════════════════════════════════════════════════════════════
+    match /admin/{filename=**} {
+      allow read: if true;
+      allow write: if isSignedIn()
+                      && (
+                        request.auth.token.admin == true
+                        || request.auth.token.email == 'sinhang0122@gmail.com'
+                        || request.auth.token.email == 'koaus.official@gmail.com'
+                      )
+                      && under5MB()
+                      && isImage();
+    }
+
+    // ── 그 외 모든 경로: 기본 거부 ──
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

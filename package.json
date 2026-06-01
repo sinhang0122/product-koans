@@ -6,7 +6,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "deploy:rules": "firebase deploy --only firestore:rules",
-    "deploy:rules:dryrun": "firebase deploy --only firestore:rules --dry-run"
+    "deploy:rules:dryrun": "firebase deploy --only firestore:rules --dry-run",
+    "deploy:storage": "firebase deploy --only storage",
+    "deploy:all-rules": "firebase deploy --only firestore:rules,storage"
   },
   "repository": {
     "type": "git",
