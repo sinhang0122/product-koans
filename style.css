@@ -995,6 +995,42 @@ body {
   background: #2a1414; border-color: #5a2424; color: #f3c2c2;
 }
 :root[data-theme="dark"] .caution-box .caution-title { color: #ff8c8c; }
+/* ── KoAus 미니 공용 배너 (Notice 상단 1/4 사이즈) ── */
+.koaus-mini-banner {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  max-width: 600px;          /* 기존 hero(1200px)의 1/2 — 화면 좁게 */
+  width: calc(100% - 24px);
+  margin: 8px auto 6px;      /* 중앙 정렬 + 위·아래 콤팩트 */
+  padding: 8px 14px;
+  border-radius: 999px;      /* 알약 모양 */
+  background: linear-gradient(90deg, #0f172a 0%, #1e293b 100%);
+  color: #fff;
+  font-size: 12.5px; font-weight: 600;
+  text-decoration: none;
+  box-shadow: 0 4px 14px rgba(15,23,42,.18);
+  box-sizing: border-box;
+  overflow: hidden;
+}
+.koaus-mini-banner .mn-ico { font-size: 14px; flex-shrink: 0; }
+.koaus-mini-banner .mn-text {
+  flex: 1; min-width: 0;
+  text-align: center;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.koaus-mini-banner:hover { filter: brightness(1.08); transform: translateY(-1px); transition: filter .12s, transform .12s; }
+:root[data-theme="dark"] .koaus-mini-banner {
+  background: linear-gradient(90deg, #1e293b 0%, #334155 100%);
+}
+@media (max-width: 767px) {
+  .koaus-mini-banner {
+    max-width: calc(100% - 16px);
+    margin: 4px auto;
+    padding: 6px 10px;
+    font-size: 11.5px;
+    border-radius: 999px;
+  }
+}
+
 /* ── KoAus 히어로 배너 (PC Swiper / 모바일 1:3~1:4 카드) ── */
 .koaus-hero {
   max-width: 1200px;
@@ -1008,11 +1044,12 @@ body {
 .koaus-hero-mobile[hidden] { display: none !important; }
 .koaus-hero-pc .swiper {
   width: 100%;
-  aspect-ratio: 24 / 7;  /* 와이드 히어로 */
-  max-height: 360px;
+  aspect-ratio: 18 / 7;  /* 와이드 히어로 — 세로 1/3 증액(24/7 → 18/7) */
+  max-height: 480px;     /* 360 → 480 (1/3 증가) */
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 8px 28px rgba(15, 23, 42, .14);
+  margin-left: auto; margin-right: auto;  /* 중앙 정렬 안전망 */
 }
 .koaus-hero-pc .swiper-slide {
   position: relative;
@@ -1095,7 +1132,14 @@ body {
     box-sizing: border-box;
     overflow: hidden;
     border-radius: 12px;
+    /* 모바일: 지도(#accomMap·#jobsMap 등 360px)와 1:1 매칭 */
+    aspect-ratio: unset;
+    height: 360px;
+    margin-left: auto; margin-right: auto;  /* 중앙 정렬 */
   }
+  .koaus-hero-mobile .hero-content { gap: 6px; }
+  .koaus-hero-mobile .hero-title { font-size: 22px; }
+  .koaus-hero-mobile .hero-sub   { font-size: 14px; }
   /* 본문 가로 스크롤 방지 — 광고 배너 등이 화면 폭 초과 못 함 */
   html, body { max-width: 100%; overflow-x: hidden; }
 
