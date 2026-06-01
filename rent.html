@@ -2355,7 +2355,7 @@
       const map = {
         'auth/email-already-in-use': '이미 사용 중인 이메일입니다.',
         'auth/invalid-email':        '유효하지 않은 이메일입니다.',
-        'auth/weak-password':        '비밀번호는 6자 이상이어야 합니다.',
+        'auth/weak-password':        '비밀번호는 영문, 숫자, 특수문자를 포함하여 10자 이상이어야 합니다.',
         'auth/wrong-password':       '비밀번호가 틀렸습니다.',
         'auth/user-not-found':       '등록되지 않은 이메일입니다.',
         'auth/invalid-credential':   '이메일 또는 비밀번호가 올바르지 않습니다.',
@@ -2398,7 +2398,7 @@
       const errEl = document.getElementById('authSignupError');
       if (!authAgree.checked) { errEl.textContent = '이용약관에 동의해 주세요.'; return; }
       if (!email || !pw) { errEl.textContent = '이메일과 비밀번호를 입력해 주세요.'; return; }
-      if (!/^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/.test(pw)) { errEl.textContent = '비밀번호는 8자 이상이며 영문·숫자·특수문자를 각각 1개 이상 포함해야 합니다.'; return; }
+      if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{10,}$/.test(pw)) { errEl.textContent = '비밀번호는 영문, 숫자, 특수문자를 포함하여 10자 이상이어야 합니다.'; return; }
       if (pw !== pw2)    { errEl.textContent = '비밀번호가 일치하지 않습니다.'; return; }
       if (typeof grecaptcha !== 'undefined' && !grecaptcha.getResponse()) { errEl.textContent = "'로봇이 아닙니다' 인증을 완료해 주세요."; return; }
       try {

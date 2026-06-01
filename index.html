@@ -713,6 +713,14 @@
         </div>
         <div class="auth-error" id="authLoginError"></div>
         <button class="auth-submit" id="authLoginSubmit">로그인</button>
+        <!-- 계정 찾기 링크 (비밀번호 재설정 + 인증 메일 재전송) -->
+        <div class="auth-help-links" style="display:flex;gap:14px;justify-content:center;margin-top:10px;font-size:12.5px;">
+          <a href="#" id="authResetPw"     style="color:var(--text-muted);text-decoration:underline;">비밀번호 재설정</a>
+          <span style="color:var(--border);">·</span>
+          <a href="#" id="authResendVerify" style="color:var(--text-muted);text-decoration:underline;">인증 메일 재전송</a>
+          <span style="color:var(--border);">·</span>
+          <a href="#" id="authFindId"      style="color:var(--text-muted);text-decoration:underline;">아이디 찾기</a>
+        </div>
       </div>
 
       <!-- 회원가입 폼 -->
