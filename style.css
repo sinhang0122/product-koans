@@ -1415,7 +1415,51 @@ body.is-admin .koaus-admin-toolbar { display: inline-flex !important; }
 .accom-card-title2 .koaus-official-badge,
 .partner-card-name .koaus-official-badge { margin-left: 5px; }
 
-/* ── admin 운영시간 — 요일 토글 + 시간 select ── */
+/* ── 7일 영업시간 그리드 (월~일 각 행에 오픈/마감 select) ── */
+.biz-hours-grid {
+  display: flex; flex-direction: column; gap: 6px;
+  margin-top: 6px;
+  border: 1px solid var(--border, #e4e7eb);
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: var(--bg-input, #fafafa);
+  box-sizing: border-box;
+}
+.biz-hours-row {
+  display: grid;
+  grid-template-columns: 38px 1fr 14px 1fr;
+  align-items: center;
+  gap: 8px;
+}
+.biz-hours-day {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 38px; height: 32px;
+  border-radius: 8px;
+  background: #1f2937; color: #fff;
+  font-size: 13px; font-weight: 800;
+}
+.biz-hours-row:nth-child(6) .biz-hours-day { background: #2563eb; }   /* 토 */
+.biz-hours-row:nth-child(7) .biz-hours-day { background: #dc2626; }   /* 일 */
+.biz-hours-sel {
+  width: 100%; box-sizing: border-box;
+  padding: 7px 10px; border: 1px solid var(--border, #e4e7eb);
+  border-radius: 8px;
+  background: var(--bg-card, #fff); color: var(--text-primary, #0f172a);
+  font-size: 13px; cursor: pointer;
+}
+.biz-hours-sep {
+  text-align: center; color: var(--text-muted, #64748b); font-weight: 700;
+}
+:root[data-theme="dark"] .biz-hours-grid { background: #0f172a; border-color: #2c3346; }
+:root[data-theme="dark"] .biz-hours-sel { background: #1d2433; border-color: #2c3346; color: #f1f5f9; }
+@media (max-width: 767px) {
+  .biz-hours-grid { padding: 8px 10px; }
+  .biz-hours-row { grid-template-columns: 32px 1fr 10px 1fr; gap: 6px; }
+  .biz-hours-day { width: 32px; height: 30px; font-size: 12px; }
+  .biz-hours-sel { padding: 6px 8px; font-size: 12.5px; }
+}
+
+/* ── admin 운영시간 — 요일 토글 + 시간 select (구버전, 호환 유지) ── */
 .hours-day-row {
   display: flex; flex-wrap: wrap; gap: 6px;
   margin-top: 6px;
@@ -1465,9 +1509,17 @@ body.is-admin .koaus-admin-toolbar { display: inline-flex !important; }
 :root[data-theme="dark"] .trades-chip { background: #1d2433; border-color: #2c3346; }
 :root[data-theme="dark"] .trades-chip:hover { background: #252d3f; }
 
-/* ── trades.html 좌상단 문의하기 + 안내 박스 ── */
+/* ── 비즈니스 페이지 상단 — [홈으로] + [Official 인증 받기] 우측 정렬 ── */
 .page-header-left { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 0; }
-.page-header-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 6px; }
+.page-header-actions {
+  display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+  justify-content: flex-end;       /* 우측 정렬 */
+  margin-top: 6px;
+  margin-left: auto;               /* 추가 안전망 */
+}
+@media (max-width: 767px) {
+  .page-header-actions { justify-content: flex-end; gap: 6px; margin-top: 4px; }
+}
 .trades-inquiry-btn {
   display: inline-flex; align-items: center; gap: 4px;
   padding: 6px 12px; border-radius: 8px;

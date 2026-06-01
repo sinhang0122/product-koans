@@ -813,27 +813,10 @@
 
         <div class="admin-row">
           <div class="admin-field">
-            <label class="admin-label">영업시간 — 요일 + 시간 선택</label>
-            <div class="hours-day-row" data-hours-prefix="rs">
-              <button type="button" class="hours-day-btn" data-day="mon">월</button>
-              <button type="button" class="hours-day-btn" data-day="tue">화</button>
-              <button type="button" class="hours-day-btn" data-day="wed">수</button>
-              <button type="button" class="hours-day-btn" data-day="thu">목</button>
-              <button type="button" class="hours-day-btn" data-day="fri">금</button>
-              <button type="button" class="hours-day-btn" data-day="sat">토</button>
-              <button type="button" class="hours-day-btn" data-day="sun">일</button>
-            </div>
-            <div class="hours-time-row">
-              <select class="admin-input hours-time" id="rsHoursOpen">
-                <option value="">오픈</option>
-              </select>
-              <span class="hours-tilde">~</span>
-              <select class="admin-input hours-time" id="rsHoursClose">
-                <option value="">마감</option>
-              </select>
-            </div>
+            <label class="admin-label">영업시간 — 요일별 오픈/마감 시간 선택</label>
+            <div class="biz-hours-grid" data-biz-hours="rs"></div>
             <input type="hidden" id="rsHours" value="" />
-            <input type="hidden" id="rsHoursDays" value="" />
+            <input type="hidden" id="rsHoursJson" value="" />
           </div>
           <div class="admin-field">
             <label class="admin-label" for="rsContact">연락처<span class="admin-req">*</span></label>
@@ -939,27 +922,10 @@
 
         <div class="admin-row">
           <div class="admin-field">
-            <label class="admin-label">진료 시간 — 요일 + 시간 선택</label>
-            <div class="hours-day-row" data-hours-prefix="gp">
-              <button type="button" class="hours-day-btn" data-day="mon">월</button>
-              <button type="button" class="hours-day-btn" data-day="tue">화</button>
-              <button type="button" class="hours-day-btn" data-day="wed">수</button>
-              <button type="button" class="hours-day-btn" data-day="thu">목</button>
-              <button type="button" class="hours-day-btn" data-day="fri">금</button>
-              <button type="button" class="hours-day-btn" data-day="sat">토</button>
-              <button type="button" class="hours-day-btn" data-day="sun">일</button>
-            </div>
-            <div class="hours-time-row">
-              <select class="admin-input hours-time" id="gpHoursOpen">
-                <option value="">오픈</option>
-              </select>
-              <span class="hours-tilde">~</span>
-              <select class="admin-input hours-time" id="gpHoursClose">
-                <option value="">마감</option>
-              </select>
-            </div>
+            <label class="admin-label">진료 시간 — 요일별 오픈/마감 선택</label>
+            <div class="biz-hours-grid" data-biz-hours="gp"></div>
             <input type="hidden" id="gpHours" value="" />
-            <input type="hidden" id="gpHoursDays" value="" />
+            <input type="hidden" id="gpHoursJson" value="" />
           </div>
           <div class="admin-field">
             <label class="admin-label" for="gpContact">연락처<span class="admin-req">*</span></label>
@@ -1995,65 +1961,68 @@
     });
 
     // ── 운영시간 UI: 요일 토글 + 시간 select 자동 채움 + hidden 동기화 ──
-    (function setupHoursUI() {
-      const DAYS = [
-        ['mon','월'], ['tue','화'], ['wed','수'], ['thu','목'],
-        ['fri','금'], ['sat','토'], ['sun','일'],
-      ];
+    (function setupBizHoursGrid() {
+      // 7일 영업시간 그리드 — 각 요일별 오픈/마감 select(01:00~24:00 + 휴무)
+      const DAYS = [['mon','월'],['tue','화'],['wed','수'],['thu','목'],['fri','금'],['sat','토'],['sun','일']];
       const DAY_LABEL = Object.fromEntries(DAYS);
-      // 1~24 시간 옵션 채우기 (01:00 ~ 24:00)
-      document.querySelectorAll('select.hours-time').forEach(sel => {
-        for (let h = 1; h <= 24; h++) {
-          const opt = document.createElement('option');
-          const v = String(h).padStart(2, '0') + ':00';
-          opt.value = v; opt.textContent = v;
-          sel.appendChild(opt);
-        }
-      });
-      // 요일 버튼 토글
-      document.querySelectorAll('.hours-day-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          btn.classList.toggle('is-on');
-          syncHidden(btn.closest('.hours-day-row'));
-        });
-      });
-      // hidden hours·hoursDays 자동 조합 (selects 변경 시도 동기화)
-      document.querySelectorAll('select.hours-time').forEach(sel => {
-        sel.addEventListener('change', () => {
-          const prefix = sel.id.startsWith('rs') ? 'rs' : 'gp';
-          const row = document.querySelector(`.hours-day-row[data-hours-prefix="${prefix}"]`);
-          if (row) syncHidden(row);
-        });
-      });
-      function syncHidden(row) {
-        if (!row) return;
-        const prefix = row.dataset.hoursPrefix;
-        const days = Array.from(row.querySelectorAll('.hours-day-btn.is-on')).map(b => b.dataset.day);
-        const open  = (document.getElementById(prefix + 'HoursOpen')  || {}).value || '';
-        const close = (document.getElementById(prefix + 'HoursClose') || {}).value || '';
-        const dayText = days.map(d => DAY_LABEL[d]).join('·');
-        const text = (days.length && open && close)
-          ? `${dayText} ${open}~${close}`
-          : (days.length ? dayText : (open && close ? `${open}~${close}` : ''));
-        const hidden     = document.getElementById(prefix + 'Hours');
-        const hiddenDays = document.getElementById(prefix + 'HoursDays');
-        if (hidden)     hidden.value = text;
-        if (hiddenDays) hiddenDays.value = days.join(',');
+      const TIMES = Array.from({ length: 24 }, (_, i) => String(i + 1).padStart(2, '0') + ':00');
+
+      function buildGrid(prefix) {
+        const grid = document.querySelector(`.biz-hours-grid[data-biz-hours="${prefix}"]`);
+        if (!grid || grid.__built) return;
+        const options = TIMES.map(t => `<option value="${t}">${t}</option>`).join('');
+        grid.innerHTML = DAYS.map(([k, label]) => `
+          <div class="biz-hours-row">
+            <span class="biz-hours-day">${label}</span>
+            <select class="biz-hours-sel" data-day="${k}" data-role="open">
+              <option value="">오픈 ▽</option>
+              ${options}
+              <option value="closed">휴무</option>
+            </select>
+            <span class="biz-hours-sep">~</span>
+            <select class="biz-hours-sel" data-day="${k}" data-role="close">
+              <option value="">마감 ▽</option>
+              ${options}
+            </select>
+          </div>
+        `).join('');
+        grid.__built = true;
+        grid.querySelectorAll('select').forEach(s => s.addEventListener('change', () => sync(prefix)));
       }
-      // 폼 reset 시 토글·select 초기화
+      function sync(prefix) {
+        const grid = document.querySelector(`.biz-hours-grid[data-biz-hours="${prefix}"]`);
+        if (!grid) return;
+        const obj = {};
+        const text = [];
+        DAYS.forEach(([k, label]) => {
+          const op = (grid.querySelector(`select[data-day="${k}"][data-role="open"]`)  || {}).value || '';
+          const cl = (grid.querySelector(`select[data-day="${k}"][data-role="close"]`) || {}).value || '';
+          if (op === 'closed') { obj[k] = 'closed'; text.push(`${label} 휴무`); }
+          else if (op && cl)   { obj[k] = `${op}~${cl}`; text.push(`${label} ${op}~${cl}`); }
+        });
+        const hidden = document.getElementById(prefix + 'Hours');
+        const json   = document.getElementById(prefix + 'HoursJson');
+        if (hidden) hidden.value = text.join(', ');
+        if (json)   json.value   = JSON.stringify(obj);
+      }
+      function resetGrid(prefix) {
+        const grid = document.querySelector(`.biz-hours-grid[data-biz-hours="${prefix}"]`);
+        if (!grid) return;
+        grid.querySelectorAll('select').forEach(s => s.value = '');
+        const hidden = document.getElementById(prefix + 'Hours');     if (hidden) hidden.value = '';
+        const json   = document.getElementById(prefix + 'HoursJson'); if (json)   json.value   = '';
+      }
+      // admin ⑧ restaurants, ⑨ gp 빌드
+      ['rs', 'gp'].forEach(buildGrid);
+      // 폼 reset 시 그리드 초기화
       ['restForm', 'gpForm'].forEach(fid => {
         const f = document.getElementById(fid);
         if (!f) return;
-        f.addEventListener('reset', () => {
-          setTimeout(() => {
-            f.querySelectorAll('.hours-day-btn').forEach(b => b.classList.remove('is-on'));
-            const prefix = (fid === 'restForm') ? 'rs' : 'gp';
-            ['HoursOpen','HoursClose','Hours','HoursDays'].forEach(suf => {
-              const el = document.getElementById(prefix + suf); if (el) el.value = '';
-            });
-          }, 0);
-        });
+        f.addEventListener('reset', () => setTimeout(() => resetGrid(fid === 'restForm' ? 'rs' : 'gp'), 0));
       });
+      // 외부에서 호출 가능 (사장님 글쓰기 모달 확장 대비)
+      window.__koausBuildBizHours = buildGrid;
+      window.__koausResetBizHours = resetGrid;
     })();
 
     // ── 삭제 위임 (Firestore 문서 삭제) ──
