@@ -1250,7 +1250,7 @@
     //  · 그 외 (비로그인 / 일반 사용자) → 알림 후 index.html 강제 리다이렉트.
     const ADMIN_EMAILS = [
       'sinhang0122@gmail.com',  // 운영자 본인
-      'admin@thekoaus.com',     // 공식 운영자 메일
+      'koaus.official@gmail.com',     // 공식 운영자 메일
     ];
     let _redirecting = false;
     async function denyAndRedirect(reason) {
@@ -1263,7 +1263,12 @@
     }
     onAuthStateChanged(auth, async user => {
       try {
-        if (!user) { showLocked(''); return; }     // 비로그인 → 로그인 폼 노출
+        if (!user) {
+          // 명시적 로그아웃 시 sessionStorage 캐시 제거 (다른 페이지 fast-path 동기화)
+          try { sessionStorage.removeItem('koaus-admin'); } catch (_) {}
+          showLocked('');
+          return;
+        }
         // 1) 이메일 화이트리스트 (최우선) — 빠른 경로
         const email = (user.email || '').toLowerCase();
         const isAdminEmail = ADMIN_EMAILS.includes(email);
@@ -1276,6 +1281,8 @@
           console.warn('[admin] 토큰 갱신 실패 — 화이트리스트로 fallback', tokErr);
         }
         if (isAdminEmail || isAdminClaim) {
+          // 다른 페이지 fast-path 캐시 — 페이지 이동 시 admin-mark.js 가 즉시 인지
+          try { sessionStorage.setItem('koaus-admin', email); } catch (_) {}
           showAdmin(user);
           try {
             if (typeof window.__koausAdminShowSection === 'function') {
@@ -1284,6 +1291,7 @@
             }
           } catch (sErr) { console.warn('[admin] hash 라우팅 재호출 실패', sErr); }
         } else {
+          try { sessionStorage.removeItem('koaus-admin'); } catch (_) {}
           denyAndRedirect(`권한 없음 — email='${email}' (whitelist:${isAdminEmail}, claim:${isAdminClaim})`);
         }
       } catch (e) {

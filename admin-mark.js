@@ -24,8 +24,24 @@ const firebaseConfig = {
 // admin.html 의 ADMIN_EMAILS 와 동기화 — Firestore rules 의 isAdmin() 과도 일치
 const ADMIN_EMAILS = [
   'sinhang0122@gmail.com',
-  'admin@thekoaus.com',
+  'koaus.official@gmail.com',
 ];
+
+// ── 페이지 진입 즉시 sessionStorage 1차 체크 (Firebase 로딩 전 튕김 방지) ──
+//  · admin.html 로그인 성공 시 sessionStorage 'koaus-admin' = email 저장.
+//  · 다른 페이지 진입 시 이 값을 즉시 읽어 body.is-admin 부여 → CSS 의 admin 전용
+//    버튼이 깜빡임 없이 노출. onAuthStateChanged 결과로 최종 확정 (불일치 시 해제).
+(function applyAdminFastPath() {
+  try {
+    const cached = (sessionStorage.getItem('koaus-admin') || '').toLowerCase();
+    if (cached && ADMIN_EMAILS.includes(cached)) {
+      window.koausIsAdmin = true;
+      window.koausAdminEmail = cached;
+      if (document.body) document.body.classList.add('is-admin');
+      else document.addEventListener('DOMContentLoaded', () => document.body.classList.add('is-admin'), { once: true });
+    }
+  } catch (_) {}
+})();
 
 const app  = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -169,7 +185,12 @@ window.addEventListener('koaus-services-updated', () => setTimeout(injectCardAct
 // ── 인증 상태 추적 ──
 onAuthStateChanged(auth, async user => {
   try {
-    if (!user) { setAdminFlag(false); setAdminEmail(''); return; }
+    if (!user) {
+      setAdminFlag(false); setAdminEmail('');
+      // 명시적 로그아웃 시 sessionStorage 캐시 제거 (다른 탭과 동기화)
+      try { sessionStorage.removeItem('koaus-admin'); } catch (_) {}
+      return;
+    }
     const email = (user.email || '').toLowerCase();
     setAdminEmail(email);
     const isAdminEmail = ADMIN_EMAILS.includes(email);
@@ -178,7 +199,13 @@ onAuthStateChanged(auth, async user => {
       const t = await user.getIdTokenResult();
       isAdminClaim = !!(t.claims && t.claims.admin === true);
     } catch (_) {}
-    setAdminFlag(isAdminEmail || isAdminClaim);
+    const isAdmin = isAdminEmail || isAdminClaim;
+    setAdminFlag(isAdmin);
+    // sessionStorage 캐시 갱신/제거 — 다음 페이지 fastPath 용
+    try {
+      if (isAdmin) sessionStorage.setItem('koaus-admin', email);
+      else sessionStorage.removeItem('koaus-admin');
+    } catch (_) {}
     if (window.koausIsAdmin) setTimeout(injectCardActions, 100);
   } catch (e) {
     console.warn('[admin-mark] custom claim 조회 실패', e);
