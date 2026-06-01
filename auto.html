@@ -2646,8 +2646,7 @@
         const msg = authErrMsg(e.code);
         if (errEl) errEl.textContent = msg;
         if (e.code === 'auth/email-already-in-use') {
-          alert('이미 가입된 이메일 주소입니다.
-로그인 탭으로 전환하거나 다른 이메일을 사용해 주세요.');
+          alert('이미 가입된 이메일 주소입니다.\n로그인 탭으로 전환하거나 다른 이메일을 사용해 주세요.');
           try {
             const lt = document.querySelector('.auth-tab[data-target="login"]'); if (lt) lt.click();
             const le = document.getElementById('authLoginEmail'); if (le) le.value = email;

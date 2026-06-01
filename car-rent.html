@@ -680,7 +680,7 @@
     function renderPhotoThumbs() {
       const box = document.getElementById('wPhotoThumbs');
       const addBtn = document.getElementById('wPhotoAddBtn');
-      if (!box) return;
+      if (!box) throw new Error('pinnedNoticeBox not found');
       box.innerHTML = pendingPhotoFiles.map((p, i) =>
         `<div class="photo-thumb"><img src="${p.preview}" alt="사진 ${i+1}"><button type="button" class="photo-thumb-x" data-idx="${i}" aria-label="삭제">✕</button></div>`
       ).join('');

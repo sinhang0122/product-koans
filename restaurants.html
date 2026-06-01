@@ -1113,7 +1113,8 @@
     }
     // Firestore best-effort (콘솔에서 Firestore 활성화 + users 규칙 배포 시 동작)
     async function syncRecentToFirestore(arr) {
-      try {
+      (function () {
+    try {
         const u = window.koausAuth && window.koausAuth.user;
         if (!u || !window.koausDb || !window.koausFs) return;
         const { doc, setDoc } = window.koausFs;
@@ -2581,8 +2582,7 @@
         const msg = authErrMsg(e.code);
         if (errEl) errEl.textContent = msg;
         if (e.code === 'auth/email-already-in-use') {
-          alert('이미 가입된 이메일 주소입니다.
-로그인 탭으로 전환하거나 다른 이메일을 사용해 주세요.');
+          alert('이미 가입된 이메일 주소입니다.\n로그인 탭으로 전환하거나 다른 이메일을 사용해 주세요.');
           try {
             const lt = document.querySelector('.auth-tab[data-target="login"]'); if (lt) lt.click();
             const le = document.getElementById('authLoginEmail'); if (le) le.value = email;
@@ -2760,7 +2760,7 @@
       const app = getApps().length ? getApp() : initializeApp(cfg);
       const db = getFirestore(app);
       const box = document.getElementById('pinnedNoticeBox');
-      if (!box) return;
+      if (!box) throw new Error('pinnedNoticeBox not found');
       const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/\n/g,'<br>');
       onSnapshot(doc(db, 'board_pinned_notices', 'restaurants'), snap => {
         const data = snap.exists() ? snap.data() : null;
