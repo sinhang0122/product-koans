@@ -1,4 +1,4 @@
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
+import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
 import { getAnalytics } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-analytics.js';
 import {
   getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut,
@@ -16,7 +16,7 @@ const firebaseConfig = {
   measurementId:     'G-DERZ9MTKPL',
 };
 
-const firebaseApp = initializeApp(firebaseConfig);
+const firebaseApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
 // ── App Check (reCAPTCHA v3) — 봇·외부 스크립트의 백엔드(인증/DB) 접근 차단 ──
 // 사이트 키 발급: Firebase 콘솔 > App Check > 앱 등록(reCAPTCHA v3 공급자)

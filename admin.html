@@ -1165,7 +1165,11 @@
        ・ onSnapshot 실시간 구독 → 등록/삭제 즉시 화면 반영
        ════════════════════════════════════════════════════════════════════ -->
   <script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
+    // ── Firebase 중복 초기화 방어 ──
+    //  admin-mark.js / 기타 module 이 이미 default app 을 생성한 경우,
+    //  initializeApp 직접 호출 시 'app/duplicate-app' 에러 발생 → 어드민 먹통.
+    //  getApps().length 체크 후 기존 app 재사용.
+    import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
     import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
     import { getFirestore, collection, addDoc, deleteDoc, doc, setDoc, updateDoc, onSnapshot, query, orderBy, limit, serverTimestamp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
 
@@ -1178,7 +1182,8 @@
       appId:             '1:663988594088:web:ef30c2fd557407b00b299d',
       measurementId:     'G-DERZ9MTKPL',
     };
-    const app  = initializeApp(firebaseConfig);
+    // 멱등 초기화 — 같은 페이지에서 다른 module 이 default app 을 만들었어도 안전.
+    const app  = getApps().length ? getApp() : initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db   = getFirestore(app);
 
