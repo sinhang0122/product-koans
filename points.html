@@ -762,14 +762,28 @@
       const board   = document.getElementById('partnerBoard');
       const catDsc  = document.getElementById('partnerCatDisclaimer');
       const points  = document.getElementById('pointsSection');
+      // 히어로 배너: 가채점 탭에서는 노출 안 함 (사용자 요구)
+      const heroSection = document.querySelector('main .koaus-hero');
+      const pcLegal = document.getElementById('heroPcLegal');
+      const pcEdu   = document.getElementById('heroPcEdu');
+      const mbLegal = document.getElementById('heroMobileLegal');
+      const mbEdu   = document.getElementById('heroMobileEdu');
       if (activeCat === 'points') {
         if (board)  board.style.display  = 'none';
         if (catDsc) catDsc.style.display = 'none';
         if (points) points.style.display = '';
+        if (heroSection) heroSection.style.display = 'none';
       } else {
         if (board)  board.style.display  = '';
         if (points) points.style.display = 'none';
         if (catDsc) { catDsc.style.display = ''; catDsc.textContent = CAT_DISCLAIMER[activeCat]; }
+        if (heroSection) heroSection.style.display = '';
+        // legal/education 슬라이더 분기
+        const isEdu = activeCat === 'education';
+        if (pcLegal) pcLegal.hidden = isEdu;
+        if (pcEdu)   pcEdu.hidden   = !isEdu;
+        if (mbLegal) mbLegal.hidden = isEdu;
+        if (mbEdu)   mbEdu.hidden   = !isEdu;
       }
     }
 
@@ -859,16 +873,21 @@
       }
       function activateHero() {
         const cat = getCat();
-        const isEdu = cat === 'education';
-        // PC: cat 에 해당하는 슬라이더만 노출
+        const isLegal = cat === 'legal';
+        const isEdu   = cat === 'education';
+        const isPoints = cat === 'points';  // 가채점 — 배너 노출 안 함
+        // PC/모바일: cat 에 해당하는 슬라이더만 노출, 가채점이면 양쪽 모두 숨김
+        const heroSection = document.querySelector('main .koaus-hero');
         const pcLegal = document.getElementById('heroPcLegal');
         const pcEdu   = document.getElementById('heroPcEdu');
         const mbLegal = document.getElementById('heroMobileLegal');
         const mbEdu   = document.getElementById('heroMobileEdu');
-        if (pcLegal) pcLegal.hidden = isEdu;
+        if (heroSection) heroSection.style.display = isPoints ? 'none' : '';
+        if (pcLegal) pcLegal.hidden = !isLegal;
         if (pcEdu)   pcEdu.hidden   = !isEdu;
-        if (mbLegal) mbLegal.hidden = isEdu;
+        if (mbLegal) mbLegal.hidden = !isLegal;
         if (mbEdu)   mbEdu.hidden   = !isEdu;
+        if (isPoints) return;  // 가채점 진입 시 Swiper 초기화도 skip
         // Swiper 초기화 — 활성화된 슬라이더만
         if (typeof window.Swiper !== 'function') return;
         const el = document.getElementById(isEdu ? 'heroSwiperEdu' : 'heroSwiperLegal');

@@ -1072,11 +1072,43 @@ body {
 .koaus-hero-pc .swiper-button-prev:hover,
 .koaus-hero-pc .swiper-button-next:hover { opacity: 1; background: rgba(0,0,0,.4); }
 
-/* 모바일 (≤ 767): PC 슬라이더 숨기고 1:3~1:4 카드 노출 */
+/* 모바일 (≤ 767): PC 슬라이더 숨기고 5:1 카드 노출 + 여백 타이트 */
 @media (max-width: 767px) {
-  .koaus-hero { margin: 10px auto 14px; padding: 0 12px; }
+  /* hero 컨테이너 — overflow 차단 + 좌우 패딩 최소화 */
+  .koaus-hero {
+    margin: 6px auto 8px;
+    padding: 0 10px;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;        /* 5:1 카드가 가로 폭 초과 시 즉시 클립 */
+  }
   .koaus-hero-pc { display: none; }
-  .koaus-hero-mobile { display: block; }
+  .koaus-hero-mobile {
+    display: block;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+  .koaus-hero-mobile .hero-card {
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+    border-radius: 12px;
+  }
+  /* 본문 가로 스크롤 방지 — 광고 배너 등이 화면 폭 초과 못 함 */
+  html, body { max-width: 100%; overflow-x: hidden; }
+
+  /* 모바일 섹션 간격 타이트 — PC 는 영향 0 */
+  .notice-section { margin: 6px 10px 8px; }
+  .home-shortcuts { gap: 8px; padding: 0 12px; margin: 6px 0 10px; }
+  .home-main > section { margin-block: 6px; }
+  .page-container > section,
+  .home-main > .koaus-hero,
+  .page-container > .koaus-hero { margin-top: 6px; margin-bottom: 8px; }
+  .accom-controls { margin: 6px 12px 8px; gap: 6px; }
+  .page-header { margin: 6px 12px 8px; padding: 0; }
+  .trades-notice { margin: 6px 12px 8px; padding: 9px 12px; font-size: 12px; }
+  .pinned-notice { margin: 0 0 8px; padding: 9px 12px; font-size: 12.5px; }
+  .caution-box { margin-top: 4px; padding: 10px 12px; font-size: 12px; }
 }
 .koaus-hero-mobile .hero-card {
   position: relative;
