@@ -1358,6 +1358,39 @@ body {
 :root[data-theme="dark"] .admin-approve { background: #064e3b; color: #6ee7b7; border-color: #047857; }
 :root[data-theme="dark"] .admin-reject  { background: #4c1d1d; color: #fca5a5; border-color: #7f1d1d; }
 
+/* ── KoAus 갓모드(God Mode) — 관리자 전용 UI ── */
+/* 기본 hidden, body.is-admin 인 경우에만 display 복원 */
+.admin-only { display: none !important; }
+body.is-admin .admin-only { display: revert !important; }
+body.is-admin .koaus-admin-toolbar { display: inline-flex !important; }
+
+.koaus-admin-toolbar {
+  position: absolute; top: 6px; right: 6px;
+  z-index: 5;
+  display: inline-flex; gap: 4px;
+  padding: 3px 5px;
+  background: rgba(15, 23, 42, .85);
+  border-radius: 999px;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 4px 12px rgba(0,0,0,.18);
+}
+.koaus-admin-btn {
+  appearance: none;
+  width: 28px; height: 28px;
+  border: none; border-radius: 50%;
+  background: rgba(255,255,255,.92); color: #0f172a;
+  font-size: 14px; line-height: 1; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: transform .12s, background .12s;
+}
+.koaus-admin-btn:hover { transform: scale(1.08); background: #fff; }
+.koaus-admin-btn--approve:hover { background: #d1fae5; color: #065f46; }
+.koaus-admin-btn--hold:hover    { background: #fef3c7; color: #b45309; }
+.koaus-admin-btn--del:hover     { background: #fee2e2; color: #991b1b; }
+
+/* 카드 안 액션바 위치 보정 — accom-card 는 position 기준 */
+.accom-card { position: relative; }
+
 /* ── KoAus 공식 인증 뱃지 (isOfficial === true) ── */
 .koaus-official-badge {
   display: inline-flex; align-items: center; gap: 3px;
