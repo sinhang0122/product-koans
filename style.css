@@ -964,6 +964,8 @@ body {
 .required-mark { margin-left: 4px; font-weight: bold; color: var(--text-primary); }
 .write-input, .write-textarea {
   width: 100%; display: block;
+  box-sizing: border-box;   /* padding 이 width 에 포함되어 가로 스크롤 차단 */
+  max-width: 100%;
   background: var(--bg-input); border: 1px solid var(--border);
   border-radius: var(--r-md); color: var(--text-primary);
   font-family: var(--font); font-size: 15px; line-height: 1.4; padding: 13px 15px; outline: none;
@@ -2035,6 +2037,17 @@ select.filter-mini-input {
   }
   .write-modal *, .write-overlay * { max-width: 100%; box-sizing: border-box; }
   .page-container { max-width: 100%; box-sizing: border-box; }
+
+  /* 글쓰기 모달: 모바일에서 패딩 축소 + 가로 스크롤 원천 차단 */
+  .write-overlay { padding: 10px; }
+  .write-modal, .write-modal--tall {
+    padding: 16px 14px; gap: 10px;
+    width: 100%;
+    overflow-x: hidden;        /* 자식 요소가 폭 초과해도 가로 스크롤 차단 */
+  }
+  .write-grid { grid-template-columns: 1fr !important; gap: 0; }
+  /* select 도 안전망 */
+  select.write-input { max-width: 100%; box-sizing: border-box; }
 
   /* 모바일 지도 높이 2/3 축소 */
   #accomMap, #jobsMap { height: 360px !important; min-height: 280px !important; }

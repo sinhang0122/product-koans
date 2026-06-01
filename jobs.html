@@ -626,19 +626,19 @@
         </div>
         <div class="write-col">
           <div class="write-field">
-            <label class="write-label" for="wAddress">근무지 주소 Location</label>
+            <label class="write-label" for="wAddress">근무지 주소 Location<span class="required-mark">*</span></label>
             <input class="write-input" id="wAddress" type="text" autocomplete="off" placeholder="" maxlength="200" />
             <ul class="addr-suggest" id="wAddressSuggest"></ul>
           </div>
           <div class="write-field">
-            <label class="write-label" for="wContact">연락처 Contact<span class="required-mark">*</span></label>
+            <label class="write-label" for="wContact">연락처 Contact <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택)</em></label>
             <input class="write-input" id="wContact" type="text" placeholder="전화번호 / 카카오톡 / 이메일" maxlength="100" />
           </div>
         </div>
       </div>
 
       <div class="write-field write-field--grow" style="grid-column:1/-1;">
-        <label class="write-label" for="wBody">내용 Comments<span class="required-mark">*</span></label>
+        <label class="write-label" for="wBody">내용 Comments <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택)</em></label>
         <textarea class="write-textarea" id="wBody" placeholder="모집 인원, 근무 조건, 우대사항 등 자세히 적어주세요"></textarea>
       </div>
 
@@ -1090,12 +1090,12 @@
         const payAmount = (elPayAmount && elPayAmount.value) ? Number(elPayAmount.value) : 0;
         const address   = (elAddress  && elAddress.value.trim())  || '';
 
-        // ── 2) 필수 항목 빈 칸 검증 ──
-        if (!title || !body || !contactRaw) {
-          alert('제목 · 내용 · 연락처를 모두 입력해 주세요.');
+        // ── 2) 필수 항목 빈 칸 검증 (제목 + 근무지 주소 만 필수, 나머지 선택) ──
+        if (!title || !address) {
+          alert('제목과 근무지 주소를 입력해 주세요.');
           return;
         }
-        // 연락처: 자유 형식 허용 (호주 전화 / 카카오톡 / 이메일 / URL 등)
+        // 연락처: 자유 형식 허용 (호주 전화 / 카카오톡 / 이메일 / URL 등), 비워두기 가능
         const contact = contactRaw.replace(/\s+/g, ' ').trim();
         const nick = (elAuthor && elAuthor.value.trim())
           || localStorage.getItem('koaus-nickname')

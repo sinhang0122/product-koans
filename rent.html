@@ -698,7 +698,7 @@
 
         <div class="write-col">
           <div class="write-field">
-            <span class="write-label">렌트 기간 Lease Term (중복 선택)<span class="required-mark">*</span></span>
+            <span class="write-label">렌트 기간 Lease Term (중복 선택)</span>
             <div class="toggle-group" id="wTypes">
               <label class="toggle-pill"><input type="checkbox" data-type="ultra_short"> 초단기 (1개월 이하)</label>
               <label class="toggle-pill"><input type="checkbox" data-type="short"> 단기 (1개월~6개월)</label>
@@ -748,7 +748,7 @@
       </div><!-- /offerFields .write-grid -->
 
       <div class="write-field">
-        <label class="write-label" for="wBody" id="wBodyLabel">상세 설명 Comments<span class="required-mark">*</span></label>
+        <label class="write-label" for="wBody" id="wBodyLabel">상세 설명 Comments</label>
         <textarea class="write-textarea" id="wBody" placeholder="방 크기, 가격, 포함 내역, 입주 가능 날짜 등 자세히 적어주세요"></textarea>
       </div>
 
@@ -758,7 +758,7 @@
       </div>
 
       <div class="write-field">
-        <label class="write-label" for="wContact">연락처 Contact<span class="required-mark">*</span></label>
+        <label class="write-label" for="wContact">연락처 Contact <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택)</em></label>
         <input class="write-input" id="wContact" type="tel" placeholder="예: 0412345678 (호주 10자리)" maxlength="20" />
       </div>
 
@@ -1193,7 +1193,7 @@
     function applyWriteModeUI() {
       const isFind = activeMode === 'find';
       document.getElementById('offerFields').style.display = isFind ? 'none' : '';
-      document.getElementById('wBodyLabel').innerHTML = (isFind ? '자유 코멘트 Comments' : '상세 설명 Comments') + '<span class="required-mark">*</span>';
+      document.getElementById('wBodyLabel').innerHTML = (isFind ? '자유 코멘트 Comments' : '상세 설명 Comments');
       document.getElementById('wBody').placeholder = isFind
         ? '구하는 조건·예산·기간·자기소개 등을 자유롭게 적어주세요'
         : '방 크기, 가격, 포함 내역, 입주 가능 날짜 등 자세히 적어주세요';
@@ -1329,19 +1329,23 @@
       let fields, coords = null;
 
       if (isFind) {
-        // ── 방 구하기: 자유 양식 (제목 / 코멘트 / 연락처만) ──
-        if (!title || !body || !contactRaw) {
-          alert('모든 필수 항목을 올바르게 입력해 주세요.');
+        // ── 방 구하기: 자유 양식 — 제목만 필수, 나머지 선택 ──
+        if (!title) {
+          alert('제목을 입력해 주세요.');
           return;
         }
-        const phone = contactRaw.replace(/[-\s]/g, '');
-        if (!/^0\d{9}$/.test(phone)) {
-          alert('올바른 호주 전화번호 10자리를 입력해 주세요. (예: 0412345678)');
-          return;
+        let phone = '';
+        if (contactRaw) {
+          phone = contactRaw.replace(/[-\s]/g, '');
+          // 입력했다면 형식 검증 (빈값이면 검증 skip)
+          if (!/^0\d{9}$/.test(phone)) {
+            alert('연락처는 호주 전화번호 10자리(예: 0412345678) 형식으로 입력해 주세요. 비워두려면 입력란을 지워주세요.');
+            return;
+          }
         }
         fields = { mode: 'find', title, body, contact: phone };
       } else {
-        // ── 방 올리기: 구조화 양식 (주거형태 제외 필수) ──
+        // ── 방 올리기: 필수 = 제목 / 주소 / 주당 렌트비. 나머지는 선택 사항 ──
         const types    = [...document.querySelectorAll('#wTypes input:checked')].map(c => c.dataset.type);
         const address  = document.getElementById('wAddress').value.trim();
         const priceVal = document.getElementById('wPrice').value.trim();
@@ -1350,17 +1354,19 @@
         const bathrooms = Number(document.getElementById('wBathrooms').value || 0);
         const carSpaces = Number(document.getElementById('wCarSpaces').value || 0);
 
-        if (!title || !address || !priceVal || !contactRaw || !body) {
-          alert('모든 필수 항목을 올바르게 입력해 주세요.');
+        if (!title || !address || !priceVal) {
+          alert('필수 항목(제목 · 주소 · 주당 렌트비)을 입력해 주세요.');
           return;
         }
         const price = parseInt(priceVal, 10);
         if (!(price > 0)) { alert('주당 렌트비를 숫자로 올바르게 입력해 주세요.'); return; }
-        if (types.length === 0) { alert('렌트 기간을 1개 이상 선택해 주세요.'); return; }
-        const phone = contactRaw.replace(/[-\s]/g, '');
-        if (!/^0\d{9}$/.test(phone)) {
-          alert('올바른 호주 전화번호 10자리를 입력해 주세요. (예: 0412345678)');
-          return;
+        let phone = '';
+        if (contactRaw) {
+          phone = contactRaw.replace(/[-\s]/g, '');
+          if (!/^0\d{9}$/.test(phone)) {
+            alert('연락처는 호주 전화번호 10자리(예: 0412345678) 형식으로 입력해 주세요. 비워두려면 입력란을 지워주세요.');
+            return;
+          }
         }
         fields = {
           mode: 'offer', types, title, body, address, price, propType,
