@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>GP (한인 한국어 가능 의사) — KoAus</title>
+  <title>한인 미용실 (Korean Hair Salons) — KoAus</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;800;900&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet" />
@@ -473,7 +473,7 @@
   </aside>
 
   <main class="page-container">
-    <section class="koaus-hero" data-koaus-hero-cat="gp"></section>
+    <section class="koaus-hero" data-koaus-hero-cat="restaurants"></section>
     <!-- 전광판(Marquee) · Firestore global_ticker — 좌측 [Notice|광고주] 고정 + 우측 [광고내용] 우→좌 흐름 (marquee.js) -->
     <a class="koaus-mini-banner" href="index.html" aria-label="KoAus 안내">
       <span class="mn-ico" aria-hidden="true">📣</span>
@@ -505,8 +505,8 @@
 
     <div class="page-header">
       <div class="page-header-left">
-        <h1 class="page-title" id="boardTitle">🏥 호주 한국어 가능 GP (Korean-Speaking GP)</h1>
-        <p class="page-subtitle" id="boardSubtitle">주(State)별 한국어 가능 GP·진료과 정보 · 등록된 클리닉만 노출</p>
+        <h1 class="page-title" id="boardTitle">✂️ 한인 미용실 (Korean Hair Salons)</h1>
+        <p class="page-subtitle" id="boardSubtitle">주(State) · 시술 종류별 한인 미용실 정보 · 등록된 가게만 노출</p>
         <div class="page-header-actions">
           <a href="index.html" class="page-back">← 홈으로</a>
           <a href="contact.html" class="trades-inquiry-btn">✉️ 문의하기</a>
@@ -536,7 +536,7 @@
       <span class="board-count" id="boardCount">총 0건</span>
       <div class="accom-ctrl-actions">
         <button class="board-write-btn board-write-btn--ghost" id="filterModalBtn">상세 필터</button>
-        <button class="board-write-btn" id="requestBtnOpen" type="button">+ 등록 요청</button>
+        <button class="board-write-btn" id="requestBtnOpen" type="button">+ 사장님 글쓰기</button>
       </div>
     </div>
 
@@ -573,40 +573,39 @@
       </div>
 
       <div class="filter-section">
-        <label class="filter-section-label">진료과 Specialty · 복수 선택</label>
+        <label class="filter-section-label">시술 종류 Service · 복수 선택</label>
         <div class="trades-chip-grid">
-          <label class="trades-chip"><input type="checkbox" class="gp-fspec" value="family"> 가정의학과</label>
-          <label class="trades-chip"><input type="checkbox" class="gp-fspec" value="pediatrics"> 소아과</label>
-          <label class="trades-chip"><input type="checkbox" class="gp-fspec" value="internal"> 내과</label>
-          <label class="trades-chip"><input type="checkbox" class="gp-fspec" value="dermatology"> 피부과</label>
-          <label class="trades-chip"><input type="checkbox" class="gp-fspec" value="ob_gyn"> 산부인과</label>
-          <label class="trades-chip"><input type="checkbox" class="gp-fspec" value="psychiatry"> 정신과/심리</label>
-          <label class="trades-chip"><input type="checkbox" class="gp-fspec" value="dental"> 치과</label>
-          <label class="trades-chip"><input type="checkbox" class="gp-fspec" value="womens"> 여성 건강</label>
-          <label class="trades-chip"><input type="checkbox" class="gp-fspec" value="mens"> 남성 건강</label>
-          <label class="trades-chip"><input type="checkbox" class="gp-fspec" value="travel"> 여행/예방접종</label>
-          <label class="trades-chip"><input type="checkbox" class="gp-fspec" value="other"> 기타</label>
+          <label class="trades-chip"><input type="checkbox" class="salon-fservice" value="cut">      ✂️ 커트</label>
+          <label class="trades-chip"><input type="checkbox" class="salon-fservice" value="perm">     💁 펌</label>
+          <label class="trades-chip"><input type="checkbox" class="salon-fservice" value="color">    🎨 염색</label>
+          <label class="trades-chip"><input type="checkbox" class="salon-fservice" value="magic">    🧪 매직(스트레이트)</label>
+          <label class="trades-chip"><input type="checkbox" class="salon-fservice" value="clinic">   💆 클리닉</label>
+          <label class="trades-chip"><input type="checkbox" class="salon-fservice" value="bleach">   ⚪ 탈색</label>
+          <label class="trades-chip"><input type="checkbox" class="salon-fservice" value="styling">  ✨ 스타일링</label>
+          <label class="trades-chip"><input type="checkbox" class="salon-fservice" value="extension"> 🎀 붙임머리</label>
+          <label class="trades-chip"><input type="checkbox" class="salon-fservice" value="men">      🧔 남성 전문</label>
+          <label class="trades-chip"><input type="checkbox" class="salon-fservice" value="kids">     👶 키즈컷</label>
+          <label class="trades-chip"><input type="checkbox" class="salon-fservice" value="other">    📌 기타</label>
         </div>
       </div>
 
       <div class="filter-section">
-        <label class="filter-section-label" for="gpFAvail">진료 가능 시간 Availability</label>
-        <select class="write-input" id="gpFAvail">
+        <label class="filter-section-label" for="rsFStatus">예약 옵션 Booking</label>
+        <select class="write-input" id="rsFStatus">
           <option value="">전체</option>
-          <option value="open_now">지금 진료중</option>
-          <option value="weekend">주말 진료</option>
-          <option value="evening">저녁 진료(18시 이후)</option>
-          <option value="bulk_billing">Bulk Billing 가능</option>
+          <option value="walkin">워크인 가능</option>
+          <option value="reservation">예약 필수</option>
+          <option value="evening">저녁 영업</option>
         </select>
       </div>
 
       <div class="filter-section">
-        <label class="filter-section-label">진료 옵션 Options</label>
+        <label class="filter-section-label">편의 옵션 Options</label>
         <div class="trades-chip-grid">
-          <label class="trades-chip"><input type="checkbox" id="gpFKorean">  🇰🇷 한국어 가능</label>
-          <label class="trades-chip"><input type="checkbox" id="gpFTeleHealth"> 💻 텔레헬스</label>
-          <label class="trades-chip"><input type="checkbox" id="gpFParking">  🅿 주차</label>
-          <label class="trades-chip"><input type="checkbox" id="gpFWalkIn">    🚶 워크인(예약 없이)</label>
+          <label class="trades-chip"><input type="checkbox" id="rsFParking">  🅿 주차</label>
+          <label class="trades-chip"><input type="checkbox" id="rsFDelivery"> 💳 카드 가능</label>
+          <label class="trades-chip"><input type="checkbox" id="rsFTakeaway"> 🇰🇷 한국어 가능</label>
+          <label class="trades-chip"><input type="checkbox" id="rsFHalal">    💵 학생 할인</label>
         </div>
       </div>
 
@@ -703,10 +702,10 @@
       </div>
      </div><!-- /rea-scroll -->
 
-      <!-- Sticky 하단 액션바 -->
+      <!-- Sticky 하단 액션바 (K-푸드 & 다이닝 — 사장님 인증 + 연락처) -->
       <div class="rea-actionbar" style="display:flex;gap:8px;flex-wrap:wrap;">
         <button class="rea-contact-btn" id="detailContactBtn" type="button" style="flex:1;min-width:0;">📞 연락처 보기</button>
-        <a class="rea-contact-btn" href="contact.html?type=owner-verify&amp;board=gp" style="flex:1;min-width:0;background:#1f2937;color:#fff;text-decoration:none;display:flex;align-items:center;justify-content:center;">🛡 Official 검증</a>
+        <a class="rea-contact-btn" id="detailOwnerVerifyBtn" href="contact.html?type=owner-verify" style="flex:1;min-width:0;background:#1f2937;color:#fff;text-decoration:none;display:flex;align-items:center;justify-content:center;">🛡 Official 검증</a>
       </div>
     </div>
   </div>
@@ -918,7 +917,7 @@
     applyTheme(localStorage.getItem('koaus-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
 
     // ── Data ──
-    const STORE_KEY    = 'koaus-gp-posts';
+    const STORE_KEY    = 'koaus-salon-posts';
     const SEED_VERSION = '2026-05-empty';   // SAMPLES 변경 시 localStorage 재시드용
     const SAMPLES = [];
 
@@ -1137,8 +1136,8 @@
     // 지역 검색창 자동완성 (글쓰기 주소와 동일 로직 재사용)
     function initRegionAutocomplete() { wireAutocomplete('ffRegion', 'ffRegionSuggest'); }
 
-    // ── Write Modal (gp.html: 사용자 직접 글쓰기 모달 없음 — 등록 요청만, no-op 가드) ──
-    const writeOverlay = document.getElementById('writeOverlay') || { addEventListener(){}, classList: { add(){}, remove(){} } };
+    // ── Write Modal ──
+    const writeOverlay = document.getElementById('writeOverlay');
 
     let editingId = null;  // 수정 중인 글 id (null이면 새 글)
 
@@ -1162,9 +1161,8 @@
       if (!u.emailVerified) { openVerifyModal(); return; }
       openWriteModal();
     });
-    // gp.html: 글쓰기 모달 마크업 부재 — null-safe 가드
-    (document.getElementById('writeBtnClose')  || { addEventListener(){} }).addEventListener('click', closeWriteModal);
-    (document.getElementById('writeBtnCancel') || { addEventListener(){} }).addEventListener('click', closeWriteModal);
+    document.getElementById('writeBtnClose').addEventListener('click',  closeWriteModal);
+    document.getElementById('writeBtnCancel').addEventListener('click', closeWriteModal);
     writeOverlay.addEventListener('click', e => { if (e.target === writeOverlay) closeWriteModal(); });
 
     function setWriteMode(mode) {
@@ -2661,12 +2659,12 @@
     const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
     let db; try { db = getFirestore(app); } catch (e) { console.warn('\[restaurants\] Firestore 미초기화', e); }
     if (db) {
-      const STORE = 'koaus-gp-posts';
+      const STORE = 'koaus-salon-posts';
       try {
         onSnapshot(query(collection(db, 'services'), where('status', '==', 'approved'), orderBy('createdAt', 'desc'), limit(50)), snap => {
           const fsItems = snap.docs
             .map(d => ({ _fsDocId: d.id, ...d.data() }))
-            .filter(s => s.category === 'gp' && s.status !== 'pending');
+            .filter(s => s.category === 'salon' && s.status !== 'pending');
           fsItems.forEach(s => {
             if (s.createdAt && s.createdAt.toMillis) {
               const d = s.createdAt.toDate(); const p = n => String(n).padStart(2,'0');
@@ -2685,7 +2683,7 @@
           // restaurants 페이지는 어드민 데이터만 노출 (로컬 사용자 글 없음)
           localStorage.setItem(STORE, JSON.stringify(fsItems));
           window.dispatchEvent(new Event('koaus-services-updated'));
-        }, err => console.warn('[gp] services 구독 실패', err));
+        }, err => console.warn('[salon] services 구독 실패', err));
       } catch (e) { console.warn('\[restaurants\] Firestore services subscribe 실패', e); }
     }
   </script>
@@ -2763,45 +2761,79 @@
       const box = document.getElementById('pinnedNoticeBox');
       if (!box) return;
       const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/\n/g,'<br>');
-      onSnapshot(doc(db, 'board_pinned_notices', 'gp'), snap => {
+      onSnapshot(doc(db, 'board_pinned_notices', 'salon'), snap => {
         const data = snap.exists() ? snap.data() : null;
         if (data && data.text && String(data.text).trim()) {
           box.innerHTML = '<span class="pn-icon" aria-hidden="true">📢</span><div class="pn-body"><strong>공지</strong> · ' + esc(data.text) + '</div>';
           box.hidden = false;
         } else { box.hidden = true; box.innerHTML = ''; }
-      }, err => console.warn('[gp] pinned-notice 구독 실패', err));
-    } catch (e) { console.warn('[gp] pinned-notice 초기화 실패', e); }
+      }, err => console.warn('[salon] pinned-notice 구독 실패', err));
+    } catch (e) { console.warn('[salon] pinned-notice 초기화 실패', e); }
   </script>
 
   <!-- ── 등록 요청 모달 (유저 → services 컬렉션, status='pending') ── -->
   <div class="request-overlay" id="requestOverlay" hidden>
     <div class="request-modal">
       <div class="request-header">
-        <h3 class="request-title">등록 요청하기 <em>Submit Request</em></h3>
+        <h3 class="request-title">사장님 글쓰기 <em>Owner Submission</em></h3>
         <button type="button" class="request-close" id="requestClose" aria-label="닫기">✕</button>
       </div>
-      <p class="request-info">⚠ 관리자 검토 후 게시판에 노출됩니다. 허위·광고성 정보 등록 시 영구 차단됩니다.</p>
+      <p class="request-info">⚠ 관리자 검토 후 게시판에 노출됩니다. 가게 사장님이 직접 작성하셔도 좋고, 등록된 정보만 통과합니다.</p>
       <form id="requestForm">
-        <div class="request-field"><label>식당 이름 <span class="required">*</span></label><input type="text" id="rqTitle" maxlength="80" required placeholder="예: 김밥천국 Strathfield"></div>
+        <div class="request-field"><label>상호명 <span class="required">*</span></label><input type="text" id="rqTitle" maxlength="80" required placeholder="예: 김밥천국 Strathfield"></div>
         <div class="request-field"><label>연락처 <span class="required">*</span></label><input type="text" id="rqContact" maxlength="200" placeholder="오픈채팅이나 카톡 아이디 혹은 전화번호를 입력해주세요" required></div>
         <div class="request-field"><label>주소</label><input type="text" id="rqAddress" maxlength="200" placeholder="예: 8 Albert Rd, Strathfield NSW 2135"></div>
-        <div class="request-field"><label>한 줄 소개</label><input type="text" id="rqSummary" maxlength="120" placeholder="예: 정통 한식 · 가족 식사 추천"></div>
-        <div class="request-field"><label>상세 내용</label><textarea id="rqBody" rows="4" maxlength="2000" placeholder="가게 분위기·메뉴 구성·가격대·운영시간·주차 등"></textarea></div>
-        <div class="request-field"><label>대표 이미지 URL (선택)</label><input type="url" id="rqImage" placeholder="https://...jpg"></div>
+
+        <!-- 운영시간 — admin ⑧/⑨ 와 동일 위젯 (요일 7 토글 + 1~24 select) -->
+        <div class="request-field">
+          <label>운영시간 — 요일 + 시간 선택</label>
+          <div class="hours-day-row" data-hours-prefix="rq">
+            <button type="button" class="hours-day-btn" data-day="mon">월</button>
+            <button type="button" class="hours-day-btn" data-day="tue">화</button>
+            <button type="button" class="hours-day-btn" data-day="wed">수</button>
+            <button type="button" class="hours-day-btn" data-day="thu">목</button>
+            <button type="button" class="hours-day-btn" data-day="fri">금</button>
+            <button type="button" class="hours-day-btn" data-day="sat">토</button>
+            <button type="button" class="hours-day-btn" data-day="sun">일</button>
+          </div>
+          <div class="hours-time-row">
+            <select id="rqHoursOpen" class="hours-time"><option value="">오픈</option></select>
+            <span class="hours-tilde">~</span>
+            <select id="rqHoursClose" class="hours-time"><option value="">마감</option></select>
+          </div>
+          <input type="hidden" id="rqHours" value="" />
+          <input type="hidden" id="rqHoursDays" value="" />
+        </div>
+
+        <div class="request-field"><label>한 줄 소개 / 대표 메뉴</label><input type="text" id="rqSummary" maxlength="120" placeholder="예: 정통 한식 · 김치찌개 · 제육볶음 · 삼겹살"></div>
+        <div class="request-field"><label>가게 소개 / 상세</label><textarea id="rqBody" rows="4" maxlength="2000" placeholder="가게 분위기·메뉴 구성·가격대·예약 가능 여부 등"></textarea></div>
+
+        <!-- 사진 6 장 업로드 + 미리보기 (Storage 자동 압축·업로드) -->
+        <div class="request-field">
+          <label>가게 사진 <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(최대 6장)</em></label>
+          <button type="button" class="photo-upload-btn" id="rqPhotoBtn" style="display:flex;align-items:center;gap:8px;padding:11px 16px;border:1.5px dashed var(--border);border-radius:10px;background:var(--bg-input);color:var(--text-muted);font-size:14px;font-weight:600;cursor:pointer;width:100%;justify-content:center;">
+            <span aria-hidden="true">📷</span>
+            <span id="rqPhotoBtnLabel">사진 첨부 (0/6)</span>
+          </button>
+          <input type="file" id="rqPhotoInput" accept="image/*" multiple style="display:none;" />
+          <div id="rqPhotoThumbs" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;"></div>
+          <input type="hidden" id="rqImage" />
+        </div>
+
         <div class="request-actions">
           <button type="button" class="request-cancel-btn" id="rqCancel">취소</button>
-          <button type="submit" class="request-submit-btn" id="rqSubmit">등록 요청 보내기</button>
+          <button type="submit" class="request-submit-btn" id="rqSubmit">사장님 등록 요청 보내기</button>
         </div>
         <p class="request-note" id="rqNote"></p>
       </form>
     </div>
   </div>
 
-  <script type="module" data-koaus-req-category="gp">
+  <script type="module" data-koaus-req-category="salon">
     import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
     import { getFirestore, collection, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
     import { getAuth } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
-    const REQUEST_CATEGORY = (document.currentScript && document.currentScript.getAttribute('data-koaus-req-category')) || 'restaurants';
+    const REQUEST_CATEGORY = "salon";
     const cfg = {
       apiKey:'AIzaSyCamqnt0bNUD9uz1N5BbCuQjSkWLSpPqlU', authDomain:'koaus-f564c.firebaseapp.com',
       projectId:'koaus-f564c', storageBucket:'koaus-f564c.firebasestorage.app',
@@ -2831,9 +2863,13 @@
         const u = auth.currentUser;
         if (!u) { note.textContent = '로그인이 필요합니다.'; note.classList.add('is-error'); return; }
         const title = $('rqTitle').value.trim(), contact = $('rqContact').value.trim();
-        if (!title || !contact) { note.textContent = '식당 이름과 연락처는 필수입니다.'; note.classList.add('is-error'); return; }
+        if (!title || !contact) { note.textContent = '상호명과 연락처는 필수입니다.'; note.classList.add('is-error'); return; }
         const address = $('rqAddress').value.trim(), summary = $('rqSummary').value.trim();
-        const imageUrl = $('rqImage').value.trim();
+        // 사진 6장 (window.__rqPhotoUrls 에 Storage 업로드 URL 누적)
+        const imgs = Array.isArray(window.__rqPhotoUrls) ? window.__rqPhotoUrls.slice(0, 6).filter(Boolean) : [];
+        // 운영시간 hidden 동기화 (요일 + open ~ close)
+        const hours = ($('rqHours') && $('rqHours').value) || '';
+        const hoursDays = ($('rqHoursDays') && $('rqHoursDays').value) || '';
         const submit = $('rqSubmit'); if (submit) { submit.disabled = true; submit.textContent = '전송 중…'; }
         try {
           await addDoc(collection(db, 'services'), {
@@ -2842,7 +2878,8 @@
             address, region: address,
             summary, tagline: summary,
             body: $('rqBody').value.trim(),
-            imageUrls: imageUrl ? [imageUrl] : [],
+            hours, hoursDays,
+            imageUrls: imgs,
             status: 'pending',
             adminPost: false,
             author: (u.displayName || (u.email ? u.email.split('@')[0] : '익명')),
@@ -2850,7 +2887,8 @@
             createdAt: serverTimestamp(),
           });
           form.reset(); hide();
-          alert('✅ 등록이 요청되었습니다.\n관리자 검토 후 게시판에 노출됩니다.');
+          window.dispatchEvent(new Event('koaus-rq-form-reset'));
+          alert('✅ 사장님 등록이 요청되었습니다.\n관리자 검토 후 게시판에 노출됩니다.');
         } catch (err) {
           console.error('[koaus] request submit 실패', err);
           note.textContent = '❌ 등록 실패: ' + (err.message || err); note.classList.add('is-error');
@@ -2863,45 +2901,52 @@
     else bind();
   </script>
 
-  <!-- ── 상세 필터 후처리 (gp: 진료과·진료 가능 시간·진료 옵션) ── -->
+  <!-- ── 상세 필터 후처리 (restaurants: 음식 종류·영업 상태·편의시설) ── -->
   <script>
     (function () {
-      const STORE_KEY = 'koaus-gp-posts';
+      const STORE_KEY = 'koaus-salon-posts';
       function collect() {
         return {
-          specs:    Array.from(document.querySelectorAll('.gp-fspec:checked')).map(c => c.value),
-          avail:    (document.getElementById('gpFAvail') || {}).value || '',
-          korean:    !!(document.getElementById('gpFKorean')    || {}).checked,
-          teleHealth:!!(document.getElementById('gpFTeleHealth')|| {}).checked,
-          parking:   !!(document.getElementById('gpFParking')   || {}).checked,
-          walkIn:    !!(document.getElementById('gpFWalkIn')    || {}).checked,
+          cuisines: Array.from(document.querySelectorAll('.rs-fcuisine:checked')).map(c => c.value),
+          status:   (document.getElementById('rsFStatus') || {}).value || '',
+          parking:  !!(document.getElementById('rsFParking')  || {}).checked,
+          delivery: !!(document.getElementById('rsFDelivery') || {}).checked,
+          takeaway: !!(document.getElementById('rsFTakeaway') || {}).checked,
+          halal:    !!(document.getElementById('rsFHalal')    || {}).checked,
         };
       }
       function matches(p, f) {
-        if (f.specs.length) {
-          const ps = Array.isArray(p.specialties) ? p.specialties : [];
-          if (!f.specs.some(s => ps.includes(s))) return false;
+        if (f.cuisines.length) {
+          const ps = Array.isArray(p.cuisines) ? p.cuisines : [];
+          if (!f.cuisines.some(c => ps.includes(c))) return false;
         }
-        if (f.avail === 'bulk_billing' && !p.bulkBilling) return false;
-        // weekend/evening/open_now 은 영업시간 자유 텍스트라 정확한 매칭 어려움 — 무시
-        if (f.korean     && !p.korean)     return false;
-        if (f.teleHealth && !p.teleHealth) return false;
-        if (f.parking    && !p.parking)    return false;
-        if (f.walkIn     && !p.walkIn)     return false;
+        if (f.status === 'delivery_only' && !p.delivery) return false;
+        if (f.status === 'takeaway_only' && !p.takeaway) return false;
+        // open_now 는 영업시간 자유 텍스트라 정확한 매칭 어려움 — 무시
+        if (f.parking  && !p.parking)  return false;
+        if (f.delivery && !p.delivery) return false;
+        if (f.takeaway && !p.takeaway) return false;
+        if (f.halal    && !p.halal)    return false;
         return true;
       }
-      function readData() { try { return JSON.parse(localStorage.getItem(STORE_KEY) || '[]'); } catch { return []; } }
+      function readData() {
+        try { return JSON.parse(localStorage.getItem(STORE_KEY) || '[]'); } catch { return []; }
+      }
       function apply() {
         const f = collect();
-        const empty = !f.specs.length && !f.avail && !f.korean && !f.teleHealth && !f.parking && !f.walkIn;
+        const empty = !f.cuisines.length && !f.status && !f.parking && !f.delivery && !f.takeaway && !f.halal;
         const data = readData();
         const filtered = empty ? data : data.filter(p => matches(p, f));
         const ids = new Set(filtered.map(p => String(p.id)));
+        // 카드 hide/show
         document.querySelectorAll('#postGrid .accom-card').forEach(card => {
-          card.style.display = empty || ids.has(card.dataset.id) ? '' : 'none';
+          const show = empty || ids.has(card.dataset.id);
+          card.style.display = show ? '' : 'none';
         });
+        // 카운트
         const cnt = document.getElementById('boardCount');
         if (cnt) cnt.textContent = '총 ' + (empty ? data.length : filtered.length) + '건';
+        // 마커 — updateMapMarkers 가 노출됐다면 호출
         if (typeof window.__koausUpdateMap === 'function') {
           window.__koausUpdateMap(empty ? data : filtered);
         }
@@ -2911,19 +2956,134 @@
         const reset_ = document.getElementById('filterResetBtn');
         if (apply_) apply_.addEventListener('click', () => setTimeout(apply, 50));
         if (reset_) reset_.addEventListener('click', () => {
-          document.querySelectorAll('.gp-fspec').forEach(c => c.checked = false);
-          const av = document.getElementById('gpFAvail'); if (av) av.value = '';
-          ['gpFKorean','gpFTeleHealth','gpFParking','gpFWalkIn'].forEach(id => {
+          document.querySelectorAll('.rs-fcuisine').forEach(c => c.checked = false);
+          const st = document.getElementById('rsFStatus'); if (st) st.value = '';
+          ['rsFParking','rsFDelivery','rsFTakeaway','rsFHalal'].forEach(id => {
             const el = document.getElementById(id); if (el) el.checked = false;
           });
           setTimeout(apply, 50);
         });
+        // services 갱신 시 자동 재적용
         window.addEventListener('koaus-services-updated', () => setTimeout(apply, 100));
       }
       if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind, { once: true });
       else bind();
     })();
   </script>
+
+  <!-- ── 사장님 글쓰기 모달: 사진 6장 업로드 + 운영시간 위젯 + 사장님 인증 버튼 ── -->
+  <script type="module">
+    import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
+    import { getAuth } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
+    import { getStorage, ref, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-storage.js';
+    const cfg = {
+      apiKey:'AIzaSyCamqnt0bNUD9uz1N5BbCuQjSkWLSpPqlU', authDomain:'koaus-f564c.firebaseapp.com',
+      projectId:'koaus-f564c', storageBucket:'koaus-f564c.firebasestorage.app',
+      messagingSenderId:'663988594088', appId:'1:663988594088:web:ef30c2fd557407b00b299d',
+    };
+    const app  = getApps().length ? getApp() : initializeApp(cfg);
+    const auth = getAuth(app);
+    const storage = getStorage(app);
+    const MAX = 6;
+    window.__rqPhotoUrls  = [];
+    window.__rqPhotoFiles = [];
+    function $$(id) { return document.getElementById(id); }
+    function lab() {
+      const el = $$('rqPhotoBtnLabel'); if (el) el.textContent = `사진 첨부 (${(window.__rqPhotoFiles||[]).length}/${MAX})`;
+    }
+    function thumbs() {
+      const w = $$('rqPhotoThumbs'); if (!w) return;
+      const arr = window.__rqPhotoFiles || [];
+      w.innerHTML = arr.map((p,i) => `
+        <div style="position:relative;width:72px;height:72px;border-radius:8px;overflow:hidden;border:1px solid var(--border);background:var(--bg-elevated);">
+          <img src="${p.previewUrl}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;">
+          <button type="button" data-idx="${i}" class="rq-photo-del" aria-label="삭제"
+            style="position:absolute;top:2px;right:2px;width:20px;height:20px;border-radius:50%;border:none;background:rgba(0,0,0,.65);color:#fff;font-size:11px;cursor:pointer;">×</button>
+        </div>
+      `).join('');
+      w.querySelectorAll('.rq-photo-del').forEach(b => b.addEventListener('click', e => {
+        e.preventDefault();
+        const idx = Number(b.dataset.idx);
+        const it = window.__rqPhotoFiles[idx]; if (it && it.previewUrl) URL.revokeObjectURL(it.previewUrl);
+        window.__rqPhotoFiles.splice(idx, 1);
+        window.__rqPhotoUrls.splice(idx, 1);
+        thumbs(); lab();
+      }));
+    }
+    async function compress(file, maxW=1280, q=0.82) {
+      return new Promise((resolve, reject) => {
+        const img = new Image(); const url = URL.createObjectURL(file);
+        img.onload = () => {
+          const s = Math.min(1, maxW / img.width);
+          const w = Math.round(img.width * s), h = Math.round(img.height * s);
+          const c = document.createElement('canvas'); c.width = w; c.height = h;
+          c.getContext('2d').drawImage(img, 0, 0, w, h);
+          c.toBlob(b => { URL.revokeObjectURL(url); b ? resolve(b) : reject(new Error('compress')); }, 'image/jpeg', q);
+        };
+        img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('image')); };
+        img.src = url;
+      });
+    }
+    function bindPhotos() {
+      const btn = $$('rqPhotoBtn'), inp = $$('rqPhotoInput');
+      if (!btn || !inp) return;
+      btn.addEventListener('click', () => inp.click());
+      inp.addEventListener('change', async e => {
+        const files = Array.from(e.target.files || []); e.target.value = '';
+        const rem = MAX - (window.__rqPhotoFiles || []).length;
+        if (rem <= 0) { alert('최대 6장까지 첨부할 수 있습니다.'); return; }
+        const u = auth.currentUser; if (!u) { alert('로그인 후 사진 업로드 가능합니다.'); return; }
+        for (const f of files.slice(0, rem)) {
+          try {
+            const blob = await compress(f);
+            const preview = URL.createObjectURL(blob);
+            window.__rqPhotoFiles.push({ blob, previewUrl: preview, name: f.name });
+            thumbs(); lab();
+            const idx = window.__rqPhotoFiles.length - 1;
+            try {
+              const sref = ref(storage, `post_images/salon/${u.uid}/${Date.now()}-${idx}.jpg`);
+              await uploadBytes(sref, blob, { contentType: 'image/jpeg' });
+              window.__rqPhotoUrls[idx] = await getDownloadURL(sref);
+            } catch (upErr) { console.warn('[salon] 사진 업로드 실패', upErr); }
+          } catch (cErr) { console.warn('[salon] 사진 압축 실패', cErr); }
+        }
+      });
+    }
+    // 운영시간 위젯: 요일 7 토글 + select(1~24) → hidden 자동 조합 + reset 처리
+    function bindHours() {
+      const DAY_LABEL = { mon:'월', tue:'화', wed:'수', thu:'목', fri:'금', sat:'토', sun:'일' };
+      document.querySelectorAll('.hours-day-row[data-hours-prefix="rq"] .hours-day-btn').forEach(btn => {
+        btn.addEventListener('click', () => { btn.classList.toggle('is-on'); sync(); });
+      });
+      ['rqHoursOpen','rqHoursClose'].forEach(id => {
+        const sel = $$(id); if (!sel) return;
+        for (let h = 1; h <= 24; h++) {
+          const v = String(h).padStart(2,'0') + ':00';
+          sel.insertAdjacentHTML('beforeend', `<option value="${v}">${v}</option>`);
+        }
+        sel.addEventListener('change', sync);
+      });
+      function sync() {
+        const days = Array.from(document.querySelectorAll('.hours-day-row[data-hours-prefix="rq"] .hours-day-btn.is-on')).map(b => b.dataset.day);
+        const open = ($$('rqHoursOpen')||{}).value || '', close = ($$('rqHoursClose')||{}).value || '';
+        const txt = (days.length && open && close) ? `${days.map(d=>DAY_LABEL[d]).join('·')} ${open}~${close}` : '';
+        if ($$('rqHours'))     $$('rqHours').value     = txt;
+        if ($$('rqHoursDays')) $$('rqHoursDays').value = days.join(',');
+      }
+    }
+    function reset() {
+      (window.__rqPhotoFiles || []).forEach(p => p.previewUrl && URL.revokeObjectURL(p.previewUrl));
+      window.__rqPhotoFiles = []; window.__rqPhotoUrls = [];
+      thumbs(); lab();
+      document.querySelectorAll('.hours-day-row[data-hours-prefix="rq"] .hours-day-btn').forEach(b => b.classList.remove('is-on'));
+      ['rqHoursOpen','rqHoursClose','rqHours','rqHoursDays'].forEach(id => { const el = $$(id); if (el) el.value = ''; });
+    }
+    function init() { bindPhotos(); bindHours(); lab(); }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
+    else init();
+    window.addEventListener('koaus-rq-form-reset', reset);
+  </script>
+
   <script src="hero-banner.js" defer></script>
 </body>
 </html>

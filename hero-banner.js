@@ -45,13 +45,13 @@
       gradients: ['hero-bg--legal1', 'hero-bg--legal2'],
       slides: [
         { eyebrow: '🔧 Skilled Trades',        title: '한인 기술자 — 전기·배관·페인팅·핸디맨.', sub: '자격증·보험·ABN 보유 업체만 — 출장비·경력 비교',                cta: { href: '#postGrid', label: '기술자 보기 →' } },
-        { eyebrow: '관리자 검증',             title: '광고가 아닌 진짜 한인 기술자.',        sub: '직접 검증 후 등록 → 안심하고 견적 요청 가능',                       cta: null },
+        { eyebrow: '관리자 검토',             title: '광고가 아닌 진짜 한인 기술자.',        sub: '관리자 검토 후 등록 → 견적 요청 가능',                              cta: null },
       ],
     },
     restaurants: {
       gradients: ['hero-bg--edu1', 'hero-bg--edu3'],
       slides: [
-        { eyebrow: '🍱 Korean Restaurants',    title: '검증된 K-푸드 & 다이닝, 지도와 함께.',       sub: '한식·중식·치킨·BBQ·카페 — 가격대와 영업시간을 한눈에',            cta: { href: '#postGrid', label: '식당 보기 →' } },
+        { eyebrow: '🍱 Korean Restaurants',    title: '등록된 K-푸드 & 다이닝, 지도와 함께.',       sub: '한식·중식·치킨·BBQ·카페 — 가격대와 영업시간을 한눈에',            cta: { href: '#postGrid', label: '식당 보기 →' } },
         { eyebrow: '편의시설 필터',           title: '주차·배달·포장·할랄 옵션까지.',        sub: '음식 종류 + 편의시설 + 영업 상태로 빠르게 검색',                   cta: null },
       ],
     },

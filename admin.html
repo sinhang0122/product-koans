@@ -114,6 +114,7 @@
             <a href="trades.html?state=nsw" class="accord-link accord-link--sub">기술직</a>
             <a href="restaurants.html?state=nsw" class="accord-link accord-link--sub">K-푸드 & 다이닝</a>
             <a href="gp.html?state=nsw" class="accord-link accord-link--sub">GP</a>
+            <a href="salon.html?state=nsw" class="accord-link accord-link--sub">한인 미용실</a>
             </div>
           </div>
         </div>
@@ -162,6 +163,7 @@
             <a href="trades.html?state=vic" class="accord-link accord-link--sub">기술직</a>
             <a href="restaurants.html?state=vic" class="accord-link accord-link--sub">K-푸드 & 다이닝</a>
             <a href="gp.html?state=vic" class="accord-link accord-link--sub">GP</a>
+            <a href="salon.html?state=vic" class="accord-link accord-link--sub">한인 미용실</a>
             </div>
           </div>
         </div>
@@ -210,6 +212,7 @@
             <a href="trades.html?state=qld" class="accord-link accord-link--sub">기술직</a>
             <a href="restaurants.html?state=qld" class="accord-link accord-link--sub">K-푸드 & 다이닝</a>
             <a href="gp.html?state=qld" class="accord-link accord-link--sub">GP</a>
+            <a href="salon.html?state=qld" class="accord-link accord-link--sub">한인 미용실</a>
             </div>
           </div>
         </div>
@@ -258,6 +261,7 @@
             <a href="trades.html?state=wa" class="accord-link accord-link--sub">기술직</a>
             <a href="restaurants.html?state=wa" class="accord-link accord-link--sub">K-푸드 & 다이닝</a>
             <a href="gp.html?state=wa" class="accord-link accord-link--sub">GP</a>
+            <a href="salon.html?state=wa" class="accord-link accord-link--sub">한인 미용실</a>
             </div>
           </div>
         </div>
@@ -306,6 +310,7 @@
             <a href="trades.html?state=sa" class="accord-link accord-link--sub">기술직</a>
             <a href="restaurants.html?state=sa" class="accord-link accord-link--sub">K-푸드 & 다이닝</a>
             <a href="gp.html?state=sa" class="accord-link accord-link--sub">GP</a>
+            <a href="salon.html?state=sa" class="accord-link accord-link--sub">한인 미용실</a>
             </div>
           </div>
         </div>
@@ -354,6 +359,7 @@
             <a href="trades.html?state=tas" class="accord-link accord-link--sub">기술직</a>
             <a href="restaurants.html?state=tas" class="accord-link accord-link--sub">K-푸드 & 다이닝</a>
             <a href="gp.html?state=tas" class="accord-link accord-link--sub">GP</a>
+            <a href="salon.html?state=tas" class="accord-link accord-link--sub">한인 미용실</a>
             </div>
           </div>
         </div>
@@ -402,6 +408,7 @@
             <a href="trades.html?state=act" class="accord-link accord-link--sub">기술직</a>
             <a href="restaurants.html?state=act" class="accord-link accord-link--sub">K-푸드 & 다이닝</a>
             <a href="gp.html?state=act" class="accord-link accord-link--sub">GP</a>
+            <a href="salon.html?state=act" class="accord-link accord-link--sub">한인 미용실</a>
             </div>
           </div>
         </div>
@@ -450,6 +457,7 @@
             <a href="trades.html?state=nt" class="accord-link accord-link--sub">기술직</a>
             <a href="restaurants.html?state=nt" class="accord-link accord-link--sub">K-푸드 & 다이닝</a>
             <a href="gp.html?state=nt" class="accord-link accord-link--sub">GP</a>
+            <a href="salon.html?state=nt" class="accord-link accord-link--sub">한인 미용실</a>
             </div>
           </div>
         </div>
@@ -457,7 +465,7 @@
       <div class="accord-foot-group">
         <a href="emergency.html" class="accord-direct-link"><span>긴급연락처 <em>Emergency Contacts</em></span></a>
         <a href="calculator.html" class="accord-direct-link"><span>환율 계산 비교 <em>FX Calculator</em></span></a>
-        <a href="contact.html" class="accord-direct-link"><span>광고문의 <em>Ad Inquiry</em></span></a>
+        <a href="contact.html" class="accord-direct-link"><span>문의 <em>Inquiry</em></span></a>
       </div>
     </nav>
     <div class="sidebar-footer-nav">
@@ -512,6 +520,7 @@
       <a href="#trades"         class="admin-sidenav-link" data-target="trades">⑦ 기술직 관리</a>
       <a href="#restaurants"    class="admin-sidenav-link" data-target="restaurants">⑧ K-푸드 & 다이닝 관리</a>
       <a href="#gp"             class="admin-sidenav-link" data-target="gp">⑨ GP 관리</a>
+      <a href="#salon"          class="admin-sidenav-link" data-target="salon">⑩ 한인 미용실 관리</a>
     </nav>
     <div class="admin-body" id="adminBody">
 
@@ -1000,6 +1009,113 @@
 
       <h3 class="admin-list-title">등록된 GP 게시글</h3>
       <div class="admin-post-list" id="gpList"></div>
+    </section>
+
+    <!-- ── ⑩ 한인 미용실 관리 (services 컬렉션, category='salon') ── -->
+    <section class="admin-section" id="salon">
+      <h2 class="admin-section-title">⑩ 한인 미용실 게시글 등록 (Korean Hair Salons)</h2>
+      <p style="font-size:12px;color:var(--text-muted);margin:-8px 0 10px;line-height:1.55;">커트·펌·염색·매직·클리닉 등 한인 미용실 게시글을 등록합니다. salon.html 페이지의 List/Map View 에 자동 노출됩니다.</p>
+      <form class="admin-form" id="salonForm">
+        <div class="admin-row">
+          <div class="admin-field">
+            <label class="admin-label" for="slState">노출 주 (State)<span class="admin-req">*</span></label>
+            <select class="admin-input" id="slState">
+              <option value="">전 지역</option>
+              <option value="nsw">NSW</option><option value="vic">VIC</option><option value="qld">QLD</option><option value="wa">WA</option>
+              <option value="sa">SA</option><option value="tas">TAS</option><option value="act">ACT</option><option value="nt">NT</option>
+            </select>
+          </div>
+          <div class="admin-field">
+            <label class="admin-label" for="slTitle">상호명<span class="admin-req">*</span></label>
+            <input class="admin-input" id="slTitle" type="text" maxlength="80" placeholder="예: 강남 헤어 살롱 Strathfield" />
+          </div>
+        </div>
+
+        <div class="admin-field">
+          <label class="admin-label">시술 종류<span class="admin-req">*</span> · 복수 선택</label>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:6px 12px;margin-top:6px;">
+            <label class="admin-check"><input type="checkbox" class="sl-service" value="cut"> ✂️ 커트</label>
+            <label class="admin-check"><input type="checkbox" class="sl-service" value="perm"> 💁 펌</label>
+            <label class="admin-check"><input type="checkbox" class="sl-service" value="color"> 🎨 염색</label>
+            <label class="admin-check"><input type="checkbox" class="sl-service" value="magic"> 🧪 매직</label>
+            <label class="admin-check"><input type="checkbox" class="sl-service" value="clinic"> 💆 클리닉</label>
+            <label class="admin-check"><input type="checkbox" class="sl-service" value="bleach"> ⚪ 탈색</label>
+            <label class="admin-check"><input type="checkbox" class="sl-service" value="styling"> ✨ 스타일링</label>
+            <label class="admin-check"><input type="checkbox" class="sl-service" value="extension"> 🎀 붙임머리</label>
+            <label class="admin-check"><input type="checkbox" class="sl-service" value="men"> 🧔 남성 전문</label>
+            <label class="admin-check"><input type="checkbox" class="sl-service" value="kids"> 👶 키즈컷</label>
+            <label class="admin-check"><input type="checkbox" class="sl-service" value="other"> 📌 기타</label>
+          </div>
+        </div>
+
+        <div class="admin-row">
+          <div class="admin-field">
+            <label class="admin-label" for="slHours">영업시간</label>
+            <input class="admin-input" id="slHours" type="text" maxlength="120" placeholder="예: 평일 10:00~20:00, 주말 09:00~18:00" />
+          </div>
+          <div class="admin-field">
+            <label class="admin-label" for="slContact">연락처<span class="admin-req">*</span></label>
+            <input class="admin-input" id="slContact" type="text" maxlength="200" placeholder="오픈채팅이나 카톡 아이디 혹은 전화번호를 입력해주세요" />
+          </div>
+        </div>
+
+        <div class="admin-row">
+          <div class="admin-field">
+            <label class="admin-label" for="slPriceCut">커트 가격 (AUD)</label>
+            <input class="admin-input" id="slPriceCut" type="number" min="0" max="500" placeholder="예: 35" />
+          </div>
+          <div class="admin-field">
+            <label class="admin-label" for="slPricePerm">펌 가격 (AUD)</label>
+            <input class="admin-input" id="slPricePerm" type="number" min="0" max="1000" placeholder="예: 120" />
+          </div>
+        </div>
+
+        <div class="admin-row">
+          <div class="admin-field">
+            <label class="admin-label" for="slAddress">주소<span class="admin-req">*</span></label>
+            <input class="admin-input" id="slAddress" type="text" maxlength="200" placeholder="예: 8 Albert Rd, Strathfield NSW 2135" />
+          </div>
+          <div class="admin-field">
+            <label class="admin-label">편의 옵션</label>
+            <div style="display:flex;flex-direction:column;gap:6px;margin-top:6px;">
+              <label class="admin-check"><input type="checkbox" id="slKorean" checked> 🇰🇷 한국어 가능</label>
+              <label class="admin-check"><input type="checkbox" id="slParking"> 🅿 주차 가능</label>
+              <label class="admin-check"><input type="checkbox" id="slCard"> 💳 카드 결제</label>
+              <label class="admin-check"><input type="checkbox" id="slStudent"> 💵 학생 할인</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="admin-field">
+          <label class="admin-label" for="slDesigner">대표 디자이너 / 경력</label>
+          <input class="admin-input" id="slDesigner" type="text" maxlength="200" placeholder="예: 김디자이너 (10년 경력, 강남 R살롱 출신)" />
+        </div>
+
+        <div class="admin-field">
+          <label class="admin-label" for="slSummary">한 줄 소개</label>
+          <input class="admin-input" id="slSummary" type="text" maxlength="120" placeholder="예: 한국 스타일 정밀 펌 · 학생 할인" />
+        </div>
+
+        <div class="admin-field">
+          <label class="admin-label" for="slBody">상세 내용</label>
+          <textarea class="admin-textarea" id="slBody" placeholder="가격표·디자이너 정보·예약 방법·시술 후 케어 등 자세히 안내해 주세요."></textarea>
+        </div>
+
+        <div class="admin-field">
+          <label class="admin-label" for="slImage">대표 이미지 URL (선택)</label>
+          <input class="admin-input" id="slImage" type="url" placeholder="https://...jpg" />
+        </div>
+
+        <div class="admin-field">
+          <label class="admin-check"><input type="checkbox" id="slPremium" checked> 프리미엄 상단 고정 (Pinned)</label>
+        </div>
+
+        <div class="admin-actions"><button class="admin-submit" type="submit">한인 미용실 게시글 등록</button></div>
+        <p class="admin-note" id="slNote"></p>
+      </form>
+
+      <h3 class="admin-list-title">등록된 미용실 게시글</h3>
+      <div class="admin-post-list" id="slList"></div>
     </section>
 
     </div><!-- /.admin-body -->
@@ -1686,11 +1802,100 @@
       </div>`;
     }, p => p.category === 'gp');
 
+    // ── ⑩ 한인 미용실 게시글 등록 (services 컬렉션, category='salon') ──
+    const SALON_SVC_LABEL = {
+      cut:'커트', perm:'펌', color:'염색', magic:'매직', clinic:'클리닉', bleach:'탈색',
+      styling:'스타일링', extension:'붙임머리', men:'남성', kids:'키즈', other:'기타',
+    };
+    $('salonForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const state    = $('slState').value;
+      const title    = $('slTitle').value.trim();
+      const contact  = $('slContact').value.trim();
+      const address  = $('slAddress').value.trim();
+      const services = Array.from(document.querySelectorAll('.sl-service:checked')).map(c => c.value);
+      if (!state || !title || !contact || !address || !services.length) {
+        flash($('slNote'), '주·상호명·연락처·주소·시술 종류는 필수 입력입니다.', false); return;
+      }
+      const u = auth.currentUser;
+      if (!u) { flash($('slNote'), '로그인이 필요합니다.', false); showLocked(); return; }
+      const payload = {
+        category:    'salon',
+        state,
+        title,
+        contact,
+        address,
+        region:      address,
+        services,
+        hours:       $('slHours').value.trim(),
+        priceCut:    $('slPriceCut').value ? Number($('slPriceCut').value) : null,
+        pricePerm:   $('slPricePerm').value ? Number($('slPricePerm').value) : null,
+        korean:      $('slKorean').checked,
+        parking:     $('slParking').checked,
+        cardOk:      $('slCard').checked,
+        studentDiscount: $('slStudent').checked,
+        designer:    $('slDesigner').value.trim(),
+        summary:     $('slSummary').value.trim(),
+        tagline:     $('slSummary').value.trim(),
+        body:        $('slBody').value.trim(),
+        imageUrls:   $('slImage').value.trim() ? [$('slImage').value.trim()] : [],
+        isPremium:   $('slPremium').checked,
+        adminPost:   true,
+        status:      'approved',
+        author:      '관리자',
+        uid:         u.uid,
+        email:       u.email,
+        createdAt:   serverTimestamp(),
+      };
+      try {
+        await addDoc(collection(db, 'services'), payload);
+        $('salonForm').reset();
+        $('slPremium').checked = true;
+        $('slKorean').checked  = true;
+        document.querySelectorAll('.sl-service').forEach(c => c.checked = false);
+        flash($('slNote'), `[${services.map(s => SALON_SVC_LABEL[s]).join('·')}] 미용실 등록 완료 — salon.html 페이지에 실시간 노출`, true);
+        alert('성공적으로 등록되었습니다!');
+      } catch (err) {
+        console.error('[admin] salon 저장 실패', err);
+        flash($('slNote'), '❌ 등록 실패: ' + (err.message || err), false);
+      }
+    });
+    subscribeList('services', $('slList'), p => {
+      const ss = Array.isArray(p.services) ? p.services.map(s => SALON_SVC_LABEL[s] || s).join(' · ') : '';
+      const opts = [];
+      if (p.korean)          opts.push('🇰🇷 한국어');
+      if (p.parking)         opts.push('🅿 주차');
+      if (p.cardOk)          opts.push('💳 카드');
+      if (p.studentDiscount) opts.push('💵 학생 할인');
+      const priceRange = (p.priceCut || p.pricePerm) ? `커트 ${p.priceCut ? '$'+p.priceCut : '-'} · 펌 ${p.pricePerm ? '$'+p.pricePerm : '-'}` : '';
+      return `<div class="admin-post-item">
+        <div class="admin-post-meta">
+          ${ss ? `<span class="admin-post-cat">${escHtml(ss)}</span>` : ''}
+          <span class="admin-post-state">${escHtml(p.state ? (STATE_LABEL[p.state] || p.state) : '전 지역')}</span>
+          ${p.isPremium ? '<span class="admin-post-pin">📌 PIN</span>' : ''}
+          ${p.status === 'pending' ? '<span class="admin-post-pin" style="background:#fef3c7;color:#b45309;">⏳ pending</span>' : ''}
+        </div>
+        <div class="admin-post-title">${escHtml(p.title || '-')}</div>
+        ${p.address  ? `<div class="admin-post-sub">📍 ${escHtml(p.address)}</div>` : ''}
+        ${p.hours    ? `<div class="admin-post-sub">🕐 ${escHtml(p.hours)}</div>` : ''}
+        ${priceRange ? `<div class="admin-post-sub">💰 ${escHtml(priceRange)}</div>` : ''}
+        ${opts.length ? `<div class="admin-post-sub">${opts.join(' · ')}</div>` : ''}
+        ${p.designer ? `<div class="admin-post-sub">👤 ${escHtml(p.designer)}</div>` : ''}
+        ${p.summary  ? `<div class="admin-post-sub">${escHtml(p.summary)}</div>` : ''}
+        ${p.contact  ? `<div class="admin-post-sub">📞 ${escHtml(p.contact)}</div>` : ''}
+        <div class="admin-post-actions">
+          <span class="admin-post-time">${fmtDate(p.createdAt)}</span>
+          <button class="admin-del" data-col="services" data-id="${p.id}">삭제</button>
+        </div>
+      </div>`;
+    }, p => p.category === 'salon');
+
     // ── 🔴 통합 승인 대기열 (services 컬렉션 status='pending') ──
     const APPROVAL_CAT_LABEL = {
       trades:      '🔧 기술직',
       restaurants: '🍱 K-푸드 & 다이닝',
       gp:          '🏥 GP',
+      salon:       '✂️ 한인 미용실',
       maintenance: '🔩 정비소',
       towing:      '🚛 견인',
       inspection:  '🚨 동행·긴급출동',
