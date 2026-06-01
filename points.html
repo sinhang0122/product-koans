@@ -923,12 +923,16 @@
         if (typeof window.Swiper !== 'function') return;
         const el = document.getElementById(isEdu ? 'heroSwiperEdu' : 'heroSwiperLegal');
         if (!el || el.__koausSwiperInited) return;
+        // 슬라이드 개수 검사 — loop 모드는 2개 이상 필요
+        const slideCount = el.querySelectorAll('.swiper-slide').length;
+        if (slideCount === 0) return;
+        const useLoop = slideCount >= 2;
         const navPrefix = isEdu ? '#heroPcEdu' : '#heroPcLegal';
         try {
           new window.Swiper(el, {
-            loop: true,
+            loop: useLoop,
             speed: 700,
-            autoplay: { delay: 4500, disableOnInteraction: false },
+            autoplay: useLoop ? { delay: 4500, disableOnInteraction: false } : false,
             pagination: { el: navPrefix + ' .swiper-pagination', clickable: true },
             navigation: {
               nextEl: navPrefix + ' .swiper-button-next',

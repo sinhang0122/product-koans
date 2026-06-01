@@ -154,14 +154,18 @@
   }
 
   function initSwipers(container) {
-    if (typeof window.Swiper !== 'function') return;
+    if (!container || typeof window.Swiper !== 'function') return;
     const swEl = container.querySelector('.koaus-hero-pc .swiper');
     if (!swEl || swEl.__koausSwiperInited) return;
+    // 슬라이드 개수 검사 — loop 모드는 2개 이상 필요. 1개 이하면 loop 끄고 autoplay 도 끔.
+    const slideCount = swEl.querySelectorAll('.swiper-slide').length;
+    if (slideCount === 0) return;  // 빈 컨테이너 init 시도 자체 차단
+    const useLoop = slideCount >= 2;
     try {
       new window.Swiper(swEl, {
-        loop: true,
+        loop: useLoop,
         speed: 700,
-        autoplay: { delay: 4500, disableOnInteraction: false },
+        autoplay: useLoop ? { delay: 4500, disableOnInteraction: false } : false,
         pagination: { el: swEl.querySelector('.swiper-pagination'), clickable: true },
         navigation: {
           nextEl: swEl.querySelector('.swiper-button-next'),
