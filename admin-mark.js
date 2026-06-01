@@ -266,6 +266,50 @@ window.addEventListener('koaus-services-updated', () => setTimeout(injectCardAct
   [500, 1500].forEach(ms => setTimeout(autoBuildAll, ms));
 })();
 
+// ── State(주) 바로가기 카드 — 전역 자동 빌드 ──
+//  · 사용법: 페이지 본문 어디든 `<section data-koaus-state-quick></section>` 한 줄만 추가.
+//  · 8개 주 카드 그리드(state.html?id=xxx) 가 자동 주입된다. 페이지 본체 JS 수정 불필요.
+//  · 이미 빌드된 그리드는 재실행 시 스킵 (idempotent).
+(function setupGlobalStateQuick() {
+  const STATES = [
+    ['nsw','NSW','New South Wales','🦘'],
+    ['vic','VIC','Victoria','🌆'],
+    ['qld','QLD','Queensland','🏖'],
+    ['wa', 'WA', 'Western Australia','🏜'],
+    ['sa', 'SA', 'South Australia','🍇'],
+    ['tas','TAS','Tasmania','🍃'],
+    ['act','ACT','Australian Capital','🏛'],
+    ['nt', 'NT', 'Northern Territory','🌵'],
+  ];
+  const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  function buildOne(host) {
+    if (!host || host.__koausStateBuilt) return;
+    const cards = STATES.map(([id,code,name,flag]) =>
+      '<a class="state-card" href="state.html?id=' + id + '">' +
+        '<span class="state-card-arrow" aria-hidden="true">→</span>' +
+        '<span class="state-card-code">' + code + '</span>' +
+        '<span class="state-card-name">' + flag + ' ' + esc(name) + '</span>' +
+      '</a>'
+    ).join('');
+    host.innerHTML =
+      '<section class="state-section" aria-label="주 바로가기">' +
+        '<div class="state-section-head">' +
+          '<span class="state-section-title">📍 주(State) 바로가기 ' +
+            '<em style="font-style:normal;font-weight:600;color:var(--text-muted);">· State Hub</em></span>' +
+          '<span class="state-section-hint">8개 주 · 카테고리 통합</span>' +
+        '</div>' +
+        '<div class="state-grid">' + cards + '</div>' +
+      '</section>';
+    host.__koausStateBuilt = true;
+  }
+  function buildAll() { document.querySelectorAll('[data-koaus-state-quick]').forEach(buildOne); }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', buildAll, { once: true });
+  } else { setTimeout(buildAll, 0); }
+  // 동적 마운트 대비 지연 재시도
+  [400, 1500].forEach(ms => setTimeout(buildAll, ms));
+})();
+
 // ── 7일 영업시간 표 렌더링 헬퍼 (상세 뷰용) ──
 //  · window.__koausRenderBizHoursTable(hoursJson) — Firestore 의 hoursJson 객체 입력
 //  · 반환: HTML 문자열 (<table class="biz-hours-table">...</table>)

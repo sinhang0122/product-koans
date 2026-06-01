@@ -3619,3 +3619,185 @@ a.legal-meta-val:hover { border-bottom: 1px solid var(--text-primary); }
   transition: border-color 0.15s, background 0.15s;
 }
 .admin-logout:hover { border-color: var(--text-primary); background: var(--bg-elevated); }
+
+/* ════════════════════════════════════════════════════════════════════════
+   KoAus 2.1 — Fluid Responsive Layout (maplescouter.com 레퍼런스)
+   ════════════════════════════════════════════════════════════════════════
+   · 데스크톱: 중앙 max-width 컬럼 + 넉넉한 여백
+   · 태블릿/모바일: 100vw 꽉 채움 (가로 스크롤 절대 차단)
+   · 폰트/간격: clamp() 으로 부드럽게 보간
+   · 모든 규칙은 기존 정의보다 뒤에 와서 cascade 로 override
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* 1) 글로벌 overflow-x 차단 — 어떤 자식 요소도 화면 밖으로 못 나가게 가드 */
+html, body { max-width: 100vw; overflow-x: hidden; }
+
+/* 2) page-container — 메이플 환산처럼 데스크톱 1200px, 모바일은 100vw 꽉
+   · 양옆 패딩은 화면 너비에 따라 fluid (clamp)
+   · padding-top 압축은 그대로 유지 */
+.page-container {
+  max-width: 1200px;
+  padding: 14px clamp(12px, 3vw, 28px) 64px;
+  gap: clamp(10px, 1.5vw, 14px);
+}
+@media (max-width: 480px) {
+  .page-container { padding: 12px clamp(10px, 3vw, 14px) 48px; }
+}
+
+/* 3) page-header — 제목/액션 줄바꿈 + fluid 폰트 */
+.page-title    { font-size: clamp(20px, 3.8vw, 28px); }
+.page-subtitle { font-size: clamp(12.5px, 1.6vw, 14px); }
+
+/* 4) home-main — 모바일에서도 좌우 여백 살짝 더 컴팩트하게 (꽉 채우기) */
+.home-main {
+  max-width: 1100px;
+  padding: clamp(20px, 4vw, 36px) clamp(14px, 3vw, 24px) clamp(48px, 8vw, 80px);
+  gap: clamp(14px, 2.2vw, 22px);
+}
+
+/* 5) 모바일 맵 뷰 — 1:5 비율 (지도 컴팩트 / 리스트 위주)
+   · #mapView 가 페이지 헤더/검색바 아래에 단독으로 켜졌을 때만 적용
+   · 데스크톱은 기존 동작 그대로 (560px 등) */
+@media (max-width: 768px) {
+  #mapView { width: 100%; }
+  #accomMap {
+    height: clamp(160px, 22vh, 220px) !important;
+    min-height: 160px !important;
+    border-radius: var(--r-md);
+  }
+  /* 지도 fab(확대/현위치 등) 도 좀 더 살짝 작게 */
+  .map-fab-group { right: 10px; bottom: 12px; }
+  /* '이 지역 검색' 버튼도 작게 */
+  .area-search-btn { padding: 7px 14px; font-size: 12.5px; top: 10px; }
+}
+@media (max-width: 480px) {
+  #accomMap {
+    height: clamp(140px, 18vh, 180px) !important;
+    min-height: 140px !important;
+  }
+}
+
+/* 6) State(주) 바로가기 카드 — Care/Exchange/Home-shortcut 디자인 톤 통일
+   · 데스크톱 4열, 태블릿 3열, 모바일 2열 (꽉 채움)
+   · padding/gap fluid, 카드 자체는 home-shortcut 스타일 모방 */
+.state-section {
+  margin: clamp(16px, 2.5vw, 28px) 0 clamp(8px, 1.5vw, 14px);
+  display: flex; flex-direction: column;
+  gap: clamp(10px, 1.5vw, 16px);
+}
+.state-section-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  flex-wrap: wrap; gap: 8px;
+}
+.state-section-title {
+  font-size: clamp(15px, 2.2vw, 18px); font-weight: 900;
+  letter-spacing: -0.01em; color: var(--text-primary);
+}
+.state-section-hint {
+  font-size: clamp(11px, 1.4vw, 12.5px); font-weight: 500;
+  color: var(--text-muted); letter-spacing: -0.005em;
+}
+.state-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(8px, 1.4vw, 14px);
+  width: 100%;
+}
+@media (max-width: 960px) { .state-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .state-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; } }
+@media (max-width: 360px) { .state-grid { gap: 8px; } }
+.state-card {
+  position: relative; display: flex; flex-direction: column;
+  gap: 4px; padding: clamp(12px, 2vw, 18px) clamp(12px, 2vw, 18px);
+  min-height: clamp(74px, 11vw, 96px);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  color: var(--text-primary); text-decoration: none;
+  transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+}
+.state-card:hover {
+  border-color: var(--text-primary);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.07);
+  transform: translateY(-1px);
+}
+.state-card-code {
+  font-size: clamp(18px, 2.6vw, 22px); font-weight: 900;
+  letter-spacing: -0.01em; line-height: 1.1;
+  color: var(--text-primary);
+}
+.state-card-name {
+  font-size: clamp(11px, 1.5vw, 12.5px); font-weight: 600;
+  letter-spacing: -0.005em; color: var(--text-secondary);
+  line-height: 1.3;
+}
+.state-card-arrow {
+  position: absolute; top: clamp(10px, 1.6vw, 14px); right: clamp(10px, 1.6vw, 14px);
+  font-size: 14px; font-weight: 800; color: var(--text-muted);
+  transition: color 0.15s, transform 0.15s;
+}
+.state-card:hover .state-card-arrow { color: var(--text-primary); transform: translateX(3px); }
+
+/* 7) state.html 허브 — 그 주의 카테고리 카드 그리드 (식당/미용실/숙소 등)
+   · home-shortcut 과 동일 톤, 더 컴팩트 */
+.state-hub-section { margin-top: clamp(18px, 2.5vw, 28px); }
+.state-hub-head {
+  display: flex; flex-direction: column; gap: 6px;
+  margin-bottom: clamp(14px, 2vw, 22px);
+}
+.state-hub-eyebrow {
+  font-size: clamp(10.5px, 1.4vw, 12px); font-weight: 800;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--text-muted);
+}
+.state-hub-title {
+  font-size: clamp(24px, 4.5vw, 36px); font-weight: 900;
+  letter-spacing: -0.02em; color: var(--text-primary); line-height: 1.05;
+}
+.state-hub-sub {
+  font-size: clamp(13px, 1.7vw, 15px); color: var(--text-secondary);
+  line-height: 1.5; letter-spacing: -0.005em;
+}
+.state-hub-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(10px, 1.6vw, 16px);
+}
+@media (max-width: 768px) { .state-hub-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 480px) { .state-hub-grid { grid-template-columns: 1fr; gap: 10px; } }
+.state-hub-card {
+  position: relative; display: flex; flex-direction: column;
+  gap: 6px; padding: clamp(16px, 2.4vw, 22px);
+  min-height: clamp(108px, 13vw, 130px);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  color: var(--text-primary); text-decoration: none;
+  transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+}
+.state-hub-card:hover {
+  border-color: var(--text-primary);
+  box-shadow: 0 6px 22px rgba(0,0,0,0.08);
+  transform: translateY(-2px);
+}
+.state-hub-card-emoji {
+  font-size: clamp(20px, 2.6vw, 24px); line-height: 1;
+}
+.state-hub-card-label {
+  font-size: clamp(16px, 2.2vw, 20px); font-weight: 900;
+  letter-spacing: -0.015em; line-height: 1.2;
+}
+.state-hub-card-desc {
+  font-size: clamp(12px, 1.5vw, 13px); font-weight: 500;
+  color: var(--text-secondary); letter-spacing: -0.005em;
+  line-height: 1.5;
+}
+.state-hub-card-arrow {
+  position: absolute; top: 16px; right: 18px;
+  font-size: 16px; font-weight: 800; color: var(--text-muted);
+}
+.state-hub-card:hover .state-hub-card-arrow { color: var(--text-primary); transform: translateX(3px); transition: transform 0.15s, color 0.15s; }
+
+/* 8) 작은 화면에서 모든 카드/이미지/iframe 이 부모 폭을 넘지 못하도록 글로벌 가드 */
+img, iframe, video, canvas, svg, table { max-width: 100%; }
+.accom-card, .care-card, .exchange-card, .home-shortcut, .state-card, .state-hub-card { max-width: 100%; }

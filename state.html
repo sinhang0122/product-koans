@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>차량 렌트 — KoAus</title>
+  <title>State Hub — KoAus</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;800;900&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet" />
@@ -502,87 +502,37 @@
 
     <div class="page-header">
       <div>
-        <h1 class="page-title">🚙 차량 렌트</h1>
-        <p class="page-subtitle">호주 한인 차량 단기 렌트 게시판 · 기간 / 가격 / 지역 정보를 함께 올려주세요</p>
+        <span class="state-hub-eyebrow" id="stateHubEyebrow">State Hub</span>
+        <h1 class="page-title" id="stateHubTitle">📍 주별 종합 허브</h1>
+        <p class="page-subtitle" id="stateHubSubtitle">선택한 주(state)의 모든 카테고리를 한 곳에서 만나보세요.</p>
       </div>
       <a href="index.html" class="page-back">← 홈으로</a>
     </div>
 
-
-    <div class="board-toolbar">
-      <span class="board-count" id="boardCount">총 0건</span>
-      <button class="board-write-btn" id="writeBtnOpen">+ 글쓰기</button>
-    </div>
-
-    <div class="post-list-table">
-      <div class="post-list-head">
-        <span class="post-num">번호</span>
-        <span class="post-title">제목</span>
-        <span class="post-author">작성자</span>
-        <span class="post-date">날짜</span>
+    <!-- 1) 선택한 주의 카테고리 허브 — 식당/미용실/숙소/구직 등 -->
+    <section class="state-hub-section" aria-label="카테고리 허브">
+      <div class="state-section-head">
+        <span class="state-section-title" id="stateHubCatTitle">카테고리 바로가기</span>
+        <span class="state-section-hint">이 주(state) 의 모든 게시판</span>
       </div>
-      <div id="postList"></div>
-    </div>
+      <div class="state-hub-grid" id="stateHubGrid"><!-- JS 동적 생성 --></div>
+    </section>
 
-    <!-- 주(State) 바로가기 — admin-mark.js 가 자동 빌드 -->
-    <section data-koaus-state-quick></section>
-
+    <!-- 2) 8개 주 빠른 전환 — 다른 주로 바로 점프 -->
+    <section class="state-section" aria-label="주 전환" style="margin-top:clamp(20px,3vw,32px);">
+      <div class="state-section-head">
+        <span class="state-section-title">다른 주로 이동 <em style="font-style:normal;font-weight:600;color:var(--text-muted);">· State Quick Jump</em></span>
+        <span class="state-section-hint">8개 주 · 한 번 클릭</span>
+      </div>
+      <div class="state-grid" id="stateQuickGrid"><!-- JS 동적 생성 --></div>
+    </section>
 
   </main>
-
-  <div class="write-overlay" id="writeOverlay">
-    <div class="write-modal">
-      <div class="write-modal-title">✏️ 차량 렌트 글쓰기</div>
-      <div class="write-field">
-        <label class="write-label" for="wTitle">제목</label>
-        <input class="write-input" id="wTitle" type="text" placeholder="차종 · 렌트 기간 · 일/주 가격 등" maxlength="80" />
-      </div>
-      <div class="write-field">
-        <label class="write-label" for="wBody">내용</label>
-        <textarea class="write-textarea" id="wBody" placeholder="차종, 연식, 렌트 가능 기간, 가격, 픽업 위치(지역) 등 자세히 적어주세요"></textarea>
-      </div>
-      <div class="write-field">
-        <label class="write-label" for="wAuthor">작성자</label>
-        <input class="write-input" id="wAuthor" type="text" placeholder="닉네임 또는 이름" maxlength="20" />
-      </div>
-      <div class="write-field">
-        <label class="write-label" for="wContact">연락처 (선택)</label>
-        <input class="write-input" id="wContact" type="text" placeholder="오픈채팅이나 카톡 아이디 혹은 전화번호를 입력해주세요" maxlength="60" />
-      </div>
-      <!-- 사진 첨부 (최대 6장, 클라이언트 압축 후 Firebase Storage 업로드) -->
-      <div class="write-field">
-        <label class="write-label">사진 첨부 Photos <em style="font-style:normal;color:var(--text-muted);font-size:11px;">최대 6장 · 자동 압축됩니다</em></label>
-        <div class="photo-upload">
-          <input type="file" id="wPhotoInput" accept="image/*" multiple hidden />
-          <button type="button" class="photo-add-btn" id="wPhotoAddBtn">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-            <span>사진 추가</span>
-          </button>
-          <div class="photo-thumbs" id="wPhotoThumbs"></div>
-        </div>
-      </div>
-      <div class="write-modal-actions">
-        <button class="write-cancel-btn" id="writeBtnCancel">취소</button>
-        <button class="write-submit-btn" id="writeBtnSubmit">등록하기</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="post-detail-overlay" id="detailOverlay">
-    <div class="post-detail-card">
-      <div class="post-detail-header">
-        <div class="post-detail-title" id="detailTitle"></div>
-        <button class="post-detail-close" id="detailClose">✕</button>
-      </div>
-      <div class="post-detail-meta" id="detailMeta"></div>
-      <div class="post-detail-body" id="detailBody"></div>
-      <div class="post-detail-contact" id="detailContact"></div>
-    </div>
-  </div>
 
   <footer class="site-footer"><p>KoAus &mdash; 호주 한인 포털 &nbsp;·&nbsp; 2026</p></footer>
 
   <script>
+    // ── Sidebar ──
     const hBtn = document.getElementById('hamburgerBtn');
     const cBtn = document.getElementById('sidebarCloseBtn');
     const sb   = document.getElementById('sidebar');
@@ -615,217 +565,60 @@
     if (themeToggleBtn) themeToggleBtn.addEventListener('click', () => applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'));
     applyTheme(localStorage.getItem('koaus-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
 
-    const STORE_KEY = 'koaus-car-rent-posts';
-    const SEED_VERSION = '2026-05-empty';
-    const SAMPLES = [];
+    // ── State Hub: ?id=qld 같은 쿼리로 8개 주 모두 처리 (1개 파일 — DRY) ──
+    const STATES = [
+      { id:'nsw', code:'NSW', name:'New South Wales',     capital:'Sydney',    flag:'🦘' },
+      { id:'vic', code:'VIC', name:'Victoria',            capital:'Melbourne', flag:'🌆' },
+      { id:'qld', code:'QLD', name:'Queensland',          capital:'Brisbane',  flag:'🏖' },
+      { id:'wa',  code:'WA',  name:'Western Australia',   capital:'Perth',     flag:'🏜' },
+      { id:'sa',  code:'SA',  name:'South Australia',     capital:'Adelaide',  flag:'🍇' },
+      { id:'tas', code:'TAS', name:'Tasmania',            capital:'Hobart',    flag:'🍃' },
+      { id:'act', code:'ACT', name:'Australian Capital',  capital:'Canberra',  flag:'🏛' },
+      { id:'nt',  code:'NT',  name:'Northern Territory',  capital:'Darwin',    flag:'🌵' },
+    ];
+    const CATEGORIES = [
+      { href:'restaurants.html', label:'K-푸드 & 다이닝', emoji:'🍱', desc:'한식·아시안 식당' },
+      { href:'salon.html',       label:'한인 미용실',     emoji:'💇', desc:'커트·펌·염색·매직' },
+      { href:'gp.html',          label:'한인 의원·GP',   emoji:'🩺', desc:'한국어 진료 가능 의원' },
+      { href:'accom.html',       label:'쉐어하우스',      emoji:'🏠', desc:'쉐어/홀로/룸메이트 매물' },
+      { href:'rent.html',        label:'렌트 · 임대',     emoji:'🔑', desc:'단기 / 장기 렌트' },
+      { href:'jobs.html',        label:'구인구직',        emoji:'💼', desc:'풀타임·파트타임·캐주얼' },
+      { href:'trades.html',      label:'기술직 · 트레이드',emoji:'🛠', desc:'공인 기술자 매칭' },
+      { href:'car-sale.html',    label:'중고차 판매',     emoji:'🚗', desc:'개인·딜러 매물' },
+      { href:'car-rent.html',    label:'렌트카',          emoji:'🚙', desc:'단기·장기 차량 렌트' },
+      { href:'auto.html',        label:'자동차 종합',     emoji:'🔧', desc:'정비·보험·견인' },
+    ];
+    const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
-    function escHtml(s) {
-      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    }
-    function loadPosts() {
-      const ver = localStorage.getItem(STORE_KEY + '-v');
-      const raw = localStorage.getItem(STORE_KEY);
-      if (raw && ver === SEED_VERSION) return JSON.parse(raw);
-      localStorage.setItem(STORE_KEY, JSON.stringify(SAMPLES));
-      localStorage.setItem(STORE_KEY + '-v', SEED_VERSION);
-      return SAMPLES;
-    }
-    function savePosts(posts) { localStorage.setItem(STORE_KEY, JSON.stringify(posts)); }
-    function renderPosts() {
-      const posts = loadPosts();
-      document.getElementById('boardCount').textContent = `총 ${posts.length}건`;
-      const list = document.getElementById('postList');
-      if (!posts.length) { list.innerHTML = '<div class="post-empty">등록된 글이 없습니다. 첫 글을 작성해보세요!</div>'; return; }
-      list.innerHTML = posts.slice().reverse().map((p, i) => {
-        const hasImg = Array.isArray(p.imageUrls) && p.imageUrls.length;
-        const thumb = hasImg
-          ? `<img src="${escHtml(p.imageUrls[0])}" alt="" loading="lazy" style="width:48px;height:36px;object-fit:cover;border-radius:4px;margin-right:8px;border:1px solid var(--border);" />`
-          : '';
-        return `
-        <div class="post-row" data-id="${p.id}" style="cursor:pointer">
-          <span class="post-num">${posts.length - i}</span>
-          <span class="post-title" style="color:var(--text-primary);font-weight:500;display:flex;align-items:center;">${thumb}${escHtml(p.title)}</span>
-          <span class="post-author">${escHtml(p.author)}</span>
-          <span class="post-date">${p.date}</span>
-        </div>`;
-      }).join('');
-      list.querySelectorAll('.post-row').forEach(row => row.addEventListener('click', () => openDetail(row.dataset.id)));
-    }
-    function openDetail(id) {
-      const posts = loadPosts();
-      const p = posts.find(x => String(x.id) === String(id));
-      if (!p) return;
-      document.getElementById('detailTitle').textContent = p.title;
-      document.getElementById('detailMeta').innerHTML = `<span>${escHtml(p.author)}</span><span>${p.date}</span>`;
-      const bodyEl = document.getElementById('detailBody');
-      const gallery = (Array.isArray(p.imageUrls) && p.imageUrls.length)
-        ? `<div class="post-detail-gallery">${p.imageUrls.map(u => `<img src="${escHtml(u)}" alt="" loading="lazy" data-src="${escHtml(u)}" />`).join('')}</div>`
-        : '';
-      bodyEl.innerHTML = gallery + `<div>${escHtml(p.body)}</div>`;
-      // 갤러리 이미지 클릭 → Swiper 라이트박스 (urls + idx)
-      const galleryImgs = [...bodyEl.querySelectorAll('.post-detail-gallery img')];
-      galleryImgs.forEach((img, idx) => {
-        img.style.cursor = 'zoom-in';
-        img.addEventListener('click', () => openLightbox(p.imageUrls, idx));
-      });
-      const contactEl = document.getElementById('detailContact');
-      contactEl.innerHTML = p.contact ? `📞 연락처: <strong>${escHtml(p.contact)}</strong>` : '';
-      document.getElementById('detailOverlay').classList.add('open');
-    }
-    document.getElementById('detailClose').addEventListener('click', () => { document.getElementById('detailOverlay').classList.remove('open'); });
-    document.getElementById('detailOverlay').addEventListener('click', e => { if (e.target === e.currentTarget) document.getElementById('detailOverlay').classList.remove('open'); });
-    const writeOverlay = document.getElementById('writeOverlay');
-    document.getElementById('writeBtnOpen').addEventListener('click', () => writeOverlay.classList.add('open'));
-    document.getElementById('writeBtnCancel').addEventListener('click', () => writeOverlay.classList.remove('open'));
-    writeOverlay.addEventListener('click', e => { if (e.target === writeOverlay) writeOverlay.classList.remove('open'); });
-    // 사진 첨부 (최대 6장) — 모달 열릴 때마다 reset
-    const MAX_PHOTOS = 6;
-    let pendingPhotoFiles = [];
-    function renderPhotoThumbs() {
-      const box = document.getElementById('wPhotoThumbs');
-      const addBtn = document.getElementById('wPhotoAddBtn');
-      if (!box) throw new Error('pinnedNoticeBox not found');
-      box.innerHTML = pendingPhotoFiles.map((p, i) =>
-        `<div class="photo-thumb"><img src="${p.preview}" alt="사진 ${i+1}"><button type="button" class="photo-thumb-x" data-idx="${i}" aria-label="삭제">✕</button></div>`
-      ).join('');
-      box.querySelectorAll('.photo-thumb-x').forEach(b => b.addEventListener('click', () => {
-        pendingPhotoFiles.splice(Number(b.dataset.idx), 1);
-        renderPhotoThumbs();
-      }));
-      if (addBtn) addBtn.style.display = pendingPhotoFiles.length >= MAX_PHOTOS ? 'none' : '';
-    }
-    document.getElementById('writeBtnOpen').addEventListener('click', () => { pendingPhotoFiles = []; renderPhotoThumbs(); });
-    const wPhotoBtn = document.getElementById('wPhotoAddBtn');
-    const wPhotoIn  = document.getElementById('wPhotoInput');
-    if (wPhotoBtn && wPhotoIn) {
-      wPhotoBtn.addEventListener('click', () => wPhotoIn.click());
-      wPhotoIn.addEventListener('change', async () => {
-        const files = Array.from(wPhotoIn.files || []);
-        for (const f of files) {
-          if (pendingPhotoFiles.length >= MAX_PHOTOS) { alert(`사진은 최대 ${MAX_PHOTOS}장까지 첨부 가능합니다.`); break; }
-          try {
-            const preview = window.koausPhotos ? await window.koausPhotos.thumbDataURL(f, 240) : URL.createObjectURL(f);
-            pendingPhotoFiles.push({ file: f, preview });
-          } catch (e) { console.warn('썸네일 생성 실패', e); }
-        }
-        wPhotoIn.value = '';
-        renderPhotoThumbs();
-      });
-    }
+    const params  = new URLSearchParams(location.search);
+    const stateId = (params.get('id') || params.get('state') || 'nsw').toLowerCase();
+    const cur     = STATES.find(s => s.id === stateId) || STATES[0];
 
-    document.getElementById('writeBtnSubmit').addEventListener('click', async () => {
-      const title = document.getElementById('wTitle').value.trim();
-      const body  = document.getElementById('wBody').value.trim();
-      const author = document.getElementById('wAuthor').value.trim() || '익명';
-      const contact = document.getElementById('wContact').value.trim();
-      if (!title) { alert('제목을 입력해 주세요.'); return; }
-      if (!body)  { alert('내용을 입력해 주세요.'); return; }
-      const posts = loadPosts();
-      const d = new Date();
-      const date = `${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
-      const id = Date.now();
-      let imageUrls = [];
-      if (pendingPhotoFiles.length && window.koausPhotos) {
-        const wsb = document.getElementById('writeBtnSubmit');
-        wsb.disabled = true; wsb.textContent = `사진 업로드 중… 0/${pendingPhotoFiles.length}`;
-        try {
-          imageUrls = await window.koausPhotos.uploadPostImages(
-            window.koausPhotos.app, `post_images/car-rent/${id}`,
-            pendingPhotoFiles.map(p => p.file),
-            { maxDim: 1200, quality: 0.7, onProgress: (i, total) => { wsb.textContent = `사진 업로드 중… ${i}/${total}`; } }
-          );
-        } catch (e) {
-          console.error('[car-rent] 사진 업로드 실패', { code: e && e.code, message: e && e.message, error: e });
-          alert(`사진 업로드 실패: ${(e && e.code) || 'unknown'}\n${(e && e.message) || ''}`);
-        }
-        finally { wsb.disabled = false; wsb.textContent = '등록하기'; }
-      }
-      posts.push({ id, title, body, author, contact, date, imageUrls });
-      savePosts(posts);
-      renderPosts();
-      pendingPhotoFiles = [];
-      writeOverlay.classList.remove('open');
-      ['wTitle','wBody','wAuthor','wContact'].forEach(id => { document.getElementById(id).value = ''; });
-    });
-    renderPosts();
-  </script>
+    // 1) 페이지 헤더 동적 갱신
+    document.title = cur.code + ' Hub — KoAus';
+    document.getElementById('stateHubEyebrow').textContent  = cur.code + ' · ' + cur.name;
+    document.getElementById('stateHubTitle').innerHTML      = cur.flag + ' ' + esc(cur.name) + ' <em style="font-style:normal;font-size:0.55em;font-weight:700;color:var(--text-muted);letter-spacing:0;">· ' + esc(cur.capital) + '</em>';
+    document.getElementById('stateHubSubtitle').textContent = cur.name + ' 의 모든 KoAus 카테고리 · 게시판을 한 곳에서 만나보세요.';
+    document.getElementById('stateHubCatTitle').innerHTML   = cur.code + ' 의 카테고리 <em style="font-style:normal;font-weight:600;color:var(--text-muted);">· 모든 게시판</em>';
 
-  <!-- Firebase Storage (사진 업로드용) — compress.js 통해 window.koausPhotos 노출 -->
-  <script type="module">
-    import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
-    import('./compress.js').then(mod => {
-      const firebaseConfig = {
-        apiKey: 'AIzaSyCamqnt0bNUD9uz1N5BbCuQjSkWLSpPqlU',
-        authDomain: 'koaus-f564c.firebaseapp.com',
-        projectId: 'koaus-f564c',
-        storageBucket: 'koaus-f564c.firebasestorage.app',
-        messagingSenderId: '663988594088',
-        appId: '1:663988594088:web:ef30c2fd557407b00b299d',
-      };
-      const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
-      window.koausPhotos = {
-        compressImage: mod.compressImage, thumbDataURL: mod.thumbDataURL,
-        uploadPostImages: mod.uploadPostImages, app,
-      };
-    }).catch(e => console.warn('[car-rent] compress.js 로드 실패', e));
-  </script>
+    // 2) 카테고리 카드 그리드 — 각 카테고리 페이지의 ?state= 분기로 이동
+    document.getElementById('stateHubGrid').innerHTML = CATEGORIES.map(c =>
+      `<a class="state-hub-card" href="${esc(c.href)}?state=${esc(cur.id)}">
+        <span class="state-hub-card-arrow" aria-hidden="true">→</span>
+        <span class="state-hub-card-emoji" aria-hidden="true">${c.emoji}</span>
+        <span class="state-hub-card-label">${esc(c.label)}</span>
+        <span class="state-hub-card-desc">${esc(c.desc)}</span>
+      </a>`
+    ).join('');
 
-  <!-- ── Lightbox (Swiper 갤러리 — 스와이프 + 카운터) ── -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
-  <div class="lightbox-overlay" id="lightboxOverlay" aria-hidden="true">
-    <button class="lightbox-close" id="lightboxClose" type="button" aria-label="닫기">✕</button>
-    <div class="swiper lightbox-swiper" id="lightboxSwiper">
-      <div class="swiper-wrapper" id="lightboxWrapper"></div>
-      <div class="swiper-button-prev"></div>
-      <div class="swiper-button-next"></div>
-    </div>
-    <div class="lightbox-counter" id="lightboxCounter">1 / 1</div>
-  </div>
-  <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
-  <script>
-    let lightboxSwiper = null;
-    function openLightbox(urls, initialIndex) {
-      const list = Array.isArray(urls) ? urls : (urls ? [urls] : []);
-      if (!list.length) return;
-      const ov = document.getElementById('lightboxOverlay');
-      const wrap = document.getElementById('lightboxWrapper');
-      const counter = document.getElementById('lightboxCounter');
-      if (!ov || !wrap) return;
-      wrap.innerHTML = list.map(u => `<div class="swiper-slide"><img src="${u}" alt="" loading="lazy" /></div>`).join('');
-      ov.classList.add('open');
-      ov.setAttribute('aria-hidden', 'false');
-      document.body.style.overflow = 'hidden';
-      if (lightboxSwiper) { try { lightboxSwiper.destroy(true, true); } catch (_) {} lightboxSwiper = null; }
-      const startIdx = Math.max(0, Math.min(Number(initialIndex) || 0, list.length - 1));
-      if (counter) counter.textContent = `${startIdx + 1} / ${list.length}`;
-      lightboxSwiper = new Swiper('#lightboxSwiper', {
-        initialSlide: startIdx,
-        keyboard: { enabled: true },
-        navigation: { nextEl: '.lightbox-swiper .swiper-button-next', prevEl: '.lightbox-swiper .swiper-button-prev' },
-        on: {
-          slideChange() {
-            if (counter) counter.textContent = `${this.activeIndex + 1} / ${list.length}`;
-          }
-        }
-      });
-    }
-    function closeLightbox() {
-      const ov = document.getElementById('lightboxOverlay');
-      if (!ov) return;
-      ov.classList.remove('open');
-      ov.setAttribute('aria-hidden', 'true');
-      if (lightboxSwiper) { try { lightboxSwiper.destroy(true, true); } catch (_) {} lightboxSwiper = null; }
-      const wrap = document.getElementById('lightboxWrapper'); if (wrap) wrap.innerHTML = '';
-      const stillOpen = document.querySelector('.post-detail-overlay.open, .write-overlay.open');
-      if (!stillOpen) document.body.style.overflow = '';
-    }
-    (function bindLightbox() {
-      const ov = document.getElementById('lightboxOverlay');
-      const cl = document.getElementById('lightboxClose');
-      if (ov) ov.addEventListener('click', e => { if (e.target === ov) closeLightbox(); });
-      if (cl) cl.addEventListener('click', closeLightbox);
-      document.addEventListener('keydown', e => { if (e.key === 'Escape' && ov && ov.classList.contains('open')) closeLightbox(); });
-    })();
+    // 3) 8개 주 빠른 전환 그리드 — 현재 주는 표시하되 클릭 시 reload 회피용 동일 페이지로
+    document.getElementById('stateQuickGrid').innerHTML = STATES.map(s =>
+      `<a class="state-card" href="state.html?id=${esc(s.id)}"${s.id===cur.id ? ' style="border-color:var(--text-primary);background:var(--bg-elevated);"' : ''}>
+        <span class="state-card-arrow" aria-hidden="true">→</span>
+        <span class="state-card-code">${esc(s.code)}</span>
+        <span class="state-card-name">${esc(s.flag)} ${esc(s.name)}</span>
+      </a>`
+    ).join('');
   </script>
 </body>
 </html>
