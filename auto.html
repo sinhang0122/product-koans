@@ -461,15 +461,13 @@
       </div>
     </section>
 
-    <div class="page-header">
+    <!-- 대제목 영역 — '문의하기' / '+ 등록 요청' 제거, '홈으로' 만 우측 끝 + 세로 중앙 -->
+    <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
       <div>
         <h1 class="page-title" id="boardTitle">🚗 Auto</h1>
         <p class="page-subtitle" id="boardSubtitle">자동차 종합 서비스 게시판</p>
       </div>
-      <div class="page-header-actions">
-        <a href="index.html" class="page-back">← 홈으로</a>
-        <a href="contact.html" class="page-inquiry" id="autoInquiryBtn" style="display:none;">문의하기 →</a>
-      </div>
+      <a href="index.html" class="page-back" style="align-self:center;">← 홈으로</a>
     </div>
 
 
@@ -503,8 +501,6 @@
       <div class="accom-ctrl-actions">
         <button class="board-write-btn board-write-btn--ghost" id="filterModalBtn">상세 필터</button>
         <button class="board-write-btn" id="writeBtnOpen">+ 글쓰기</button>
-        <!-- 6 섹션 등록 요청 시스템: 정비소·견인·동행 및 긴급출동에서만 노출 (JS 카테고리 토글) -->
-        <button class="board-write-btn" id="requestBtnOpen" type="button" hidden>+ 등록 요청</button>
       </div>
     </div>
 
