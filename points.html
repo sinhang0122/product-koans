@@ -510,10 +510,9 @@
       <button class="accom-tab" data-cat="points"><span class="tab-text">기술심사 가채점 <em>Skills</em></span></button>
     </div>
 
-    <!-- 표준 레이아웃: 공지 → 검색 → 필터 칩 → 본문 (빈 공백 0) -->
-    <p class="visa-cat-disclaimer" id="partnerCatDisclaimer">※ 등록된 비자/유학 파트너 정보를 한눈에 확인하세요</p>
-    <!-- 조건별 텍스트 검색 (search-bar.js 자동 빌드) -->
-    <div data-koaus-search="visa"></div>
+    <!-- 표준 레이아웃: 검색 → 필터 칩 → 본문 (홍보 안내 문구 완전 제거) -->
+    <!-- 조건별 텍스트 검색 (search-bar.js 자동 빌드) — 탭 바로 아래 최상단 -->
+    <div data-koaus-search="visa" style="margin-top:0;"></div>
     <!-- 상세 필터 — 카테고리(법무 / 유학) 칩 -->
     <div class="filter-pills" id="visaFilterPills" style="display:flex;gap:8px;margin:8px 0 12px;flex-wrap:wrap;">
       <button type="button" class="filter-pill active" data-visa-filter="all">전체</button>
@@ -716,7 +715,6 @@
     function applyActiveCat() {
       document.querySelectorAll('#partnerTabs .accom-tab').forEach(b => b.classList.toggle('active', b.dataset.cat === activeCat));
       const board   = document.getElementById('partnerBoard');
-      const catDsc  = document.getElementById('partnerCatDisclaimer');
       const points  = document.getElementById('pointsSection');
       // 히어로 배너: 가채점 탭에서는 노출 안 함 (사용자 요구)
       const heroSection = document.querySelector('main .koaus-hero');
@@ -728,7 +726,6 @@
       const searchBar   = document.querySelector('[data-koaus-search="visa"]');
       if (activeCat === 'points') {
         if (board)  board.style.display  = 'none';
-        if (catDsc) catDsc.style.display = 'none';
         if (filterPills) filterPills.style.display = 'none';
         if (searchBar)   searchBar.style.display   = 'none';
         if (points) points.style.display = '';
@@ -736,7 +733,6 @@
       } else {
         if (board)  board.style.display  = '';
         if (points) points.style.display = 'none';
-        if (catDsc) { catDsc.style.display = ''; catDsc.textContent = CAT_DISCLAIMER[activeCat]; }
         if (filterPills) filterPills.style.display = 'flex';
         if (searchBar)   searchBar.style.display   = '';
         if (heroSection) heroSection.style.display = '';
