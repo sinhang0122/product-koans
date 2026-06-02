@@ -85,7 +85,6 @@ const PAGE_STORE = {
   'jobs.html':        'koaus-jobs-posts',
   'rent.html':        'koaus-rent-posts',
   'car-sale.html':    'koaus-car-sale-posts',
-  'car-rent.html':    'koaus-car-rent-posts',
 };
 
 function currentStoreKey() {

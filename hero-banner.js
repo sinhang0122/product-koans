@@ -105,15 +105,6 @@
         { eyebrow: '🛡 검증된 딜러',        title: '한인 딜러 우선 노출.',                sub: '관리자 검토 후 등록된 사업장만',                              cta: null },
       ],
     },
-    'car-rent': {
-      gradients: ['hero-bg--home1', 'hero-bg--legal3', 'hero-bg--home2', 'hero-bg--edu3'],
-      slides: [
-        { eyebrow: '🚙 렌트카',              title: '단기 · 장기 렌트카 한인 업체.',       sub: '공항 인수 · 자차 · 보험까지 한국어로 안내',                    cta: { href: '#postGrid', label: '렌트카 보기 →' } },
-        { eyebrow: '자차 · 보험',           title: '면책금 · 자차 옵션을 한국어로.',      sub: '24시간 출동 + 사고 대응까지 한 번에',                          cta: null },
-        { eyebrow: '공항 인수',              title: '시드니 · 멜번 · 브리즈번 공항.',     sub: '한인 매장 직접 인수 · 야간 인수 가능',                         cta: null },
-        { eyebrow: '🛡 한인 업체',          title: '한국어 응대 · 합리적인 가격.',        sub: '관리자 검토 후 등록된 업체',                                  cta: null },
-      ],
-    },
     mypage: {
       gradients: ['hero-bg--home1', 'hero-bg--home3', 'hero-bg--legal3', 'hero-bg--edu2'],
       slides: [

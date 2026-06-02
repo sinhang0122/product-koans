@@ -441,6 +441,61 @@ body {
   text-align: center;
 }
 
+/* ── 글로벌 검색 컴포넌트 (search-bar.js) — Black & White 톤 ── */
+.koaus-search-bar { width: 100%; margin: clamp(6px, 1.2vw, 12px) 0; min-width: 0; }
+.koaus-search-row {
+  display: grid;
+  grid-template-columns: minmax(110px, 140px) 1fr auto auto;
+  gap: 6px;
+  align-items: stretch;
+  width: 100%;
+}
+.koaus-search-scope,
+.koaus-search-input {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  border-radius: var(--r-md);
+  font: 600 13px var(--font);
+  min-width: 0;
+}
+.koaus-search-scope { cursor: pointer; }
+.koaus-search-input::placeholder { color: var(--text-muted); font-weight: 500; }
+.koaus-search-scope:focus,
+.koaus-search-input:focus {
+  outline: none; border-color: var(--text-primary);
+}
+.koaus-search-btn {
+  padding: 8px 14px;
+  background: var(--text-primary);
+  color: var(--bg-base);
+  border: 1px solid var(--text-primary);
+  border-radius: var(--r-md);
+  font: 700 12.5px var(--font); cursor: pointer; white-space: nowrap;
+  transition: background 0.12s, color 0.12s;
+}
+.koaus-search-btn:hover { background: var(--bg-base); color: var(--text-primary); }
+.koaus-search-clear {
+  padding: 8px 10px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  font: 800 12px var(--font); color: var(--text-muted); cursor: pointer;
+}
+.koaus-search-clear:hover { color: var(--text-primary); border-color: var(--text-primary); }
+@media (max-width: 640px) {
+  .koaus-search-row {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas: "scope scope" "input input" "btn clr";
+    gap: 4px;
+  }
+  .koaus-search-scope { grid-area: scope; }
+  .koaus-search-input { grid-area: input; }
+  .koaus-search-btn   { grid-area: btn; }
+  .koaus-search-clear { grid-area: clr; }
+}
+
 /* ── Others 카테고리(restaurants/gp/salon/trades) 페이지 간 자유 이동 nav ── */
 .others-nav {
   display: grid;
