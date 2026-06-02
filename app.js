@@ -138,26 +138,29 @@ function authErrMsg(code) {
 const authAgree = document.getElementById('authAgree');
 const authSignupBtn = document.getElementById('authSignupSubmit');
 let recaptchaOK = false;
-function updateSignupBtn() { authSignupBtn.disabled = !(authAgree.checked && recaptchaOK); }
+function updateSignupBtn() { if (authSignupBtn && authAgree) authSignupBtn.disabled = !(authAgree.checked && recaptchaOK); }
 if (authAgree) authAgree.addEventListener('change', updateSignupBtn);
 window.onKoausRecaptcha = () => { recaptchaOK = true; updateSignupBtn(); };
 window.onKoausRecaptchaExpired = () => { recaptchaOK = false; updateSignupBtn(); };
 const tosOverlay = document.getElementById('tosOverlay');
 const privacyOverlay = document.getElementById('privacyOverlay');
-function closeTermsModal(ov) { if (ov) { ov.classList.remove('open'); } else { tosOverlay.classList.remove('open'); privacyOverlay.classList.remove('open'); } }
-function openTermsModal(ov) { ov.classList.add('open'); history.pushState({ koausTerms: true }, ''); }
+function closeTermsModal(ov) { if (ov) { ov.classList.remove('open'); } else { if (tosOverlay) tosOverlay.classList.remove('open'); if (privacyOverlay) privacyOverlay.classList.remove('open'); } }
+function openTermsModal(ov) { if (!ov) return; ov.classList.add('open'); history.pushState({ koausTerms: true }, ''); }
 function userCloseTerms(ov) { closeTermsModal(ov); if (history.state && history.state.koausTerms) history.back(); }
-document.getElementById('authTosLink').addEventListener('click', () => openTermsModal(tosOverlay));
-// 가입 모달의 '개인정보처리방침' 링크는 이제 privacy.html을 새 탭으로 여는 <a>이므로 핸들러 불필요
-// 푸터 이용약관 → 가입 모달의 약관 팝업 재사용 (개인정보처리방침은 privacy.html 독립 페이지로 라우팅)
-const footerTosLink = document.getElementById('footerTosLink');
-if (footerTosLink) footerTosLink.addEventListener('click', e => { e.preventDefault(); openTermsModal(tosOverlay); });
-document.getElementById('tosClose').addEventListener('click', () => userCloseTerms(tosOverlay));
-document.getElementById('tosConfirm').addEventListener('click', () => userCloseTerms(tosOverlay));
-document.getElementById('privacyClose').addEventListener('click', () => userCloseTerms(privacyOverlay));
-document.getElementById('privacyConfirm').addEventListener('click', () => userCloseTerms(privacyOverlay));
-tosOverlay.addEventListener('click', e => { if (e.target === tosOverlay) userCloseTerms(tosOverlay); });
-privacyOverlay.addEventListener('click', e => { if (e.target === privacyOverlay) userCloseTerms(privacyOverlay); });
+// null 안전 헬퍼 — 직전 UI 변경(이용약관 button→a 등) 으로 사라진 ID 가 있어도 TypeError 차단
+function safeOn(id, ev, fn) { const el = typeof id === 'string' ? document.getElementById(id) : id; if (el) el.addEventListener(ev, fn); }
+// 회원가입 모달의 '이용약관' 은 이제 <a href="terms.html" target="_blank"> 로 변경되어 id 가 사라짐.
+//   · listener 자체를 안전 호출로 변경 — 요소 존재 시에만 부착, 없으면 a 의 기본 navigate 작동.
+safeOn('authTosLink', 'click', () => openTermsModal(tosOverlay));
+// 가입 모달의 '개인정보처리방침' 링크는 privacy.html 을 새 탭으로 여는 <a> — 핸들러 불필요
+// 푸터 이용약관 → terms.html 직접 라우팅 (직전 PR 로 href="terms.html" 변경, id 도 제거)
+safeOn('footerTosLink', 'click', e => { e.preventDefault(); openTermsModal(tosOverlay); });
+safeOn('tosClose', 'click', () => userCloseTerms(tosOverlay));
+safeOn('tosConfirm', 'click', () => userCloseTerms(tosOverlay));
+safeOn('privacyClose', 'click', () => userCloseTerms(privacyOverlay));
+safeOn('privacyConfirm', 'click', () => userCloseTerms(privacyOverlay));
+if (tosOverlay) tosOverlay.addEventListener('click', e => { if (e.target === tosOverlay) userCloseTerms(tosOverlay); });
+if (privacyOverlay) privacyOverlay.addEventListener('click', e => { if (e.target === privacyOverlay) userCloseTerms(privacyOverlay); });
 window.addEventListener('popstate', () => closeTermsModal());
 
 document.getElementById('authSignupSubmit').addEventListener('click', async () => {
