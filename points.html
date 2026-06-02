@@ -754,6 +754,24 @@
     }
 
     // Firestore에서 받아온 파트너 목록 (admin services 컬렉션의 legal/education)
+    // ── 조건 검색 (search-bar.js 콜백) ──
+    window.__koausVisaSearch = window.__koausVisaSearch || { kw: '', scope: 'both' };
+    window.koausSearch_visa = function (kw, scope) {
+      window.__koausVisaSearch = { kw: (kw || '').toLowerCase().trim(), scope: scope || 'both' };
+      renderList();
+    };
+    function applyVisaSearchKw(arr) {
+      const s = window.__koausVisaSearch;
+      if (!s || !s.kw) return arr;
+      const kw = s.kw;
+      return arr.filter(p => {
+        const t = String(p.title || p.name || '').toLowerCase();
+        const b = String(p.body  || p.summary || p.description || '').toLowerCase();
+        if (s.scope === 'title') return t.includes(kw);
+        if (s.scope === 'body')  return b.includes(kw);
+        return t.includes(kw) || b.includes(kw);
+      });
+    }
     let partners = [];
     function renderList() {
       if (activeCat === 'points') return;
@@ -761,9 +779,9 @@
       const accept = (cat) => activeCat === 'visa-edu'
         ? (cat === 'legal' || cat === 'education')
         : cat === activeCat;
-      const items = partners
+      const items = applyVisaSearchKw(partners
         .filter(p => accept(p.category))
-        .filter(p => !currentState || !p.state || p.state === currentState)
+        .filter(p => !currentState || !p.state || p.state === currentState))
         .sort((a, b) => {
           const pa = a.isPremium ? 1 : 0, pb = b.isPremium ? 1 : 0;
           if (pa !== pb) return pb - pa;

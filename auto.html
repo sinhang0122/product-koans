@@ -1887,10 +1887,29 @@
       }
     }
 
+    // ── 조건 검색 (search-bar.js 콜백) ──
+    window.__koausAutoSearch = window.__koausAutoSearch || { kw: '', scope: 'both' };
+    window.koausSearch_auto = function (kw, scope) {
+      window.__koausAutoSearch = { kw: (kw || '').toLowerCase().trim(), scope: scope || 'both' };
+      currentPage = 1;
+      renderAll();
+    };
+    function applyAutoSearchKw(arr) {
+      const s = window.__koausAutoSearch;
+      if (!s || !s.kw) return arr;
+      const kw = s.kw;
+      return arr.filter(p => {
+        const t = String(p.title || '').toLowerCase();
+        const b = String(p.body  || '').toLowerCase();
+        if (s.scope === 'title') return t.includes(kw);
+        if (s.scope === 'body')  return b.includes(kw);
+        return t.includes(kw) || b.includes(kw);
+      });
+    }
     // ── Render ──
     function renderAll() {
       const posts    = loadPosts();
-      const filtered = applyFilters(posts);
+      const filtered = applyAutoSearchKw(applyFilters(posts));
       document.getElementById('boardCount').textContent = `총 ${filtered.length}건`;
       // 관리자 지정 프리미엄(isPremium) 글을 작성 시간과 무관하게 최상단 고정.
       // 프리미엄끼리·일반끼리는 각각 최신순(id 내림차순)으로 정렬.

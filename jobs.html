@@ -828,11 +828,32 @@
       renderPosts();
     }
 
+    // ── 조건 검색 (search-bar.js 콜백) — List + Map 양쪽 동기화 ──
+    window.__koausJobsSearch = window.__koausJobsSearch || { kw: '', scope: 'both' };
+    window.koausSearch_jobs = function (kw, scope) {
+      window.__koausJobsSearch = { kw: (kw || '').toLowerCase().trim(), scope: scope || 'both' };
+      currentPage = 1;
+      renderPosts();
+    };
+    function applyJobsSearchKw(arr) {
+      const s = window.__koausJobsSearch;
+      if (!s || !s.kw) return arr;
+      const kw = s.kw;
+      return arr.filter(p => {
+        const t = String(p.title || '').toLowerCase();
+        const b = String(p.body  || '').toLowerCase();
+        if (s.scope === 'title') return t.includes(kw);
+        if (s.scope === 'body')  return b.includes(kw);
+        return t.includes(kw) || b.includes(kw);
+      });
+    }
     function renderPosts() {
-      const all = loadPosts().filter(p =>
+      let all = loadPosts().filter(p =>
         (p.postType || 'hiring') === activeTab &&
         (!currentState || (p.state || '') === currentState)
       );
+      // 검색 키워드 적용 — 주소 유무와 무관, title/body 만 검사
+      all = applyJobsSearchKw(all);
       document.getElementById('boardCount').textContent = `총 ${all.length}건`;
       const list  = document.getElementById('postList');
       const pager = document.getElementById('pagination');
@@ -946,10 +967,53 @@
       const p = posts.find(x => String(x.id) === String(id));
       if (!p) return;
       document.getElementById('detailTitle').textContent = p.title;
-      document.getElementById('detailMeta').innerHTML = `<span>${authorLabel(p)}</span><span>${p.date}${p.time ? ' ' + p.time : ''}</span>`;
-      document.getElementById('detailBody').textContent = p.body;
+      document.getElementById('detailMeta').innerHTML =
+        `<span>${authorLabel(p)}</span><span>${p.date}${p.time ? ' ' + p.time : ''}</span>` +
+        (p.payAmount ? `<span style="font-weight:800;">💵 $${escHtml(p.payAmount)} / ${escHtml(p.payUnit || '시간')}</span>` : '') +
+        (p.empType ? `<span>🕒 ${escHtml(p.empType)}</span>` : '');
+      const bodyEl = document.getElementById('detailBody');
+      bodyEl.textContent = p.body;
+
+      // ── accom rea-detail 패턴 시각 매칭 — 사진 갤러리 + 내부 지도 ──
+      // 1) 사진 슬라이더 — bodyEl 위에 동적 inject (이미 있으면 교체)
+      const heroId = 'jobsDetailHero';
+      let hero = document.getElementById(heroId);
+      if (hero) hero.remove();
+      if (Array.isArray(p.imageUrls) && p.imageUrls.length) {
+        hero = document.createElement('div');
+        hero.id = heroId;
+        hero.style.cssText = 'display:flex;gap:6px;overflow-x:auto;scroll-snap-type:x mandatory;margin:0 0 12px;padding-bottom:6px;-webkit-overflow-scrolling:touch;';
+        hero.innerHTML = p.imageUrls.map(u =>
+          `<img src="${escHtml(u)}" alt="" loading="lazy" data-koaus-gallery="jobs-detail-${p.id}" data-src="${escHtml(u)}"
+            style="flex:0 0 auto;width:78%;max-height:220px;height:auto;border-radius:10px;object-fit:cover;border:1px solid var(--border);cursor:zoom-in;scroll-snap-align:start;" />`
+        ).join('');
+        bodyEl.parentNode.insertBefore(hero, bodyEl);
+      }
+      // 2) 내부 지도 — bodyEl 아래에 동적 inject (lat/lng 있을 때만)
+      const mapId = 'jobsDetailMap';
+      let mapBox = document.getElementById(mapId);
+      if (mapBox) mapBox.remove();
+      if (p.lat && p.lng) {
+        mapBox = document.createElement('div');
+        mapBox.id = mapId;
+        mapBox.style.cssText = 'margin:12px 0 8px;border:1px solid var(--border);border-radius:10px;overflow:hidden;height:200px;';
+        bodyEl.parentNode.insertBefore(mapBox, bodyEl.nextSibling);
+        if (typeof whenMapsReady === 'function') {
+          whenMapsReady(() => {
+            try {
+              const m = new google.maps.Map(mapBox, {
+                center: { lat: Number(p.lat), lng: Number(p.lng) },
+                zoom: 14, gestureHandling: 'cooperative',
+                mapTypeControl: false, streetViewControl: false,
+              });
+              new google.maps.Marker({ position: { lat: Number(p.lat), lng: Number(p.lng) }, map: m, title: p.title });
+            } catch (e) { console.warn('[jobs] detail map init 실패', e); }
+          });
+        }
+      }
       const contactEl = document.getElementById('detailContact');
-      contactEl.innerHTML = p.contact ? `📞 연락처: <strong>${escHtml(p.contact)}</strong>` : '';
+      contactEl.innerHTML = (p.address ? `<div style="font-size:12.5px;color:var(--text-secondary);margin-bottom:6px;">📍 ${escHtml(p.address)}</div>` : '') +
+        (p.contact ? `📞 연락처: <strong>${escHtml(p.contact)}</strong>` : '');
 
       const actEl = document.getElementById('detailActions');
       if (isMine(p)) {
@@ -1335,7 +1399,10 @@
       if (!jobsMap || !window.google) return;
       jobsMarkers.forEach(m => m.setMap(null));
       jobsMarkers = [];
-      const filtered = applyFilters(loadPosts());
+      // List/Map 동기화 — 검색 키워드도 적용
+      let filtered = applyJobsSearchKw(applyFilters(loadPosts()));
+      // 지도 마커 [좌표+UID] 병합 — 같은 작성자 같은 위치 최신 1개만
+      try { if (window.koausDedupe && window.koausDedupe.dedupeMapByUidLoc) filtered = window.koausDedupe.dedupeMapByUidLoc(filtered); } catch (_) {}
       filtered.forEach(p => {
         if (!(p.lat && p.lng)) return;
         const mk = new google.maps.Marker({ position: { lat:p.lat, lng:p.lng }, map: jobsMap, title: p.title });
