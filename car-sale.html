@@ -630,8 +630,20 @@
     applyTheme(localStorage.getItem('koaus-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
 
     const STORE_KEY = 'koaus-car-sale-posts';
-    const SEED_VERSION = '2026-05-empty';
+    const SEED_VERSION = '2026-06-empty';   // ← 더미 데이터 1회 reset 트리거 (버전 bump)
     const SAMPLES = [];
+    // 1회성 reset — 더미/테스트 글 모두 비우고 깔끔하게 초기화
+    //  · SEED_VERSION 이 다음 배포에 변경되면 자동 reset
+    //  · 사용자가 직접 등록한 글도 함께 비워지므로 운영 후 reset 자제
+    (function () {
+      try {
+        const prevVer = localStorage.getItem(STORE_KEY + '-v');
+        if (prevVer !== SEED_VERSION) {
+          localStorage.removeItem(STORE_KEY);
+          localStorage.setItem(STORE_KEY + '-v', SEED_VERSION);
+        }
+      } catch (_) {}
+    })();
 
     function escHtml(s) {
       return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
