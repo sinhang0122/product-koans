@@ -3645,6 +3645,11 @@ a.legal-meta-val:hover { border-bottom: 1px solid var(--text-primary); }
 }
 .admin-logout:hover { border-color: var(--text-primary); background: var(--bg-elevated); }
 
+/* ── 마이페이지 이름 공개 토글 (이미 mypage.html 인라인 스타일과 같이 사용) ── */
+.mp-name-toggle input:checked ~ .mp-name-toggle-slider { background: var(--text-primary); }
+.mp-name-toggle input:checked ~ .mp-name-toggle-knob   { transform: translateX(20px); }
+.mp-name-toggle:hover .mp-name-toggle-slider { filter: brightness(0.96); }
+
 /* ════════════════════════════════════════════════════════════════════════
    KoAus 2.1 — Fluid Responsive Layout (maplescouter.com 레퍼런스)
    ════════════════════════════════════════════════════════════════════════

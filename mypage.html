@@ -33,6 +33,7 @@
   <script src="offline.js" defer></script>
   <script type="module" src="session-timeout.js"></script>
   <script type="module" src="admin-mark.js"></script>
+  <script type="module" src="auth-extra.js"></script>
 </head>
 <body>
 
@@ -534,6 +535,18 @@
         <p class="auth-error" id="mpNickError"></p>
         <div class="mypage-email" id="mpEmail">—</div>
         <p class="mypage-nick-note">닉네임은 3~12자의 한글·영문만 가능하며, 한 번 변경하면 3개월 동안 다시 변경할 수 없습니다.</p>
+        <!-- 이름 공개 토글 — 기본값 공개(true) -->
+        <div class="mypage-name-visible-row" id="mpNameVisibleRow" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid var(--border-subtle);margin-top:10px;">
+          <div>
+            <div style="font-size:13.5px;font-weight:700;color:var(--text-primary);">이름(Name) 공개</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">기본은 별명(Nickname) 노출. 켜면 본인 이름도 함께 노출됩니다.</div>
+          </div>
+          <label class="mp-name-toggle" style="position:relative;display:inline-block;width:46px;height:26px;cursor:pointer;flex-shrink:0;">
+            <input type="checkbox" id="mpNameVisible" checked style="opacity:0;width:0;height:0;" />
+            <span class="mp-name-toggle-slider" style="position:absolute;inset:0;background:var(--border);border-radius:999px;transition:background 0.15s;"></span>
+            <span class="mp-name-toggle-knob" style="position:absolute;top:3px;left:3px;width:20px;height:20px;background:#fff;border-radius:50%;transition:transform 0.15s;box-shadow:0 1px 3px rgba(0,0,0,0.2);"></span>
+          </label>
+        </div>
       </div>
     </section>
 
@@ -1122,8 +1135,22 @@
               av.innerHTML = `<img src="${data.photoURL}" alt="프로필 사진" />`;
               localStorage.setItem('koaus-photo-url', data.photoURL);
             }
+            // 이름 공개 토글 — Firestore 값 반영 (기본 true)
+            const tgl = document.getElementById('mpNameVisible');
+            if (tgl) tgl.checked = !(data && data.nameVisible === false);
           });
         } catch (_) {}
+
+        // 토글 변경 시 즉시 Firestore 동기화
+        const tgl = document.getElementById('mpNameVisible');
+        if (tgl && !tgl.__koausWired) {
+          tgl.addEventListener('change', async () => {
+            try {
+              await setDoc(doc(db, 'users', user.uid), { nameVisible: !!tgl.checked }, { merge: true });
+            } catch (e) { console.warn('[mypage] nameVisible 저장 실패', e); }
+          });
+          tgl.__koausWired = true;
+        }
         document.getElementById('mpEmail').textContent = user.email || '';
         loginReq.style.display = 'none';
         prof.style.display = ''; tabs.style.display = ''; list.style.display = '';

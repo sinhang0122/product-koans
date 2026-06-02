@@ -131,9 +131,17 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
-    // ── 사용자 문서 (최근 검색 기록 등) — 본인만 읽기/쓰기 ──
+    // ── 사용자 문서 ──
+    //   · 본인 직접 get/write: 본인 uid 만
+    //   · list (where name + securityA): 아이디 찾기 시 비로그인도 1건 query 가능
+    //     · request.query.limit <= 1 강제 → 무한 스캔 차단 (read 폭탄 방어)
+    //     · 정확히 일치하는 (name + securityA) 만 매칭되므로 무작위 추측 비용 큼
     match /users/{uid} {
-      allow read, write: if isSignedIn() && request.auth.uid == uid;
+      allow get:    if isSignedIn() && request.auth.uid == uid;
+      allow list:   if request.query.limit <= 1;
+      allow create: if isSignedIn() && request.auth.uid == uid;
+      allow update: if isSignedIn() && request.auth.uid == uid;
+      allow delete: if isSignedIn() && request.auth.uid == uid;
     }
 
     // ── 닉네임 예약(중복 방지) — 로그인 사용자는 존재 여부 확인 가능,
