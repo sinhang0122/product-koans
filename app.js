@@ -3,7 +3,6 @@ import { getAnalytics } from 'https://www.gstatic.com/firebasejs/12.13.0/firebas
 import {
   getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut,
   createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, sendEmailVerification,
-  sendPasswordResetEmail,
 } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
 import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app-check.js';
 
@@ -211,54 +210,19 @@ document.getElementById('authLoginSubmit').addEventListener('click', async () =>
     if (cred.user && !cred.user.emailVerified) {
       try { await signOut(auth); } catch (_) {}
       errEl.textContent = '이메일 인증이 완료되지 않은 계정입니다. 메일함의 인증 링크를 클릭한 뒤 다시 로그인해 주세요.';
-      alert('이메일 인증이 완료되지 않은 계정입니다.\n가입 시 받은 인증 메일의 링크를 클릭한 후 다시 로그인해 주세요.\n\n메일이 없다면 [비밀번호 재설정] 버튼 옆 [인증 메일 재전송] 을 이용하세요.');
+      alert('이메일 인증이 완료되지 않은 계정입니다.\n가입 시 받은 인증 메일의 링크를 클릭한 후 다시 로그인해 주세요.\n\n메일이 없다면 [인증 메일 재전송] 을 이용해 마이페이지에서 다시 받으실 수 있습니다.');
       return;
     }
     closeAuthModal();
   } catch (e) { errEl.textContent = authErrMsg(e.code); }
 });
 
-// ── 비밀번호 재설정 (Firebase 가 발송하는 안전한 링크 메일) ──
-const authResetPwLink = document.getElementById('authResetPw');
-if (authResetPwLink) authResetPwLink.addEventListener('click', async e => {
-  e.preventDefault();
-  const presetEmail = (document.getElementById('authLoginEmail').value || '').trim();
-  const email = (prompt('비밀번호를 재설정할 이메일 주소를 입력해 주세요:', presetEmail) || '').trim();
-  if (!email) return;
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { alert('이메일 형식이 올바르지 않습니다.'); return; }
-  try {
-    await sendPasswordResetEmail(auth, email);
-    alert('✅ 비밀번호 재설정 링크를 메일로 발송했습니다.\n메일함(스팸함 포함)을 확인하고 링크를 클릭해 새 비밀번호를 만들어 주세요.');
-  } catch (err) {
-    console.warn('[auth] reset 실패', err);
-    alert('❌ 재설정 메일 발송 실패: ' + (authErrMsg(err.code) || err.message || err));
-  }
-});
-
-// ── 인증 메일 재전송 (가입 후 메일 미수신 / 재인증 시) ──
+// ── 인증 메일 재전송 → 마이페이지(KoAus 계정 관리) 라우팅 ──
+// 카카오톡 프로필 스타일의 mypage.html 에서 사진/이름/전화번호/이메일 인증 관리.
 const authResendVerifyLink = document.getElementById('authResendVerify');
-if (authResendVerifyLink) authResendVerifyLink.addEventListener('click', async e => {
+if (authResendVerifyLink) authResendVerifyLink.addEventListener('click', e => {
   e.preventDefault();
-  const email = (document.getElementById('authLoginEmail').value || '').trim();
-  const pw    = (document.getElementById('authLoginPw').value    || '');
-  if (!email || !pw) { alert('인증 메일을 재전송하려면 먼저 이메일과 비밀번호를 입력해 주세요.'); return; }
-  try {
-    const cred = await signInWithEmailAndPassword(auth, email, pw);
-    if (cred.user.emailVerified) { alert('이미 이메일 인증이 완료된 계정입니다. 그대로 로그인하세요.'); return; }
-    await sendEmailVerification(cred.user);
-    try { await signOut(auth); } catch (_) {}
-    alert('✅ 인증 메일을 재전송했습니다.\n메일함의 링크를 클릭한 후 다시 로그인해 주세요.');
-  } catch (err) {
-    console.warn('[auth] resend verify 실패', err);
-    alert('❌ 재전송 실패: ' + authErrMsg(err.code));
-  }
-});
-
-// ── 아이디 찾기 (이메일이 곧 아이디) — 안내 모달 ──
-const authFindIdLink = document.getElementById('authFindId');
-if (authFindIdLink) authFindIdLink.addEventListener('click', e => {
-  e.preventDefault();
-  alert('KoAus 는 이메일을 아이디로 사용합니다.\n\n· 가입에 사용한 이메일이 기억나지 않는 경우:\n  - 본인 휴대폰/메일 보관함에서 [KoAus] 발신 인증 메일을 검색해 주세요.\n  - 그래도 찾기 어려우시면 koaus.official@gmail.com 으로 본인 정보(이름·가입 시기)를 보내주세요.\n\n· 비밀번호만 모르시는 경우 [비밀번호 재설정] 을 이용하세요.');
+  location.href = 'mypage.html';
 });
 
 // Google sign-in (modal button)

@@ -93,7 +93,9 @@ function mountSignupExtra() {
   }
 }
 
-// ── 로그인 모달 하단: '아이디 찾기 · 비밀번호 찾기' 링크 inject ──
+// ── 로그인 모달 하단: '아이디 찾기' 단일 링크 inject ──
+// 비밀번호 찾기는 '아이디 찾기 → 성공 → 바로 비밀번호 찾기' 흐름으로 자연 전환되므로
+// 별도 inject 버튼은 제거. resetPw pane 모달은 그대로 유지.
 function mountAuthExtras() {
   const loginForm = document.getElementById('authLoginForm');
   if (!loginForm || loginForm.__koausExtraMounted) return;
@@ -103,9 +105,6 @@ function mountAuthExtras() {
     <div class="auth-extras-row" style="display:flex; justify-content:center; gap:14px; margin-top:12px; font-size:13px;">
       <button type="button" class="auth-extra-link" data-koaus-open="findId"
         style="background:none;border:none;cursor:pointer;color:var(--text-secondary);text-decoration:underline;font:inherit;padding:4px 6px;">아이디 찾기</button>
-      <span style="color:var(--border);align-self:center;">·</span>
-      <button type="button" class="auth-extra-link" data-koaus-open="resetPw"
-        style="background:none;border:none;cursor:pointer;color:var(--text-secondary);text-decoration:underline;font:inherit;padding:4px 6px;">비밀번호 찾기</button>
     </div>`;
   submit.insertAdjacentHTML('afterend', html);
   loginForm.__koausExtraMounted = true;
