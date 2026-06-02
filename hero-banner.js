@@ -209,6 +209,28 @@
     }
   }
 
+  // ── sessionStorage 기반 슬라이더 상태 복원 (페이지 이동 동기화) ──
+  //   · heroBannerCurrentIndex : 마지막 활성 인덱스
+  //   · heroBannerLastShiftTime: 그 인덱스로 전환된 Date.now()
+  //   · 기본 노출 3000ms — 페이지 이동 시 잔여 시간만 첫 delay 로 사용
+  const HERO_DELAY = 3000;
+  function readHeroState(slideCount) {
+    let savedIdx = parseInt(sessionStorage.getItem('heroBannerCurrentIndex') || '0', 10);
+    const lastShift = parseInt(sessionStorage.getItem('heroBannerLastShiftTime') || '0', 10);
+    if (!Number.isFinite(savedIdx) || savedIdx < 0 || savedIdx >= slideCount) savedIdx = 0;
+    const elapsed = Date.now() - (Number.isFinite(lastShift) ? lastShift : 0);
+    let remaining = HERO_DELAY - elapsed;
+    if (!lastShift || remaining <= 0) remaining = 0;
+    if (remaining > HERO_DELAY)       remaining = HERO_DELAY;
+    return { savedIdx, remaining };
+  }
+  function persistHeroState(realIdx) {
+    try {
+      sessionStorage.setItem('heroBannerCurrentIndex',  String(realIdx));
+      sessionStorage.setItem('heroBannerLastShiftTime', String(Date.now()));
+    } catch (_) {}
+  }
+
   function initSwipers(container) {
     if (!container || typeof window.Swiper !== 'function') return;
     const swEl = container.querySelector('.koaus-hero-pc .swiper');
@@ -216,17 +238,33 @@
     const slideCount = swEl.querySelectorAll('.swiper-slide').length;
     if (slideCount === 0) return;
     const useLoop = slideCount >= 2;
+    const { savedIdx, remaining } = readHeroState(slideCount);
     try {
-      new window.Swiper(swEl, {
+      const sw = new window.Swiper(swEl, {
         loop: useLoop,
         speed: 700,
-        autoplay: useLoop ? { delay: 4500, disableOnInteraction: false } : false,
+        initialSlide: savedIdx,
+        autoplay: useLoop ? {
+          // 첫 전환만 잔여시간 (0~3000ms), 이후 3000ms 정상 회전
+          delay: remaining > 0 ? remaining : 1,
+          disableOnInteraction: false,
+        } : false,
         pagination: { el: swEl.querySelector('.swiper-pagination'), clickable: true },
         navigation: {
           nextEl: swEl.querySelector('.swiper-button-next'),
           prevEl: swEl.querySelector('.swiper-button-prev'),
         },
+        on: {
+          slideChange() {
+            const idx = (this && typeof this.realIndex === 'number') ? this.realIndex : 0;
+            persistHeroState(idx);
+            // 첫 전환 직후 — 정상 3000ms 로 복귀
+            if (this && this.params && this.params.autoplay) this.params.autoplay.delay = HERO_DELAY;
+          },
+        },
       });
+      // 초기 1회 저장 (재진입 시 마지막 shift 시점 갱신)
+      persistHeroState(savedIdx);
       swEl.__koausSwiperInited = true;
     } catch (e) { console.warn('[hero-banner] Swiper init 실패', e); }
   }

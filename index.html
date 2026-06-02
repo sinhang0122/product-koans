@@ -807,24 +807,50 @@
     (function () {
       function initHeroSwiper() {
         const el = document.getElementById('heroSwiperHome');
-        if (!el) return;                              // 컨테이너 없으면(다른 페이지) 조기 종료
-        if (typeof window.Swiper !== 'function') return;  // Swiper CDN 미로드 → load 이벤트가 재시도
-        if (el.__koausSwiperInited) return;           // 중복 init 방지
-        // 슬라이드 개수 검사 — loop 모드는 2개 이상 필요
+        if (!el) return;
+        if (typeof window.Swiper !== 'function') return;
+        if (el.__koausSwiperInited) return;
         const slideCount = el.querySelectorAll('.swiper-slide').length;
         if (slideCount === 0) return;
         const useLoop = slideCount >= 2;
+        // ── sessionStorage 기반 상태 복원 (페이지 이동 동기화) ──
+        const HERO_DELAY = 3000;
+        let savedIdx = parseInt(sessionStorage.getItem('heroBannerCurrentIndex') || '0', 10);
+        const lastShift = parseInt(sessionStorage.getItem('heroBannerLastShiftTime') || '0', 10);
+        if (!Number.isFinite(savedIdx) || savedIdx < 0 || savedIdx >= slideCount) savedIdx = 0;
+        const elapsed = Date.now() - (Number.isFinite(lastShift) ? lastShift : 0);
+        let remaining = HERO_DELAY - elapsed;
+        if (!lastShift || remaining <= 0) remaining = 0;
+        if (remaining > HERO_DELAY) remaining = HERO_DELAY;
+        function persistHeroState(idx) {
+          try {
+            sessionStorage.setItem('heroBannerCurrentIndex',  String(idx));
+            sessionStorage.setItem('heroBannerLastShiftTime', String(Date.now()));
+          } catch (_) {}
+        }
         try {
-          new window.Swiper(el, {
+          const sw = new window.Swiper(el, {
             loop: useLoop,
             speed: 700,
-            autoplay: useLoop ? { delay: 4500, disableOnInteraction: false } : false,
+            initialSlide: savedIdx,
+            autoplay: useLoop ? {
+              delay: remaining > 0 ? remaining : 1,
+              disableOnInteraction: false,
+            } : false,
             pagination: { el: '.koaus-hero-pc .swiper-pagination', clickable: true },
             navigation: {
               nextEl: '.koaus-hero-pc .swiper-button-next',
               prevEl: '.koaus-hero-pc .swiper-button-prev',
             },
+            on: {
+              slideChange() {
+                const idx = (this && typeof this.realIndex === 'number') ? this.realIndex : 0;
+                persistHeroState(idx);
+                if (this && this.params && this.params.autoplay) this.params.autoplay.delay = HERO_DELAY;
+              },
+            },
           });
+          persistHeroState(savedIdx);
           el.__koausSwiperInited = true;
         } catch (e) { console.warn('[hero] Swiper 초기화 실패', e); }
       }
