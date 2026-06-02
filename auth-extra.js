@@ -152,14 +152,10 @@ function mountExtraModals() {
     </div>`;
   document.body.insertAdjacentHTML('beforeend', html);
   // 찾기 모달은 로그인 모달(.auth-overlay z-index:3000) 위에 무조건 표시
+  //  · display 는 CSS .report-overlay.open { display: flex } 에 위임 — 인라인 X
+  //  · 그래야 닫기 후 재오픈 시 클래스 토글만으로 정상 노출됨
   const modal = document.getElementById('koausExtraModal');
   modal.style.zIndex = '4100';
-  modal.style.position = 'fixed';
-  modal.style.inset = '0';
-  modal.style.background = 'rgba(0,0,0,0.65)';
-  modal.style.alignItems = 'center';
-  modal.style.justifyContent = 'center';
-  modal.style.padding = '20px';
   document.getElementById('koausExtraClose').addEventListener('click', closeExtraModal);
   modal.addEventListener('click', e => {
     if (e.target.id === 'koausExtraModal') closeExtraModal();
@@ -170,24 +166,29 @@ function mountExtraModals() {
 function openExtraModal(pane) {
   mountExtraModals();
   const modal = document.getElementById('koausExtraModal');
-  // 로그인 모달이 떠 있으면 자동으로 닫음 — 화면에 모달 1개만 노출
+  // 로그인 모달이 떠 있으면 .open 클래스만 제거 — 인라인 style.display 절대 X
+  //  · 이전 PR 에서 style.display='none' 인라인을 남겨두는 바람에 다음 openAuthModal 시
+  //    .open 의 display:flex 가 인라인에 가려져서 로그인 창 먹통 버그 발생 → 픽스
   document.querySelectorAll('.auth-overlay.open').forEach(o => {
     o.classList.remove('open');
-    o.style.display = 'none';
+    o.style.removeProperty('display');   // 인라인 style 완전 제거 (남기지 않음)
   });
   try { document.body.style.overflow = 'hidden'; } catch (_) {}
   document.querySelectorAll('#koausExtraModal .koaus-extra-pane').forEach(el => {
     el.hidden = el.dataset.pane !== pane;
   });
   document.getElementById('koausExtraTitle').textContent = pane === 'resetPw' ? '비밀번호 찾기' : '아이디 찾기';
+  // 결과 영역 초기화 (이전 검색 결과/버튼 잔재 제거)
+  ['koausFindIdMsg','koausResetPwMsg'].forEach(id => { const el = document.getElementById(id); if (el && id==='koausResetPwMsg') el.innerHTML = '가입한 이메일로 재설정 링크를 보내드립니다.'; else if (el) el.innerHTML = ''; });
   modal.classList.add('open');
-  modal.style.display = 'flex';
 }
 function closeExtraModal() {
   const modal = document.getElementById('koausExtraModal');
   if (!modal) return;
   modal.classList.remove('open');
-  modal.style.display = '';
+  // 인라인 style 완전 정리 — 다음 open 시 .open 클래스가 정상 작동하도록
+  modal.style.removeProperty('display');
+  try { document.body.style.overflow = ''; } catch (_) {}
 }
 
 // ── 비번 재설정 — sendPasswordResetEmail ──
@@ -236,8 +237,28 @@ async function onFindId() {
     }
     const data = snap.docs[0].data();
     const email = data.email || '';
-    msg.innerHTML = '✅ 가입된 이메일: <strong>' + esc(maskEmail(email)) + '</strong>';
+    msg.innerHTML =
+      '✅ 가입된 이메일: <strong>' + esc(maskEmail(email)) + '</strong>' +
+      '<button type="button" class="auth-submit koaus-find-id-to-reset" ' +
+        'style="margin-top:10px;width:100%;font-size:13.5px;padding:10px 14px;">' +
+        '🔑 바로 비밀번호 찾기' +
+      '</button>';
     msg.style.color = 'var(--green, #16a34a)';
+    // 즉시 비밀번호 찾기 pane 으로 전환 — 모달 닫기/재오픈 없이 매끄럽게 연결
+    const btn = msg.querySelector('.koaus-find-id-to-reset');
+    if (btn) btn.addEventListener('click', () => {
+      // 발견한 이메일 마스킹 해제 — 원본 그대로 prefill (실제 이메일 발송 대상)
+      const prefill = document.getElementById('koausResetPwEmail');
+      if (prefill) prefill.value = email;
+      // pane 전환
+      document.querySelectorAll('#koausExtraModal .koaus-extra-pane').forEach(el => {
+        el.hidden = el.dataset.pane !== 'resetPw';
+      });
+      document.getElementById('koausExtraTitle').textContent = '비밀번호 찾기';
+      // resetPw 메시지 초기화
+      const rm = document.getElementById('koausResetPwMsg');
+      if (rm) { rm.innerHTML = '위 이메일로 재설정 링크를 보내드립니다. 버튼을 눌러주세요.'; rm.style.color = 'var(--text-muted)'; }
+    });
   } catch (e) {
     msg.textContent = '조회 중 오류: ' + (e && (e.code || e.message) || e);
     msg.style.color = 'var(--red, #dc2626)';

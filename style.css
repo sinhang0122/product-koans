@@ -2194,8 +2194,23 @@ select.write-input {
   position: fixed; inset: 0; background: rgba(0,0,0,0.65);
   z-index: 3000; display: none; align-items: center;
   justify-content: center; padding: 20px;
+  opacity: 0; transition: opacity 0.22s ease;
 }
-.auth-overlay.open { display: flex; }
+.auth-overlay.open { display: flex; opacity: 1; }
+.auth-overlay.open .auth-modal,
+.auth-overlay.open .report-card,
+.auth-overlay.open .myacct-card { animation: koaus-modal-pop 0.24s cubic-bezier(.2,.7,.3,1.04); }
+@keyframes koaus-modal-pop {
+  from { opacity: 0; transform: scale(0.94) translateY(8px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0); }
+}
+/* 찾기 모달 (auth-extra koausExtraModal — .report-overlay) 도 동일 톤 */
+.report-overlay { opacity: 0; transition: opacity 0.22s ease; }
+.report-overlay.open { opacity: 1; }
+.report-overlay.open .report-card { animation: koaus-modal-pop 0.24s cubic-bezier(.2,.7,.3,1.04); }
+/* 마이페이지 모달도 동일 톤 */
+.myacct-overlay { opacity: 0; transition: opacity 0.22s ease; }
+.myacct-overlay.open { opacity: 1; }
 .auth-modal {
   background: var(--bg-base); border: 1px solid var(--border);
   border-radius: var(--r-xl); width: 100%; max-width: 420px;
