@@ -1046,10 +1046,8 @@ body {
   margin: 0 auto;
 }
 .koaus-hero-pc { display: block; }
-.koaus-hero-mobile { display: none; }
-/* HTML hidden 속성 우선 — display:block 이 hidden 을 덮어쓰는 중복 렌더링 버그 픽스 */
-.koaus-hero-pc[hidden],
-.koaus-hero-mobile[hidden] { display: none !important; }
+.koaus-hero-mobile { display: none !important; }  /* 단일카드 패턴 폐기 — 모바일도 PC swiper */
+.koaus-hero-pc[hidden] { display: none !important; }
 .koaus-hero-pc .swiper {
   width: 100%;
   aspect-ratio: 18 / 7;  /* 와이드 히어로 — 세로 1/3 증액(24/7 → 18/7) */
@@ -1123,40 +1121,36 @@ body {
 .koaus-hero-pc .swiper-button-prev:hover,
 .koaus-hero-pc .swiper-button-next:hover { opacity: 1; background: rgba(0,0,0,.4); }
 
-/* 모바일 (≤ 767): PC 슬라이더 숨기고 5:1 카드 노출 + 여백 타이트 */
+/* 모바일 (≤ 767): PC swiper 그대로 노출 + 컴팩트 슬라이드 + 여백 타이트 */
 @media (max-width: 767px) {
   /* hero 컨테이너 — overflow 차단 + 좌우 패딩 최소화, 상하 여백 최소화 */
   .koaus-hero {
-    margin: 3px auto 4px;    /* 6/8 → 3/4 — hero ↔ notice/state 간격 압축 */
-    padding: 0 10px;
-    max-width: 100%;
-    box-sizing: border-box;
-    overflow: hidden;        /* 5:1 카드가 가로 폭 초과 시 즉시 클립 */
-  }
-  .koaus-hero-pc { display: none; }
-  .koaus-hero-mobile {
-    display: block;
-    max-width: 100%;
-    box-sizing: border-box;
-  }
-  .koaus-hero-mobile .hero-card {
+    margin: 3px auto 4px;
+    padding: 0 8px;
     max-width: 100%;
     box-sizing: border-box;
     overflow: hidden;
-    border-radius: 12px;
-    /* 모바일: 슬림 와이드 띠 — 화면의 ~16vh 이내 (메이플 환산 톤)
-       · 하단 콘텐츠 시인성 확보가 우선 — 360px → clamp(110px, 16vh, 168px)
-       · Map View (#accomMap 등) 와는 별개 — 지도 크기는 변경하지 않음 */
-    aspect-ratio: unset;
-    height: clamp(110px, 16vh, 168px);
-    min-height: 100px;
-    padding: 10px 14px;
-    margin-left: auto; margin-right: auto;
   }
-  .koaus-hero-mobile .hero-content { gap: 4px; }
-  .koaus-hero-mobile .hero-eyebrow { font-size: 10px; padding: 2px 7px; }
-  .koaus-hero-mobile .hero-title { font-size: 17px; line-height: 1.2; margin: 2px 0 0; }
-  .koaus-hero-mobile .hero-sub   { font-size: 12px; line-height: 1.35; }
+  .koaus-hero-pc { display: block; }       /* 모바일에서도 PC swiper 노출 */
+  .koaus-hero-mobile { display: none !important; }   /* 단일카드 폐기 */
+  /* PC swiper 의 모바일 컴팩트 — 슬림 띠 + 4개 슬라이드 동일 노출 + 스와이프 */
+  .koaus-hero-pc .swiper {
+    aspect-ratio: unset;
+    height: clamp(120px, 18vh, 180px);
+    min-height: 110px;
+    border-radius: 12px;
+  }
+  .koaus-hero-pc .swiper-slide { padding: 12px 16px; }
+  .koaus-hero-pc .hero-eyebrow { font-size: 10px; padding: 2px 7px; }
+  .koaus-hero-pc .hero-title   { font-size: 17px; line-height: 1.2; }
+  .koaus-hero-pc .hero-sub     { font-size: 12px; line-height: 1.35; }
+  .koaus-hero-pc .hero-cta     { font-size: 11.5px; padding: 6px 12px; }
+  .koaus-hero-pc .swiper-button-prev,
+  .koaus-hero-pc .swiper-button-next { width: 24px; height: 24px; --swiper-navigation-size: 12px; }
+  .koaus-hero-pc .swiper-button-prev::after,
+  .koaus-hero-pc .swiper-button-next::after { font-size: 11px; }
+  .koaus-hero-pc .swiper-pagination-bullet { width: 6px; height: 6px; }
+  .koaus-hero-pc .swiper-pagination-bullet-active { width: 18px; }
   /* 본문 가로 스크롤 방지 — 광고 배너 등이 화면 폭 초과 못 함 */
   html, body { max-width: 100%; overflow-x: hidden; }
 
