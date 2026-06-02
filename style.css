@@ -441,63 +441,70 @@ body {
   text-align: center;
 }
 
-/* ── 글로벌 검색 컴포넌트 (search-bar.js) — Black & White 톤, 시원한 확대 사이즈 ── */
-.koaus-search-bar { width: 100%; margin: clamp(10px, 2vw, 18px) 0; min-width: 0; }
+/* ── 글로벌 검색 컴포넌트 (search-bar.js) — Black & White 톤 ──
+   · 사이즈는 .board-write-btn / .board-write-btn--ghost (padding 10/20, font 14px)
+     와 100% 일치 — 같은 줄에 나란히 놓아도 높이/체급 통일 */
+.koaus-search-bar { width: 100%; margin: 8px 0; min-width: 0; }
 .koaus-search-row {
   display: grid;
-  grid-template-columns: minmax(140px, 180px) 1fr auto auto;
-  gap: 10px;
+  grid-template-columns: minmax(110px, 140px) 1fr auto auto;
+  gap: 8px;
   align-items: stretch;
   width: 100%;
 }
 .koaus-search-scope,
 .koaus-search-input {
-  padding: 14px 18px;
-  border: 1.5px solid var(--border);
+  height: 40px;                /* board-write-btn 과 동일 높이 */
+  padding: 0 14px;             /* 10/20 → 좌우 14px, 세로는 height 로 통제 */
+  border: 1px solid var(--border);
   background: var(--bg-input);
   color: var(--text-primary);
   border-radius: var(--r-md);
-  font: 700 15.5px var(--font);
+  font: 700 14px var(--font);  /* board-write-btn 과 동일 font-size */
   letter-spacing: -0.01em;
   min-width: 0;
+  box-sizing: border-box;
 }
-.koaus-search-scope { cursor: pointer; font-weight: 600; }
+.koaus-search-scope { cursor: pointer; }
 .koaus-search-input::placeholder { color: var(--text-muted); font-weight: 500; }
 .koaus-search-scope:focus,
 .koaus-search-input:focus {
   outline: none; border-color: var(--text-primary);
-  box-shadow: 0 0 0 3px rgba(0,0,0,0.08);
 }
 .koaus-search-btn {
-  padding: 14px 22px;
+  height: 40px;
+  padding: 0 18px;
   background: var(--text-primary);
   color: var(--bg-base);
-  border: 1.5px solid var(--text-primary);
+  border: 1px solid var(--text-primary);
   border-radius: var(--r-md);
-  font: 800 14.5px var(--font);
+  font: 700 14px var(--font);
   letter-spacing: -0.01em;
   cursor: pointer; white-space: nowrap;
-  transition: background 0.12s, color 0.12s;
+  transition: opacity 0.15s, background 0.12s, color 0.12s;
+  box-sizing: border-box;
 }
-.koaus-search-btn:hover { background: var(--bg-base); color: var(--text-primary); }
+.koaus-search-btn:hover { opacity: 0.85; }
 .koaus-search-clear {
-  padding: 14px 14px;
+  height: 40px;
+  padding: 0 12px;
   background: var(--bg-surface);
-  border: 1.5px solid var(--border);
+  border: 1px solid var(--border);
   border-radius: var(--r-md);
-  font: 900 14px var(--font); color: var(--text-muted); cursor: pointer;
+  font: 700 13px var(--font); color: var(--text-muted); cursor: pointer;
+  box-sizing: border-box;
 }
 .koaus-search-clear:hover { color: var(--text-primary); border-color: var(--text-primary); }
 @media (max-width: 640px) {
   .koaus-search-row {
     grid-template-columns: 1fr 1fr;
     grid-template-areas: "scope scope" "input input" "btn clr";
-    gap: 8px;
+    gap: 6px;
   }
-  .koaus-search-scope { grid-area: scope; padding: 12px 16px; font-size: 14.5px; }
-  .koaus-search-input { grid-area: input; padding: 12px 16px; font-size: 14.5px; }
-  .koaus-search-btn   { grid-area: btn;   padding: 12px 18px; font-size: 14px; }
-  .koaus-search-clear { grid-area: clr;   padding: 12px 14px; font-size: 13px; }
+  .koaus-search-scope { grid-area: scope; height: 36px; font-size: 13.5px; }
+  .koaus-search-input { grid-area: input; height: 36px; font-size: 13.5px; }
+  .koaus-search-btn   { grid-area: btn;   height: 36px; font-size: 13.5px; padding: 0 14px; }
+  .koaus-search-clear { grid-area: clr;   height: 36px; font-size: 12.5px; padding: 0 10px; }
 }
 
 /* ── Others 카테고리(restaurants/gp/salon/trades) 페이지 간 자유 이동 nav ── */
