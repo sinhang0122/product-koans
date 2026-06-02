@@ -1140,14 +1140,19 @@ body {
     box-sizing: border-box;
     overflow: hidden;
     border-radius: 12px;
-    /* 모바일: 지도(#accomMap·#jobsMap 등 360px)와 1:1 매칭 */
+    /* 모바일: 슬림 와이드 띠 — 화면의 ~16vh 이내 (메이플 환산 톤)
+       · 하단 콘텐츠 시인성 확보가 우선 — 360px → clamp(110px, 16vh, 168px)
+       · Map View (#accomMap 등) 와는 별개 — 지도 크기는 변경하지 않음 */
     aspect-ratio: unset;
-    height: 360px;
-    margin-left: auto; margin-right: auto;  /* 중앙 정렬 */
+    height: clamp(110px, 16vh, 168px);
+    min-height: 100px;
+    padding: 10px 14px;
+    margin-left: auto; margin-right: auto;
   }
-  .koaus-hero-mobile .hero-content { gap: 6px; }
-  .koaus-hero-mobile .hero-title { font-size: 22px; }
-  .koaus-hero-mobile .hero-sub   { font-size: 14px; }
+  .koaus-hero-mobile .hero-content { gap: 4px; }
+  .koaus-hero-mobile .hero-eyebrow { font-size: 10px; padding: 2px 7px; }
+  .koaus-hero-mobile .hero-title { font-size: 17px; line-height: 1.2; margin: 2px 0 0; }
+  .koaus-hero-mobile .hero-sub   { font-size: 12px; line-height: 1.35; }
   /* 본문 가로 스크롤 방지 — 광고 배너 등이 화면 폭 초과 못 함 */
   html, body { max-width: 100%; overflow-x: hidden; }
 
