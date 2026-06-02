@@ -84,6 +84,11 @@ const authClose    = document.getElementById('authClose');
 let _authOpenedAt = 0;
 const openAuthModal  = () => {
   _authOpenedAt = Date.now();
+  // 보안: 모달 진입 시 이메일/비밀번호 입력 강제 초기화 — 자동 채우기 차단
+  ['authLoginEmail', 'authLoginPw'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
   authOverlay.classList.add('open');
   document.body.style.overflow = 'hidden';
 };
@@ -304,14 +309,30 @@ document.getElementById('myAccountLogout').addEventListener('click', () => {
 const loginBtn = document.getElementById('loginBtn');
 
 // 로그인 후: '로그아웃' 토글 + 클릭 시 signOut → 홈 redirect (사용자 요구)
+// localStorage(닉네임/프로필) · sessionStorage(마스터 패스포트) 캐시 완전 초기화
 async function handleLogout() {
   try {
-    // sessionStorage 캐시(마스터 패스포트)는 admin-mark.js 의 onAuthStateChanged 가 정리
+    // sessionStorage 캐시(마스터 패스포트)는 admin-mark.js 의 onAuthStateChanged 도 정리하지만
+    // 즉시 차단을 위해 여기서도 한 번 명시 wipe
+    ['koaus-admin', 'isAdmin', 'isAdminLoggedIn'].forEach(k => {
+      try { sessionStorage.removeItem(k); } catch (_) {}
+    });
+    // 유저 인증/프로필 캐시 (theme 등 유저 무관 키는 보존)
+    ['koaus-nickname', 'koaus-nickname-changed-at', 'koaus-photo-url'].forEach(k => {
+      try { localStorage.removeItem(k); } catch (_) {}
+    });
+    // 게시판별 중복 방지 캐시 (koaus-duplicate-*) — 유저 종속이므로 wipe
+    try {
+      Object.keys(localStorage).filter(k => k.startsWith('koaus-duplicate-'))
+        .forEach(k => localStorage.removeItem(k));
+    } catch (_) {}
     await signOut(auth);
   } catch (e) { console.warn('[app] signOut 실패', e); }
   // 홈으로 강제 리다이렉트 — 어떤 페이지에서 호출되든 동일
   try { location.replace('index.html'); } catch (_) { location.href = 'index.html'; }
 }
+// 다른 페이지(mypage 등)에서도 호출 가능하도록 글로벌 export
+window.koausLogout = handleLogout;
 
 function wireLoginBtn() {
   const btn = document.getElementById('loginBtn');

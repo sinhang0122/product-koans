@@ -448,7 +448,10 @@
         <h1 class="page-title">👤 마이페이지</h1>
         <p class="page-subtitle">내 활동 내역과 저장한 글을 확인하세요</p>
       </div>
-      <a href="index.html" class="page-back">← 홈으로</a>
+      <div class="page-header-actions page-header-actions--col">
+        <a href="index.html" class="page-back">← 홈으로</a>
+        <button type="button" id="mpLogoutBtn" class="page-back mypage-logout-btn">로그아웃</button>
+      </div>
     </div>
 
     <section class="mypage-login-required" id="loginRequired" style="display:none;">
@@ -650,7 +653,7 @@
   <script type="module">
     import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
     import {
-      getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged,
+      getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut,
       createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification,
     } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
     import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app-check.js';
@@ -1050,6 +1053,27 @@
 
     const tlb = document.getElementById('topbarLoginBtn');
     if (tlb) tlb.addEventListener('click', () => { if (!window.koausAuth.user) openAuthModal(); });
+
+    // 마이페이지 로그아웃 버튼 — 캐시 wipe + signOut + 홈 리다이렉트
+    // mypage.html 은 app.js 를 로드하지 않으므로 자체 인라인 처리 (글로벌 koausLogout 있으면 우선 사용)
+    const mpLogoutBtn = document.getElementById('mpLogoutBtn');
+    if (mpLogoutBtn) mpLogoutBtn.addEventListener('click', async () => {
+      if (window.koausLogout) { window.koausLogout(); return; }
+      // sessionStorage 마스터 패스포트 wipe
+      ['koaus-admin', 'isAdmin', 'isAdminLoggedIn'].forEach(k => {
+        try { sessionStorage.removeItem(k); } catch (_) {}
+      });
+      // localStorage 유저 프로필/이메일 캐시 wipe (theme 등은 보존)
+      ['koaus-nickname', 'koaus-nickname-changed-at', 'koaus-photo-url'].forEach(k => {
+        try { localStorage.removeItem(k); } catch (_) {}
+      });
+      try {
+        Object.keys(localStorage).filter(k => k.startsWith('koaus-duplicate-'))
+          .forEach(k => localStorage.removeItem(k));
+      } catch (_) {}
+      try { await signOut(auth); } catch (e) { console.warn('[mypage] signOut 실패', e); }
+      try { location.replace('index.html'); } catch (_) { location.href = 'index.html'; }
+    });
 
     onAuthStateChanged(auth, user => {
       window.koausAuth.user = user;

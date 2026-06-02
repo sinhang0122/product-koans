@@ -398,6 +398,17 @@ body {
   display: flex; flex-direction: column; gap: 6px; align-items: stretch;
   flex-shrink: 0;
 }
+/* 마이페이지용 column 변형 — [← 홈으로] 위 / [로그아웃] 아래 정갈한 세로 정렬 */
+.page-header-actions--col {
+  display: flex; flex-direction: column; gap: 8px;
+  align-items: flex-end; align-self: flex-start;
+  min-width: 110px;
+}
+.page-header-actions--col .page-back { width: 100%; justify-content: center; box-sizing: border-box; }
+.mypage-logout-btn {
+  background: none; cursor: pointer;
+  font-family: inherit;
+}
 .page-inquiry {
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;
   font-size: 13px; font-weight: 800; letter-spacing: -0.01em;
