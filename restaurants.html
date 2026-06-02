@@ -74,6 +74,9 @@
       </div>
     </div>
     <nav class="sidebar-nav">
+      <!-- 빠른 링크: 홈으로 + 문의하기 (모든 페이지 공통, accord-direct-link 톤) -->
+      <a href="index.html"  class="accord-direct-link"><span>🏠 홈으로 <em>Home</em></span></a>
+      <a href="contact.html" class="accord-direct-link"><span>📩 문의하기 <em>Inquiry</em></span></a>
       <div class="accord-item" data-group="nsw">
         <button class="accord-header">
           <span>NSW <em>뉴사우스 웨일스 주</em></span>
@@ -602,7 +605,6 @@
           <label class="trades-chip"><input type="checkbox" id="rsFParking"> 🅿 주차</label>
           <label class="trades-chip"><input type="checkbox" id="rsFDelivery"> 🚚 배달</label>
           <label class="trades-chip"><input type="checkbox" id="rsFTakeaway"> 📦 포장</label>
-          <label class="trades-chip"><input type="checkbox" id="rsFHalal"> 🌙 할랄·베지</label>
         </div>
       </div>
 
@@ -2920,7 +2922,6 @@
           parking:  !!(document.getElementById('rsFParking')  || {}).checked,
           delivery: !!(document.getElementById('rsFDelivery') || {}).checked,
           takeaway: !!(document.getElementById('rsFTakeaway') || {}).checked,
-          halal:    !!(document.getElementById('rsFHalal')    || {}).checked,
         };
       }
       function matches(p, f) {
@@ -2934,7 +2935,6 @@
         if (f.parking  && !p.parking)  return false;
         if (f.delivery && !p.delivery) return false;
         if (f.takeaway && !p.takeaway) return false;
-        if (f.halal    && !p.halal)    return false;
         return true;
       }
       function readData() {
@@ -2942,7 +2942,7 @@
       }
       function apply() {
         const f = collect();
-        const empty = !f.cuisines.length && !f.status && !f.parking && !f.delivery && !f.takeaway && !f.halal;
+        const empty = !f.cuisines.length && !f.status && !f.parking && !f.delivery && !f.takeaway;
         const data = readData();
         const filtered = empty ? data : data.filter(p => matches(p, f));
         const ids = new Set(filtered.map(p => String(p.id)));
@@ -2966,7 +2966,7 @@
         if (reset_) reset_.addEventListener('click', () => {
           document.querySelectorAll('.rs-fcuisine').forEach(c => c.checked = false);
           const st = document.getElementById('rsFStatus'); if (st) st.value = '';
-          ['rsFParking','rsFDelivery','rsFTakeaway','rsFHalal'].forEach(id => {
+          ['rsFParking','rsFDelivery','rsFTakeaway'].forEach(id => {
             const el = document.getElementById(id); if (el) el.checked = false;
           });
           setTimeout(apply, 50);
