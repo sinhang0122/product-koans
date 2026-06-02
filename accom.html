@@ -33,6 +33,7 @@
   <script src="offline.js" defer></script>
   <script type="module" src="session-timeout.js"></script>
   <script src="search-bar.js" defer></script>
+  <script src="local-analytics.js" defer></script>
   <script type="module" src="admin-mark.js"></script>
   <script type="module" src="auth-extra.js"></script>
 </head>
@@ -1808,12 +1809,32 @@
         return t.includes(kw) || b.includes(kw);
       });
     }
+    // ── 관리자 고정글 절대 방어 (Absolute Pinned) ──
+    //  · isPinned/adminPin 글은 필터·검색·지역리셋·키워드를 무시하고 항상 최상단
+    function getPinnedPosts() {
+      try { return (loadPosts() || []).filter(p => p && (p.isPinned === true || p.adminPin === true)); }
+      catch (_) { return []; }
+    }
+    function mergePinnedFirst(filteredArr) {
+      const pinned = getPinnedPosts();
+      if (!pinned.length) return filteredArr;
+      const ids = new Set(pinned.map(p => String(p.id)));
+      const tail = filteredArr.filter(p => !ids.has(String(p.id)));
+      return pinned.concat(tail);
+    }
     function renderAll() {
-      const posts    = loadPosts();
-      const filtered = applySearchKw(applyFilters(posts));
+      const posts  = loadPosts();
+      // pinned 는 필터 통째로 bypass — 일반 글만 필터/검색 적용 후 pinned 와 합침
+      const normal = posts.filter(p => !(p && (p.isPinned === true || p.adminPin === true)));
+      const filtered = mergePinnedFirst(applySearchKw(applyFilters(normal)));
       document.getElementById('boardCount').textContent = `총 ${filtered.length}건`;
-      // 최신 글이 위로 (내림차순)
-      const sorted = filtered.slice().sort((a, b) => b.id - a.id);
+      // 정렬: pinned 는 항상 맨 위, 나머지는 최신순 (id 내림차순)
+      const sorted = filtered.slice().sort((a, b) => {
+        const ap = (a.isPinned || a.adminPin) ? 1 : 0;
+        const bp = (b.isPinned || b.adminPin) ? 1 : 0;
+        if (ap !== bp) return bp - ap;   // pinned 우선
+        return b.id - a.id;
+      });
       const totalPages = Math.max(1, Math.ceil(sorted.length / PER_PAGE));
       if (currentPage > totalPages) currentPage = totalPages;
       renderListView(sorted, totalPages);

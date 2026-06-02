@@ -134,6 +134,11 @@
     </div>`;
   }
 
+  // ── 지역 코드 → 한국어 라벨 (로컬 애널리틱스 슬롯 분배 시 eyebrow 보강) ──
+  const STATE_LABEL = {
+    nsw:'NSW', vic:'VIC', qld:'QLD', wa:'WA', sa:'SA', tas:'TAS', act:'ACT', nt:'NT',
+  };
+
   function render(container) {
     const cat = container.getAttribute('data-koaus-hero-cat');
     const data = SLOTS[cat];
@@ -146,10 +151,29 @@
     container.__koausHeroRendered = true;
     container.classList.add('koaus-hero');
 
+    // ── 로컬 애널리틱스 — 14일 활동 기반 4 슬롯 지역 분배 ──
+    //   · allocateSlots 가 ['nsw','nsw','vic','sa'] 같은 4개 지역 배열 반환
+    //   · 각 슬라이드의 eyebrow 앞에 [지역] 태그 inject (실제 슬라이드 데이터는 SLOTS 유지)
+    //   · agent.md §1 — 로컬 애널리틱스 절대 훼손 X, hero-banner 의 SLOTS 데이터도 그대로
+    let slotStates = [];
+    try {
+      if (window.koausAnalytics && typeof window.koausAnalytics.allocateSlots === 'function') {
+        slotStates = window.koausAnalytics.allocateSlots(data.slides.length);
+      }
+    } catch (_) {}
     // 데스크톱 + 모바일 동일 swiper — 모바일 단일카드 패턴 폐기
     const slidesHtml = data.slides
-      .map((s, i) => buildSlide(s, data.gradients[i % data.gradients.length], i))
+      .map((s, i) => {
+        // 지역별 슬롯 분배 — slotStates[i] 가 있으면 eyebrow 에 지역 태그 prepend
+        const st = slotStates[i];
+        const stagged = st ? Object.assign({}, s, {
+          eyebrow: '📍 ' + (STATE_LABEL[st] || st.toUpperCase()) + ' · ' + s.eyebrow,
+        }) : s;
+        return buildSlide(stagged, data.gradients[i % data.gradients.length], i);
+      })
       .join('');
+    // data-koaus-hero-region (분배 결과) — 별도 광고 모듈이 후속 덮어쓰기 가능 (확장 포인트)
+    container.setAttribute('data-koaus-hero-region', slotStates.join(','));
     container.innerHTML = `
       <div class="koaus-hero-pc">
         <div class="swiper" data-koaus-hero-swiper="${escHtml(cat)}">
