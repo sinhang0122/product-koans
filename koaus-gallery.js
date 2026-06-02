@@ -114,6 +114,18 @@
   }
   function next() { setIndex(idx + 1); }
   function prev() { setIndex(idx - 1); }
+
+  // ── 데스크톱 키보드 핸들러 (open 시 부착 / close 시 제거 — 메모리 누수 방어) ──
+  //   · ArrowLeft  : 이전 사진
+  //   · ArrowRight : 다음 사진
+  //   · Escape     : 즉시 닫기
+  function onKeyDown(e) {
+    if (!overlay || !overlay.classList.contains('is-open')) return;
+    if (e.key === 'Escape')          { e.preventDefault(); close(); }
+    else if (e.key === 'ArrowRight') { e.preventDefault(); next();  }
+    else if (e.key === 'ArrowLeft')  { e.preventDefault(); prev();  }
+  }
+
   function open(_urls, start) {
     if (!Array.isArray(_urls) || !_urls.length) return;
     ensureMounted();
@@ -123,12 +135,17 @@
     uiVisible = true;
     document.documentElement.style.overflow = 'hidden';
     setIndex(start || 0);
+    // 키보드 리스너 부착 — 중복 방지를 위해 한 번 제거 후 add
+    document.removeEventListener('keydown', onKeyDown);
+    document.addEventListener('keydown', onKeyDown);
   }
   function close() {
     if (!overlay) return;
     overlay.classList.remove('is-open');
     document.documentElement.style.overflow = '';
     urls = []; resetTransform();
+    // 키보드 리스너 해제 — 모달 닫힌 후 keydown 가로채지 않음
+    document.removeEventListener('keydown', onKeyDown);
   }
   function toggleUI() {
     if (!overlay) return;
@@ -231,13 +248,7 @@
       if (scale <= 1.01) { panX = 0; panY = 0; }
       applyTransform(false);
     }, { passive: false });
-    // 키보드
-    document.addEventListener('keydown', e => {
-      if (!overlay || !overlay.classList.contains('is-open')) return;
-      if (e.key === 'Escape') close();
-      else if (e.key === 'ArrowRight') next();
-      else if (e.key === 'ArrowLeft')  prev();
-    });
+    // 키보드 핸들러는 open() 시 부착 / close() 시 제거 — bindGestures 안에서 영구 등록 X (메모리 누수 방어)
   }
 
   // ── 자동 감지: data-koaus-gallery="groupKey" — 같은 그룹 img 들 묶음 ──
