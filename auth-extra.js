@@ -151,8 +151,17 @@ function mountExtraModals() {
       </div>
     </div>`;
   document.body.insertAdjacentHTML('beforeend', html);
+  // 찾기 모달은 로그인 모달(.auth-overlay z-index:3000) 위에 무조건 표시
+  const modal = document.getElementById('koausExtraModal');
+  modal.style.zIndex = '4100';
+  modal.style.position = 'fixed';
+  modal.style.inset = '0';
+  modal.style.background = 'rgba(0,0,0,0.65)';
+  modal.style.alignItems = 'center';
+  modal.style.justifyContent = 'center';
+  modal.style.padding = '20px';
   document.getElementById('koausExtraClose').addEventListener('click', closeExtraModal);
-  document.getElementById('koausExtraModal').addEventListener('click', e => {
+  modal.addEventListener('click', e => {
     if (e.target.id === 'koausExtraModal') closeExtraModal();
   });
   document.getElementById('koausResetPwSubmit').addEventListener('click', onResetPw);
@@ -161,6 +170,12 @@ function mountExtraModals() {
 function openExtraModal(pane) {
   mountExtraModals();
   const modal = document.getElementById('koausExtraModal');
+  // 로그인 모달이 떠 있으면 자동으로 닫음 — 화면에 모달 1개만 노출
+  document.querySelectorAll('.auth-overlay.open').forEach(o => {
+    o.classList.remove('open');
+    o.style.display = 'none';
+  });
+  try { document.body.style.overflow = 'hidden'; } catch (_) {}
   document.querySelectorAll('#koausExtraModal .koaus-extra-pane').forEach(el => {
     el.hidden = el.dataset.pane !== pane;
   });

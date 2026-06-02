@@ -339,18 +339,49 @@ document.getElementById('myAccountLogout').addEventListener('click', () => {
 // ── Auth ──
 const loginBtn = document.getElementById('loginBtn');
 
+// 로그인 후: '로그아웃' 토글 + 클릭 시 signOut → 홈 redirect (사용자 요구)
+async function handleLogout() {
+  try {
+    // sessionStorage 캐시(마스터 패스포트)는 admin-mark.js 의 onAuthStateChanged 가 정리
+    await signOut(auth);
+  } catch (e) { console.warn('[app] signOut 실패', e); }
+  // 홈으로 강제 리다이렉트 — 어떤 페이지에서 호출되든 동일
+  try { location.replace('index.html'); } catch (_) { location.href = 'index.html'; }
+}
+
+function wireLoginBtn() {
+  const btn = document.getElementById('loginBtn');
+  if (!btn) return;
+  // 기존 onclick 리바인딩 (bfcache 복원 시에도 안전)
+  if (auth.currentUser) {
+    btn.textContent = '로그아웃';
+    btn.title = '로그아웃';
+    btn.onclick = handleLogout;
+  } else {
+    btn.textContent = '로그인';
+    btn.title = '로그인 / 회원가입';
+    btn.onclick = openAuthModal;
+  }
+}
+
 onAuthStateChanged(auth, user => {
+  if (!loginBtn) return;
   if (user) {
-    const nick = localStorage.getItem('koaus-nickname') || user.displayName?.split(' ')[0] || user.email?.split('@')[0] || '계정';
-    loginBtn.textContent = nick;
-    loginBtn.title = '내 계정';
-    loginBtn.onclick = openMyAccountModal;
+    loginBtn.textContent = '로그아웃';
+    loginBtn.title = '로그아웃';
+    loginBtn.onclick = handleLogout;
   } else {
     loginBtn.textContent = '로그인';
     loginBtn.title = '로그인 / 회원가입';
     loginBtn.onclick = openAuthModal;
   }
 });
+
+// bfcache 복원 (Back/Forward 캐시) 시 — 로그인 버튼 onclick 재바인딩
+window.addEventListener('pageshow', e => { if (e.persisted) wireLoginBtn(); });
+// 초기 1회 — DOMContentLoaded 이후라도 안전망
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wireLoginBtn, { once: true });
+else setTimeout(wireLoginBtn, 0);
 
 // ── Exchange rate calculator ──
 const FALLBACK_RATES = {
