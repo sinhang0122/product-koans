@@ -2482,10 +2482,38 @@
       const bounds = new google.maps.LatLngBounds();
       let hasCoord  = false;
 
+      // ── [어뷰징 방어] 동일 주소(좌표) + 동일 작성자(UID) 글 무리 → 최신 1개만 ──
+      //   · 제목을 교묘하게 바꿔도 클러스터(+N)로 합산하지 않음
+      //   · 같은 사람이 같은 위치에 여러 번 올리는 도배 시각적 차단
+      //   · 다른 사용자가 같은 위치에 올린 글은 그대로 클러스터링 합산
+      const dedupedByUidLoc = (function () {
+        const groups = new Map();
+        filteredPosts.forEach(p => {
+          if (!p.lat || !p.lng) return;
+          const uid = String(p.uid || p.authorUid || '').trim();
+          if (!uid) return;
+          const key = Number(p.lat).toFixed(4) + ',' + Number(p.lng).toFixed(4) + '|' + uid;
+          if (!groups.has(key)) groups.set(key, []);
+          groups.get(key).push(p);
+        });
+        // 각 그룹에서 최신 글 1개만 (id 내림차순 — id 가 Date.now() 기반)
+        const survivors = new Set();
+        groups.forEach(arr => {
+          arr.sort((a, b) => (b.id || 0) - (a.id || 0));
+          if (arr[0]) survivors.add(String(arr[0].id));
+        });
+        // uid 없는 글은 검열 대상 외 (그대로 통과)
+        return filteredPosts.filter(p => {
+          const uid = String(p.uid || p.authorUid || '').trim();
+          if (!uid || !p.lat || !p.lng) return true;
+          return survivors.has(String(p.id));
+        });
+      })();
+
       // ── 좌표 클러스터링 ── 같은 위치(4자리 정밀도 ≈ 11m)에 글이 여러 개면
       //   하나의 마커 + 숫자 배지(+N) — 부동산 앱 패턴. 클릭 시 첫 글 InfoWindow 표시
       const groups = new Map();
-      filteredPosts.forEach(p => {
+      dedupedByUidLoc.forEach(p => {
         if (!p.lat || !p.lng) return;
         const key = Number(p.lat).toFixed(4) + ',' + Number(p.lng).toFixed(4);
         if (!groups.has(key)) groups.set(key, []);

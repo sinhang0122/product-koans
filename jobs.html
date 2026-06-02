@@ -1643,7 +1643,7 @@
       createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification,
     } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
     import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app-check.js';
-    import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, limit, serverTimestamp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
+    import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, limit, serverTimestamp, where, getDocs, doc, deleteDoc } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
 
     const firebaseConfig = {
       apiKey:            'AIzaSyCamqnt0bNUD9uz1N5BbCuQjSkWLSpPqlU',
@@ -1855,10 +1855,34 @@
         };
         console.log('🚀 Firestore 전송 시도 데이터: ', payload, '| collection=jobs_posts | uid=', u.uid);
         try {
+          // ── Step 1: 새 글 등록 — 반드시 먼저 성공해야 함 ──
           const ref = await addDoc(collection(db, 'jobs_posts'), payload);
           console.log('✅ Firestore addDoc 성공 — docId =', ref.id);
+          // ── Step 2: 새 글 등록 100% 성공 확인 직후에만 과거 중복 글 삭제 (Rollback-safe) ──
+          //   · 조건: 같은 uid + 같은 title + 같은 body (완전 동일)
+          //   · 새 글 자기 자신(ref.id)은 제외
+          //   · 삭제 실패는 새 글 등록에 영향 X (silent log)
+          try {
+            const dupQ = query(
+              collection(db, 'jobs_posts'),
+              where('uid',   '==', u.uid),
+              where('title', '==', payload.title),
+              where('body',  '==', payload.body),
+              limit(10)
+            );
+            const dupSnap = await getDocs(dupQ);
+            const dupes = dupSnap.docs.filter(d => d.id !== ref.id);
+            if (dupes.length) {
+              console.info('[jobs] 중복 글 ' + dupes.length + '개 발견 → 과거 글 삭제 진행');
+              await Promise.allSettled(dupes.map(d => deleteDoc(doc(db, 'jobs_posts', d.id))));
+            }
+          } catch (dedupeErr) {
+            // 중복 글 정리 실패해도 새 글은 살아있음 — 데이터 유실 0
+            console.warn('[jobs] 중복 글 정리 실패 (새 글은 정상 등록됨):', dedupeErr);
+          }
           return ref;
         } catch (error) {
+          // 새 글 등록 자체가 실패한 경우 — 과거 글 절대 건드리지 않음 (Rollback)
           console.error('❌ Firestore 전송 실패 원인: ', error);
           throw error;
         }
