@@ -504,27 +504,18 @@
       <div>
         <span class="state-hub-eyebrow" id="stateHubEyebrow">State Hub</span>
         <h1 class="page-title" id="stateHubTitle">📍 주별 종합 허브</h1>
-        <p class="page-subtitle" id="stateHubSubtitle">선택한 주(state)의 모든 카테고리를 한 곳에서 만나보세요.</p>
+        <p class="page-subtitle" id="stateHubSubtitle">아래 5개 카테고리 중 하나를 선택해 주세요. 주(State) 정보는 자동으로 유지됩니다.</p>
       </div>
-      <a href="index.html" class="page-back">← 홈으로</a>
+      <a href="index.html" class="page-back">← 다른 주 선택</a>
     </div>
 
-    <!-- 1) 선택한 주의 카테고리 허브 — 식당/미용실/숙소/구직 등 -->
+    <!-- 선택한 주의 5개 카테고리 — Living / Work / Auto / Visa / Others -->
     <section class="state-hub-section" aria-label="카테고리 허브">
       <div class="state-section-head">
-        <span class="state-section-title" id="stateHubCatTitle">카테고리 바로가기</span>
-        <span class="state-section-hint">이 주(state) 의 모든 게시판</span>
+        <span class="state-section-title" id="stateHubCatTitle">카테고리 선택</span>
+        <span class="state-section-hint">5개 카테고리 · 클릭 시 해당 섹션 진입</span>
       </div>
       <div class="state-hub-grid" id="stateHubGrid"><!-- JS 동적 생성 --></div>
-    </section>
-
-    <!-- 2) 8개 주 빠른 전환 — 다른 주로 바로 점프 -->
-    <section class="state-section" aria-label="주 전환" style="margin-top:clamp(20px,3vw,32px);">
-      <div class="state-section-head">
-        <span class="state-section-title">다른 주로 이동 <em style="font-style:normal;font-weight:600;color:var(--text-muted);">· State Quick Jump</em></span>
-        <span class="state-section-hint">8개 주 · 한 번 클릭</span>
-      </div>
-      <div class="state-grid" id="stateQuickGrid"><!-- JS 동적 생성 --></div>
     </section>
 
   </main>
@@ -576,17 +567,18 @@
       { id:'act', code:'ACT', name:'Australian Capital',  capital:'Canberra',  flag:'🏛' },
       { id:'nt',  code:'NT',  name:'Northern Territory',  capital:'Darwin',    flag:'🌵' },
     ];
+    // 5개 핵심 카테고리만 노출 — 주(State) 정보는 query 로 그대로 전달
+    //  · Living  → accom.html?state=xxx           (쉐어)
+    //  · Work    → jobs.html?state=xxx&tab=post   (일 올리기)
+    //  · Auto    → auto.html?state=xxx&category=used (중고차 판매)
+    //  · Visa    → points.html?state=xxx&cat=legal (법무법인)
+    //  · Others  → restaurants.html?state=xxx     (K-푸드)
     const CATEGORIES = [
-      { href:'restaurants.html', label:'K-푸드 & 다이닝', emoji:'🍱', desc:'한식·아시안 식당' },
-      { href:'salon.html',       label:'한인 미용실',     emoji:'💇', desc:'커트·펌·염색·매직' },
-      { href:'gp.html',          label:'한인 의원·GP',   emoji:'🩺', desc:'한국어 진료 가능 의원' },
-      { href:'accom.html',       label:'쉐어하우스',      emoji:'🏠', desc:'쉐어/홀로/룸메이트 매물' },
-      { href:'rent.html',        label:'렌트 · 임대',     emoji:'🔑', desc:'단기 / 장기 렌트' },
-      { href:'jobs.html',        label:'구인구직',        emoji:'💼', desc:'풀타임·파트타임·캐주얼' },
-      { href:'trades.html',      label:'기술직 · 트레이드',emoji:'🛠', desc:'공인 기술자 매칭' },
-      { href:'car-sale.html',    label:'중고차 판매',     emoji:'🚗', desc:'개인·딜러 매물' },
-      { href:'car-rent.html',    label:'렌트카',          emoji:'🚙', desc:'단기·장기 차량 렌트' },
-      { href:'auto.html',        label:'자동차 종합',     emoji:'🔧', desc:'정비·보험·견인' },
+      { href:'accom.html',       extra:'',                 label:'Living · 리빙', emoji:'🏠', desc:'쉐어하우스 — 함께 살 집을 찾아보세요' },
+      { href:'jobs.html',        extra:'&tab=post',        label:'Work · 워크',   emoji:'💼', desc:'일 올리기 — 직원을 모집해 보세요' },
+      { href:'auto.html',        extra:'&category=used',   label:'Auto · 오토',   emoji:'🚗', desc:'중고차 판매 — 직거래 · 딜러 매물' },
+      { href:'points.html',      extra:'&cat=legal',       label:'Visa · 비자',   emoji:'🛡', desc:'법무법인 — 비자 · 이민 전문 상담' },
+      { href:'restaurants.html', extra:'',                 label:'Others · 아더스', emoji:'🍱', desc:'K-푸드 & 다이닝 — 한식·아시안 식당' },
     ];
     const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
@@ -598,25 +590,16 @@
     document.title = cur.code + ' Hub — KoAus';
     document.getElementById('stateHubEyebrow').textContent  = cur.code + ' · ' + cur.name;
     document.getElementById('stateHubTitle').innerHTML      = cur.flag + ' ' + esc(cur.name) + ' <em style="font-style:normal;font-size:0.55em;font-weight:700;color:var(--text-muted);letter-spacing:0;">· ' + esc(cur.capital) + '</em>';
-    document.getElementById('stateHubSubtitle').textContent = cur.name + ' 의 모든 KoAus 카테고리 · 게시판을 한 곳에서 만나보세요.';
-    document.getElementById('stateHubCatTitle').innerHTML   = cur.code + ' 의 카테고리 <em style="font-style:normal;font-weight:600;color:var(--text-muted);">· 모든 게시판</em>';
+    document.getElementById('stateHubSubtitle').textContent = '아래 5개 카테고리 중 하나를 선택해 주세요 — ' + cur.name + ' 정보가 자동으로 유지됩니다.';
+    document.getElementById('stateHubCatTitle').innerHTML   = cur.code + ' 카테고리 <em style="font-style:normal;font-weight:600;color:var(--text-muted);">· Living · Work · Auto · Visa · Others</em>';
 
-    // 2) 카테고리 카드 그리드 — 각 카테고리 페이지의 ?state= 분기로 이동
+    // 2) 5개 카테고리 카드 — 각 페이지의 ?state= 로 분기 + 카테고리별 보조 파라미터 동시 전달
     document.getElementById('stateHubGrid').innerHTML = CATEGORIES.map(c =>
-      `<a class="state-hub-card" href="${esc(c.href)}?state=${esc(cur.id)}">
+      `<a class="state-hub-card" href="${esc(c.href)}?state=${esc(cur.id)}${esc(c.extra)}">
         <span class="state-hub-card-arrow" aria-hidden="true">→</span>
         <span class="state-hub-card-emoji" aria-hidden="true">${c.emoji}</span>
         <span class="state-hub-card-label">${esc(c.label)}</span>
         <span class="state-hub-card-desc">${esc(c.desc)}</span>
-      </a>`
-    ).join('');
-
-    // 3) 8개 주 빠른 전환 그리드 — 현재 주는 표시하되 클릭 시 reload 회피용 동일 페이지로
-    document.getElementById('stateQuickGrid').innerHTML = STATES.map(s =>
-      `<a class="state-card" href="state.html?id=${esc(s.id)}"${s.id===cur.id ? ' style="border-color:var(--text-primary);background:var(--bg-elevated);"' : ''}>
-        <span class="state-card-arrow" aria-hidden="true">→</span>
-        <span class="state-card-code">${esc(s.code)}</span>
-        <span class="state-card-name">${esc(s.flag)} ${esc(s.name)}</span>
       </a>`
     ).join('');
   </script>
