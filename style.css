@@ -441,6 +441,21 @@ body {
   text-align: center;
 }
 
+/* ── Others 헤더 정돈: 단일 [← 홈으로] 우측 끝 + 세로 중앙 ── */
+.page-header-actions--flat {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  align-self: stretch;
+  flex-shrink: 0;
+  min-width: 0;
+}
+.page-header-actions--flat .page-header-btn-row {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
 /* ── 글로벌 검색 컴포넌트 (search-bar.js) — Black & White 톤 ──
    · 사이즈는 .board-write-btn / .board-write-btn--ghost (padding 10/20, font 14px)
      와 100% 일치 — 같은 줄에 나란히 놓아도 높이/체급 통일 */
@@ -513,6 +528,9 @@ body {
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: clamp(6px, 1vw, 10px);
   margin: clamp(6px, 1.2vw, 12px) 0;
+}
+.others-nav.others-nav--2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 .others-nav-item {
   display: flex; align-items: center; justify-content: center; gap: 6px;
