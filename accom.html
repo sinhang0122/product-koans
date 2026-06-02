@@ -469,11 +469,6 @@
 
   <main class="page-container">
     <section class="koaus-hero" data-koaus-hero-cat="accom"></section>
-    <!-- 전광판(Marquee) · Firestore global_ticker — 좌측 [Notice|광고주] 고정 + 우측 [광고내용] 우→좌 흐름 (marquee.js) -->
-    <a class="koaus-mini-banner" href="index.html" aria-label="KoAus 안내">
-      <span class="mn-ico" aria-hidden="true">📣</span>
-      <span class="mn-text">KoAus · 호주 한인 포털 — 등록된 정보만 노출됩니다.</span>
-    </a>
 
     <section class="notice-section">
       <div class="notice-row" id="tickerRow">
@@ -2338,6 +2333,22 @@
         strokeColor: v ? '#000000' : '#ffffff', strokeWeight: 2,
       };
     }
+    // 클러스터 아이콘 (부동산 앱 패턴) — 같은 좌표 N개 글 한 마커로 + 숫자 배지
+    //   · SVG dataURL — 원형 검정 마커 + 흰색 외곽 + 가운데 +N 텍스트
+    //   · 블랙 앤 화이트 톤 유지, 크기는 글 개수에 따라 약간 확장
+    function clusterIcon(count) {
+      const size = count >= 10 ? 36 : count >= 5 ? 32 : 28;
+      const text = '+' + (count - 1);
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 40 40">` +
+        `<circle cx="20" cy="20" r="18" fill="#000" stroke="#fff" stroke-width="3"/>` +
+        `<text x="20" y="25" text-anchor="middle" fill="#fff" font-family="Urbanist,Noto Sans KR,sans-serif" font-size="14" font-weight="900">${text}</text>` +
+      `</svg>`;
+      return {
+        url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg),
+        scaledSize: new google.maps.Size(size, size),
+        anchor: new google.maps.Point(size/2, size/2),
+      };
+    }
 
     // InfoWindow 위임: ⭐ + ☑ 우선(stopPropagation), 카드는 markVisited + openDetail
     document.addEventListener('click', e => {
@@ -2444,13 +2455,24 @@
       const bounds = new google.maps.LatLngBounds();
       let hasCoord  = false;
 
+      // ── 좌표 클러스터링 ── 같은 위치(4자리 정밀도 ≈ 11m)에 글이 여러 개면
+      //   하나의 마커 + 숫자 배지(+N) — 부동산 앱 패턴. 클릭 시 첫 글 InfoWindow 표시
+      const groups = new Map();
       filteredPosts.forEach(p => {
         if (!p.lat || !p.lng) return;
+        const key = Number(p.lat).toFixed(4) + ',' + Number(p.lng).toFixed(4);
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key).push(p);
+      });
+      groups.forEach((postsAtSameSpot) => {
+        const p = postsAtSameSpot[0];
+        const extra = postsAtSameSpot.length - 1;   // 추가 글 개수 (0 = 단일)
         const marker = new google.maps.Marker({
           position: { lat: p.lat, lng: p.lng },
           map,
-          title: p.title,
-          icon: markerIcon(p.id),
+          title: extra > 0 ? `${p.title} (+${extra}건)` : p.title,
+          icon: extra > 0 ? clusterIcon(postsAtSameSpot.length, isSaved(p.id), isContacted(p.id)) : markerIcon(p.id),
+          label: extra > 0 ? null : undefined,
         });
         marker.addListener('click', () => {
           const iwTags = filterTags(p).slice(0, 3).map(t =>

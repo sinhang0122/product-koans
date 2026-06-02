@@ -441,59 +441,63 @@ body {
   text-align: center;
 }
 
-/* ── 글로벌 검색 컴포넌트 (search-bar.js) — Black & White 톤 ── */
-.koaus-search-bar { width: 100%; margin: clamp(6px, 1.2vw, 12px) 0; min-width: 0; }
+/* ── 글로벌 검색 컴포넌트 (search-bar.js) — Black & White 톤, 시원한 확대 사이즈 ── */
+.koaus-search-bar { width: 100%; margin: clamp(10px, 2vw, 18px) 0; min-width: 0; }
 .koaus-search-row {
   display: grid;
-  grid-template-columns: minmax(110px, 140px) 1fr auto auto;
-  gap: 6px;
+  grid-template-columns: minmax(140px, 180px) 1fr auto auto;
+  gap: 10px;
   align-items: stretch;
   width: 100%;
 }
 .koaus-search-scope,
 .koaus-search-input {
-  padding: 8px 12px;
-  border: 1px solid var(--border);
+  padding: 14px 18px;
+  border: 1.5px solid var(--border);
   background: var(--bg-input);
   color: var(--text-primary);
   border-radius: var(--r-md);
-  font: 600 13px var(--font);
+  font: 700 15.5px var(--font);
+  letter-spacing: -0.01em;
   min-width: 0;
 }
-.koaus-search-scope { cursor: pointer; }
+.koaus-search-scope { cursor: pointer; font-weight: 600; }
 .koaus-search-input::placeholder { color: var(--text-muted); font-weight: 500; }
 .koaus-search-scope:focus,
 .koaus-search-input:focus {
   outline: none; border-color: var(--text-primary);
+  box-shadow: 0 0 0 3px rgba(0,0,0,0.08);
 }
 .koaus-search-btn {
-  padding: 8px 14px;
+  padding: 14px 22px;
   background: var(--text-primary);
   color: var(--bg-base);
-  border: 1px solid var(--text-primary);
+  border: 1.5px solid var(--text-primary);
   border-radius: var(--r-md);
-  font: 700 12.5px var(--font); cursor: pointer; white-space: nowrap;
+  font: 800 14.5px var(--font);
+  letter-spacing: -0.01em;
+  cursor: pointer; white-space: nowrap;
   transition: background 0.12s, color 0.12s;
 }
 .koaus-search-btn:hover { background: var(--bg-base); color: var(--text-primary); }
 .koaus-search-clear {
-  padding: 8px 10px;
+  padding: 14px 14px;
   background: var(--bg-surface);
-  border: 1px solid var(--border);
+  border: 1.5px solid var(--border);
   border-radius: var(--r-md);
-  font: 800 12px var(--font); color: var(--text-muted); cursor: pointer;
+  font: 900 14px var(--font); color: var(--text-muted); cursor: pointer;
 }
 .koaus-search-clear:hover { color: var(--text-primary); border-color: var(--text-primary); }
 @media (max-width: 640px) {
   .koaus-search-row {
     grid-template-columns: 1fr 1fr;
     grid-template-areas: "scope scope" "input input" "btn clr";
-    gap: 4px;
+    gap: 8px;
   }
-  .koaus-search-scope { grid-area: scope; }
-  .koaus-search-input { grid-area: input; }
-  .koaus-search-btn   { grid-area: btn; }
-  .koaus-search-clear { grid-area: clr; }
+  .koaus-search-scope { grid-area: scope; padding: 12px 16px; font-size: 14.5px; }
+  .koaus-search-input { grid-area: input; padding: 12px 16px; font-size: 14.5px; }
+  .koaus-search-btn   { grid-area: btn;   padding: 12px 18px; font-size: 14px; }
+  .koaus-search-clear { grid-area: clr;   padding: 12px 14px; font-size: 13px; }
 }
 
 /* ── Others 카테고리(restaurants/gp/salon/trades) 페이지 간 자유 이동 nav ── */
@@ -1741,19 +1745,28 @@ body.is-admin .koaus-admin-toolbar { display: inline-flex !important; }
 :root[data-theme="dark"] .trades-notice-link { color: #9bc1f5; }
 
 /* ── 게시판 리스트 최상단 핀공지 ── */
+/* 관리자 고정 공지 — Black & White 톤앤매너 (노란색 → 무채색 + 좌측 강조 보더)
+   · 빈 콘텐츠 시: [hidden] 또는 비어 있는 자식 → 부모 자체 hidden 으로 공간 0 처리
+   · :empty / .is-empty 자동 hide (JS 가 텍스트 채울 때만 노출) */
 .pinned-notice {
   display: flex; align-items: flex-start; gap: 10px;
-  margin: 0 0 12px; padding: 12px 14px; border-radius: 10px;
-  background: #fff8d6; border: 1px solid #f5d76e; color: #5b4500;
+  margin: 0 0 12px; padding: 12px 14px;
+  border-radius: var(--r-md);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--text-primary);
+  color: var(--text-primary);
   font-size: 13.5px; line-height: 1.55;
 }
+.pinned-notice[hidden],
+.pinned-notice:empty,
+.pinned-notice.is-empty { display: none !important; margin: 0 !important; padding: 0 !important; border: 0 !important; }
 .pinned-notice .pn-icon { font-size: 18px; line-height: 1.2; flex-shrink: 0; }
 .pinned-notice .pn-body { flex: 1; min-width: 0; word-break: break-word; }
-.pinned-notice .pn-body strong { color: #735500; }
+.pinned-notice .pn-body strong { color: var(--text-primary); font-weight: 800; }
 :root[data-theme="dark"] .pinned-notice {
-  background: #2a2310; border-color: #6a5520; color: #f6e4a8;
+  background: var(--bg-elevated); border-color: var(--border); color: var(--text-primary);
 }
-:root[data-theme="dark"] .pinned-notice .pn-body strong { color: #ffd86b; }
 .write-input:focus, .write-textarea:focus { border-color: var(--border-focus); }
 .write-textarea { resize: vertical; min-height: 72px; line-height: 1.6; }
 /* select도 input과 동일한 높이 + B&W 화살표로 통일 */

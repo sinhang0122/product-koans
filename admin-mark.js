@@ -277,6 +277,30 @@ window.addEventListener('koaus-services-updated', () => setTimeout(injectCardAct
   [500, 1500].forEach(ms => setTimeout(autoBuildAll, ms));
 })();
 
+// ── .pinned-notice 조건부 노출 — 비어 있으면 화면에서 완전히 제거 ──
+//  · 평소 등록된 고정 공지가 없으면 공간을 전혀 차지하지 않음 (Conditional Rendering)
+//  · JS 가 내용을 채우면 자동 노출, 비우면 자동 hidden
+(function setupPinnedNoticeGate() {
+  function check(el) {
+    const txt = (el.textContent || '').trim();
+    if (!txt) { el.setAttribute('hidden', ''); el.classList.add('is-empty'); }
+    else      { el.removeAttribute('hidden'); el.classList.remove('is-empty'); }
+  }
+  function wire() {
+    document.querySelectorAll('.pinned-notice').forEach(el => {
+      if (el.__koausPinnedWired) return;
+      el.__koausPinnedWired = true;
+      check(el);
+      try {
+        new MutationObserver(() => check(el)).observe(el, { childList: true, subtree: true, characterData: true });
+      } catch (_) {}
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wire, { once: true });
+  else wire();
+  [400, 1500].forEach(ms => setTimeout(wire, ms));
+})();
+
 // ── State(주) 바로가기 카드 — 전역 자동 빌드 ──
 //  · 사용법: 페이지 본문 어디든 `<section data-koaus-state-quick></section>` 한 줄만 추가.
 //  · 8개 주 카드 그리드(state.html?id=xxx) 가 자동 주입된다. 페이지 본체 JS 수정 불필요.
