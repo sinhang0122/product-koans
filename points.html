@@ -510,21 +510,109 @@
       <button class="accom-tab" data-cat="points"><span class="tab-text">기술심사 가채점 <em>Skills</em></span></button>
     </div>
 
-    <!-- 표준 레이아웃: 검색 → 필터 칩 → 본문 (홍보 안내 문구 완전 제거) -->
+    <!-- 표준 레이아웃: 검색 → 필터/뷰토글/글쓰기 → 본문 (accom 패턴 100% 통일) -->
     <!-- 조건별 텍스트 검색 (search-bar.js 자동 빌드) — 탭 바로 아래 최상단 -->
     <div data-koaus-search="visa" style="margin-top:0;"></div>
-    <!-- 상세 필터 — 카테고리(법무 / 유학) 칩 -->
+    <!-- Controls — List/Map 토글 + 상세 필터 칩 + 글쓰기 (accom 패턴) -->
+    <div class="accom-controls" id="visaControls">
+      <div class="view-toggle" id="visaViewToggle">
+        <button class="view-btn active" id="visaListBtn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          List View
+        </button>
+        <button class="view-btn" id="visaMapBtn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+          Map View
+        </button>
+      </div>
+      <span class="board-count" id="visaBoardCount">총 0건</span>
+      <div class="accom-ctrl-actions">
+        <button class="board-write-btn" id="visaWriteBtn">+ 글쓰기</button>
+      </div>
+    </div>
+    <!-- 상세 필터 칩 — 카테고리 (전체 / 법무 / 유학) -->
     <div class="filter-pills" id="visaFilterPills" style="display:flex;gap:8px;margin:8px 0 12px;flex-wrap:wrap;">
       <button type="button" class="filter-pill active" data-visa-filter="all">전체</button>
       <button type="button" class="filter-pill" data-visa-filter="legal">⚖ 법무법인</button>
       <button type="button" class="filter-pill" data-visa-filter="education">🎓 유학원</button>
     </div>
-    <!-- 법무법인·유학원: 리스트 전용 (지도 제거) — 가채점 탭 활성 시 숨김 -->
+    <!-- List View — accom-grid 패턴 -->
     <section class="partner-board partner-board--list-only" id="partnerBoard">
       <div class="partner-list" id="partnerList">
         <div class="post-empty">파트너 정보를 불러오는 중…</div>
       </div>
     </section>
+    <!-- Map View (lat/lng 있는 글만 마커) -->
+    <div id="visaMapView" style="display:none;">
+      <div id="visaMap" style="width:100%;height:480px;border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;background:var(--bg-card);"></div>
+    </div>
+
+    <!-- ── 비자/유학 글쓰기 모달 (accom 5:5 패턴, 제목만 required) ── -->
+    <div class="write-overlay" id="visaWriteOverlay">
+      <div class="write-modal write-modal--tall">
+        <div class="write-modal-header">
+          <div class="write-modal-title">글쓰기 <em>Visa &amp; Edu</em></div>
+          <span class="write-author-badge">작성자 : <b id="vwAuthorName">-</b></span>
+          <button class="write-modal-close" id="vwClose" type="button">✕</button>
+        </div>
+        <div class="write-grid">
+          <div class="write-field">
+            <label class="write-label" for="vwTitle">제목 <span style="color:var(--red,#dc2626);">*</span></label>
+            <input class="write-input" id="vwTitle" type="text" maxlength="120" placeholder="예: 시드니 한인 법무법인 추천 · 489 비자 진행 후기" required />
+          </div>
+          <div class="write-field">
+            <label class="write-label" for="vwCategory">카테고리 (선택)</label>
+            <select class="write-input" id="vwCategory">
+              <option value="legal">⚖ 법무법인 / 비자 · 이민</option>
+              <option value="education">🎓 유학원 · 어학원</option>
+            </select>
+          </div>
+          <div class="write-field">
+            <label class="write-label" for="vwVisaType">비자 종류 (선택)</label>
+            <select class="write-input" id="vwVisaType">
+              <option value="">선택 안 함</option>
+              <option value="189">189 · 독립 기술 이민</option>
+              <option value="190">190 · 주정부 기술 이민</option>
+              <option value="491">491 · 지역 기술 이민</option>
+              <option value="482">482 · 임시 기술 비자</option>
+              <option value="500">500 · 학생 비자</option>
+              <option value="485">485 · 졸업생 임시 비자</option>
+              <option value="820/801">820/801 · 배우자 비자</option>
+              <option value="187">187 · 지역 후원 영주권</option>
+              <option value="other">기타 / 모름</option>
+            </select>
+          </div>
+          <div class="write-field">
+            <label class="write-label" for="vwAddress">주소 (선택)</label>
+            <input class="write-input" id="vwAddress" type="text" autocomplete="off" maxlength="200" placeholder="시드니 CBD, 멜번 등 — 지도 표시용" />
+          </div>
+          <div class="write-field write-field--full">
+            <label class="write-label" for="vwBody">상세 내용 (선택)</label>
+            <textarea class="write-textarea" id="vwBody" maxlength="3000" placeholder="비자 종류 · 진행 절차 · 비용 · 기간 · 후기 등 자유 기재"></textarea>
+          </div>
+          <div class="write-field write-field--full">
+            <label class="write-label" for="vwContact">연락처 (선택)</label>
+            <input class="write-input" id="vwContact" type="text" maxlength="100" placeholder="카카오톡 ID · 이메일 · 전화번호 등" />
+          </div>
+        </div>
+        <div class="write-modal-actions">
+          <button class="write-cancel-btn" id="vwCancel" type="button">취소</button>
+          <button class="write-submit-btn" id="vwSubmit" type="button">등록하기</button>
+        </div>
+        <p class="auth-error" id="vwError" style="margin:6px 14px;color:var(--red,#dc2626);"></p>
+      </div>
+    </div>
+
+    <!-- ── 비자/유학 상세 모달 (accom rea-detail 패턴 시각 매칭) ── -->
+    <div class="report-overlay" id="visaDetailOverlay">
+      <div class="report-card" style="max-width: 640px;">
+        <div class="report-header">
+          <span class="report-title" id="visaDetailTitle">제목</span>
+          <button type="button" class="report-close" id="visaDetailClose" aria-label="닫기">✕</button>
+        </div>
+        <div class="report-body" id="visaDetailBody"><!-- 동적 렌더 --></div>
+      </div>
+    </div>
 
 <!-- ───────── 기술심사 점수 가채점 (가채점 탭 활성 시에만 노출 — 아래 #pointsSection 으로 재배치) ───────── -->
     <section class="points-section" id="pointsSection" style="display:none;">
@@ -825,12 +913,174 @@
 
     applyActiveCat();
     renderList();  // 초기: 빈 상태 안내
+
+    // ── List/Map 뷰 토글 + Firestore 글쓰기 (accom 패턴 이식) ──
+    (function setupVisaUI() {
+      const board     = document.getElementById('partnerBoard');
+      const mapView   = document.getElementById('visaMapView');
+      const listBtn   = document.getElementById('visaListBtn');
+      const mapBtn    = document.getElementById('visaMapBtn');
+      const writeBtn  = document.getElementById('visaWriteBtn');
+      const overlay   = document.getElementById('visaWriteOverlay');
+      const closeBtn  = document.getElementById('vwClose');
+      const cancelBtn = document.getElementById('vwCancel');
+      const submitBtn = document.getElementById('vwSubmit');
+      const detailOv  = document.getElementById('visaDetailOverlay');
+      const detailClose = document.getElementById('visaDetailClose');
+
+      function openWrite() {
+        const u = window.koausAuth && window.koausAuth.user;
+        if (!u) { alert('로그인 후 작성할 수 있습니다.'); if (window.koausAuth && window.koausAuth.openAuthModal) window.koausAuth.openAuthModal(); return; }
+        const nick = localStorage.getItem('koaus-nickname') || (u.displayName||'').split(' ')[0] || (u.email||'').split('@')[0] || '사용자';
+        const _wan = document.getElementById('vwAuthorName'); if (_wan) _wan.textContent = nick;
+        overlay.classList.add('open');
+      }
+      function closeWrite() { overlay.classList.remove('open'); ['vwTitle','vwBody','vwAddress','vwContact'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; }); document.getElementById('vwError').textContent = ''; }
+
+      if (writeBtn) writeBtn.addEventListener('click', openWrite);
+      if (closeBtn) closeBtn.addEventListener('click', closeWrite);
+      if (cancelBtn) cancelBtn.addEventListener('click', closeWrite);
+      if (overlay) overlay.addEventListener('click', e => { if (e.target === overlay) closeWrite(); });
+
+      // List/Map 토글
+      function setView(v) {
+        const isMap = v === 'map';
+        listBtn.classList.toggle('active', !isMap);
+        mapBtn.classList.toggle('active',  isMap);
+        if (board)   board.style.display   = isMap ? 'none' : '';
+        if (mapView) mapView.style.display = isMap ? '' : 'none';
+        if (isMap) ensureVisaMap();
+      }
+      if (listBtn) listBtn.addEventListener('click', () => setView('list'));
+      if (mapBtn)  mapBtn.addEventListener('click',  () => setView('map'));
+
+      // Visa 지도 — Google Maps 로드 보장 후 마커 (lat/lng 있는 글만)
+      let visaMap = null, visaMarkers = [];
+      function ensureVisaMap() {
+        if (window.google && google.maps) return initVisaMap();
+        // Maps API 로드 (이미 다른 페이지에서 로드되었으면 재사용)
+        if (!document.querySelector('script[data-koaus-maps-loader]')) {
+          const s = document.createElement('script');
+          s.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyDeAm0pgvz1tEt8O0_QHaJVfwzwq25vEyA&libraries=places&callback=initVisaMapCB';
+          s.async = true; s.defer = true;
+          s.setAttribute('data-koaus-maps-loader', '1');
+          window.initVisaMapCB = initVisaMap;
+          document.head.appendChild(s);
+        } else { setTimeout(ensureVisaMap, 300); }
+      }
+      function initVisaMap() {
+        const el = document.getElementById('visaMap');
+        if (!el || visaMap) { updateVisaMarkers(); return; }
+        visaMap = new google.maps.Map(el, {
+          center: { lat:-25.2744, lng:133.7751 }, zoom: 4,
+          gestureHandling: 'greedy', mapTypeControl: false, streetViewControl: false,
+        });
+        updateVisaMarkers();
+      }
+      function updateVisaMarkers() {
+        if (!visaMap || !window.google) return;
+        visaMarkers.forEach(m => m.setMap(null));
+        visaMarkers = [];
+        const arr = (window.partners || []).filter(p => p.lat && p.lng);
+        // [좌표+UID] 병합
+        let merged = arr;
+        try { if (window.koausDedupe && window.koausDedupe.dedupeMapByUidLoc) merged = window.koausDedupe.dedupeMapByUidLoc(arr); } catch (_) {}
+        const bounds = new google.maps.LatLngBounds();
+        merged.forEach(p => {
+          const mk = new google.maps.Marker({ position:{lat:Number(p.lat), lng:Number(p.lng)}, map: visaMap, title: p.title || p.name || '' });
+          mk.addListener('click', () => openVisaDetail(p));
+          visaMarkers.push(mk); bounds.extend(mk.getPosition());
+        });
+        try { if (merged.length) visaMap.fitBounds(bounds); if (merged.length === 1) visaMap.setZoom(13); } catch (_) {}
+      }
+
+      // 상세 모달
+      function openVisaDetail(p) {
+        if (!detailOv) return;
+        const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        document.getElementById('visaDetailTitle').textContent = p.title || p.name || '';
+        const imgs = Array.isArray(p.imageUrls) ? p.imageUrls : [];
+        const galleryHtml = imgs.length
+          ? '<div style="display:flex;gap:6px;overflow-x:auto;scroll-snap-type:x mandatory;margin:0 0 12px;-webkit-overflow-scrolling:touch;">'
+            + imgs.map(u => '<img src="'+esc(u)+'" data-koaus-gallery="visa-detail-'+esc(p.id)+'" data-src="'+esc(u)+'" loading="lazy" style="flex:0 0 auto;width:78%;max-height:220px;height:auto;border-radius:10px;object-fit:cover;border:1px solid var(--border);cursor:zoom-in;scroll-snap-align:start;" />').join('')
+            + '</div>'
+          : '';
+        const meta = [
+          p.visaType ? '<span style="font-weight:800;">🛂 ' + esc(p.visaType) + '</span>' : '',
+          p.category === 'legal' ? '⚖ 법무법인' : (p.category === 'education' ? '🎓 유학원' : ''),
+          p.address ? '📍 ' + esc(p.address) : '',
+        ].filter(Boolean).join(' · ');
+        const body = (p.body || p.summary || p.description || '').replace(/\n/g, '<br>');
+        const contact = p.contact ? '<div style="margin-top:10px;padding:10px 12px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;font-size:13.5px;"><strong>📞 연락처:</strong> ' + esc(p.contact) + '</div>' : '';
+        document.getElementById('visaDetailBody').innerHTML =
+          galleryHtml +
+          (meta ? '<div style="font-size:12.5px;color:var(--text-secondary);margin-bottom:10px;">' + meta + '</div>' : '') +
+          '<div style="font-size:14px;line-height:1.6;color:var(--text-primary);">' + body + '</div>' +
+          contact;
+        detailOv.classList.add('open');
+      }
+      if (detailClose) detailClose.addEventListener('click', () => detailOv.classList.remove('open'));
+      if (detailOv) detailOv.addEventListener('click', e => { if (e.target === detailOv) detailOv.classList.remove('open'); });
+      // partnerList 항목 클릭 → 상세 (이벤트 위임)
+      document.addEventListener('click', e => {
+        const card = e.target.closest('[data-partner-id]');
+        if (!card) return;
+        const id = card.getAttribute('data-partner-id');
+        const p = (window.partners || []).find(x => String(x.id) === String(id));
+        if (p) openVisaDetail(p);
+      });
+
+      // 글쓰기 submit — Firestore services 컬렉션에 push (koausDedupe 활용)
+      submitBtn.addEventListener('click', async () => {
+        const errEl = document.getElementById('vwError');
+        errEl.textContent = '';
+        const title    = document.getElementById('vwTitle').value.trim();
+        const category = document.getElementById('vwCategory').value || 'legal';
+        const visaType = document.getElementById('vwVisaType').value || '';
+        const address  = document.getElementById('vwAddress').value.trim();
+        const body     = document.getElementById('vwBody').value.trim();
+        const contact  = document.getElementById('vwContact').value.trim();
+        if (!title) { errEl.textContent = '제목을 입력해 주세요.'; return; }
+        const u = window.koausAuth && window.koausAuth.user;
+        if (!u) { errEl.textContent = '로그인이 필요합니다.'; return; }
+        if (!window.koausDb || !window.koausFs) { errEl.textContent = 'Firestore 미초기화'; return; }
+        const { addDoc, collection, serverTimestamp } = window.koausFs;
+        const payload = {
+          category, title, body, address, contact, visaType,
+          status: 'approved',           // 사용자 글: 즉시 노출 (admin 검토 단계 우회 옵션)
+          author: (u.displayName || (u.email||'').split('@')[0] || '익명'),
+          uid: u.uid, email: u.email || '',
+          authorUid: u.uid, authorEmail: u.email || '',
+          createdAt: serverTimestamp(),
+        };
+        submitBtn.disabled = true; submitBtn.textContent = '등록 중…';
+        try {
+          if (window.koausDedupe && window.koausDedupe.addAndCleanup) {
+            await window.koausDedupe.addAndCleanup(
+              { db: window.koausDb, addDoc, collection, query: window.koausFs.query, where: window.koausFs.where, getDocs: window.koausFs.getDocs, doc: window.koausFs.doc, deleteDoc: window.koausFs.deleteDoc, limit: window.koausFs.limit },
+              'services', payload, { uid: u.uid, title, address }
+            );
+          } else {
+            await addDoc(collection(window.koausDb, 'services'), payload);
+          }
+          closeWrite();
+          alert('✅ 비자/유학 글이 등록되었습니다.');
+        } catch (e) {
+          console.error('[visa] 등록 실패', e);
+          errEl.textContent = '등록 실패: ' + (e && (e.code || e.message) || e);
+        } finally { submitBtn.disabled = false; submitBtn.textContent = '등록하기'; }
+      });
+
+      // partners 갱신 시 지도 마커도 sync
+      const _origRender = window.__renderPartners;
+      window.__renderPartners = (arr) => { if (typeof _origRender === 'function') _origRender(arr); if (visaMap) updateVisaMarkers(); };
+    })();
   </script>
 
   <!-- Firestore: services 컬렉션 중 legal/education만 실시간 구독 -->
   <script type="module">
     import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
-    import { getFirestore, collection, query, orderBy, limit, onSnapshot } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
+    import { getFirestore, collection, query, orderBy, limit, onSnapshot, addDoc, where, getDocs, doc, deleteDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
     const firebaseConfig = {
       apiKey:'AIzaSyCamqnt0bNUD9uz1N5BbCuQjSkWLSpPqlU', authDomain:'koaus-f564c.firebaseapp.com',
       projectId:'koaus-f564c', storageBucket:'koaus-f564c.firebasestorage.app',
@@ -838,6 +1088,8 @@
     };
     const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
     let db; try { db = getFirestore(app); } catch (e) { console.warn('[points] Firestore 미초기화', e); }
+    // 글쓰기 핸들러(classic script) 가 사용할 Firestore 인스턴스 + 함수 노출
+    try { window.koausDb = db; window.koausFs = { addDoc, collection, query, where, getDocs, doc, deleteDoc, limit, serverTimestamp }; } catch (_) {}
     if (db) {
       try {
         onSnapshot(query(collection(db, 'services'), orderBy('createdAt', 'desc'), limit(20)), snap => {
