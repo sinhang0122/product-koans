@@ -483,53 +483,54 @@
         <div class="swiper" id="heroSwiperHome">
           <div class="swiper-wrapper" data-koaus-hero-slots="home" data-koaus-cap="4">
             <!-- 슬롯 4 개: 향후 Firestore 인기 광고주 / 클릭률 기반으로 매핑 가능. -->
-            <div class="swiper-slide hero-bg--home1" data-koaus-slot="0">
+            <!-- 슬라이드 자체가 클릭 영역 — a 태그로 변경, 내부 hero-cta 는 span(시각 표시) -->
+            <a class="swiper-slide hero-bg--home1" data-koaus-slot="0" href="#sectionShortcuts">
               <div class="hero-content">
                 <span class="hero-eyebrow">KoAus · Korea ↔ Australia</span>
                 <h2 class="hero-title">호주 한인 생활의 모든 것, 한 곳에서.</h2>
                 <p class="hero-sub">쉐어·렌트·구인구직·정비·식당·법무·유학 — 한인 커뮤니티 포털</p>
-                <a class="hero-cta" href="#sectionShortcuts">서비스 둘러보기 →</a>
+                <span class="hero-cta">서비스 둘러보기 →</span>
               </div>
-            </div>
-            <div class="swiper-slide hero-bg--home2" data-koaus-slot="1">
+            </a>
+            <a class="swiper-slide hero-bg--home2" data-koaus-slot="1" href="accom.html">
               <div class="hero-content">
                 <span class="hero-eyebrow">실시간 매물 · 지도 보기</span>
                 <h2 class="hero-title">쉐어·렌트, 위치까지 한눈에.</h2>
                 <p class="hero-sub">시드니·멜버른·브리즈번 — 한인 매물을 지도와 사진으로 확인하세요</p>
-                <a class="hero-cta" href="accom.html">쉐어 보러가기 →</a>
+                <span class="hero-cta">쉐어 보러가기 →</span>
               </div>
-            </div>
-            <div class="swiper-slide hero-bg--home3" data-koaus-slot="2">
+            </a>
+            <a class="swiper-slide hero-bg--home3" data-koaus-slot="2" href="trades.html">
               <div class="hero-content">
                 <span class="hero-eyebrow">관리자 검토 게시판</span>
                 <h2 class="hero-title">믿을 수 있는 한인 기술자·식당·GP.</h2>
                 <p class="hero-sub">관리자가 등록 검토 후 표시 — 무분별한 광고 zero</p>
-                <a class="hero-cta" href="trades.html">기술직 보러가기 →</a>
+                <span class="hero-cta">기술직 보러가기 →</span>
               </div>
-            </div>
-            <div class="swiper-slide hero-bg--legal3" data-koaus-slot="3">
+            </a>
+            <a class="swiper-slide hero-bg--legal3" data-koaus-slot="3" href="points.html?cat=legal">
               <div class="hero-content">
                 <span class="hero-eyebrow">Visa · 법무 · 유학</span>
                 <h2 class="hero-title">호주 정착부터 비자까지 한 페이지.</h2>
                 <p class="hero-sub">법무법인·유학원 추천 + 기술심사 가채점 도구 무료 제공</p>
-                <a class="hero-cta" href="points.html?cat=legal">상담 시작 →</a>
+                <span class="hero-cta">상담 시작 →</span>
               </div>
-            </div>
+            </a>
           </div>
           <div class="swiper-pagination"></div>
           <div class="swiper-button-prev"></div>
           <div class="swiper-button-next"></div>
         </div>
       </div>
-      <!-- 모바일 단일 카드 (≤767px) -->
+      <!-- 모바일 단일 카드 (≤767px) — 클릭 시 서비스 단축 카드 영역으로 스크롤 -->
       <div class="koaus-hero-mobile">
-        <div class="hero-card hero-bg--home1">
+        <a class="hero-card hero-bg--home1" href="#sectionShortcuts" style="text-decoration:none;color:inherit;">
           <div class="hero-content">
             <span class="hero-eyebrow">KoAus</span>
             <h2 class="hero-title">호주 한인 생활의 모든 것</h2>
             <p class="hero-sub">쉐어 · 렌트 · 구인 · 정비 · 식당 · GP</p>
           </div>
-        </div>
+        </a>
       </div>
     </section>
 
@@ -562,7 +563,7 @@
 
     <!-- 메인 단축 카드 — 8개 주(State) 카드와 100% 동일 CSS 클래스(.state-grid / .state-card)
          · modifier: .state-grid--pair (2개 카드 한 줄 grid — Care/환율) -->
-    <section class="state-grid state-grid--pair" aria-label="핵심 기능 바로가기">
+    <section id="sectionShortcuts" class="state-grid state-grid--pair" aria-label="핵심 기능 바로가기">
       <a class="state-card" href="care.html">
         <span class="state-card-arrow" aria-hidden="true">→</span>
         <span class="state-card-code">🤝 Care</span>
