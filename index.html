@@ -560,17 +560,18 @@
     <!-- 주(State) 바로가기 — admin-mark.js 가 자동 빌드 -->
     <section data-koaus-state-quick></section>
 
-    <!-- 메인 단축 카드 (5:5 균등 · Care · 환율 계산 비교) -->
-    <section class="home-shortcuts" aria-label="핵심 기능 바로가기">
-      <a class="home-shortcut" href="care.html">
-        <span class="home-shortcut-arrow" aria-hidden="true">→</span>
-        <span class="home-shortcut-label">Care</span>
-        <span class="home-shortcut-desc">호주 생활 케어 및 맞춤형 커뮤니티 비즈니스 서비스</span>
+    <!-- 메인 단축 카드 — 8개 주(State) 카드와 100% 동일 CSS 클래스(.state-grid / .state-card)
+         · modifier: .state-grid--pair (2개 카드 한 줄 grid — Care/환율) -->
+    <section class="state-grid state-grid--pair" aria-label="핵심 기능 바로가기">
+      <a class="state-card" href="care.html">
+        <span class="state-card-arrow" aria-hidden="true">→</span>
+        <span class="state-card-code">🤝 Care</span>
+        <span class="state-card-name">호주 생활 케어 · 긴급 연락처</span>
       </a>
-      <a class="home-shortcut" href="calculator.html">
-        <span class="home-shortcut-arrow" aria-hidden="true">→</span>
-        <span class="home-shortcut-label">환율 계산 비교</span>
-        <span class="home-shortcut-desc">AUD ↔ KRW 주요 송금 앱 비교 · 방향별 한도/에러를 실시간 검증</span>
+      <a class="state-card" href="calculator.html">
+        <span class="state-card-arrow" aria-hidden="true">→</span>
+        <span class="state-card-code">💱 환율</span>
+        <span class="state-card-name">AUD ↔ KRW 송금 앱 비교</span>
       </a>
     </section>
 

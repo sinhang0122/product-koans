@@ -1121,9 +1121,9 @@ body {
 
 /* 모바일 (≤ 767): PC 슬라이더 숨기고 5:1 카드 노출 + 여백 타이트 */
 @media (max-width: 767px) {
-  /* hero 컨테이너 — overflow 차단 + 좌우 패딩 최소화 */
+  /* hero 컨테이너 — overflow 차단 + 좌우 패딩 최소화, 상하 여백 최소화 */
   .koaus-hero {
-    margin: 6px auto 8px;
+    margin: 3px auto 4px;    /* 6/8 → 3/4 — hero ↔ notice/state 간격 압축 */
     padding: 0 10px;
     max-width: 100%;
     box-sizing: border-box;
@@ -1156,13 +1156,19 @@ body {
   /* 본문 가로 스크롤 방지 — 광고 배너 등이 화면 폭 초과 못 함 */
   html, body { max-width: 100%; overflow-x: hidden; }
 
-  /* 모바일 섹션 간격 타이트 — PC 는 영향 0 */
-  .notice-section { margin: 6px 10px 8px; }
-  .home-shortcuts { gap: 8px; padding: 0 12px; margin: 6px 0 10px; }
-  .home-main > section { margin-block: 6px; }
+  /* 모바일 섹션 간격 타이트 — PC 는 영향 0
+     · hero ↔ notice ↔ state 그리드 사이 여백 압축 (4px 단위) */
+  .notice-section { margin: 4px 10px 4px; }
+  .home-shortcuts { gap: 8px; padding: 0 12px; margin: 4px 0 6px; }
+  .home-main > section { margin-block: 4px; }
+  .home-main { gap: 4px; padding-top: 6px; }   /* fluid clamp 무효화 — 모바일 타이트 강제 */
   .page-container > section,
   .home-main > .koaus-hero,
-  .page-container > .koaus-hero { margin-top: 6px; margin-bottom: 8px; }
+  .page-container > .koaus-hero { margin-top: 3px; margin-bottom: 4px; }
+  /* 주(State) 바로가기 섹션 — hero 직후 노출, 위 여백 최소 */
+  [data-koaus-state-quick] { margin: 4px 0; }
+  [data-koaus-state-quick] .state-section { margin: 0; }
+  [data-koaus-state-quick] .state-section-head { margin-bottom: 4px; }
   .accom-controls { margin: 6px 12px 8px; gap: 6px; }
   .page-header { margin: 6px 12px 8px; padding: 0; }
   .trades-notice { margin: 6px 12px 8px; padding: 9px 12px; font-size: 12px; }
@@ -3711,6 +3717,8 @@ html, body { max-width: 100vw; overflow-x: hidden; }
 @media (max-width: 960px) { .state-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (max-width: 640px) { .state-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; } }
 @media (max-width: 360px) { .state-grid { gap: 8px; } }
+/* modifier — 카드 2개만 한 줄로 (홈의 Care/환율 페어 등) */
+.state-grid.state-grid--pair { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 /* .home-shortcut(홈 Care/환율 카드)와 100% 동일 디자인 토큰 — 사이즈만 8개 그리드용으로 컴팩트 */
 .state-card {
   position: relative; display: flex; flex-direction: column;
