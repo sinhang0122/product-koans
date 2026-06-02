@@ -93,9 +93,8 @@ function mountSignupExtra() {
   }
 }
 
-// ── 로그인 모달 하단: '아이디 찾기' 단일 링크 inject ──
-// 비밀번호 찾기는 '아이디 찾기 → 성공 → 바로 비밀번호 찾기' 흐름으로 자연 전환되므로
-// 별도 inject 버튼은 제거. resetPw pane 모달은 그대로 유지.
+// ── 로그인 모달 하단: '아이디 찾기 · 비밀번호 찾기' 두 진입점 inject ──
+// 두 링크는 같은 통합 탭 모달을 열며 초기 active 탭만 다름 (findId / resetPw).
 function mountAuthExtras() {
   const loginForm = document.getElementById('authLoginForm');
   if (!loginForm || loginForm.__koausExtraMounted) return;
@@ -105,6 +104,9 @@ function mountAuthExtras() {
     <div class="auth-extras-row" style="display:flex; justify-content:center; gap:14px; margin-top:12px; font-size:13px;">
       <button type="button" class="auth-extra-link" data-koaus-open="findId"
         style="background:none;border:none;cursor:pointer;color:var(--text-secondary);text-decoration:underline;font:inherit;padding:4px 6px;">아이디 찾기</button>
+      <span style="color:var(--border);align-self:center;">·</span>
+      <button type="button" class="auth-extra-link" data-koaus-open="resetPw"
+        style="background:none;border:none;cursor:pointer;color:var(--text-secondary);text-decoration:underline;font:inherit;padding:4px 6px;">비밀번호 찾기</button>
     </div>`;
   submit.insertAdjacentHTML('afterend', html);
   loginForm.__koausExtraMounted = true;
@@ -121,9 +123,11 @@ function mountExtraModals() {
   if (document.getElementById('koausExtraModal')) return;
   const html = `
     <div id="koausExtraModal" class="report-overlay" role="dialog" aria-modal="true">
-      <div class="report-card" style="max-width: 420px;">
-        <div class="report-header">
-          <span class="report-title" id="koausExtraTitle">아이디 찾기</span>
+      <div class="report-modal report-card">
+        <div class="koaus-extra-tabs" role="tablist" aria-label="계정 찾기">
+          <button type="button" class="koaus-extra-tab is-active" role="tab" data-tab="findId" aria-selected="true">아이디 찾기</button>
+          <span class="koaus-extra-tab-sep" aria-hidden="true"></span>
+          <button type="button" class="koaus-extra-tab" role="tab" data-tab="resetPw" aria-selected="false">비밀번호 찾기</button>
           <button type="button" class="report-close" id="koausExtraClose" aria-label="닫기">✕</button>
         </div>
         <div class="report-body" id="koausExtraBody">
@@ -159,8 +163,31 @@ function mountExtraModals() {
   modal.addEventListener('click', e => {
     if (e.target.id === 'koausExtraModal') closeExtraModal();
   });
+  // 탭 클릭 → pane 즉시 전환 (active 상태 동기화)
+  modal.querySelectorAll('.koaus-extra-tab').forEach(btn => {
+    btn.addEventListener('click', () => switchExtraPane(btn.dataset.tab));
+  });
   document.getElementById('koausResetPwSubmit').addEventListener('click', onResetPw);
   document.getElementById('koausFindIdSubmit').addEventListener('click', onFindId);
+}
+
+// 탭/pane 동기화 — 진입점 + 탭 클릭 공통 경로
+function switchExtraPane(pane) {
+  const isReset = pane === 'resetPw';
+  document.querySelectorAll('#koausExtraModal .koaus-extra-pane').forEach(el => {
+    el.hidden = el.dataset.pane !== pane;
+  });
+  document.querySelectorAll('#koausExtraModal .koaus-extra-tab').forEach(btn => {
+    const on = btn.dataset.tab === pane;
+    btn.classList.toggle('is-active', on);
+    btn.setAttribute('aria-selected', on ? 'true' : 'false');
+  });
+  // pane 메시지 초기화 (이전 결과/잔재 제거)
+  const fim = document.getElementById('koausFindIdMsg');
+  const rpm = document.getElementById('koausResetPwMsg');
+  if (fim) fim.innerHTML = '';
+  if (rpm) rpm.innerHTML = '가입한 이메일로 재설정 링크를 보내드립니다.';
+  void isReset; // 라벨 동기화는 탭이 담당 — 별도 title 미사용
 }
 function openExtraModal(pane) {
   mountExtraModals();
@@ -173,12 +200,8 @@ function openExtraModal(pane) {
     o.style.removeProperty('display');   // 인라인 style 완전 제거 (남기지 않음)
   });
   try { document.body.style.overflow = 'hidden'; } catch (_) {}
-  document.querySelectorAll('#koausExtraModal .koaus-extra-pane').forEach(el => {
-    el.hidden = el.dataset.pane !== pane;
-  });
-  document.getElementById('koausExtraTitle').textContent = pane === 'resetPw' ? '비밀번호 찾기' : '아이디 찾기';
-  // 결과 영역 초기화 (이전 검색 결과/버튼 잔재 제거)
-  ['koausFindIdMsg','koausResetPwMsg'].forEach(id => { const el = document.getElementById(id); if (el && id==='koausResetPwMsg') el.innerHTML = '가입한 이메일로 재설정 링크를 보내드립니다.'; else if (el) el.innerHTML = ''; });
+  // 진입점별 초기 active 탭 + pane 동기화 (탭 클릭 경로와 단일화)
+  switchExtraPane(pane === 'resetPw' ? 'resetPw' : 'findId');
   modal.classList.add('open');
 }
 function closeExtraModal() {
@@ -249,12 +272,8 @@ async function onFindId() {
       // 발견한 이메일 마스킹 해제 — 원본 그대로 prefill (실제 이메일 발송 대상)
       const prefill = document.getElementById('koausResetPwEmail');
       if (prefill) prefill.value = email;
-      // pane 전환
-      document.querySelectorAll('#koausExtraModal .koaus-extra-pane').forEach(el => {
-        el.hidden = el.dataset.pane !== 'resetPw';
-      });
-      document.getElementById('koausExtraTitle').textContent = '비밀번호 찾기';
-      // resetPw 메시지 초기화
+      // 통합 헬퍼 — 탭 active + pane 전환 + 메시지 초기화 한 번에
+      switchExtraPane('resetPw');
       const rm = document.getElementById('koausResetPwMsg');
       if (rm) { rm.innerHTML = '위 이메일로 재설정 링크를 보내드립니다. 버튼을 눌러주세요.'; rm.style.color = 'var(--text-muted)'; }
     });

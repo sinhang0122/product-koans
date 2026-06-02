@@ -3117,6 +3117,46 @@ body.is-admin .admin-only.admin-only--block { display: block !important; }
 .report-etc { margin-top: 10px; min-height: 70px; }
 .report-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; }
 
+/* ── 계정 찾기 통합 탭 (아이디 찾기 | 비밀번호 찾기) ──
+   · .report-modal 안에서 헤더 영역을 대체하는 탭 네비
+   · 가운데 1px 세로 구분선 + 비활성 muted + 활성 underline */
+.koaus-extra-tabs {
+  display: flex; align-items: center;
+  gap: 0; margin: -4px -4px 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+}
+.koaus-extra-tab {
+  flex: 1; min-width: 0;
+  background: none; border: none; cursor: pointer;
+  font: 700 14.5px var(--font);
+  color: var(--text-muted); letter-spacing: -0.01em;
+  padding: 8px 4px;
+  border-radius: var(--r-sm);
+  transition: color 0.14s ease, background 0.14s ease;
+}
+.koaus-extra-tab:hover { color: var(--text-secondary); background: var(--bg-elevated); }
+.koaus-extra-tab.is-active {
+  color: var(--text-primary);
+  position: relative;
+}
+.koaus-extra-tab.is-active::after {
+  content: ''; position: absolute; left: 14%; right: 14%; bottom: -9px;
+  height: 2px; background: var(--text-primary); border-radius: 2px;
+}
+.koaus-extra-tab-sep {
+  width: 1px; height: 16px; background: var(--border); flex-shrink: 0;
+}
+.koaus-extra-tabs .report-close { margin-left: 6px; }
+/* 탭 전환 시 pane fade-in — 콘텐츠가 스르륵 바뀌는 미세한 자연감 */
+.koaus-extra-pane { animation: koaus-pane-fade 0.22s ease both; }
+.koaus-extra-pane[hidden] { display: none; }
+@keyframes koaus-pane-fade {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: none; }
+}
+
 /* ── 토스트 알림 ── */
 .koaus-toast {
   position: fixed; left: 50%; bottom: 32px; transform: translateX(-50%) translateY(20px);
