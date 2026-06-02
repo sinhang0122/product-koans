@@ -539,19 +539,10 @@
     </div>
 
 
-    <!-- List View -->
+    <!-- List View — accom(쉐어) 동일 그리드 카드 패턴 100% 시각 통일 -->
     <div id="listView">
       <div id="pinnedNoticeBox" class="pinned-notice" hidden></div>
-      <div class="post-list-table post-list-table--jobs">
-        <div class="post-list-head">
-          <span class="post-num">번호</span>
-          <span class="post-title">제목</span>
-          <span class="post-author">작성자</span>
-          <span class="post-date">날짜</span>
-          <span class="post-star">저장</span>
-        </div>
-        <div id="postList"></div>
-      </div>
+      <div id="postList" class="accom-grid accom-grid--compact"></div>
       <div class="pagination" id="pagination"></div>
     </div>
 
@@ -861,26 +852,36 @@
       const start = (currentPage - 1) * PER_PAGE;
       const pageItems = sorted.slice(start, start + PER_PAGE);
 
+      // accom(쉐어) 의 .accom-card 마크업 100% 동일 패턴 — jobs 데이터 매핑
+      //  · 백엔드(jobs_posts) 필드 0건 수정 — 시각 매핑만 (title/payAmount/empType/address)
       list.innerHTML = pageItems.map((p, i) => {
         const saved = isSaved(p.id);
+        const payText = p.payAmount ? `💵 $${escHtml(p.payAmount)} / ${escHtml(p.payUnit || '시간')}` : '';
+        const empText = p.empType   ? `🕒 ${escHtml(p.empType)}` : '';
+        const addrText= p.address   ? `📍 ${escHtml(p.address)}` : '';
+        const metaParts = [payText, empText].filter(Boolean).join(' · ');
         return `
-        <div class="post-row${isMine(p) ? ' my-post-highlight' : ''}" data-id="${p.id}" style="cursor:pointer">
-          <span class="post-num">${sorted.length - (start + i)}</span>
-          <span class="post-title" style="color:var(--text-primary);font-weight:500;">
-            <span class="post-title-text">${escHtml(p.title)}</span>
-            <span class="post-mini-actions">
-              ${isMine(p) ? `<button class="mini-btn mini-edit" data-id="${p.id}" type="button">수정</button><button class="mini-btn mini-del" data-id="${p.id}" type="button">삭제</button>` : ''}
-              <button class="mini-btn mini-share" data-id="${p.id}" type="button">공유</button>
-              <button class="mini-btn mini-report" data-id="${p.id}" type="button">신고</button>
-            </span>
-          </span>
-          <span class="post-author">${authorLabel(p)}</span>
-          <span class="post-date">${p.date}${p.time ? ' ' + p.time : ''}</span>
-          <button class="bookmark-btn${saved ? ' is-saved' : ''}" data-id="${p.id}" title="저장한 글" aria-label="저장">${saved ? '★' : '☆'}</button>
-        </div>`;
+        <a class="accom-card${isMine(p) ? ' my-post-highlight' : ''}" data-id="${p.id}" style="cursor:pointer;text-decoration:none;color:inherit;">
+          <div class="accom-card-img" style="background:var(--bg-card);display:flex;align-items:center;justify-content:center;font-size:36px;color:var(--text-muted);">💼</div>
+          <div class="accom-card-body">
+            <div class="accom-card-title">${escHtml(p.title)}</div>
+            ${metaParts ? `<div class="accom-card-meta">${metaParts}</div>` : ''}
+            ${addrText  ? `<div class="accom-card-meta" style="font-size:11.5px;color:var(--text-muted);">${addrText}</div>` : ''}
+            <div class="accom-card-footer">
+              <span>${authorLabel(p)}</span>
+              <span>${escHtml(p.date)}${p.time ? ' ' + escHtml(p.time) : ''}</span>
+            </div>
+          </div>
+          <button class="bookmark-btn${saved ? ' is-saved' : ''}" data-id="${p.id}" title="저장한 글" aria-label="저장"
+            style="position:absolute;top:10px;right:10px;z-index:2;background:rgba(255,255,255,0.9);border:1px solid var(--border);border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:16px;line-height:1;">${saved ? '★' : '☆'}</button>
+        </a>`;
       }).join('');
 
-      list.querySelectorAll('.post-row').forEach(row => row.addEventListener('click', () => openDetail(row.dataset.id)));
+      list.querySelectorAll('.accom-card[data-id]').forEach(row => row.addEventListener('click', e => {
+        // 카드 내부의 bookmark/mini 액션 클릭은 카드 클릭으로 흡수 X
+        if (e.target.closest('.bookmark-btn, .mini-btn')) return;
+        openDetail(row.dataset.id);
+      }));
       list.querySelectorAll('.mini-edit').forEach(btn => btn.addEventListener('click', e => {
         e.stopPropagation();
         const p = loadPosts().find(x => String(x.id) === String(btn.dataset.id));

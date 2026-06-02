@@ -512,21 +512,40 @@
     </div>
 
 
-    <div class="board-toolbar">
-      <span class="board-count" id="boardCount">총 0건</span>
-      <button class="board-write-btn" id="writeBtnOpen">+ 글쓰기</button>
-    </div>
-
-    <div class="post-list-table">
-      <div class="post-list-head">
-        <span class="post-num">번호</span>
-        <span class="post-title">제목</span>
-        <span class="post-author">작성자</span>
-        <span class="post-date">날짜</span>
+    <div class="accom-controls">
+      <div class="view-toggle" id="viewToggle">
+        <button class="view-btn active" id="viewListBtn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          List View
+        </button>
+        <button class="view-btn" id="viewMapBtn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+          Map View
+        </button>
       </div>
-      <div id="postList"></div>
+      <span class="board-count" id="boardCount">총 0건</span>
+      <div class="accom-ctrl-actions">
+        <button class="board-write-btn" id="writeBtnOpen">+ 글쓰기</button>
+      </div>
     </div>
 
+    <!-- List View -->
+    <div id="listView">
+      <div class="post-list-table">
+        <div class="post-list-head">
+          <span class="post-num">번호</span>
+          <span class="post-title">제목</span>
+          <span class="post-author">작성자</span>
+          <span class="post-date">날짜</span>
+        </div>
+        <div id="postList"></div>
+      </div>
+    </div>
+
+    <!-- Map View (lat/lng 가 있는 글만 마커 표시 — 주소 미입력 글은 List 에서만 노출) -->
+    <div id="mapView" style="display:none;">
+      <div id="accomMap" role="region" aria-label="렌트카 매물 지도"></div>
+    </div>
 
   </main>
 
@@ -548,6 +567,12 @@
       <div class="write-field">
         <label class="write-label" for="wContact">연락처 (선택)</label>
         <input class="write-input" id="wContact" type="text" placeholder="오픈채팅이나 카톡 아이디 혹은 전화번호를 입력해주세요" maxlength="60" />
+      </div>
+      <!-- 주소 (선택) — required 절대 X. 미입력 시에도 글 정상 등록 -->
+      <div class="write-field">
+        <label class="write-label" for="wAddress">픽업 주소 (선택)</label>
+        <input class="write-input" id="wAddress" type="text" autocomplete="off" placeholder="예: 8 Albert Rd, Strathfield NSW (선택 사항)" maxlength="200" />
+        <ul class="addr-suggest" id="wAddressSuggest"></ul>
       </div>
       <!-- 사진 첨부 (최대 6장, 클라이언트 압축 후 Firebase Storage 업로드) -->
       <div class="write-field">
@@ -718,6 +743,11 @@
       const body  = document.getElementById('wBody').value.trim();
       const author = document.getElementById('wAuthor').value.trim() || '익명';
       const contact = document.getElementById('wContact').value.trim();
+      // 주소 (선택) — 비어 있어도 그대로 등록
+      const addrEl = document.getElementById('wAddress');
+      const address = addrEl ? addrEl.value.trim() : '';
+      const lat = addrEl && addrEl.dataset.lat ? Number(addrEl.dataset.lat) : 0;
+      const lng = addrEl && addrEl.dataset.lng ? Number(addrEl.dataset.lng) : 0;
       if (!title) { alert('제목을 입력해 주세요.'); return; }
       if (!body)  { alert('내용을 입력해 주세요.'); return; }
       const posts = loadPosts();
@@ -740,14 +770,123 @@
         }
         finally { wsb.disabled = false; wsb.textContent = '등록하기'; }
       }
-      posts.push({ id, title, body, author, contact, date, imageUrls });
+      posts.push({ id, title, body, author, contact, date, imageUrls, address, lat, lng });
       savePosts(posts);
       renderPosts();
+      if (typeof updateMapMarkers === 'function') updateMapMarkers();   // 지도 뷰 즉시 동기화
       pendingPhotoFiles = [];
       writeOverlay.classList.remove('open');
-      ['wTitle','wBody','wAuthor','wContact'].forEach(id => { document.getElementById(id).value = ''; });
+      ['wTitle','wBody','wAuthor','wContact','wAddress'].forEach(id => { const el = document.getElementById(id); if (el) { el.value = ''; if (el.dataset) { delete el.dataset.lat; delete el.dataset.lng; } } });
     });
     renderPosts();
+
+    // ── List / Map 뷰 토글 + Google Maps 초기화 (accom 패턴 이식, 단순화) ──
+    //  · Maps API 비동기 로드 — whenMapsReady 가드로 콜백 타이밍 안전
+    //  · 주소 미입력 글은 마커 없이 List 에서만 노출 (lat=0 || lng=0 필터)
+    //  · agent.md §3 — 비동기 SyntaxError 방지: 모든 await 는 async 함수 내
+    const GOOGLE_MAPS_KEY = 'AIzaSyDeAm0pgvz1tEt8O0_QHaJVfwzwq25vEyA';
+    let mapScriptLoaded = false, mapScriptLoading = false;
+    let carRentMap = null, mapReady = false, carRentMarkers = [];
+    function whenMapsReady(cb) {
+      if (window.google && google.maps) return cb();
+      if (mapScriptLoading) {
+        window.addEventListener('koaus-maps-ready', cb, { once: true });
+        return;
+      }
+      mapScriptLoading = true;
+      const s = document.createElement('script');
+      s.src = 'https://maps.googleapis.com/maps/api/js?key=' + GOOGLE_MAPS_KEY + '&libraries=places&callback=initCarRentMap';
+      s.async = true; s.defer = true;
+      document.head.appendChild(s);
+      window.addEventListener('koaus-maps-ready', cb, { once: true });
+    }
+    window.initCarRentMap = function () {
+      mapScriptLoaded = true; mapScriptLoading = false;
+      const el = document.getElementById('accomMap');
+      if (!el || carRentMap) {
+        window.dispatchEvent(new Event('koaus-maps-ready'));
+        return;
+      }
+      carRentMap = new google.maps.Map(el, {
+        gestureHandling: 'greedy',
+        center: { lat: -25.2744, lng: 133.7751 }, zoom: 4,
+        mapTypeControl: false, streetViewControl: false,
+      });
+      mapReady = true;
+      updateMapMarkers();
+      window.dispatchEvent(new Event('koaus-maps-ready'));
+    };
+    function updateMapMarkers() {
+      if (!mapReady || !carRentMap) return;
+      carRentMarkers.forEach(m => m.setMap(null));
+      carRentMarkers = [];
+      const posts = loadPosts().filter(p => p.lat && p.lng);
+      if (!posts.length) return;
+      const bounds = new google.maps.LatLngBounds();
+      posts.forEach(p => {
+        const marker = new google.maps.Marker({
+          position: { lat: Number(p.lat), lng: Number(p.lng) },
+          map: carRentMap, title: p.title,
+        });
+        const iw = new google.maps.InfoWindow({
+          content: `<div style="font:600 13px var(--font,sans-serif);max-width:240px;"><strong>${escHtml(p.title)}</strong><br><span style="color:#666;font-weight:500;">${escHtml(p.address || '')}</span></div>`,
+        });
+        marker.addListener('click', () => iw.open({ map: carRentMap, anchor: marker }));
+        carRentMarkers.push(marker);
+        bounds.extend(marker.getPosition());
+      });
+      try { carRentMap.fitBounds(bounds); if (posts.length === 1) carRentMap.setZoom(13); } catch (_) {}
+    }
+    // 토글 핸들러
+    (function wireViewToggle() {
+      const listBtn = document.getElementById('viewListBtn');
+      const mapBtn  = document.getElementById('viewMapBtn');
+      const listEl  = document.getElementById('listView');
+      const mapEl   = document.getElementById('mapView');
+      if (!listBtn || !mapBtn || !listEl || !mapEl) return;
+      listBtn.addEventListener('click', () => {
+        listBtn.classList.add('active'); mapBtn.classList.remove('active');
+        listEl.style.display = ''; mapEl.style.display = 'none';
+      });
+      mapBtn.addEventListener('click', () => {
+        mapBtn.classList.add('active'); listBtn.classList.remove('active');
+        listEl.style.display = 'none'; mapEl.style.display = '';
+        whenMapsReady(() => {
+          if (carRentMap && mapReady) {
+            // resize 후 마커 재배치 (display:none → block 전환 직후 트리거)
+            google.maps.event.trigger(carRentMap, 'resize');
+            updateMapMarkers();
+          }
+        });
+      });
+    })();
+
+    // ── 주소 자동완성 (Places Autocomplete) — wAddress 가 있을 때만 wire ──
+    function wireAutocomplete() {
+      const input = document.getElementById('wAddress');
+      if (!input || input.dataset.acWired === '1') return;
+      whenMapsReady(() => {
+        if (!(window.google && google.maps && google.maps.places && google.maps.places.Autocomplete)) {
+          setTimeout(wireAutocomplete, 300);
+          return;
+        }
+        const ac = new google.maps.places.Autocomplete(input, {
+          componentRestrictions: { country: 'au' },
+          fields: ['formatted_address', 'geometry', 'name'],
+          types: ['geocode'],
+        });
+        ac.addListener('place_changed', () => {
+          const p = ac.getPlace();
+          if (!p || !p.geometry || !p.geometry.location) return;
+          input.value = p.formatted_address || p.name || input.value;
+          input.dataset.lat = String(p.geometry.location.lat());
+          input.dataset.lng = String(p.geometry.location.lng());
+        });
+        input.dataset.acWired = '1';
+      });
+    }
+    // 글쓰기 모달 첫 오픈 시 Autocomplete 와이어 (성능: lazy)
+    document.getElementById('writeBtnOpen').addEventListener('click', wireAutocomplete);
   </script>
 
   <!-- Firebase Storage (사진 업로드용) — compress.js 통해 window.koausPhotos 노출 -->
