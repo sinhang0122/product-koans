@@ -460,36 +460,61 @@
       <button class="mypage-login-btn" id="mypageLoginBtn">로그인 / 회원가입</button>
     </section>
 
-    <section class="mypage-profile" id="profileSection" style="display:none;">
-      <div class="mypage-avatar" id="mpAvatar">?</div>
-      <div class="mypage-profile-info">
-        <div class="mypage-name-row" id="mpNameRow">
-          <span class="mypage-name" id="mpName">—</span>
-          <button class="mypage-edit-btn" id="mpEditBtn">닉네임 변경</button>
-          <button class="mypage-photo-btn" id="mpPhotoBtn">사진 교체</button>
-        </div>
-        <div class="mypage-nick-edit" id="mpNickEdit" style="display:none;">
-          <input class="auth-input" id="mpNickInput" type="text" maxlength="12" placeholder="3~12자 한글/영문" autocomplete="off" />
-          <div class="mypage-nick-actions">
-            <button class="mypage-edit-btn" id="mpNickSave">저장</button>
-            <button class="mypage-photo-btn" id="mpNickCancel">취소</button>
+    <section class="mypage-account" id="profileSection" style="display:none;">
+      <header class="mypage-account-header">
+        <h2 class="mypage-account-title">KoAus 계정</h2>
+        <p class="mypage-account-subtitle">프로필 사진과 이름·닉네임을 관리합니다.</p>
+      </header>
+
+      <!-- 1) 프로필 카드: 아바타 + 이름 + 이메일 -->
+      <div class="mypage-account-card">
+        <div class="mypage-avatar" id="mpAvatar">?</div>
+        <div class="mypage-profile-info">
+          <div class="mypage-name-row" id="mpNameRow">
+            <span class="mypage-name" id="mpName">—</span>
           </div>
+          <div class="mypage-email" id="mpEmail">—</div>
         </div>
-        <p class="auth-error" id="mpNickError"></p>
-        <div class="mypage-email" id="mpEmail">—</div>
-        <p class="mypage-nick-note">닉네임은 3~12자의 한글·영문만 가능하며, 한 번 변경하면 3개월 동안 다시 변경할 수 없습니다.</p>
-        <!-- 이름 공개 토글 — 기본값 공개(true) -->
-        <div class="mypage-name-visible-row" id="mpNameVisibleRow" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid var(--border-subtle);margin-top:10px;">
-          <div>
-            <div style="font-size:13.5px;font-weight:700;color:var(--text-primary);">이름(Name) 공개</div>
-            <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">기본은 별명(Nickname) 노출. 켜면 본인 이름도 함께 노출됩니다.</div>
-          </div>
-          <label class="mp-name-toggle" style="position:relative;display:inline-block;width:46px;height:26px;cursor:pointer;flex-shrink:0;">
-            <input type="checkbox" id="mpNameVisible" checked style="opacity:0;width:0;height:0;" />
-            <span class="mp-name-toggle-slider" style="position:absolute;inset:0;background:var(--border);border-radius:999px;transition:background 0.15s;"></span>
-            <span class="mp-name-toggle-knob" style="position:absolute;top:3px;left:3px;width:20px;height:20px;background:#fff;border-radius:50%;transition:transform 0.15s;box-shadow:0 1px 3px rgba(0,0,0,0.2);"></span>
-          </label>
+      </div>
+
+      <!-- 2) 닉네임 변경 행 -->
+      <div class="mypage-account-row">
+        <div class="mypage-account-row-info">
+          <div class="mypage-account-row-label">닉네임 (Nickname)</div>
+          <div class="mypage-account-row-desc">게시판에 표시되는 별명 · 3~12자 한글·영문</div>
         </div>
+        <button class="mypage-edit-btn" id="mpEditBtn">닉네임 변경</button>
+      </div>
+      <div class="mypage-nick-edit" id="mpNickEdit" style="display:none;">
+        <input class="auth-input" id="mpNickInput" type="text" maxlength="12" placeholder="3~12자 한글/영문" autocomplete="off" />
+        <div class="mypage-nick-actions">
+          <button class="mypage-edit-btn" id="mpNickSave">저장</button>
+          <button class="mypage-photo-btn" id="mpNickCancel">취소</button>
+        </div>
+      </div>
+      <p class="auth-error" id="mpNickError"></p>
+      <p class="mypage-nick-note">닉네임은 한 번 변경하면 3개월 동안 다시 변경할 수 없습니다.</p>
+
+      <!-- 3) 사진 교체 행 -->
+      <div class="mypage-account-row">
+        <div class="mypage-account-row-info">
+          <div class="mypage-account-row-label">프로필 사진 (Photo)</div>
+          <div class="mypage-account-row-desc">정사각 권장 · 자동 압축 후 업로드</div>
+        </div>
+        <button class="mypage-photo-btn" id="mpPhotoBtn">사진 교체</button>
+      </div>
+
+      <!-- 4) 이름 공개 토글 (활성 시 초록색 — 예외 허용) -->
+      <div class="mypage-account-row" id="mpNameVisibleRow">
+        <div class="mypage-account-row-info">
+          <div class="mypage-account-row-label">이름(Name) 공개</div>
+          <div class="mypage-account-row-desc">기본은 별명(Nickname) 노출. 켜면 본인 이름도 함께 노출됩니다.</div>
+        </div>
+        <label class="mp-name-toggle" aria-label="이름 공개 토글">
+          <input type="checkbox" id="mpNameVisible" checked />
+          <span class="mp-name-toggle-slider"></span>
+          <span class="mp-name-toggle-knob"></span>
+        </label>
       </div>
     </section>
 

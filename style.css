@@ -3649,6 +3649,60 @@ body.is-admin .admin-only.admin-only--block { display: block !important; }
   display: flex; align-items: flex-start; gap: 18px; padding: 24px;
   background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--r-xl);
 }
+
+/* ── KoAus 계정 (카카오톡 프로필 스타일) ──
+   · 대제목 + 프로필 카드(아바타·이름·이메일) + 닉네임·사진·토글 행 구분
+   · B&W 톤 유지, 토글 활성 시 초록색 (사용자 예외 허용) */
+.mypage-account {
+  background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--r-xl);
+  padding: 24px 20px;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.mypage-account-header { margin-bottom: 10px; }
+.mypage-account-title {
+  font-size: 18px; font-weight: 900; color: var(--text-primary);
+  letter-spacing: -0.01em; margin: 0;
+}
+.mypage-account-subtitle {
+  font-size: 12.5px; color: var(--text-muted); margin: 4px 0 0;
+}
+.mypage-account-card {
+  display: flex; align-items: center; gap: 16px;
+  padding: 14px 4px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.mypage-account-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 14px 4px;
+  border-bottom: 1px solid var(--border);
+}
+.mypage-account-row:last-child { border-bottom: none; }
+.mypage-account-row-info { min-width: 0; flex: 1; }
+.mypage-account-row-label {
+  font-size: 13.5px; font-weight: 700; color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+.mypage-account-row-desc {
+  font-size: 12px; color: var(--text-muted); margin-top: 2px; line-height: 1.45;
+}
+
+/* 토글 — 활성 시 초록 (예외 허용) */
+.mp-name-toggle {
+  position: relative; display: inline-block;
+  width: 46px; height: 26px; cursor: pointer; flex-shrink: 0;
+}
+.mp-name-toggle input { opacity: 0; width: 0; height: 0; }
+.mp-name-toggle-slider {
+  position: absolute; inset: 0;
+  background: var(--border); border-radius: 999px;
+  transition: background 0.18s ease;
+}
+.mp-name-toggle-knob {
+  position: absolute; top: 3px; left: 3px;
+  width: 20px; height: 20px; background: #fff; border-radius: 50%;
+  transition: transform 0.18s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
 .mypage-avatar {
   width: 60px; height: 60px; flex-shrink: 0; border-radius: 50%;
   background: var(--accent); color: var(--accent-text);
@@ -3916,10 +3970,11 @@ a.legal-meta-val:hover { border-bottom: 1px solid var(--text-primary); }
 }
 .admin-logout:hover { border-color: var(--text-primary); background: var(--bg-elevated); }
 
-/* ── 마이페이지 이름 공개 토글 (이미 mypage.html 인라인 스타일과 같이 사용) ── */
-.mp-name-toggle input:checked ~ .mp-name-toggle-slider { background: var(--text-primary); }
+/* ── 마이페이지 이름 공개 토글 — 활성 시 초록색 (사용자 예외 허용) ── */
+.mp-name-toggle input:checked ~ .mp-name-toggle-slider { background: #16a34a; }
 .mp-name-toggle input:checked ~ .mp-name-toggle-knob   { transform: translateX(20px); }
 .mp-name-toggle:hover .mp-name-toggle-slider { filter: brightness(0.96); }
+.mp-name-toggle input:focus-visible ~ .mp-name-toggle-slider { outline: 2px solid #16a34a; outline-offset: 2px; }
 
 /* ════════════════════════════════════════════════════════════════════════
    KoAus 2.1 — Fluid Responsive Layout (maplescouter.com 레퍼런스)
