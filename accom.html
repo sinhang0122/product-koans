@@ -510,7 +510,17 @@
       <button class="accom-tab" data-mode="find"><span class="tab-text">방 구하기 <em>Find a Room</em></span></button>
     </div>
 
-    <!-- Controls -->
+    <!-- 표준 레이아웃 순서 (agent.md 가이드라인):
+         1) 관리자 고정 공지 — 등록글 없으면 자동 hidden (admin-mark.js MutationObserver)
+         2) 조건별 텍스트 검색창 + 아코디언 (search-bar.js)
+         3) 상세 필터 / 글쓰기 / 뷰 토글 (accom-controls)
+         4) 본문 그리드 (listView) -->
+    <div id="pinnedNoticeBox" class="pinned-notice" hidden></div>
+
+    <!-- 조건별 텍스트 검색 (search-bar.js 자동 빌드) -->
+    <div data-koaus-search="accom"></div>
+
+    <!-- Controls — 상세 필터 / 글쓰기 / 뷰 토글 -->
     <div class="accom-controls">
       <div class="view-toggle" id="viewToggle">
         <button class="view-btn active" id="viewListBtn">
@@ -529,13 +539,8 @@
       </div>
     </div>
 
-
     <!-- List View -->
-    <!-- 조건별 텍스트 검색 (search-bar.js 자동 빌드) -->
-    <div data-koaus-search="accom"></div>
-
     <div id="listView">
-      <div id="pinnedNoticeBox" class="pinned-notice" hidden></div>
       <div id="postGrid" class="accom-grid accom-grid--compact"></div>
       <div class="pagination" id="pagination"></div>
     </div>

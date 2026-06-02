@@ -517,6 +517,12 @@
       <button class="accom-tab" data-cat="towing"><span class="tab-text">견인 <em>Towing</em></span></button>
     </div>
 
+    <!-- 표준 레이아웃: 공지 → 검색 → 필터/뷰 → 본문 -->
+    <div id="pinnedNoticeBox" class="pinned-notice" hidden></div>
+
+    <!-- 조건별 텍스트 검색 (search-bar.js 자동 빌드) -->
+    <div data-koaus-search="auto"></div>
+
     <!-- Controls -->
     <div class="accom-controls">
       <div class="view-toggle" id="viewToggle">
@@ -539,9 +545,6 @@
     </div>
 
     <!-- List View -->
-    <!-- 조건별 텍스트 검색 (search-bar.js 자동 빌드) -->
-    <div data-koaus-search="auto"></div>
-
     <div id="listView">
       <div id="postGrid" class="accom-grid accom-grid--compact"></div>
       <div class="pagination" id="pagination"></div>
