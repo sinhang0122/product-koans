@@ -2218,14 +2218,39 @@ select.write-input {
 }
 .myacct-logout-btn:hover { background: rgba(220,38,38,0.06); border-color: var(--red); }
 
-/* ── Auth Modal ── */
+/* ── Auth Modal ──
+   · 모바일 회원가입 모달이 vh 보다 길어질 때 상단 'X' 가 화면 밖으로 잘리던 버그 픽스
+   · align-items: flex-start + overflow-y: auto + margin: auto 패턴
+   · 짧은 모달: 자식 margin auto 가 균등 분배 → 시각적 중앙 정렬 유지
+   · 긴 모달:  margin 0 으로 처리되어 위부터 시작 + 컨테이너 스크롤
+   · iOS safe-area-inset-top 으로 노치/상태바 아래 16px 추가 여백 확보 */
 .auth-overlay {
   position: fixed; inset: 0; background: rgba(0,0,0,0.65);
-  z-index: 3000; display: none; align-items: center;
-  justify-content: center; padding: 20px;
+  z-index: 3000; display: none;
+  justify-content: center;
+  align-items: flex-start;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 20px;
+  padding-top: max(20px, calc(env(safe-area-inset-top, 0px) + 16px));
+  padding-bottom: max(20px, calc(env(safe-area-inset-bottom, 0px) + 20px));
   opacity: 0; transition: opacity 0.22s ease;
 }
 .auth-overlay.open { display: flex; opacity: 1; }
+/* 모달 박스: margin auto → 짧을 때 중앙, 길 때 위부터 (auto = 0) */
+.auth-overlay .auth-modal,
+.auth-overlay .report-card,
+.auth-overlay .myacct-card { margin: auto; }
+/* 모바일 보강: 노치/상태바 클리어런스 + 위쪽 16px 추가 (mt-4) */
+@media (max-width: 640px) {
+  .auth-overlay,
+  .report-overlay {
+    padding-top: max(16px, calc(env(safe-area-inset-top, 0px) + 16px));
+    padding-bottom: max(16px, calc(env(safe-area-inset-bottom, 0px) + 16px));
+  }
+  /* 모바일에서 모달 자체의 상단 패딩도 살짝 줄여 X 버튼 위 공간 절약 */
+  .auth-overlay .auth-modal { padding-top: 28px; }
+}
 .auth-overlay.open .auth-modal,
 .auth-overlay.open .report-card,
 .auth-overlay.open .myacct-card { animation: koaus-modal-pop 0.24s cubic-bezier(.2,.7,.3,1.04); }
@@ -3098,12 +3123,22 @@ body.is-admin .admin-only.admin-only--block { display: block !important; }
 }
 .detail-share-menu button:hover { background: var(--bg-elevated); }
 
-/* ── 신고 모달 ── */
+/* ── 신고 모달 ──
+   · auth-overlay 와 동일한 안전 정렬 패턴 (top truncation 픽스) */
 .report-overlay {
   position: fixed; inset: 0; z-index: 2200; background: rgba(0,0,0,.55);
-  display: none; align-items: center; justify-content: center; padding: 20px;
+  display: none;
+  justify-content: center;
+  align-items: flex-start;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 20px;
+  padding-top: max(20px, calc(env(safe-area-inset-top, 0px) + 16px));
+  padding-bottom: max(20px, calc(env(safe-area-inset-bottom, 0px) + 20px));
 }
 .report-overlay.open { display: flex; }
+.report-overlay .report-modal,
+.report-overlay .report-card { margin: auto; }
 /* 약관/개인정보 모달은 회원가입 모달(z-index 3000) 위에 떠야 함 (모달 위 모달) */
 #tosOverlay, #privacyOverlay { z-index: 9999; }
 /* Google Places Autocomplete dropdown 이 write-modal 위로 올라오도록 z-index 보정 */
