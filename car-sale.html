@@ -519,7 +519,11 @@
 
   <div class="write-overlay" id="writeOverlay">
     <div class="write-modal">
-      <div class="write-modal-title">✏️ 차량 판매 글쓰기</div>
+      <!-- accom 패턴: 헤더에 제목 + 우측 작성자 배지 -->
+      <div class="write-modal-header">
+        <div class="write-modal-title">✏️ 차량 판매 글쓰기</div>
+        <span class="write-author-badge">작성자 : <b id="wAuthorName">-</b></span>
+      </div>
       <div class="write-field">
         <label class="write-label" for="wTitle">제목</label>
         <input class="write-input" id="wTitle" type="text" placeholder="차종 · 연식 · 가격 등 (예: 2019 Toyota Camry $15,000)" maxlength="80" />
@@ -528,10 +532,8 @@
         <label class="write-label" for="wBody">내용</label>
         <textarea class="write-textarea" id="wBody" placeholder="연식, 주행거리(km), 색상, 옵션, 사고 유무, 위치(지역) 등 자세히 적어주세요"></textarea>
       </div>
-      <div class="write-field">
-        <label class="write-label" for="wAuthor">작성자</label>
-        <input class="write-input" id="wAuthor" type="text" placeholder="닉네임 또는 이름" maxlength="20" />
-      </div>
+      <!-- 작성자 — 헤더 배지로 표시, 폼 안에는 hidden 만 (accom 패턴 100% 통일) -->
+      <input type="hidden" id="wAuthor" value="" />
       <div class="write-field">
         <label class="write-label" for="wContact">연락처 (선택)</label>
         <input class="write-input" id="wContact" type="text" placeholder="오픈채팅이나 카톡 아이디 혹은 전화번호를 입력해주세요" maxlength="60" />
@@ -733,7 +735,15 @@
     document.getElementById('detailClose').addEventListener('click', () => { document.getElementById('detailOverlay').classList.remove('open'); });
     document.getElementById('detailOverlay').addEventListener('click', e => { if (e.target === e.currentTarget) document.getElementById('detailOverlay').classList.remove('open'); });
     const writeOverlay = document.getElementById('writeOverlay');
-    document.getElementById('writeBtnOpen').addEventListener('click', () => { editingId = null; writeOverlay.classList.add('open'); });
+    document.getElementById('writeBtnOpen').addEventListener('click', () => {
+      editingId = null;
+      // accom 패턴: 헤더 우측 작성자 배지 갱신 + hidden 동기화
+      const u = window.koausAuth && window.koausAuth.user;
+      const nick = (u && (localStorage.getItem('koaus-nickname') || (u.displayName||'').split(' ')[0] || (u.email||'').split('@')[0])) || '익명';
+      const _wan = document.getElementById('wAuthorName'); if (_wan) _wan.textContent = nick;
+      const _wa  = document.getElementById('wAuthor');     if (_wa)  _wa.value = nick;
+      writeOverlay.classList.add('open');
+    });
     document.getElementById('writeBtnCancel').addEventListener('click', () => { editingId = null; writeOverlay.classList.remove('open'); });
     writeOverlay.addEventListener('click', e => { if (e.target === writeOverlay) { editingId = null; writeOverlay.classList.remove('open'); } });
     document.getElementById('writeBtnSubmit').addEventListener('click', () => {

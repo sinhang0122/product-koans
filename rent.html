@@ -658,6 +658,7 @@
     <div class="write-modal write-modal--tall">
       <div class="write-modal-header">
         <div class="write-modal-title">글쓰기 <em>Write Post</em></div>
+        <span class="write-author-badge">작성자 : <b id="wAuthorName">-</b></span>
         <button class="write-modal-close" id="writeBtnClose">✕</button>
       </div>
 
@@ -772,10 +773,8 @@
         <textarea class="write-textarea" id="wBody" placeholder="방 크기, 가격, 포함 내역, 입주 가능 날짜 등 자세히 적어주세요"></textarea>
       </div>
 
-      <div class="write-field">
-        <label class="write-label" for="wAuthor">작성자 Author</label>
-        <input class="write-input" id="wAuthor" type="text" placeholder="로그인 후 자동 입력" maxlength="20" readonly />
-      </div>
+      <!-- 작성자 — accom 패턴: 헤더 우측 배지(wAuthorName)로 표시, 폼 안에는 hidden 만 -->
+      <input type="hidden" id="wAuthor" value="" />
 
       <div class="write-field">
         <label class="write-label" for="wContact">연락처 Contact <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택)</em></label>
@@ -1223,7 +1222,9 @@
       setWriteMode('create');
       setTypeChecks([]);  // 기간 체크 초기화
       applyWriteModeUI();
-      document.getElementById('wAuthor').value = currentNickname();  // 작성자 자동 입력(읽기 전용)
+      document.getElementById('wAuthor').value = currentNickname();  // hidden input 동기화
+      // accom 패턴: 헤더 우측 작성자 배지 갱신
+      const _wan = document.getElementById('wAuthorName'); if (_wan) _wan.textContent = currentNickname() || '-';
       loadMapScript();              // Places 로드 보장
       wireAutocomplete('wAddress'); // 주소 자동완성 바인딩
       window.pendingPhotoFiles = []; if (typeof renderPhotoThumbs === 'function') renderPhotoThumbs();
