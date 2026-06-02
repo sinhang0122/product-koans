@@ -1122,9 +1122,17 @@
         const payAmount = (elPayAmount && elPayAmount.value) ? Number(elPayAmount.value) : 0;
         const address   = (elAddress  && elAddress.value.trim())  || '';
 
-        // ── 2) 필수 항목 빈 칸 검증 (제목 + 근무지 주소 만 필수, 나머지 선택) ──
+        // ── 2) 필수 항목 빈 칸 검증 ──
+        //  · title / address / body 셋 다 필수 (firestore.rules:73 validPostCreate
+        //    의 reqStr('body', 1, 5000) 정합 — 빈 본문 전송 시 permission-denied 발생).
+        //  · 모바일에서 본문(textarea)을 빠뜨리고 등록할 때 "서버 저장 실패" 원인이었음.
         if (!title || !address) {
           alert('제목과 근무지 주소를 입력해 주세요.');
+          return;
+        }
+        if (!body) {
+          alert('본문(모집 인원·근무 조건·우대사항 등)을 입력해 주세요.');
+          if (elBody && typeof elBody.focus === 'function') elBody.focus();
           return;
         }
         // 연락처: 자유 형식 허용 (호주 전화 / 카카오톡 / 이메일 / URL 등), 비워두기 가능
