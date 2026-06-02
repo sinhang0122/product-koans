@@ -33,6 +33,7 @@
   <script src="offline.js" defer></script>
   <script type="module" src="session-timeout.js"></script>
   <script src="local-analytics.js" defer></script>
+  <script src="koaus-gallery.js" defer></script>
   <script type="module" src="admin-mark.js"></script>
   <script type="module" src="auth-extra.js"></script>
 </head>
@@ -2689,6 +2690,11 @@
     function openLightbox(urls, initialIndex) {
       const list = Array.isArray(urls) ? urls : (urls ? [urls] : []);
       if (!list.length) return;
+      // 전역 공통 갤러리 우선 사용 (koaus-gallery.js — 풀스크린 + 스와이프 + 줌 + UI 토글)
+      if (window.koausGallery && typeof window.koausGallery.open === "function") {
+        window.koausGallery.open(list, Number(initialIndex) || 0);
+        return;
+      }
       const ov = document.getElementById('lightboxOverlay');
       const wrap = document.getElementById('lightboxWrapper');
       const counter = document.getElementById('lightboxCounter');
