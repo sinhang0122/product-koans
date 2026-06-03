@@ -46,7 +46,7 @@
       <span class="topbar-tagline"><b>Korea&nbsp;-&nbsp;Australia</b><span class="topbar-tagline-div">|</span>호주 한인 커뮤니티의 새로운 기준</span>
     </a>
     <div class="topbar-actions">
-      <a href="index.html" class="topbar-login-btn">로그인</a>
+      <button type="button" class="topbar-login-btn" id="topbarLoginBtn">로그인</button>
       <button class="topbar-theme-btn" id="themeToggleBtn" type="button" aria-label="테마 변경" title="테마 변경 (Light / Dark)">
         <svg class="ico-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
         <svg class="ico-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
@@ -1374,8 +1374,36 @@
 
     // ── 글로벌 koausAuth — 비자 글쓰기 가드에서 호출 ──
     window.koausAuth = { user: null, openAuthModal, afterLogin: null };
+
+    // 상단 헤더 로그인 버튼 — 비로그인: 모달 즉시 열림 / 로그인: 닉네임 + 마이페이지 라우팅
+    const topbarLoginBtn = document.getElementById('topbarLoginBtn');
+    if (topbarLoginBtn) {
+      topbarLoginBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (window.koausAuth.user) {
+          window.location.href = 'mypage.html';
+        } else {
+          openAuthModal();
+        }
+      });
+    }
+
     onAuthStateChanged(auth, user => {
       window.koausAuth.user = user;
+      // 상단 로그인 버튼 라벨 동기화
+      if (topbarLoginBtn) {
+        if (user) {
+          const nick = localStorage.getItem('koaus-nickname')
+            || user.displayName?.split(' ')[0]
+            || user.email?.split('@')[0]
+            || '계정';
+          topbarLoginBtn.textContent = nick;
+          topbarLoginBtn.title = '내 계정 (마이페이지)';
+        } else {
+          topbarLoginBtn.textContent = '로그인';
+          topbarLoginBtn.title = '로그인 / 회원가입';
+        }
+      }
       // 로그인 직후 보류된 작업 자동 재시도 (afterLogin 콜백)
       if (user && typeof window.koausAuth.afterLogin === 'function') {
         const cb = window.koausAuth.afterLogin;
