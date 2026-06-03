@@ -479,14 +479,17 @@
       </div>
       <span class="board-count" id="visaBoardCount">총 0건</span>
       <div class="accom-ctrl-actions">
+        <!-- 상세필터 (비자/유학 세부 카테고리) — '+ 글쓰기' 바로 옆 정렬 -->
+        <select class="board-write-btn board-write-btn--ghost" id="visaDetailFilter" aria-label="상세 필터">
+          <option value="all">상세필터 · 전체</option>
+          <option value="student">학생비자</option>
+          <option value="whv">워킹홀리데이</option>
+          <option value="pr">영주권·이민</option>
+          <option value="edu">유학·어학연수</option>
+          <option value="legal">일반법률상담</option>
+        </select>
         <button class="board-write-btn" id="visaWriteBtn">+ 글쓰기</button>
       </div>
-    </div>
-    <!-- 상세 필터 칩 — 카테고리 (전체 / 법무 / 유학) -->
-    <div class="filter-pills" id="visaFilterPills" style="display:flex;gap:8px;margin:8px 0 12px;flex-wrap:wrap;">
-      <button type="button" class="filter-pill active" data-visa-filter="all">전체</button>
-      <button type="button" class="filter-pill" data-visa-filter="legal">⚖ 법무법인</button>
-      <button type="button" class="filter-pill" data-visa-filter="education">🎓 유학원</button>
     </div>
     <!-- List View — accom-grid 패턴 -->
     <section class="partner-board partner-board--list-only" id="partnerBoard">
@@ -509,8 +512,8 @@
         </div>
         <div class="write-grid">
           <div class="write-field">
-            <label class="write-label" for="vwTitle">제목 <span style="color:var(--red,#dc2626);">*</span></label>
-            <input class="write-input" id="vwTitle" type="text" maxlength="120" placeholder="예: 시드니 한인 법무법인 추천 · 489 비자 진행 후기" required />
+            <label class="write-label" for="vwTitle">제목 <span class="required-mark" style="color:var(--red,#dc2626);font-weight:800;">[필수]</span></label>
+            <input class="write-input" id="vwTitle" type="text" maxlength="120" placeholder="[필수] 예: 시드니 한인 법무법인 추천 · 489 비자 진행 후기" required aria-required="true" />
           </div>
           <div class="write-field">
             <label class="write-label" for="vwCategory">카테고리 (선택)</label>
@@ -869,19 +872,20 @@
       const pcEdu   = document.getElementById('heroPcEdu');
       const mbLegal = document.getElementById('heroMobileLegal');
       const mbEdu   = document.getElementById('heroMobileEdu');
-      const filterPills = document.getElementById('visaFilterPills');
-      const searchBar   = document.querySelector('[data-koaus-search="visa"]');
+      // visaFilterPills 폐기 — 상세필터는 #visaDetailFilter (select) 로 통합
+      const detailFilter = document.getElementById('visaDetailFilter');
+      const searchBar    = document.querySelector('[data-koaus-search="visa"]');
       if (activeCat === 'points') {
         if (board)  board.style.display  = 'none';
-        if (filterPills) filterPills.style.display = 'none';
-        if (searchBar)   searchBar.style.display   = 'none';
+        if (detailFilter) detailFilter.style.display = 'none';
+        if (searchBar)    searchBar.style.display    = 'none';
         if (points) points.style.display = '';
         if (heroSection) heroSection.style.display = 'none';
       } else {
         if (board)  board.style.display  = '';
         if (points) points.style.display = 'none';
-        if (filterPills) filterPills.style.display = 'flex';
-        if (searchBar)   searchBar.style.display   = '';
+        if (detailFilter) detailFilter.style.display = '';
+        if (searchBar)    searchBar.style.display    = '';
         if (heroSection) heroSection.style.display = '';
         // 슬라이더 — legal/edu 분리 hidden 제거, 둘 다 노출
         if (pcLegal) pcLegal.hidden = false;
@@ -899,14 +903,14 @@
       window.__koausVisaSearch = { kw: (kw || '').toLowerCase().trim(), scope: scope || 'both' };
       renderList();
     };
-    // 필터 칩 — all/legal/education 분기
-    document.addEventListener('click', e => {
-      const btn = e.target.closest('[data-visa-filter]');
-      if (!btn) return;
-      window.__koausVisaFilter = btn.dataset.visaFilter || 'all';
-      document.querySelectorAll('[data-visa-filter]').forEach(b => b.classList.toggle('active', b === btn));
-      if (typeof renderList === 'function') renderList();
-    });
+    // 상세필터 드롭다운 — accom-ctrl-actions 안의 select 와이어
+    const visaDetailFilterEl = document.getElementById('visaDetailFilter');
+    if (visaDetailFilterEl) {
+      visaDetailFilterEl.addEventListener('change', () => {
+        window.__koausVisaFilter = visaDetailFilterEl.value || 'all';
+        if (typeof renderList === 'function') renderList();
+      });
+    }
     function applyVisaSearchKw(arr) {
       const s = window.__koausVisaSearch;
       if (!s || !s.kw) return arr;
@@ -920,17 +924,39 @@
       });
     }
     let partners = [];
+    // 상세필터 → category + visaType 매핑 (글 내용 키워드로 보조 필터)
+    function matchesDetailFilter(p, filter) {
+      if (filter === 'all' || !filter) return p.category === 'legal' || p.category === 'education';
+      const vt = String(p.visaType || '').toLowerCase();
+      const text = String((p.title || '') + ' ' + (p.body || '') + ' ' + (p.summary || '')).toLowerCase();
+      switch (filter) {
+        case 'student':
+          return p.category === 'education' || vt === '500' || vt === '485' ||
+                 /학생\s*비자|student\s*visa|500|485/.test(text);
+        case 'whv':
+          return /워킹\s*홀리데이|whv|417|462/.test(text);
+        case 'pr':
+          return ['189','190','491','187','820','820/801'].includes(vt) ||
+                 /영주권|이민|pr\b|permanent\s*resident|189|190|491|187|820/.test(text);
+        case 'edu':
+          return p.category === 'education' ||
+                 /유학|어학연수|어학원|학원|university|college|elicos/.test(text);
+        case 'legal':
+          return p.category === 'legal' || /법무|법률|상담|legal|law/.test(text);
+        default:
+          return true;
+      }
+    }
     function renderList() {
       if (activeCat === 'points') return;
-      // 비자/유학 통합 — legal + education 두 카테고리, 필터 칩으로 좁힘
+      // 비자/유학 통합 — 상세필터로 좁힘
       const filter = window.__koausVisaFilter || 'all';
-      const accept = (cat) => {
-        if (activeCat !== 'visa-edu') return cat === activeCat;
-        if (filter === 'all') return cat === 'legal' || cat === 'education';
-        return cat === filter;
+      const accept = (p) => {
+        if (activeCat !== 'visa-edu') return p.category === activeCat;
+        return matchesDetailFilter(p, filter);
       };
       const items = applyVisaSearchKw(partners
-        .filter(p => accept(p.category))
+        .filter(accept)
         .filter(p => !currentState || !p.state || p.state === currentState))
         .sort((a, b) => {
           const pa = a.isPremium ? 1 : 0, pb = b.isPremium ? 1 : 0;
