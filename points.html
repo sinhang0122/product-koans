@@ -539,7 +539,10 @@
           </div>
           <div class="write-field">
             <label class="write-label" for="vwAddress">주소 (선택)</label>
-            <input class="write-input" id="vwAddress" type="text" autocomplete="off" maxlength="200" placeholder="시드니 CBD, 멜번 등 — 지도 표시용" />
+            <div class="addr-ac">
+              <input class="write-input" id="vwAddress" type="text" autocomplete="off" maxlength="200" placeholder="도로명·지역명만 입력해도 OK (예: George St, Sydney NSW)" />
+              <ul class="addr-suggest" id="vwAddressSuggest"></ul>
+            </div>
           </div>
           <div class="write-field write-field--full">
             <label class="write-label" for="vwBody">상세 내용 (선택)</label>
@@ -1029,8 +1032,61 @@
         const nick = localStorage.getItem('koaus-nickname') || (u.displayName||'').split(' ')[0] || (u.email||'').split('@')[0] || '사용자';
         const _wan = document.getElementById('vwAuthorName'); if (_wan) _wan.textContent = nick;
         overlay.classList.add('open');
+        // Places API 미리 로드 + 주소 자동완성 wire (이미 wire 됐다면 no-op)
+        try { ensureVisaMap(); } catch (_) {}
+        try { wireVisaAddressAutocomplete(); } catch (_) {}
       }
-      function closeWrite() { overlay.classList.remove('open'); ['vwTitle','vwBody','vwAddress','vwContact'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; }); document.getElementById('vwError').textContent = ''; }
+      function closeWrite() { overlay.classList.remove('open'); ['vwTitle','vwBody','vwAddress','vwContact'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; }); document.getElementById('vwError').textContent = ''; const sg = document.getElementById('vwAddressSuggest'); if (sg) { sg.classList.remove('show'); sg.innerHTML = ''; } }
+
+      // ── 주소 자동완성 (Google Places AutocompleteService) ──
+      // · Maps API 비동기 로드 후 wire — google.maps.places 가 준비되면 즉시 연결
+      // · 모달 내부에서 보이도록 .addr-suggest 글로벌 CSS (z-index 60) 활용
+      let acService = null;
+      let vwAcWired = false;
+      function escAddr(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+      function wireVisaAddressAutocomplete() {
+        if (vwAcWired) return;
+        // Places 라이브러리가 아직 로드 안 됐으면 폴링 재시도 (Map 로드 시 같이 옴 — libraries=places)
+        if (!(window.google && google.maps && google.maps.places && google.maps.places.AutocompleteService)) {
+          setTimeout(wireVisaAddressAutocomplete, 300);
+          return;
+        }
+        if (!acService) acService = new google.maps.places.AutocompleteService();
+        const input = document.getElementById('vwAddress');
+        const list  = document.getElementById('vwAddressSuggest');
+        if (!input || !list) return;
+        vwAcWired = true;
+        let timer = null;
+        const hide = () => { list.classList.remove('show'); list.innerHTML = ''; };
+        input.addEventListener('input', () => {
+          const q = input.value.trim();
+          clearTimeout(timer);
+          if (q.length < 2) { hide(); return; }
+          timer = setTimeout(() => {
+            acService.getPlacePredictions(
+              { input: q, componentRestrictions: { country: 'au' }, types: ['geocode'] },
+              (preds, status) => {
+                if (status !== google.maps.places.PlacesServiceStatus.OK || !preds || !preds.length) { hide(); return; }
+                list.innerHTML = preds.slice(0, 6).map(p => {
+                  const sf   = p.structured_formatting || {};
+                  const main = escAddr(sf.main_text || p.description);
+                  const sec  = sf.secondary_text ? `<span class="addr-sub">${escAddr(sf.secondary_text)}</span>` : '';
+                  return `<li data-desc="${escAddr(p.description)}">📍 ${main} ${sec}</li>`;
+                }).join('');
+                list.classList.add('show');
+              }
+            );
+          }, 250);
+        });
+        list.addEventListener('click', e => {
+          const li = e.target.closest('li');
+          if (!li) return;
+          input.value = li.dataset.desc;
+          hide();
+        });
+        input.addEventListener('keydown', e => { if (e.key === 'Escape') hide(); });
+        document.addEventListener('click', e => { if (!e.target.closest('.addr-ac')) hide(); });
+      }
 
       if (writeBtn) writeBtn.addEventListener('click', openWrite);
       if (closeBtn) closeBtn.addEventListener('click', closeWrite);

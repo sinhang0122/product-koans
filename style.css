@@ -2498,6 +2498,13 @@ select.filter-mini-input {
   box-shadow: 0 10px 28px rgba(0,0,0,.22); display: none;
 }
 .addr-suggest.show { display: block; }
+/* 모달 내부에서도 자동완성 드롭다운이 잘리지 않고 위로 떠야 함
+   · .write-modal 자체가 overflow-y:auto (내부 스크롤) 라 absolute 자식이 잘릴 수 있음
+   · z-index를 모달 위로 올리고, 모달 내부에서 부모 stacking context 안에서 최상위 */
+.write-overlay .addr-suggest,
+.report-overlay .addr-suggest { z-index: 9999; }
+/* Google Places Autocomplete native dropdown (.pac-container) 도 모달 위로 */
+.pac-container { z-index: 99999 !important; }
 .addr-suggest li {
   padding: 10px 12px; border-radius: var(--r-sm); cursor: pointer;
   font-size: 13px; color: var(--text-primary);
