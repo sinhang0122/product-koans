@@ -630,16 +630,86 @@
     </div>
   </div>
 
+  <!-- ── 상세 모달 (accom rea-detail 패턴 1:1 이식) ── -->
   <div class="post-detail-overlay" id="detailOverlay">
-    <div class="post-detail-card">
-      <div class="post-detail-header">
-        <div class="post-detail-title" id="detailTitle"></div>
-        <button class="post-detail-close" id="detailClose">✕</button>
+    <div class="post-detail-card rea-detail">
+     <div class="rea-scroll">
+      <!-- Hero 사진 영역 -->
+      <div class="rea-hero" id="detailHero">
+        <div class="rea-hero-ph" id="detailHeroPh">
+          <svg width="54" height="54" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        </div>
+        <div class="rea-hero-top">
+          <button class="rea-ovl-btn" id="detailSaveBtn" type="button" aria-label="저장">☆</button>
+          <div class="rea-share-wrap">
+            <button class="rea-ovl-btn" id="detailShareBtn" type="button" aria-label="공유하기">🔗</button>
+            <div class="detail-share-menu" id="detailShareMenu">
+              <button type="button" data-share="kakao">💬 카카오톡 공유</button>
+              <button type="button" data-share="facebook">📘 페이스북 공유</button>
+              <button type="button" data-share="copy">🔗 링크 복사</button>
+            </div>
+          </div>
+        </div>
+        <div class="rea-hero-counter" id="detailHeroCounter">1 / 1</div>
       </div>
-      <div class="post-detail-meta" id="detailMeta"></div>
-      <div class="post-detail-body" id="detailBody"></div>
-      <div class="post-detail-contact" id="detailContact"></div>
-      <div class="post-detail-actions" id="detailActions"></div>
+
+      <!-- Sticky 네비 헤더 -->
+      <div class="rea-navbar">
+        <button class="rea-back" id="detailClose" type="button" aria-label="뒤로가기">‹</button>
+        <span class="rea-nav-title" id="detailNavTitle"></span>
+        <button class="rea-nav-close" id="detailCloseX" type="button" aria-label="닫기">✕</button>
+      </div>
+
+      <div class="rea-content">
+        <div class="rea-status" id="detailStatus"></div>
+        <div class="rea-price" id="detailPrice"></div>
+        <div class="rea-addr-row">
+          <span class="rea-addr" id="detailAddrText"></span>
+          <button class="detail-addr-copy" id="detailAddrCopy" type="button" title="주소 복사" aria-label="주소 복사">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          </button>
+        </div>
+        <div class="rea-summary" id="detailSummary"></div>
+
+        <div class="rea-section" id="detailLocation" style="display:none;">
+          <h3 class="rea-subtitle">Location</h3>
+          <div class="rea-map-wrap" id="detailMapWrap">
+            <div class="detail-mini-map" id="detailMiniMap"></div>
+            <button class="fullscreen-btn" id="detailMapFullscreenBtn" type="button" aria-label="전체화면">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 9V4h5"/><path d="M20 9V4h-5"/><path d="M4 15v5h5"/><path d="M20 15v5h-5"/>
+              </svg>
+            </button>
+          </div>
+          <div class="rea-loc-btns">
+            <a class="rea-loc-btn" id="detailDirBtn" target="_blank" rel="noopener noreferrer">
+              <span>📍 길찾기 <em>See travel times</em></span><span class="rea-loc-arrow">›</span></a>
+            <a class="rea-loc-btn" id="detailSvBtn" target="_blank" rel="noopener noreferrer">
+              <span>🛣️ 스트릿뷰 <em>Street View</em></span><span class="rea-loc-arrow">›</span></a>
+          </div>
+        </div>
+
+        <div class="rea-section">
+          <h3 class="rea-subtitle">Description</h3>
+          <div class="rea-desc" id="detailBody"></div>
+          <button class="rea-more" id="detailMore" type="button" style="display:none;">더보기 ›</button>
+        </div>
+
+        <div class="rea-section" id="detailFeaturesSec" style="display:none;">
+          <h3 class="rea-subtitle">Job features</h3>
+          <ul class="rea-features" id="detailFeatures"></ul>
+        </div>
+
+        <div class="rea-owner-actions" id="detailActions"></div>
+
+        <button class="rea-report" id="detailReportBtn" type="button">🚨 신고하기</button>
+      </div>
+     </div><!-- /rea-scroll -->
+
+      <!-- Sticky 하단 액션바 -->
+      <div class="rea-actionbar">
+        <button class="rea-contact-btn" id="detailContactBtn" type="button">연락처 보기</button>
+      </div>
     </div>
   </div>
 
@@ -911,46 +981,138 @@
       }
     }
 
+    // 헬퍼 — text/URL 복사 (accom 패턴 동일)
+    function copyText(text, msg) {
+      try { navigator.clipboard.writeText(text); alert(msg || '복사되었습니다.'); }
+      catch (e) { alert(text); }
+    }
+    function copyAddress(addr) { copyText(addr, '주소가 복사되었습니다:\n' + addr); }
+
     function openDetail(id) {
       const posts = loadPosts();
       const p = posts.find(x => String(x.id) === String(id));
       if (!p) return;
-      document.getElementById('detailTitle').textContent = p.title;
-      document.getElementById('detailMeta').innerHTML =
-        `<span>${authorLabel(p)}</span><span>${p.date}${p.time ? ' ' + p.time : ''}</span>` +
-        (p.payAmount ? `<span style="font-weight:800;">💵 $${escHtml(p.payAmount)} / ${escHtml(p.payUnit || '시간')}</span>` : '') +
-        (p.empType ? `<span>🕒 ${escHtml(p.empType)}</span>` : '');
-      const bodyEl = document.getElementById('detailBody');
-      bodyEl.textContent = p.body;
 
-      // ── accom rea-detail 패턴 시각 매칭 — 사진 갤러리 + 내부 지도 ──
-      // 1) 사진 슬라이더 — bodyEl 위에 동적 inject (이미 있으면 교체)
-      const heroId = 'jobsDetailHero';
-      let hero = document.getElementById(heroId);
-      if (hero) hero.remove();
-      if (Array.isArray(p.imageUrls) && p.imageUrls.length) {
-        hero = document.createElement('div');
-        hero.id = heroId;
-        hero.style.cssText = 'display:flex;gap:6px;overflow-x:auto;scroll-snap-type:x mandatory;margin:0 0 12px;padding-bottom:6px;-webkit-overflow-scrolling:touch;';
-        hero.innerHTML = p.imageUrls.map(u =>
-          `<img src="${escHtml(u)}" alt="" loading="lazy" data-koaus-gallery="jobs-detail-${p.id}" data-src="${escHtml(u)}"
-            style="flex:0 0 auto;width:78%;max-height:220px;height:auto;border-radius:10px;object-fit:cover;border:1px solid var(--border);cursor:zoom-in;scroll-snap-align:start;" />`
-        ).join('');
-        bodyEl.parentNode.insertBefore(hero, bodyEl);
+      // 1) Hero 사진 갤러리 (accom 패턴 동일)
+      const hero = document.getElementById('detailHero');
+      const heroPh = document.getElementById('detailHeroPh');
+      const counter = document.getElementById('detailHeroCounter');
+      if (hero) {
+        const oldGal = hero.querySelector('.detail-hero-img, .detail-hero-gallery');
+        if (oldGal) oldGal.remove();
+        if (Array.isArray(p.imageUrls) && p.imageUrls.length) {
+          const N = p.imageUrls.length;
+          if (heroPh) heroPh.style.display = 'none';
+          if (counter) { counter.textContent = `1 / ${N}`; counter.style.display = ''; }
+          const wrap = document.createElement('div');
+          wrap.className = 'detail-hero-gallery';
+          wrap.innerHTML = p.imageUrls.map(u =>
+            `<img src="${escHtml(u)}" alt="" loading="lazy" data-src="${escHtml(u)}" />`
+          ).join('');
+          hero.appendChild(wrap);
+          wrap.addEventListener('scroll', () => {
+            const w = wrap.clientWidth || 1;
+            const idx = Math.min(N, Math.max(1, Math.round(wrap.scrollLeft / w) + 1));
+            if (counter) counter.textContent = `${idx} / ${N}`;
+          }, { passive: true });
+          wrap.addEventListener('click', e => {
+            const t = e.target.closest('img'); if (!t) return;
+            const imgs = [...wrap.querySelectorAll('img')];
+            const idx = Math.max(0, imgs.indexOf(t));
+            if (window.koausGallery) window.koausGallery.open(p.imageUrls, idx);
+          });
+        } else {
+          if (heroPh) heroPh.style.display = '';
+          if (counter) counter.style.display = 'none';
+        }
       }
-      // 2) 내부 지도 — bodyEl 아래에 동적 inject (lat/lng 있을 때만)
-      const mapId = 'jobsDetailMap';
-      let mapBox = document.getElementById(mapId);
-      if (mapBox) mapBox.remove();
+
+      // 2) Nav 타이틀
+      document.getElementById('detailNavTitle').textContent = p.title;
+
+      // 3) 상태: '구인' / '구직' + 작성자
+      const isFindMode = p.mode === 'find' || p.tab === 'find';
+      document.getElementById('detailStatus').innerHTML =
+        `⚪ ${isFindMode ? '구직 (Find a Job)' : '직원 채용 (Post a Job)'} ` +
+        `<span class="rea-dot">•</span> 작성자: <strong>${escHtml(authorLabel(p))}</strong>`;
+
+      // 4) 가격 (Huge Bold) — 급여
+      const priceEl = document.getElementById('detailPrice');
+      if (p.payAmount) {
+        const unit = p.payUnit || '시간';
+        priceEl.innerHTML = `$${escHtml(String(p.payAmount))} <span class="rea-price-unit">per ${escHtml(unit)}</span>`;
+      } else {
+        priceEl.innerHTML = '<span class="rea-price-na">급여 협의</span>';
+      }
+
+      // 5) 주소 + 복사
+      const addrText = document.getElementById('detailAddrText');
+      const addrCopy = document.getElementById('detailAddrCopy');
+      if (p.address) {
+        addrText.textContent = '📍 ' + p.address;
+        addrCopy.style.display = '';
+        addrCopy.onclick = () => copyAddress(p.address);
+      } else { addrText.textContent = '주소 미등록'; addrCopy.style.display = 'none'; }
+
+      // 6) 핵심 요약 칩 (고용형태 / 날짜)
+      const sum = [];
+      if (p.empType) sum.push('🕒 ' + p.empType);
+      if (p.date)    sum.push('📅 ' + p.date + (p.time ? ' ' + p.time : ''));
+      document.getElementById('detailSummary').innerHTML =
+        sum.map(s => `<span class="rea-chip">${escHtml(s)}</span>`).join('');
+
+      // 7) Description + 더보기
+      const bodyEl = document.getElementById('detailBody');
+      const moreBtn = document.getElementById('detailMore');
+      bodyEl.textContent = p.body || '';
+      bodyEl.classList.remove('expanded');
+      moreBtn.textContent = '더보기 ›';
+      moreBtn.onclick = () => { const e = bodyEl.classList.toggle('expanded'); moreBtn.textContent = e ? '접기 ‹' : '더보기 ›'; };
+      requestAnimationFrame(() => {
+        moreBtn.style.display = (bodyEl.scrollHeight > bodyEl.clientHeight + 4) ? '' : 'none';
+      });
+
+      // 8) Job features (jobs용 옵션 — 거의 없음, 숨김)
+      document.getElementById('detailFeaturesSec').style.display = 'none';
+
+      // 9) 저장(★) 토글
+      const saveBtn = document.getElementById('detailSaveBtn');
+      const setStar = () => { const on = isSaved(p.id); saveBtn.textContent = on ? '★' : '☆'; saveBtn.classList.toggle('saved', on); };
+      setStar();
+      saveBtn.onclick = () => { toggleSaved(p); setStar(); };
+
+      // 10) 본인 글: 수정/삭제
+      const actEl = document.getElementById('detailActions');
+      if (isMine(p)) {
+        actEl.innerHTML = `<button class="detail-edit-btn" id="detailEditBtn">수정하기</button><button class="detail-delete-btn" id="detailDeleteBtn">삭제하기</button>`;
+        document.getElementById('detailEditBtn').onclick   = () => openWriteModalForEdit(p);
+        document.getElementById('detailDeleteBtn').onclick = () => deletePost(p.id);
+        actEl.style.display = 'flex';
+      } else { actEl.innerHTML = ''; actEl.style.display = 'none'; }
+
+      // 11) 하단 sticky 연락처 버튼
+      const cbtn = document.getElementById('detailContactBtn');
+      if (p.contact) {
+        const isLink = /^https?:\/\//i.test(p.contact);
+        cbtn.disabled = false;
+        if (isLink) { cbtn.textContent = '💬 카카오톡으로 연락하기'; cbtn.onclick = () => window.open(p.contact, '_blank', 'noopener'); }
+        else { cbtn.textContent = '📞 연락처 보기'; cbtn.onclick = () => copyText(p.contact, `연락처: ${p.contact}`); }
+      } else { cbtn.textContent = '연락처 미등록'; cbtn.disabled = true; cbtn.onclick = null; }
+
+      // 12) Location (지도) — lat/lng 있을 때만
+      const locSec = document.getElementById('detailLocation');
       if (p.lat && p.lng) {
-        mapBox = document.createElement('div');
-        mapBox.id = mapId;
-        mapBox.style.cssText = 'margin:12px 0 8px;border:1px solid var(--border);border-radius:10px;overflow:hidden;height:200px;';
-        bodyEl.parentNode.insertBefore(mapBox, bodyEl.nextSibling);
+        locSec.style.display = '';
+        const dir = document.getElementById('detailDirBtn');
+        const sv  = document.getElementById('detailSvBtn');
+        if (dir) dir.href = `https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}`;
+        if (sv)  sv.href  = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${p.lat},${p.lng}`;
         if (typeof whenMapsReady === 'function') {
           whenMapsReady(() => {
             try {
-              const m = new google.maps.Map(mapBox, {
+              const mapEl = document.getElementById('detailMiniMap');
+              if (!mapEl) return;
+              const m = new google.maps.Map(mapEl, {
                 center: { lat: Number(p.lat), lng: Number(p.lng) },
                 zoom: 14, gestureHandling: 'cooperative',
                 mapTypeControl: false, streetViewControl: false,
@@ -959,26 +1121,11 @@
             } catch (e) { console.warn('[jobs] detail map init 실패', e); }
           });
         }
-      }
-      const contactEl = document.getElementById('detailContact');
-      contactEl.innerHTML = (p.address ? `<div style="font-size:12.5px;color:var(--text-secondary);margin-bottom:6px;">📍 ${escHtml(p.address)}</div>` : '') +
-        (p.contact ? `📞 연락처: <strong>${escHtml(p.contact)}</strong>` : '');
-
-      const actEl = document.getElementById('detailActions');
-      if (isMine(p)) {
-        actEl.innerHTML = `
-          <button class="detail-edit-btn" id="detailEditBtn">수정하기</button>
-          <button class="detail-delete-btn" id="detailDeleteBtn">삭제하기</button>`;
-        document.getElementById('detailEditBtn').onclick   = () => openWriteModalForEdit(p);
-        document.getElementById('detailDeleteBtn').onclick = () => deletePost(p.id);
-        actEl.style.display = 'flex';
-      } else {
-        actEl.innerHTML = '';
-        actEl.style.display = 'none';
-      }
+      } else { locSec.style.display = 'none'; }
 
       recordRecent(p);
       document.getElementById('detailOverlay').classList.add('open');
+      const rc = document.querySelector('.rea-content'); if (rc) rc.scrollTop = 0;
     }
 
     function deletePost(id) {
@@ -991,7 +1138,32 @@
       renderPosts();
     }
     safeOn('detailClose', 'click', () => { const ov = document.getElementById('detailOverlay'); if (ov) ov.classList.remove('open'); });
+    safeOn('detailCloseX', 'click', () => { const ov = document.getElementById('detailOverlay'); if (ov) ov.classList.remove('open'); });
     safeOn('detailOverlay', 'click', e => { if (e.target === e.currentTarget) e.currentTarget.classList.remove('open'); });
+    // 신고 버튼 (B&W 표준 — 클릭 시 안내만)
+    safeOn('detailReportBtn', 'click', () => { alert('신고가 접수되었습니다. 관리자 검토 후 조치됩니다.'); });
+    // 공유 메뉴 토글
+    safeOn('detailShareBtn', 'click', e => {
+      e.stopPropagation();
+      const menu = document.getElementById('detailShareMenu');
+      if (menu) menu.classList.toggle('show');
+    });
+    document.addEventListener('click', e => {
+      const menu = document.getElementById('detailShareMenu');
+      const btn = document.getElementById('detailShareBtn');
+      if (menu && menu.classList.contains('show') && !menu.contains(e.target) && e.target !== btn) {
+        menu.classList.remove('show');
+      }
+    });
+    document.querySelectorAll('#detailShareMenu button').forEach(b => {
+      b.addEventListener('click', () => {
+        const url = location.href;
+        if (b.dataset.share === 'copy') copyText(url, '링크가 복사되었습니다.');
+        else if (b.dataset.share === 'facebook') window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank', 'noopener');
+        else if (b.dataset.share === 'kakao') copyText(url, '링크가 복사되었습니다. 카카오톡에 붙여넣어 주세요.');
+        document.getElementById('detailShareMenu').classList.remove('show');
+      });
+    });
     const writeOverlay = document.getElementById('writeOverlay');
     let editingId = null;  // 수정 중인 글 id
 
