@@ -37,6 +37,7 @@
   <script src="koaus-dedupe.js" defer></script>
   <script type="module" src="admin-mark.js"></script>
   <script type="module" src="auth-extra.js"></script>
+  <script type="module" src="koaus-phone-auth.js"></script>
 </head>
 <body>
 
@@ -725,24 +726,7 @@
         <button class="filter-apply-btn" id="privacyConfirm" type="button">확인</button>
       </div>
     </div>
-  </div>
-
-  <!-- ── 이메일 인증 필요 모달 (글쓰기 소프트 게이트) ── -->
-  <div class="report-overlay" id="verifyOverlay">
-    <div class="report-modal">
-      <div class="report-header">
-        <span class="report-title">✉️ 이메일 인증 필요</span>
-        <button class="report-close" id="verifyClose" type="button">✕</button>
-      </div>
-      <p class="verify-modal-msg">게시글을 작성하려면 이메일 인증이 필요합니다. 메일함을 확인해 주세요.</p>
-      <div class="report-actions">
-        <button class="filter-reset-btn" id="verifyResendBtn" type="button">인증 메일 재전송</button>
-        <button class="filter-apply-btn" id="verifyOkBtn" type="button">확인</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── Auth Modal ── -->
+  </div><!-- ── Auth Modal ── -->
   <div class="auth-overlay" id="authOverlay">
     <div class="auth-modal">
       <button class="auth-close" id="authClose" aria-label="닫기">
@@ -1082,23 +1066,11 @@
     let editingId = null;  // 수정 중인 글 id (null이면 새 글)
 
     // 글쓰기 버튼 클릭 시에만 이메일 인증 검사 (소프트 게이트)
-    const verifyOverlay = document.getElementById('verifyOverlay');
-    const openVerifyModal  = () => verifyOverlay.classList.add('open');
-    const closeVerifyModal = () => verifyOverlay.classList.remove('open');
-    document.getElementById('verifyClose').addEventListener('click', closeVerifyModal);
-    document.getElementById('verifyOkBtn').addEventListener('click', closeVerifyModal);
-    verifyOverlay.addEventListener('click', e => { if (e.target === verifyOverlay) closeVerifyModal(); });
-    document.getElementById('verifyResendBtn').addEventListener('click', async () => {
-      const u = window.koausAuth && window.koausAuth.user;
-      if (!u) return;
-      try { await sendEmailVerification(u); alert('인증 메일이 재전송되었습니다.'); }
-      catch (e) { alert('잠시 후 다시 시도해 주세요.'); }
-    });
     // restaurants.html — 글쓰기 버튼 없음 (관리자 전용 등록). 안전한 no-op 가드.
     (document.getElementById('writeBtnOpen') || { addEventListener(){} }).addEventListener('click', () => {
       const u = window.koausAuth && window.koausAuth.user;
       if (!u) { alert('글을 작성하려면 로그인이 필요합니다.'); window.koausAuth && window.koausAuth.openAuthModal(); return; }
-      if (!u.emailVerified) { openVerifyModal(); return; }
+      if (!window.koausCanPost(u)) { window.koausPhoneVerify && window.koausPhoneVerify({ onVerified: () => document.getElementById("writeBtnOpen") && document.getElementById("writeBtnOpen").click() }); return; }
       openWriteModal();
     });
     document.getElementById('writeBtnClose').addEventListener('click',  closeWriteModal);
@@ -2387,7 +2359,7 @@
     import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
     import {
       getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged,
-      createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification,
+      createUserWithEmailAndPassword, signInWithEmailAndPassword,
     } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
     import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app-check.js';
     import { getFirestore, doc, getDoc, setDoc, addDoc, collection, serverTimestamp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
@@ -2525,9 +2497,8 @@
       try {
         // 소프트 게이트: 가입 후 로그아웃하지 않고 로그인 상태 유지 + 인증 메일 1회 발송
         const cred = await createUserWithEmailAndPassword(auth, email, pw);
-        try { await sendEmailVerification(cred.user); } catch (e) {}
         hardCloseAuthModal();
-        alert('가입이 완료되었습니다. 인증 메일을 보냈으니 메일함을 확인해 주세요. (글쓰기 시 인증이 필요합니다)');
+        alert('가입이 완료되었습니다.\n글을 작성하실 때 휴대폰 SMS 인증을 거치게 됩니다.');
       } catch (e) {
         const msg = authErrMsg(e.code);
         if (errEl) errEl.textContent = msg;

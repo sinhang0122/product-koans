@@ -2,7 +2,7 @@ import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebase
 import { getAnalytics } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-analytics.js';
 import {
   getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut,
-  createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, sendEmailVerification,
+  createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile,
 } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
 import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app-check.js';
 
@@ -178,10 +178,10 @@ document.getElementById('authSignupSubmit').addEventListener('click', async () =
   if (pw !== pw2)    { errEl.textContent = '비밀번호가 일치하지 않습니다.'; return; }
   if (typeof grecaptcha !== 'undefined' && !grecaptcha.getResponse()) { errEl.textContent = "'로봇이 아닙니다' 인증을 완료해 주세요."; return; }
   try {
-    const cred = await createUserWithEmailAndPassword(auth, email, pw);
-    try { await sendEmailVerification(cred.user); } catch (e) {}
+    await createUserWithEmailAndPassword(auth, email, pw);
+    // 이메일 인증 메일 자동 발송 폐기 — 글쓰기 시점에 휴대폰 SMS 인증으로 대체 (Phase 2)
     closeAuthModal();
-    alert('가입이 완료되었습니다. 인증 메일을 보냈으니 메일함을 확인해 주세요.');
+    alert('가입이 완료되었습니다.\n글을 작성하실 때 휴대폰 SMS 인증을 거치게 됩니다.');
   } catch (e) {
     // 이메일 중복 등 명확한 사용자 에러 → 텍스트 + 알림(토스트)으로 이중 안내
     const friendlyMsg = authErrMsg(e.code);
@@ -203,21 +203,14 @@ document.getElementById('authSignupSubmit').addEventListener('click', async () =
   }
 });
 
-// Email sign-in (이메일 인증 미완료 시 차단)
+// Email sign-in — 이메일 인증 미완료 계정도 로그인 허용 (글쓰기 시 SMS 인증으로 게이트)
 document.getElementById('authLoginSubmit').addEventListener('click', async () => {
   const email = document.getElementById('authLoginEmail').value.trim();
   const pw    = document.getElementById('authLoginPw').value;
   const errEl = document.getElementById('authLoginError');
   if (!email || !pw) { errEl.textContent = '이메일과 비밀번호를 입력해 주세요.'; return; }
   try {
-    const cred = await signInWithEmailAndPassword(auth, email, pw);
-    // 이메일 인증 미완료 → 즉시 로그아웃 후 차단 안내
-    if (cred.user && !cred.user.emailVerified) {
-      try { await signOut(auth); } catch (_) {}
-      errEl.textContent = '이메일 인증이 완료되지 않은 계정입니다. 메일함의 인증 링크를 클릭한 뒤 다시 로그인해 주세요.';
-      alert('이메일 인증이 완료되지 않은 계정입니다.\n가입 시 받은 인증 메일의 링크를 클릭한 후 다시 로그인해 주세요.\n\n메일이 없다면 [인증 메일 재전송] 을 이용해 마이페이지에서 다시 받으실 수 있습니다.');
-      return;
-    }
+    await signInWithEmailAndPassword(auth, email, pw);
     closeAuthModal();
   } catch (e) { errEl.textContent = authErrMsg(e.code); }
 });
