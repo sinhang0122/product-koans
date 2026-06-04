@@ -519,15 +519,19 @@
         <button class="filter-modal-close" id="filterModalClose">✕</button>
       </div>
 
-      <!-- 렌트카 필터 (글쓰기 필드 연동) -->
-      <div class="cat-filter" data-filter="rental">
+      <!-- 중고차 판매 필터 (글쓰기 필드 1:1 동기화) -->
+      <div class="cat-filter" data-filter="used">
         <div class="filter-section">
-          <label class="filter-section-label" for="ffRegion">판매/대여 지역 Region</label>
+          <label class="filter-section-label" for="ffRegion">판매 지역 Region</label>
           <input class="write-input" id="ffRegion" type="text" autocomplete="off" placeholder="지역명 검색 (예: Strathfield NSW)" />
         </div>
         <div class="filter-section">
           <label class="filter-section-label" for="ffBrand">브랜드 Brand</label>
           <input class="write-input" id="ffBrand" type="text" placeholder="예: Toyota, Hyundai" />
+        </div>
+        <div class="filter-section">
+          <label class="filter-section-label" for="ffModel">모델 Model</label>
+          <input class="write-input" id="ffModel" type="text" placeholder="예: Corolla, i30" />
         </div>
         <div class="filter-section">
           <label class="filter-section-label" for="ffMaxPrice">최대 가격 (총액 $)</label>
@@ -540,6 +544,14 @@
         <div class="filter-section">
           <label class="filter-section-label" for="ffMinYear">최소 연식 (년식)</label>
           <input class="write-input" id="ffMinYear" type="number" min="1950" max="2100" placeholder="예: 2015" />
+        </div>
+        <div class="filter-section">
+          <label class="filter-section-label" for="ffRwc">RWC 유무 Roadworthy</label>
+          <select class="write-input" id="ffRwc">
+            <option value="">전체</option>
+            <option value="yes">RWC 있음만</option>
+            <option value="no">RWC 없음만</option>
+          </select>
         </div>
       </div>
 
@@ -1197,9 +1209,11 @@
       });
     }
     function currentFilter() {
-      if (activeCategory === 'rental') return {
-        cat:'rental', region:_fv('ffRegion'), brand:_fv('ffBrand'),
-        maxPrice:_fv('ffMaxPrice'), maxMileage:_fv('ffMaxMileage'), minYear:_fv('ffMinYear'),
+      if (activeCategory === 'used') return {
+        cat:'used',
+        region:_fv('ffRegion'), brand:_fv('ffBrand'), model:_fv('ffModel'),
+        maxPrice:_fv('ffMaxPrice'), maxMileage:_fv('ffMaxMileage'),
+        minYear:_fv('ffMinYear'), rwc:_fv('ffRwc'),
       };
       if (activeCategory === 'inspection') return { cat:'inspection', maxInsp:_fv('ffMaxInsp'), maxEmer:_fv('ffMaxEmer') };
       if (activeCategory === 'maintenance') return {
@@ -1212,13 +1226,19 @@
     }
     function applyFilterValues(s) {
       if (!s) return;
-      if (s.cat === 'rental')      { _set('ffRegion',s.region); _set('ffBrand',s.brand); _set('ffMaxPrice',s.maxPrice); _set('ffMaxMileage',s.maxMileage); _set('ffMinYear',s.minYear); }
+      // 옛 'rental' 최근 검색 호환 — 같은 필드 매핑
+      if (s.cat === 'used' || s.cat === 'rental') {
+        _set('ffRegion',s.region); _set('ffBrand',s.brand); _set('ffModel',s.model);
+        _set('ffMaxPrice',s.maxPrice); _set('ffMaxMileage',s.maxMileage);
+        _set('ffMinYear',s.minYear); _set('ffRwc',s.rwc);
+      }
       else if (s.cat === 'inspection')  { _set('ffMaxInsp',s.maxInsp); _set('ffMaxEmer',s.maxEmer); }
       else if (s.cat === 'maintenance') { _set('ffMaintRegion',s.region); _set('ffMaintType',s.mtype); _set('ffMaintHours',s.hours); }
       else if (s.cat === 'towing')      { _set('ffTowRegion',s.region); _set('ffTowType',s.ttype); }
     }
     function clearFilterInputs() {
-      ['ffRegion','ffBrand','ffMaxPrice','ffMaxMileage','ffMinYear','ffMaxInsp','ffMaxEmer',
+      ['ffRegion','ffBrand','ffModel','ffMaxPrice','ffMaxMileage','ffMinYear','ffRwc',
+       'ffMaxInsp','ffMaxEmer',
        'ffMaintRegion','ffMaintType','ffMaintHours','ffTowRegion','ffTowType'].forEach(id => _set(id,''));
     }
 
@@ -1277,12 +1297,15 @@
     function saveRecentSearches(arr) { localStorage.setItem(RECENT_SEARCH_KEY(), JSON.stringify(arr.slice(0, 5))); }
     function searchLabel(s) {
       const parts = [];
-      if (s.cat === 'rental') {
+      if (s.cat === 'used' || s.cat === 'rental') {
         if (s.region)     parts.push(s.region);
         if (s.brand)      parts.push(s.brand);
+        if (s.model)      parts.push(s.model);
         if (s.maxPrice)   parts.push('≤$' + s.maxPrice);
         if (s.maxMileage) parts.push('≤' + s.maxMileage + 'km');
         if (s.minYear)    parts.push(s.minYear + '년~');
+        if (s.rwc === 'yes') parts.push('RWC');
+        else if (s.rwc === 'no') parts.push('RWC X');
       } else if (s.cat === 'inspection') {
         if (s.maxInsp) parts.push('인스펙션 ≤$' + s.maxInsp);
         if (s.maxEmer) parts.push('출동 ≤$' + s.maxEmer);
@@ -1796,12 +1819,15 @@
         if (areaBounds) {
           if (!(p.lat && p.lng) || !areaBounds.contains({ lat: p.lat, lng: p.lng })) return false;
         }
-        if (f.cat === 'rental') {
+        if (f.cat === 'used' || f.cat === 'rental') {
+          // 글쓰기 필드 1:1 동기화 — region/brand/model/maxPrice/maxMileage/minYear/rwc
           if (f.region && !(`${p.region || ''} ${p.title || ''}`.toLowerCase().includes(f.region.toLowerCase()))) return false;
-          if (f.brand && !(`${p.brand || ''}`.toLowerCase().includes(f.brand.toLowerCase()))) return false;
+          if (f.brand  && !(`${p.brand  || ''}`.toLowerCase().includes(f.brand.toLowerCase()))) return false;
+          if (f.model  && !(`${p.model  || ''} ${p.title || ''}`.toLowerCase().includes(f.model.toLowerCase()))) return false;
           const mp = num(f.maxPrice);   if (mp !== null && p.price && p.price > mp) return false;
           const mm = num(f.maxMileage); if (mm !== null && p.mileage && parseInt(p.mileage, 10) > mm) return false;
           const my = num(f.minYear);    if (my !== null && p.year && parseInt(p.year, 10) < my) return false;
+          if (f.rwc && p.rwc && p.rwc !== f.rwc) return false;
         } else if (f.cat === 'inspection') {
           const mi = num(f.maxInsp);
           if (mi !== null && !(p.inspectionAvailable && p.inspectionPrice && p.inspectionPrice <= mi)) return false;
