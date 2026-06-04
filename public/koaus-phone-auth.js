@@ -13,7 +13,7 @@
 
 import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
 import {
-  getAuth, RecaptchaVerifier, PhoneAuthProvider,
+  getAuth, RecaptchaVerifier, PhoneAuthProvider, onAuthStateChanged, signOut,
   signInWithPhoneNumber, linkWithCredential,
 } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
 
@@ -98,6 +98,8 @@ let pendingPhoneCred = null;     // linkWithCredential 용 PhoneAuthProvider cre
 let pendingMode = 'link';        // 'link' (로그인 유저 phone 연결) | 'signin' (Phone 단독 가입/로그인)
 let lastSentAt = 0;
 let afterVerifiedCb = null;
+let afterCancelCb = null;
+let _verified = false;
 
 function setMsg(text, kind) {
   const el = document.getElementById('koausPhoneMsg');
@@ -193,6 +195,7 @@ async function verifyCode() {
       await pendingConfirmation.confirm(code);
     }
     setCodeMsg('✅ 인증 완료', 'ok');
+    _verified = true;
     setTimeout(() => {
       closePhoneModal();
       if (typeof afterVerifiedCb === 'function') { try { afterVerifiedCb(); } catch (_) {} }
@@ -209,6 +212,8 @@ async function verifyCode() {
 function openPhoneModal(opts) {
   mountPhoneModal();
   afterVerifiedCb = (opts && typeof opts.onVerified === 'function') ? opts.onVerified : null;
+  afterCancelCb   = (opts && typeof opts.onCancel   === 'function') ? opts.onCancel   : null;
+  _verified = false;
   try { document.body.style.overflow = 'hidden'; } catch (_) {}
   // 로그인 모달 등 다른 overlay 가 떠 있으면 시각 충돌 최소화 — 인라인 display 제거
   document.querySelectorAll('.auth-overlay.open').forEach(o => {
@@ -226,17 +231,55 @@ function closePhoneModal() {
   const ov = document.getElementById('koausPhoneOverlay');
   if (ov) ov.classList.remove('open');
   try { document.body.style.overflow = ''; } catch (_) {}
+  // 미인증 상태로 닫힘 → onCancel 콜백 호출 (글로벌 인터셉터가 signOut 처리)
+  if (!_verified && typeof afterCancelCb === 'function') {
+    const cb = afterCancelCb; afterCancelCb = null;
+    try { cb(); } catch (_) {}
+  }
 }
 
 // ── 글로벌 노출 ──
-// koausPhoneVerify(opts) — 호출 시 휴대폰 인증 모달 열림
-//   opts.onVerified: 인증 성공 시 콜백
 window.koausPhoneVerify = openPhoneModal;
 window.koausClosePhoneModal = closePhoneModal;
 
-// ── 글쓰기 가드 헬퍼 ──
-// requireCanPost(user, openAuthModalFn?) — true 면 통과, false 면 인증 흐름 자동 시작
-// 페이지에서 if (!koausRequireCanPost(u, openAuthModal, retry)) return; 패턴으로 사용
+// ── 글로벌 인증 강제 인터셉터 (가입/로그인 시점 정책) ──
+// onAuthStateChanged 발화 시:
+//   · canPost(u) === true (이메일 인증 또는 phone 연결) → 통과
+//   · canPost(u) === false → 즉시 휴대폰 인증 모달 강제
+//     · 모달 X/취소 닫기 → signOut + 안내 → 비로그인 상태로 복귀
+//     · 인증 성공 → 모달 자동 닫기 + 세션 유지
+//
+// 이로써 글쓰기·연락하기 등 액션 시점에는 추가 인증 불필요.
+let _phoneEnforced = '';   // 이미 강제 처리한 uid (중복 모달 방지)
+let _phoneEnforcing = false;
+let _signedOutBypass = false;  // 강제 signOut 시 onAuthStateChanged 재발화 무시
+
+onAuthStateChanged(auth, async (user) => {
+  if (!user) { _phoneEnforced = ''; _phoneEnforcing = false; return; }
+  if (window.koausCanPost(user)) { _phoneEnforced = user.uid; return; }
+  if (_phoneEnforced === user.uid || _phoneEnforcing) return;
+  _phoneEnforcing = true;
+  // 살짝 지연 — 페이지별 로그인 모달 close 애니메이션 끝나기를 기다림
+  setTimeout(() => {
+    openPhoneModal({
+      onVerified: () => {
+        _phoneEnforced = user.uid;
+        _phoneEnforcing = false;
+        // 페이지에 따라 캐시된 닉네임 동기화 필요 — 최소 reload 로 안전 적용
+        try { /* hot reload 없이 세션 유지 — 다른 모듈 들이 알아서 반영 */ } catch (_) {}
+      },
+      onCancel: async () => {
+        _phoneEnforcing = false;
+        _signedOutBypass = true;
+        try { await signOut(auth); } catch (_) {}
+        alert('휴대폰 SMS 인증을 완료해야 KoAus 를 이용하실 수 있습니다.\n다음에 다시 시도해 주세요.');
+      },
+    });
+  }, 350);
+});
+
+// ── 글쓰기 가드 헬퍼 (legacy) — 새 정책에서는 단순 로그인 체크만 필요 ──
+// 그러나 미인증 유저가 어떤 우회 경로로 통과했을 경우의 안전망으로 유지
 window.koausRequireCanPost = function (user, openAuthModalFn, retryCb) {
   if (!user) {
     alert('로그인 후 이용할 수 있습니다.');
@@ -244,8 +287,7 @@ window.koausRequireCanPost = function (user, openAuthModalFn, retryCb) {
     return false;
   }
   if (window.koausCanPost(user)) return true;
-  // 미인증 → 휴대폰 인증 모달
-  alert('글을 작성하려면 휴대폰 인증이 필요합니다.\n안전한 거래를 위해 SMS 인증을 진행해 주세요.');
+  // 안전망 — 이론상 글로벌 인터셉터가 미리 처리하지만, 만약 도달 시 모달 호출
   openPhoneModal({ onVerified: retryCb });
   return false;
 };

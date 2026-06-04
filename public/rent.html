@@ -1103,7 +1103,7 @@
     function guardedOpenWrite() {
       const u = window.koausAuth && window.koausAuth.user;
       if (!u) { alert('글을 작성하려면 로그인이 필요합니다.'); window.koausAuth && window.koausAuth.openAuthModal(); return; }
-      if (!window.koausCanPost(u)) { window.koausPhoneVerify && window.koausPhoneVerify({ onVerified: () => document.getElementById("writeBtnOpen") && document.getElementById("writeBtnOpen").click() }); return; }
+      // 휴대폰 인증은 로그인 시점 글로벌 인터셉터에서 강제 — 여기선 로그인 여부만 신뢰
       openWriteModal();
     }
     document.getElementById('writeBtnOpen').addEventListener('click', guardedOpenWrite);
