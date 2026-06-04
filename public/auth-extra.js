@@ -20,11 +20,23 @@ const app  = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db   = getFirestore(app);
 
+// 공식 보안 질문 15개 — 계정 복구의 핵심 수단
 const SECURITY_QUESTIONS = [
-  '어머니 성함은 무엇입니까?',
-  '처음 키운 반려동물의 이름은?',
+  '어머니의 성함은 무엇입니까?',
+  '아버지의 성함은 무엇입니까?',
   '졸업한 초등학교의 이름은?',
+  '졸업한 중학교의 이름은?',
+  '졸업한 고등학교의 이름은?',
+  '처음 키운 반려동물의 이름은?',
   '가장 친한 친구의 별명은?',
+  '태어난 도시는?',
+  '본인이 좋아하는 음식은?',
+  '가장 기억에 남는 여행지는?',
+  '결혼기념일(또는 부모님 결혼기념일)은? (예: 0915)',
+  '첫 직장(또는 인턴)의 이름은?',
+  '인생 첫 자동차의 모델명은?',
+  '가장 좋아하는 영화 제목은?',
+  '본인 휴대폰 마지막 4자리 (가입 시점 기준)는?',
 ];
 const norm = s => String(s || '').trim().toLowerCase();
 const esc  = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -43,24 +55,28 @@ function mountSignupExtra() {
   if (!pwConfirm) return;
   const wrap = pwConfirm.closest('.auth-field') || pwConfirm.parentElement;
   if (!wrap) return;
+  // 이름(실명) 필드 폐기 — 별명(닉네임) + 보안 Q/A 만 유지
+  // 닉네임 옆 [중복확인] 버튼 — Firestore users 컬렉션 중복 비동기 체크
   const html = `
     <div class="auth-field">
-      <label class="auth-label" for="authSignupName">이름 (Name)</label>
-      <input class="auth-input" id="authSignupName" type="text" autocomplete="name" placeholder="홍길동" maxlength="50" />
+      <label class="auth-label" for="authSignupNick">별명 (Nickname) <span style="color:var(--red,#dc2626);font-weight:800;">[필수]</span></label>
+      <div style="display:flex;gap:8px;align-items:stretch;">
+        <input class="auth-input" id="authSignupNick" type="text" autocomplete="nickname"
+               placeholder="3~12자 한글·영문·숫자" maxlength="30" style="flex:1;min-width:0;" />
+        <button type="button" id="authSignupNickCheck"
+                style="flex-shrink:0;padding:0 14px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-sm);font:700 13px var(--font);color:var(--text-primary);cursor:pointer;white-space:nowrap;">중복확인</button>
+      </div>
+      <p class="koaus-extra-msg" id="authSignupNickMsg" style="font-size:12px;color:var(--text-muted);margin:6px 0 0;min-height:16px;"></p>
     </div>
     <div class="auth-field">
-      <label class="auth-label" for="authSignupNick">별명 (Nickname)</label>
-      <input class="auth-input" id="authSignupNick" type="text" autocomplete="nickname" placeholder="화면에 표시될 이름" maxlength="30" />
-    </div>
-    <div class="auth-field">
-      <label class="auth-label" for="authSignupSecQ">보안 질문</label>
+      <label class="auth-label" for="authSignupSecQ">보안 질문 (Security Question) <span style="color:var(--red,#dc2626);font-weight:800;">[필수]</span></label>
       <select class="auth-input" id="authSignupSecQ">
         ${SECURITY_QUESTIONS.map(q => `<option value="${esc(q)}">${esc(q)}</option>`).join('')}
       </select>
     </div>
     <div class="auth-field">
-      <label class="auth-label" for="authSignupSecA">보안 답변</label>
-      <input class="auth-input" id="authSignupSecA" type="text" autocomplete="off" placeholder="아이디 찾기 시 사용됩니다" maxlength="100" />
+      <label class="auth-label" for="authSignupSecA">보안 답변 (Answer) <span style="color:var(--red,#dc2626);font-weight:800;">[필수]</span></label>
+      <input class="auth-input" id="authSignupSecA" type="text" autocomplete="off" placeholder="아이디·비밀번호 찾기에 사용됩니다" maxlength="100" />
     </div>`;
   wrap.insertAdjacentHTML('afterend', html);
   // 보안 질문 랜덤 1개 선택
@@ -68,25 +84,76 @@ function mountSignupExtra() {
   if (sel) sel.selectedIndex = Math.floor(Math.random() * SECURITY_QUESTIONS.length);
   form.__koausExtraMounted = true;
 
+  // ── 별명 [중복확인] 핸들러 — Firestore users 컬렉션 nickname 필드 매칭 ──
+  let _nickConfirmed = '';   // 확인 완료된 닉네임 (회원가입 시점에 매칭 확인)
+  const setNickMsg = (text, kind) => {
+    const el = document.getElementById('authSignupNickMsg');
+    if (!el) return;
+    el.textContent = text || '';
+    el.style.color = kind === 'err' ? 'var(--red, #dc2626)' : kind === 'ok' ? '#16a34a' : 'var(--text-muted)';
+  };
+  const nickInput = document.getElementById('authSignupNick');
+  const nickCheckBtn = document.getElementById('authSignupNickCheck');
+  if (nickInput) nickInput.addEventListener('input', () => {
+    if (_nickConfirmed && _nickConfirmed !== nickInput.value.trim()) {
+      _nickConfirmed = '';
+      setNickMsg('닉네임이 변경되었습니다. 다시 [중복확인]을 눌러 주세요.', 'err');
+    }
+  });
+  if (nickCheckBtn) nickCheckBtn.addEventListener('click', async () => {
+    const nick = (nickInput?.value || '').trim();
+    if (!/^[a-zA-Z0-9가-힣]{3,12}$/.test(nick)) {
+      setNickMsg('3~12자 한글·영문·숫자만 사용 가능합니다.', 'err');
+      _nickConfirmed = ''; return;
+    }
+    nickCheckBtn.disabled = true; nickCheckBtn.textContent = '확인 중…';
+    try {
+      const q1 = query(collection(db, 'users'), where('nickname', '==', nick), limit(1));
+      const snap = await getDocs(q1);
+      if (snap.empty) {
+        setNickMsg('✅ 사용 가능한 닉네임입니다.', 'ok');
+        _nickConfirmed = nick;
+      } else {
+        setNickMsg('이미 사용 중인 닉네임입니다. 다른 별명을 입력해 주세요.', 'err');
+        _nickConfirmed = '';
+      }
+    } catch (e) {
+      console.warn('[auth-extra] nick 중복확인 실패', e);
+      setNickMsg('확인 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.', 'err');
+      _nickConfirmed = '';
+    } finally {
+      nickCheckBtn.disabled = false; nickCheckBtn.textContent = '중복확인';
+    }
+  });
+
   // 회원가입 직전 신규 필드 검증 + 임시 저장 (capture phase — 페이지 본체 listener 전 실행)
   const btn = document.getElementById('authSignupSubmit');
   if (btn && !btn.__koausExtraHook) {
     btn.addEventListener('click', e => {
-      const name = document.getElementById('authSignupName')?.value.trim() || '';
       const nick = document.getElementById('authSignupNick')?.value.trim() || '';
       const secQ = document.getElementById('authSignupSecQ')?.value || '';
       const secA = document.getElementById('authSignupSecA')?.value.trim() || '';
       const errEl = document.getElementById('authSignupError');
-      if (!name || !nick || !secA) {
-        if (errEl) errEl.textContent = '이름, 별명, 보안 답변을 모두 입력해 주세요.';
-        e.stopImmediatePropagation();
-        e.preventDefault();
+      if (!nick || !secA) {
+        if (errEl) errEl.textContent = '별명과 보안 답변을 모두 입력해 주세요.';
+        e.stopImmediatePropagation(); e.preventDefault(); return;
+      }
+      if (!/^[a-zA-Z0-9가-힣]{3,12}$/.test(nick)) {
+        if (errEl) errEl.textContent = '별명은 3~12자 한글·영문·숫자만 가능합니다.';
+        e.stopImmediatePropagation(); e.preventDefault(); return;
+      }
+      if (_nickConfirmed !== nick) {
+        if (errEl) errEl.textContent = '별명 [중복확인]을 먼저 진행해 주세요.';
+        e.stopImmediatePropagation(); e.preventDefault();
+        try { nickCheckBtn.click(); } catch (_) {}
         return;
       }
       // 페이지 본체 핸들러가 createUserWithEmailAndPassword 성공 시 사용하도록 임시 저장
+      // name 필드 폐기 — nickname 만 저장 (보안질문/답변 함께)
       window.__koausPendingSignup = {
         email: (document.getElementById('authSignupEmail')?.value || '').trim().toLowerCase(),
-        name, nickname: nick, securityQ: secQ, securityA: norm(secA), nameVisible: true,
+        nickname: nick, securityQ: secQ, securityA: norm(secA),
+        nameVisible: false,  // 이름 미수집 → 닉네임만 노출
       };
     }, true);  // capture phase
     btn.__koausExtraHook = true;
@@ -131,10 +198,10 @@ function mountExtraModals() {
           <button type="button" class="report-close" id="koausExtraClose" aria-label="닫기">✕</button>
         </div>
         <div class="report-body" id="koausExtraBody">
-          <!-- 아이디 찾기 폼 -->
+          <!-- 아이디 찾기 폼 — 닉네임 + 보안 답변 매칭 → 이메일 마스킹 노출 -->
           <div class="koaus-extra-pane" data-pane="findId">
-            <div class="auth-field"><label class="auth-label">이름 (Name)</label>
-              <input class="auth-input" id="koausFindIdName" type="text" maxlength="50" placeholder="가입 시 입력한 이름" />
+            <div class="auth-field"><label class="auth-label">별명 (Nickname)</label>
+              <input class="auth-input" id="koausFindIdNick" type="text" maxlength="30" placeholder="가입 시 입력한 별명" />
             </div>
             <div class="auth-field"><label class="auth-label">보안 답변</label>
               <input class="auth-input" id="koausFindIdSecA" type="text" maxlength="100" placeholder="가입 시 설정한 보안 답변" />
@@ -142,13 +209,16 @@ function mountExtraModals() {
             <p class="koaus-extra-msg" id="koausFindIdMsg" style="font-size:12.5px;color:var(--text-muted);margin-top:8px;min-height:18px;"></p>
             <button class="auth-submit" id="koausFindIdSubmit" style="margin-top:4px;">아이디 찾기</button>
           </div>
-          <!-- 비밀번호 찾기 폼 -->
+          <!-- 비밀번호 찾기 폼 — 이메일 + 보안 답변 매칭 → 재설정 메일 자동 발송 -->
           <div class="koaus-extra-pane" data-pane="resetPw" hidden>
             <div class="auth-field"><label class="auth-label">가입한 이메일</label>
               <input class="auth-input" id="koausResetPwEmail" type="email" autocomplete="email" placeholder="email@example.com" />
             </div>
-            <p class="koaus-extra-msg" id="koausResetPwMsg" style="font-size:12.5px;color:var(--text-muted);margin-top:8px;min-height:18px;">가입한 이메일로 재설정 링크를 보내드립니다.</p>
-            <button class="auth-submit" id="koausResetPwSubmit" style="margin-top:4px;">재설정 링크 보내기</button>
+            <div class="auth-field"><label class="auth-label">보안 답변</label>
+              <input class="auth-input" id="koausResetPwSecA" type="text" maxlength="100" placeholder="가입 시 설정한 보안 답변" />
+            </div>
+            <p class="koaus-extra-msg" id="koausResetPwMsg" style="font-size:12.5px;color:var(--text-muted);margin-top:8px;min-height:18px;">이메일 + 보안 답변이 일치하면 재설정 링크를 보내드립니다.</p>
+            <button class="auth-submit" id="koausResetPwSubmit" style="margin-top:4px;">확인 후 재설정 메일 받기</button>
           </div>
         </div>
       </div>
@@ -186,7 +256,7 @@ function switchExtraPane(pane) {
   const fim = document.getElementById('koausFindIdMsg');
   const rpm = document.getElementById('koausResetPwMsg');
   if (fim) fim.innerHTML = '';
-  if (rpm) rpm.innerHTML = '가입한 이메일로 재설정 링크를 보내드립니다.';
+  if (rpm) rpm.innerHTML = '이메일 + 보안 답변이 일치하면 재설정 링크를 보내드립니다.';
   void isReset; // 라벨 동기화는 탭이 담당 — 별도 title 미사용
 }
 function openExtraModal(pane) {
@@ -213,49 +283,65 @@ function closeExtraModal() {
   try { document.body.style.overflow = ''; } catch (_) {}
 }
 
-// ── 비번 재설정 — sendPasswordResetEmail ──
+// ── 비번 재설정 — 이메일 + 보안 답변 매칭 후 sendPasswordResetEmail 자동 발송 ──
+// 클라이언트만으로 비밀번호를 직접 변경하는 것은 Firebase 보안상 불가능 (signed-in user 만 updatePassword).
+// → 보안질문 통과 시 Firebase 공식 reset 메일을 자동 발송 → 유저는 메일 링크 클릭 → 새 비번 설정.
 async function onResetPw() {
-  const email = (document.getElementById('koausResetPwEmail').value || '').trim();
-  const msg = document.getElementById('koausResetPwMsg');
+  const email = (document.getElementById('koausResetPwEmail').value || '').trim().toLowerCase();
+  const secA  = norm(document.getElementById('koausResetPwSecA')?.value || '');
+  const msg   = document.getElementById('koausResetPwMsg');
   if (!email || !/^.+@.+\..+$/.test(email)) {
     msg.textContent = '올바른 이메일 형식이 아닙니다.';
-    msg.style.color = 'var(--red, #dc2626)';
-    return;
+    msg.style.color = 'var(--red, #dc2626)'; return;
   }
-  msg.textContent = '전송 중…';
+  if (!secA) {
+    msg.textContent = '보안 답변을 입력해 주세요.';
+    msg.style.color = 'var(--red, #dc2626)'; return;
+  }
+  msg.textContent = '확인 중…';
   msg.style.color = 'var(--text-muted)';
   try {
+    // Firestore users 컬렉션에서 이메일+보안답변 일치 검증 (보안 1차 게이트)
+    const q1 = query(collection(db, 'users'),
+      where('email', '==', email), where('securityA', '==', secA), limit(1));
+    const snap = await getDocs(q1);
+    if (snap.empty) {
+      msg.textContent = '이메일 또는 보안 답변이 일치하지 않습니다.';
+      msg.style.color = 'var(--red, #dc2626)'; return;
+    }
+    // 검증 통과 → Firebase 공식 비밀번호 재설정 메일 자동 발송
+    msg.textContent = '재설정 메일 전송 중…';
     await sendPasswordResetEmail(auth, email);
-    msg.textContent = '✅ 재설정 링크를 발송했습니다. 메일함을 확인하세요.';
+    msg.innerHTML = '✅ 보안 답변이 일치합니다.<br>가입한 이메일로 <strong>비밀번호 재설정 링크</strong>를 발송했습니다.<br><span style="font-size:11.5px;">메일함(스팸함 포함)을 확인하고 링크를 눌러 새 비밀번호를 설정해 주세요.</span>';
     msg.style.color = 'var(--green, #16a34a)';
   } catch (e) {
     const code = e && e.code || '';
     msg.textContent = code === 'auth/user-not-found' ? '가입된 이메일이 아닙니다.'
                     : code === 'auth/invalid-email' ? '이메일 형식이 올바르지 않습니다.'
-                    : ('재설정 메일 전송 실패: ' + (code || e.message || e));
+                    : code === 'auth/too-many-requests' ? '잠시 후 다시 시도해 주세요.'
+                    : ('재설정 처리 실패: ' + (code || e.message || e));
     msg.style.color = 'var(--red, #dc2626)';
   }
 }
 
-// ── 아이디 찾기 — users 컬렉션 query (name + securityA 일치) ──
+// ── 아이디 찾기 — 별명(nickname) + 보안 답변 일치 시 이메일 마스킹 노출 ──
 async function onFindId() {
-  const name = (document.getElementById('koausFindIdName').value || '').trim();
+  const nick = (document.getElementById('koausFindIdNick').value || '').trim();
   const secA = norm(document.getElementById('koausFindIdSecA').value || '');
   const msg = document.getElementById('koausFindIdMsg');
-  if (!name || !secA) {
-    msg.textContent = '이름과 보안 답변을 모두 입력해 주세요.';
-    msg.style.color = 'var(--red, #dc2626)';
-    return;
+  if (!nick || !secA) {
+    msg.textContent = '별명과 보안 답변을 모두 입력해 주세요.';
+    msg.style.color = 'var(--red, #dc2626)'; return;
   }
   msg.textContent = '조회 중…';
   msg.style.color = 'var(--text-muted)';
   try {
-    const q = query(collection(db, 'users'), where('name', '==', name), where('securityA', '==', secA), limit(1));
-    const snap = await getDocs(q);
+    const q1 = query(collection(db, 'users'),
+      where('nickname', '==', nick), where('securityA', '==', secA), limit(1));
+    const snap = await getDocs(q1);
     if (snap.empty) {
-      msg.textContent = '일치하는 정보가 없습니다.';
-      msg.style.color = 'var(--red, #dc2626)';
-      return;
+      msg.textContent = '일치하는 정보가 없습니다. 별명·보안 답변을 다시 확인해 주세요.';
+      msg.style.color = 'var(--red, #dc2626)'; return;
     }
     const data = snap.docs[0].data();
     const email = data.email || '';
@@ -266,16 +352,16 @@ async function onFindId() {
         '🔑 바로 비밀번호 찾기' +
       '</button>';
     msg.style.color = 'var(--green, #16a34a)';
-    // 즉시 비밀번호 찾기 pane 으로 전환 — 모달 닫기/재오픈 없이 매끄럽게 연결
     const btn = msg.querySelector('.koaus-find-id-to-reset');
     if (btn) btn.addEventListener('click', () => {
-      // 발견한 이메일 마스킹 해제 — 원본 그대로 prefill (실제 이메일 발송 대상)
-      const prefill = document.getElementById('koausResetPwEmail');
-      if (prefill) prefill.value = email;
-      // 통합 헬퍼 — 탭 active + pane 전환 + 메시지 초기화 한 번에
+      // 발견한 이메일 + 보안답변 prefill (재타이핑 없이 즉시 비번 찾기 가능)
+      const prefillEmail = document.getElementById('koausResetPwEmail');
+      const prefillSecA  = document.getElementById('koausResetPwSecA');
+      if (prefillEmail) prefillEmail.value = email;
+      if (prefillSecA)  prefillSecA.value  = document.getElementById('koausFindIdSecA').value;
       switchExtraPane('resetPw');
       const rm = document.getElementById('koausResetPwMsg');
-      if (rm) { rm.innerHTML = '위 이메일로 재설정 링크를 보내드립니다. 버튼을 눌러주세요.'; rm.style.color = 'var(--text-muted)'; }
+      if (rm) { rm.innerHTML = '확인되었습니다. [확인 후 재설정 메일 받기] 버튼을 눌러 주세요.'; rm.style.color = 'var(--text-muted)'; }
     });
   } catch (e) {
     msg.textContent = '조회 중 오류: ' + (e && (e.code || e.message) || e);
@@ -290,16 +376,15 @@ onAuthStateChanged(auth, async user => {
   if (user.uid === _firstUid) return;
   _firstUid = user.uid;
   const pending = window.__koausPendingSignup;
-  if (!pending || !pending.name) return;
+  if (!pending || !pending.nickname) return;
   if (pending.email && pending.email !== (user.email || '').toLowerCase()) return;
   try {
     await setDoc(doc(db, 'users', user.uid), {
       email: (user.email || '').toLowerCase(),
-      name: pending.name,
       nickname: pending.nickname,
       securityQ: pending.securityQ,
       securityA: pending.securityA,
-      nameVisible: pending.nameVisible !== false,
+      nameVisible: false,  // 이름 필드 폐기 — 항상 false
       createdAt: Date.now(),
     }, { merge: true });
     // 마이페이지/게시글 작성 시 별명 사용
