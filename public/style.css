@@ -2545,9 +2545,9 @@ select.filter-mini-input {
   /* select 도 안전망 */
   select.write-input { max-width: 100%; box-sizing: border-box; }
 
-  /* 모바일 지도 높이 2/3 축소 */
-  #accomMap, #jobsMap { height: 360px !important; min-height: 280px !important; }
-  .partner-map-wrap, .partner-map { min-height: 220px !important; }
+  /* 모바일 메인 맵 뷰 — 시인성 강화를 위해 세로 2배 (사용자 요청 2026-06-04) */
+  #accomMap, #jobsMap, #visaMap { height: 720px !important; min-height: 560px !important; }
+  .partner-map-wrap, .partner-map { min-height: 440px !important; }
   .rea-map-wrap .detail-mini-map { height: 140px !important; }
 
   /* 모바일 카드 콤팩트 — 세로 길이 2/3 축소 (썸네일 비율 보호) */
@@ -4034,14 +4034,15 @@ html, body { max-width: 100vw; overflow-x: hidden; }
   gap: clamp(14px, 2.2vw, 22px);
 }
 
-/* 5) 모바일 맵 뷰 — 1:5 비율 (지도 컴팩트 / 리스트 위주)
+/* 5) 모바일 맵 뷰 — 세로 2배 (시인성 강화, 사용자 요청 2026-06-04)
    · #mapView 가 페이지 헤더/검색바 아래에 단독으로 켜졌을 때만 적용
-   · 데스크톱은 기존 동작 그대로 (560px 등) */
+   · 데스크톱은 기존 동작 그대로 (560px 등)
+   · 이전: clamp(160px, 22vh, 220px) → 변경: clamp(320px, 44vh, 440px) */
 @media (max-width: 768px) {
   #mapView { width: 100%; }
-  #accomMap {
-    height: clamp(160px, 22vh, 220px) !important;
-    min-height: 160px !important;
+  #accomMap, #jobsMap, #visaMap {
+    height: clamp(320px, 44vh, 440px) !important;
+    min-height: 320px !important;
     border-radius: var(--r-md);
   }
   /* 지도 fab(확대/현위치 등) 도 좀 더 살짝 작게 */
@@ -4050,9 +4051,9 @@ html, body { max-width: 100vw; overflow-x: hidden; }
   .area-search-btn { padding: 7px 14px; font-size: 12.5px; top: 10px; }
 }
 @media (max-width: 480px) {
-  #accomMap {
-    height: clamp(140px, 18vh, 180px) !important;
-    min-height: 140px !important;
+  #accomMap, #jobsMap, #visaMap {
+    height: clamp(280px, 36vh, 360px) !important;
+    min-height: 280px !important;
   }
 }
 
