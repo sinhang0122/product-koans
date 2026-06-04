@@ -60,9 +60,14 @@ function mountPhoneModal() {
           </div>
           <!-- Step 2: 코드 입력 -->
           <div data-step="code" hidden>
-            <p style="font-size:12.5px;color:var(--text-muted);margin:6px 0 12px;line-height:1.55;">
+            <p style="font-size:12.5px;color:var(--text-muted);margin:6px 0 8px;line-height:1.55;">
               <b id="koausPhoneEcho">—</b> 로 6자리 인증코드를 보냈습니다.
             </p>
+            <!-- 메인 타이머 — 3분 (180s) 유효시간 -->
+            <div id="koausPhoneTimerRow" style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 12px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-sm);margin:0 0 10px;">
+              <span style="font-size:12px;color:var(--text-muted);">유효시간</span>
+              <span id="koausPhoneTimer" style="font:800 14px var(--font);color:var(--text-primary);letter-spacing:0.04em;font-variant-numeric:tabular-nums;">03:00</span>
+            </div>
             <div class="auth-field">
               <label class="auth-label" for="koausPhoneCode">인증코드 (6자리)</label>
               <input class="auth-input" id="koausPhoneCode" type="text" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="------" />
@@ -70,7 +75,7 @@ function mountPhoneModal() {
             <p class="koaus-extra-msg" id="koausPhoneCodeMsg" style="font-size:12.5px;color:var(--text-muted);margin:8px 0 4px;min-height:18px;"></p>
             <div style="display:flex;gap:8px;margin-top:6px;">
               <button class="auth-submit" id="koausPhoneVerifyBtn" style="flex:2;">확인</button>
-              <button type="button" id="koausPhoneResendBtn" style="flex:1;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-sm);font:700 13px var(--font);color:var(--text-secondary);cursor:pointer;">재전송</button>
+              <button type="button" id="koausPhoneResendBtn" disabled style="flex:1;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-sm);font:700 13px var(--font);color:var(--text-secondary);cursor:pointer;opacity:0.5;">재전송 <span id="koausPhoneResendCd" style="font-size:11px;color:var(--text-muted);"></span></button>
             </div>
           </div>
         </div>
@@ -83,13 +88,122 @@ function mountPhoneModal() {
   });
   document.getElementById('koausPhoneSendBtn').addEventListener('click', sendCode);
   document.getElementById('koausPhoneVerifyBtn').addEventListener('click', verifyCode);
-  document.getElementById('koausPhoneResendBtn').addEventListener('click', () => {
-    if (Date.now() - lastSentAt < 60_000) {
-      setCodeMsg(`재전송은 ${Math.ceil((60_000 - (Date.now() - lastSentAt)) / 1000)}초 후 가능합니다.`, 'warn');
+  document.getElementById('koausPhoneResendBtn').addEventListener('click', resendCode);
+}
+
+// ── 이중 타이머 상태 ──
+const MAIN_TIMER_MS  = 180_000;   // 3분 유효시간
+const RESEND_COOLDOWN_MS = 10_000; // 재전송 10초 쿨다운
+let mainTimerHandle = null;
+let resendCdHandle  = null;
+let mainTimerStartedAt = 0;
+let resendStartedAt = 0;
+
+function fmtMSS(ms) {
+  if (ms < 0) ms = 0;
+  const total = Math.ceil(ms / 1000);
+  const m = Math.floor(total / 60);
+  const s = total % 60;
+  return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+}
+
+function startMainTimer() {
+  clearMainTimer();
+  mainTimerStartedAt = Date.now();
+  const tick = () => {
+    const remain = MAIN_TIMER_MS - (Date.now() - mainTimerStartedAt);
+    const el = document.getElementById('koausPhoneTimer');
+    if (el) {
+      el.textContent = fmtMSS(remain);
+      el.style.color = remain <= 30_000 ? 'var(--red, #dc2626)' : 'var(--text-primary)';
+    }
+    if (remain <= 0) {
+      clearMainTimer();
+      // 세션 강제 파기 + 입력/확인 버튼 비활성화
+      pendingConfirmation = null;
+      const inp = document.getElementById('koausPhoneCode');
+      const vbtn = document.getElementById('koausPhoneVerifyBtn');
+      if (inp)  { inp.disabled = true; inp.style.opacity = '0.5'; }
+      if (vbtn) { vbtn.disabled = true; vbtn.style.opacity = '0.5'; }
+      setCodeMsg('⏰ 유효시간이 만료됐습니다. [재전송] 버튼으로 새 인증번호를 받아 주세요.', 'err');
+    }
+  };
+  tick();
+  mainTimerHandle = setInterval(tick, 1000);
+}
+function clearMainTimer() {
+  if (mainTimerHandle) { clearInterval(mainTimerHandle); mainTimerHandle = null; }
+}
+
+function startResendCooldown() {
+  clearResendCooldown();
+  resendStartedAt = Date.now();
+  const btn = document.getElementById('koausPhoneResendBtn');
+  const cd  = document.getElementById('koausPhoneResendCd');
+  if (btn) { btn.disabled = true; btn.style.opacity = '0.5'; btn.style.cursor = 'not-allowed'; }
+  const tick = () => {
+    const remain = RESEND_COOLDOWN_MS - (Date.now() - resendStartedAt);
+    if (remain <= 0) {
+      clearResendCooldown();
+      if (btn) { btn.disabled = false; btn.style.opacity = '1'; btn.style.cursor = 'pointer'; }
+      if (cd) cd.textContent = '';
       return;
     }
-    showStep('phone');
-  });
+    if (cd) cd.textContent = '(' + Math.ceil(remain / 1000) + 's)';
+  };
+  tick();
+  resendCdHandle = setInterval(tick, 250);
+}
+function clearResendCooldown() {
+  if (resendCdHandle) { clearInterval(resendCdHandle); resendCdHandle = null; }
+  const cd = document.getElementById('koausPhoneResendCd');
+  if (cd) cd.textContent = '';
+}
+
+// ── 재전송 — Firebase signInWithPhoneNumber 재호출 + 타이머 리셋 ──
+async function resendCode() {
+  // 쿨다운 확인 (UI에서 disable 처리되지만 안전망)
+  if (Date.now() - resendStartedAt < RESEND_COOLDOWN_MS) return;
+  const e164 = document.getElementById('koausPhoneEcho')?.textContent || '';
+  if (!/^\+61[0-9]{8,10}$/.test(e164)) {
+    setCodeMsg('번호 정보가 사라졌습니다. 처음부터 다시 시도해 주세요.', 'err');
+    showStep('phone'); return;
+  }
+  setCodeMsg('재전송 중…', 'info');
+  try {
+    // reCAPTCHA 재사용 시 stale token 위험 → 새로 만들기
+    try { if (recaptchaVerifier) await recaptchaVerifier.clear(); } catch (_) {}
+    recaptchaVerifier = new RecaptchaVerifier(auth, 'koausRecaptchaSlot', { size: 'invisible' });
+    await recaptchaVerifier.render();
+    const u = auth.currentUser;
+    pendingMode = u ? 'link' : 'signin';
+    if (pendingMode === 'link') {
+      const provider = new PhoneAuthProvider(auth);
+      const verificationId = await provider.verifyPhoneNumber(e164, recaptchaVerifier);
+      pendingConfirmation = { verificationId };
+    } else {
+      pendingConfirmation = await signInWithPhoneNumber(auth, e164, recaptchaVerifier);
+    }
+    lastSentAt = Date.now();
+    // 입력 + 확인 버튼 재활성화 (세션 새로 시작)
+    const inp = document.getElementById('koausPhoneCode');
+    const vbtn = document.getElementById('koausPhoneVerifyBtn');
+    if (inp)  { inp.disabled = false; inp.style.opacity = '1'; inp.value = ''; }
+    if (vbtn) { vbtn.disabled = false; vbtn.style.opacity = '1'; }
+    setCodeMsg('✅ 인증번호를 재전송했습니다. SMS 도착까지 30초~1분 소요됩니다.', 'ok');
+    // 메인 타이머 + 재전송 쿨다운 모두 리셋
+    startMainTimer();
+    startResendCooldown();
+  } catch (err) {
+    console.warn('[phone-auth] resend 실패', err);
+    if (err && err.code === 'auth/too-many-requests') {
+      setCodeMsg('잠시 후 다시 시도해 주세요. (요청 과다)', 'err');
+    } else if (err && err.code === 'auth/operation-not-allowed') {
+      setCodeMsg('서버에서 휴대폰 인증이 아직 활성화되지 않았습니다.', 'err');
+    } else {
+      setCodeMsg('재전송 실패: ' + ((err && err.message) || err), 'err');
+    }
+  }
 }
 
 let recaptchaVerifier = null;
@@ -163,6 +277,9 @@ async function sendCode() {
     document.getElementById('koausPhoneEcho').textContent = e164;
     showStep('code');
     setCodeMsg('SMS 도착까지 30초~1분 소요될 수 있습니다.', 'info');
+    // 이중 타이머 시작 — 메인 3분 + 재전송 10초 쿨다운
+    startMainTimer();
+    startResendCooldown();
   } catch (err) {
     console.warn('[phone-auth] sendCode 실패', err);
     if (err && err.code === 'auth/operation-not-allowed') {
@@ -220,9 +337,16 @@ function openPhoneModal(opts) {
     o.classList.remove('open');
     o.style.removeProperty('display');
   });
-  // 입력 초기화
+  // 입력 + disable 상태 초기화 (이전 만료 세션의 흔적 제거)
   const pi = document.getElementById('koausPhoneInput'); if (pi) pi.value = '';
-  const pc = document.getElementById('koausPhoneCode');  if (pc) pc.value = '';
+  const pc = document.getElementById('koausPhoneCode');
+  if (pc) { pc.value = ''; pc.disabled = false; pc.style.opacity = '1'; }
+  const vb = document.getElementById('koausPhoneVerifyBtn');
+  if (vb) { vb.disabled = false; vb.style.opacity = '1'; }
+  const tm = document.getElementById('koausPhoneTimer');
+  if (tm) { tm.textContent = '03:00'; tm.style.color = 'var(--text-primary)'; }
+  // 모달 재오픈 시 이전 인터벌 정리
+  clearMainTimer(); clearResendCooldown();
   setMsg(''); setCodeMsg('');
   showStep('phone');
   document.getElementById('koausPhoneOverlay').classList.add('open');
@@ -231,6 +355,9 @@ function closePhoneModal() {
   const ov = document.getElementById('koausPhoneOverlay');
   if (ov) ov.classList.remove('open');
   try { document.body.style.overflow = ''; } catch (_) {}
+  // 타이머 모두 정지 (열려있을 동안만 작동해야 함)
+  clearMainTimer();
+  clearResendCooldown();
   // 미인증 상태로 닫힘 → onCancel 콜백 호출 (글로벌 인터셉터가 signOut 처리)
   if (!_verified && typeof afterCancelCb === 'function') {
     const cb = afterCancelCb; afterCancelCb = null;
