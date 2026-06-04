@@ -569,6 +569,17 @@
           <button type="button" class="report-close" id="visaDetailClose" aria-label="닫기">✕</button>
         </div>
         <div class="report-body" id="visaDetailBody"><!-- 동적 렌더 --></div>
+        <!-- 위치 (Location) — 주소가 있으면 자동 노출 + geocode 폴백 -->
+        <div class="rea-section" id="visaDetailLocation" style="display:none;margin-top:14px;">
+          <h3 class="rea-subtitle" style="font-size:14px;font-weight:800;margin:0 0 8px;">Location</h3>
+          <div class="rea-map-wrap" style="position:relative;">
+            <div class="detail-mini-map" id="visaDetailMiniMap" style="width:100%;height:200px;border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;background:var(--bg-card);"></div>
+          </div>
+          <div class="rea-loc-btns" style="display:flex;gap:8px;margin-top:8px;">
+            <a class="rea-loc-btn" id="visaDetailDirBtn" target="_blank" rel="noopener noreferrer" style="flex:1;text-align:center;">📍 길찾기</a>
+            <a class="rea-loc-btn" id="visaDetailSvBtn" target="_blank" rel="noopener noreferrer" style="flex:1;text-align:center;">🛣️ 스트릿뷰</a>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -1169,6 +1180,75 @@
           '<div style="font-size:14px;line-height:1.6;color:var(--text-primary);">' + body + '</div>' +
           contact;
         detailOv.classList.add('open');
+        // 지도 (lat/lng 우선, 없으면 address 로 geocode 폴백)
+        setupVisaDetailLocation(p);
+      }
+
+      // ── 비자 상세 지도 (accom 패턴) ──
+      let visaDetailCoords = null, visaMiniMapObj = null, visaMiniMarker = null;
+      async function visaGeocode(address) {
+        return new Promise(resolve => {
+          if (!window.google || !google.maps || !google.maps.Geocoder) { resolve(null); return; }
+          try {
+            new google.maps.Geocoder().geocode({ address, componentRestrictions: { country: 'au' } }, (results, status) => {
+              if (status === 'OK' && results && results[0]) {
+                const loc = results[0].geometry.location;
+                resolve({ lat: loc.lat(), lng: loc.lng() });
+              } else resolve(null);
+            });
+          } catch (e) { resolve(null); }
+        });
+      }
+      async function setupVisaDetailLocation(p) {
+        const sec = document.getElementById('visaDetailLocation');
+        if (!sec) return;
+        if (!p.address && !(p.lat && p.lng)) { sec.style.display = 'none'; visaDetailCoords = null; return; }
+        sec.style.display = '';
+        const dirBtn = document.getElementById('visaDetailDirBtn');
+        const svBtn  = document.getElementById('visaDetailSvBtn');
+        const setLinks = () => {
+          if (dirBtn) dirBtn.href = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(p.address || (visaDetailCoords ? `${visaDetailCoords.lat},${visaDetailCoords.lng}` : ''))}&travelmode=transit`;
+          if (svBtn)  svBtn.href  = visaDetailCoords
+            ? `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${visaDetailCoords.lat},${visaDetailCoords.lng}`
+            : `https://www.google.com/maps?q=${encodeURIComponent(p.address || '')}&layer=c`;
+        };
+        visaDetailCoords = (p.lat && p.lng) ? { lat: Number(p.lat), lng: Number(p.lng) } : null;
+        setLinks();
+        // Maps API 미리 로드 (Places + Geocoder)
+        try { ensureVisaMap(); } catch (_) {}
+        if (!visaDetailCoords && p.address) {
+          // Geocoder 가 준비될 때까지 짧게 대기 후 시도
+          for (let i = 0; i < 20 && !(window.google && google.maps && google.maps.Geocoder); i++) {
+            await new Promise(r => setTimeout(r, 150));
+          }
+          visaDetailCoords = await visaGeocode(p.address);
+          setLinks();
+        }
+        const el = document.getElementById('visaDetailMiniMap');
+        if (!el) return;
+        if (!visaDetailCoords) {
+          el.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-muted);font-size:12.5px;">지도 위치를 찾을 수 없습니다.</div>';
+          return;
+        }
+        const c = visaDetailCoords;
+        // Map 준비될 때까지 폴링
+        const tryInit = () => {
+          if (!(window.google && google.maps && google.maps.Map)) { setTimeout(tryInit, 200); return; }
+          try {
+            if (!visaMiniMapObj) {
+              visaMiniMapObj = new google.maps.Map(el, {
+                gestureHandling: 'greedy', center: c, zoom: 15,
+                disableDefaultUI: true, clickableIcons: false,
+              });
+            } else {
+              google.maps.event.trigger(visaMiniMapObj, 'resize');
+              visaMiniMapObj.setCenter(c); visaMiniMapObj.setZoom(15);
+            }
+            if (visaMiniMarker) visaMiniMarker.setMap(null);
+            visaMiniMarker = new google.maps.Marker({ position: c, map: visaMiniMapObj, title: p.title || '' });
+          } catch (e) { console.warn('[points] visa detail map init 실패', e); }
+        };
+        tryInit();
       }
       if (detailClose) detailClose.addEventListener('click', () => detailOv.classList.remove('open'));
       if (detailOv) detailOv.addEventListener('click', e => { if (e.target === detailOv) detailOv.classList.remove('open'); });

@@ -1099,33 +1099,61 @@
         else { cbtn.textContent = '📞 연락처 보기'; cbtn.onclick = () => copyText(p.contact, `연락처: ${p.contact}`); }
       } else { cbtn.textContent = '연락처 미등록'; cbtn.disabled = true; cbtn.onclick = null; }
 
-      // 12) Location (지도) — lat/lng 있을 때만
-      const locSec = document.getElementById('detailLocation');
-      if (p.lat && p.lng) {
-        locSec.style.display = '';
-        const dir = document.getElementById('detailDirBtn');
-        const sv  = document.getElementById('detailSvBtn');
-        if (dir) dir.href = `https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}`;
-        if (sv)  sv.href  = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${p.lat},${p.lng}`;
-        if (typeof whenMapsReady === 'function') {
-          whenMapsReady(() => {
-            try {
-              const mapEl = document.getElementById('detailMiniMap');
-              if (!mapEl) return;
-              const m = new google.maps.Map(mapEl, {
-                center: { lat: Number(p.lat), lng: Number(p.lng) },
-                zoom: 14, gestureHandling: 'cooperative',
-                mapTypeControl: false, streetViewControl: false,
-              });
-              new google.maps.Marker({ position: { lat: Number(p.lat), lng: Number(p.lng) }, map: m, title: p.title });
-            } catch (e) { console.warn('[jobs] detail map init 실패', e); }
-          });
-        }
-      } else { locSec.style.display = 'none'; }
+      // 12) Location (지도) — accom 패턴: p.address 만 있어도 geocode fallback 으로 표시
+      setupDetailLocation(p);
 
       recordRecent(p);
       document.getElementById('detailOverlay').classList.add('open');
       const rc = document.querySelector('.rea-content'); if (rc) rc.scrollTop = 0;
+    }
+
+    // ── 상세 지도 (accom 패턴 1:1) ──
+    // p.lat/lng 우선, 없으면 p.address 로 geocode 폴백 → whenMapsReady 후 지도 표시
+    let jobsDetailCoords = null, jobsMiniMapObj = null, jobsMiniMarker = null;
+    async function setupDetailLocation(p) {
+      const sec = document.getElementById('detailLocation');
+      if (!sec) return;
+      if (!p.address && !(p.lat && p.lng)) { sec.style.display = 'none'; jobsDetailCoords = null; return; }
+      sec.style.display = '';
+      // 외부 링크 (길찾기/스트릿뷰) — 주소 기반 폴백 포함
+      const dir = document.getElementById('detailDirBtn');
+      const sv  = document.getElementById('detailSvBtn');
+      const setLinks = () => {
+        if (dir) dir.href = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(p.address || (jobsDetailCoords ? `${jobsDetailCoords.lat},${jobsDetailCoords.lng}` : ''))}&travelmode=transit`;
+        if (sv)  sv.href  = jobsDetailCoords
+          ? `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${jobsDetailCoords.lat},${jobsDetailCoords.lng}`
+          : `https://www.google.com/maps?q=${encodeURIComponent(p.address || '')}&layer=c`;
+      };
+      jobsDetailCoords = (p.lat && p.lng) ? { lat: Number(p.lat), lng: Number(p.lng) } : null;
+      setLinks();
+      if (!jobsDetailCoords && p.address && typeof geocode === 'function') {
+        // Maps script 로드 보장 + 지오코딩 (best-effort)
+        if (typeof loadMapScript === 'function') loadMapScript();
+        try { jobsDetailCoords = await geocode(p.address); } catch (_) { jobsDetailCoords = null; }
+        setLinks();
+      }
+      const el = document.getElementById('detailMiniMap');
+      if (!el) return;
+      if (!jobsDetailCoords) {
+        el.innerHTML = '<div class="map-empty" style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-muted);font-size:12.5px;">지도 위치를 찾을 수 없습니다.</div>';
+        return;
+      }
+      const c = jobsDetailCoords;
+      whenMapsReady(() => {
+        try {
+          if (!jobsMiniMapObj) {
+            jobsMiniMapObj = new google.maps.Map(el, {
+              gestureHandling: 'greedy', center: c, zoom: 15,
+              disableDefaultUI: true, clickableIcons: false,
+            });
+          } else {
+            google.maps.event.trigger(jobsMiniMapObj, 'resize');
+            jobsMiniMapObj.setCenter(c); jobsMiniMapObj.setZoom(15);
+          }
+          if (jobsMiniMarker) jobsMiniMarker.setMap(null);
+          jobsMiniMarker = new google.maps.Marker({ position: c, map: jobsMiniMapObj, title: p.title || '' });
+        } catch (e) { console.warn('[jobs] detail map init 실패', e); }
+      });
     }
 
     function deletePost(id) {
