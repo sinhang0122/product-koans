@@ -21,7 +21,7 @@ const firebaseApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
 // ── App Check (reCAPTCHA v3) — 봇·외부 스크립트의 백엔드(인증/DB) 접근 차단 ──
 // 사이트 키 발급: Firebase 콘솔 > App Check > 앱 등록(reCAPTCHA v3 공급자)
 // 키를 채우면 자동 활성화됨. (placeholder 상태에서는 운영 사이트를 깨뜨리지 않도록 건너뜀)
-const APP_CHECK_SITE_KEY = '6LcMRActAAAAALY3ancFhgqgzXbdWogVdb12R1Wf';
+const APP_CHECK_SITE_KEY = '6Ld1mAwtAAAAADURkCq0J6GOr3wFg9DQVOsxVG5v';
 if (APP_CHECK_SITE_KEY && !APP_CHECK_SITE_KEY.startsWith('TODO')) {
   initializeAppCheck(firebaseApp, {
     provider: new ReCaptchaV3Provider(APP_CHECK_SITE_KEY),
@@ -128,7 +128,7 @@ function authErrMsg(code) {
   const map = {
     'auth/email-already-in-use': '이미 사용 중인 이메일입니다.',
     'auth/invalid-email':        '유효하지 않은 이메일입니다.',
-    'auth/weak-password':        '비밀번호는 영문, 숫자, 특수문자를 포함하여 10자 이상이어야 합니다.',
+    'auth/weak-password':        '비밀번호는 10자 이상이어야 하며 영문, 숫자, 특수문자 세 가지를 모두 조합해야 합니다.',
     'auth/wrong-password':       '비밀번호가 틀렸습니다.',
     'auth/user-not-found':       '등록되지 않은 이메일입니다.',
     'auth/invalid-credential':   '이메일 또는 비밀번호가 올바르지 않습니다.',
@@ -167,6 +167,24 @@ if (tosOverlay) tosOverlay.addEventListener('click', e => { if (e.target === tos
 if (privacyOverlay) privacyOverlay.addEventListener('click', e => { if (e.target === privacyOverlay) userCloseTerms(privacyOverlay); });
 window.addEventListener('popstate', () => closeTermsModal());
 
+// 비밀번호 정책 — 10자 이상 + 영문/숫자/특수문자 3종 조합 (submit + 실시간 검사 공통)
+const KOAUS_PW_REGEX = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z0-9]).{10,}$/;
+const KOAUS_PW_RULE_MSG = '비밀번호는 10자 이상이어야 하며 영문, 숫자, 특수문자 세 가지를 모두 조합해야 합니다.';
+// 실시간 유효성 — 입력 즉시 정규식 매칭 결과를 #authSignupPwMsg 에 노출
+const _pwInput = document.getElementById('authSignupPw');
+const _pwMsgEl = document.getElementById('authSignupPwMsg');
+if (_pwInput && _pwMsgEl) _pwInput.addEventListener('input', () => {
+  const v = _pwInput.value;
+  if (!v) { _pwMsgEl.textContent = ''; _pwMsgEl.style.color = 'var(--text-muted)'; return; }
+  if (KOAUS_PW_REGEX.test(v)) {
+    _pwMsgEl.textContent = '✅ 사용 가능한 비밀번호입니다.';
+    _pwMsgEl.style.color = '#16a34a';
+  } else {
+    _pwMsgEl.textContent = KOAUS_PW_RULE_MSG;
+    _pwMsgEl.style.color = 'var(--red, #dc2626)';
+  }
+});
+
 document.getElementById('authSignupSubmit').addEventListener('click', async () => {
   const email = document.getElementById('authSignupEmail').value.trim();
   const pw    = document.getElementById('authSignupPw').value;
@@ -174,7 +192,7 @@ document.getElementById('authSignupSubmit').addEventListener('click', async () =
   const errEl = document.getElementById('authSignupError');
   if (!authAgree.checked) { errEl.textContent = '이용약관에 동의해 주세요.'; return; }
   if (!email || !pw) { errEl.textContent = '이메일과 비밀번호를 입력해 주세요.'; return; }
-  if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{10,}$/.test(pw)) { errEl.textContent = '비밀번호는 영문, 숫자, 특수문자를 포함하여 10자 이상이어야 합니다.'; return; }
+  if (!KOAUS_PW_REGEX.test(pw)) { errEl.textContent = KOAUS_PW_RULE_MSG; return; }
   if (pw !== pw2)    { errEl.textContent = '비밀번호가 일치하지 않습니다.'; return; }
   if (typeof grecaptcha !== 'undefined' && !grecaptcha.getResponse()) { errEl.textContent = "'로봇이 아닙니다' 인증을 완료해 주세요."; return; }
   try {
@@ -213,14 +231,6 @@ document.getElementById('authLoginSubmit').addEventListener('click', async () =>
     await signInWithEmailAndPassword(auth, email, pw);
     closeAuthModal();
   } catch (e) { errEl.textContent = authErrMsg(e.code); }
-});
-
-// ── 인증 메일 재전송 → 마이페이지(KoAus 계정 관리) 라우팅 ──
-// 카카오톡 프로필 스타일의 mypage.html 에서 사진/이름/전화번호/이메일 인증 관리.
-const authResendVerifyLink = document.getElementById('authResendVerify');
-if (authResendVerifyLink) authResendVerifyLink.addEventListener('click', e => {
-  e.preventDefault();
-  location.href = 'mypage.html';
 });
 
 // Google sign-in (modal button)

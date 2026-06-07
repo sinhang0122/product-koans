@@ -6,7 +6,7 @@
 // ════════════════════════════════════════════════════════════════════
 import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
 import { getAuth, onAuthStateChanged, sendPasswordResetEmail } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
-import { getFirestore, doc, getDoc, setDoc, collection, query, where, limit, getDocs } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
+import { getFirestore, doc, getDoc, setDoc, runTransaction } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
 
 const firebaseConfig = {
   apiKey: 'AIzaSyCamqnt0bNUD9uz1N5BbCuQjSkWLSpPqlU',
@@ -20,24 +20,15 @@ const app  = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db   = getFirestore(app);
 
-// 공식 보안 질문 15개 — 계정 복구의 핵심 수단
+// 공식 보안 질문 풀 — 회원가입/비번재설정 동일 옵션 (글로벌 표준)
+//   · 4번째는 "직접 입력" 마커값('__custom__') — 선택 시 사용자 정의 질문 input 활성화
+//   · 옛 13개 풀로 가입한 사용자는 "직접 질문 입력"으로 자기 질문 그대로 타이핑해 검증 가능
 const SECURITY_QUESTIONS = [
-  '어머니의 성함은 무엇입니까?',
-  '아버지의 성함은 무엇입니까?',
-  '졸업한 초등학교의 이름은?',
-  '졸업한 중학교의 이름은?',
-  '졸업한 고등학교의 이름은?',
-  '처음 키운 반려동물의 이름은?',
-  '가장 친한 친구의 별명은?',
-  '태어난 도시는?',
-  '본인이 좋아하는 음식은?',
-  '가장 기억에 남는 여행지는?',
-  '결혼기념일(또는 부모님 결혼기념일)은? (예: 0915)',
-  '첫 직장(또는 인턴)의 이름은?',
-  '인생 첫 자동차의 모델명은?',
-  '가장 좋아하는 영화 제목은?',
-  '본인 휴대폰 마지막 4자리 (가입 시점 기준)는?',
+  '어릴 적 살던 동네 이름은?',
+  '가장 기억에 남는 선생님 성함은?',
+  '첫 반려동물의 이름은?',
 ];
+const SEC_Q_CUSTOM = '__custom__';   // select value sentinel — 절대 사용자 질문과 충돌하지 않음
 const norm = s => String(s || '').trim().toLowerCase();
 const esc  = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 function maskEmail(email) {
@@ -72,16 +63,28 @@ function mountSignupExtra() {
       <label class="auth-label" for="authSignupSecQ">보안 질문 (Security Question) <span style="color:var(--red,#dc2626);font-weight:800;">[필수]</span></label>
       <select class="auth-input" id="authSignupSecQ">
         ${SECURITY_QUESTIONS.map(q => `<option value="${esc(q)}">${esc(q)}</option>`).join('')}
+        <option value="${SEC_Q_CUSTOM}">직접 질문 입력하기</option>
       </select>
+      <input class="auth-input" id="authSignupSecQCustom" type="text" maxlength="100"
+             placeholder="직접 입력할 질문을 적어 주세요" hidden style="margin-top:8px;" />
     </div>
     <div class="auth-field">
       <label class="auth-label" for="authSignupSecA">보안 답변 (Answer) <span style="color:var(--red,#dc2626);font-weight:800;">[필수]</span></label>
-      <input class="auth-input" id="authSignupSecA" type="text" autocomplete="off" placeholder="아이디·비밀번호 찾기에 사용됩니다" maxlength="100" />
+      <input class="auth-input" id="authSignupSecA" type="text" autocomplete="off" placeholder="비밀번호 재설정에 사용됩니다" maxlength="100" />
     </div>`;
   wrap.insertAdjacentHTML('afterend', html);
-  // 보안 질문 랜덤 1개 선택
-  const sel = document.getElementById('authSignupSecQ');
-  if (sel) sel.selectedIndex = Math.floor(Math.random() * SECURITY_QUESTIONS.length);
+  // 보안 질문 select: 첫 옵션 기본 고정 (사용자가 능동 선택). "직접 입력" 선택 시만 input 표시
+  const sel       = document.getElementById('authSignupSecQ');
+  const customInp = document.getElementById('authSignupSecQCustom');
+  const toggleCustomQ = () => {
+    const on = sel.value === SEC_Q_CUSTOM;
+    customInp.hidden = !on;
+    if (on) { try { customInp.focus(); } catch (_) {} } else { customInp.value = ''; }
+  };
+  if (sel) {
+    sel.selectedIndex = 0;
+    sel.addEventListener('change', toggleCustomQ);
+  }
   form.__koausExtraMounted = true;
 
   // ── 별명 [중복확인] 핸들러 — Firestore users 컬렉션 nickname 필드 매칭 ──
@@ -108,9 +111,10 @@ function mountSignupExtra() {
     }
     nickCheckBtn.disabled = true; nickCheckBtn.textContent = '확인 중…';
     try {
-      const q1 = query(collection(db, 'users'), where('nickname', '==', nick), limit(1));
-      const snap = await getDocs(q1);
-      if (snap.empty) {
+      // nicknames/{nick.toLowerCase()} 단일 doc get — 비로그인 유저도 id 1건 조회로 중복 판별
+      // (case-insensitive 유일성 — 'Alice'/'alice' 동시 점유 차단, mypage 동일 정책)
+      const snap = await getDoc(doc(db, 'nicknames', nick.toLowerCase()));
+      if (!snap.exists()) {
         setNickMsg('✅ 사용 가능한 닉네임입니다.', 'ok');
         _nickConfirmed = nick;
       } else {
@@ -130,13 +134,22 @@ function mountSignupExtra() {
   const btn = document.getElementById('authSignupSubmit');
   if (btn && !btn.__koausExtraHook) {
     btn.addEventListener('click', e => {
-      const nick = document.getElementById('authSignupNick')?.value.trim() || '';
-      const secQ = document.getElementById('authSignupSecQ')?.value || '';
-      const secA = document.getElementById('authSignupSecA')?.value.trim() || '';
-      const errEl = document.getElementById('authSignupError');
+      const nick    = document.getElementById('authSignupNick')?.value.trim() || '';
+      const secQRaw = document.getElementById('authSignupSecQ')?.value || '';
+      const secQCustom = document.getElementById('authSignupSecQCustom')?.value.trim() || '';
+      const secA    = document.getElementById('authSignupSecA')?.value.trim() || '';
+      const errEl   = document.getElementById('authSignupError');
+      // "직접 입력" 선택 시 customQ 필수 — 그 외엔 select값 그대로 질문 텍스트로 사용
+      const secQ = (secQRaw === SEC_Q_CUSTOM) ? secQCustom : secQRaw;
       if (!nick || !secA) {
         if (errEl) errEl.textContent = '별명과 보안 답변을 모두 입력해 주세요.';
         e.stopImmediatePropagation(); e.preventDefault(); return;
+      }
+      if (secQRaw === SEC_Q_CUSTOM && (!secQCustom || secQCustom.length < 2)) {
+        if (errEl) errEl.textContent = '직접 입력할 보안 질문을 2자 이상 입력해 주세요.';
+        e.stopImmediatePropagation(); e.preventDefault();
+        try { document.getElementById('authSignupSecQCustom').focus(); } catch (_) {}
+        return;
       }
       if (!/^[a-zA-Z0-9가-힣]{3,12}$/.test(nick)) {
         if (errEl) errEl.textContent = '별명은 3~12자 한글·영문·숫자만 가능합니다.';
@@ -149,7 +162,7 @@ function mountSignupExtra() {
         return;
       }
       // 페이지 본체 핸들러가 createUserWithEmailAndPassword 성공 시 사용하도록 임시 저장
-      // name 필드 폐기 — nickname 만 저장 (보안질문/답변 함께)
+      // securityQ: 항상 질문 텍스트 자체 (custom 선택 시 customQ 값) — DB 단일 표준
       window.__koausPendingSignup = {
         email: (document.getElementById('authSignupEmail')?.value || '').trim().toLowerCase(),
         nickname: nick, securityQ: secQ, securityA: norm(secA),
@@ -160,20 +173,18 @@ function mountSignupExtra() {
   }
 }
 
-// ── 로그인 모달 하단: '아이디 찾기 · 비밀번호 찾기' 두 진입점 inject ──
-// 두 링크는 같은 통합 탭 모달을 열며 초기 active 탭만 다름 (findId / resetPw).
+// ── 로그인 모달 하단: '비밀번호 찾기' 단일 진입점 inject ──
+//   글로벌 인증 표준(이메일=아이디)에 따라 옛 [아이디 찾기 · 비밀번호 찾기] 2버튼 폐기.
+//   비밀번호 찾기는 ID/PW 모달의 resetPw pane 으로 직접 진입.
 function mountAuthExtras() {
   const loginForm = document.getElementById('authLoginForm');
   if (!loginForm || loginForm.__koausExtraMounted) return;
   const submit = document.getElementById('authLoginSubmit');
   if (!submit) return;
   const html = `
-    <div class="auth-extras-row" style="display:flex; justify-content:center; gap:14px; margin-top:12px; font-size:13px;">
-      <button type="button" class="auth-extra-link" data-koaus-open="findId"
-        style="background:none;border:none;cursor:pointer;color:var(--text-secondary);text-decoration:underline;font:inherit;padding:4px 6px;">아이디 찾기</button>
-      <span style="color:var(--border);align-self:center;">·</span>
+    <div class="auth-extras-row" style="display:flex; justify-content:center; margin-top:12px; font-size:13px;">
       <button type="button" class="auth-extra-link" data-koaus-open="resetPw"
-        style="background:none;border:none;cursor:pointer;color:var(--text-secondary);text-decoration:underline;font:inherit;padding:4px 6px;">비밀번호 찾기</button>
+        style="background:none;border:none;cursor:pointer;color:var(--text-secondary);text-decoration:underline;font:inherit;padding:4px 10px;">비밀번호 찾기</button>
     </div>`;
   submit.insertAdjacentHTML('afterend', html);
   loginForm.__koausExtraMounted = true;
@@ -191,33 +202,28 @@ function mountExtraModals() {
   const html = `
     <div id="koausExtraModal" class="report-overlay" role="dialog" aria-modal="true">
       <div class="report-modal report-card">
-        <div class="koaus-extra-tabs" role="tablist" aria-label="계정 찾기">
-          <button type="button" class="koaus-extra-tab is-active" role="tab" data-tab="findId" aria-selected="true">아이디 찾기</button>
-          <span class="koaus-extra-tab-sep" aria-hidden="true"></span>
-          <button type="button" class="koaus-extra-tab" role="tab" data-tab="resetPw" aria-selected="false">비밀번호 찾기</button>
+        <div class="koaus-extra-tabs" role="tablist" aria-label="비밀번호 찾기">
+          <span class="koaus-extra-tab is-active" role="tab" data-tab="resetPw" aria-selected="true">비밀번호 찾기</span>
           <button type="button" class="report-close" id="koausExtraClose" aria-label="닫기">✕</button>
         </div>
         <div class="report-body" id="koausExtraBody">
-          <!-- 아이디 찾기 폼 — 닉네임 + 보안 답변 매칭 → 이메일 마스킹 노출 -->
-          <div class="koaus-extra-pane" data-pane="findId">
-            <div class="auth-field"><label class="auth-label">별명 (Nickname)</label>
-              <input class="auth-input" id="koausFindIdNick" type="text" maxlength="30" placeholder="가입 시 입력한 별명" />
-            </div>
-            <div class="auth-field"><label class="auth-label">보안 답변</label>
-              <input class="auth-input" id="koausFindIdSecA" type="text" maxlength="100" placeholder="가입 시 설정한 보안 답변" />
-            </div>
-            <p class="koaus-extra-msg" id="koausFindIdMsg" style="font-size:12.5px;color:var(--text-muted);margin-top:8px;min-height:18px;"></p>
-            <button class="auth-submit" id="koausFindIdSubmit" style="margin-top:4px;">아이디 찾기</button>
-          </div>
-          <!-- 비밀번호 찾기 폼 — 이메일 + 보안 답변 매칭 → 재설정 메일 자동 발송 -->
-          <div class="koaus-extra-pane" data-pane="resetPw" hidden>
+          <!-- 비밀번호 찾기 폼 — 이메일 + 보안질문 + 보안답변 3종 매칭 → 재설정 메일 자동 발송 -->
+          <div class="koaus-extra-pane" data-pane="resetPw">
             <div class="auth-field"><label class="auth-label">가입한 이메일</label>
               <input class="auth-input" id="koausResetPwEmail" type="email" autocomplete="email" placeholder="email@example.com" />
+            </div>
+            <div class="auth-field"><label class="auth-label">보안 질문</label>
+              <select class="auth-input" id="koausResetPwSecQ">
+                ${SECURITY_QUESTIONS.map(q => `<option value="${esc(q)}">${esc(q)}</option>`).join('')}
+                <option value="${SEC_Q_CUSTOM}">직접 질문 입력하기</option>
+              </select>
+              <input class="auth-input" id="koausResetPwSecQCustom" type="text" maxlength="100"
+                     placeholder="가입 시 직접 입력한 질문을 그대로 입력" hidden style="margin-top:8px;" />
             </div>
             <div class="auth-field"><label class="auth-label">보안 답변</label>
               <input class="auth-input" id="koausResetPwSecA" type="text" maxlength="100" placeholder="가입 시 설정한 보안 답변" />
             </div>
-            <p class="koaus-extra-msg" id="koausResetPwMsg" style="font-size:12.5px;color:var(--text-muted);margin-top:8px;min-height:18px;">이메일 + 보안 답변이 일치하면 재설정 링크를 보내드립니다.</p>
+            <p class="koaus-extra-msg" id="koausResetPwMsg" style="font-size:12.5px;color:var(--text-muted);margin-top:8px;min-height:18px;">이메일 + 보안 질문 + 답변이 모두 일치하면 재설정 링크를 보내드립니다.</p>
             <button class="auth-submit" id="koausResetPwSubmit" style="margin-top:4px;">확인 후 재설정 메일 받기</button>
           </div>
         </div>
@@ -233,33 +239,25 @@ function mountExtraModals() {
   modal.addEventListener('click', e => {
     if (e.target.id === 'koausExtraModal') closeExtraModal();
   });
-  // 탭 클릭 → pane 즉시 전환 (active 상태 동기화)
-  modal.querySelectorAll('.koaus-extra-tab').forEach(btn => {
-    btn.addEventListener('click', () => switchExtraPane(btn.dataset.tab));
-  });
+  // 비번찾기 select change → "직접 입력" 시에만 customQ input 표시 (가입 폼과 동일 UX)
+  const rpSel = document.getElementById('koausResetPwSecQ');
+  const rpCustom = document.getElementById('koausResetPwSecQCustom');
+  if (rpSel && rpCustom) {
+    rpSel.addEventListener('change', () => {
+      const on = rpSel.value === SEC_Q_CUSTOM;
+      rpCustom.hidden = !on;
+      if (on) { try { rpCustom.focus(); } catch (_) {} } else { rpCustom.value = ''; }
+    });
+  }
   document.getElementById('koausResetPwSubmit').addEventListener('click', onResetPw);
-  document.getElementById('koausFindIdSubmit').addEventListener('click', onFindId);
 }
 
-// 탭/pane 동기화 — 진입점 + 탭 클릭 공통 경로
-function switchExtraPane(pane) {
-  const isReset = pane === 'resetPw';
-  document.querySelectorAll('#koausExtraModal .koaus-extra-pane').forEach(el => {
-    el.hidden = el.dataset.pane !== pane;
-  });
-  document.querySelectorAll('#koausExtraModal .koaus-extra-tab').forEach(btn => {
-    const on = btn.dataset.tab === pane;
-    btn.classList.toggle('is-active', on);
-    btn.setAttribute('aria-selected', on ? 'true' : 'false');
-  });
-  // pane 메시지 초기화 (이전 결과/잔재 제거)
-  const fim = document.getElementById('koausFindIdMsg');
+// 단일 pane(resetPw) 메시지 초기화만 담당 — 옛 findId 탭 폐기로 탭 전환 로직 불필요
+function switchExtraPane(_pane) {
   const rpm = document.getElementById('koausResetPwMsg');
-  if (fim) fim.innerHTML = '';
   if (rpm) rpm.innerHTML = '이메일 + 보안 답변이 일치하면 재설정 링크를 보내드립니다.';
-  void isReset; // 라벨 동기화는 탭이 담당 — 별도 title 미사용
 }
-function openExtraModal(pane) {
+function openExtraModal(_pane) {
   mountExtraModals();
   const modal = document.getElementById('koausExtraModal');
   // 로그인 모달이 떠 있으면 .open 클래스만 제거 — 인라인 style.display 절대 X
@@ -267,11 +265,10 @@ function openExtraModal(pane) {
   //    .open 의 display:flex 가 인라인에 가려져서 로그인 창 먹통 버그 발생 → 픽스
   document.querySelectorAll('.auth-overlay.open').forEach(o => {
     o.classList.remove('open');
-    o.style.removeProperty('display');   // 인라인 style 완전 제거 (남기지 않음)
+    o.style.removeProperty('display');
   });
   try { document.body.style.overflow = 'hidden'; } catch (_) {}
-  // 진입점별 초기 active 탭 + pane 동기화 (탭 클릭 경로와 단일화)
-  switchExtraPane(pane === 'resetPw' ? 'resetPw' : 'findId');
+  switchExtraPane('resetPw');
   modal.classList.add('open');
 }
 function closeExtraModal() {
@@ -283,15 +280,23 @@ function closeExtraModal() {
   try { document.body.style.overflow = ''; } catch (_) {}
 }
 
-// ── 비번 재설정 — 이메일 + 보안 답변 매칭 후 sendPasswordResetEmail 자동 발송 ──
+// ── 비번 재설정 — 이메일 + 보안질문 + 보안답변 3종 매칭 후 sendPasswordResetEmail 자동 발송 ──
 // 클라이언트만으로 비밀번호를 직접 변경하는 것은 Firebase 보안상 불가능 (signed-in user 만 updatePassword).
-// → 보안질문 통과 시 Firebase 공식 reset 메일을 자동 발송 → 유저는 메일 링크 클릭 → 새 비번 설정.
+// → 보안질문 + 답변 통과 시 Firebase 공식 reset 메일을 자동 발송 → 유저는 메일 링크 클릭 → 새 비번 설정.
+// 질문도 검증함으로써, 답변만 추측해서는 재설정을 발송시킬 수 없도록 보안 강화.
 async function onResetPw() {
-  const email = (document.getElementById('koausResetPwEmail').value || '').trim().toLowerCase();
-  const secA  = norm(document.getElementById('koausResetPwSecA')?.value || '');
-  const msg   = document.getElementById('koausResetPwMsg');
+  const email      = (document.getElementById('koausResetPwEmail').value || '').trim().toLowerCase();
+  const secQRaw    = document.getElementById('koausResetPwSecQ')?.value || '';
+  const secQCustom = (document.getElementById('koausResetPwSecQCustom')?.value || '').trim();
+  const secQ       = (secQRaw === SEC_Q_CUSTOM) ? secQCustom : secQRaw;
+  const secA       = norm(document.getElementById('koausResetPwSecA')?.value || '');
+  const msg        = document.getElementById('koausResetPwMsg');
   if (!email || !/^.+@.+\..+$/.test(email)) {
     msg.textContent = '올바른 이메일 형식이 아닙니다.';
+    msg.style.color = 'var(--red, #dc2626)'; return;
+  }
+  if (!secQ) {
+    msg.textContent = '보안 질문을 선택(또는 직접 입력)해 주세요.';
     msg.style.color = 'var(--red, #dc2626)'; return;
   }
   if (!secA) {
@@ -301,18 +306,32 @@ async function onResetPw() {
   msg.textContent = '확인 중…';
   msg.style.color = 'var(--text-muted)';
   try {
-    // Firestore users 컬렉션에서 이메일+보안답변 일치 검증 (보안 1차 게이트)
-    const q1 = query(collection(db, 'users'),
-      where('email', '==', email), where('securityA', '==', secA), limit(1));
-    const snap = await getDocs(q1);
-    if (snap.empty) {
-      msg.textContent = '이메일 또는 보안 답변이 일치하지 않습니다.';
+    // emails/{email} 단일 doc get — 비로그인 유저도 id 1건 조회로 가입 여부 + 질문/답변 매칭
+    // (users 컬렉션 list 폐기 — 보안답변 평문이 임의 필드 조합 쿼리로 새지 않도록 차단)
+    // 응답 메시지는 'doc 없음' / 'secQ 불일치' / 'secA 불일치' 모두 동일 — enumeration 차단
+    const snap = await getDoc(doc(db, 'emails', email));
+    if (!snap.exists()) {
+      msg.textContent = '질문 또는 답변이 일치하지 않습니다.';
       msg.style.color = 'var(--red, #dc2626)'; return;
     }
+    const data = snap.data();
+    // secQ 매칭: trim 만 적용 (대소문자 구분 — 한글 질문이므로 그대로 비교)
+    const savedQ = String(data.securityQ || '').trim();
+    if (savedQ && savedQ !== secQ.trim()) {
+      msg.textContent = '질문 또는 답변이 일치하지 않습니다.';
+      msg.style.color = 'var(--red, #dc2626)'; return;
+    }
+    // secA 매칭: trim + lowercase (norm) — 가입 시 norm 적용 평문 저장과 동일 정책
+    if (norm(data.securityA) !== secA) {
+      msg.textContent = '질문 또는 답변이 일치하지 않습니다.';
+      msg.style.color = 'var(--red, #dc2626)'; return;
+    }
+    // 옛 가입자(securityQ 미저장) 호환: savedQ 가 비어 있으면 secQ 검증을 건너뛰고 secA 만으로 통과
+    // → 옛 13개 풀 유저는 답변만 일치해도 진입 가능 (마이페이지에서 securityQ 갱신 유도 별도)
     // 검증 통과 → Firebase 공식 비밀번호 재설정 메일 자동 발송
     msg.textContent = '재설정 메일 전송 중…';
     await sendPasswordResetEmail(auth, email);
-    msg.innerHTML = '✅ 보안 답변이 일치합니다.<br>가입한 이메일로 <strong>비밀번호 재설정 링크</strong>를 발송했습니다.<br><span style="font-size:11.5px;">메일함(스팸함 포함)을 확인하고 링크를 눌러 새 비밀번호를 설정해 주세요.</span>';
+    msg.innerHTML = '✅ 보안 질문/답변이 일치합니다.<br>가입한 이메일로 <strong>비밀번호 재설정 링크</strong>를 발송했습니다.<br><span style="font-size:11.5px;">메일함(스팸함 포함)을 확인하고 링크를 눌러 새 비밀번호를 설정해 주세요.</span>';
     msg.style.color = 'var(--green, #16a34a)';
   } catch (e) {
     const code = e && e.code || '';
@@ -320,51 +339,6 @@ async function onResetPw() {
                     : code === 'auth/invalid-email' ? '이메일 형식이 올바르지 않습니다.'
                     : code === 'auth/too-many-requests' ? '잠시 후 다시 시도해 주세요.'
                     : ('재설정 처리 실패: ' + (code || e.message || e));
-    msg.style.color = 'var(--red, #dc2626)';
-  }
-}
-
-// ── 아이디 찾기 — 별명(nickname) + 보안 답변 일치 시 이메일 마스킹 노출 ──
-async function onFindId() {
-  const nick = (document.getElementById('koausFindIdNick').value || '').trim();
-  const secA = norm(document.getElementById('koausFindIdSecA').value || '');
-  const msg = document.getElementById('koausFindIdMsg');
-  if (!nick || !secA) {
-    msg.textContent = '별명과 보안 답변을 모두 입력해 주세요.';
-    msg.style.color = 'var(--red, #dc2626)'; return;
-  }
-  msg.textContent = '조회 중…';
-  msg.style.color = 'var(--text-muted)';
-  try {
-    const q1 = query(collection(db, 'users'),
-      where('nickname', '==', nick), where('securityA', '==', secA), limit(1));
-    const snap = await getDocs(q1);
-    if (snap.empty) {
-      msg.textContent = '일치하는 정보가 없습니다. 별명·보안 답변을 다시 확인해 주세요.';
-      msg.style.color = 'var(--red, #dc2626)'; return;
-    }
-    const data = snap.docs[0].data();
-    const email = data.email || '';
-    msg.innerHTML =
-      '✅ 가입된 이메일: <strong>' + esc(maskEmail(email)) + '</strong>' +
-      '<button type="button" class="auth-submit koaus-find-id-to-reset" ' +
-        'style="margin-top:10px;width:100%;font-size:13.5px;padding:10px 14px;">' +
-        '🔑 바로 비밀번호 찾기' +
-      '</button>';
-    msg.style.color = 'var(--green, #16a34a)';
-    const btn = msg.querySelector('.koaus-find-id-to-reset');
-    if (btn) btn.addEventListener('click', () => {
-      // 발견한 이메일 + 보안답변 prefill (재타이핑 없이 즉시 비번 찾기 가능)
-      const prefillEmail = document.getElementById('koausResetPwEmail');
-      const prefillSecA  = document.getElementById('koausResetPwSecA');
-      if (prefillEmail) prefillEmail.value = email;
-      if (prefillSecA)  prefillSecA.value  = document.getElementById('koausFindIdSecA').value;
-      switchExtraPane('resetPw');
-      const rm = document.getElementById('koausResetPwMsg');
-      if (rm) { rm.innerHTML = '확인되었습니다. [확인 후 재설정 메일 받기] 버튼을 눌러 주세요.'; rm.style.color = 'var(--text-muted)'; }
-    });
-  } catch (e) {
-    msg.textContent = '조회 중 오류: ' + (e && (e.code || e.message) || e);
     msg.style.color = 'var(--red, #dc2626)';
   }
 }
@@ -378,19 +352,52 @@ onAuthStateChanged(auth, async user => {
   const pending = window.__koausPendingSignup;
   if (!pending || !pending.nickname) return;
   if (pending.email && pending.email !== (user.email || '').toLowerCase()) return;
+  const lowEmail = (user.email || '').toLowerCase();
+  const lowNick  = String(pending.nickname || '').toLowerCase();
+  const now      = Date.now();
   try {
-    await setDoc(doc(db, 'users', user.uid), {
-      email: (user.email || '').toLowerCase(),
-      nickname: pending.nickname,
-      securityQ: pending.securityQ,
-      securityA: pending.securityA,
-      nameVisible: false,  // 이름 필드 폐기 — 항상 false
-      createdAt: Date.now(),
-    }, { merge: true });
+    // users + nicknames + emails 3개 doc 을 트랜잭션 1세트로 원자적 작성
+    // (race 차단: 동시 가입자가 같은 닉/이메일 선점 시 한쪽이 NICK_TAKEN/EMAIL_TAKEN 으로 롤백)
+    await runTransaction(db, async tx => {
+      const userRef  = doc(db, 'users', user.uid);
+      const nickRef  = doc(db, 'nicknames', lowNick);
+      const emailRef = doc(db, 'emails', lowEmail);
+      // ── Reads (모든 read 가 write 보다 앞서야 함) ──
+      const nickSnap  = await tx.get(nickRef);
+      const emailSnap = await tx.get(emailRef);
+      if (nickSnap.exists() && nickSnap.data().uid !== user.uid)   throw new Error('NICK_TAKEN');
+      if (emailSnap.exists() && emailSnap.data().uid !== user.uid) throw new Error('EMAIL_TAKEN');
+      // ── Writes ──
+      tx.set(userRef, {
+        email: lowEmail,
+        nickname: pending.nickname,
+        securityQ: pending.securityQ,
+        securityA: pending.securityA,
+        nameVisible: false,  // 이름 필드 폐기 — 항상 false
+        createdAt: now,
+      }, { merge: true });
+      tx.set(nickRef, {
+        uid: user.uid,
+        nickname: pending.nickname,
+        email: lowEmail,
+        securityA: pending.securityA,   // 비번 재설정 시 secA 매칭용 (norm 적용 평문, nicknames 측 미러)
+        createdAt: now,
+      });
+      tx.set(emailRef, {
+        uid: user.uid,
+        securityQ: pending.securityQ,   // 비번 재설정 시 secQ 매칭용 (질문 텍스트 자체)
+        securityA: pending.securityA,   // 비번 재설정 시 secA 매칭용 (norm 적용 평문)
+        createdAt: now,
+      });
+    });
     // 마이페이지/게시글 작성 시 별명 사용
     try { localStorage.setItem('koaus-nickname', pending.nickname); } catch (_) {}
   } catch (e) {
-    console.warn('[auth-extra] 회원가입 추가 정보 저장 실패', e);
+    console.warn('[auth-extra] 회원가입 추가 정보 저장 실패', e && e.message || e);
+    // 가입 자체(Auth)는 성공한 상태 — 트랜잭션 실패 시 마이페이지에서 별명 재설정 가능
+    if (e && (e.message === 'NICK_TAKEN' || e.message === 'EMAIL_TAKEN')) {
+      try { alert('가입 직후 부가 정보 저장에 실패했습니다.\n마이페이지에서 별명을 다시 설정해 주세요.'); } catch (_) {}
+    }
   } finally {
     window.__koausPendingSignup = null;
   }

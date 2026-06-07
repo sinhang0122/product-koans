@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KoAus · 광고 관리자</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FAF6EF; --ink:#11243B; --ink-soft:#5A6B7E; --line:#E5DCCD;
+    --accent:#E4572E; --accent-2:#0B5FA5; --ok:#1F8A53; --warn:#C0392B;
+    --card:#fff; --shadow:0 10px 40px -18px rgba(17,36,59,.35);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:
+      radial-gradient(1100px 460px at 90% -10%, rgba(228,87,46,.10), transparent 60%),
+      radial-gradient(900px 420px at -6% 6%, rgba(11,95,165,.10), transparent 55%),
+      var(--paper);
+    color:var(--ink);
+    font-family:'IBM Plex Sans KR',-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+    -webkit-font-smoothing:antialiased; line-height:1.55; padding:0 0 60px;
+  }
+  a{color:var(--accent-2)}
+  .bar{position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between;
+    gap:12px;padding:12px 20px;background:rgba(250,246,239,.86);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+  .brand{font-family:'Gowun Batang',serif;font-weight:700;font-size:20px}
+  .brand b{color:var(--accent)}
+  .who{font-size:12.5px;color:var(--ink-soft);display:flex;align-items:center;gap:10px}
+  .btn{cursor:pointer;border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 13px;
+    font-family:inherit;font-size:13px;color:var(--ink);transition:.14s}
+  .btn:hover{border-color:var(--accent);transform:translateY(-1px)}
+  .btn.primary{background:var(--accent);color:#fff;border-color:transparent}
+  .btn.ghost{border-style:dashed;color:var(--ink-soft)}
+  .btn.danger{color:var(--warn);border-color:#E8C9C4}
+  .btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+  .wrap{max-width:1000px;margin:0 auto;padding:22px 18px 0}
+
+  /* 잠금/설정 화면 */
+  .center{min-height:62vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:30px}
+  .center .box{max-width:440px;background:var(--card);border:1px solid var(--line);border-radius:18px;
+    padding:30px 28px;box-shadow:var(--shadow)}
+  .center h1{font-family:'Gowun Batang',serif;font-size:24px;margin:0 0 8px}
+  .center p{color:var(--ink-soft);font-size:14px;margin:0 0 18px}
+  .gbtn{display:inline-flex;align-items:center;gap:10px;cursor:pointer;border:1px solid var(--line);
+    background:#fff;border-radius:12px;padding:11px 18px;font-family:inherit;font-size:14px;font-weight:600}
+  .gbtn:hover{box-shadow:0 8px 20px -12px rgba(17,36,59,.4)}
+  .gbtn svg{width:18px;height:18px}
+  .note{font-size:12px;color:var(--ink-soft);margin-top:14px}
+  .alert{background:#FCF3E7;border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:13px;text-align:left}
+  .alert.bad{background:#FBEAE7;border-color:#E8C9C4;color:#7a2017}
+
+  /* 미리보기 */
+  .hero{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:hidden;margin-bottom:20px}
+  .hero-head{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)}
+  .hero-head .t{font-family:'Gowun Batang',serif;font-size:14.5px}
+  .pill{font-size:11.5px;font-weight:600;border-radius:999px;padding:4px 10px;border:1px solid var(--line);color:var(--ink-soft)}
+  .pill.on{background:var(--accent);color:#fff;border-color:transparent}
+  .slide{aspect-ratio:16/5;min-height:140px;background:#EFE7DA;position:relative}
+  .slide img{width:100%;height:100%;object-fit:cover;display:block}
+  .slide .empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--ink-soft);font-size:13px}
+
+  /* 주 탭 */
+  .tabs{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:16px}
+  .tab{cursor:pointer;border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 13px;font-size:13px;color:var(--ink);font-family:inherit}
+  .tab .c{display:inline-block;min-width:18px;text-align:center;margin-left:6px;font-size:11px;color:var(--ink-soft);
+    background:#F1EADD;border-radius:999px;padding:1px 6px}
+  .tab.active{background:var(--ink);color:#fff;border-color:transparent}
+  .tab.active .c{background:rgba(255,255,255,.2);color:#fff}
+
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:var(--shadow);margin-bottom:18px}
+  .panel h2{font-family:'Gowun Batang',serif;font-size:16px;margin:0 0 4px}
+  .panel .sub{color:var(--ink-soft);font-size:12.5px;margin:0 0 16px}
+
+  .form{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:680px){.form{grid-template-columns:1fr}}
+  .field{display:flex;flex-direction:column;gap:5px}
+  .field.full{grid-column:1 / -1}
+  label{font-size:12px;font-weight:600;color:var(--ink)}
+  input[type=text],input[type=url],input[type=number],input[type=date]{
+    border:1px solid var(--line);border-radius:10px;padding:9px 11px;font-family:inherit;font-size:13.5px;background:#fff;color:var(--ink)}
+  input:focus{outline:none;border-color:var(--accent)}
+  .row{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .file{display:flex;align-items:center;gap:10px}
+  .thumbprev{width:120px;height:44px;object-fit:cover;border-radius:8px;border:1px solid var(--line);background:#EFE7DA;display:none}
+  .switch{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--ink)}
+  .hintmini{font-size:11.5px;color:var(--ink-soft)}
+
+  /* 목록 */
+  .list{display:flex;flex-direction:column;gap:12px}
+  .item{display:grid;grid-template-columns:140px 1fr auto;gap:14px;align-items:start;
+    border:1px solid var(--line);border-radius:14px;padding:12px;background:#fff}
+  @media(max-width:680px){.item{grid-template-columns:1fr}}
+  .item .thumb{width:140px;height:62px;object-fit:cover;border-radius:9px;border:1px solid var(--line);background:#EFE7DA}
+  @media(max-width:680px){.item .thumb{width:100%;height:120px}}
+  .item .fields{display:grid;grid-template-columns:1fr 90px;gap:8px}
+  .item .fields .full{grid-column:1 / -1}
+  .item .ops{display:flex;flex-direction:column;gap:7px;align-items:flex-end}
+  .badge{font-size:11px;font-weight:600;border-radius:999px;padding:3px 9px}
+  .badge.on{background:#E6F4EC;color:var(--ok)}
+  .badge.off{background:#F1EADD;color:var(--ink-soft)}
+  .empty-list{color:var(--ink-soft);font-size:13.5px;padding:8px 2px}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;
+    padding:11px 18px;border-radius:12px;font-size:13.5px;opacity:0;pointer-events:none;transition:.25s;z-index:50}
+  .toast.show{opacity:1}
+  .spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:r .7s linear infinite;vertical-align:-2px}
+  @keyframes r{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <div class="brand">Ko<b>Aus</b> · 광고 관리자</div>
+  <div class="who" id="who"></div>
+</div>
+
+<!-- 설정 안내 (config 미입력 시) -->
+<div id="cfgView" class="center" style="display:none">
+  <div class="box">
+    <h1>Firebase 설정이 필요해요</h1>
+    <p>이 파일 위쪽 <code>firebaseConfig</code> 와 <code>ADMIN_EMAILS</code> 를 먼저 채워주세요.</p>
+    <div class="alert bad">파이어베이스 콘솔 → 프로젝트 설정 → "내 앱"의 웹 앱 구성(SDK setup and configuration)에서 복사할 수 있습니다.</div>
+  </div>
+</div>
+
+<!-- 로그인/권한 화면 -->
+<div id="lockView" class="center" style="display:none">
+  <div class="box">
+    <h1 id="lockTitle">관리자 로그인</h1>
+    <p id="lockMsg">등록된 관리자 Google 계정으로 로그인하세요.</p>
+    <button class="gbtn" id="googleBtn">
+      <svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.7-6.7C35.6 2.6 30.2 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.8 6C12.2 13.2 17.6 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.6c0-1.6-.1-3.1-.4-4.6H24v9.1h12.4c-.5 2.9-2.1 5.3-4.6 6.9l7.1 5.5c4.2-3.9 6.2-9.6 6.2-16.9z"/><path fill="#FBBC05" d="M10.4 28.7c-.5-1.4-.8-2.9-.8-4.7s.3-3.3.8-4.7l-7.8-6C1 16.5 0 20.1 0 24s1 7.5 2.6 10.7l7.8-6z"/><path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.5l-7.1-5.5c-2 1.4-4.6 2.2-8.1 2.2-6.4 0-11.8-3.7-13.6-8.7l-7.8 6C6.5 42.6 14.6 48 24 48z"/></svg>
+      Google 계정으로 로그인
+    </button>
+    <div class="note">로그인 계정이 관리자 명단에 없으면 접근이 거부됩니다.</div>
+  </div>
+</div>
+
+<!-- 관리자 앱 -->
+<div id="appView" class="wrap" style="display:none">
+
+  <section class="hero">
+    <div class="hero-head">
+      <span class="t">미리보기 — <span id="pvLabel">NSW · 시드니</span> 방문자에게 보이는 모습</span>
+      <span class="pill on" id="pvPill">노출 중</span>
+    </div>
+    <div class="slide">
+      <img id="pvImg" alt="미리보기" style="display:none">
+      <div class="empty" id="pvEmpty">이 주에 노출 중인 광고가 없습니다</div>
+    </div>
+  </section>
+
+  <div class="tabs" id="tabs"></div>
+
+  <section class="panel">
+    <h2>새 배너 추가 — <span id="addLabel">NSW · 시드니</span></h2>
+    <p class="sub">이미지를 올리거나(권장) 외부 이미지 주소를 넣으세요. 비율은 가로로 긴 배너(약 16:5)를 권장합니다.</p>
+    <div class="form">
+      <div class="field full">
+        <label>배너 이미지</label>
+        <div class="file">
+          <input type="file" id="fFile" accept="image/*">
+          <img class="thumbprev" id="fPrev">
+        </div>
+        <span class="hintmini">또는 외부 이미지 URL ↓ (파일을 고르면 이쪽은 무시됩니다)</span>
+        <input type="url" id="fImgUrl" placeholder="https://...  (광고주가 호스팅한 배너 주소)">
+      </div>
+      <div class="field">
+        <label>클릭 시 이동할 링크</label>
+        <input type="url" id="fHref" placeholder="https://advertiser.example.com">
+      </div>
+      <div class="field">
+        <label>설명(대체텍스트)</label>
+        <input type="text" id="fAlt" placeholder="예) 시드니 한인 ○○ 6월 프로모션">
+      </div>
+      <div class="field">
+        <label>가중치 (여러 광고 노출 비율, 기본 1)</label>
+        <input type="number" id="fWeight" value="1" min="1" step="1">
+      </div>
+      <div class="field">
+        <label>노출 기간 (선택)</label>
+        <div class="row">
+          <input type="date" id="fStart"> ~ <input type="date" id="fEnd">
+        </div>
+      </div>
+      <div class="field full">
+        <div class="row">
+          <span class="switch"><input type="checkbox" id="fActive" checked> 바로 노출(활성)</span>
+          <button class="btn primary" id="addBtn">＋ 배너 추가</button>
+          <span class="hintmini" id="addMsg"></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>등록된 배너 — <span id="listLabel">NSW · 시드니</span></h2>
+    <p class="sub">링크·가중치·기간을 바꾸고 저장하거나, 노출을 켜고 끌 수 있습니다.</p>
+    <div class="list" id="list"></div>
+  </section>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Firebase compat SDK (사이트가 쓰는 버전과 맞춰도 됩니다) -->
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-storage-compat.js"></script>
+
+<script>
+/* ============================================================================
+ *  ↓↓↓ 여기 두 줄만 채우면 됩니다 ↓↓↓
+ * ========================================================================== */
+const firebaseConfig = {
+  apiKey:            "AIzaSyCamqnt0bNUD9uz1N5BbCuQjSkWLSpPqlU",
+  authDomain:        "koaus-f564c.firebaseapp.com",
+  projectId:         "koaus-f564c",
+  storageBucket:     "koaus-f564c.firebasestorage.app",
+  messagingSenderId: "663988594088",
+  appId:             "1:663988594088:web:ef30c2fd557407b00b299d",
+  measurementId:     "G-DERZ9MTKPL"
+};
+const ADMIN_EMAILS = ["sinhang0122@gmail.com"];   // 사용자 명시 — sinhang0122 단독 운영자
+const ADS_COLLECTION = "ad_banners";                 // koaus-ads.js 의 adsCollection 과 동일해야 함
+/* ========================================================================== */
+
+const STATES = ['nsw','vic','qld','wa','sa','tas','act','nt','default'];
+const LABELS  = {nsw:'NSW · 시드니',vic:'VIC · 멜버른',qld:'QLD · 브리즈번',wa:'WA · 퍼스',
+                 sa:'SA · 애들레이드',tas:'TAS · 호바트',act:'ACT · 캔버라',nt:'NT · 다윈',
+                 'default':'기본(전국 공통)'};
+
+let db, auth, storage, currentState = 'nsw';
+const $ = function(id){ return document.getElementById(id); };
+function show(id){ ['cfgView','lockView','appView'].forEach(function(v){ $(v).style.display = (v===id?'':'none'); }); }
+function toast(msg){ var t=$('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(function(){t.classList.remove('show');},2200); }
+
+/* ── 설정 확인 ── */
+function configFilled(){ return firebaseConfig.apiKey && firebaseConfig.apiKey.indexOf('여기에')===-1 && firebaseConfig.projectId.indexOf('YOUR_')===-1; }
+
+/* ── 초기화 ── */
+(function start(){
+  if (!configFilled()){ show('cfgView'); return; }
+  try {
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    auth = firebase.auth(); db = firebase.firestore(); storage = firebase.storage();
+  } catch(e){ show('cfgView'); return; }
+
+  $('googleBtn').addEventListener('click', function(){
+    auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(function(e){ toast('로그인 실패: '+(e.message||e)); });
+  });
+
+  auth.onAuthStateChanged(function(user){
+    if (!user){ show('lockView'); $('lockTitle').textContent='관리자 로그인'; $('lockMsg').textContent='등록된 관리자 Google 계정으로 로그인하세요.'; $('who').innerHTML=''; return; }
+    var email = (user.email||'').toLowerCase();
+    var ok = ADMIN_EMAILS.map(function(e){return e.toLowerCase();}).indexOf(email) !== -1;
+    if (!ok){
+      show('lockView');
+      $('lockTitle').textContent='접근 권한 없음';
+      $('lockMsg').textContent = email + ' 계정은 관리자가 아닙니다.';
+      $('who').innerHTML = '<span>'+email+'</span><button class="btn" id="soBtn">로그아웃</button>';
+      $('soBtn').onclick = function(){ auth.signOut(); };
+      return;
+    }
+    $('who').innerHTML = '<span>'+email+'</span><button class="btn" id="soBtn">로그아웃</button>';
+    $('soBtn').onclick = function(){ auth.signOut(); };
+    show('appView');
+    buildTabs();
+    selectState('nsw');
+  });
+})();
+
+/* ── 주 탭 ── */
+function buildTabs(){
+  var html='';
+  STATES.forEach(function(s){ html += '<button class="tab" data-s="'+s+'" id="tab-'+s+'">'+LABELS[s]+'<span class="c" id="cnt-'+s+'">·</span></button>'; });
+  $('tabs').innerHTML = html;
+  $('tabs').onclick = function(e){ var b=e.target.closest('.tab'); if(b) selectState(b.getAttribute('data-s')); };
+  refreshCounts();
+}
+function refreshCounts(){
+  STATES.forEach(function(s){
+    db.collection(ADS_COLLECTION).where('state','==',s).get().then(function(snap){
+      var el=$('cnt-'+s); if(el) el.textContent = snap.size;
+    }).catch(function(){});
+  });
+}
+function selectState(s){
+  currentState = s;
+  STATES.forEach(function(x){ var t=$('tab-'+x); if(t) t.classList.toggle('active', x===s); });
+  $('addLabel').textContent = LABELS[s];
+  $('listLabel').textContent = LABELS[s];
+  $('pvLabel').textContent = LABELS[s];
+  loadList();
+}
+
+/* ── 이미지 미리보기 ── */
+$('fFile') && $('fFile').addEventListener('change', function(){
+  var f=this.files && this.files[0]; var p=$('fPrev');
+  if(f){ p.src=URL.createObjectURL(f); p.style.display='block'; } else { p.style.display='none'; }
+});
+
+/* ── 배너 추가 ── */
+function uploadImage(file){
+  var path = 'ad-banners/'+currentState+'/'+Date.now()+'_'+file.name.replace(/[^\w.\-]/g,'_');
+  var ref = storage.ref().child(path);
+  return ref.put(file).then(function(snap){ return snap.ref.getDownloadURL().then(function(url){ return {url:url, path:path}; }); });
+}
+$('addBtn') && $('addBtn').addEventListener('click', function(){
+  var btn=this;
+  var file=$('fFile').files && $('fFile').files[0];
+  var imgUrl=$('fImgUrl').value.trim();
+  var href=$('fHref').value.trim();
+  if(!file && !imgUrl){ toast('이미지 파일을 올리거나 이미지 URL을 넣어주세요.'); return; }
+  if(!href){ toast('클릭 시 이동할 링크를 넣어주세요.'); return; }
+  btn.disabled=true; $('addMsg').innerHTML='<span class="spin"></span> 저장 중…';
+
+  var go = file ? uploadImage(file) : Promise.resolve({url:imgUrl, path:null});
+  go.then(function(img){
+    return db.collection(ADS_COLLECTION).add({
+      state: currentState,
+      img: img.url,
+      imgPath: img.path,
+      href: href,
+      alt: $('fAlt').value.trim(),
+      weight: parseInt($('fWeight').value,10) || 1,
+      start: $('fStart').value || null,
+      end: $('fEnd').value || null,
+      active: $('fActive').checked,
+      order: Date.now(),
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  }).then(function(){
+    $('fFile').value=''; $('fImgUrl').value=''; $('fHref').value=''; $('fAlt').value='';
+    $('fWeight').value='1'; $('fStart').value=''; $('fEnd').value=''; $('fActive').checked=true;
+    $('fPrev').style.display='none'; $('addMsg').textContent='';
+    btn.disabled=false; toast('배너가 추가되었습니다.'); loadList(); refreshCounts();
+  }).catch(function(e){
+    btn.disabled=false; $('addMsg').textContent='';
+    toast('저장 실패: '+(e.message||e));
+  });
+});
+
+/* ── 목록 로드/렌더 ── */
+function inWindow(d){
+  var now=Date.now();
+  if(d.start && new Date(d.start+'T00:00:00').getTime()>now) return false;
+  if(d.end && new Date(d.end+'T23:59:59').getTime()<now) return false;
+  return true;
+}
+function loadList(){
+  $('list').innerHTML = '<div class="empty-list"><span class="spin" style="border-color:#ccc;border-top-color:#888"></span> 불러오는 중…</div>';
+  db.collection(ADS_COLLECTION).where('state','==',currentState).get().then(function(snap){
+    var rows=[]; snap.forEach(function(doc){ rows.push(Object.assign({id:doc.id}, doc.data())); });
+    rows.sort(function(a,b){ return (a.order||0)-(b.order||0); });
+    renderList(rows); updatePreview(rows);
+  }).catch(function(e){
+    $('list').innerHTML='<div class="empty-list">불러오기 실패: '+(e.message||e)+'</div>';
+  });
+}
+function renderList(rows){
+  if(!rows.length){ $('list').innerHTML='<div class="empty-list">아직 등록된 배너가 없습니다. 위에서 추가해 보세요.</div>'; return; }
+  var html='';
+  rows.forEach(function(d){
+    var live = d.active && inWindow(d);
+    html += ''
+    + '<div class="item" data-id="'+d.id+'">'
+    +   '<img class="thumb" src="'+d.img+'" alt="">'
+    +   '<div class="fields">'
+    +     '<div class="full"><label>링크</label><input type="url" data-f="href" value="'+(d.href||'').replace(/"/g,'&quot;')+'"></div>'
+    +     '<div class="full"><label>설명</label><input type="text" data-f="alt" value="'+(d.alt||'').replace(/"/g,'&quot;')+'"></div>'
+    +     '<div><label>가중치</label><input type="number" data-f="weight" min="1" value="'+(d.weight||1)+'"></div>'
+    +     '<div><label>시작일</label><input type="date" data-f="start" value="'+(d.start||'')+'"></div>'
+    +     '<div><label>종료일</label><input type="date" data-f="end" value="'+(d.end||'')+'"></div>'
+    +     '<div class="full"><span class="switch"><input type="checkbox" data-f="active" '+(d.active?'checked':'')+'> 활성</span> '
+    +        '<span class="badge '+(live?'on':'off')+'">'+(live?'노출 중':(d.active?'기간 외':'꺼짐'))+'</span></div>'
+    +   '</div>'
+    +   '<div class="ops">'
+    +     '<button class="btn primary" data-act="save">저장</button>'
+    +     '<button class="btn danger" data-act="del">삭제</button>'
+    +   '</div>'
+    + '</div>';
+  });
+  $('list').innerHTML = html;
+
+  $('list').querySelectorAll('.item').forEach(function(item){
+    var id=item.getAttribute('data-id');
+    item.querySelector('[data-act="save"]').onclick = function(){ saveItem(item, id); };
+    item.querySelector('[data-act="del"]').onclick  = function(){ delItem(item, id, rows); };
+  });
+}
+function val(item, f){ var el=item.querySelector('[data-f="'+f+'"]'); return el ? (el.type==='checkbox'? el.checked : el.value) : null; }
+function saveItem(item, id){
+  var btn=item.querySelector('[data-act="save"]'); btn.disabled=true; btn.textContent='저장 중…';
+  db.collection(ADS_COLLECTION).doc(id).update({
+    href: (val(item,'href')||'').trim(),
+    alt: (val(item,'alt')||'').trim(),
+    weight: parseInt(val(item,'weight'),10)||1,
+    start: val(item,'start')||null,
+    end: val(item,'end')||null,
+    active: !!val(item,'active'),
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(function(){
+    btn.disabled=false; btn.textContent='저장'; toast('저장되었습니다.'); loadList(); refreshCounts();
+  }).catch(function(e){ btn.disabled=false; btn.textContent='저장'; toast('저장 실패: '+(e.message||e)); });
+}
+function delItem(item, id, rows){
+  if(!confirm('이 배너를 삭제할까요? 되돌릴 수 없습니다.')) return;
+  var rec = rows.filter(function(r){return r.id===id;})[0] || {};
+  var afterDoc = function(){
+    db.collection(ADS_COLLECTION).doc(id).delete().then(function(){
+      toast('삭제되었습니다.'); loadList(); refreshCounts();
+    }).catch(function(e){ toast('삭제 실패: '+(e.message||e)); });
+  };
+  if (rec.imgPath){ storage.ref().child(rec.imgPath).delete().then(afterDoc).catch(afterDoc); }
+  else afterDoc();
+}
+
+/* ── 미리보기: 현재 주에서 실제 노출될 광고(활성+기간) 중 첫 번째 ── */
+function updatePreview(rows){
+  var live = rows.filter(function(d){ return d.active && inWindow(d); }).sort(function(a,b){return (a.order||0)-(b.order||0);});
+  if(live.length){
+    $('pvImg').src=live[0].img; $('pvImg').style.display='block'; $('pvEmpty').style.display='none';
+    $('pvPill').textContent='노출 중 ('+live.length+'개 순환)'; $('pvPill').className='pill on';
+  } else {
+    $('pvImg').style.display='none'; $('pvEmpty').style.display='flex';
+    $('pvPill').textContent='노출 없음'; $('pvPill').className='pill';
+  }
+}
+</script>
+</body>
+</html>

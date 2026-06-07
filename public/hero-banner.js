@@ -139,6 +139,171 @@
     nsw:'NSW', vic:'VIC', qld:'QLD', wa:'WA', sa:'SA', tas:'TAS', act:'ACT', nt:'NT',
   };
 
+  // ════════════════════════════════════════════════════════════════════
+  //  유저 닫기 상태 저장 — localStorage 'koaus-dismissed-ads'
+  //   · 쿠키 동의 팝업 없이 브라우저 저장소만 사용 (개인정보 없음, 광고 ID + 타임스탬프만)
+  //   · TTL 24h — 만료된 항목은 다음 조회 시 자가 청소
+  //   · 키 형식: "{type}:{docId}" = timestamp (ex: "banner:abc123" = 1717584000000)
+  // ════════════════════════════════════════════════════════════════════
+  const DISMISS_KEY = 'koaus-dismissed-ads';
+  const DISMISS_TTL_MS = 24 * 60 * 60 * 1000;
+  function readDismissMap() {
+    try {
+      const raw = localStorage.getItem(DISMISS_KEY);
+      const obj = raw ? JSON.parse(raw) : {};
+      // 자가 청소 — TTL 만료된 항목 즉시 삭제
+      const now = Date.now();
+      let dirty = false;
+      for (const k in obj) {
+        const ts = +obj[k] || 0;
+        if (!ts || (now - ts) >= DISMISS_TTL_MS) { delete obj[k]; dirty = true; }
+      }
+      if (dirty) {
+        try { localStorage.setItem(DISMISS_KEY, JSON.stringify(obj)); } catch (_) {}
+      }
+      return obj;
+    } catch (_) { return {}; }
+  }
+  function isDismissed(type, id) {
+    if (!id) return false;
+    const map = readDismissMap();
+    const ts = +map[type + ':' + id] || 0;
+    return ts > 0 && (Date.now() - ts) < DISMISS_TTL_MS;
+  }
+  function markDismissed(type, id) {
+    if (!id) return;
+    try {
+      const map = readDismissMap();
+      map[type + ':' + id] = Date.now();
+      localStorage.setItem(DISMISS_KEY, JSON.stringify(map));
+    } catch (_) {}
+  }
+
+  // ════════════════════════════════════════════════════════════════════
+  //  관리자 등록 배너 (Firestore hero_banners) — 지역 매칭 후 우선 노출
+  //   · admin.html ② 히어로 배너 관리 에서 등록된 데이터
+  //   · regions 배열에 'all' 또는 현재 페이지 ?state=xxx 가 포함된 배너만 핀셋 필터
+  //   · 매칭 배너 1건 이상 → SLOTS(하드코딩) 완전 대체
+  //   · 매칭 배너 0건 또는 fetch 실패 → SLOTS fallback (기존 사용자 경험 보존)
+  //   · IIFE 안에서 dynamic import 로 Firebase SDK 로드 (페이지 script 태그 변경 불필요)
+  // ════════════════════════════════════════════════════════════════════
+  function currentState() {
+    try { return (new URLSearchParams(location.search).get('state') || '').toLowerCase(); }
+    catch (_) { return ''; }
+  }
+
+  // 페이지 진입 시 1회만 fetch — 결과 캐시 (다중 컨테이너 재사용)
+  let _adminBannersPromise = null;
+  function fetchAdminBanners() {
+    if (_adminBannersPromise) return _adminBannersPromise;
+    _adminBannersPromise = (async () => {
+      try {
+        const [{ initializeApp, getApps, getApp }, fb] = await Promise.all([
+          import('https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js'),
+          import('https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js'),
+        ]);
+        const firebaseConfig = {
+          apiKey: 'AIzaSyCamqnt0bNUD9uz1N5BbCuQjSkWLSpPqlU',
+          authDomain: 'koaus-f564c.firebaseapp.com',
+          projectId: 'koaus-f564c',
+          storageBucket: 'koaus-f564c.firebasestorage.app',
+          messagingSenderId: '663988594088',
+          appId: '1:663988594088:web:ef30c2fd557407b00b299d',
+        };
+        const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+        const db  = fb.getFirestore(app);
+        // active=true 만 조건 — orderBy(order)는 색인 부담 회피 위해 클라이언트 정렬
+        // limit 20 — firestore.rules limitedList() 와 일치 (빌링 안전망)
+        const snap = await fb.getDocs(fb.query(
+          fb.collection(db, 'hero_banners'),
+          fb.where('active', '==', true),
+          fb.limit(20),
+        ));
+        const state = currentState();
+        return snap.docs
+          .map(d => ({ id: d.id, ...d.data() }))
+          .filter(b => Array.isArray(b.regions) && b.regions.length
+                       && (b.regions.includes('all') || (state && b.regions.includes(state)))
+                       && !isDismissed('banner', b.id))   // 유저가 닫은 배너는 렌더 대상에서 완전 제외
+          .sort((a, b) => ((a.order ?? 100) - (b.order ?? 100)));
+      } catch (e) {
+        console.warn('[hero-banner] admin 배너 fetch 실패 — SLOTS fallback', e);
+        return [];
+      }
+    })();
+    return _adminBannersPromise;
+  }
+
+  // 관리자 배너 슬라이드 — 이미지 + 클릭 링크 (linkUrl 있으면 새 탭) + X 닫기 버튼
+  //   · X 버튼 클릭 → markDismissed + swiper.removeSlide (즉시 사라짐 + 24h 차단)
+  //   · 슬라이드 이동 링크와 충돌하지 않도록 stopPropagation + preventDefault
+  function buildAdminSlide(banner, idx) {
+    // URL 스킴 화이트리스트 — admin 이 입력하지만 권한 탈취·실수 대비 (javascript: 등 차단)
+    const rawLink = banner.linkUrl || '';
+    const link = (window.koausUrlGuard && window.koausUrlGuard.isSafeHttp(rawLink)) ? rawLink : '';
+    const rawImg = banner.imageUrl || '';
+    const safeImg = (window.koausUrlGuard && window.koausUrlGuard.isSafeHttp(rawImg)) ? rawImg : '';
+    const alt  = escHtml(banner.alt || '히어로 배너');
+    const img  = escHtml(safeImg);
+    const docId = escHtml(banner.id || '');
+    const imgEl = `<img src="${img}" alt="${alt}" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;">`;
+    const wrap = link
+      ? `<a href="${escHtml(link)}" target="_blank" rel="noopener noreferrer" aria-label="${alt}" style="display:block;width:100%;height:100%;">${imgEl}</a>`
+      : imgEl;
+    const dismissBtn = `<button type="button" class="koaus-hero-dismiss" data-koaus-dismiss-id="${docId}"
+        aria-label="이 광고 24시간 동안 숨기기"
+        title="24시간 동안 숨기기"
+        style="position:absolute;top:10px;right:10px;z-index:5;width:30px;height:30px;border-radius:999px;border:none;background:rgba(0,0,0,0.55);color:#fff;font-size:16px;font-weight:800;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);">×</button>`;
+    return `<div class="swiper-slide koaus-hero-admin-slide" data-koaus-slot="${idx}" data-koaus-banner-id="${docId}" style="background:var(--bg-base,#000);position:relative;">${wrap}${dismissBtn}</div>`;
+  }
+
+  // admin 배너로 컨테이너 렌더 시도 — true 반환 시 SLOTS 렌더 skip
+  function renderAdminBanners(container, banners) {
+    if (!banners || !banners.length) return false;
+    if (container.__koausHeroRendered) return true;
+    container.__koausHeroRendered = true;
+    container.classList.add('koaus-hero');
+    const slidesHtml = banners.map((b, i) => buildAdminSlide(b, i)).join('');
+    const cat = container.getAttribute('data-koaus-hero-cat') || 'admin';
+    container.setAttribute('data-koaus-hero-source', 'admin');
+    container.setAttribute('data-koaus-hero-region', currentState() || 'all');
+    container.innerHTML = `
+      <div class="koaus-hero-pc">
+        <div class="swiper" data-koaus-hero-swiper="${escHtml(cat)}">
+          <div class="swiper-wrapper" data-koaus-hero-slots="${escHtml(cat)}" data-koaus-cap="${banners.length}">
+            ${slidesHtml}
+          </div>
+          <div class="swiper-pagination"></div>
+          <div class="swiper-button-prev"></div>
+          <div class="swiper-button-next"></div>
+        </div>
+      </div>`;
+    // X 닫기 이벤트 위임 — 컨테이너 1회 바인딩, 클릭된 슬라이드만 swiper.removeSlide
+    if (!container.__koausDismissBound) {
+      container.__koausDismissBound = true;
+      container.addEventListener('click', e => {
+        const btn = e.target.closest('.koaus-hero-dismiss');
+        if (!btn) return;
+        e.preventDefault();
+        e.stopPropagation();
+        const docId = btn.getAttribute('data-koaus-dismiss-id') || '';
+        markDismissed('banner', docId);
+        const sw = container.__koausSwiperInstance;
+        const slideEl = btn.closest('.swiper-slide');
+        if (sw && typeof sw.removeSlide === 'function' && slideEl) {
+          // swiper-slide 인덱스 — DOM 순서 그대로
+          const idx = Array.prototype.indexOf.call(slideEl.parentNode.children, slideEl);
+          try { sw.removeSlide(idx); } catch (_) {}
+          // 슬라이드 전부 비면 컨테이너 자체 숨김 (사용자 의도 충실)
+          if (sw.slides && sw.slides.length === 0) container.style.display = 'none';
+        } else if (slideEl) {
+          slideEl.style.display = 'none';
+        }
+      });
+    }
+    return true;
+  }
+
   function render(container) {
     const cat = container.getAttribute('data-koaus-hero-cat');
     const data = SLOTS[cat];
@@ -213,7 +378,23 @@
   //   · heroBannerCurrentIndex : 마지막 활성 인덱스
   //   · heroBannerLastShiftTime: 그 인덱스로 전환된 Date.now()
   //   · 기본 노출 3000ms — 페이지 이동 시 잔여 시간만 첫 delay 로 사용
-  const HERO_DELAY = 3000;
+  //   · admin (지시 7/7) 이 app_settings/timings 에서 설정 가능 → 동적 갱신
+  let HERO_DELAY = 3000;
+  (async function loadHeroDelayFromSettings() {
+    try {
+      // window.koausDb 가 다른 페이지 스크립트에서 노출됨 (jobs/restaurants/accom 등). admin 미진입 페이지에서 미정의 가능 → silent fallback.
+      const db = window.koausDb;
+      if (!db) return;
+      const { doc, getDoc } = await import('https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js');
+      const snap = await getDoc(doc(db, 'app_settings', 'timings'));
+      if (snap.exists()) {
+        const v = snap.data();
+        if (typeof v.heroDelaySec === 'number' && v.heroDelaySec >= 1 && v.heroDelaySec <= 30) {
+          HERO_DELAY = v.heroDelaySec * 1000;
+        }
+      }
+    } catch (_) { /* best-effort — 실패 시 3000ms 기본 */ }
+  })();
   function readHeroState(slideCount) {
     let savedIdx = parseInt(sessionStorage.getItem('heroBannerCurrentIndex') || '0', 10);
     const lastShift = parseInt(sessionStorage.getItem('heroBannerLastShiftTime') || '0', 10);
@@ -266,13 +447,24 @@
       // 초기 1회 저장 (재진입 시 마지막 shift 시점 갱신)
       persistHeroState(savedIdx);
       swEl.__koausSwiperInited = true;
+      // dismiss 핸들러가 swiper.removeSlide 호출할 수 있도록 컨테이너에 인스턴스 보관
+      container.__koausSwiperInstance = sw;
     } catch (e) { console.warn('[hero-banner] Swiper init 실패', e); }
   }
 
-  function run() {
+  async function run() {
     const containers = Array.from(document.querySelectorAll('[data-koaus-hero-cat]'));
     if (!containers.length) return;
-    containers.forEach(render);
+    // 1) admin 배너 fetch (단일 fetch 캐시, 모든 컨테이너 공통)
+    //    fetch 결과 없으면 SLOTS fallback 으로 즉시 진입
+    let banners = [];
+    try { banners = await fetchAdminBanners(); } catch (_) {}
+    // 2) 컨테이너별 렌더 — admin 배너 있으면 SLOTS 대체, 없으면 SLOTS fallback
+    containers.forEach(c => {
+      const used = renderAdminBanners(c, banners);
+      if (!used) render(c);
+    });
+    // 3) Swiper init (admin·SLOTS 공통)
     ensureSwiperLoaded(() => containers.forEach(initSwipers));
   }
 

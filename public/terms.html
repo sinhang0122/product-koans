@@ -32,7 +32,10 @@
   <script src="local-analytics.js" defer></script>
   <script src="koaus-gallery.js" defer></script>
   <script src="koaus-dedupe.js" defer></script>
+  <script src="koaus-url-guard.js" defer></script>
+  <script src="koaus-report.js" defer></script>
   <script type="module" src="admin-mark.js"></script>
+  <script type="module" src="koaus-rbac.js"></script>
   <script type="module" src="auth-extra.js"></script>
   <script type="module" src="koaus-phone-auth.js"></script>
 </head>
@@ -109,7 +112,7 @@
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="restaurants.html?state=nsw" class="accord-link accord-link--sub">K-Food</a>
-            <a href="trades.html?state=nsw" class="accord-link accord-link--sub">일상</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -151,7 +154,7 @@
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="restaurants.html?state=vic" class="accord-link accord-link--sub">K-Food</a>
-            <a href="trades.html?state=vic" class="accord-link accord-link--sub">일상</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -193,7 +196,7 @@
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="restaurants.html?state=qld" class="accord-link accord-link--sub">K-Food</a>
-            <a href="trades.html?state=qld" class="accord-link accord-link--sub">일상</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -235,7 +238,7 @@
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="restaurants.html?state=wa" class="accord-link accord-link--sub">K-Food</a>
-            <a href="trades.html?state=wa" class="accord-link accord-link--sub">일상</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -277,7 +280,7 @@
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="restaurants.html?state=sa" class="accord-link accord-link--sub">K-Food</a>
-            <a href="trades.html?state=sa" class="accord-link accord-link--sub">일상</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -319,7 +322,7 @@
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="restaurants.html?state=tas" class="accord-link accord-link--sub">K-Food</a>
-            <a href="trades.html?state=tas" class="accord-link accord-link--sub">일상</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -361,7 +364,7 @@
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="restaurants.html?state=act" class="accord-link accord-link--sub">K-Food</a>
-            <a href="trades.html?state=act" class="accord-link accord-link--sub">일상</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -403,13 +406,13 @@
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="restaurants.html?state=nt" class="accord-link accord-link--sub">K-Food</a>
-            <a href="trades.html?state=nt" class="accord-link accord-link--sub">일상</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
       </div>
       <div class="accord-foot-group">
-        <a href="emergency.html" class="accord-direct-link"><span>긴급연락처 <em>Emergency Contacts</em></span></a>
+        <a href="care.html" class="accord-direct-link"><span>Care <em>호주 생활 케어</em></span></a>
         <a href="calculator.html" class="accord-direct-link"><span>환율 계산 비교 <em>FX Calculator</em></span></a>
         <a href="contact.html" class="accord-direct-link"><span>문의 <em>Inquiry</em></span></a>
       </div>
@@ -453,64 +456,218 @@
     </div>
 
     <article class="legal-page">
+
+      <!-- 운영자/사업자 정보 (Operator details) — 본문 상단 공통 명시 (EN/KO 통합 헤더) -->
       <section class="legal-article">
-        <h2 class="legal-article-title">제1조 (목적 — Purpose)</h2>
-        <p>본 약관은 KoAus(코오스, 이하 "당사")가 운영하는 웹사이트(thekoaus.com, 이하 "플랫폼")가 제공하는 호주 한인 커뮤니티 서비스(이하 "서비스")의 이용 조건 및 절차, 회원과 당사의 권리·의무·책임 사항을 규정함을 목적으로 합니다.</p>
+        <h2 class="legal-article-title">Operator details · 운영자 정보</h2>
+        <p>Operator: KIM SHINHAENG (MR SHINHAENG KIM), sole trader — trading as &ldquo;Koaus Community&rdquo;<br>
+           운영자: 김신행 (MR SHINHAENG KIM), 개인사업자 — 사업자명 &ldquo;Koaus Community&rdquo;<br>
+           ABN: 27581486613<br>
+           Registered business name: Koaus Community (registered with ASIC) · 등록 사업자명: Koaus Community (호주 ASIC 등록)<br>
+           Trade mark: &ldquo;koaus&rdquo; — word mark application (Classes 9 and 35) with IP Australia · 상표: &ldquo;koaus&rdquo; 단어 상표 출원 (IP Australia, Classes 9 &amp; 35)<br>
+           Contact email · 연락처: <a href="mailto:koaus.official@gmail.com">koaus.official@gmail.com</a><br>
+           Governing law · 준거법: State of Queensland, Australia · 호주 퀸즐랜드주<br>
+           Effective date · 시행일: 3 June 2026 / 2026년 6월 3일</p>
       </section>
 
-      <section class="legal-article">
-        <h2 class="legal-article-title">제2조 (서비스의 내용 — Services Provided)</h2>
-        <p>당사는 호주 거주 한인 사용자를 위해 다음과 같은 게시판형 정보 매개 서비스를 제공합니다 — ① 쉐어하우스 · 렌트 매물 정보 ② K-Food · 미용실 · 의원 · 기술직 · 자동차 등 비즈니스 정보 ③ 구인구직 정보 ④ 환율 비교 · 긴급 연락처 · 영사 정보. 본 플랫폼은 정보를 매개할 뿐 직접 거래 당사자가 아니며, 게시물의 정확성 · 진위 · 거래 결과에 대해 보증하지 않습니다.</p>
-      </section>
+      <!-- ── 언어 점프 (앵커) — English 또는 한국어 섹션으로 즉시 스크롤 ── -->
+      <nav aria-label="Language switch · 언어 선택" style="display:flex;gap:8px;margin:18px 0 30px;flex-wrap:wrap;">
+        <a href="#terms-en" style="display:inline-flex;align-items:center;gap:6px;padding:8px 18px;background:var(--bg-base);border:1px solid var(--border);border-radius:999px;font-size:13px;font-weight:800;color:var(--text-primary);text-decoration:none;letter-spacing:0.02em;">English ↓</a>
+        <a href="#terms-ko" style="display:inline-flex;align-items:center;gap:6px;padding:8px 18px;background:var(--bg-base);border:1px solid var(--border);border-radius:999px;font-size:13px;font-weight:800;color:var(--text-primary);text-decoration:none;letter-spacing:0.02em;">한국어 ↓</a>
+      </nav>
 
-      <section class="legal-article">
-        <h2 class="legal-article-title">제3조 (회원 가입 및 자격 — Membership)</h2>
-        <p>회원 가입은 이메일 인증을 통해 본인 확인 후 완료됩니다. 만 14세 미만은 가입할 수 없으며, 허위 정보를 기재하거나 타인 명의를 도용한 경우 사전 통지 없이 계정이 정지될 수 있습니다. 가입 시 입력한 정보는 <a href="privacy.html">개인정보처리방침</a>에 따라 안전하게 관리됩니다.</p>
-      </section>
+      <!-- ════════════════════════════════════════════════════════════════
+           ENGLISH VERSION (상단 배치)
+           ════════════════════════════════════════════════════════════════ -->
+      <div id="terms-en">
+        <p style="display:inline-block;font-size:11px;font-weight:800;color:#1e3a8a;background:rgba(30,58,138,0.08);border:1px solid rgba(30,58,138,0.18);padding:3px 10px;border-radius:999px;letter-spacing:0.06em;margin:0 0 14px;">ENGLISH VERSION</p>
+        <h1 style="font-size:30px;font-weight:900;color:var(--text-primary);margin:0 0 6px;letter-spacing:-0.01em;line-height:1.25;">Terms of Service &amp; Specific Disclaimers</h1>
+        <p style="font-size:13.5px;color:var(--text-muted);margin:0 0 22px;font-weight:600;">Effective Date: 3 June 2026</p>
 
-      <section class="legal-article">
-        <h2 class="legal-article-title">제4조 (이용자의 의무 — User Obligations)</h2>
-        <p>회원은 다음 행위를 해서는 안 됩니다 — ① 허위 매물 · 광고성 스팸 · 명예훼손 · 사기성 게시물 등록 ② 타인의 게시물을 무단 복제 · 도용 ③ 자동화된 수단(봇 · 크롤러)으로 서비스에 접근 ④ 플랫폼의 보안을 침해하거나 운영을 방해하는 행위 ⑤ 호주 법률 또는 한국 법률에 위반되는 활동. 위 행위 적발 시 게시물 즉시 삭제, 계정 영구 정지, 관계 법령에 따른 신고가 이뤄질 수 있습니다.</p>
-      </section>
+        <section class="legal-article">
+          <h2 class="legal-article-title">1. Introduction and acceptance</h2>
+          <p>These Terms govern use of the Korean&ndash;Australian community information-sharing service (&ldquo;KoAus&rdquo;) provided by KIM SHINHAENG / Koaus Community. By accessing or using the service you are taken to agree to these Terms. On registration you complete a step confirming agreement to these Terms and the <a href="privacy.html">Privacy Policy</a>.</p>
+        </section>
 
-      <section class="legal-article">
-        <h2 class="legal-article-title">제5조 (게시물 관리 — Content Moderation)</h2>
-        <p>비즈니스(식당 · 미용실 · 의원 · 기술직 등) 게시물은 관리자 검토 후 노출되며, 부정 광고 · 허위 정보 · 명백한 어뷰징은 사전 통지 없이 보류 또는 삭제될 수 있습니다. 사용자는 자신의 게시물에 대해 언제든 수정 · 삭제할 권리를 가지며, 신고된 게시물은 호주 공정거래위원회(ACCC) 및 관련 법령 기준에 따라 검토됩니다.</p>
-      </section>
+        <section class="legal-article">
+          <h2 class="legal-article-title">2. Nature of the platform and limitation of liability</h2>
+          <p>KoAus is an online platform (a &ldquo;venue&rdquo;) for users to share information (jobs, sharehouses, second-hand goods, vehicle and care services, etc.). The parties to any transaction or contract are the users themselves; we do not intervene in or guarantee any transaction. To the maximum extent permitted by law, we are not liable for legal or financial disputes or direct or indirect loss arising from direct dealings or use of information. These Terms do not exclude or limit consumer rights guaranteed by the Australian Consumer Law (ACL).</p>
+        </section>
 
-      <section class="legal-article">
-        <h2 class="legal-article-title">제6조 (거래 책임 면제 — Liability Disclaimer)</h2>
-        <p>당사는 회원 간의 거래(쉐어하우스 계약, 차량 매매, 서비스 예약 등)의 직접 당사자가 아니며, 거래 과정에서 발생하는 분쟁 · 사기 · 손해에 대해 책임지지 않습니다. 회원은 거래 전 반드시 상대방의 신원 및 정보의 진위를 직접 확인해야 하며, 의심스러운 상황은 즉시 호주 경찰(000) 또는 사이버 신고(<a href="https://www.cyber.gov.au" target="_blank" rel="noopener">cyber.gov.au</a>)에 알려야 합니다.</p>
-      </section>
+        <section class="legal-article">
+          <h2 class="legal-article-title">3. User responsibilities and prohibited conduct</h2>
+          <p>You must provide accurate information. The following are prohibited: false listings or scam information; abuse, defamation or discrimination; impersonation; bot-driven spam; posting illegal or harmful content; and infringing others&rsquo; rights. All users must comply with the Online Safety Act 2021 (Cth).</p>
+          <p>You are responsible for your account and all activity that occurs under it, and must keep your mobile (SMS verification) and any linked Google account secure. Notify us immediately if you become aware of any unauthorised use of your account.</p>
+        </section>
 
-      <section class="legal-article">
-        <h2 class="legal-article-title">제7조 (지적재산권 — Intellectual Property)</h2>
-        <p>플랫폼의 디자인 · 로고 · 소스코드 · 데이터베이스 구조 · 카테고리 분류 체계는 당사의 자산이며, 무단 복제 · 재배포 · 상업적 활용을 금합니다. 회원이 작성한 게시물의 저작권은 작성자 본인에게 있으나, 당사는 서비스 운영을 위한 범위 내에서 비독점적으로 활용할 수 있습니다.</p>
-      </section>
+        <section class="legal-article">
+          <h2 class="legal-article-title">4. Content ownership and licence</h2>
+          <p>You retain ownership of the content you post. However, you grant us a non-exclusive, royalty-free licence to use, reproduce and display that content for operating, displaying and promoting the service. <em style="font-style:normal;color:var(--text-secondary);">(Provided, however, that sensitive photos containing the user's personal identity or face will never be used for external marketing purposes without prior explicit consent.)</em> &ldquo;koaus&rdquo; (name and logo) is a trade mark of the operator, filed with IP Australia (word mark, Classes 9 and 35), and &ldquo;Koaus Community&rdquo; is our registered business name. The KoAus name, logo, design and software remain our property.</p>
+        </section>
 
-      <section class="legal-article">
-        <h2 class="legal-article-title">제8조 (서비스 변경 · 중단 — Service Modification)</h2>
-        <p>당사는 운영상 · 기술상의 필요에 따라 서비스를 변경 · 일시 중단할 수 있으며, 사전 공지하는 것을 원칙으로 합니다. 다만 시스템 점검 · 보안 사고 등 긴급 상황에서는 사후 공지로 갈음할 수 있으며, 이로 인한 손해에 대해 책임지지 않습니다.</p>
-      </section>
+        <section class="legal-article">
+          <h2 class="legal-article-title">5. Reporting and content removal</h2>
+          <p>You can report harmful or infringing content to <a href="mailto:koaus.official@gmail.com">koaus.official@gmail.com</a>. We may remove infringing posts without prior notice and may restrict the service for, or permanently suspend, an infringing user&rsquo;s account. Online safety matters may also be reported to the eSafety Commissioner (<a href="https://www.esafety.gov.au" target="_blank" rel="noopener noreferrer">www.esafety.gov.au</a>).</p>
+        </section>
 
-      <section class="legal-article">
-        <h2 class="legal-article-title">제9조 (계정 해지 및 탈퇴 — Account Termination)</h2>
-        <p>회원은 언제든 마이페이지를 통해 계정을 탈퇴할 수 있으며, 탈퇴 후 6개월간 부정 이용 방지를 위해 일부 정보가 암호화 보관된 뒤 안전히 파기됩니다. 본 약관 위반 시 당사는 사전 통지 후 계정을 해지할 수 있으며, 중대한 위반(사기 · 명예훼손 · 보안 침해)의 경우 즉시 해지될 수 있습니다.</p>
-      </section>
+        <section class="legal-article">
+          <h2 class="legal-article-title">6. Account suspension, termination and deletion</h2>
+          <p>You may request deletion of your account at any time. We may refuse registration or suspend or terminate an account where: (1) you have used another person&rsquo;s identity or information; (2) you provided false information when registering; (3) you engage in conduct prohibited by these Terms or applicable law; (4) you interfere with other users&rsquo; use of the service or threaten its operation; or (5) you post fraudulent, illegal or harmful content.</p>
+          <p>Before permanently terminating an account we will, where practicable, notify you of the reason and give you an opportunity to respond. However, in urgent or serious cases — such as illegal content, fraud, safety risks, or repeated or serious breaches — we may suspend or terminate immediately without prior notice.</p>
+        </section>
 
-      <section class="legal-article">
-        <h2 class="legal-article-title">제10조 (준거법 및 분쟁 해결 — Governing Law)</h2>
-        <p>본 약관은 호주 뉴사우스웨일스주(New South Wales) 법률에 따라 해석 · 적용되며, 분쟁 발생 시 호주 NSW 관할 법원을 1심 전속 합의관할 법원으로 합니다. 사용자와 당사 간의 분쟁은 우선 상호 협의로 해결하되, 협의가 어려운 경우 호주 NSW 공정거래(NSW Fair Trading) 절차에 따릅니다.</p>
-      </section>
+        <section class="legal-article">
+          <h2 class="legal-article-title">7. Disclaimer of warranties</h2>
+          <p>The service is provided &ldquo;as is&rdquo;, and we do not warrant the accuracy, completeness or currency of posted information. (Consumer guarantees that cannot be excluded under the ACL are not affected.)</p>
+        </section>
 
-      <section class="legal-article">
-        <h2 class="legal-article-title">제11조 (약관의 개정 — Amendments)</h2>
-        <p>당사는 관련 법령을 위배하지 않는 범위에서 본 약관을 개정할 수 있으며, 개정 시 적용일자 7일 전(중요한 변경은 30일 전)부터 플랫폼 내 공지를 통해 사전 안내합니다. 사용자가 개정 약관에 동의하지 않을 경우 계정을 탈퇴할 수 있으며, 명시적 거부 의사를 표시하지 않고 서비스를 계속 이용하면 개정 약관에 동의한 것으로 간주됩니다.</p>
-      </section>
+        <section class="legal-article">
+          <h2 class="legal-article-title">8. Indemnity</h2>
+          <p>To the extent permitted by law, you indemnify us against loss arising from your breach of these Terms or from your content or conduct.</p>
+        </section>
+
+        <section class="legal-article">
+          <h2 class="legal-article-title">9. Advertising and sponsorship</h2>
+          <p>We may display advertising or paid listings, and sponsored or promotional content will be identified as such. Separate advertising terms may apply to advertisers.</p>
+        </section>
+
+        <section class="legal-article">
+          <h2 class="legal-article-title">10. Notices</h2>
+          <p>Unless otherwise stated, we give notices to you by the email address you have provided or by an in-service notification. Notices to users generally may be given by posting an announcement within the service, which replaces individual notice.</p>
+        </section>
+
+        <section class="legal-article">
+          <h2 class="legal-article-title">11. Changes to these Terms</h2>
+          <p>We may change these Terms and will notify material changes in accordance with clause 10 (Notices). Continued use after a change is taken as acceptance of it.</p>
+        </section>
+
+        <section class="legal-article">
+          <h2 class="legal-article-title">12. Governing law and jurisdiction</h2>
+          <p>These Terms are governed by the laws of the State of Queensland, Australia, and related disputes are subject to the jurisdiction of the courts of Queensland.</p>
+        </section>
+
+        <section class="legal-article">
+          <h2 class="legal-article-title">13. General</h2>
+          <p>If any provision is invalid, the remaining provisions continue in effect. These Terms constitute the entire agreement between us and the user.</p>
+        </section>
+
+        <!-- ── Service-Specific Disclaimers — 별도 시각적 강조 (callout 박스) ── -->
+        <section class="legal-article" style="margin-top:30px;padding:22px 24px;background:var(--bg-base);border:1px solid var(--border);border-radius:14px;">
+          <h2 class="legal-article-title" style="margin-top:0;">Service-Specific Disclaimers</h2>
+          <p>The following features are provided for information and convenience only, and we do not warrant their accuracy, currency or suitability.</p>
+          <ul style="margin:10px 0 0;padding-left:22px;line-height:1.75;">
+            <li><strong>Emergency contacts:</strong> For reference only. In a real emergency, call <strong>000</strong> (Australia&rsquo;s emergency number) immediately. Contact details may have changed &mdash; verify with official sources.</li>
+            <li><strong>Currency calculator:</strong> Displayed rates are indicative, may differ from actual transaction rates, and may be delayed or inaccurate. This is not financial advice.</li>
+            <li><strong>Powerball / lottery information:</strong> Provided for information only and is not affiliated with any official lottery operator. We do not warrant its accuracy; for users aged 18 and over only.</li>
+            <li><strong>Visa/immigration and legal/education directory:</strong> A list of third-party businesses; not an endorsement or recommendation by us. We do not provide immigration or legal advice. In Australia, paid immigration assistance may only be provided by a registered migration agent (OMARA) or a lawyer.</li>
+            <li><strong>Mechanic, car rental, towing, care and other business listings:</strong> Any transaction is between the user and the business; it is not guaranteed or recommended by us.</li>
+          </ul>
+          <p style="margin:14px 0 0;padding:12px 14px;background:var(--bg-surface);border-left:3px solid var(--accent,#3B82F6);border-radius:6px;font-size:13.5px;line-height:1.7;">
+            <strong>🤖 AI Moderation Appeal:</strong> Automated AI moderation is utilized to maintain a clean platform environment. If your legitimate content is incorrectly flagged or hidden, you may request an immediate review by contacting <a href="mailto:koaus.official@gmail.com">koaus.official@gmail.com</a>.
+          </p>
+        </section>
+      </div>
+
+      <!-- ── 영문 / 한글 섹션 사이 구분선 ── -->
+      <hr style="margin:54px 0 40px;border:0;border-top:1px solid var(--border);">
+
+      <!-- ════════════════════════════════════════════════════════════════
+           KOREAN VERSION (하단 배치)
+           ════════════════════════════════════════════════════════════════ -->
+      <div id="terms-ko">
+        <p style="display:inline-block;font-size:11px;font-weight:800;color:#1e3a8a;background:rgba(30,58,138,0.08);border:1px solid rgba(30,58,138,0.18);padding:3px 10px;border-radius:999px;letter-spacing:0.06em;margin:0 0 14px;">한국어 버전</p>
+        <h1 style="font-size:30px;font-weight:900;color:var(--text-primary);margin:0 0 6px;letter-spacing:-0.01em;line-height:1.25;">서비스 이용약관 및 서비스별 면책고지</h1>
+        <p style="font-size:13.5px;color:var(--text-muted);margin:0 0 22px;font-weight:600;">시행일: 2026년 6월 3일</p>
+
+        <section class="legal-article">
+          <h2 class="legal-article-title">1. 목적 및 동의</h2>
+          <p>본 약관은 김신행 / Koaus Community이 제공하는 호주 한인 커뮤니티 정보공유 서비스(&ldquo;KoAus&rdquo;)의 이용 조건을 규정합니다. 서비스에 접속·이용하면 본 약관에 동의한 것으로 간주됩니다. 회원가입 시 약관 및 <a href="privacy.html">개인정보처리방침</a>에 대한 동의 절차를 거칩니다.</p>
+        </section>
+
+        <section class="legal-article">
+          <h2 class="legal-article-title">2. 플랫폼의 성격 및 면책</h2>
+          <p>KoAus는 이용자 간 정보(구인구직, 쉐어하우스, 중고거래, 차량·케어 서비스 등)를 공유하는 온라인 플랫폼(Venue)입니다. 거래·계약의 당사자는 이용자 본인이며, 당사는 거래에 개입하거나 이를 보장하지 않습니다. 직거래나 정보 활용으로 발생하는 법적·금전적 분쟁 및 직간접 손실에 대해 당사는 법이 허용하는 최대 한도 내에서 책임을 지지 않습니다. 본 약관은 「호주 소비자법(ACL)」이 보장하는 소비자 권리를 배제·제한하지 않습니다.</p>
+        </section>
+
+        <section class="legal-article">
+          <h2 class="legal-article-title">3. 이용자의 책임 및 금지행위</h2>
+          <p>이용자는 정확한 정보를 제공해야 하며, 다음 행위를 금지합니다: 허위 매물·사기성 정보, 욕설·비방·차별, 타인 사칭, 봇을 이용한 스팸, 불법·유해 콘텐츠 게시, 타인의 권리 침해. 모든 이용자는 「Online Safety Act 2021 (Cth)」을 준수해야 합니다.</p>
+          <p>이용자는 본인 계정 및 본인 계정으로 이루어진 모든 활동에 대해 책임을 지며, 본인의 휴대폰(SMS 인증) 및 연결된 Google 계정을 안전하게 관리해야 합니다. 계정의 무단 사용을 인지한 경우 즉시 당사에 알려야 합니다.</p>
+        </section>
+
+        <section class="legal-article">
+          <h2 class="legal-article-title">4. 콘텐츠 소유권 및 이용 허락</h2>
+          <p>이용자가 게시한 콘텐츠의 소유권은 이용자에게 있습니다. 다만 이용자는 당사에게 서비스 운영·표시·홍보를 위해 해당 콘텐츠를 사용·복제·게시할 수 있는 비독점적·무상의 사용권을 부여합니다. <em style="font-style:normal;color:var(--text-secondary);">(단, 이용자의 개인 신상이나 얼굴이 포함된 민감한 사진은 사전 동의 없이 외부 마케팅에 사용하지 않습니다.)</em> &ldquo;koaus&rdquo; 명칭·로고는 운영자가 IP Australia에 출원한 상표(워드마크, Class 9·35)이며, &ldquo;Koaus Community&rdquo;는 등록된 사업자명입니다. KoAus의 명칭·로고·디자인·소프트웨어에 대한 권리는 당사에 있습니다.</p>
+        </section>
+
+        <section class="legal-article">
+          <h2 class="legal-article-title">5. 신고 및 콘텐츠 삭제</h2>
+          <p>이용자는 유해·위반 콘텐츠를 <a href="mailto:koaus.official@gmail.com">koaus.official@gmail.com</a> 으로 신고할 수 있습니다. 당사는 위반 게시물을 사전 통보 없이 삭제하고, 위반 이용자의 서비스 이용을 제한하거나 계정을 영구 정지할 수 있습니다. 호주 온라인 안전 관련 신고는 eSafety Commissioner(<a href="https://www.esafety.gov.au" target="_blank" rel="noopener noreferrer">www.esafety.gov.au</a>)에도 가능합니다.</p>
+        </section>
+
+        <section class="legal-article">
+          <h2 class="legal-article-title">6. 계정 정지·해지 및 삭제</h2>
+          <p>이용자는 언제든 계정 삭제를 요청할 수 있습니다. 당사는 다음 각 호에 해당하는 경우 회원가입을 거부하거나 계정을 정지·해지할 수 있습니다: (1) 타인의 명의·정보를 도용한 경우, (2) 가입 시 필수 정보를 허위로 기재한 경우, (3) 본 약관 또는 관계 법령이 금지하는 행위를 한 경우, (4) 다른 이용자의 서비스 이용을 방해하거나 서비스 운영을 위협하는 경우, (5) 사기·불법·유해 콘텐츠를 게시한 경우.</p>
+          <p>계정을 영구 해지하기 전에는 가능한 경우 이용자에게 그 사유를 통지하고 소명할 기회를 제공합니다. 다만 불법 콘텐츠, 사기, 안전 위협, 반복적·중대한 위반 등 긴급하거나 중대한 경우에는 사전 통지 없이 즉시 정지·해지할 수 있습니다.</p>
+        </section>
+
+        <section class="legal-article">
+          <h2 class="legal-article-title">7. 보증의 부인</h2>
+          <p>서비스는 &ldquo;있는 그대로(as is)&rdquo; 제공되며, 당사는 게시 정보의 정확성·완전성·최신성을 보증하지 않습니다. (ACL상 배제할 수 없는 소비자 보증은 영향을 받지 않습니다.)</p>
+        </section>
+
+        <section class="legal-article">
+          <h2 class="legal-article-title">8. 배상</h2>
+          <p>이용자는 본 약관 위반 또는 자신의 콘텐츠·행위로 인해 당사에 발생한 손해에 대해 법이 허용하는 범위에서 당사를 면책·배상합니다.</p>
+        </section>
+
+        <section class="legal-article">
+          <h2 class="legal-article-title">9. 광고 및 협찬</h2>
+          <p>당사는 광고·유료 게시를 게재할 수 있으며, 협찬·광고성 콘텐츠는 그 사실을 표시합니다. 광고주에게는 별도의 광고 약관이 적용될 수 있습니다.</p>
+        </section>
+
+        <section class="legal-article">
+          <h2 class="legal-article-title">10. 통지</h2>
+          <p>당사가 이용자에게 하는 통지는 별도의 규정이 없는 한 이용자가 제공한 이메일 주소 또는 서비스 내 알림을 통해 합니다. 불특정 다수의 이용자에 대한 통지는 서비스 내 공지사항 게시로 개별 통지를 갈음할 수 있습니다.</p>
+        </section>
+
+        <section class="legal-article">
+          <h2 class="legal-article-title">11. 약관의 변경</h2>
+          <p>당사는 약관을 변경할 수 있으며, 중요한 변경은 제10조(통지)에 따라 안내합니다. 변경 후 계속 이용하면 변경에 동의한 것으로 간주됩니다.</p>
+        </section>
+
+        <section class="legal-article">
+          <h2 class="legal-article-title">12. 준거법 및 관할</h2>
+          <p>본 약관은 호주 퀸즈랜드주 법률을 따르며, 관련 분쟁은 퀸즈랜드주 법원의 관할에 속합니다.</p>
+        </section>
+
+        <section class="legal-article">
+          <h2 class="legal-article-title">13. 일반 조항</h2>
+          <p>본 약관의 일부 조항이 무효이더라도 나머지 조항은 유효합니다. 본 약관은 당사와 이용자 간의 완전한 합의를 구성합니다.</p>
+        </section>
+
+        <!-- ── 서비스별 면책 및 안내 — 별도 시각적 강조 (callout 박스) ── -->
+        <section class="legal-article" style="margin-top:30px;padding:22px 24px;background:var(--bg-base);border:1px solid var(--border);border-radius:14px;">
+          <h2 class="legal-article-title" style="margin-top:0;">서비스별 면책 및 안내</h2>
+          <p>아래 기능들은 정보 제공·편의 목적이며, 당사는 그 정확성·최신성·적합성을 보증하지 않습니다.</p>
+          <ul style="margin:10px 0 0;padding-left:22px;line-height:1.75;">
+            <li><strong>긴급연락처:</strong> 참고용입니다. 실제 응급 상황에서는 즉시 <strong>000</strong>(호주 긴급전화)으로 연락하세요. 연락처 정보는 변경되었을 수 있으니 공식 출처로 확인하세요.</li>
+            <li><strong>환율 계산기:</strong> 표시 환율은 참고용이며 실제 거래 환율과 다를 수 있고 지연·오차가 있을 수 있습니다. 금융 자문이 아닙니다.</li>
+            <li><strong>파워볼·복권 정보:</strong> 정보 제공용이며 공식 복권사업자와 무관합니다. 정확성을 보증하지 않으며 만 18세 이상만 이용하세요.</li>
+            <li><strong>비자·이민 및 법무·유학 디렉터리:</strong> 제3자 업체 목록이며 당사의 추천·보증이 아닙니다. 당사는 이민·법률 자문을 제공하지 않습니다. 호주에서 유료 이민 지원은 등록 이민 대리인(OMARA) 또는 변호사만 제공할 수 있습니다.</li>
+            <li><strong>정비·렌터카·견인·케어 등 업체 정보:</strong> 거래는 이용자와 해당 업체 간에 이루어지며 당사의 보증·추천이 아닙니다.</li>
+          </ul>
+          <p style="margin:14px 0 0;padding:12px 14px;background:var(--bg-surface);border-left:3px solid var(--accent,#3B82F6);border-radius:6px;font-size:13.5px;line-height:1.7;">
+            <strong>🤖 AI 모더레이션 이의제기:</strong> 쾌적한 커뮤니티 환경 유지를 위해 AI 기반 자동 모더레이션이 작동합니다. 정상적인 게시물이 위반 사항으로 잘못 인식되어 숨김 처리된 경우, <a href="mailto:koaus.official@gmail.com">koaus.official@gmail.com</a> 으로 이의제기를 해주시면 운영자가 확인 후 즉시 조치해 드립니다.
+          </p>
+        </section>
+      </div>
 
       <footer class="legal-meta">
-        <div class="legal-meta-row"><span class="legal-meta-label">시행일</span><span class="legal-meta-val">2026년 5월</span></div>
-        <div class="legal-meta-row"><span class="legal-meta-label">문의</span><a class="legal-meta-val" href="mailto:koaus.official@gmail.com">koaus.official@gmail.com</a></div>
+        <div class="legal-meta-row"><span class="legal-meta-label">Effective date · 시행일</span><span class="legal-meta-val">3 June 2026 · 2026년 6월 3일</span></div>
+        <div class="legal-meta-row"><span class="legal-meta-label">Operator · 운영자</span><span class="legal-meta-val">KIM SHINHAENG / 김신행 (ABN 27581486613)</span></div>
+        <div class="legal-meta-row"><span class="legal-meta-label">Governing law · 준거법</span><span class="legal-meta-val">State of Queensland, Australia · 호주 퀸즐랜드주</span></div>
+        <div class="legal-meta-row"><span class="legal-meta-label">Contact · 연락처</span><a class="legal-meta-val" href="mailto:koaus.official@gmail.com">koaus.official@gmail.com</a></div>
       </footer>
     </article>
 

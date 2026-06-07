@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>Care — KoAus</title>
+  <title>자주 묻는 질문 (FAQ) — KoAus(코오스)</title>
+  <meta name="description" content="KoAus 이용에 대해 자주 묻는 질문 — 회원가입, 쉐어·렌트, 구인구직, 비자, 중고차, 광고, 개인정보까지 한곳에 정리했습니다." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;800;900&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet" />
@@ -446,109 +447,134 @@
 
     <div class="page-header">
       <div>
-        <h1 class="page-title">🤝 Care · 긴급 연락처</h1>
-        <p class="page-subtitle">호주 한인 필수 긴급 서비스 & 영사 연락처</p>
+        <h1 class="page-title">자주 묻는 질문</h1>
+        <p class="page-subtitle">FAQ · 회원가입부터 쉐어·구인·비자·중고차·광고·개인정보까지</p>
       </div>
-      <a href="index.html" class="page-back">← 홈으로</a>
+      <div class="legal-header-actions">
+        <a href="index.html" class="page-back">← 홈으로</a>
+      </div>
     </div>
 
-    <section class="care-block">
-      <details class="care-accord" open>
-        <summary class="care-accord-summary">
-          <span class="care-accord-title">🚨 주요 긴급 서비스 <em>전국 공통</em></span>
-          <span class="care-accord-chev" aria-hidden="true">▼</span>
-        </summary>
-        <div class="care-accord-body">
-      <div class="care-card">
-        <div class="care-card-info">
-          <div class="care-card-name">호주 통합 긴급신고 <span class="care-card-tag">경찰 · 소방 · 구급차</span></div>
-          <div class="care-card-num">000</div>
-        </div>
-        <div class="care-card-actions">
-          <a class="care-call-btn" href="tel:000">📞 전화 걸기</a>
-        </div>
-      </div>
-      <div class="care-card">
-        <div class="care-card-info">
-          <div class="care-card-name">정부 무료 통역 서비스 <span class="care-card-tag">TIS National</span></div>
-          <div class="care-card-num">131 450</div>
-        </div>
-        <div class="care-card-actions">
-          <a class="care-call-btn" href="tel:131450">📞 전화 걸기</a>
-        </div>
-      </div>
-      <div class="care-card">
-        <div class="care-card-info">
-          <div class="care-card-name">경찰 민원 · 비긴급 신고 <span class="care-card-tag">Police Assistance</span></div>
-          <div class="care-card-num">131 444</div>
-        </div>
-        <div class="care-card-actions">
-          <a class="care-call-btn" href="tel:131444">📞 전화 걸기</a>
-        </div>
-      </div>
-        </div>
-      </details>
-    </section>
+    <article class="faq-page" style="max-width:760px;margin:0 auto;">
 
-    <section class="care-block">
-      <details class="care-accord">
-        <summary class="care-accord-summary">
-          <span class="care-accord-title">🇰🇷 대한민국 대사관 · 영사관 <em>약도·전화·관할 지역</em></span>
-          <span class="care-accord-chev" aria-hidden="true">▼</span>
-        </summary>
-        <div class="care-accord-body">
-          <div id="consulateList"></div>
-        </div>
-      </details>
-    </section>
+      <!-- FAQ 자체 인라인 스타일 (paper 톤 카드 + 다크 테마 적응) -->
+      <style>
+        .faq-page .faq-hero { text-align:center; padding: 26px 0 18px; }
+        .faq-page .faq-kicker { font-size:12px; letter-spacing:.24em; text-transform:uppercase; color:#E4572E; font-weight:700; }
+        .faq-page .faq-hero h2 { font-size: clamp(24px, 4vw, 34px); font-weight: 900; margin: 8px 0 6px; letter-spacing:-.01em; }
+        .faq-page .faq-hero p { color: var(--text-secondary); margin: 0; font-size: 14.5px; }
+        .faq-page .faq-controls { position: sticky; top: 60px; background: var(--bg-base); padding: 12px 0; z-index: 5; }
+        .faq-page .faq-search { width: 100%; border: 1px solid var(--border); border-radius: 12px; padding: 11px 14px;
+          font-family: inherit; font-size: 14.5px; background: var(--bg-surface); color: var(--text-primary); box-sizing: border-box; }
+        .faq-page .faq-search:focus { outline: none; border-color: #E4572E; }
+        .faq-page .faq-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+        .faq-page .faq-chip { cursor: pointer; border: 1px solid var(--border); background: var(--bg-surface); border-radius: 999px;
+          padding: 6px 13px; font-size: 12.5px; font-family: inherit; color: var(--text-primary); transition: all .12s; }
+        .faq-page .faq-chip:hover { border-color: var(--text-primary); }
+        .faq-page .faq-chip.active { background: var(--text-primary); color: var(--bg-base); border-color: transparent; }
+        .faq-page .faq-list { margin-top: 6px; }
+        .faq-page .faq-item { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 14px;
+          margin-bottom: 10px; overflow: hidden; box-shadow: 0 4px 14px -10px rgba(0,0,0,0.16); }
+        .faq-page .faq-q { width: 100%; text-align: left; cursor: pointer; border: none; background: none;
+          font-family: inherit; color: var(--text-primary); font-size: 14.5px; font-weight: 700;
+          padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+        .faq-page .faq-q .faq-cat { font-size: 10.5px; font-weight: 700; color: #0B5FA5; background: rgba(11,95,165,0.10);
+          border-radius: 999px; padding: 2px 8px; flex: none; }
+        .faq-page .faq-q .faq-ico { flex: none; transition: transform .2s; color: var(--text-muted); font-size: 18px; }
+        .faq-page .faq-item.open .faq-q .faq-ico { transform: rotate(45deg); }
+        .faq-page .faq-a { max-height: 0; overflow: hidden; transition: max-height .25s ease;
+          color: var(--text-secondary); font-size: 13.5px; line-height: 1.65; }
+        .faq-page .faq-a .faq-inner { padding: 0 16px 14px; }
+        .faq-page .faq-a p { margin: 0 0 10px; }
+        .faq-page .faq-a a { color: #0B5FA5; text-decoration: underline; }
+        .faq-page .faq-note { font-size: 12px; color: var(--text-muted); background: var(--bg-card);
+          border: 1px dashed var(--border); border-radius: 9px; padding: 9px 11px; margin-top: 4px; }
+        .faq-page .faq-empty { text-align: center; color: var(--text-muted); padding: 28px; font-size: 13.5px; }
+      </style>
 
-    <!-- ── 호주 상비약 가이드 (단일 통합 아코디언) — 교민 · 워홀러용 ── -->
-    <section class="care-block">
-      <details class="med-accord med-accord--single">
-        <summary>
-          <span class="med-symptom">
-            <span class="med-emo">💊</span>호주 상비약 가이드 (약 💊)
-            <em style="font-style:normal;font-weight:500;color:var(--text-muted);font-size:12.5px;margin-left:6px;">증상별 현지 약 이름</em>
-          </span>
-          <span class="med-chev">▼</span>
-        </summary>
-        <div class="med-body med-body--list">
-          <ul class="med-list">
-            <li><strong>진통제</strong> : 파나돌 (Panadol)</li>
-            <li><strong>진통·소염·해열제</strong> : 뉴로펜 (Nurofen)</li>
-            <li><strong>종합 감기약</strong> : 코드랄 (Codral)</li>
-            <li><strong>기침 감기약</strong> : 베나드릴 (Benadryl)</li>
-            <li><strong>목감기(사탕형)</strong> : 스트렙실 (Strepsils)</li>
-            <li><strong>지사제(설사약)</strong> : 가스트로 스탑 (Gastro-Stop), 이모디움 (Imodium)</li>
-            <li><strong>소화제</strong> : 마일란타 (Mylanta)</li>
-            <li><strong>위산과다 및 속쓰림</strong> : 개비스콘 (Gaviscon)</li>
-            <li><strong>알레르기</strong> : 클라라틴 (Claratyne), 지르텍 (Zyrtec), 텔파스트 (Telfast)</li>
-            <li><strong>근육통/삔 곳</strong> : 딥히트 (Deep Heat), 볼타렌 (Voltaren), 피지오크림 (Fisiocrem)</li>
-            <li><strong>상처 소독약</strong> : 베타딘 (Betadine)</li>
-            <li><strong>만능 상처/보습 연고</strong> : 루카스 포포크림 (Lucas&rsquo; Papaw Ointment)</li>
-            <li><strong>안구건조 인공눈물</strong> : 리프레쉬 (Refresh), 시스테인 (Systane)</li>
-            <li><strong>숙취해소 및 피로회복</strong> : 하이드로돌 (Hydrodol), 베로카 (Berocca)</li>
-            <li><strong>멀미약</strong> : 트래바캄 (Travacalm)</li>
-          </ul>
-          <p class="med-list-footer">* 본 정보는 참고용이며, 복용 전 반드시 약사 또는 의사와 상담하세요.</p>
-        </div>
-      </details>
-    </section>
+      <header class="faq-hero">
+        <div class="faq-kicker">FAQ · 자주 묻는 질문</div>
+        <h2>무엇이 궁금하세요?</h2>
+        <p>아래에서 검색하거나 주제를 골라보세요.</p>
+      </header>
 
+      <div class="faq-controls">
+        <input class="faq-search" id="faqSearch" type="text" placeholder="질문 검색 (예: 쉐어 보증금, 가채점, 광고)">
+        <div class="faq-chips" id="faqChips"></div>
+      </div>
+
+      <div class="faq-list" id="faqList"></div>
+
+    </article>
+
+    <script>
+      /* FAQ 데이터 (사용자 시안 그대로 — 카테고리·질문·답변 HTML) */
+      var FAQS = [
+        { cat:'일반', q:'KoAus는 무료인가요?', a:'<p>네. 게시판 열람과 기본 이용은 무료입니다. 글 작성·저장 등 일부 기능은 로그인이 필요합니다.</p>' },
+        { cat:'일반', q:'회원가입을 꼭 해야 하나요?', a:'<p>정보 열람은 가입 없이 가능합니다. 글을 올리거나 저장·문의를 하려면 이메일 또는 Google 계정으로 로그인하면 됩니다.</p>' },
+        { cat:'일반', q:'어떤 지역을 지원하나요?', a:'<p>호주 전 주를 지원합니다 — NSW(시드니)·VIC(멜버른)·QLD(브리즈번)·WA(퍼스)·SA(애들레이드)·TAS·ACT·NT. 상단 메뉴에서 주를 고르면 그 지역 정보만 모아 볼 수 있습니다.</p>' },
+        { cat:'일반', q:'게시물은 어떻게 검토되나요?', a:'<p>업체·기술자·식당 정보는 관리자가 등록 내용을 확인한 뒤 노출하며, 이용자가 부적절한 게시물을 신고하면 다시 검토합니다. 자세한 운영 방식은 <a href="about.html">소개 페이지</a>를 참고하세요.</p>' },
+        { cat:'쉐어·렌트', q:'쉐어 보증금(본드)은 보통 어떻게 되나요?', a:'<p>호주 쉐어는 통상 보증금(2주치 내외)과 선불 임대료를 요구하는 경우가 많지만, 집·집주인마다 다릅니다. 입주 조건과 환불 규정을 계약 전에 글이나 서면으로 꼭 확인하세요.</p><div class="faq-note">참고용 일반 정보입니다. 정식 임대차 권리는 각 주 임차인 기관(예: NSW Fair Trading)에서 확인하세요.</div>' },
+        { cat:'쉐어·렌트', q:'쉐어·렌트 사기를 피하려면?', a:'<p>직접 방을 보기 전에는 보증금을 송금하지 마세요. 시세보다 지나치게 싸거나, 만나지 않고 입금만 요구하면 의심하세요. 가능하면 계약 내용을 글로 남기고, 신분이 확인되는 상대와 거래하세요.</p>' },
+        { cat:'구인구직', q:'구인 글은 어떻게 올리나요?', a:'<p>상단에서 해당 주를 고른 뒤 <b>구인 → 직원 채용</b>에서 올릴 수 있습니다. 로그인이 필요합니다.</p>' },
+        { cat:'구인구직', q:'세컨/써드 비자 카운트 잡만 보고 싶어요.', a:'<p>구인구직 페이지의 <b>상세 필터</b>에서 「🌏 세컨/써드 비자 카운트 가능 잡만 보기」를 체크하면 해당 공고만 즉시 표시됩니다. 전국 단위 탐색은 지도 영역 제한을 해제하세요.</p>' },
+        { cat:'구인구직', q:'임금 미지급·부당대우가 걱정돼요.', a:'<p>근무 전 시급·근무조건을 명확히 하고, 페이슬립(payslip)을 받아두세요. 호주의 최저임금·근로 권리는 공식 기관 <a href="https://www.fairwork.gov.au" target="_blank" rel="noopener">Fair Work Ombudsman</a>에서 확인할 수 있습니다.</p>' },
+        { cat:'비자·유학', q:'기술심사 가채점(점수 계산)은 어떻게 쓰나요?', a:'<p>비자/유학 메뉴의 <b>기술심사 가채점</b>에서 항목을 입력하면 예상 점수를 계산해 줍니다.</p><div class="faq-note">예상치를 위한 참고 도구이며 공식 결과가 아닙니다. 실제 점수·요건은 변동되니 최신 정보는 <a href="https://immi.homeaffairs.gov.au" target="_blank" rel="noopener">호주 이민성(immi.homeaffairs.gov.au)</a> 또는 등록 이민법무사를 통해 확인하세요.</div>' },
+        { cat:'비자·유학', q:'KoAus의 비자·법무 정보는 공식인가요?', a:'<p>아니요. 이해를 돕기 위한 참고 정보이며 법적 자문이 아닙니다. 비자 신청·법률 문제는 등록 이민법무사(MARA)나 변호사 등 전문가와 상담하세요.</p>' },
+        { cat:'중고차·정비', q:'중고차를 살 때 무엇을 확인하나요?', a:'<p>차량 금융·도난 이력은 <a href="https://www.ppsr.gov.au" target="_blank" rel="noopener">PPSR</a> 조회로 확인하고, 가능하면 정비사 동행 점검(KoAus의 동행 점검 서비스)을 이용하세요. 등록(rego)·주행거리·사고 이력도 함께 확인합니다.</p>' },
+        { cat:'결제·광고', q:'업체 광고를 싣고 싶어요.', a:'<p>광고 문의는 <a href="mailto:koaus.official@gmail.com">koaus.official@gmail.com</a>으로 보내주세요. 지역(주)별로 노출 위치를 안내해 드립니다.</p>' },
+        { cat:'결제·광고', q:'광고는 어떻게 노출되나요?', a:'<p>KoAus는 화면을 광고로 도배하지 않습니다. 광고는 선별된 자리에만 표시하고, 콘텐츠와 분명히 구분되도록 "광고/Sponsored" 라벨을 답니다. 방문자의 자주 보는 주(NSW/VIC/QLD 등)에 맞춰 자동 타겟팅 됩니다.</p>' },
+        { cat:'개인정보·신고', q:'부적절한 게시물은 어떻게 신고하나요?', a:'<p>각 게시글의 [🚨 신고하기] 또는 카드의 [신고] 버튼을 누르면 사유 카테고리(스팸/사기/부적절/기타)를 선택해 즉시 접수할 수 있습니다. 운영팀이 검토 후 조치합니다.</p>' },
+        { cat:'개인정보·신고', q:'개인정보는 어떻게 보호되나요?', a:'<p>서비스에 필요한 최소한의 정보만 수집하며 실명은 수집하지 않습니다. 자세한 내용은 <a href="privacy.html">개인정보처리방침</a>을 참고하세요.</p>' }
+      ];
+
+      (function () {
+        var $ = function (id) { return document.getElementById(id); };
+        var activeCat = '전체', term = '';
+        function cats() { var set = ['전체']; FAQS.forEach(function (f) { if (set.indexOf(f.cat) === -1) set.push(f.cat); }); return set; }
+        function strip(html) { var d = document.createElement('div'); d.innerHTML = html; return d.textContent || ''; }
+        function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+        function render() {
+          var chipsHtml = '';
+          cats().forEach(function (c) { chipsHtml += '<button class="faq-chip' + (c === activeCat ? ' active' : '') + '" data-c="' + esc(c) + '">' + esc(c) + '</button>'; });
+          $('faqChips').innerHTML = chipsHtml;
+          $('faqChips').querySelectorAll('.faq-chip').forEach(function (b) { b.onclick = function () { activeCat = b.getAttribute('data-c'); render(); }; });
+          var html = ''; var t = term.trim().toLowerCase();
+          FAQS.forEach(function (f, i) {
+            if (activeCat !== '전체' && f.cat !== activeCat) return;
+            if (t && (f.q.toLowerCase().indexOf(t) === -1 && strip(f.a).toLowerCase().indexOf(t) === -1)) return;
+            html += '<div class="faq-item" data-i="' + i + '">'
+              + '<button class="faq-q"><span><span class="faq-cat">' + esc(f.cat) + '</span> &nbsp;' + esc(f.q) + '</span><span class="faq-ico">+</span></button>'
+              + '<div class="faq-a"><div class="faq-inner">' + f.a + '</div></div>'
+              + '</div>';
+          });
+          $('faqList').innerHTML = html || '<div class="faq-empty">검색 결과가 없습니다.</div>';
+          $('faqList').querySelectorAll('.faq-item').forEach(function (item) {
+            item.querySelector('.faq-q').onclick = function () {
+              var open = item.classList.toggle('open');
+              var a = item.querySelector('.faq-a');
+              a.style.maxHeight = open ? (a.querySelector('.faq-inner').scrollHeight + 'px') : '0';
+            };
+          });
+        }
+        $('faqSearch').addEventListener('input', function () { term = this.value; render(); });
+        render();
+        /* SEO 구조화 데이터 (FAQPage) — 검색엔진 이해 보조 */
+        try {
+          var ld = { "@context": "https://schema.org", "@type": "FAQPage",
+            "mainEntity": FAQS.map(function (f) {
+              return { "@type": "Question", "name": f.q,
+                "acceptedAnswer": { "@type": "Answer", "text": strip(f.a) } };
+            }) };
+          var s = document.createElement('script'); s.type = 'application/ld+json';
+          s.textContent = JSON.stringify(ld); document.head.appendChild(s);
+        } catch (e) {}
+      })();
+    </script>
 
   </main>
 
-  <footer class="site-footer-v2">
-    <div class="footer-links">
-      <a href="about.html">KoAus 소개 / About</a>
-      <a href="faq.html">자주 묻는 질문 / FAQ</a>
-      <a href="guide.html">이용 가이드 / Guide</a>
-      <a href="privacy.html">Privacy Policy / 개인정보처리방침</a>
-      <a href="terms.html">Terms of Service / 서비스 이용약관</a>
-      <a href="contact.html">Contact / 문의하기</a>
-    </div>
-    <p class="footer-copy">© 2026 Koaus Community. All rights reserved.</p>
-  </footer>
+  <footer class="site-footer"><p>KoAus</p></footer>
 
   <script>
     // ── Sidebar ──
@@ -584,33 +610,21 @@
     if (themeToggleBtn) themeToggleBtn.addEventListener('click', () => applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'));
     applyTheme(localStorage.getItem('koaus-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
 
-    // ── 영사관 주별 매핑 (선택한 주 관할 영사관을 최상단 강조) ──
-    const STATE_GOV = { act:'canberra', nsw:'sydney', qld:'sydney', nt:'sydney', vic:'melbourne', tas:'melbourne', sa:'melbourne', wa:'melbourne' };
-    const CONSULATES = {
-      canberra:  { name:'주호주 대한민국 대사관',     region:'ACT 관할',           tel:'0262704100', telDisp:'(02) 6270 4100', addr:'113 Empire Circuit, Yarralumla ACT 2600' },
-      sydney:    { name:'주시드니 대한민국 총영사관', region:'NSW · QLD · NT 관할', tel:'0292100200', telDisp:'(02) 9210 0200', addr:'Level 10, 44 Market St, Sydney NSW 2000' },
-      melbourne: { name:'주멜버른 대한민국 분관',     region:'VIC · TAS · SA · WA 관할', tel:'0395333800', telDisp:'(03) 9533 3800', addr:'Level 9, 459 Little Collins St, Melbourne VIC 3000' },
-    };
-    const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    const careState = (new URLSearchParams(location.search).get('state') || '').toLowerCase();
-    const gov = STATE_GOV[careState];
-    const order = gov ? [gov, ...['canberra','sydney','melbourne'].filter(k => k !== gov)] : ['canberra','sydney','melbourne'];
-    document.getElementById('consulateList').innerHTML = order.map(k => {
-      const c = CONSULATES[k];
-      const isGov = k === gov;
-      const mapUrl = 'https://www.google.com/maps?q=' + encodeURIComponent(c.addr);
-      return `<div class="care-card care-consulate${isGov ? ' care-consulate--gov' : ''}">
-          <div class="care-card-info">
-            <div class="care-card-name">${isGov ? '<span class="care-gov-badge">내 지역 관할</span> ' : ''}${esc(c.name)} <span class="care-card-tag">${esc(c.region)}</span></div>
-            <div class="care-card-num">${esc(c.telDisp)}</div>
-            <div class="care-card-addr">📍 ${esc(c.addr)}</div>
-          </div>
-          <div class="care-card-actions">
-            <a class="care-call-btn" href="tel:${esc(c.tel)}">📞 전화</a>
-            <a class="care-map-btn" href="${mapUrl}" target="_blank" rel="noopener noreferrer">🗺 지도 보기</a>
-          </div>
-        </div>`;
-    }).join('');
+    // ── 닫기(X) 버튼: 이전 화면(회원가입 모달 등)으로 복귀, 이력 없으면 홈으로 ──
+    (function setupLegalCloseBtn() {
+      const btn = document.getElementById('legalCloseBtn');
+      if (!btn) return;
+      btn.addEventListener('click', () => {
+        // referrer 가 같은 origin 이면 history.back, 아니면 홈으로 안전 복귀
+        try {
+          if (window.history.length > 1 && document.referrer && new URL(document.referrer).origin === location.origin) {
+            window.history.back();
+            return;
+          }
+        } catch (_) {}
+        location.replace('index.html');
+      });
+    })();
   </script>
 </body>
 </html>

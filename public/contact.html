@@ -32,11 +32,14 @@
   <script src="local-analytics.js" defer></script>
   <script src="koaus-gallery.js" defer></script>
   <script src="koaus-dedupe.js" defer></script>
+  <script src="koaus-url-guard.js" defer></script>
+  <script src="koaus-report.js" defer></script>
   <script type="module" src="admin-mark.js"></script>
+  <script type="module" src="koaus-rbac.js"></script>
   <script type="module" src="auth-extra.js"></script>
   <script type="module" src="koaus-phone-auth.js"></script>
   <!-- reCAPTCHA v3 (Formspree Custom reCAPTCHA 연동) — invisible 토큰 발급 -->
-  <script src="https://www.google.com/recaptcha/api.js?render=6LcMRActAAAAALY3ancFhgqgzXbdWogVdb12R1Wf"></script>
+  <script src="https://www.google.com/recaptcha/api.js?render=6Ld1mAwtAAAAADURkCq0J6GOr3wFg9DQVOsxVG5v"></script>
 </head>
 <body>
 
@@ -111,7 +114,7 @@
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="restaurants.html?state=nsw" class="accord-link accord-link--sub">K-Food</a>
-            <a href="trades.html?state=nsw" class="accord-link accord-link--sub">일상</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -153,7 +156,7 @@
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="restaurants.html?state=vic" class="accord-link accord-link--sub">K-Food</a>
-            <a href="trades.html?state=vic" class="accord-link accord-link--sub">일상</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -195,7 +198,7 @@
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="restaurants.html?state=qld" class="accord-link accord-link--sub">K-Food</a>
-            <a href="trades.html?state=qld" class="accord-link accord-link--sub">일상</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -237,7 +240,7 @@
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="restaurants.html?state=wa" class="accord-link accord-link--sub">K-Food</a>
-            <a href="trades.html?state=wa" class="accord-link accord-link--sub">일상</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -279,7 +282,7 @@
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="restaurants.html?state=sa" class="accord-link accord-link--sub">K-Food</a>
-            <a href="trades.html?state=sa" class="accord-link accord-link--sub">일상</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -321,7 +324,7 @@
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="restaurants.html?state=tas" class="accord-link accord-link--sub">K-Food</a>
-            <a href="trades.html?state=tas" class="accord-link accord-link--sub">일상</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -363,7 +366,7 @@
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="restaurants.html?state=act" class="accord-link accord-link--sub">K-Food</a>
-            <a href="trades.html?state=act" class="accord-link accord-link--sub">일상</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -405,13 +408,13 @@
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="restaurants.html?state=nt" class="accord-link accord-link--sub">K-Food</a>
-            <a href="trades.html?state=nt" class="accord-link accord-link--sub">일상</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
       </div>
       <div class="accord-foot-group">
-        <a href="emergency.html" class="accord-direct-link"><span>긴급연락처 <em>Emergency Contacts</em></span></a>
+        <a href="care.html" class="accord-direct-link"><span>Care <em>호주 생활 케어</em></span></a>
         <a href="calculator.html" class="accord-direct-link"><span>환율 계산 비교 <em>FX Calculator</em></span></a>
         <a href="contact.html" class="accord-direct-link"><span>문의 <em>Inquiry</em></span></a>
       </div>
@@ -480,7 +483,17 @@
 
   </main>
 
-  <footer class="site-footer"><p>KoAus</p></footer>
+  <footer class="site-footer-v2">
+    <div class="footer-links">
+      <a href="about.html">KoAus 소개 / About</a>
+      <a href="faq.html">자주 묻는 질문 / FAQ</a>
+      <a href="guide.html">이용 가이드 / Guide</a>
+      <a href="privacy.html">Privacy Policy / 개인정보처리방침</a>
+      <a href="terms.html">Terms of Service / 서비스 이용약관</a>
+      <a href="contact.html">Contact / 문의하기</a>
+    </div>
+    <p class="footer-copy">© 2026 Koaus Community. All rights reserved.</p>
+  </footer>
 
   <script>
     // ── URL ?type=owner-verify 진입 시 사장님 공식 인증 모드로 UI 전환 ──
@@ -545,7 +558,7 @@
     //  · 페이지 이탈 없이 AJAX 제출.
     //  · grecaptcha.execute 로 invisible v3 토큰 발급 후 'g-recaptcha-response'
     //    필드로 Formspree 로 함께 전송 → 서버 측에서 secret key 검증.
-    const RECAPTCHA_SITE_KEY = '6LcMRActAAAAALY3ancFhgqgzXbdWogVdb12R1Wf';
+    const RECAPTCHA_SITE_KEY = '6Ld1mAwtAAAAADURkCq0J6GOr3wFg9DQVOsxVG5v';
     async function getRecaptchaToken() {
       if (typeof grecaptcha === 'undefined' || !grecaptcha.execute) return '';
       return new Promise((resolve) => {

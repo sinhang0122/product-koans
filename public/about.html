@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>Care — KoAus</title>
+  <title>KoAus 소개 (About) — 호주 한인 커뮤니티 포털</title>
+  <meta name="description" content="KoAus는 쉐어·렌트·구인·정비·식당·비자까지 호주 한인 생활 정보를 한곳에 모은 커뮤니티 포털입니다. 관리자 검토를 거친 신뢰할 수 있는 정보를 지향합니다." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;800;900&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet" />
@@ -446,109 +447,108 @@
 
     <div class="page-header">
       <div>
-        <h1 class="page-title">🤝 Care · 긴급 연락처</h1>
-        <p class="page-subtitle">호주 한인 필수 긴급 서비스 & 영사 연락처</p>
+        <h1 class="page-title">KoAus 소개</h1>
+        <p class="page-subtitle">About · 호주 한인 생활 정보 커뮤니티 포털</p>
       </div>
-      <a href="index.html" class="page-back">← 홈으로</a>
+      <div class="legal-header-actions">
+        <a href="index.html" class="page-back">← 홈으로</a>
+      </div>
     </div>
 
-    <section class="care-block">
-      <details class="care-accord" open>
-        <summary class="care-accord-summary">
-          <span class="care-accord-title">🚨 주요 긴급 서비스 <em>전국 공통</em></span>
-          <span class="care-accord-chev" aria-hidden="true">▼</span>
-        </summary>
-        <div class="care-accord-body">
-      <div class="care-card">
-        <div class="care-card-info">
-          <div class="care-card-name">호주 통합 긴급신고 <span class="care-card-tag">경찰 · 소방 · 구급차</span></div>
-          <div class="care-card-num">000</div>
-        </div>
-        <div class="care-card-actions">
-          <a class="care-call-btn" href="tel:000">📞 전화 걸기</a>
-        </div>
-      </div>
-      <div class="care-card">
-        <div class="care-card-info">
-          <div class="care-card-name">정부 무료 통역 서비스 <span class="care-card-tag">TIS National</span></div>
-          <div class="care-card-num">131 450</div>
-        </div>
-        <div class="care-card-actions">
-          <a class="care-call-btn" href="tel:131450">📞 전화 걸기</a>
-        </div>
-      </div>
-      <div class="care-card">
-        <div class="care-card-info">
-          <div class="care-card-name">경찰 민원 · 비긴급 신고 <span class="care-card-tag">Police Assistance</span></div>
-          <div class="care-card-num">131 444</div>
-        </div>
-        <div class="care-card-actions">
-          <a class="care-call-btn" href="tel:131444">📞 전화 걸기</a>
-        </div>
-      </div>
-        </div>
-      </details>
-    </section>
+    <article class="about-page" style="max-width:760px;margin:0 auto;">
 
-    <section class="care-block">
-      <details class="care-accord">
-        <summary class="care-accord-summary">
-          <span class="care-accord-title">🇰🇷 대한민국 대사관 · 영사관 <em>약도·전화·관할 지역</em></span>
-          <span class="care-accord-chev" aria-hidden="true">▼</span>
-        </summary>
-        <div class="care-accord-body">
-          <div id="consulateList"></div>
-        </div>
-      </details>
-    </section>
+      <!-- About: 페이지 자체 인라인 스타일 (사용자 제공 디자인 — paper 카드 톤) -->
+      <style>
+        .about-page { color: var(--text-primary); }
+        .about-page .about-hero { text-align:center; padding: 28px 0 22px; }
+        .about-page .about-kicker { font-size:12px; letter-spacing:.24em; text-transform:uppercase; color:#E4572E; font-weight:700; }
+        .about-page .about-hero h2 { font-size: clamp(26px, 4.4vw, 38px); font-weight: 900; letter-spacing:-.01em; line-height:1.25; margin: 10px 0 12px; }
+        .about-page .about-hero p { font-size: 15.5px; color: var(--text-secondary); max-width: 56ch; margin: 0 auto; line-height: 1.7; }
+        .about-page .about-block { background: var(--bg-surface); border:1px solid var(--border); border-radius: 16px;
+          box-shadow: 0 8px 30px -18px rgba(0,0,0,0.18); padding: 26px 28px; margin-bottom: 18px; }
+        .about-page .about-block h3 { font-size: 19px; font-weight: 900; margin:0 0 12px; display:flex; align-items:center; gap:10px; letter-spacing:-.005em; }
+        .about-page .about-block h3 .en { font-size: 11px; letter-spacing:.14em; text-transform:uppercase; color: var(--text-muted); font-weight: 600; }
+        .about-page .about-block p { margin: 0 0 12px; color: var(--text-secondary); font-size: 14.5px; line-height: 1.7; }
+        .about-page .about-offer { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 4px; }
+        @media (max-width: 560px) { .about-page .about-offer { grid-template-columns: 1fr; } }
+        .about-page .about-offer .c { border:1px solid var(--border); border-radius: 12px; padding: 14px 15px; background: var(--bg-card); }
+        .about-page .about-offer .c b { display: block; font-size: 14px; font-weight: 800; margin-bottom: 3px; color: var(--text-primary); }
+        .about-page .about-offer .c span { font-size: 12.5px; color: var(--text-muted); }
+        .about-page .about-principles { list-style: none; padding: 0; margin: 6px 0 0; }
+        .about-page .about-principles li { display: flex; gap: 12px; padding: 12px 0; border-bottom:1px solid var(--border); }
+        .about-page .about-principles li:last-child { border-bottom: none; }
+        .about-page .about-principles .mark { flex: none; width: 26px; height: 26px; border-radius: 8px; background:#E4572E; color:#fff;
+          display:flex; align-items:center; justify-content:center; font-weight: 800; font-size: 13px; }
+        .about-page .about-principles b { font-size: 14.5px; font-weight: 800; color: var(--text-primary); }
+        .about-page .about-principles span { display: block; color: var(--text-muted); font-size: 13px; margin-top: 2px; line-height: 1.55; }
+        .about-page .about-info { display: grid; grid-template-columns: 130px 1fr; gap: 8px 18px; font-size: 14px; }
+        @media (max-width: 560px) { .about-page .about-info { grid-template-columns: 100px 1fr; gap: 6px 12px; font-size: 13px; } }
+        .about-page .about-info dt { color: var(--text-muted); font-weight: 600; }
+        .about-page .about-info dd { margin: 0; color: var(--text-primary); }
+        .about-page .about-cta { text-align: center; margin: 18px 0 6px; }
+        .about-page .about-cta a { display: inline-block; background: var(--accent, #E4572E); color: #fff;
+          border-radius: 12px; padding: 12px 24px; font-weight: 800; text-decoration: none; transition: filter .12s; }
+        .about-page .about-cta a:hover { filter: brightness(1.05); }
+      </style>
 
-    <!-- ── 호주 상비약 가이드 (단일 통합 아코디언) — 교민 · 워홀러용 ── -->
-    <section class="care-block">
-      <details class="med-accord med-accord--single">
-        <summary>
-          <span class="med-symptom">
-            <span class="med-emo">💊</span>호주 상비약 가이드 (약 💊)
-            <em style="font-style:normal;font-weight:500;color:var(--text-muted);font-size:12.5px;margin-left:6px;">증상별 현지 약 이름</em>
-          </span>
-          <span class="med-chev">▼</span>
-        </summary>
-        <div class="med-body med-body--list">
-          <ul class="med-list">
-            <li><strong>진통제</strong> : 파나돌 (Panadol)</li>
-            <li><strong>진통·소염·해열제</strong> : 뉴로펜 (Nurofen)</li>
-            <li><strong>종합 감기약</strong> : 코드랄 (Codral)</li>
-            <li><strong>기침 감기약</strong> : 베나드릴 (Benadryl)</li>
-            <li><strong>목감기(사탕형)</strong> : 스트렙실 (Strepsils)</li>
-            <li><strong>지사제(설사약)</strong> : 가스트로 스탑 (Gastro-Stop), 이모디움 (Imodium)</li>
-            <li><strong>소화제</strong> : 마일란타 (Mylanta)</li>
-            <li><strong>위산과다 및 속쓰림</strong> : 개비스콘 (Gaviscon)</li>
-            <li><strong>알레르기</strong> : 클라라틴 (Claratyne), 지르텍 (Zyrtec), 텔파스트 (Telfast)</li>
-            <li><strong>근육통/삔 곳</strong> : 딥히트 (Deep Heat), 볼타렌 (Voltaren), 피지오크림 (Fisiocrem)</li>
-            <li><strong>상처 소독약</strong> : 베타딘 (Betadine)</li>
-            <li><strong>만능 상처/보습 연고</strong> : 루카스 포포크림 (Lucas&rsquo; Papaw Ointment)</li>
-            <li><strong>안구건조 인공눈물</strong> : 리프레쉬 (Refresh), 시스테인 (Systane)</li>
-            <li><strong>숙취해소 및 피로회복</strong> : 하이드로돌 (Hydrodol), 베로카 (Berocca)</li>
-            <li><strong>멀미약</strong> : 트래바캄 (Travacalm)</li>
-          </ul>
-          <p class="med-list-footer">* 본 정보는 참고용이며, 복용 전 반드시 약사 또는 의사와 상담하세요.</p>
-        </div>
-      </details>
-    </section>
+      <header class="about-hero">
+        <div class="about-kicker">About · 소개</div>
+        <h2>호주 한인 생활의 모든 것,<br>한 곳에서.</h2>
+        <p>KoAus는 쉐어·렌트, 구인구직, 중고차·정비, 비자·법무·유학, K-Food까지 — 호주 한인에게 꼭 필요한 생활 정보를 모아 신뢰할 수 있게 전하는 커뮤니티 포털입니다.</p>
+      </header>
 
+      <section class="about-block">
+        <h3>우리가 시작한 이유 <span class="en">Our Story</span></h3>
+        <p>호주에 막 도착했을 때, 쉐어를 구하고 일을 찾고 비자를 알아보는 정보가 여기저기 흩어져 있어 막막했습니다. 믿을 만한 정보와 무분별한 광고를 구분하기도 어려웠고요. KoAus는 그 경험에서 출발했습니다 — 한인이라면 누구나, 한 곳에서, 믿고 볼 수 있는 생활 정보를요.</p>
+      </section>
+
+      <section class="about-block">
+        <h3>무엇을 제공하나요 <span class="en">What We Offer</span></h3>
+        <div class="about-offer">
+          <div class="c"><b>🏠 쉐어 · 렌트</b><span>한인 쉐어하우스와 렌트 매물을 지도·사진과 함께</span></div>
+          <div class="c"><b>💼 구인 · 구직</b><span>직원 채용과 일자리 찾기 (세컨/써드 비자 카운트 잡 필터)</span></div>
+          <div class="c"><b>🚗 중고차 · 정비</b><span>중고차 거래, 동행 점검, 정비·견인</span></div>
+          <div class="c"><b>🛂 비자 · 법무 · 유학</b><span>법무법인·유학원 안내 + 기술심사 가채점 도구</span></div>
+          <div class="c"><b>🍱 K-Food</b><span>한인 식당·미용실·병원(GP) 등 생활 서비스</span></div>
+          <div class="c"><b>💱 환율 · 긴급연락처</b><span>송금 앱 비교 계산기와 응급 연락처</span></div>
+        </div>
+      </section>
+
+      <section class="about-block">
+        <h3>우리의 원칙 <span class="en">Our Principles</span></h3>
+        <ul class="about-principles">
+          <li><span class="mark">1</span><div><b>관리자 검토 후 표시</b><span>업체·기술자·식당 정보는 관리자가 등록 내용을 검토한 뒤 노출합니다.</span></div></li>
+          <li><span class="mark">2</span><div><b>무분별한 광고 zero</b><span>화면을 광고로 도배하지 않습니다. 광고는 선별된 자리에만, 콘텐츠를 해치지 않게.</span></div></li>
+          <li><span class="mark">3</span><div><b>투명한 운영</b><span>운영 주체와 연락처를 공개하고, 정보 출처와 수정일을 밝힙니다.</span></div></li>
+          <li><span class="mark">4</span><div><b>개인정보 최소 수집</b><span>서비스에 필요한 최소한의 정보만 받고, 실명은 수집하지 않습니다.</span></div></li>
+        </ul>
+      </section>
+
+      <section class="about-block">
+        <h3>업체 정보는 이렇게 검토합니다 <span class="en">How We Review</span></h3>
+        <p>등록 신청이 들어오면 운영자가 업체명·연락처·서비스 내용을 확인하고, 명백한 허위·사기성 정보를 걸러낸 뒤 게시합니다. 이용자가 부적절한 게시물을 신고하면 다시 검토합니다. 비자·법무·의료·재정 관련 정보는 참고용이며 전문 자문이 아닙니다 — 중요한 결정은 반드시 자격을 갖춘 전문가와 상의하세요.</p>
+      </section>
+
+      <section class="about-block">
+        <h3>운영 정보 <span class="en">Who Runs KoAus</span></h3>
+        <dl class="about-info">
+          <dt>서비스명</dt><dd>KoAus (Korea ↔ Australia)</dd>
+          <dt>운영 주체</dt><dd>Koaus Community (개인사업자 / sole trader) · 운영자 김신행 (KIM SHINHAENG)</dd>
+          <dt>ABN</dt><dd>27 581 486 613</dd>
+          <dt>등록 사업자명</dt><dd>Koaus Community (호주 ASIC 등록)</dd>
+          <dt>상표</dt><dd>"koaus" 단어 상표 출원 (IP Australia, Classes 9 &amp; 35)</dd>
+          <dt>소재지</dt><dd>State of Queensland, Australia</dd>
+          <dt>문의</dt><dd><a href="mailto:koaus.official@gmail.com">koaus.official@gmail.com</a></dd>
+        </dl>
+      </section>
+
+      <div class="about-cta"><a href="contact.html">문의 · 제보하기 →</a></div>
+
+    </article>
 
   </main>
 
-  <footer class="site-footer-v2">
-    <div class="footer-links">
-      <a href="about.html">KoAus 소개 / About</a>
-      <a href="faq.html">자주 묻는 질문 / FAQ</a>
-      <a href="guide.html">이용 가이드 / Guide</a>
-      <a href="privacy.html">Privacy Policy / 개인정보처리방침</a>
-      <a href="terms.html">Terms of Service / 서비스 이용약관</a>
-      <a href="contact.html">Contact / 문의하기</a>
-    </div>
-    <p class="footer-copy">© 2026 Koaus Community. All rights reserved.</p>
-  </footer>
+  <footer class="site-footer"><p>KoAus</p></footer>
 
   <script>
     // ── Sidebar ──
@@ -584,33 +584,21 @@
     if (themeToggleBtn) themeToggleBtn.addEventListener('click', () => applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'));
     applyTheme(localStorage.getItem('koaus-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
 
-    // ── 영사관 주별 매핑 (선택한 주 관할 영사관을 최상단 강조) ──
-    const STATE_GOV = { act:'canberra', nsw:'sydney', qld:'sydney', nt:'sydney', vic:'melbourne', tas:'melbourne', sa:'melbourne', wa:'melbourne' };
-    const CONSULATES = {
-      canberra:  { name:'주호주 대한민국 대사관',     region:'ACT 관할',           tel:'0262704100', telDisp:'(02) 6270 4100', addr:'113 Empire Circuit, Yarralumla ACT 2600' },
-      sydney:    { name:'주시드니 대한민국 총영사관', region:'NSW · QLD · NT 관할', tel:'0292100200', telDisp:'(02) 9210 0200', addr:'Level 10, 44 Market St, Sydney NSW 2000' },
-      melbourne: { name:'주멜버른 대한민국 분관',     region:'VIC · TAS · SA · WA 관할', tel:'0395333800', telDisp:'(03) 9533 3800', addr:'Level 9, 459 Little Collins St, Melbourne VIC 3000' },
-    };
-    const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    const careState = (new URLSearchParams(location.search).get('state') || '').toLowerCase();
-    const gov = STATE_GOV[careState];
-    const order = gov ? [gov, ...['canberra','sydney','melbourne'].filter(k => k !== gov)] : ['canberra','sydney','melbourne'];
-    document.getElementById('consulateList').innerHTML = order.map(k => {
-      const c = CONSULATES[k];
-      const isGov = k === gov;
-      const mapUrl = 'https://www.google.com/maps?q=' + encodeURIComponent(c.addr);
-      return `<div class="care-card care-consulate${isGov ? ' care-consulate--gov' : ''}">
-          <div class="care-card-info">
-            <div class="care-card-name">${isGov ? '<span class="care-gov-badge">내 지역 관할</span> ' : ''}${esc(c.name)} <span class="care-card-tag">${esc(c.region)}</span></div>
-            <div class="care-card-num">${esc(c.telDisp)}</div>
-            <div class="care-card-addr">📍 ${esc(c.addr)}</div>
-          </div>
-          <div class="care-card-actions">
-            <a class="care-call-btn" href="tel:${esc(c.tel)}">📞 전화</a>
-            <a class="care-map-btn" href="${mapUrl}" target="_blank" rel="noopener noreferrer">🗺 지도 보기</a>
-          </div>
-        </div>`;
-    }).join('');
+    // ── 닫기(X) 버튼: 이전 화면(회원가입 모달 등)으로 복귀, 이력 없으면 홈으로 ──
+    (function setupLegalCloseBtn() {
+      const btn = document.getElementById('legalCloseBtn');
+      if (!btn) return;
+      btn.addEventListener('click', () => {
+        // referrer 가 같은 origin 이면 history.back, 아니면 홈으로 안전 복귀
+        try {
+          if (window.history.length > 1 && document.referrer && new URL(document.referrer).origin === location.origin) {
+            window.history.back();
+            return;
+          }
+        } catch (_) {}
+        location.replace('index.html');
+      });
+    })();
   </script>
 </body>
 </html>

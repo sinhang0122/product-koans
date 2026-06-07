@@ -17,15 +17,23 @@ service cloud.firestore {
     function isSignedIn() {
       return request.auth != null;
     }
-    // 관리자 — Firebase Admin SDK(setAdmin.js)로 부여한 custom claim {admin: true} 보유
-    //         또는 화이트리스트 이메일(token.email) 일치 시 인정 (이중 안전망).
-    //         admin.html 의 ADMIN_EMAILS 와 동기화 필요.
+    // 관리자 — 3중 안전망:
+    //   ① Firebase Admin SDK(setAdmin.js)로 부여한 custom claim {admin: true}  ← 가장 안전·저비용
+    //   ② 화이트리스트 이메일(token.email) 일치               ← 백업 + admin.html 동기화 필요
+    //   ③ users/{uid}.isAdmin == true (Firestore get)         ← admin 콘솔에서 수동 토글 가능,
+    //                                                            users 컬렉션 update 룰이 isAdmin
+    //                                                            필드 변조를 막아야 안전.
+    //   · 비용 영향: ③ get() 호출은 룰 평가당 read 1회 추가. ①·② 가 통과하면 ③ 평가 skip(단락).
+    //   · 클라이언트 측 변조 차단: users 컬렉션 update 룰에 isAdmin/email 변조 거부 가드 추가됨.
     function isAdmin() {
       return isSignedIn()
         && (
           request.auth.token.admin == true
           || request.auth.token.email == 'sinhang0122@gmail.com'
-          || request.auth.token.email == 'koaus.official@gmail.com'
+          // koaus.official@gmail.com 권한 검증 제거 (사용자 명시 — sinhang0122 단독 운영자)
+          //   · 단 mailto: 운영 연락처(terms/privacy 등) 는 그대로 사용 — 권한과 별개 채널
+          || (exists(/databases/$(database)/documents/users/$(request.auth.uid))
+              && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true)
         );
     }
     function data() {
@@ -53,6 +61,10 @@ service cloud.firestore {
       return !(field in data())
         || (data()[field] is list && data()[field].size() <= maxCount);
     }
+    // 선택 bool: 없거나 / 있으면 bool 타입
+    function optBool(field) {
+      return !(field in data()) || data()[field] is bool;
+    }
     // 목록 조회는 반드시 20개 이하만 — 무한 스캔(read 폭탄) 차단
     function limitedList() {
       return request.query.limit <= 20;
@@ -78,6 +90,7 @@ service cloud.firestore {
         && optStr('address', 300)
         && optStr('contact', 100)
         && optStr('phone', 30)
+        && optStr('kakaoLink', 500)   // 카톡 오픈채팅 URL (작성자 입력 분리 필드)
         && optStr('author', 50)
         && optStr('email', 200)
         // 렌트(rent_posts) — 새 숫자/리스트 필드
@@ -87,36 +100,89 @@ service cloud.firestore {
         && optInt('payAmount', 0, 9999999)   // jobs (시급/연봉)
         && optStr('empType',   30)           // jobs
         && optStr('payUnit',   20)           // jobs
+        && optBool('visaEligible')           // jobs — 세컨/써드 비자 자격 카운트 가능 여부
         // 사진 URL 배열 (post_images Storage) — 최대 8개로 여유
         && optUrlList('imageUrls', 8);
+    }
+
+    // ── 작성자 update 가드 (운영자 모더레이션 필드 변조 차단) ──
+    //   · 일반 작성자가 자기 글을 수정할 때, 운영자 전용 필드(블라인드·신고누적·역할·모더레이션 타임스탬프)를
+    //     새로 부여하거나 기존 값을 바꾸지 못하도록 잠근다.
+    //   · status 는 별도 화이트리스트(statusAllowedForOwner) — 작성자가 'completed'/'closed' 자율 부여는 허용.
+    //   · uid 잠금 — 작성자가 자기 글의 소유권을 다른 uid 로 이전(자기 글 회피)하는 공격 차단.
+    //   · admin update 경로(forceUpdate 등)는 isAdmin() 분기에서 본 가드를 우회 — 운영 권한 보장.
+    function moderatorOnlyFields() {
+      // ⚠️ isHidden / hiddenAt 는 작성자도 본인 글 '일시 숨김' 토글 가능 (마이페이지 ⏸️/▶️)
+      //    → 운영자 전용 잠금 목록에서 제외. 운영자/작성자 둘 다 토글 허용.
+      //    단, uid 잠금(uidLocked) + status 화이트리스트(statusAllowedForOwner)는 그대로 유지.
+      return ['isOfficial', 'reportCount', 'role',
+              'approvedAt', 'heldAt', 'pausedAt', 'closedAt'];
+    }
+    function noModeratorFieldChange() {
+      return !request.resource.data.diff(resource.data).affectedKeys()
+                .hasAny(moderatorOnlyFields());
+    }
+    function uidLocked() {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(['uid']);
+    }
+    // 작성자가 status 를 부여 가능한 범위
+    //   · 변경 없음 OR 'completed'(거래 완료) OR 'closed'(구인 마감)
+    //   · 'hidden' ↔ 'approved' (마이페이지 ⏸️/▶️ 일시 숨김 토글 — 작성자 본인 글)
+    function statusAllowedForOwner() {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(['status'])
+        || request.resource.data.status == 'completed'
+        || request.resource.data.status == 'closed'
+        || request.resource.data.status == 'hidden'
+        || request.resource.data.status == 'approved';
     }
 
     // ── 게시판 컬렉션 (현재 localStorage 스토어 → 향후 Firestore 전환 대비) ──
     //   koaus-accom-posts → accom_posts,  koaus-rent-posts → rent_posts,
     //   koaus-jobs-posts  → jobs_posts,   koaus-auto-posts → auto_posts
+    // 작성자 본인(uid 매칭) 또는 관리자(isAdmin)는 강제 update/delete 가능 (블라인드·강제 수정·강제 삭제)
     match /accom_posts/{postId} {
-      allow get:           if true;
-      allow list:          if limitedList();
-      allow create:        if validPostCreate();
-      allow update, delete: if ownerOnExisting();
+      allow get:    if true;
+      allow list:   if limitedList();
+      allow create: if validPostCreate();
+      allow update: if isAdmin()
+                       || ( ownerOnExisting()
+                            && uidLocked()
+                            && noModeratorFieldChange()
+                            && statusAllowedForOwner() );
+      allow delete: if isAdmin() || ownerOnExisting();
     }
     match /rent_posts/{postId} {
-      allow get:           if true;
-      allow list:          if limitedList();
-      allow create:        if validPostCreate();
-      allow update, delete: if ownerOnExisting();
+      allow get:    if true;
+      allow list:   if limitedList();
+      allow create: if validPostCreate();
+      allow update: if isAdmin()
+                       || ( ownerOnExisting()
+                            && uidLocked()
+                            && noModeratorFieldChange()
+                            && statusAllowedForOwner() );
+      allow delete: if isAdmin() || ownerOnExisting();
     }
     match /jobs_posts/{postId} {
-      allow get:           if true;
-      allow list:          if limitedList();
-      allow create:        if validPostCreate();
-      allow update, delete: if ownerOnExisting();
+      allow get:    if true;
+      allow list:   if limitedList();
+      allow create: if validPostCreate();
+      allow update: if isAdmin()
+                       || ( ownerOnExisting()
+                            && uidLocked()
+                            && noModeratorFieldChange()
+                            && statusAllowedForOwner() );
+      allow delete: if isAdmin() || ownerOnExisting();
     }
     match /auto_posts/{postId} {
-      allow get:           if true;
-      allow list:          if limitedList();
-      allow create:        if validPostCreate();
-      allow update, delete: if ownerOnExisting();
+      allow get:    if true;
+      allow list:   if limitedList();
+      allow create: if validPostCreate();
+      allow update: if isAdmin()
+                       || ( ownerOnExisting()
+                            && uidLocked()
+                            && noModeratorFieldChange()
+                            && statusAllowedForOwner() );
+      allow delete: if isAdmin() || ownerOnExisting();
     }
 
     // ── 문의 메일 (contact.html → 'mail' 컬렉션, 쓰기 전용) ──
@@ -133,33 +199,93 @@ service cloud.firestore {
 
     // ── 사용자 문서 ──
     //   · 본인 직접 get/write: 본인 uid 만
-    //   · list (where name + securityA): 아이디 찾기 시 비로그인도 1건 query 가능
-    //     · request.query.limit <= 1 강제 → 무한 스캔 차단 (read 폭탄 방어)
-    //     · 정확히 일치하는 (name + securityA) 만 매칭되므로 무작위 추측 비용 큼
+    //   · 관리자: 강제 권한 (운영·민원 처리·계정 제재 목적 — get/update/delete 가능, list 는 enumeration 차단 유지)
+    //   · list: 전면 차단 — 옛 'where(field+securityA) limit 1' 우회 enumeration 봉쇄
+    //     · 아이디/비번 찾기는 nicknames/{nick}, emails/{email} 단일 get 으로 분리됨
+    //   · ⚠️ 권한 무결성: 본인이 자기 자신을 admin으로 만드는 변조 차단.
+    //     - 본인 update 경로에서는 isAdmin/email 필드를 새로 추가하거나 값 변경 금지 (inline 가드).
+    //     - admin이 직접 콘솔 또는 setAdmin.js로 부여하는 경우(admin update 경로)만 가능.
     match /users/{uid} {
-      allow get:    if isSignedIn() && request.auth.uid == uid;
-      allow list:   if request.query.limit <= 1;
-      allow create: if isSignedIn() && request.auth.uid == uid;
-      allow update: if isSignedIn() && request.auth.uid == uid;
-      allow delete: if isSignedIn() && request.auth.uid == uid;
+      allow get:    if isAdmin() || (isSignedIn() && request.auth.uid == uid);
+      allow list:   if false;
+      allow create: if isSignedIn() && request.auth.uid == uid
+                       // 가입 시점 isAdmin 자체 부여 차단 — admin 전용 권한은 setAdmin.js 로만
+                       && (!('isAdmin' in request.resource.data) || request.resource.data.isAdmin == false)
+                       // role 필드 자체 부여 차단 (시스템 향후 확장 대비 — 'user' 외 값 봉쇄)
+                       && (!('role' in request.resource.data) || request.resource.data.role == 'user');
+      allow update: if isAdmin()
+                       || ( isSignedIn()
+                            && request.auth.uid == uid
+                            // 본인 update — isAdmin 필드 변경 금지 (없거나 / 기존 값 동일)
+                            && (!('isAdmin' in request.resource.data)
+                                || (('isAdmin' in resource.data) && request.resource.data.isAdmin == resource.data.isAdmin))
+                            // email 필드 변조 금지 (가입 시 set 한 값 그대로)
+                            && (!('email' in request.resource.data)
+                                || (('email' in resource.data) && request.resource.data.email == resource.data.email))
+                            // role 필드 변조 금지 (없거나 / 기존 값 동일)
+                            && (!('role' in request.resource.data)
+                                || (('role' in resource.data) && request.resource.data.role == resource.data.role))
+                          );
+      allow delete: if isAdmin() || (isSignedIn() && request.auth.uid == uid);
     }
 
-    // ── 닉네임 예약(중복 방지) — 로그인 사용자는 존재 여부 확인 가능,
-    //    예약/삭제는 본인(uid) 소유만. create는 문서가 없을 때만(고유성). ──
+    // ── 닉네임 색인(중복 방지 + 아이디 찾기) ──
+    //   · doc id = nickname.toLowerCase() (case-insensitive 유일성)
+    //   · get: 누구나 1건 조회 (가입 전 중복 체크 + 아이디 찾기 nick+secA 매칭)
+    //   · list: 전면 차단 (열거 방지)
+    //   · create/update/delete: 본인(uid) 소유만
     match /nicknames/{nick} {
-      allow get:    if isSignedIn();
+      allow get:    if true;
+      allow list:   if false;
       allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid;
       allow update: if isSignedIn() && resource.data.uid == request.auth.uid
                        && request.resource.data.uid == request.auth.uid;
       allow delete: if isSignedIn() && resource.data.uid == request.auth.uid;
     }
 
-    // ── 신고(reports) — 로그인 사용자가 생성만 가능, 읽기/수정/삭제는 운영자(콘솔) 전용 ──
+    // ── 이메일 색인(비번 찾기) ──
+    //   · doc id = email.toLowerCase()
+    //   · get: 누구나 1건 조회 (비번 찾기 email+secA 매칭 후 sendPasswordResetEmail)
+    //   · list: 전면 차단 (열거 방지)
+    //   · create/update/delete: 본인(uid) 소유만 (회원가입 트랜잭션 1회)
+    match /emails/{email} {
+      allow get:    if true;
+      allow list:   if false;
+      allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid;
+      allow update: if isSignedIn() && resource.data.uid == request.auth.uid
+                       && request.resource.data.uid == request.auth.uid;
+      allow delete: if isSignedIn() && resource.data.uid == request.auth.uid;
+    }
+
+    // ── 신고(reports) — 로그인 사용자가 생성만 가능, 운영자(admin) + 본인만 조회 ──
+    //   · 관리자가 admin 페이지에서 신고 큐를 처리하거나 본인이 자기 신고 이력을 확인할 수 있도록 허용
+    //   · list 는 enumeration 차단을 위해 관리자 전용 유지
+    //   · update/delete 는 운영 처리 전용 → 관리자만
     match /reports/{reportId} {
       allow create: if isSignedIn()
                        && reqStr('reason', 1, 1000)
                        && data().reporterUid == request.auth.uid;
-      allow read, update, delete: if false;
+      allow get:    if isAdmin()
+                       || (isSignedIn() && resource.data.reporterUid == request.auth.uid);
+      allow list:   if isAdmin() && request.query.limit <= 200;
+      allow update, delete: if isAdmin();
+    }
+
+    // ── 차량/렌터카 문의(listing_inquiries) — auto.html 인콰이어리 모달 silent backup ──
+    //   · 실제 흐름은 mailto: 메일 발송 우선, Firestore 저장은 best-effort 백업 (catch silent)
+    //   · 누구나 1건 create 가능 (비로그인 포함 — 사용자 명시 흐름 유지)
+    //   · read/list 는 개인정보(name/contact/email/message) 보호로 관리자 전용
+    //   · 필드 길이 강제로 빌링 폭탄 차단
+    match /listing_inquiries/{id} {
+      allow get:    if isAdmin();
+      allow list:   if isAdmin() && request.query.limit <= 200;
+      allow create: if reqStr('message', 1, 5000)
+                       && optStr('category', 100)
+                       && optStr('state', 10)
+                       && optStr('name', 100)
+                       && optStr('contact', 100)
+                       && optStr('email', 200);
+      allow update, delete: if isAdmin();
     }
 
     // ════════════════════════════════════════════════════════════════
@@ -198,7 +324,7 @@ service cloud.firestore {
       allow list: if limitedList();
     }
 
-    // 관리자 광고 배너 (홈 광고칸 — 이미지 + 클릭 URL)
+    // 관리자 광고 배너 (홈 광고칸 — 이미지 + 클릭 URL)  [LEGACY — admin UI에서 제거됨, 데이터 보존용]
     match /ads/{id} {
       allow read: if true;
       allow create, update, delete: if isAdmin()
@@ -207,6 +333,26 @@ service cloud.firestore {
                                        && optStr('alt', 200)
                                        && optStr('memo', 500);
       allow list: if limitedList();
+    }
+
+    // ── 히어로 배너 (서브페이지 상단 swiper) ──
+    //   · imageUrl: 배너 이미지 URL (https)
+    //   · linkUrl:  클릭 시 이동할 URL (optional)
+    //   · alt:      대체 텍스트 / 배너 이름
+    //   · regions:  노출 지역 배열 — ['all'] 또는 ['nsw','vic',...] (max 9)
+    //   · order:    정렬 순서 (낮을수록 앞)
+    //   · active:   노출 여부
+    //   · read:     누구나 — 서브 페이지에서 클라이언트가 직접 fetch 후 필터링
+    //   · write:    관리자만 — 이미지/링크 URL 길이 + regions 배열 크기 강제 (빌링 안전망)
+    match /hero_banners/{id} {
+      allow read: if true;
+      allow list: if limitedList();
+      allow create, update, delete: if isAdmin()
+                                       && reqStr('imageUrl', 1, 500)
+                                       && optStr('linkUrl', 500)
+                                       && optStr('alt', 200)
+                                       && request.resource.data.regions is list
+                                       && request.resource.data.regions.size() <= 9;
     }
 
     // ════════════════════════════════════════════════════════════════
@@ -260,11 +406,14 @@ service cloud.firestore {
           && optStr('status',   30)
           && optUrlList('imageUrls', 8)
         )
-        // ② 일반 로그인 유저 등록 요청 — status='pending' 강제 + 본인 uid +
-        //    isOfficial 임의 설정 금지 (필드 자체가 없거나 false 만 허용 → admin 만 부여 가능)
+        // ② 일반 로그인 유저 등록 — 자율 등록형 게시판 (UGC):
+        //    status 는 'pending' 또는 'approved' 둘 다 허용 (비자/유학 등 즉시 노출 컨셉)
+        //    · isOfficial:false 강제 (admin 표시 금지 — admin 만 isOfficial:true 부여 가능)
+        //    · authorId / uid 본인 일치 강제 (오너십 보안)
         || ( isSignedIn()
-             && request.resource.data.status == 'pending'
-             && request.resource.data.uid    == request.auth.uid
+             && (request.resource.data.status == 'pending'
+                 || request.resource.data.status == 'approved')
+             && request.resource.data.uid == request.auth.uid
              && ( !('isOfficial' in request.resource.data)
                   || request.resource.data.isOfficial == false )
              && reqStr('category', 1, 50)
@@ -278,9 +427,18 @@ service cloud.firestore {
              && optUrlList('imageUrls', 8)
            );
 
-      // 승인(status='approved' 변경) / 반려 삭제는 admin 전용
-      allow update: if isAdmin();
-      allow delete: if isAdmin();
+      // 본인 글 수정/삭제 허용 (RBAC 작성자 액션) + admin 강제 권한
+      //   · 작성자: uid 매칭 + uid 잠금 + 운영자 모더레이션 필드 변조 차단 + status 화이트리스트
+      //     (일반 필드 patch — title/body/category/region/address/contact/imageUrls 등은 자유)
+      //   · admin: 강제 권한 (블라인드·강제 수정·강제 삭제 — 가드 우회)
+      allow update: if isAdmin()
+                       || ( isSignedIn()
+                            && resource.data.uid == request.auth.uid
+                            && uidLocked()
+                            && noModeratorFieldChange()
+                            && statusAllowedForOwner() );
+      allow delete: if isAdmin()
+                       || (isSignedIn() && resource.data.uid == request.auth.uid);
     }
 
     // ════════════════════════════════════════════════════════════════
@@ -294,6 +452,53 @@ service cloud.firestore {
                                        && optStr('title', 200)
                                        && optStr('board', 30);
       allow list: if limitedList();
+    }
+
+    // ── 광고 배너 (ad_banners) — 지시 [두더지 잡기 방지! 광고 시스템] ──
+    //   · koaus-ads.js + admin-ads.html 연동 컬렉션 (사용자 제공 모듈)
+    //   · 읽기: 누구나 (홈 히어로 슬라이더 옆에 append — onAd 콜백)
+    //   · 쓰기: admin 만 + 필드 길이 강제 + Storage URL 검증
+    //   · list: admin 페이지가 active==true 전체 fetch (limit 미명시) → 광고 수 적음, 안전
+    match /ad_banners/{id} {
+      allow get:    if true;
+      allow list:   if true;
+      allow create, update: if isAdmin()
+                               && reqStr('img',    1, 1000)
+                               && optStr('href',         1500)
+                               && optStr('alt',           200)
+                               && optStr('state',          30)
+                               && optStr('imgPath',       500)
+                               && optStr('start',          30)
+                               && optStr('end',            30);
+      allow delete: if isAdmin();
+    }
+
+    // ── 상단 노출 공지 (top_notices) — 지시 7/7 admin 카드 2 ──
+    //   · sponsor + priority + action + url + text + active
+    //   · 읽기: 누구나 (홈 상단 노출용)
+    //   · 쓰기: admin 전용 + 필드 길이 강제
+    match /top_notices/{id} {
+      allow read: if true;
+      allow list: if limitedList();
+      allow create, update, delete: if isAdmin()
+                                       && reqStr('sponsor', 1, 100)
+                                       && reqStr('text', 1, 1000)
+                                       && optStr('url', 500)
+                                       && optStr('action', 30);
+    }
+
+    // ── 앱 전역 설정 (지시 7/7) ──
+    //   · app_settings/timings 1개 doc → { heroDelaySec, marqueeDurationSec, updatedAt }
+    //   · 읽기: 누구나 (홈/카테고리 페이지에서 hero-banner/marquee 시간 초기화 시 fetch)
+    //   · 쓰기: admin 만 + 숫자 범위 + 빌링 폭탄 방어
+    //   · list: enumeration 차단 (단일 doc id 'timings' 만 get 으로 접근)
+    match /app_settings/{id} {
+      allow get:    if true;
+      allow list:   if false;
+      allow create, update: if isAdmin()
+                               && optInt('heroDelaySec',       1,   30)
+                               && optInt('marqueeDurationSec', 5,  300);
+      allow delete: if isAdmin();
     }
 
     // ── 그 외 모든 경로: 기본 거부 ──

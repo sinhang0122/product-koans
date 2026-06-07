@@ -36,7 +36,12 @@
   <script src="local-analytics.js" defer></script>
   <script src="koaus-gallery.js" defer></script>
   <script src="koaus-dedupe.js" defer></script>
+  <script src="koaus-map-cluster.js" defer></script>
+  <script src="koaus-url-guard.js" defer></script>
+  <script src="koaus-report.js" defer></script>
   <script type="module" src="admin-mark.js"></script>
+  <script type="module" src="koaus-rbac.js"></script>
+  <script src="koaus-contact-actions.js" defer></script>
   <script type="module" src="auth-extra.js"></script>
   <script type="module" src="koaus-phone-auth.js"></script>
 </head>
@@ -113,7 +118,7 @@
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="restaurants.html?state=nsw" class="accord-link accord-link--sub">K-Food</a>
-            <a href="trades.html?state=nsw" class="accord-link accord-link--sub">일상</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -155,7 +160,7 @@
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="restaurants.html?state=vic" class="accord-link accord-link--sub">K-Food</a>
-            <a href="trades.html?state=vic" class="accord-link accord-link--sub">일상</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -197,7 +202,7 @@
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="restaurants.html?state=qld" class="accord-link accord-link--sub">K-Food</a>
-            <a href="trades.html?state=qld" class="accord-link accord-link--sub">일상</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -239,7 +244,7 @@
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="restaurants.html?state=wa" class="accord-link accord-link--sub">K-Food</a>
-            <a href="trades.html?state=wa" class="accord-link accord-link--sub">일상</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -281,7 +286,7 @@
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="restaurants.html?state=sa" class="accord-link accord-link--sub">K-Food</a>
-            <a href="trades.html?state=sa" class="accord-link accord-link--sub">일상</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -323,7 +328,7 @@
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="restaurants.html?state=tas" class="accord-link accord-link--sub">K-Food</a>
-            <a href="trades.html?state=tas" class="accord-link accord-link--sub">일상</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -365,7 +370,7 @@
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="restaurants.html?state=act" class="accord-link accord-link--sub">K-Food</a>
-            <a href="trades.html?state=act" class="accord-link accord-link--sub">일상</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -407,13 +412,13 @@
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="restaurants.html?state=nt" class="accord-link accord-link--sub">K-Food</a>
-            <a href="trades.html?state=nt" class="accord-link accord-link--sub">일상</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
       </div>
       <div class="accord-foot-group">
-        <a href="emergency.html" class="accord-direct-link"><span>긴급연락처 <em>Emergency Contacts</em></span></a>
+        <a href="care.html" class="accord-direct-link"><span>Care <em>호주 생활 케어</em></span></a>
         <a href="calculator.html" class="accord-direct-link"><span>환율 계산 비교 <em>FX Calculator</em></span></a>
         <a href="contact.html" class="accord-direct-link"><span>문의 <em>Inquiry</em></span></a>
       </div>
@@ -479,6 +484,13 @@
         </button>
       </div>
       <span class="board-count" id="boardCount">총 0건</span>
+      <!-- List View 에서도 지도 영역 제한 알림 — 클릭 시 전체 지역 복원 (지시 3/3) -->
+      <button id="areaResetTopBtn" type="button"
+              style="display:none;margin-left:8px;padding:4px 10px;font-size:11.5px;font-weight:700;
+                     background:#fef3c7;color:#92400e;border:1px solid #fde68a;border-radius:999px;
+                     cursor:pointer;white-space:nowrap;">
+        🌏 지역 제한 적용 중 — 전체 보기
+      </button>
       <div class="accom-ctrl-actions">
         <button class="board-write-btn board-write-btn--ghost" id="filterModalBtn">상세 필터</button>
         <button class="board-write-btn" id="writeBtnOpen">+ 글쓰기</button>
@@ -493,7 +505,10 @@
 
     <!-- Map View -->
     <div id="mapView" style="display:none;">
-      <button class="area-search-btn" id="areaSearchBtn">이 지역 잡 구하기</button>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap;">
+        <button class="area-search-btn" id="areaSearchBtn">이 지역 잡 구하기</button>
+        <button class="area-search-btn" id="areaResetBtn" type="button" style="display:none;background:var(--bg-card);color:var(--text-primary);border:1px solid var(--border);">🌏 전체 지역 보기</button>
+      </div>
       <div id="jobsMap" style="width:100%;height:480px;border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;"></div>
     </div>
 
@@ -532,6 +547,12 @@
         </div>
       </div>
       <div class="filter-section">
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--text-primary);cursor:pointer;">
+          <input type="checkbox" id="ffVisaEligible" style="width:18px;height:18px;cursor:pointer;flex-shrink:0;" />
+          <span>🌏 세컨/써드 비자 카운트 가능 잡만 보기</span>
+        </label>
+      </div>
+      <div class="filter-section">
         <div class="recent-searches" id="recentSearches"></div>
       </div>
       <div class="filter-modal-actions">
@@ -548,6 +569,15 @@
         <span class="write-author-badge">작성자 : <b id="wAuthorName">-</b></span>
         <input type="hidden" id="wAuthor" value="" />
         <button class="write-modal-close" id="writeBtnClose" type="button" aria-label="닫기">✕</button>
+      </div>
+
+      <!-- 작성 주의사항 안내 박스 — 다음 작업에서 본문 inject -->
+      <div class="write-rules-box" role="note" aria-label="작성 주의사항">
+        <span class="wrb-icon" aria-hidden="true">⚠️</span>
+        <div class="wrb-body">
+          <strong class="wrb-title">작성 전 주의사항</strong>
+          <p>💡 호주 법정 최저임금 및 캐주얼 로딩 준수 여부를 확인하세요. 급여 형태(Tax/Cash)와 주급 지급일을 명시해야 하며, 타인의 텍스 파일 넘버(TFN) 도용 및 불법 알선 행위는 금지됩니다.</p>
+        </div>
       </div>
 
       <div class="write-field">
@@ -592,16 +622,34 @@
               <input class="write-input" id="wPayAmount" type="number" min="0" placeholder="금액" style="flex:1;" />
             </div>
           </div>
+          <div class="write-field">
+            <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--text-primary);cursor:pointer;">
+              <input type="checkbox" id="wVisaEligible" style="width:18px;height:18px;cursor:pointer;flex-shrink:0;" />
+              <span>🌏 세컨/써드 비자 카운트 가능 <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(Working Holiday 417/462)</em></span>
+            </label>
+          </div>
         </div>
         <div class="write-col">
           <div class="write-field">
-            <label class="write-label" for="wAddress">근무지 주소 Location<span class="required-mark">*</span></label>
-            <input class="write-input" id="wAddress" type="text" autocomplete="off" placeholder="" maxlength="200" />
+            <label class="write-label" for="wAddress">근무지 주소 Location <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택)</em></label>
+            <input class="write-input" id="wAddress" type="text" autocomplete="off" placeholder="주소 입력 시 자동완성 (선택사항)" maxlength="200" />
             <ul class="addr-suggest" id="wAddressSuggest"></ul>
           </div>
           <div class="write-field">
-            <label class="write-label" for="wContact">연락처 Contact <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택)</em></label>
-            <input class="write-input" id="wContact" type="text" placeholder="오픈채팅이나 카톡 아이디 혹은 전화번호를 입력해주세요" maxlength="100" />
+            <label class="write-label" for="wPhone">📞 전화번호 Phone <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택 · 전화 + 문자 둘 다 활성)</em></label>
+            <input class="write-input" id="wPhone" type="tel" placeholder="04xx xxx xxx" maxlength="30" autocomplete="tel" />
+          </div>
+          <div class="write-field">
+            <label class="write-label" for="wKakao">💛 카톡 오픈채팅 링크 <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택)</em></label>
+            <input class="write-input" id="wKakao" type="url" placeholder="https://open.kakao.com/o/..." maxlength="500" />
+          </div>
+          <div class="write-field">
+            <label class="write-label" for="wEmail">✉️ 이메일 Email <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택)</em></label>
+            <input class="write-input" id="wEmail" type="email" placeholder="example@gmail.com" maxlength="200" autocomplete="email" />
+          </div>
+          <div class="write-field">
+            <label class="write-label" for="wContact">기타 통합 입력 Misc <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택 · 위 분리 필드 우선, 자유 형식 추가 메모용)</em></label>
+            <input class="write-input" id="wContact" type="text" placeholder="기타 연락 수단·시간대·메모 등 자유 입력" maxlength="100" />
           </div>
         </div>
       </div>
@@ -624,6 +672,16 @@
         </ol>
       </div>
 
+        <!-- [필수] 게시 규정 동의 — agent.md §2-C Mandatory Consent (글쓰기 표준 철칙) -->
+        <div class="write-consent-row" style="display:flex;align-items:flex-start;gap:8px;padding:10px 12px;margin:14px 0 8px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-sm);">
+          <input type="checkbox" id="writeConsent" style="flex-shrink:0;width:18px;height:18px;margin-top:1px;cursor:pointer;" />
+          <label for="writeConsent" style="flex:1;font-size:12.5px;line-height:1.5;color:var(--text-primary);cursor:pointer;">
+            <strong style="color:var(--red,#dc2626);">[필수]</strong>
+            <a href="terms.html" target="_blank" rel="noopener" style="color:var(--text-primary);text-decoration:underline;font-weight:700;"
+               title="이용약관 §3 (금지행위 — 허위 매물·사기·욕설·타인 사칭·봇 스팸·불법 콘텐츠 금지) + §10 (서비스별 면책)">이용약관 및 주의사항</a>을 확인하였으며,
+            서비스 규정 위반 시 게시물 삭제 및 계정 제재가 이루어질 수 있음에 동의합니다.
+          </label>
+        </div>
       <div class="write-modal-actions">
         <button class="write-cancel-btn" id="writeBtnCancel">취소</button>
         <button class="write-submit-btn" id="writeBtnSubmit">등록하기</button>
@@ -710,11 +768,23 @@
       <!-- Sticky 하단 액션바 -->
       <div class="rea-actionbar">
         <button class="rea-contact-btn" id="detailContactBtn" type="button">연락처 보기</button>
+        <!-- 동적 연락 버튼 컨테이너 — 다음 지시에서 JS 가 작성자 연락처에 맞춰 1~4개 버튼 inject -->
+        <div id="contact-action-container" class="contact-action-container" aria-label="연락 수단"></div>
       </div>
     </div>
   </div>
 
-  <footer class="site-footer"><p>KoAus</p></footer><script>
+  <footer class="site-footer-v2">
+    <div class="footer-links">
+      <a href="about.html">KoAus 소개 / About</a>
+      <a href="faq.html">자주 묻는 질문 / FAQ</a>
+      <a href="guide.html">이용 가이드 / Guide</a>
+      <a href="privacy.html">Privacy Policy / 개인정보처리방침</a>
+      <a href="terms.html">Terms of Service / 서비스 이용약관</a>
+      <a href="contact.html">Contact / 문의하기</a>
+    </div>
+    <p class="footer-copy">© 2026 Koaus Community. All rights reserved.</p>
+  </footer><script>
     // 안전 attach 헬퍼: 요소가 없으면 console.warn만 찍고 진행 — null.addEventListener 크래시 방지
     function safeOn(id, ev, fn) {
       const el = document.getElementById(id);
@@ -851,17 +921,42 @@
       });
     }
     function renderPosts() {
-      let all = loadPosts().filter(p =>
-        (p.postType || 'hiring') === activeTab &&
-        (!currentState || (p.state || '') === currentState)
-      );
-      // 검색 키워드 적용 — 주소 유무와 무관, title/body 만 검사
-      all = applyJobsSearchKw(all);
-      document.getElementById('boardCount').textContent = `총 ${all.length}건`;
+      let all;
+      try {
+        all = loadPosts().filter(p =>
+          (p.postType || 'hiring') === activeTab &&
+          (!currentState || (p.state || '') === currentState) &&
+          // 일시 숨김 글 제외 — 메인 리스트에서 즉시 사라짐 (지시 5/7)
+          !p.isHidden
+        );
+        // 상세 필터(visaEligible / empType / minPay / areaBounds) 통합 적용 — 카드·카운트 일관
+        //   · 옛 글은 visaEligible 필드 부재(undefined) → Boolean 강제 변환으로 안전 처리
+        //   · 옛 코드는 wrapper 가 카운트만 덮어써 "카드 다수 + 카운트 0" 불일치 발생 → 본 통합 호출로 해소
+        all = applyFilters(all);
+        // 검색 키워드 적용 — 주소 유무와 무관, title/body 만 검사
+        all = applyJobsSearchKw(all);
+      } catch (err) {
+        console.error('[jobs] renderPosts 필터 실패 — 안전망: 전체 표시', err);
+        all = loadPosts().filter(p => (p.postType || 'hiring') === activeTab);
+      }
+      // 빈 결과 안내 — visaEligible 필터 활성 시 별도 메시지
+      const _visaActive = !!(activeFilter && activeFilter.visaEligible);
+      document.getElementById('boardCount').textContent = `총 ${all.length}건${_visaActive ? ' · 🌏 세컨/써드 필터 적용' : ''}`;
       const list  = document.getElementById('postList');
       const pager = document.getElementById('pagination');
       if (!all.length) {
-        list.innerHTML = '<div class="post-empty">아직 등록된 글이 없습니다. 첫 글을 작성해보세요!</div>';
+        // 빈 결과 — 활성 필터에 따라 안내 차별화 (사용자가 빈 화면 원인을 즉시 인지)
+        const _hasFilter = !!(activeFilter && (activeFilter.visaEligible || activeFilter.empType || activeFilter.minPay || areaBounds));
+        const _visaActive = !!(activeFilter && activeFilter.visaEligible);
+        let msg;
+        if (_visaActive) {
+          msg = '🌏 세컨/써드 비자 카운트 가능 글이 아직 없습니다.<br><small style="color:var(--text-muted);">필터를 해제하거나 다른 지역도 확인해 보세요.</small>';
+        } else if (_hasFilter) {
+          msg = '조건에 맞는 글이 없습니다.<br><small style="color:var(--text-muted);">상세 필터를 초기화해 보세요.</small>';
+        } else {
+          msg = '아직 등록된 글이 없습니다. 첫 글을 작성해보세요!';
+        }
+        list.innerHTML = '<div class="post-empty">' + msg + '</div>';
         pager.innerHTML = '';
         return;
       }
@@ -877,11 +972,12 @@
         const saved = isSaved(p.id);
         const payText = p.payAmount ? `💵 $${escHtml(p.payAmount)} / ${escHtml(p.payUnit || '시간')}` : '';
         const empText = p.empType   ? `🕒 ${escHtml(p.empType)}` : '';
+        const visaText= p.visaEligible ? '🌏 세컨/써드 가능' : '';
         const addrText= p.address   ? `📍 ${escHtml(p.address)}` : '';
-        const metaParts = [payText, empText].filter(Boolean).join(' · ');
+        const metaParts = [payText, empText, visaText].filter(Boolean).join(' · ');
         return `
         <a class="accom-card${isMine(p) ? ' my-post-highlight' : ''}" data-id="${p.id}" style="cursor:pointer;text-decoration:none;color:inherit;">
-          <div class="accom-card-img" style="background:var(--bg-card);display:flex;align-items:center;justify-content:center;font-size:36px;color:var(--text-muted);">💼</div>
+          <div class="accom-card-img">💼</div>
           <div class="accom-card-body">
             <div class="accom-card-title">${escHtml(p.title)}</div>
             ${metaParts ? `<div class="accom-card-meta">${metaParts}</div>` : ''}
@@ -889,6 +985,11 @@
             <div class="accom-card-footer">
               <span>${authorLabel(p)}</span>
               <span>${escHtml(p.date)}${p.time ? ' ' + escHtml(p.time) : ''}</span>
+            </div>
+            <div class="post-mini-actions">
+              <button class="mini-btn mini-share" data-id="${p.id}" type="button">공유</button>
+              <button class="mini-btn mini-report" data-id="${p.id}" type="button">신고</button>
+              ${(isMine(p) || window.koausIsAdmin) ? `<button class="mini-btn mini-edit" data-id="${p.id}" type="button">수정</button><button class="mini-btn mini-hide" data-id="${p.id}" type="button">숨김</button><button class="mini-btn mini-del" data-id="${p.id}" type="button">삭제</button>` : ''}
             </div>
           </div>
           <button class="bookmark-btn${saved ? ' is-saved' : ''}" data-id="${p.id}" title="저장한 글" aria-label="저장"
@@ -1065,16 +1166,59 @@
       setStar();
       saveBtn.onclick = () => { toggleSaved(p); setStar(); };
 
-      // 10) 본인 글: 수정/삭제
+      // 10) 본인/운영자 액션바 — RBAC 헬퍼 사용 (CLAUDE.md §2-E)
+      //   · 작성자: 수정 · 삭제 · 마감(구인 완료) · 공유 · 찜
+      //   · 운영자: + 블라인드 (강제 권한)
+      //   · 공유 · 찜은 hero-top 우상단 floating 과 별도로 본문 액션바에도 노출 (UX 강화)
       const actEl = document.getElementById('detailActions');
-      if (isMine(p)) {
-        actEl.innerHTML = `<button class="detail-edit-btn" id="detailEditBtn">수정하기</button><button class="detail-delete-btn" id="detailDeleteBtn">삭제하기</button>`;
-        document.getElementById('detailEditBtn').onclick   = () => openWriteModalForEdit(p);
-        document.getElementById('detailDeleteBtn').onclick = () => deletePost(p.id);
-        actEl.style.display = 'flex';
-      } else { actEl.innerHTML = ''; actEl.style.display = 'none'; }
+      const _rbac = window.koausRbac;
+      const _btns = [];
+      const _isMineFlag    = (_rbac && _rbac.isAuthor) ? _rbac.isAuthor(p) : isMine(p);
+      const _isAdminFlag   = (_rbac && _rbac.isAdmin)  ? _rbac.isAdmin()   : false;
+      if (_isMineFlag) {
+        _btns.push('<button class="detail-action-btn detail-edit-btn" id="detailEditBtn">✏️ 수정</button>');
+        _btns.push('<button class="detail-action-btn detail-delete-btn" id="detailDeleteBtn">🗑 삭제</button>');
+        _btns.push('<button class="detail-action-btn detail-complete-btn" id="detailCompleteBtn">✅ 구인 마감</button>');
+        // 본인 글 일시 숨김 토글 — ⏸️ 일시 숨김 ↔ ▶️ 다시 노출
+        _btns.push('<button class="detail-action-btn detail-hide-btn" id="detailHideBtn">' + (p.isHidden ? '▶️ 다시 노출' : '⏸️ 일시 숨김') + '</button>');
+      } else if (_isAdminFlag) {
+        // 운영자 (타인 글) — 동일 일시 숨김 토글 (작성자 권한 우회)
+        _btns.push('<button class="detail-action-btn detail-hide-btn" id="detailHideBtn">' + (p.isHidden ? '▶️ 다시 노출' : '⏸️ 일시 숨김') + '</button>');
+      }
+      // 누구나: 공유·찜 (본문 액션바 통합 — hero-top 과 중복 노출)
+      _btns.push('<button class="detail-action-btn detail-share2-btn" id="detailShareBtn2">🔗 공유</button>');
+      _btns.push('<button class="detail-action-btn detail-save2-btn" id="detailSaveBtn2">' + (isSaved(p.id) ? '★ 저장됨' : '☆ 찜하기') + '</button>');
+      actEl.innerHTML = _btns.join('');
+      actEl.style.display = 'flex';
+      // 핸들러 연결
+      const _bEd = document.getElementById('detailEditBtn');     if (_bEd) _bEd.onclick = () => openWriteModalForEdit(p);
+      const _bDl = document.getElementById('detailDeleteBtn');   if (_bDl) _bDl.onclick = () => deletePost(p.id);
+      const _bCp = document.getElementById('detailCompleteBtn'); if (_bCp) _bCp.onclick = async () => {
+        if (!confirm('구인을 마감 처리하시겠습니까? (status=completed)')) return;
+        try {
+          const fsId = p.fsDocId || p.id;
+          if (_rbac && _rbac.markCompleted) await _rbac.markCompleted('jobs_posts', String(fsId));
+          alert('✅ 구인 마감 처리 완료');
+          document.getElementById('detailOverlay').classList.remove('open');
+          renderPosts();
+        } catch (e) { alert('마감 실패: ' + (e.message || e)); }
+      };
+      const _bHd = document.getElementById('detailHideBtn'); if (_bHd) _bHd.onclick = async () => {
+        const willHide = !p.isHidden;
+        if (!confirm(willHide ? '이 글을 일시 숨김 처리하시겠습니까? (메인 리스트에서 제외)' : '다시 노출하시겠습니까?')) return;
+        try {
+          const fsId = p.fsDocId || p.id;
+          if (_rbac && _rbac.toggleHidden) await _rbac.toggleHidden('jobs_posts', String(fsId), !!p.isHidden);
+          alert(willHide ? '⏸️ 일시 숨김 처리 완료' : '▶️ 다시 노출 처리 완료');
+          document.getElementById('detailOverlay').classList.remove('open'); renderPosts();
+        } catch (e) { alert('상태 변경 실패: ' + (e.message || e)); }
+      };
+      const _bSh2 = document.getElementById('detailShareBtn2'); if (_bSh2) _bSh2.onclick = () => { const sb = document.getElementById('detailShareBtn'); if (sb) sb.click(); };
+      const _bSv2 = document.getElementById('detailSaveBtn2');  if (_bSv2) _bSv2.onclick = () => { toggleSaved(p); _bSv2.textContent = isSaved(p.id) ? '★ 저장됨' : '☆ 찜하기'; const sb = document.getElementById('detailSaveBtn'); if (sb) { sb.textContent = isSaved(p.id) ? '★' : '☆'; sb.classList.toggle('saved', isSaved(p.id)); } };
 
       // 11) 하단 sticky 연락처 버튼
+      // 동적 연락 버튼 컨테이너 — phone/kakaoLink/email 분리 필드 기반 자동 렌더 (koaus-contact-actions.js)
+      if (window.koausContactActions) window.koausContactActions.render(p);
       const cbtn = document.getElementById('detailContactBtn');
       if (p.contact) {
         const isLink = /^https?:\/\//i.test(p.contact);
@@ -1087,6 +1231,8 @@
       setupDetailLocation(p);
 
       recordRecent(p);
+      // 신고 모달이 detail postId 를 식별할 수 있도록 글로벌 변수 노출
+      window.__jobsDetailPostId = String(p.id || '');
       document.getElementById('detailOverlay').classList.add('open');
       const rc = document.querySelector('.rea-content'); if (rc) rc.scrollTop = 0;
     }
@@ -1152,8 +1298,19 @@
     safeOn('detailClose', 'click', () => { const ov = document.getElementById('detailOverlay'); if (ov) ov.classList.remove('open'); });
     safeOn('detailCloseX', 'click', () => { const ov = document.getElementById('detailOverlay'); if (ov) ov.classList.remove('open'); });
     safeOn('detailOverlay', 'click', e => { if (e.target === e.currentTarget) e.currentTarget.classList.remove('open'); });
-    // 신고 버튼 (B&W 표준 — 클릭 시 안내만)
-    safeOn('detailReportBtn', 'click', () => { alert('신고가 접수되었습니다. 관리자 검토 후 조치됩니다.'); });
+    // 신고 버튼 — 공용 신고 헬퍼 (지시 6/7: 4 카테고리 select + addDoc)
+    safeOn('detailReportBtn', 'click', () => {
+      if (!window.koausReport || !window.koausReport.open) {
+        alert('신고 모듈을 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요.'); return;
+      }
+      // 현재 상세 모달에 표시 중인 글의 ID — detailOverlay 의 data 또는 보조 변수
+      const titleEl = document.getElementById('detailNavTitle');
+      window.koausReport.open({
+        postId:    String(window.__jobsDetailPostId || ''),
+        board:     'jobs',
+        postTitle: titleEl ? titleEl.textContent : '',
+      });
+    });
     // 공유 메뉴 토글
     safeOn('detailShareBtn', 'click', e => {
       e.stopPropagation();
@@ -1197,6 +1354,9 @@
       setWriteMode('create');
       fillAuthorBadge();
       applyDuplicateData();   // ?duplicate=1 진입 시 원본 데이터 prefill
+      // 안전망 — 모달 진입 시점 wire 재시도. whenMapsReady() 가 Maps 미로드 시 콜백 큐에 보류
+      // → 페이지 로드 직후 L1730의 1회 호출이 아직 실행 전이어도 모달 진입에 wire 보장
+      try { whenMapsReady(() => wireAutocomplete('wAddress', 'wAddressSuggest')); } catch (_) {}
       writeOverlay.classList.add('open');
     }
 
@@ -1216,7 +1376,13 @@
       set('wPayUnit',   d.payUnit || 'hour');
       set('wPayAmount', d.payAmount);
       set('wContact',   d.contact);
+      set('wPhone',     d.phone);
+      set('wKakao',     d.kakaoLink);
+      set('wEmail',     d.email);
       set('wBody',      d.body);
+      // 세컨/써드 비자 카운트 — checkbox
+      const _veSet = document.getElementById('wVisaEligible');
+      if (_veSet) _veSet.checked = !!d.visaEligible;
     }
     function openWriteModalForEdit(p) {
       editingId = p.id;
@@ -1224,6 +1390,10 @@
       document.getElementById('wTitle').value   = p.title || '';
       document.getElementById('wBody').value    = p.body || '';
       document.getElementById('wContact').value = p.contact || '';
+      const elPh = document.getElementById('wPhone');       if (elPh) elPh.value     = p.phone      || '';
+      const elKk = document.getElementById('wKakao');       if (elKk) elKk.value     = p.kakaoLink  || '';
+      const elEm = document.getElementById('wEmail');       if (elEm) elEm.value     = p.email      || '';
+      const elVe = document.getElementById('wVisaEligible'); if (elVe) elVe.checked  = !!p.visaEligible;
       const elAd = document.getElementById('wAddress');     if (elAd) elAd.value     = p.address    || '';
       const elEt = document.getElementById('wEmpType');     if (elEt) elEt.value     = p.empType    || '';
       const elPu = document.getElementById('wPayUnit');     if (elPu) elPu.value     = p.payUnit    || 'hour';
@@ -1231,6 +1401,8 @@
       document.getElementById('wAuthor').value = p.author || '';
       const badge = document.getElementById('wAuthorName'); if (badge) badge.textContent = p.author || '-';
       setWriteMode('edit');
+      // 수정 모드 진입에도 동일한 wire 재시도 (Maps 늦게 로드된 케이스 대비)
+      try { whenMapsReady(() => wireAutocomplete('wAddress', 'wAddressSuggest')); } catch (_) {}
       document.getElementById('detailOverlay').classList.remove('open');
       writeOverlay.classList.add('open');
     }
@@ -1250,6 +1422,14 @@
     safeOn('writeBtnClose',  'click', () => { if (writeOverlay) writeOverlay.classList.remove('open'); });
     if (writeOverlay) writeOverlay.addEventListener('click', e => { if (e.target === writeOverlay) writeOverlay.classList.remove('open'); });
     safeOn('writeBtnSubmit', 'click', e => {
+      // [필수] 게시 규정 동의 — agent.md §2-C Mandatory Consent (글쓰기 표준 철칙)
+      const _consent = document.getElementById('writeConsent');
+      if (_consent && !_consent.checked) {
+        alert('게시 규정 동의에 체크해 주세요.');
+        try { _consent.focus(); _consent.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (_) {}
+        return;
+      }
+
       // 폼 reload·기본 동작 차단 (button type 미지정 환경 대비)
       if (e && e.preventDefault) e.preventDefault();
       try {
@@ -1283,6 +1463,9 @@
         const elTitle    = document.getElementById('wTitle');
         const elBody     = document.getElementById('wBody');
         const elContact  = document.getElementById('wContact');
+        const elPhone    = document.getElementById('wPhone');
+        const elKakao    = document.getElementById('wKakao');
+        const elEmail    = document.getElementById('wEmail');
         const elAuthor   = document.getElementById('wAuthor');
         const elCategory = document.getElementById('wCategory');
         const elEmpType  = document.getElementById('wEmpType');
@@ -1306,20 +1489,25 @@
         const address   = (elAddress  && elAddress.value.trim())  || '';
 
         // ── 2) 필수 항목 빈 칸 검증 ──
-        //  · title / address / body 셋 다 필수 (firestore.rules:73 validPostCreate
-        //    의 reqStr('body', 1, 5000) 정합 — 빈 본문 전송 시 permission-denied 발생).
-        //  · 모바일에서 본문(textarea)을 빠뜨리고 등록할 때 "서버 저장 실패" 원인이었음.
-        if (!title || !address) {
-          alert('제목과 근무지 주소를 입력해 주세요.');
+        //  · 사용자 요청에 따라 address 필수 해제 — title 만 필수로 운용.
+        //  · firestore.rules:73 validPostCreate 의 reqStr('body', 1, 5000) 정합 위해
+        //    body 는 아래에서 빈 값이면 공백 1자 자동 채움 (permission-denied 회피).
+        if (!title) {
+          alert('제목을 입력해 주세요.');
           return;
         }
-        if (!body) {
-          alert('본문(모집 인원·근무 조건·우대사항 등)을 입력해 주세요.');
-          if (elBody && typeof elBody.focus === 'function') elBody.focus();
-          return;
-        }
+        // body 는 라벨 '(선택)' — 빈 본문도 통과. Firestore Rules 의 reqStr('body', 1, 5000)
+        // 호환을 위해 빈 값이면 공백 1자 자동 채움 (permission-denied 회피 + 선택 의미 보존)
+        const bodySafe = body || ' ';
         // 연락처: 자유 형식 허용 (호주 전화 / 카카오톡 / 이메일 / URL 등), 비워두기 가능
         const contact = contactRaw.replace(/\s+/g, ' ').trim();
+        // 분리 필드 — koaus-contact-actions.js 가 post.phone/kakaoLink/email 로 자동 버튼 렌더
+        const phone     = (elPhone && elPhone.value.trim())  || '';
+        const kakaoLink = (elKakao && elKakao.value.trim())  || '';
+        const email     = (elEmail && elEmail.value.trim())  || '';
+        // 세컨/써드 비자 카운트 가능 여부 — checkbox
+        const _veEl     = document.getElementById('wVisaEligible');
+        const visaEligible = !!(_veEl && _veEl.checked);
         const nick = (elAuthor && elAuthor.value.trim())
           || localStorage.getItem('koaus-nickname')
           || user.displayName?.split(' ')[0]
@@ -1346,18 +1534,18 @@
         if (editingId != null) {
           const idx = posts.findIndex(x => String(x.id) === String(editingId));
           if (idx >= 0) {
-            Object.assign(posts[idx], { postType, title, body, contact, category, empType, payUnit, payAmount, address, lat, lng });
+            Object.assign(posts[idx], { postType, title, body: bodySafe, contact, phone, kakaoLink, email, visaEligible, category, empType, payUnit, payAmount, address, lat, lng });
             savePosts(posts);
             recordMyPost(posts[idx]);
           }
           editingId = null;
         } else {
           const post = {
-            id: Date.now(), postType, title, body,
+            id: Date.now(), postType, title, body: bodySafe,
             state: currentState, author: nick,
             uid: user.uid || '', email: user.email || '',
             authorUid: user.uid || '', authorEmail: user.email || '',
-            contact, date, time,
+            contact, phone, kakaoLink, email, visaEligible, date, time,
             category, empType, payUnit, payAmount, address, lat, lng,
           };
           posts.push(post);
@@ -1381,7 +1569,8 @@
 
         setWriteMode('create');
         writeOverlay.classList.remove('open');
-        ['wTitle','wBody','wAuthor','wContact'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+        ['wTitle','wBody','wAuthor','wContact','wPhone','wKakao','wEmail'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+        const _veReset = document.getElementById('wVisaEligible'); if (_veReset) _veReset.checked = false;
         switchTab(postType);
       } catch (error) {
         console.error('❌ submitPost 예외: ', error);
@@ -1491,7 +1680,7 @@
       });
     }
 
-    // ── Maps View (지도 뷰 + 마커 + 영역 검색) ──
+    // ── Map View (지도 뷰 + 마커 + 영역 검색) ──
     const STATE_VIEWS = {
       nsw: { center:{lat:-33.8688,lng:151.2093}, zoom:11 },
       vic: { center:{lat:-37.8136,lng:144.9631}, zoom:11 },
@@ -1525,15 +1714,14 @@
       let filtered = applyJobsSearchKw(applyFilters(loadPosts()));
       // 지도 마커 [좌표+UID] 병합 — 같은 작성자 같은 위치 최신 1개만
       try { if (window.koausDedupe && window.koausDedupe.dedupeMapByUidLoc) filtered = window.koausDedupe.dedupeMapByUidLoc(filtered); } catch (_) {}
-      filtered.forEach(p => {
-        if (!(p.lat && p.lng)) return;
-        const mk = new google.maps.Marker({ position: { lat:p.lat, lng:p.lng }, map: jobsMap, title: p.title });
-        const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      // 단일 카드 HTML 빌더 — 단일 마커와 클러스터 그룹 카드 공통 사용
+      const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      function buildCardHtml(p) {
         const thumb = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#777" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>`;
         const payTxt = (p.payAmount && p.payUnit !== 'negotiable')
           ? '$' + p.payAmount + (p.payUnit === 'hour' ? ' / hr' : (p.payUnit === 'year' ? ' / yr' : ''))
           : '';
-        const iw = new google.maps.InfoWindow({ content: `
+        return `
           <div class="iw-card" data-pid="${p.id}" style="display:flex;gap:10px;max-width:270px;padding:4px 2px;cursor:pointer;font-family:'Urbanist','Noto Sans KR',sans-serif;">
             <div style="flex-shrink:0;width:72px;height:72px;border-radius:6px;overflow:hidden;border:1px solid #000;background:#f5f5f5;display:flex;align-items:center;justify-content:center;">${thumb}</div>
             <div style="min-width:0;flex:1;">
@@ -1542,13 +1730,19 @@
               ${p.address ? `<div style="font-size:11px;color:#444;margin-top:3px;">📍 ${esc(p.address)}</div>` : ''}
               <div style="font-size:10px;color:#666;margin-top:4px;">탭하여 상세 보기 →</div>
             </div>
-          </div>` });
-        mk.addListener('click', () => iw.open(jobsMap, mk));
-        // 카드 클릭 → 상세 모달 오픈 (위임 처리는 _jobsIwInstances 통해)
-        if (!window._jobsIws) window._jobsIws = [];
-        window._jobsIws.push(iw);
-        jobsMarkers.push(mk);
-      });
+          </div>`;
+      }
+      // InfoWindow 페이지 1개 재사용 (lazy init) — 마커마다 새로 만들지 않음
+      if (!window._jobsIw) window._jobsIw = new google.maps.InfoWindow();
+      window._jobsIws = [window._jobsIw];   // 위임 click 의 일괄 close 와 backwards-compat
+      // 좌표 클러스터링 + 마커 부착 — koaus-map-cluster 헬퍼 1호출
+      if (window.koausMapCluster) {
+        window.koausMapCluster.attachMarkers({
+          map: jobsMap, infoWindow: window._jobsIw,
+          posts: filtered, markers: jobsMarkers,
+          buildCardHtml,
+        });
+      }
     }
     // InfoWindow 위임 click — jobs 페이지 한 번만 등록
     if (!window._jobsIwBound) {
@@ -1572,6 +1766,14 @@
         if (activeFilter.minPay) {
           if (!p.payAmount || p.payAmount < activeFilter.minPay) return false;
           if (activeFilter.payUnit && p.payUnit !== activeFilter.payUnit)  return false;
+        }
+        // 세컨/써드 비자 필터 — 체크 시 visaEligible truthy 글만
+        //   타입 안전: localStorage 직렬화 후 boolean/string('true')/숫자(1) 어떤 형태든 truthy 처리
+        //   옛 글은 visaEligible 필드 부재(undefined) → Boolean(undefined) === false → 제외 (정상)
+        if (activeFilter.visaEligible) {
+          const v = p.visaEligible;
+          const isOn = v === true || v === 'true' || v === 1 || v === '1';
+          if (!isOn) return false;
         }
         return true;
       });
@@ -1647,24 +1849,51 @@
       const empType  = document.getElementById('ffEmpType').value;
       const payUnit  = document.getElementById('ffPayUnit').value;
       const minPay   = Number(document.getElementById('ffMinPay').value) || 0;
-      activeFilter = { region, empType, payUnit, minPay };
+      const _ffVe    = document.getElementById('ffVisaEligible');
+      const visaEligible = !!(_ffVe && _ffVe.checked);
+      activeFilter = { region, empType, payUnit, minPay, visaEligible };
       areaBounds = null;
       if (region) {
         try { const c = await geocode(region);
           if (jobsMap) jobsMap.panTo(c);
         } catch (_) {}
       }
-      addRecentSearch({ region, empType, payUnit, minPay });
+      addRecentSearch({ region, empType, payUnit, minPay, visaEligible });
       closeFilterModal();
       renderPosts();
       updateMapMarkers();
+      updateAreaResetVisibility();
     });
     safeOn('filterResetBtn', 'click', () => {
       ['ffRegion','ffMinPay'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
       const ffEt = document.getElementById('ffEmpType'); if (ffEt) ffEt.value = '';
+      const ffVe = document.getElementById('ffVisaEligible'); if (ffVe) ffVe.checked = false;
       document.getElementById('ffPayUnit').value = 'hour';
       activeFilter = {}; areaBounds = null;
       renderPosts(); updateMapMarkers();
+      updateAreaResetVisibility();
+    });
+    // 지도 영역 제한 해제 — 세컨/써드 잡 전국 검색 등 광역 탐색용 (List + Map 양쪽 동기화)
+    function updateAreaResetVisibility() {
+      const mapBtn  = document.getElementById('areaResetBtn');
+      const listBtn = document.getElementById('areaResetTopBtn');
+      const show = !!areaBounds;
+      if (mapBtn)  mapBtn.style.display  = show ? '' : 'none';
+      if (listBtn) listBtn.style.display = show ? 'inline-flex' : 'none';
+    }
+    function _resetAreaBounds() {
+      areaBounds = null;
+      updateAreaResetVisibility();
+      renderPosts();
+      try { updateMapMarkers(); } catch (_) {}
+    }
+    safeOn('areaResetBtn',    'click', _resetAreaBounds);
+    safeOn('areaResetTopBtn', 'click', _resetAreaBounds);
+    // 세컨/써드 비자 체크박스 — 즉시 필터 적용 (모달 [적용하기] 안 눌러도 실시간 반영)
+    safeOn('ffVisaEligible', 'change', (e) => {
+      activeFilter.visaEligible = !!(e.target && e.target.checked);
+      renderPosts();
+      try { updateMapMarkers(); } catch (_) {}
     });
 
     // ── View 토글 (List / Map) ──
@@ -1682,6 +1911,8 @@
         lv.style.display = ''; mv.style.display = 'none';
         lb && lb.classList.add('active'); mb && mb.classList.remove('active');
       }
+      // View 전환 시 영역 제한 알림 가시성 동기화 (List/Map 어디서든 표시)
+      try { updateAreaResetVisibility(); } catch (_) {}
     }
     safeOn('viewListBtn', 'click', () => switchView('list'));
     safeOn('viewMapBtn',  'click', () => switchView('map'));
@@ -1690,6 +1921,7 @@
       areaBounds = jobsMap.getBounds();
       const asb = document.getElementById('areaSearchBtn');
       if (asb) asb.classList.remove('show');
+      updateAreaResetVisibility();
       updateMapMarkers();
       renderPosts();
     });
@@ -1700,15 +1932,8 @@
       whenMapsReady(() => wireAutocomplete('wAddress', 'wAddressSuggest'));
     });
 
-    // renderPosts 에서 filter 적용 (기존 renderPosts 보강 — applyFilters 통과)
-    const _origRender = renderPosts;
-    renderPosts = function () {
-      _origRender.apply(this, arguments);
-      // 추가: 필터 적용된 카운트로 boardCount 보정
-      const cnt = applyFilters(loadPosts()).length;
-      const bc = document.getElementById('boardCount');
-      if (bc) bc.textContent = `총 ${cnt}건`;
-    };
+    // renderPosts 본체가 applyFilters 를 직접 호출 — wrapper 중복 카운트 보정 불필요
+    //   (옛 wrapper 는 "카드 다수 + 카운트 0" 불일치 버그 원인. 제거됨.)
 
     // 초기 진입 시 Places 미리 로드 (자동완성 응답성)
     loadMapScript();
@@ -1725,11 +1950,18 @@
         <button class="report-close" id="tosClose" type="button" aria-label="닫기">✕</button>
       </div>
       <div class="tos-body">
-        <p><strong>제1조 (목적 및 동의 - Introduction &amp; Acceptance)</strong><br>본 약관은 KoAus(이하 "서비스")가 제공하는 호주 한인 커뮤니티 정보 공유 서비스의 이용 조건을 규정합니다. 본 서비스에 접속하거나 이용함으로써 사용자는 본 약관에 동의하는 것으로 간주되며, 동의하지 않으실 경우 서비스를 이용하실 수 없습니다.</p>
-        <p><strong>제2조 (정보 공유 및 플랫폼의 면책 - Venue &amp; Limitation of Liability)</strong><br>서비스는 이용자 간 정보(구인구직, 쉐어하우스, 중고거래 등) 공유 공간만을 제공하는 온라인 플랫폼(Venue)입니다. 거래 및 계약의 당사자는 사용자 본인이며, 직거래나 정보 활용으로 인해 발생하는 모든 법적·금전적 분쟁과 직간접적 손실에 대해 당사는 법이 허용하는 최대 한도 내에서 책임을 지지 않습니다. 본 서비스는 호주 소비자법(ACL)이 보장하는 소비자 권리를 제한하지 않으며, 당사는 거래 일체에 개입하거나 보장하지 않습니다.</p>
-        <p><strong>제3조 (금지 행위 및 행동 규범 - User Conduct &amp; Online Safety Act)</strong><br>허위 매물, 사기성 정보, 욕설·비방, 타인 사칭, 봇(Bot)을 이용한 스팸 등은 엄격히 금지됩니다. 모든 사용자는 호주의 온라인 안전법 2021(Online Safety Act 2021)을 준수해야 하며, 위반 시 게시물은 사전 통보 없이 즉시 삭제되고 서비스 이용 제한 및 계정이 영구 정지될 수 있습니다.</p>
-        <p><strong>제4조 (준거법 - Governing Law)</strong><br>본 약관은 호주 퀸즐랜드(Queensland)주의 법률을 따르며, 본 웹사이트와 관련된 모든 분쟁은 퀸즐랜드주 법원의 관할에 속합니다.</p>
-        <p class="tos-note">※ 본 약관은 베타 서비스용 요약본이며, 서비스 고도화에 따라 정식 약관으로 대체될 수 있습니다.</p>
+        <p><strong>Operator · 운영자</strong> — KIM SHINHAENG, sole trader trading as <strong>"Koaus Community"</strong> (ABN 27581486613) · 김신행, 사업자명 <strong>"Koaus Community"</strong>. Contact: <a href="mailto:koaus.official@gmail.com">koaus.official@gmail.com</a>. Governing law: State of Queensland, Australia. Effective 5 June 2026 / 시행일 2026년 6월 5일.</p>
+        <p><strong>EN — 1. Introduction &amp; acceptance.</strong> These Terms govern use of the Korean–Australian community information-sharing service ("KoAus"). By accessing the service you agree to these Terms and to the Privacy Policy.</p>
+        <p><strong>EN — 2. Platform nature &amp; limitation of liability.</strong> KoAus is an online venue for users to share information (jobs, sharehouses, second-hand goods, vehicle and care services, etc.). The parties to any transaction are the users themselves. To the maximum extent permitted by law, we are not liable for loss arising from direct dealings. These Terms do not exclude or limit consumer rights guaranteed by the Australian Consumer Law (ACL).</p>
+        <p><strong>EN — 3. Prohibited conduct.</strong> False listings, scam information, abuse, defamation, impersonation, bot-driven spam, and infringing content are prohibited. All users must comply with the Online Safety Act 2021 (Cth).</p>
+        <p><strong>EN — 4. Content ownership &amp; intellectual property.</strong> You retain ownership of your content but grant us a non-exclusive, royalty-free licence to use, display and promote it. "koaus" is a trade mark filed with IP Australia (word mark, Classes 9 and 35); "Koaus Community" is our registered business name (ASIC).</p>
+        <p><strong>EN — 5. Reporting, account &amp; disclaimers.</strong> Report harmful content to <a href="mailto:koaus.official@gmail.com">koaus.official@gmail.com</a>. You may delete your account at any time; we may suspend accounts for breach. Service-specific disclaimers apply — emergency contacts are for reference only (call 000 in emergencies), currency rates are indicative, and visa/legal/business listings are third-party and not endorsements. Governing law: State of Queensland, Australia.</p>
+        <p><strong>KO — 1. 목적·동의.</strong> 본 약관은 김신행(사업자명 "Koaus Community", ABN 27581486613)이 제공하는 호주 한인 커뮤니티 정보공유 서비스("KoAus") 의 이용 조건을 규정합니다. 서비스 이용 시 본 약관 및 개인정보처리방침에 동의한 것으로 간주됩니다.</p>
+        <p><strong>KO — 2. 플랫폼 성격·면책.</strong> KoAus 는 이용자 간 정보(구인구직, 쉐어하우스, 중고거래, 차량·케어 서비스 등)를 공유하는 온라인 플랫폼(Venue) 입니다. 거래·계약의 당사자는 이용자 본인이며, 직거래로 발생하는 손실에 대해 당사는 법이 허용하는 최대한도 내에서 책임지지 않습니다. 호주 소비자법(ACL)이 보장하는 권리는 제한되지 않습니다.</p>
+        <p><strong>KO — 3. 금지행위.</strong> 허위 매물·사기성 정보·욕설·비방·타인 사칭·봇 스팸·불법 콘텐츠 금지. 「Online Safety Act 2021 (Cth)」 준수.</p>
+        <p><strong>KO — 4. 콘텐츠·지적재산.</strong> 게시 콘텐츠 소유권은 이용자에게 있으며, 당사는 서비스 운영·표시·홍보를 위한 비독점적 사용권을 부여받습니다. "koaus" 는 IP Australia 출원 상표(워드마크, Class 9·35), "Koaus Community" 는 ASIC 등록 사업자명입니다.</p>
+        <p><strong>KO — 5. 신고·계정·서비스별 면책.</strong> 유해 콘텐츠 신고 → <a href="mailto:koaus.official@gmail.com">koaus.official@gmail.com</a>. 이용자는 언제든 계정 삭제 요청 가능하며, 약관 위반 시 당사가 계정을 정지·해지할 수 있습니다. 서비스별 면책 — 긴급연락처(실제 응급 시 000)·환율(참고용)·비자/법무/업체 디렉터리(제3자, 당사 보증 아님). 준거법: 호주 퀸즈랜드주.</p>
+        <p class="tos-note">전체 본문 · Full text → <a href="terms.html" target="_blank" rel="noopener">terms.html</a> (12 조항 + 서비스별 면책 상세 · Effective 5 June 2026 · 시행일 2026년 6월 5일)</p>
       </div>
       <div class="report-actions">
         <button class="filter-apply-btn" id="tosConfirm" type="button">확인</button>
@@ -1745,10 +1977,17 @@
         <button class="report-close" id="privacyClose" type="button" aria-label="닫기">✕</button>
       </div>
       <div class="tos-body">
-        <p><strong>제1조 (개인정보 수집의 원칙 - Collection)</strong><br>당사는 호주 개인정보보호법 1988(Privacy Act 1988) 및 호주 개인정보보호원칙(APPs)을 엄격히 준수합니다. 회원 가입, 보안 인증, 고객 지원 시 이름, 이메일 주소, 접속 IP 등 서비스 제공에 꼭 필요한 최소한의 정보만 수집합니다. 보안 및 봇 차단을 위해 Google reCAPTCHA가 기기 정보를 수집할 수 있습니다.</p>
-        <p><strong>제2조 (정보의 사용 목적 - Use of Information)</strong><br>수집된 개인정보 및 인증 정보는 웹사이트 계정 관리, 커뮤니티 게시판 이용 권한 부여, 고객 지원 응대, 스팸 봇 차단 및 플랫폼 보안 유지 등 서비스 제공 목적 외에는 절대 사용되지 않습니다. 작성한 게시물의 연락처 등 공개 정보는 이용자 본인의 책임 하에 게시됩니다.</p>
-        <p><strong>제3조 (데이터 보안 및 해외 이전 - Data Security &amp; Overseas Disclosure)</strong><br>당사는 수집된 데이터를 안전한 클라우드 서버(Firebase)에 보관합니다. 서비스 제공을 위해 데이터가 호주 외의 국가(미국 등)에 위치한 서버에 저장되거나 처리될 수 있습니다. 무단 접근을 막기 위한 최선의 보안 조치를 취하고 있으며, 심각한 데이터 유출 발생 시 필수 데이터 유출 통지(NDB) 제도에 따라 사용자 및 호주 정보보호위원회(OAIC)에 통보합니다.</p>
-        <p><strong>제4조 (사용자의 권리 - User Rights)</strong><br>사용자는 언제든지 자신의 개인정보에 대한 열람을 요청하거나 프로필을 통해 수정할 수 있습니다. 개인정보 파기 또는 계정 삭제를 원하실 경우 고객센터를 통해 요청하실 수 있으며, 관련 법령에 따라 신속히 파기 절차를 진행합니다.</p>
+        <p><strong>Operator · 운영자</strong> — KIM SHINHAENG, sole trader trading as <strong>"Koaus Community"</strong> (ABN 27581486613) · 김신행, 사업자명 <strong>"Koaus Community"</strong>. Contact: <a href="mailto:koaus.official@gmail.com">koaus.official@gmail.com</a>. Governing law: State of Queensland, Australia. Effective 5 June 2026 / 시행일 2026년 6월 5일.</p>
+        <p><strong>EN — 1. What we collect.</strong> Only what is needed to provide the service: mobile number (SMS verification), email address (Google sign-in or optional contact), account details, content you post, IP address, and device/log information. <strong>We do NOT collect your full legal name.</strong> Google reCAPTCHA may collect device information for security and bot prevention.</p>
+        <p><strong>EN — 2. How we use it.</strong> Only for account management and authentication, connecting posts/bookings/enquiries, customer support, spam and fraud prevention, operating and improving the service, and meeting legal obligations.</p>
+        <p><strong>EN — 3. Disclosure &amp; overseas storage.</strong> When you book or enquire with a business listed on the platform, we pass your contact details to that business so the service can proceed (separate consent at booking). Information is stored on cloud servers (Firebase/Google) and may be processed in countries outside Australia (APP 8). Eligible data breaches are reported to the OAIC under the Notifiable Data Breaches (NDB) scheme.</p>
+        <p><strong>EN — 4. Retention &amp; destruction.</strong> Personal information is destroyed when its purpose is fulfilled or any legal retention period ends. To prevent misuse, essential account details may be retained in encrypted form for 6 months after account closure before destruction.</p>
+        <p><strong>EN — 5. Your rights.</strong> You may request access, correction, or deletion → <a href="mailto:koaus.official@gmail.com">koaus.official@gmail.com</a>. Complaints to the Office of the Australian Information Commissioner (OAIC, <a href="https://www.oaic.gov.au" target="_blank" rel="noopener">www.oaic.gov.au</a>). Service is for users aged 18 and over.</p>
+        <p><strong>KO — 1. 수집 정보.</strong> 당사는 서비스 제공에 필요한 최소한의 정보만 수집합니다 — 휴대전화번호(SMS 본인인증), 이메일 주소(Google 로그인 시 제공되거나 선택적 연락처), 계정 정보, 게시물 내용, 접속 IP 및 기기·로그 정보. <strong>본인 실명(성명)은 수집하지 않습니다.</strong> 보안 및 봇 차단을 위해 Google reCAPTCHA 가 기기 정보를 수집할 수 있습니다.</p>
+        <p><strong>KO — 2. 이용 목적.</strong> 계정 관리·인증, 게시·예약·문의 연동, 고객지원, 스팸·부정이용 차단, 서비스 운영·개선, 법적 의무 이행 목적으로만 이용합니다.</p>
+        <p><strong>KO — 3. 제3자 제공·해외 보관.</strong> 이용자가 플랫폼 내 업체(쉐어하우스, 정비, 렌터카, 견인 등) 에 예약·문의할 경우, 서비스 진행을 위해 해당 업체에 이용자의 연락처가 전달됩니다(예약·문의 시점에 별도 동의). 수집된 정보는 클라우드 서버(Firebase/Google) 에 보관되며 호주 외 국가에서 저장·처리될 수 있습니다(APP 8). 심각한 유출 시 호주 정보보호위원회(OAIC) 에 NDB 제도에 따라 통지합니다.</p>
+        <p><strong>KO — 4. 보관 및 파기.</strong> 개인정보는 이용 목적 달성 또는 법정 보관기간 종료 시 파기합니다. 부정이용 방지를 위해 탈퇴 후 6개월 동안 주요 정보를 암호화 보관 후 파기할 수 있습니다.</p>
+        <p><strong>KO — 5. 이용자의 권리.</strong> 열람·정정·삭제 요청 → <a href="mailto:koaus.official@gmail.com">koaus.official@gmail.com</a>. 민원 → 호주 정보보호위원회(OAIC, <a href="https://www.oaic.gov.au" target="_blank" rel="noopener">www.oaic.gov.au</a>). 본 서비스는 만 18세 이상 대상입니다.</p>
       </div>
       <div class="report-actions">
         <button class="filter-apply-btn" id="privacyConfirm" type="button">확인</button>
@@ -1850,7 +2089,7 @@
     // ── App Check (reCAPTCHA v3) — 봇·외부 스크립트의 백엔드(인증/DB) 접근 차단 ──
     // 사이트 키 발급: Firebase 콘솔 > App Check > 앱 등록(reCAPTCHA v3 공급자)
     // 키를 채우면 자동 활성화됨. (placeholder 상태에서는 운영 사이트를 깨뜨리지 않도록 건너뜀)
-    const APP_CHECK_SITE_KEY = '6LcMRActAAAAALY3ancFhgqgzXbdWogVdb12R1Wf';
+    const APP_CHECK_SITE_KEY = '6Ld1mAwtAAAAADURkCq0J6GOr3wFg9DQVOsxVG5v';
     if (APP_CHECK_SITE_KEY && !APP_CHECK_SITE_KEY.startsWith('TODO')) {
       initializeAppCheck(app, {
         provider: new ReCaptchaV3Provider(APP_CHECK_SITE_KEY),

@@ -3,7 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>Care — KoAus</title>
+  <title>Account &amp; Data Deletion · 계정 및 데이터 삭제 — KoAus(코오스)</title>
+  <meta name="description" content="Account &amp; Data Deletion Notice — How to request deletion of your KoAus account and personal information. 계정 및 개인정보 삭제 신청 안내." />
+  <meta name="robots" content="index, follow" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;800;900&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet" />
@@ -446,109 +448,138 @@
 
     <div class="page-header">
       <div>
-        <h1 class="page-title">🤝 Care · 긴급 연락처</h1>
-        <p class="page-subtitle">호주 한인 필수 긴급 서비스 & 영사 연락처</p>
+        <h1 class="page-title">Account &amp; Data Deletion · 계정 및 데이터 삭제</h1>
+        <p class="page-subtitle">How to delete your KoAus account and personal data · 계정 및 개인정보 삭제 신청 안내</p>
       </div>
-      <a href="index.html" class="page-back">← 홈으로</a>
+      <div class="legal-header-actions">
+        <button type="button" class="legal-close-btn" id="legalCloseBtn" aria-label="닫기 — 이전 화면으로 돌아가기" title="닫기">✕</button>
+        <a href="index.html" class="page-back">← 홈으로</a>
+      </div>
     </div>
 
-    <section class="care-block">
-      <details class="care-accord" open>
-        <summary class="care-accord-summary">
-          <span class="care-accord-title">🚨 주요 긴급 서비스 <em>전국 공통</em></span>
-          <span class="care-accord-chev" aria-hidden="true">▼</span>
-        </summary>
-        <div class="care-accord-body">
-      <div class="care-card">
-        <div class="care-card-info">
-          <div class="care-card-name">호주 통합 긴급신고 <span class="care-card-tag">경찰 · 소방 · 구급차</span></div>
-          <div class="care-card-num">000</div>
-        </div>
-        <div class="care-card-actions">
-          <a class="care-call-btn" href="tel:000">📞 전화 걸기</a>
-        </div>
-      </div>
-      <div class="care-card">
-        <div class="care-card-info">
-          <div class="care-card-name">정부 무료 통역 서비스 <span class="care-card-tag">TIS National</span></div>
-          <div class="care-card-num">131 450</div>
-        </div>
-        <div class="care-card-actions">
-          <a class="care-call-btn" href="tel:131450">📞 전화 걸기</a>
-        </div>
-      </div>
-      <div class="care-card">
-        <div class="care-card-info">
-          <div class="care-card-name">경찰 민원 · 비긴급 신고 <span class="care-card-tag">Police Assistance</span></div>
-          <div class="care-card-num">131 444</div>
-        </div>
-        <div class="care-card-actions">
-          <a class="care-call-btn" href="tel:131444">📞 전화 걸기</a>
-        </div>
-      </div>
-        </div>
-      </details>
-    </section>
+    <article class="legal-page">
 
-    <section class="care-block">
-      <details class="care-accord">
-        <summary class="care-accord-summary">
-          <span class="care-accord-title">🇰🇷 대한민국 대사관 · 영사관 <em>약도·전화·관할 지역</em></span>
-          <span class="care-accord-chev" aria-hidden="true">▼</span>
-        </summary>
-        <div class="care-accord-body">
-          <div id="consulateList"></div>
-        </div>
-      </details>
-    </section>
+      <!-- 운영자/사업자 정보 (Operator details) — 본문 상단 공통 명시 (EN/KO 통합 헤더) -->
+      <section class="legal-article">
+        <h2 class="legal-article-title">Operator details · 운영자 정보</h2>
+        <p>Operator: KIM SHINHAENG (MR SHINHAENG KIM), sole trader — trading as &ldquo;Koaus Community&rdquo;<br>
+           운영자: 김신행 (MR SHINHAENG KIM), 개인사업자 — 사업자명 &ldquo;Koaus Community&rdquo;<br>
+           ABN: 27581486613<br>
+           Contact email · 연락처: <a href="mailto:koaus.official@gmail.com">koaus.official@gmail.com</a><br>
+           Governing law · 준거법: State of Queensland, Australia · 호주 퀸즐랜드주<br>
+           Effective date · 시행일: 3 June 2026 / 2026년 6월 3일</p>
+      </section>
 
-    <!-- ── 호주 상비약 가이드 (단일 통합 아코디언) — 교민 · 워홀러용 ── -->
-    <section class="care-block">
-      <details class="med-accord med-accord--single">
-        <summary>
-          <span class="med-symptom">
-            <span class="med-emo">💊</span>호주 상비약 가이드 (약 💊)
-            <em style="font-style:normal;font-weight:500;color:var(--text-muted);font-size:12.5px;margin-left:6px;">증상별 현지 약 이름</em>
-          </span>
-          <span class="med-chev">▼</span>
-        </summary>
-        <div class="med-body med-body--list">
-          <ul class="med-list">
-            <li><strong>진통제</strong> : 파나돌 (Panadol)</li>
-            <li><strong>진통·소염·해열제</strong> : 뉴로펜 (Nurofen)</li>
-            <li><strong>종합 감기약</strong> : 코드랄 (Codral)</li>
-            <li><strong>기침 감기약</strong> : 베나드릴 (Benadryl)</li>
-            <li><strong>목감기(사탕형)</strong> : 스트렙실 (Strepsils)</li>
-            <li><strong>지사제(설사약)</strong> : 가스트로 스탑 (Gastro-Stop), 이모디움 (Imodium)</li>
-            <li><strong>소화제</strong> : 마일란타 (Mylanta)</li>
-            <li><strong>위산과다 및 속쓰림</strong> : 개비스콘 (Gaviscon)</li>
-            <li><strong>알레르기</strong> : 클라라틴 (Claratyne), 지르텍 (Zyrtec), 텔파스트 (Telfast)</li>
-            <li><strong>근육통/삔 곳</strong> : 딥히트 (Deep Heat), 볼타렌 (Voltaren), 피지오크림 (Fisiocrem)</li>
-            <li><strong>상처 소독약</strong> : 베타딘 (Betadine)</li>
-            <li><strong>만능 상처/보습 연고</strong> : 루카스 포포크림 (Lucas&rsquo; Papaw Ointment)</li>
-            <li><strong>안구건조 인공눈물</strong> : 리프레쉬 (Refresh), 시스테인 (Systane)</li>
-            <li><strong>숙취해소 및 피로회복</strong> : 하이드로돌 (Hydrodol), 베로카 (Berocca)</li>
-            <li><strong>멀미약</strong> : 트래바캄 (Travacalm)</li>
+      <!-- ════════════════════════════════════════════════════════════════
+           즉시 액션 CTA — 이메일 신청 / 마이페이지 신청
+           ════════════════════════════════════════════════════════════════ -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin:18px 0 30px;">
+        <a href="mailto:koaus.official@gmail.com?subject=Account%20%26%20Data%20Deletion%20Request%20%C2%B7%20%EA%B3%84%EC%A0%95%20%EC%82%AD%EC%A0%9C%20%EC%8B%A0%EC%B2%AD&amp;body=Hello%20KoAus%20Team%2C%0A%0AI%20would%20like%20to%20request%20deletion%20of%20my%20account%20and%20personal%20data.%0A%0AAccount%20email%20%2F%20%EA%B0%80%EC%9E%85%20%EC%9D%B4%EB%A9%94%EC%9D%BC%3A%20%0ANickname%20%2F%20%EB%8B%89%EB%84%A4%EC%9E%84%3A%20%0AReason%20(optional)%20%2F%20%EC%82%AC%EC%9C%A0(%EC%84%A0%ED%83%9D)%3A%20%0A%0AThank%20you.%0A%EA%B0%90%EC%82%AC%ED%95%A9%EB%8B%88%EB%8B%A4."
+           style="display:flex;flex-direction:column;gap:8px;padding:22px 22px;background:var(--bg-base);border:1.5px solid var(--border);border-radius:14px;text-decoration:none;color:var(--text-primary);transition:border-color 0.15s;"
+           onmouseover="this.style.borderColor='var(--text-primary)'" onmouseout="this.style.borderColor='var(--border)'">
+          <span style="font-size:24px;">📧</span>
+          <strong style="font-size:15.5px;font-weight:800;color:var(--text-primary);">Email Request · 이메일로 신청</strong>
+          <span style="font-size:12.5px;color:var(--text-muted);line-height:1.55;">Send a deletion request from your registered email · 가입한 이메일로 삭제 요청 메일 전송</span>
+          <span style="font-size:12.5px;color:#16a34a;font-weight:700;margin-top:4px;">→ koaus.official@gmail.com</span>
+        </a>
+        <a href="mypage.html"
+           style="display:flex;flex-direction:column;gap:8px;padding:22px 22px;background:var(--bg-base);border:1.5px solid var(--border);border-radius:14px;text-decoration:none;color:var(--text-primary);transition:border-color 0.15s;"
+           onmouseover="this.style.borderColor='var(--text-primary)'" onmouseout="this.style.borderColor='var(--border)'">
+          <span style="font-size:24px;">🔧</span>
+          <strong style="font-size:15.5px;font-weight:800;color:var(--text-primary);">In-App Request · 마이페이지 신청</strong>
+          <span style="font-size:12.5px;color:var(--text-muted);line-height:1.55;">My Page &gt; Delete Account (automated flow) · 마이페이지 &gt; Danger Zone &gt; 계정 삭제</span>
+          <span style="font-size:12.5px;color:#dc2626;font-weight:700;margin-top:4px;">→ Open My Page</span>
+        </a>
+      </div>
+
+      <!-- ── 언어 점프 (앵커) ── -->
+      <nav aria-label="Language switch · 언어 선택" style="display:flex;gap:8px;margin:0 0 30px;flex-wrap:wrap;">
+        <a href="#del-en" style="display:inline-flex;align-items:center;gap:6px;padding:8px 18px;background:var(--bg-base);border:1px solid var(--border);border-radius:999px;font-size:13px;font-weight:800;color:var(--text-primary);text-decoration:none;letter-spacing:0.02em;">English ↓</a>
+        <a href="#del-ko" style="display:inline-flex;align-items:center;gap:6px;padding:8px 18px;background:var(--bg-base);border:1px solid var(--border);border-radius:999px;font-size:13px;font-weight:800;color:var(--text-primary);text-decoration:none;letter-spacing:0.02em;">한국어 ↓</a>
+      </nav>
+
+      <!-- ════════════════════════════════════════════════════════════════
+           ENGLISH VERSION (상단 배치)
+           ════════════════════════════════════════════════════════════════ -->
+      <div id="del-en">
+        <p style="display:inline-block;font-size:11px;font-weight:800;color:#1e3a8a;background:rgba(30,58,138,0.08);border:1px solid rgba(30,58,138,0.18);padding:3px 10px;border-radius:999px;letter-spacing:0.06em;margin:0 0 14px;">ENGLISH VERSION</p>
+        <h1 style="font-size:30px;font-weight:900;color:var(--text-primary);margin:0 0 6px;letter-spacing:-0.01em;line-height:1.25;">Account &amp; Data Deletion Notice</h1>
+        <p style="font-size:13.5px;color:var(--text-muted);margin:0 0 22px;font-weight:600;">Effective Date: 3 June 2026</p>
+
+        <section class="legal-article">
+          <p>You may request deletion of your account and associated personal information at any time.</p>
+        </section>
+
+        <section class="legal-article">
+          <h2 class="legal-article-title">1. How to Request Deletion</h2>
+          <ul style="margin:6px 0 0;padding-left:22px;line-height:1.75;">
+            <li><strong>In-App / Website:</strong> Navigate to <a href="mypage.html">[My Page &gt; Delete Account]</a> to submit an automated request.</li>
+            <li><strong>Email Request:</strong> Send an email directly to <a href="mailto:koaus.official@gmail.com?subject=Account%20%26%20Data%20Deletion%20Request">koaus.official@gmail.com</a> from your registered email address with your deletion request.</li>
           </ul>
-          <p class="med-list-footer">* 본 정보는 참고용이며, 복용 전 반드시 약사 또는 의사와 상담하세요.</p>
-        </div>
-      </details>
-    </section>
+        </section>
 
+        <section class="legal-article">
+          <h2 class="legal-article-title">2. Scope of Deletion</h2>
+          <ul style="margin:6px 0 0;padding-left:22px;line-height:1.75;">
+            <li>Account details and personally identifying information will be permanently purged from our database.</li>
+            <li><strong>Note:</strong> Information that must be retained by law, or kept to prevent fraud and misuse, may be securely held in an encrypted format for <strong>6 months</strong> before complete destruction.</li>
+          </ul>
+        </section>
+
+        <section class="legal-article">
+          <h2 class="legal-article-title">3. Timeframe</h2>
+          <p>Deletion requests will be reviewed and processed within a reasonable time after confirming the user's identity.</p>
+        </section>
+      </div>
+
+      <!-- ── 영문 / 한글 섹션 사이 구분선 ── -->
+      <hr style="margin:54px 0 40px;border:0;border-top:1px solid var(--border);">
+
+      <!-- ════════════════════════════════════════════════════════════════
+           KOREAN VERSION (하단 배치)
+           ════════════════════════════════════════════════════════════════ -->
+      <div id="del-ko">
+        <p style="display:inline-block;font-size:11px;font-weight:800;color:#1e3a8a;background:rgba(30,58,138,0.08);border:1px solid rgba(30,58,138,0.18);padding:3px 10px;border-radius:999px;letter-spacing:0.06em;margin:0 0 14px;">한국어 버전</p>
+        <h1 style="font-size:30px;font-weight:900;color:var(--text-primary);margin:0 0 6px;letter-spacing:-0.01em;line-height:1.25;">계정 및 데이터 삭제 안내</h1>
+        <p style="font-size:13.5px;color:var(--text-muted);margin:0 0 22px;font-weight:600;">시행일: 2026년 6월 3일</p>
+
+        <section class="legal-article">
+          <p>이용자는 계정과 관련 개인정보의 삭제를 언제든지 요청할 수 있습니다.</p>
+        </section>
+
+        <section class="legal-article">
+          <h2 class="legal-article-title">1. 신청 방법</h2>
+          <ul style="margin:6px 0 0;padding-left:22px;line-height:1.75;">
+            <li><strong>앱/웹 이용:</strong> 서비스 내 <a href="mypage.html">[마이페이지 &gt; 계정 삭제]</a> 메뉴를 통해 즉시 신청 가능합니다.</li>
+            <li><strong>이메일 이용:</strong> 가입하신 계정 이메일 주소를 사용하여 <a href="mailto:koaus.official@gmail.com?subject=%EA%B3%84%EC%A0%95%20%EC%82%AD%EC%A0%9C%20%EC%8B%A0%EC%B2%AD">koaus.official@gmail.com</a> 으로 삭제 요청 메일을 보내주시면 확인 후 처리해 드립니다.</li>
+          </ul>
+        </section>
+
+        <section class="legal-article">
+          <h2 class="legal-article-title">2. 삭제 범위 및 보관 기간</h2>
+          <ul style="margin:6px 0 0;padding-left:22px;line-height:1.75;">
+            <li>계정 정보 및 개인 식별정보는 데이터베이스에서 완전히 삭제됩니다.</li>
+            <li><strong>단,</strong> 관련 법령상 보관이 필요한 정보 또는 악의적인 탈퇴/재가입 및 부정이용 방지 목적으로 지정된 데이터는 <strong>탈퇴 후 6개월 동안</strong> 안전하게 암호화 보관된 후 파기될 수 있습니다.</li>
+          </ul>
+        </section>
+
+        <section class="legal-article">
+          <h2 class="legal-article-title">3. 처리 기간</h2>
+          <p>이용자 본인 확인 절차를 거친 후 합리적인 기간 내에 신속하게 처리됩니다.</p>
+        </section>
+      </div>
+
+      <footer class="legal-meta">
+        <div class="legal-meta-row"><span class="legal-meta-label">Effective date · 시행일</span><span class="legal-meta-val">3 June 2026 · 2026년 6월 3일</span></div>
+        <div class="legal-meta-row"><span class="legal-meta-label">Operator · 운영자</span><span class="legal-meta-val">KIM SHINHAENG / 김신행 (ABN 27581486613)</span></div>
+        <div class="legal-meta-row"><span class="legal-meta-label">Governing law · 준거법</span><span class="legal-meta-val">State of Queensland, Australia · 호주 퀸즐랜드주</span></div>
+        <div class="legal-meta-row"><span class="legal-meta-label">Contact · 연락처</span><a class="legal-meta-val" href="mailto:koaus.official@gmail.com">koaus.official@gmail.com</a></div>
+      </footer>
+    </article>
 
   </main>
 
-  <footer class="site-footer-v2">
-    <div class="footer-links">
-      <a href="about.html">KoAus 소개 / About</a>
-      <a href="faq.html">자주 묻는 질문 / FAQ</a>
-      <a href="guide.html">이용 가이드 / Guide</a>
-      <a href="privacy.html">Privacy Policy / 개인정보처리방침</a>
-      <a href="terms.html">Terms of Service / 서비스 이용약관</a>
-      <a href="contact.html">Contact / 문의하기</a>
-    </div>
-    <p class="footer-copy">© 2026 Koaus Community. All rights reserved.</p>
-  </footer>
+  <footer class="site-footer"><p>KoAus</p></footer>
 
   <script>
     // ── Sidebar ──
@@ -584,33 +615,20 @@
     if (themeToggleBtn) themeToggleBtn.addEventListener('click', () => applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'));
     applyTheme(localStorage.getItem('koaus-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
 
-    // ── 영사관 주별 매핑 (선택한 주 관할 영사관을 최상단 강조) ──
-    const STATE_GOV = { act:'canberra', nsw:'sydney', qld:'sydney', nt:'sydney', vic:'melbourne', tas:'melbourne', sa:'melbourne', wa:'melbourne' };
-    const CONSULATES = {
-      canberra:  { name:'주호주 대한민국 대사관',     region:'ACT 관할',           tel:'0262704100', telDisp:'(02) 6270 4100', addr:'113 Empire Circuit, Yarralumla ACT 2600' },
-      sydney:    { name:'주시드니 대한민국 총영사관', region:'NSW · QLD · NT 관할', tel:'0292100200', telDisp:'(02) 9210 0200', addr:'Level 10, 44 Market St, Sydney NSW 2000' },
-      melbourne: { name:'주멜버른 대한민국 분관',     region:'VIC · TAS · SA · WA 관할', tel:'0395333800', telDisp:'(03) 9533 3800', addr:'Level 9, 459 Little Collins St, Melbourne VIC 3000' },
-    };
-    const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    const careState = (new URLSearchParams(location.search).get('state') || '').toLowerCase();
-    const gov = STATE_GOV[careState];
-    const order = gov ? [gov, ...['canberra','sydney','melbourne'].filter(k => k !== gov)] : ['canberra','sydney','melbourne'];
-    document.getElementById('consulateList').innerHTML = order.map(k => {
-      const c = CONSULATES[k];
-      const isGov = k === gov;
-      const mapUrl = 'https://www.google.com/maps?q=' + encodeURIComponent(c.addr);
-      return `<div class="care-card care-consulate${isGov ? ' care-consulate--gov' : ''}">
-          <div class="care-card-info">
-            <div class="care-card-name">${isGov ? '<span class="care-gov-badge">내 지역 관할</span> ' : ''}${esc(c.name)} <span class="care-card-tag">${esc(c.region)}</span></div>
-            <div class="care-card-num">${esc(c.telDisp)}</div>
-            <div class="care-card-addr">📍 ${esc(c.addr)}</div>
-          </div>
-          <div class="care-card-actions">
-            <a class="care-call-btn" href="tel:${esc(c.tel)}">📞 전화</a>
-            <a class="care-map-btn" href="${mapUrl}" target="_blank" rel="noopener noreferrer">🗺 지도 보기</a>
-          </div>
-        </div>`;
-    }).join('');
+    // ── 닫기(X) 버튼: 이전 화면(회원가입 모달 등)으로 복귀, 이력 없으면 홈으로 ──
+    (function setupLegalCloseBtn() {
+      const btn = document.getElementById('legalCloseBtn');
+      if (!btn) return;
+      btn.addEventListener('click', () => {
+        try {
+          if (window.history.length > 1 && document.referrer && new URL(document.referrer).origin === location.origin) {
+            window.history.back();
+            return;
+          }
+        } catch (_) {}
+        location.replace('index.html');
+      });
+    })();
   </script>
 </body>
 </html>

@@ -32,7 +32,10 @@
   <script src="local-analytics.js" defer></script>
   <script src="koaus-gallery.js" defer></script>
   <script src="koaus-dedupe.js" defer></script>
+  <script src="koaus-url-guard.js" defer></script>
+  <script src="koaus-report.js" defer></script>
   <script type="module" src="admin-mark.js"></script>
+  <script type="module" src="koaus-rbac.js"></script>
   <script type="module" src="auth-extra.js"></script>
   <script type="module" src="koaus-phone-auth.js"></script>
 </head>
@@ -109,7 +112,7 @@
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="restaurants.html?state=nsw" class="accord-link accord-link--sub">K-Food</a>
-            <a href="trades.html?state=nsw" class="accord-link accord-link--sub">일상</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -151,7 +154,7 @@
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="restaurants.html?state=vic" class="accord-link accord-link--sub">K-Food</a>
-            <a href="trades.html?state=vic" class="accord-link accord-link--sub">일상</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -193,7 +196,7 @@
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="restaurants.html?state=qld" class="accord-link accord-link--sub">K-Food</a>
-            <a href="trades.html?state=qld" class="accord-link accord-link--sub">일상</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -235,7 +238,7 @@
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="restaurants.html?state=wa" class="accord-link accord-link--sub">K-Food</a>
-            <a href="trades.html?state=wa" class="accord-link accord-link--sub">일상</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -277,7 +280,7 @@
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="restaurants.html?state=sa" class="accord-link accord-link--sub">K-Food</a>
-            <a href="trades.html?state=sa" class="accord-link accord-link--sub">일상</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -319,7 +322,7 @@
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="restaurants.html?state=tas" class="accord-link accord-link--sub">K-Food</a>
-            <a href="trades.html?state=tas" class="accord-link accord-link--sub">일상</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -361,7 +364,7 @@
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="restaurants.html?state=act" class="accord-link accord-link--sub">K-Food</a>
-            <a href="trades.html?state=act" class="accord-link accord-link--sub">일상</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -403,13 +406,13 @@
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="restaurants.html?state=nt" class="accord-link accord-link--sub">K-Food</a>
-            <a href="trades.html?state=nt" class="accord-link accord-link--sub">일상</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
       </div>
       <div class="accord-foot-group">
-        <a href="emergency.html" class="accord-direct-link"><span>긴급연락처 <em>Emergency Contacts</em></span></a>
+        <a href="care.html" class="accord-direct-link"><span>Care <em>호주 생활 케어</em></span></a>
         <a href="calculator.html" class="accord-direct-link"><span>환율 계산 비교 <em>FX Calculator</em></span></a>
         <a href="contact.html" class="accord-direct-link"><span>문의 <em>Inquiry</em></span></a>
       </div>
@@ -449,41 +452,143 @@
       <a href="index.html" class="page-back">← 홈으로</a>
     </div>
 
+    <!-- ── 1순위: 통역 + 응급 (호주 한인 사용 빈도 1위) ──
+         · TIS 최상단 — PC 그리드에서도 시각적 최상위에 위치하도록 첫 카드로 고정
+         · auto-fit grid 가 컬럼을 펼쳐도 데이터 순서가 곧 시각 순서가 되므로 별도 CSS order 불요 -->
     <section class="emerg-section">
-      <h2 class="emerg-section-title">호주 긴급신고 (Australia Emergency)</h2>
+      <h2 class="emerg-section-title">통역 · 긴급신고 (Translation · Emergency)</h2>
       <div class="emerg-grid">
-        <a class="emerg-card emerg-card--urgent" href="tel:000"><span class="emerg-card-label">경찰·소방·구급</span><span class="emerg-card-num">000</span><span class="emerg-card-sub">Police · Fire · Ambulance</span></a>
-        <a class="emerg-card" href="tel:131444"><span class="emerg-card-label">경찰 비응급</span><span class="emerg-card-num">131 444</span><span class="emerg-card-sub">Police Assistance Line</span></a>
-        <a class="emerg-card" href="tel:131126"><span class="emerg-card-label">중독 정보</span><span class="emerg-card-num">13 11 26</span><span class="emerg-card-sub">Poisons Information</span></a>
-        <a class="emerg-card" href="tel:132500"><span class="emerg-card-label">재난·홍수·태풍</span><span class="emerg-card-num">132 500</span><span class="emerg-card-sub">State Emergency Service (SES)</span></a>
+        <a class="emerg-card emerg-card--urgent" href="tel:131450">
+          <span class="emerg-cost emerg-cost--local">Local call</span>
+          <span class="emerg-card-label">TIS National 통역 서비스 <em style="font-style:normal;color:#16a34a;font-weight:800;">⭐ 1순위</em></span>
+          <span class="emerg-card-num">131 450</span>
+          <span class="emerg-card-sub">24시간 한국어 통역 (호주 전역 · 무료 통역사 연결)</span>
+        </a>
+        <a class="emerg-card emerg-card--urgent" href="tel:000">
+          <span class="emerg-cost emerg-cost--free">Free call</span>
+          <span class="emerg-card-label">경찰 · 소방 · 구급</span>
+          <span class="emerg-card-num">000</span>
+          <span class="emerg-card-sub">Police · Fire · Ambulance (생명·재산 위협 시)</span>
+        </a>
+        <a class="emerg-card" href="tel:131444">
+          <span class="emerg-cost emerg-cost--local">Local call</span>
+          <span class="emerg-card-label">경찰 비응급</span>
+          <span class="emerg-card-num">131 444</span>
+          <span class="emerg-card-sub">Police Assistance Line · 사건 접수·문의</span>
+        </a>
       </div>
     </section>
 
+    <!-- ── 2순위: 의료 / Medical ──
+         · healthdirect = 호주 정부 24h 무료 의료 상담 (전국)
+         · 13 HEALTH = QLD 정부 전용 — 다른 주는 healthdirect 권장 -->
+    <section class="emerg-section">
+      <h2 class="emerg-section-title">의료 · 건강 (Medical · Health)</h2>
+      <div class="emerg-grid">
+        <a class="emerg-card" href="tel:1800022222">
+          <span class="emerg-cost emerg-cost--free">Free call</span>
+          <span class="emerg-card-label">healthdirect (정부 24h 의료상담)</span>
+          <span class="emerg-card-num">1800 022 222</span>
+          <span class="emerg-card-sub">호주 전역 · 간호사 24시간 무료 의료 상담</span>
+        </a>
+        <a class="emerg-card" href="tel:13432584">
+          <span class="emerg-cost emerg-cost--local">Local call</span>
+          <span class="emerg-card-label">13 HEALTH (QLD 전용)</span>
+          <span class="emerg-card-num">13 43 25 84</span>
+          <span class="emerg-card-sub">퀸즐랜드 거주자 24시간 건강 상담</span>
+        </a>
+        <a class="emerg-card" href="tel:131126">
+          <span class="emerg-cost emerg-cost--local">Local call</span>
+          <span class="emerg-card-label">Poisons Information (중독 신고)</span>
+          <span class="emerg-card-num">13 11 26</span>
+          <span class="emerg-card-sub">약물·화학 중독 의심 시 24시간 응급 안내</span>
+        </a>
+        <a class="emerg-card" href="tel:132500">
+          <span class="emerg-cost emerg-cost--local">Local call</span>
+          <span class="emerg-card-label">State Emergency Service (재난·홍수·태풍)</span>
+          <span class="emerg-card-num">132 500</span>
+          <span class="emerg-card-sub">자연재해 시 구조·복구 요청 (SES)</span>
+        </a>
+      </div>
+    </section>
+
+    <!-- ── 3순위: 헬프라인 / 심리·상담 ── -->
+    <section class="emerg-section">
+      <h2 class="emerg-section-title">심리 상담 · 헬프라인 (Helplines)</h2>
+      <div class="emerg-grid">
+        <a class="emerg-card" href="tel:131114">
+          <span class="emerg-cost emerg-cost--local">Local call</span>
+          <span class="emerg-card-label">Lifeline (위기·자살 상담)</span>
+          <span class="emerg-card-num">13 11 14</span>
+          <span class="emerg-card-sub">24시간 영어 위기·자살 예방 상담</span>
+        </a>
+        <a class="emerg-card" href="tel:1800737732">
+          <span class="emerg-cost emerg-cost--free">Free call</span>
+          <span class="emerg-card-label">1800RESPECT (가정폭력·성폭력)</span>
+          <span class="emerg-card-num">1800 737 732</span>
+          <span class="emerg-card-sub">24시간 폭력·학대 피해 지원 (통역 가능)</span>
+        </a>
+        <a class="emerg-card" href="tel:1300224636">
+          <span class="emerg-cost emerg-cost--local">Local call</span>
+          <span class="emerg-card-label">Beyond Blue (정신건강 상담)</span>
+          <span class="emerg-card-num">1300 22 4636</span>
+          <span class="emerg-card-sub">우울·불안 등 정신건강 24시간 상담</span>
+        </a>
+        <a class="emerg-card" href="tel:1800551800">
+          <span class="emerg-cost emerg-cost--free">Free call</span>
+          <span class="emerg-card-label">Kids Helpline (청소년 5–25세)</span>
+          <span class="emerg-card-num">1800 55 1800</span>
+          <span class="emerg-card-sub">청소년·어린이 무료 24시간 상담</span>
+        </a>
+      </div>
+    </section>
+
+    <!-- ── 4순위: 대한민국 재외공관 (영사 서비스) ── -->
     <section class="emerg-section">
       <h2 class="emerg-section-title">대한민국 재외공관 (Korean Consulates · Embassy)</h2>
       <div class="emerg-grid">
-        <a class="emerg-card" href="tel:+61262704100"><span class="emerg-card-label">주호주 대한민국 대사관 (캔버라)</span><span class="emerg-card-num">+61 2 6270 4100</span><span class="emerg-card-sub">긴급(영사콜) 24h: +82-2-3210-0404</span></a>
-        <a class="emerg-card" href="tel:+61292109500"><span class="emerg-card-label">시드니 총영사관 (NSW)</span><span class="emerg-card-num">+61 2 9210 0234</span><span class="emerg-card-sub">사건·사고 24h: 0403-546-058</span></a>
-        <a class="emerg-card" href="tel:+61392729100"><span class="emerg-card-label">멜번 분관 (VIC)</span><span class="emerg-card-num">+61 3 9533 3800</span><span class="emerg-card-sub">긴급: 0418-101-303</span></a>
-        <a class="emerg-card" href="tel:+61730132000"><span class="emerg-card-label">브리즈번 분관 (QLD)</span><span class="emerg-card-num">+61 7 3221 1440</span><span class="emerg-card-sub">긴급: 0419-743-790</span></a>
+        <a class="emerg-card" href="tel:+61262704100">
+          <span class="emerg-cost emerg-cost--standard">Standard</span>
+          <span class="emerg-card-label">주호주 대한민국 대사관 (캔버라)</span>
+          <span class="emerg-card-num">+61 2 6270 4100</span>
+          <span class="emerg-card-sub">긴급(영사콜) 24h: +82-2-3210-0404</span>
+        </a>
+        <a class="emerg-card" href="tel:+61292109500">
+          <span class="emerg-cost emerg-cost--standard">Standard</span>
+          <span class="emerg-card-label">시드니 총영사관 (NSW)</span>
+          <span class="emerg-card-num">+61 2 9210 0234</span>
+          <span class="emerg-card-sub">사건·사고 24h: 0403-546-058</span>
+        </a>
+        <a class="emerg-card" href="tel:+61392729100">
+          <span class="emerg-cost emerg-cost--standard">Standard</span>
+          <span class="emerg-card-label">멜번 분관 (VIC)</span>
+          <span class="emerg-card-num">+61 3 9533 3800</span>
+          <span class="emerg-card-sub">긴급: 0418-101-303</span>
+        </a>
+        <a class="emerg-card" href="tel:+61730132000">
+          <span class="emerg-cost emerg-cost--standard">Standard</span>
+          <span class="emerg-card-label">브리즈번 분관 (QLD)</span>
+          <span class="emerg-card-num">+61 7 3221 1440</span>
+          <span class="emerg-card-sub">긴급: 0419-743-790</span>
+        </a>
       </div>
     </section>
 
-    <section class="emerg-section">
-      <h2 class="emerg-section-title">생활 응급 지원 (Community)</h2>
-      <div class="emerg-grid">
-        <a class="emerg-card" href="tel:131114"><span class="emerg-card-label">Lifeline (호주 위기 상담)</span><span class="emerg-card-num">13 11 14</span><span class="emerg-card-sub">24시간 영어 위기·자살 상담</span></a>
-        <a class="emerg-card" href="tel:1800737732"><span class="emerg-card-label">1800RESPECT</span><span class="emerg-card-num">1800 737 732</span><span class="emerg-card-sub">가정폭력·성폭력 지원 (24h)</span></a>
-        <a class="emerg-card" href="tel:1800011046"><span class="emerg-card-label">Mental Health Line (NSW)</span><span class="emerg-card-num">1800 011 511</span><span class="emerg-card-sub">정신건강 24시간 상담</span></a>
-        <a class="emerg-card" href="tel:131450"><span class="emerg-card-label">TIS National 통역 서비스</span><span class="emerg-card-num">131 450</span><span class="emerg-card-sub">24시간 한국어 통역 (호주 전역)</span></a>
-      </div>
-    </section>
-
-    <p class="emerg-disclaimer">※ 위 번호 및 정보는 변경될 수 있으며, 실제 긴급 상황에서는 가장 먼저 <strong>000</strong>으로 신고하세요. (정보 제공 목적 — 정확한 안내는 각 기관 공식 홈페이지를 확인하세요.)</p>
+    <p class="emerg-disclaimer">※ 통화료 안내 — <strong style="color:#16a34a;">Free call</strong>(1800): 무료 · <strong style="color:#b45309;">Local call</strong>(13/1300): 시내 통화료 1회 요금 · Standard: 일반 시외/국제 요금. 실제 긴급 상황에서는 가장 먼저 <strong>000</strong>으로 신고하세요. 한국어 통역이 필요하면 먼저 <strong>131 450 (TIS)</strong>로 전화해 한국어 통역사를 연결한 뒤 위 번호로 연결을 요청할 수 있습니다.</p>
 
   </main>
 
-  <footer class="site-footer"><p>KoAus</p></footer>
+  <footer class="site-footer-v2">
+    <div class="footer-links">
+      <a href="about.html">KoAus 소개 / About</a>
+      <a href="faq.html">자주 묻는 질문 / FAQ</a>
+      <a href="guide.html">이용 가이드 / Guide</a>
+      <a href="privacy.html">Privacy Policy / 개인정보처리방침</a>
+      <a href="terms.html">Terms of Service / 서비스 이용약관</a>
+      <a href="contact.html">Contact / 문의하기</a>
+    </div>
+    <p class="footer-copy">© 2026 Koaus Community. All rights reserved.</p>
+  </footer>
 
   <script>
     // ── Sidebar ──

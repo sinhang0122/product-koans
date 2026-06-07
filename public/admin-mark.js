@@ -22,9 +22,9 @@ const firebaseConfig = {
 };
 
 // admin.html 의 ADMIN_EMAILS 와 동기화 — Firestore rules 의 isAdmin() 과도 일치
+// 사용자 명시: sinhang0122 단독 운영자 (koaus.official 권한 제거 — mailto 연락처는 별개)
 const ADMIN_EMAILS = [
   'sinhang0122@gmail.com',
-  'koaus.official@gmail.com',
 ];
 
 // ── 페이지 진입 즉시 sessionStorage 1차 체크 (Firebase 로딩 전 튕김 방지) ──
@@ -113,36 +113,67 @@ function lookupFsDocId(localId) {
   } catch (_) { return null; }
 }
 
-// admin 전용 카드 액션 (퍼블릭 페이지에서 즉시 Firestore 제어)
-async function approve(docId) {
-  if (!db) { alert('Firestore 미초기화'); return; }
-  try {
-    await updateDoc(doc(db, 'services', docId), { status: 'approved', approvedAt: serverTimestamp() });
-    showToast('✅ 승인 완료 — 퍼블릭 노출');
-  } catch (e) { console.error('[admin-mark] approve 실패', e); alert('승인 실패: ' + (e.message || e)); }
+// ── 페이지별 액션 매핑 (컬렉션 / status / 라벨·툴팁 / 토스트) ──
+//   · jobs(work) 는 jobs_posts 컬렉션 + 구인 전용 status('closed'/'paused')
+//   · accom·rent 는 *_posts (현재 localStorage 만 사용 — Firestore 미마이그레이션 상태)
+//   · 그 외 services 컬렉션 (restaurants/trades/salon/gp/auto)
+// ── 통합 정책 (지시 5/7) ──
+//   · 옛 hold(pending)/hide(hidden) 2개 액션 → 'hold' (일시 숨김) 하나로 통합.
+//   · DB: { isHidden:true, status:'hidden', hiddenAt:serverTimestamp() } 일관 적용.
+//   · 메인 리스트 fetch: where('status','==','approved') + 클라이언트 `!p.isHidden` 이중 안전망으로 즉시 제외.
+//   · 작성자가 마이페이지에서 ⏸️/▶️ 토글 가능 (firestore.rules statusAllowedForOwner 허용).
+const DEFAULT_CONFIG = {
+  collection: 'services',
+  actions: {
+    approve: { status: 'approved', icon: '✅', title: '다시 노출 (일시 숨김 해제)', toast: '✅ 다시 노출 — 퍼블릭 표시', tsField: 'approvedAt', extra: { isHidden: false } },
+    hold:    { status: 'hidden',   icon: '⏸', title: '일시 숨김 (퍼블릭 제외)',  toast: '⏸ 일시 숨김 — 일반 리스트 제외', tsField: 'hiddenAt', extra: { isHidden: true } },
+    delete:  { hard: true,         icon: '🗑', title: '영구 삭제',             toast: '🗑 영구 삭제 완료' },
+  },
+};
+const PAGE_CONFIG = {
+  'jobs.html': {
+    collection: 'jobs_posts',
+    actions: {
+      approve: { status: 'closed', icon: '✅', title: '구인 마감하기',     toast: '✅ 구인 마감 처리 완료',    tsField: 'closedAt' },
+      hold:    { status: 'hidden', icon: '⏸', title: '일시 숨김 (퍼블릭 제외)', toast: '⏸ 공고 일시 숨김 처리', tsField: 'hiddenAt', extra: { isHidden: true } },
+      delete:  { hard: true,       icon: '🗑', title: '공고 영구 삭제',   toast: '🗑 공고 영구 삭제 완료' },
+    },
+  },
+  'accom.html': { collection: 'accom_posts', actions: DEFAULT_CONFIG.actions },
+  'rent.html':  { collection: 'rent_posts',  actions: DEFAULT_CONFIG.actions },
+};
+function currentPageConfig() {
+  const fname = (location.pathname.split('/').pop() || '').toLowerCase();
+  return PAGE_CONFIG[fname] || DEFAULT_CONFIG;
 }
-async function hold(docId) {
+
+// admin 전용 카드 액션 (퍼블릭 페이지에서 즉시 Firestore 제어 — 컬렉션/status 페이지별 동적)
+async function runAction(actKey, docId) {
   if (!db) { alert('Firestore 미초기화'); return; }
+  const cfg = currentPageConfig();
+  const act = cfg && cfg.actions && cfg.actions[actKey];
+  if (!act) { alert('알 수 없는 액션: ' + actKey); return; }
   try {
-    await updateDoc(doc(db, 'services', docId), { status: 'pending', heldAt: serverTimestamp() });
-    showToast('⏸ 보류 처리 — 퍼블릭 노출 중단');
-  } catch (e) { console.error('[admin-mark] hold 실패', e); alert('보류 실패: ' + (e.message || e)); }
-}
-async function deleteHard(docId) {
-  if (!db) { alert('Firestore 미초기화'); return; }
-  if (!confirm('이 글을 영구 삭제하시겠습니까?')) return;
-  try {
-    await deleteDoc(doc(db, 'services', docId));
-    showToast('🗑 영구 삭제 완료');
-  } catch (e) { console.error('[admin-mark] delete 실패', e); alert('삭제 실패: ' + (e.message || e)); }
+    if (act.hard) {
+      if (!confirm('이 글을 영구 삭제하시겠습니까?')) return;
+      await deleteDoc(doc(db, cfg.collection, docId));
+    } else {
+      const update = { status: act.status };
+      if (act.tsField) update[act.tsField] = serverTimestamp();
+      if (act.extra && typeof act.extra === 'object') Object.assign(update, act.extra);
+      await updateDoc(doc(db, cfg.collection, docId), update);
+    }
+    showToast(act.toast);
+  } catch (e) {
+    console.error('[admin-mark] ' + actKey + ' 실패 (' + cfg.collection + '/' + docId + ')', e);
+    alert((act.title || actKey) + ' 실패: ' + (e.message || e));
+  }
 }
 
 window.koausAdminQuickAction = function (action, docId) {
   if (!window.koausIsAdmin) { alert('관리자 권한이 필요합니다.'); return; }
   if (!docId) { alert('Firestore 문서 ID 를 찾을 수 없습니다 (관리자 직접 등록 글만 액션 가능).'); return; }
-  if (action === 'approve') return approve(docId);
-  if (action === 'hold')    return hold(docId);
-  if (action === 'delete')  return deleteHard(docId);
+  if (['approve', 'hold', 'delete'].indexOf(action) >= 0) return runAction(action, docId);
 };
 
 // 인스턴스 토스트 (offline.js / session-timeout.js 와 별개 ID)
@@ -176,25 +207,12 @@ function showToast(message) {
   setTimeout(() => host.classList.remove('is-show'), 2000);
 }
 
-// 카드 액션바 자동 주입 — 페이지 본체 수정 없이 services 카드에 [승인][보류][삭제] 추가
+// 카드 액션바 자동 주입 — 비활성화 (지시: 카드 내 일시정지·완료·휴지통 아이콘 제거)
+//   · 옛 .koaus-admin-toolbar (admin 카드 우측 상단 아이콘 3개) → 텍스트 mini-btn 5종으로 통합됨.
+//   · admin 권한 작성자 액션은 페이지별 .post-mini-actions 의 [공유][신고][수정][숨김][삭제] 로 일원화.
+//   · runAction(approve/hold/delete) 핸들러는 유지 — 다른 경로(상세 모달 등)에서 호출 가능.
 function injectCardActions() {
-  if (!window.koausIsAdmin) return;
-  const cards = document.querySelectorAll('.accom-card[data-id]');
-  cards.forEach(card => {
-    if (card.__koausAdminBar) return;
-    const localId = card.getAttribute('data-id');
-    const fsDocId = lookupFsDocId(localId);
-    if (!fsDocId) return;  // services 컬렉션 글이 아닌 경우 skip
-    const bar = document.createElement('div');
-    bar.className = 'koaus-admin-toolbar admin-only';
-    bar.innerHTML = `
-      <button type="button" class="koaus-admin-btn koaus-admin-btn--approve" data-act="approve" data-fsid="${fsDocId}" title="승인">✅</button>
-      <button type="button" class="koaus-admin-btn koaus-admin-btn--hold"    data-act="hold"    data-fsid="${fsDocId}" title="보류">⏸</button>
-      <button type="button" class="koaus-admin-btn koaus-admin-btn--del"     data-act="delete"  data-fsid="${fsDocId}" title="삭제">🗑</button>
-    `;
-    card.appendChild(bar);
-    card.__koausAdminBar = true;
-  });
+  // no-op (마크업 통합 — mini-btn 으로 대체)
 }
 
 // 클릭 위임 — 모든 admin 액션 버튼 (카드 클릭(상세 이동) 차단)
@@ -210,6 +228,55 @@ document.addEventListener('click', e => {
 window.addEventListener('koaus-services-updated', () => setTimeout(injectCardActions, 100));
 // 페이지 초기 렌더 직후 시도 (카드가 늦게 그려질 수 있어 여러 번 시도)
 [300, 800, 1500, 3000].forEach(ms => setTimeout(injectCardActions, ms));
+
+// ── 카드 DOM 재구성 자동 감지 (MutationObserver) — '광역 액션바 증발' 버그 차단 ──
+//   배경: 페이지의 onSnapshot/renderAll 이 innerHTML 재할당으로 카드를 재구성하면
+//         새 카드에 __koausAdminBar 플래그가 없어 액션바가 사라진 채로 보이는 버그.
+//         (특히 jobs.html — koaus-services-updated 이벤트 발화 안 함)
+//   해결: .accom-card[data-id] 추가/대체 감지 → debounce 50ms → injectCardActions 자동 호출.
+//         페이지 본체 수정 없이 모든 페이지(7개 카테고리) 동일하게 적용.
+(function setupCardMutationObserver() {
+  if (typeof MutationObserver !== 'function') return;
+  let scheduled = false;
+  function scheduleReinject() {
+    if (scheduled) return;
+    scheduled = true;
+    setTimeout(() => { scheduled = false; try { injectCardActions(); } catch (_) {} }, 50);
+  }
+  function hasCardChange(mutations) {
+    for (const m of mutations) {
+      // 1) 새로 추가된 노드 안에 .accom-card[data-id] 존재
+      if (m.addedNodes && m.addedNodes.length) {
+        for (let i = 0; i < m.addedNodes.length; i++) {
+          const n = m.addedNodes[i];
+          if (n.nodeType !== 1) continue;
+          if (n.matches && n.matches('.accom-card[data-id]')) return true;
+          if (n.querySelector && n.querySelector('.accom-card[data-id]')) return true;
+        }
+      }
+      // 2) 제거된 노드 안에 카드 있음 — 새 카드로 교체된 케이스
+      if (m.removedNodes && m.removedNodes.length) {
+        for (let i = 0; i < m.removedNodes.length; i++) {
+          const n = m.removedNodes[i];
+          if (n.nodeType !== 1) continue;
+          if (n.matches && n.matches('.accom-card[data-id]')) return true;
+          if (n.querySelector && n.querySelector('.accom-card[data-id]')) return true;
+        }
+      }
+    }
+    return false;
+  }
+  function startObserve() {
+    if (!document.body) return;
+    const observer = new MutationObserver(mutations => {
+      if (!window.koausIsAdmin) return;   // admin 아닐 때 비용 0
+      if (hasCardChange(mutations)) scheduleReinject();
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+  }
+  if (document.body) startObserve();
+  else document.addEventListener('DOMContentLoaded', startObserve, { once: true });
+})();
 
 // ── 7일 영업시간 그리드 빌더 (전역) ──
 //  · admin / 사장님 글쓰기 모달 등 어디서든 호출 가능.
@@ -306,23 +373,26 @@ window.addEventListener('koaus-services-updated', () => setTimeout(injectCardAct
 //  · 8개 주 카드 그리드(state.html?id=xxx) 가 자동 주입된다. 페이지 본체 JS 수정 불필요.
 //  · 이미 빌드된 그리드는 재실행 시 스킵 (idempotent).
 (function setupGlobalStateQuick() {
+  // 지시 2/2: 대도시 한글 병기 — 신규 방문자 가독성 (호주 지리 미숙 사용자 친절 안내)
   const STATES = [
-    ['nsw','NSW','New South Wales','🦘'],
-    ['vic','VIC','Victoria','🌆'],
-    ['qld','QLD','Queensland','🏖'],
-    ['wa', 'WA', 'Western Australia','🏜'],
-    ['sa', 'SA', 'South Australia','🍇'],
-    ['tas','TAS','Tasmania','🍃'],
-    ['act','ACT','Australian Capital','🏛'],
-    ['nt', 'NT', 'Northern Territory','🌵'],
+    ['nsw','NSW','New South Wales','🦘','시드니'],
+    ['vic','VIC','Victoria','🌆','멜버른'],
+    ['qld','QLD','Queensland','🏖','브리즈번'],
+    ['wa', 'WA', 'Western Australia','🏜','퍼스'],
+    ['sa', 'SA', 'South Australia','🍇','애들레이드'],
+    ['tas','TAS','Tasmania','🍃','호바트'],
+    ['act','ACT','Australian Capital','🏛','캔버라'],
+    ['nt', 'NT', 'Northern Territory','🌵','다윈'],
   ];
   const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   function buildOne(host) {
     if (!host || host.__koausStateBuilt) return;
-    const cards = STATES.map(([id,code,name,flag]) =>
+    const cards = STATES.map(([id,code,name,flag,city]) =>
       '<a class="state-card" href="state.html?id=' + id + '">' +
         '<span class="state-card-arrow" aria-hidden="true">→</span>' +
-        '<span class="state-card-code">' + code + '</span>' +
+        '<span class="state-card-code">' + code +
+          ' <em class="state-card-city">(' + esc(city) + ')</em>' +
+        '</span>' +
         '<span class="state-card-name">' + flag + ' ' + esc(name) + '</span>' +
       '</a>'
     ).join('');

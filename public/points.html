@@ -34,9 +34,36 @@
   <script src="local-analytics.js" defer></script>
   <script src="koaus-gallery.js" defer></script>
   <script src="koaus-dedupe.js" defer></script>
+  <script src="koaus-map-cluster.js" defer></script>
+  <script src="koaus-url-guard.js" defer></script>
+  <script src="koaus-report.js" defer></script>
   <script type="module" src="admin-mark.js"></script>
+  <script type="module" src="koaus-rbac.js"></script>
+  <script src="koaus-contact-actions.js" defer></script>
   <script type="module" src="auth-extra.js"></script>
   <script type="module" src="koaus-phone-auth.js"></script>
+
+  <!-- ────────────────────────────────────────────────────────────────────
+       visa(points) 글쓰기 모달 — 주소 자동완성 강제 표시 보장 (z-index 충돌 fix)
+        · .write-modal { overflow-y:auto; transform:translateY(16px) } 가
+          stacking context 를 만들면서 자식 .addr-suggest 의 z-index 가
+          모달 박스 안에 갇히고, overflow 가 드롭다운을 잘라내는 버그 차단.
+        · Google native .pac-container 도 동일 글로벌 우선순위로 강제.
+        · #vwAddressSuggest 는 position:fixed 로 stacking 우회 →
+          input 위치 따라 JS 가 top/left 갱신 (아래 wireVisaAddressAutocomplete 안).
+       ──────────────────────────────────────────────────────────────────── -->
+  <style>
+    .pac-container { z-index: 99999 !important; }
+    #vwAddressSuggest { z-index: 99999 !important; }
+    /* visa 모달 안에서 ul 이 모달 박스 밖으로 portal 됐을 때를 위한 fixed 룰 */
+    #vwAddressSuggest.koaus-portal {
+      position: fixed !important;
+      z-index: 99999 !important;
+      max-height: 280px;
+      overflow-y: auto;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+    }
+  </style>
 </head>
 <body>
 
@@ -111,7 +138,7 @@
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="restaurants.html?state=nsw" class="accord-link accord-link--sub">K-Food</a>
-            <a href="trades.html?state=nsw" class="accord-link accord-link--sub">일상</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -153,7 +180,7 @@
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="restaurants.html?state=vic" class="accord-link accord-link--sub">K-Food</a>
-            <a href="trades.html?state=vic" class="accord-link accord-link--sub">일상</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -195,7 +222,7 @@
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="restaurants.html?state=qld" class="accord-link accord-link--sub">K-Food</a>
-            <a href="trades.html?state=qld" class="accord-link accord-link--sub">일상</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -237,7 +264,7 @@
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="restaurants.html?state=wa" class="accord-link accord-link--sub">K-Food</a>
-            <a href="trades.html?state=wa" class="accord-link accord-link--sub">일상</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -279,7 +306,7 @@
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="restaurants.html?state=sa" class="accord-link accord-link--sub">K-Food</a>
-            <a href="trades.html?state=sa" class="accord-link accord-link--sub">일상</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -321,7 +348,7 @@
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="restaurants.html?state=tas" class="accord-link accord-link--sub">K-Food</a>
-            <a href="trades.html?state=tas" class="accord-link accord-link--sub">일상</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -363,7 +390,7 @@
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="restaurants.html?state=act" class="accord-link accord-link--sub">K-Food</a>
-            <a href="trades.html?state=act" class="accord-link accord-link--sub">일상</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -405,13 +432,13 @@
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="restaurants.html?state=nt" class="accord-link accord-link--sub">K-Food</a>
-            <a href="trades.html?state=nt" class="accord-link accord-link--sub">일상</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
       </div>
       <div class="accord-foot-group">
-        <a href="emergency.html" class="accord-direct-link"><span>긴급연락처 <em>Emergency Contacts</em></span></a>
+        <a href="care.html" class="accord-direct-link"><span>Care <em>호주 생활 케어</em></span></a>
         <a href="calculator.html" class="accord-direct-link"><span>환율 계산 비교 <em>FX Calculator</em></span></a>
         <a href="contact.html" class="accord-direct-link"><span>문의 <em>Inquiry</em></span></a>
       </div>
@@ -444,6 +471,9 @@
         </div>
       </div>
     </section>
+
+    <!-- 관리자 고정 공지 (board_pinned_notices/points) — 등록글 없으면 자동 hidden -->
+    <div id="pinnedNoticeBox" class="pinned-notice" hidden></div>
 
     <!-- 대제목 영역 — '문의하기' 제거, '홈으로' 만 우측 끝 + 세로축 중앙 정렬 -->
     <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
@@ -482,7 +512,7 @@
       <div class="accom-ctrl-actions">
         <!-- 상세필터 (비자/유학 세부 카테고리) — '+ 글쓰기' 바로 옆 정렬 -->
         <select class="board-write-btn board-write-btn--ghost" id="visaDetailFilter" aria-label="상세 필터">
-          <option value="all">상세필터 · 전체</option>
+          <option value="all">상세필터</option>
           <option value="student">학생비자</option>
           <option value="whv">워킹홀리데이</option>
           <option value="pr">영주권·이민</option>
@@ -511,6 +541,16 @@
           <span class="write-author-badge">작성자 : <b id="vwAuthorName">-</b></span>
           <button class="write-modal-close" id="vwClose" type="button">✕</button>
         </div>
+
+        <!-- 작성 주의사항 안내 박스 — 다음 작업에서 본문 inject -->
+        <div class="write-rules-box" role="note" aria-label="작성 주의사항">
+          <span class="wrb-icon" aria-hidden="true">⚠️</span>
+          <div class="wrb-body">
+            <strong class="wrb-title">작성 전 주의사항</strong>
+            <p>💡 호주에서 유료 이민/비자 상담 및 대행은 오직 등록된 이민 대리인(OMARA) 또는 변호사만 가능합니다. 허위 비자 연장 유도나 승인 보장 등의 허위 과장 문구 기재 시 제재될 수 있습니다.</p>
+          </div>
+        </div>
+
         <div class="write-grid">
           <div class="write-field">
             <label class="write-label" for="vwTitle">제목 <span class="required-mark" style="color:var(--red,#dc2626);font-weight:800;">[필수]</span></label>
@@ -550,10 +590,32 @@
             <textarea class="write-textarea" id="vwBody" maxlength="3000" placeholder="비자 종류 · 진행 절차 · 비용 · 기간 · 후기 등 자유 기재"></textarea>
           </div>
           <div class="write-field write-field--full">
-            <label class="write-label" for="vwContact">연락처 (선택)</label>
-            <input class="write-input" id="vwContact" type="text" maxlength="100" placeholder="카카오톡 ID · 이메일 · 전화번호 등" />
+            <label class="write-label" for="vwPhone">📞 전화번호 Phone <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택 · 전화 + 문자 둘 다 활성)</em></label>
+            <input class="write-input" id="vwPhone" type="tel" placeholder="04xx xxx xxx" maxlength="30" autocomplete="tel" />
+          </div>
+          <div class="write-field write-field--full">
+            <label class="write-label" for="vwKakao">💛 카톡 오픈채팅 링크 <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택)</em></label>
+            <input class="write-input" id="vwKakao" type="url" placeholder="https://open.kakao.com/o/..." maxlength="500" />
+          </div>
+          <div class="write-field write-field--full">
+            <label class="write-label" for="vwEmail">✉️ 이메일 Email <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택)</em></label>
+            <input class="write-input" id="vwEmail" type="email" placeholder="example@gmail.com" maxlength="200" autocomplete="email" />
+          </div>
+          <div class="write-field write-field--full">
+            <label class="write-label" for="vwContact">기타 통합 입력 (선택 · 위 분리 필드 우선)</label>
+            <input class="write-input" id="vwContact" type="text" maxlength="100" placeholder="기타 연락 수단·시간대·메모 등 자유 입력" />
           </div>
         </div>
+          <!-- [필수] 게시 규정 동의 — agent.md §2-C Mandatory Consent (글쓰기 표준 철칙) -->
+          <div class="write-consent-row" style="display:flex;align-items:flex-start;gap:8px;padding:10px 12px;margin:14px 0 8px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-sm);">
+            <input type="checkbox" id="writeConsent" style="flex-shrink:0;width:18px;height:18px;margin-top:1px;cursor:pointer;" />
+            <label for="writeConsent" style="flex:1;font-size:12.5px;line-height:1.5;color:var(--text-primary);cursor:pointer;">
+              <strong style="color:var(--red,#dc2626);">[필수]</strong>
+              <a href="terms.html" target="_blank" rel="noopener" style="color:var(--text-primary);text-decoration:underline;font-weight:700;"
+                 title="이용약관 §3 (금지행위 — 허위 매물·사기·욕설·타인 사칭·봇 스팸·불법 콘텐츠 금지) + §10 (서비스별 면책)">이용약관 및 주의사항</a>을 확인하였으며,
+              서비스 규정 위반 시 게시물 삭제 및 계정 제재가 이루어질 수 있음에 동의합니다.
+            </label>
+          </div>
         <div class="write-modal-actions">
           <button class="write-cancel-btn" id="vwCancel" type="button">취소</button>
           <button class="write-submit-btn" id="vwSubmit" type="button">등록하기</button>
@@ -581,6 +643,8 @@
             <a class="rea-loc-btn" id="visaDetailSvBtn" target="_blank" rel="noopener noreferrer" style="flex:1;text-align:center;">🛣️ 스트릿뷰</a>
           </div>
         </div>
+        <!-- 동적 연락 버튼 컨테이너 — 다음 지시에서 JS 가 작성자 연락처에 맞춰 1~4개 버튼 inject -->
+        <div id="contact-action-container" class="contact-action-container" aria-label="연락 수단"></div>
       </div>
     </div>
 
@@ -703,9 +767,18 @@
         <button class="report-close" id="tosClose" type="button" aria-label="닫기">✕</button>
       </div>
       <div class="tos-body">
-        <p><strong>제1조 (목적 및 동의 - Introduction &amp; Acceptance)</strong><br>본 약관은 KoAus(이하 "서비스")가 제공하는 호주 한인 커뮤니티 정보 공유 서비스의 이용 조건을 규정합니다.</p>
-        <p><strong>제2조 (정보 공유 및 플랫폼의 면책)</strong><br>서비스는 이용자 간 정보 공유 공간만을 제공하며, 거래 당사자는 사용자 본인입니다.</p>
-        <p class="tos-note">※ 본 약관은 베타 서비스용 요약본입니다.</p>
+        <p><strong>Operator · 운영자</strong> — KIM SHINHAENG, sole trader trading as <strong>"Koaus Community"</strong> (ABN 27581486613) · 김신행, 사업자명 <strong>"Koaus Community"</strong>. Contact: <a href="mailto:koaus.official@gmail.com">koaus.official@gmail.com</a>. Governing law: State of Queensland, Australia. Effective 5 June 2026 / 시행일 2026년 6월 5일.</p>
+        <p><strong>EN — 1. Introduction &amp; acceptance.</strong> These Terms govern use of the Korean–Australian community information-sharing service ("KoAus"). By accessing the service you agree to these Terms and to the Privacy Policy.</p>
+        <p><strong>EN — 2. Platform nature &amp; limitation of liability.</strong> KoAus is an online venue for users to share information (jobs, sharehouses, second-hand goods, vehicle and care services, etc.). The parties to any transaction are the users themselves. To the maximum extent permitted by law, we are not liable for loss arising from direct dealings. These Terms do not exclude or limit consumer rights guaranteed by the Australian Consumer Law (ACL).</p>
+        <p><strong>EN — 3. Prohibited conduct.</strong> False listings, scam information, abuse, defamation, impersonation, bot-driven spam, and infringing content are prohibited. All users must comply with the Online Safety Act 2021 (Cth).</p>
+        <p><strong>EN — 4. Content ownership &amp; intellectual property.</strong> You retain ownership of your content but grant us a non-exclusive, royalty-free licence to use, display and promote it. "koaus" is a trade mark filed with IP Australia (word mark, Classes 9 and 35); "Koaus Community" is our registered business name (ASIC).</p>
+        <p><strong>EN — 5. Reporting, account &amp; disclaimers.</strong> Report harmful content to <a href="mailto:koaus.official@gmail.com">koaus.official@gmail.com</a>. You may delete your account at any time; we may suspend accounts for breach. Service-specific disclaimers apply — emergency contacts are for reference only (call 000 in emergencies), currency rates are indicative, and visa/legal/business listings are third-party and not endorsements. Governing law: State of Queensland, Australia.</p>
+        <p><strong>KO — 1. 목적·동의.</strong> 본 약관은 김신행(사업자명 "Koaus Community", ABN 27581486613)이 제공하는 호주 한인 커뮤니티 정보공유 서비스("KoAus") 의 이용 조건을 규정합니다. 서비스 이용 시 본 약관 및 개인정보처리방침에 동의한 것으로 간주됩니다.</p>
+        <p><strong>KO — 2. 플랫폼 성격·면책.</strong> KoAus 는 이용자 간 정보(구인구직, 쉐어하우스, 중고거래, 차량·케어 서비스 등)를 공유하는 온라인 플랫폼(Venue) 입니다. 거래·계약의 당사자는 이용자 본인이며, 직거래로 발생하는 손실에 대해 당사는 법이 허용하는 최대한도 내에서 책임지지 않습니다. 호주 소비자법(ACL)이 보장하는 권리는 제한되지 않습니다.</p>
+        <p><strong>KO — 3. 금지행위.</strong> 허위 매물·사기성 정보·욕설·비방·타인 사칭·봇 스팸·불법 콘텐츠 금지. 「Online Safety Act 2021 (Cth)」 준수.</p>
+        <p><strong>KO — 4. 콘텐츠·지적재산.</strong> 게시 콘텐츠 소유권은 이용자에게 있으며, 당사는 서비스 운영·표시·홍보를 위한 비독점적 사용권을 부여받습니다. "koaus" 는 IP Australia 출원 상표(워드마크, Class 9·35), "Koaus Community" 는 ASIC 등록 사업자명입니다.</p>
+        <p><strong>KO — 5. 신고·계정·서비스별 면책.</strong> 유해 콘텐츠 신고 → <a href="mailto:koaus.official@gmail.com">koaus.official@gmail.com</a>. 이용자는 언제든 계정 삭제 요청 가능하며, 약관 위반 시 당사가 계정을 정지·해지할 수 있습니다. 서비스별 면책 — 긴급연락처(실제 응급 시 000)·환율(참고용)·비자/법무/업체 디렉터리(제3자, 당사 보증 아님). 준거법: 호주 퀸즈랜드주.</p>
+        <p class="tos-note">전체 본문 · Full text → <a href="terms.html" target="_blank" rel="noopener">terms.html</a> (12 조항 + 서비스별 면책 상세 · Effective 5 June 2026 · 시행일 2026년 6월 5일)</p>
       </div>
       <div class="report-actions">
         <button class="filter-apply-btn" id="tosConfirm" type="button">확인</button>
@@ -721,8 +794,17 @@
         <button class="report-close" id="privacyClose" type="button" aria-label="닫기">✕</button>
       </div>
       <div class="tos-body">
-        <p><strong>제1조 (개인정보 수집의 원칙)</strong><br>당사는 호주 개인정보보호법(Privacy Act 1988) 및 APPs 를 준수합니다.</p>
-        <p><strong>제2조 (정보의 사용 목적)</strong><br>계정 관리·게시판 권한 부여·고객 지원 목적 외 사용 금지.</p>
+        <p><strong>Operator · 운영자</strong> — KIM SHINHAENG, sole trader trading as <strong>"Koaus Community"</strong> (ABN 27581486613) · 김신행, 사업자명 <strong>"Koaus Community"</strong>. Contact: <a href="mailto:koaus.official@gmail.com">koaus.official@gmail.com</a>. Governing law: State of Queensland, Australia. Effective 5 June 2026 / 시행일 2026년 6월 5일.</p>
+        <p><strong>EN — 1. What we collect.</strong> Only what is needed to provide the service: mobile number (SMS verification), email address (Google sign-in or optional contact), account details, content you post, IP address, and device/log information. <strong>We do NOT collect your full legal name.</strong> Google reCAPTCHA may collect device information for security and bot prevention.</p>
+        <p><strong>EN — 2. How we use it.</strong> Only for account management and authentication, connecting posts/bookings/enquiries, customer support, spam and fraud prevention, operating and improving the service, and meeting legal obligations.</p>
+        <p><strong>EN — 3. Disclosure &amp; overseas storage.</strong> When you book or enquire with a business listed on the platform, we pass your contact details to that business so the service can proceed (separate consent at booking). Information is stored on cloud servers (Firebase/Google) and may be processed in countries outside Australia (APP 8). Eligible data breaches are reported to the OAIC under the Notifiable Data Breaches (NDB) scheme.</p>
+        <p><strong>EN — 4. Retention &amp; destruction.</strong> Personal information is destroyed when its purpose is fulfilled or any legal retention period ends. To prevent misuse, essential account details may be retained in encrypted form for 6 months after account closure before destruction.</p>
+        <p><strong>EN — 5. Your rights.</strong> You may request access, correction, or deletion → <a href="mailto:koaus.official@gmail.com">koaus.official@gmail.com</a>. Complaints to the Office of the Australian Information Commissioner (OAIC, <a href="https://www.oaic.gov.au" target="_blank" rel="noopener">www.oaic.gov.au</a>). Service is for users aged 18 and over.</p>
+        <p><strong>KO — 1. 수집 정보.</strong> 당사는 서비스 제공에 필요한 최소한의 정보만 수집합니다 — 휴대전화번호(SMS 본인인증), 이메일 주소(Google 로그인 시 제공되거나 선택적 연락처), 계정 정보, 게시물 내용, 접속 IP 및 기기·로그 정보. <strong>본인 실명(성명)은 수집하지 않습니다.</strong> 보안 및 봇 차단을 위해 Google reCAPTCHA 가 기기 정보를 수집할 수 있습니다.</p>
+        <p><strong>KO — 2. 이용 목적.</strong> 계정 관리·인증, 게시·예약·문의 연동, 고객지원, 스팸·부정이용 차단, 서비스 운영·개선, 법적 의무 이행 목적으로만 이용합니다.</p>
+        <p><strong>KO — 3. 제3자 제공·해외 보관.</strong> 이용자가 플랫폼 내 업체(쉐어하우스, 정비, 렌터카, 견인 등) 에 예약·문의할 경우, 서비스 진행을 위해 해당 업체에 이용자의 연락처가 전달됩니다(예약·문의 시점에 별도 동의). 수집된 정보는 클라우드 서버(Firebase/Google) 에 보관되며 호주 외 국가에서 저장·처리될 수 있습니다(APP 8). 심각한 유출 시 호주 정보보호위원회(OAIC) 에 NDB 제도에 따라 통지합니다.</p>
+        <p><strong>KO — 4. 보관 및 파기.</strong> 개인정보는 이용 목적 달성 또는 법정 보관기간 종료 시 파기합니다. 부정이용 방지를 위해 탈퇴 후 6개월 동안 주요 정보를 암호화 보관 후 파기할 수 있습니다.</p>
+        <p><strong>KO — 5. 이용자의 권리.</strong> 열람·정정·삭제 요청 → <a href="mailto:koaus.official@gmail.com">koaus.official@gmail.com</a>. 민원 → 호주 정보보호위원회(OAIC, <a href="https://www.oaic.gov.au" target="_blank" rel="noopener">www.oaic.gov.au</a>). 본 서비스는 만 18세 이상 대상입니다.</p>
       </div>
       <div class="report-actions">
         <button class="filter-apply-btn" id="privacyConfirm" type="button">확인</button>
@@ -802,7 +884,17 @@
   <!-- reCAPTCHA v2 (회원가입용) -->
   <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 
-  <footer class="site-footer"><p>KoAus</p></footer>
+  <footer class="site-footer-v2">
+    <div class="footer-links">
+      <a href="about.html">KoAus 소개 / About</a>
+      <a href="faq.html">자주 묻는 질문 / FAQ</a>
+      <a href="guide.html">이용 가이드 / Guide</a>
+      <a href="privacy.html">Privacy Policy / 개인정보처리방침</a>
+      <a href="terms.html">Terms of Service / 서비스 이용약관</a>
+      <a href="contact.html">Contact / 문의하기</a>
+    </div>
+    <p class="footer-copy">© 2026 Koaus Community. All rights reserved.</p>
+  </footer>
 
   <script>
     const hBtn = document.getElementById('hamburgerBtn');
@@ -866,7 +958,7 @@
     // ── Visa 2단 탭 (비자/유학 통합 / 가채점) — 법무법인 + 유학원 단일 섹션으로 통합 ──
     const CAT_LABEL = { 'visa-edu': '비자/유학', points: '기술심사 가채점' };
     const CAT_DISCLAIMER = {
-      'visa-edu': '※ 법무법인·유학원 등록 및 홍보 문의는 [📝 글 등록 요청하기] 또는 문의하기를 이용해주세요',
+      'visa-edu': '※ 비자·유학 정보(법무법인·유학원 등) 는 우측 상단 [+ 글쓰기] 버튼으로 자유롭게 등록해 주세요 — 커뮤니티 게시판 형식',
     };
     const params = new URLSearchParams(location.search);
     const currentState = (params.get('state') || '').toLowerCase();
@@ -982,11 +1074,23 @@
         });
       const listEl = document.getElementById('partnerList');
       if (!items.length) {
-        listEl.innerHTML = `<div class="post-empty">등록된 ${CAT_LABEL[activeCat]} 파트너가 아직 없습니다.<br>관심 있는 ${CAT_LABEL[activeCat]} 운영자라면 우측 상단 [문의하기] 버튼으로 등록을 신청해 주세요.</div>`;
+        listEl.innerHTML = `<div class="post-empty">등록된 ${CAT_LABEL[activeCat]} 정보가 아직 없습니다.<br>관련 업체·후기·정보가 있다면 우측 상단 [+ 글쓰기] 버튼으로 직접 등록해 주세요. (커뮤니티 디렉터리 게시판)</div>`;
         return;
       }
-      listEl.innerHTML = items.map(p => `
-        <div class="partner-card${p.isPremium ? ' is-premium' : ''}">
+      // 현재 로그인 사용자 (RBAC 작성자 본인 분기)
+      const _curUser  = (window.koausAuth && window.koausAuth.user) || null;
+      const _curUid   = _curUser ? String(_curUser.uid || '') : '';
+      const _isAuthor = (p) => _curUid && (String(p.authorId || p.uid || p.authorUid || '') === _curUid);
+      listEl.innerHTML = items.map(p => {
+        const mine = _isAuthor(p);
+        const fsId = p._fsDocId || '';
+        const status = p.status || '';
+        // accom-card 클래스 추가 → admin-mark.js 의 .accom-card[data-id] 셀렉터 자동 인식
+        // data-fsid 부착 → 운영자 ✅⏸👁🗑 액션바 자동 주입 (admin 일 때만)
+        // data-status 부착 → completed/closed/hidden 시각 차이 (agent.md §2-E B항)
+        return `
+        <div class="accom-card partner-card${p.isPremium ? ' is-premium' : ''}${mine ? ' my-post-highlight' : ''}"
+             data-id="${escHtml(p.id || fsId)}" data-fsid="${escHtml(fsId)}" data-status="${escHtml(status)}">
           <div class="partner-card-head">
             <span class="partner-card-name">${escHtml(p.title || '파트너')}</span>
             ${p.isPremium ? '<span class="partner-card-badge">추천</span>' : ''}
@@ -995,8 +1099,51 @@
           ${p.region  ? `<div class="partner-card-meta">📍 ${escHtml(p.region)}</div>` : ''}
           ${p.contact ? `<div class="partner-card-meta">📞 ${escHtml(p.contact)}</div>` : ''}
           ${p.body    ? `<div class="partner-card-body">${escHtml(p.body)}</div>` : ''}
-        </div>
-      `).join('');
+          ${mine ? `
+          <!-- RBAC 작성자 미니 액션 (agent.md §2-E A — 작성자 본인 전용) -->
+          <div class="post-mini-actions" data-rbac="author">
+            <button class="mini-btn mini-edit"     data-rbac-act="edit"     data-fsid="${escHtml(fsId)}" type="button" title="수정">수정</button>
+            <button class="mini-btn mini-complete" data-rbac-act="complete" data-fsid="${escHtml(fsId)}" type="button" title="마감 처리">마감</button>
+            <button class="mini-btn mini-del"      data-rbac-act="delete"   data-fsid="${escHtml(fsId)}" type="button" title="삭제">삭제</button>
+          </div>` : ''}
+        </div>`;
+      }).join('');
+
+      // ── 작성자 미니 액션 위임 click (페이지 1회만 등록) ──
+      if (!window._visaMiniActionsBound) {
+        window._visaMiniActionsBound = true;
+        document.addEventListener('click', async (e) => {
+          const btn = e.target.closest('[data-rbac-act][data-fsid]');
+          if (!btn) return;
+          // 비자 섹션 partner-card 안의 버튼인지 확인
+          const card = btn.closest('.partner-card[data-fsid]');
+          if (!card) return;
+          e.preventDefault(); e.stopPropagation();
+          const act   = btn.dataset.rbacAct;
+          const fsId  = btn.dataset.fsid;
+          if (!fsId)  { alert('Firestore 문서 ID 누락 — 새로고침 후 다시 시도해 주세요.'); return; }
+          if (!window.koausRbac) { alert('RBAC 헬퍼 미초기화 — 잠시 후 다시 시도해 주세요.'); return; }
+          try {
+            if (act === 'delete') {
+              if (!confirm('이 글을 삭제하시겠습니까?')) return;
+              await window.koausRbac.selfDelete('services', fsId);
+              alert('🗑 삭제되었습니다.');
+              try { location.reload(); } catch (_) {}
+            } else if (act === 'complete') {
+              if (!confirm('이 글을 [마감] 처리하시겠습니까?\n(상태가 completed 로 변경되며 시각적으로 흐려집니다)')) return;
+              await window.koausRbac.markCompleted('services', fsId);
+              alert('✅ 마감 처리 완료.');
+              try { location.reload(); } catch (_) {}
+            } else if (act === 'edit') {
+              // 수정 — 단순화: 글쓰기 모달 다시 열어 prefill 은 후속 작업
+              alert('수정 흐름은 후속 작업입니다. 현재는 [삭제] 후 새 글로 다시 등록해 주세요.');
+            }
+          } catch (err) {
+            console.error('[visa:rbac]', act, err);
+            alert((act === 'delete' ? '삭제' : act === 'complete' ? '마감' : '수정') + ' 실패: ' + ((err && (err.code || err.message)) || err));
+          }
+        });
+      }
     }
 
     // 카테고리 탭 클릭 — 법무/유학/가채점 3개 분기
@@ -1048,7 +1195,7 @@
         try { ensureVisaMap(); } catch (_) {}
         try { wireVisaAddressAutocomplete(); } catch (_) {}
       }
-      function closeWrite() { overlay.classList.remove('open'); ['vwTitle','vwBody','vwAddress','vwContact'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; }); document.getElementById('vwError').textContent = ''; const sg = document.getElementById('vwAddressSuggest'); if (sg) { sg.classList.remove('show'); sg.innerHTML = ''; } }
+      function closeWrite() { overlay.classList.remove('open'); ['vwTitle','vwBody','vwAddress','vwContact','vwPhone','vwKakao','vwEmail'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; }); document.getElementById('vwError').textContent = ''; const sg = document.getElementById('vwAddressSuggest'); if (sg) { sg.classList.remove('show'); sg.innerHTML = ''; } }
 
       // ── 주소 자동완성 (Google Places AutocompleteService) ──
       // · Maps API 비동기 로드 후 wire — google.maps.places 가 준비되면 즉시 연결
@@ -1058,6 +1205,8 @@
       function escAddr(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
       function wireVisaAddressAutocomplete() {
         if (vwAcWired) return;
+        // DOMContentLoaded 가드 — body 미준비 시 다음 tick 재시도 (script defer 환경 안전망)
+        if (!document.body) { setTimeout(wireVisaAddressAutocomplete, 100); return; }
         // Places 라이브러리가 아직 로드 안 됐으면 폴링 재시도 (Map 로드 시 같이 옴 — libraries=places)
         if (!(window.google && google.maps && google.maps.places && google.maps.places.AutocompleteService)) {
           setTimeout(wireVisaAddressAutocomplete, 300);
@@ -1068,6 +1217,21 @@
         const list  = document.getElementById('vwAddressSuggest');
         if (!input || !list) return;
         vwAcWired = true;
+        // ── stacking 우회 portal — ul 을 body 끝으로 이동 + position:fixed ──
+        //   · .write-modal 의 transform/overflow 가 만든 stacking context 안에 갇혀
+        //     z-index 가 효력 없는 문제 차단. body 직속 자식이 되어 viewport 기준 표시.
+        if (list.parentNode !== document.body) document.body.appendChild(list);
+        list.classList.add('koaus-portal');
+        // input 위치 따라 top/left/width 동기화 (show 시점에 호출)
+        const updatePos = () => {
+          const r = input.getBoundingClientRect();
+          list.style.top   = (r.bottom + 4) + 'px';
+          list.style.left  = r.left + 'px';
+          list.style.width = r.width + 'px';
+        };
+        // 스크롤/리사이즈/모달 transition 시점에 위치 갱신
+        window.addEventListener('scroll',  () => { if (list.classList.contains('show')) updatePos(); }, true);
+        window.addEventListener('resize',  () => { if (list.classList.contains('show')) updatePos(); });
         let timer = null;
         const hide = () => { list.classList.remove('show'); list.innerHTML = ''; };
         input.addEventListener('input', () => {
@@ -1086,6 +1250,7 @@
                   return `<li data-desc="${escAddr(p.description)}">📍 ${main} ${sec}</li>`;
                 }).join('');
                 list.classList.add('show');
+                updatePos();   // body portal — show 직전 위치 동기화 필수
               }
             );
           }, 250);
@@ -1145,15 +1310,49 @@
         visaMarkers.forEach(m => m.setMap(null));
         visaMarkers = [];
         const arr = (window.partners || []).filter(p => p.lat && p.lng);
-        // [좌표+UID] 병합
+        // [좌표+UID] 병합 (어뷰징 방어)
         let merged = arr;
         try { if (window.koausDedupe && window.koausDedupe.dedupeMapByUidLoc) merged = window.koausDedupe.dedupeMapByUidLoc(arr); } catch (_) {}
         const bounds = new google.maps.LatLngBounds();
-        merged.forEach(p => {
-          const mk = new google.maps.Marker({ position:{lat:Number(p.lat), lng:Number(p.lng)}, map: visaMap, title: p.title || p.name || '' });
-          mk.addListener('click', () => openVisaDetail(p));
-          visaMarkers.push(mk); bounds.extend(mk.getPosition());
-        });
+
+        // 단일 카드 HTML — 단일/클러스터 그룹 카드 공통. 위임 click 으로 openVisaDetail
+        const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        function buildVisaCard(p) {
+          const title = esc(p.title || p.name || '');
+          const meta = [
+            p.visaType ? '🛂 ' + esc(p.visaType) : '',
+            p.category === 'legal' ? '⚖ 법무법인' : (p.category === 'education' ? '🎓 유학원' : ''),
+          ].filter(Boolean).join(' · ');
+          return `<div class="iw-card" data-pid="${esc(p.id)}" style="display:flex;flex-direction:column;gap:4px;max-width:260px;padding:4px 2px;cursor:pointer;font-family:'Urbanist','Noto Sans KR',sans-serif;">
+            <div style="font-weight:800;font-size:13px;line-height:1.3;color:#000;">${title}</div>
+            ${meta ? `<div style="font-size:11px;color:#444;">${meta}</div>` : ''}
+            ${p.address ? `<div style="font-size:11px;color:#444;">📍 ${esc(p.address)}</div>` : ''}
+            <div style="font-size:10px;color:#666;margin-top:2px;">탭하여 상세 보기 →</div>
+          </div>`;
+        }
+        // InfoWindow 1개 재사용 (lazy init) — 페이지 전체 단일 인스턴스
+        if (!window._visaIw) window._visaIw = new google.maps.InfoWindow();
+        // 좌표 클러스터링 + 마커 부착 — koaus-map-cluster 헬퍼 1호출
+        if (window.koausMapCluster) {
+          window.koausMapCluster.attachMarkers({
+            map: visaMap, infoWindow: window._visaIw,
+            posts: merged, markers: visaMarkers, bounds,
+            buildCardHtml: buildVisaCard,
+          });
+        }
+        // 위임 click — 단일/클러스터 카드 공통: data-pid 매칭으로 partner 상세 모달 오픈
+        if (!window._visaIwBound) {
+          window._visaIwBound = true;
+          document.addEventListener('click', e => {
+            const card = e.target.closest('.iw-card[data-pid]');
+            if (!card) return;
+            // 비자/포인트 카드만 처리 (다른 섹션의 iw-card 와 분리)
+            const p = (window.partners || []).find(x => String(x.id) === String(card.dataset.pid));
+            if (!p) return;
+            try { window._visaIw && window._visaIw.close(); } catch (_) {}
+            openVisaDetail(p);
+          });
+        }
         try { if (merged.length) visaMap.fitBounds(bounds); if (merged.length === 1) visaMap.setZoom(13); } catch (_) {}
       }
 
@@ -1181,6 +1380,8 @@
           '<div style="font-size:14px;line-height:1.6;color:var(--text-primary);">' + body + '</div>' +
           contact;
         detailOv.classList.add('open');
+        // 동적 연락 버튼 컨테이너 — phone/kakaoLink/email 분리 필드 기반 자동 렌더 (koaus-contact-actions.js)
+        if (window.koausContactActions) window.koausContactActions.render(p);
         // 지도 (lat/lng 우선, 없으면 address 로 geocode 폴백)
         setupVisaDetailLocation(p);
       }
@@ -1264,6 +1465,14 @@
 
       // 글쓰기 submit — Firestore services 컬렉션에 push (koausDedupe 활용)
       submitBtn.addEventListener('click', async () => {
+      // [필수] 게시 규정 동의 — agent.md §2-C Mandatory Consent (글쓰기 표준 철칙)
+      const _consent = document.getElementById('writeConsent');
+      if (_consent && !_consent.checked) {
+        alert('게시 규정 동의에 체크해 주세요.');
+        try { _consent.focus(); _consent.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (_) {}
+        return;
+      }
+
         const errEl = document.getElementById('vwError');
         errEl.textContent = '';
         const title    = document.getElementById('vwTitle').value.trim();
@@ -1272,17 +1481,49 @@
         const address  = document.getElementById('vwAddress').value.trim();
         const body     = document.getElementById('vwBody').value.trim();
         const contact  = document.getElementById('vwContact').value.trim();
-        if (!title) { errEl.textContent = '제목을 입력해 주세요.'; return; }
+        const _phEl = document.getElementById('vwPhone');
+        const _kkEl = document.getElementById('vwKakao');
+        const _emEl = document.getElementById('vwEmail');
+        const phone     = _phEl ? _phEl.value.trim() : '';
+        const kakaoLink = _kkEl ? _kkEl.value.trim() : '';
+        const emailFld  = _emEl ? _emEl.value.trim() : '';
+        if (!title) {
+          errEl.textContent = '제목을 입력해 주세요.';
+          alert('제목을 입력해 주세요.');
+          return;
+        }
         const u = window.koausAuth && window.koausAuth.user;
-        if (!u) { errEl.textContent = '로그인이 필요합니다.'; return; }
-        if (!window.koausDb || !window.koausFs) { errEl.textContent = 'Firestore 미초기화'; return; }
+        if (!u) {
+          errEl.textContent = '로그인이 필요합니다.';
+          alert('로그인이 필요합니다.');
+          return;
+        }
+        if (!window.koausDb || !window.koausFs) {
+          errEl.textContent = 'Firestore 미초기화 — 잠시 후 다시 시도해 주세요.';
+          alert('Firestore 미초기화 — 잠시 후 다시 시도해 주세요.');
+          return;
+        }
         const { addDoc, collection, serverTimestamp } = window.koausFs;
+        // Firestore Rules 정합 (services.create 일반 사용자 — 자율 등록형 UGC 분기):
+        //   · status === 'approved' (자율 등록형 — 즉시 노출, 사용자 명시 기획 의도)
+        //   · isOfficial:false 명시 (admin 표시 금지 — 일반 유저는 false 만 허용)
+        //   · reqStr('contact', 1, 200) — 빈 값일 때 안내 자동 채움 (룰 위반 회피)
+        //   · authorId 추가 — RBAC 작성자 본인 식별 표준 필드
+        const contactSafe = contact || '게시글 본문 또는 댓글 참고';
         const payload = {
-          category, title, body, address, contact, visaType,
-          status: 'approved',           // 사용자 글: 즉시 노출 (admin 검토 단계 우회 옵션)
-          author: (u.displayName || (u.email||'').split('@')[0] || '익명'),
-          uid: u.uid, email: u.email || '',
-          authorUid: u.uid, authorEmail: u.email || '',
+          category, title,
+          body: body || ' ',          // optStr('body', 5000) — 빈 본문도 통과
+          address, contact: contactSafe, visaType,
+          phone, kakaoLink,           // 분리 연락처 — koaus-contact-actions.js 자동 버튼 렌더
+          status:     'approved',     // ✅ 자율 등록형 — 즉시 노출 (사용자 명시 의도)
+          isOfficial: false,          // admin 표시 금지 (룰 정합)
+          isUserPost: true,           // 커뮤니티 자율 등록 게시판 마커
+          author:    (u.displayName || (u.email||'').split('@')[0] || '익명'),
+          uid:       u.uid,
+          authorId:  u.uid,           // RBAC 작성자 식별 표준 필드 (agent.md §2-E)
+          email:     emailFld || u.email || '',   // 분리 필드 우선, 없으면 계정 이메일
+          authorUid: u.uid,
+          authorEmail: u.email || '',
           createdAt: serverTimestamp(),
         };
         submitBtn.disabled = true; submitBtn.textContent = '등록 중…';
@@ -1295,12 +1536,28 @@
           } else {
             await addDoc(collection(window.koausDb, 'services'), payload);
           }
+          // 성공 — 모달 닫기 + 알림 + 페이지 새로고침 (목록 갱신)
           closeWrite();
-          alert('✅ 비자/유학 글이 등록되었습니다.');
+          alert('✅ 등록이 완료되었습니다.\n비자/유학 게시판에 즉시 노출됩니다.');
+          try { location.reload(); } catch (_) { /* fallback: 새로고침 실패 시 그대로 진행 */ }
         } catch (e) {
-          console.error('[visa] 등록 실패', e);
-          errEl.textContent = '등록 실패: ' + (e && (e.code || e.message) || e);
-        } finally { submitBtn.disabled = false; submitBtn.textContent = '등록하기'; }
+          // 에러 메시지 명확화 — Rules 거부(permission-denied) 우선 안내
+          console.error('[visa] 등록 실패', { code: e && e.code, message: e && e.message, error: e });
+          let msg;
+          if (e && e.code === 'permission-denied') {
+            msg = '권한 거부 — 게시판 등록 규칙(필수 필드/로그인 상태) 을 다시 확인해 주세요.';
+          } else if (e && e.code === 'unavailable') {
+            msg = '서비스 일시 중단 — 인터넷 연결을 확인 후 다시 시도해 주세요.';
+          } else {
+            msg = '등록 실패: ' + ((e && (e.code || e.message)) || String(e));
+          }
+          errEl.textContent = msg;
+          alert('❌ ' + msg);
+        } finally {
+          // 어떤 경우든 버튼 복원 — '등록 중…' 멈춤 버그 차단
+          submitBtn.disabled = false;
+          submitBtn.textContent = '등록하기';
+        }
       });
 
       // partners 갱신 시 지도 마커도 sync
@@ -1573,6 +1830,31 @@
         setTimeout(cb, 0);
       }
     });
+  </script>
+
+  <!-- ── 게시판 상단 핀공지 (board_pinned_notices 컬렉션, doc id = 'points') ── -->
+  <script type="module">
+    import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
+    import { getFirestore, doc, onSnapshot } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
+    const cfg = {
+      apiKey:'AIzaSyCamqnt0bNUD9uz1N5BbCuQjSkWLSpPqlU', authDomain:'koaus-f564c.firebaseapp.com',
+      projectId:'koaus-f564c', storageBucket:'koaus-f564c.firebasestorage.app',
+      messagingSenderId:'663988594088', appId:'1:663988594088:web:ef30c2fd557407b00b299d',
+    };
+    try {
+      const app = getApps().length ? getApp() : initializeApp(cfg);
+      const db = getFirestore(app);
+      const box = document.getElementById('pinnedNoticeBox');
+      if (!box) throw new Error('pinnedNoticeBox not found');
+      const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/\n/g,'<br>');
+      onSnapshot(doc(db, 'board_pinned_notices', 'points'), snap => {
+        const data = snap.exists() ? snap.data() : null;
+        if (data && data.text && String(data.text).trim()) {
+          box.innerHTML = '<span class="pn-icon" aria-hidden="true">📢</span><div class="pn-body"><strong>공지</strong> · ' + esc(data.text) + '</div>';
+          box.hidden = false;
+        } else { box.hidden = true; box.innerHTML = ''; }
+      }, err => console.warn('[points] pinned-notice 구독 실패', err));
+    } catch (e) { console.warn('[points] pinned-notice 초기화 실패', e); }
   </script>
 </body>
 </html>

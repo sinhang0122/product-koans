@@ -36,7 +36,10 @@
   <script src="local-analytics.js" defer></script>
   <script src="koaus-gallery.js" defer></script>
   <script src="koaus-dedupe.js" defer></script>
+  <script src="koaus-url-guard.js" defer></script>
+  <script src="koaus-report.js" defer></script>
   <script type="module" src="admin-mark.js"></script>
+  <script type="module" src="koaus-rbac.js"></script>
   <script type="module" src="auth-extra.js"></script>
   <script type="module" src="koaus-phone-auth.js"></script>
 </head>
@@ -113,7 +116,7 @@
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="restaurants.html?state=nsw" class="accord-link accord-link--sub">K-Food</a>
-            <a href="trades.html?state=nsw" class="accord-link accord-link--sub">일상</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -155,7 +158,7 @@
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="restaurants.html?state=vic" class="accord-link accord-link--sub">K-Food</a>
-            <a href="trades.html?state=vic" class="accord-link accord-link--sub">일상</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -197,7 +200,7 @@
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="restaurants.html?state=qld" class="accord-link accord-link--sub">K-Food</a>
-            <a href="trades.html?state=qld" class="accord-link accord-link--sub">일상</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -239,7 +242,7 @@
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="restaurants.html?state=wa" class="accord-link accord-link--sub">K-Food</a>
-            <a href="trades.html?state=wa" class="accord-link accord-link--sub">일상</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -281,7 +284,7 @@
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="restaurants.html?state=sa" class="accord-link accord-link--sub">K-Food</a>
-            <a href="trades.html?state=sa" class="accord-link accord-link--sub">일상</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -323,7 +326,7 @@
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="restaurants.html?state=tas" class="accord-link accord-link--sub">K-Food</a>
-            <a href="trades.html?state=tas" class="accord-link accord-link--sub">일상</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -365,7 +368,7 @@
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="restaurants.html?state=act" class="accord-link accord-link--sub">K-Food</a>
-            <a href="trades.html?state=act" class="accord-link accord-link--sub">일상</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -407,13 +410,13 @@
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="restaurants.html?state=nt" class="accord-link accord-link--sub">K-Food</a>
-            <a href="trades.html?state=nt" class="accord-link accord-link--sub">일상</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
       </div>
       <div class="accord-foot-group">
-        <a href="emergency.html" class="accord-direct-link"><span>긴급연락처 <em>Emergency Contacts</em></span></a>
+        <a href="care.html" class="accord-direct-link"><span>Care <em>호주 생활 케어</em></span></a>
         <a href="calculator.html" class="accord-direct-link"><span>환율 계산 비교 <em>FX Calculator</em></span></a>
         <a href="contact.html" class="accord-direct-link"><span>문의 <em>Inquiry</em></span></a>
       </div>
@@ -532,11 +535,14 @@
 
   <footer class="site-footer-v2">
     <div class="footer-links">
-      <a href="privacy.html">개인정보처리방침</a>
-      <a href="terms.html">이용약관</a>
-      <a href="contact.html">문의하기</a>
+      <a href="about.html">KoAus 소개 / About</a>
+      <a href="faq.html">자주 묻는 질문 / FAQ</a>
+      <a href="guide.html">이용 가이드 / Guide</a>
+      <a href="privacy.html">Privacy Policy / 개인정보처리방침</a>
+      <a href="terms.html">Terms of Service / 서비스 이용약관</a>
+      <a href="contact.html">Contact / 문의하기</a>
     </div>
-    <p class="footer-copy">KoAus</p>
+    <p class="footer-copy">© 2026 Koaus Community. All rights reserved.</p>
   </footer>
 
   <!-- My Account Modal -->
@@ -607,11 +613,18 @@
         <button class="report-close" id="tosClose" type="button" aria-label="닫기">✕</button>
       </div>
       <div class="tos-body">
-        <p><strong>제1조 (목적 및 동의 - Introduction &amp; Acceptance)</strong><br>본 약관은 KoAus(이하 "서비스")가 제공하는 호주 한인 커뮤니티 정보 공유 서비스의 이용 조건을 규정합니다. 본 서비스에 접속하거나 이용함으로써 사용자는 본 약관에 동의하는 것으로 간주되며, 동의하지 않으실 경우 서비스를 이용하실 수 없습니다.</p>
-        <p><strong>제2조 (정보 공유 및 플랫폼의 면책 - Venue &amp; Limitation of Liability)</strong><br>서비스는 이용자 간 정보(구인구직, 쉐어하우스, 중고거래 등) 공유 공간만을 제공하는 온라인 플랫폼(Venue)입니다. 거래 및 계약의 당사자는 사용자 본인이며, 직거래나 정보 활용으로 인해 발생하는 모든 법적·금전적 분쟁과 직간접적 손실에 대해 당사는 법이 허용하는 최대 한도 내에서 책임을 지지 않습니다. 본 서비스는 호주 소비자법(ACL)이 보장하는 소비자 권리를 제한하지 않으며, 당사는 거래 일체에 개입하거나 보장하지 않습니다.</p>
-        <p><strong>제3조 (금지 행위 및 행동 규범 - User Conduct &amp; Online Safety Act)</strong><br>허위 매물, 사기성 정보, 욕설·비방, 타인 사칭, 봇(Bot)을 이용한 스팸 등은 엄격히 금지됩니다. 모든 사용자는 호주의 온라인 안전법 2021(Online Safety Act 2021)을 준수해야 하며, 위반 시 게시물은 사전 통보 없이 즉시 삭제되고 서비스 이용 제한 및 계정이 영구 정지될 수 있습니다.</p>
-        <p><strong>제4조 (준거법 - Governing Law)</strong><br>본 약관은 호주 퀸즐랜드(Queensland)주의 법률을 따르며, 본 웹사이트와 관련된 모든 분쟁은 퀸즐랜드주 법원의 관할에 속합니다.</p>
-        <p class="tos-note">※ 본 약관은 베타 서비스용 요약본이며, 서비스 고도화에 따라 정식 약관으로 대체될 수 있습니다.</p>
+        <p><strong>Operator · 운영자</strong> — KIM SHINHAENG, sole trader trading as <strong>"Koaus Community"</strong> (ABN 27581486613) · 김신행, 사업자명 <strong>"Koaus Community"</strong>. Contact: <a href="mailto:koaus.official@gmail.com">koaus.official@gmail.com</a>. Governing law: State of Queensland, Australia. Effective 5 June 2026 / 시행일 2026년 6월 5일.</p>
+        <p><strong>EN — 1. Introduction &amp; acceptance.</strong> These Terms govern use of the Korean–Australian community information-sharing service ("KoAus"). By accessing the service you agree to these Terms and to the Privacy Policy.</p>
+        <p><strong>EN — 2. Platform nature &amp; limitation of liability.</strong> KoAus is an online venue for users to share information (jobs, sharehouses, second-hand goods, vehicle and care services, etc.). The parties to any transaction are the users themselves. To the maximum extent permitted by law, we are not liable for loss arising from direct dealings. These Terms do not exclude or limit consumer rights guaranteed by the Australian Consumer Law (ACL).</p>
+        <p><strong>EN — 3. Prohibited conduct.</strong> False listings, scam information, abuse, defamation, impersonation, bot-driven spam, and infringing content are prohibited. All users must comply with the Online Safety Act 2021 (Cth).</p>
+        <p><strong>EN — 4. Content ownership &amp; intellectual property.</strong> You retain ownership of your content but grant us a non-exclusive, royalty-free licence to use, display and promote it. "koaus" is a trade mark filed with IP Australia (word mark, Classes 9 and 35); "Koaus Community" is our registered business name (ASIC).</p>
+        <p><strong>EN — 5. Reporting, account &amp; disclaimers.</strong> Report harmful content to <a href="mailto:koaus.official@gmail.com">koaus.official@gmail.com</a>. You may delete your account at any time; we may suspend accounts for breach. Service-specific disclaimers apply — emergency contacts are for reference only (call 000 in emergencies), currency rates are indicative, and visa/legal/business listings are third-party and not endorsements. Governing law: State of Queensland, Australia.</p>
+        <p><strong>KO — 1. 목적·동의.</strong> 본 약관은 김신행(사업자명 "Koaus Community", ABN 27581486613)이 제공하는 호주 한인 커뮤니티 정보공유 서비스("KoAus") 의 이용 조건을 규정합니다. 서비스 이용 시 본 약관 및 개인정보처리방침에 동의한 것으로 간주됩니다.</p>
+        <p><strong>KO — 2. 플랫폼 성격·면책.</strong> KoAus 는 이용자 간 정보(구인구직, 쉐어하우스, 중고거래, 차량·케어 서비스 등)를 공유하는 온라인 플랫폼(Venue) 입니다. 거래·계약의 당사자는 이용자 본인이며, 직거래로 발생하는 손실에 대해 당사는 법이 허용하는 최대한도 내에서 책임지지 않습니다. 호주 소비자법(ACL)이 보장하는 권리는 제한되지 않습니다.</p>
+        <p><strong>KO — 3. 금지행위.</strong> 허위 매물·사기성 정보·욕설·비방·타인 사칭·봇 스팸·불법 콘텐츠 금지. 「Online Safety Act 2021 (Cth)」 준수.</p>
+        <p><strong>KO — 4. 콘텐츠·지적재산.</strong> 게시 콘텐츠 소유권은 이용자에게 있으며, 당사는 서비스 운영·표시·홍보를 위한 비독점적 사용권을 부여받습니다. "koaus" 는 IP Australia 출원 상표(워드마크, Class 9·35), "Koaus Community" 는 ASIC 등록 사업자명입니다.</p>
+        <p><strong>KO — 5. 신고·계정·서비스별 면책.</strong> 유해 콘텐츠 신고 → <a href="mailto:koaus.official@gmail.com">koaus.official@gmail.com</a>. 이용자는 언제든 계정 삭제 요청 가능하며, 약관 위반 시 당사가 계정을 정지·해지할 수 있습니다. 서비스별 면책 — 긴급연락처(실제 응급 시 000)·환율(참고용)·비자/법무/업체 디렉터리(제3자, 당사 보증 아님). 준거법: 호주 퀸즈랜드주.</p>
+        <p class="tos-note">전체 본문 · Full text → <a href="terms.html" target="_blank" rel="noopener">terms.html</a> (12 조항 + 서비스별 면책 상세 · Effective 5 June 2026 · 시행일 2026년 6월 5일)</p>
       </div>
       <div class="report-actions">
         <button class="filter-apply-btn" id="tosConfirm" type="button">확인</button>
@@ -627,10 +640,17 @@
         <button class="report-close" id="privacyClose" type="button" aria-label="닫기">✕</button>
       </div>
       <div class="tos-body">
-        <p><strong>제1조 (개인정보 수집의 원칙 - Collection)</strong><br>당사는 호주 개인정보보호법 1988(Privacy Act 1988) 및 호주 개인정보보호원칙(APPs)을 엄격히 준수합니다. 회원 가입, 보안 인증, 고객 지원 시 이름, 이메일 주소, 접속 IP 등 서비스 제공에 꼭 필요한 최소한의 정보만 수집합니다. 보안 및 봇 차단을 위해 Google reCAPTCHA가 기기 정보를 수집할 수 있습니다.</p>
-        <p><strong>제2조 (정보의 사용 목적 - Use of Information)</strong><br>수집된 개인정보 및 인증 정보는 웹사이트 계정 관리, 커뮤니티 게시판 이용 권한 부여, 고객 지원 응대, 스팸 봇 차단 및 플랫폼 보안 유지 등 서비스 제공 목적 외에는 절대 사용되지 않습니다. 작성한 게시물의 연락처 등 공개 정보는 이용자 본인의 책임 하에 게시됩니다.</p>
-        <p><strong>제3조 (데이터 보안 및 해외 이전 - Data Security &amp; Overseas Disclosure)</strong><br>당사는 수집된 데이터를 안전한 클라우드 서버(Firebase)에 보관합니다. 서비스 제공을 위해 데이터가 호주 외의 국가(미국 등)에 위치한 서버에 저장되거나 처리될 수 있습니다. 무단 접근을 막기 위한 최선의 보안 조치를 취하고 있으며, 심각한 데이터 유출 발생 시 필수 데이터 유출 통지(NDB) 제도에 따라 사용자 및 호주 정보보호위원회(OAIC)에 통보합니다.</p>
-        <p><strong>제4조 (사용자의 권리 - User Rights)</strong><br>사용자는 언제든지 자신의 개인정보에 대한 열람을 요청하거나 프로필을 통해 수정할 수 있습니다. 개인정보 파기 또는 계정 삭제를 원하실 경우 고객센터를 통해 요청하실 수 있으며, 관련 법령에 따라 신속히 파기 절차를 진행합니다.</p>
+        <p><strong>Operator · 운영자</strong> — KIM SHINHAENG, sole trader trading as <strong>"Koaus Community"</strong> (ABN 27581486613) · 김신행, 사업자명 <strong>"Koaus Community"</strong>. Contact: <a href="mailto:koaus.official@gmail.com">koaus.official@gmail.com</a>. Governing law: State of Queensland, Australia. Effective 5 June 2026 / 시행일 2026년 6월 5일.</p>
+        <p><strong>EN — 1. What we collect.</strong> Only what is needed to provide the service: mobile number (SMS verification), email address (Google sign-in or optional contact), account details, content you post, IP address, and device/log information. <strong>We do NOT collect your full legal name.</strong> Google reCAPTCHA may collect device information for security and bot prevention.</p>
+        <p><strong>EN — 2. How we use it.</strong> Only for account management and authentication, connecting posts/bookings/enquiries, customer support, spam and fraud prevention, operating and improving the service, and meeting legal obligations.</p>
+        <p><strong>EN — 3. Disclosure &amp; overseas storage.</strong> When you book or enquire with a business listed on the platform, we pass your contact details to that business so the service can proceed (separate consent at booking). Information is stored on cloud servers (Firebase/Google) and may be processed in countries outside Australia (APP 8). Eligible data breaches are reported to the OAIC under the Notifiable Data Breaches (NDB) scheme.</p>
+        <p><strong>EN — 4. Retention &amp; destruction.</strong> Personal information is destroyed when its purpose is fulfilled or any legal retention period ends. To prevent misuse, essential account details may be retained in encrypted form for 6 months after account closure before destruction.</p>
+        <p><strong>EN — 5. Your rights.</strong> You may request access, correction, or deletion → <a href="mailto:koaus.official@gmail.com">koaus.official@gmail.com</a>. Complaints to the Office of the Australian Information Commissioner (OAIC, <a href="https://www.oaic.gov.au" target="_blank" rel="noopener">www.oaic.gov.au</a>). Service is for users aged 18 and over.</p>
+        <p><strong>KO — 1. 수집 정보.</strong> 당사는 서비스 제공에 필요한 최소한의 정보만 수집합니다 — 휴대전화번호(SMS 본인인증), 이메일 주소(Google 로그인 시 제공되거나 선택적 연락처), 계정 정보, 게시물 내용, 접속 IP 및 기기·로그 정보. <strong>본인 실명(성명)은 수집하지 않습니다.</strong> 보안 및 봇 차단을 위해 Google reCAPTCHA 가 기기 정보를 수집할 수 있습니다.</p>
+        <p><strong>KO — 2. 이용 목적.</strong> 계정 관리·인증, 게시·예약·문의 연동, 고객지원, 스팸·부정이용 차단, 서비스 운영·개선, 법적 의무 이행 목적으로만 이용합니다.</p>
+        <p><strong>KO — 3. 제3자 제공·해외 보관.</strong> 이용자가 플랫폼 내 업체(쉐어하우스, 정비, 렌터카, 견인 등) 에 예약·문의할 경우, 서비스 진행을 위해 해당 업체에 이용자의 연락처가 전달됩니다(예약·문의 시점에 별도 동의). 수집된 정보는 클라우드 서버(Firebase/Google) 에 보관되며 호주 외 국가에서 저장·처리될 수 있습니다(APP 8). 심각한 유출 시 호주 정보보호위원회(OAIC) 에 NDB 제도에 따라 통지합니다.</p>
+        <p><strong>KO — 4. 보관 및 파기.</strong> 개인정보는 이용 목적 달성 또는 법정 보관기간 종료 시 파기합니다. 부정이용 방지를 위해 탈퇴 후 6개월 동안 주요 정보를 암호화 보관 후 파기할 수 있습니다.</p>
+        <p><strong>KO — 5. 이용자의 권리.</strong> 열람·정정·삭제 요청 → <a href="mailto:koaus.official@gmail.com">koaus.official@gmail.com</a>. 민원 → 호주 정보보호위원회(OAIC, <a href="https://www.oaic.gov.au" target="_blank" rel="noopener">www.oaic.gov.au</a>). 본 서비스는 만 18세 이상 대상입니다.</p>
       </div>
       <div class="report-actions">
         <button class="filter-apply-btn" id="privacyConfirm" type="button">확인</button>
@@ -664,10 +684,6 @@
         </div>
         <div class="auth-error" id="authLoginError"></div>
         <button class="auth-submit" id="authLoginSubmit">로그인</button>
-        <!-- 인증 메일 재전송 (클릭 시 마이페이지로 이동) -->
-        <div class="auth-help-links" style="display:flex;gap:14px;justify-content:center;margin-top:10px;font-size:12.5px;">
-          <a href="#" id="authResendVerify" style="color:var(--text-muted);text-decoration:underline;">인증 메일 재전송</a>
-        </div>
       </div>
 
       <!-- 회원가입 폼 -->
@@ -678,7 +694,8 @@
         </div>
         <div class="auth-field">
           <label class="auth-label" for="authSignupPw">비밀번호</label>
-          <input class="auth-input" id="authSignupPw" type="password" placeholder="6자 이상" autocomplete="new-password" />
+          <input class="auth-input" id="authSignupPw" type="password" placeholder="10자 이상 · 영문 + 숫자 + 특수문자" autocomplete="new-password" />
+          <p class="koaus-extra-msg" id="authSignupPwMsg" style="font-size:12px;color:var(--text-muted);margin:6px 0 0;min-height:16px;"></p>
         </div>
         <div class="auth-field">
           <label class="auth-label" for="authSignupPwConfirm">비밀번호 확인</label>
@@ -738,9 +755,13 @@
           if (!slot || !img) return;
           if (!items.length) { slot.style.display = 'none'; return; }
           const pick = items[Math.floor(Math.random() * items.length)];
-          img.src = pick.image;
+          // URL 스킴 화이트리스트 — javascript:/data: 등 차단 (admin 입력이지만 권한 탈취 대비)
+          const safeImg  = (window.koausUrlGuard && window.koausUrlGuard.isSafeHttp(pick.image)) ? pick.image : '';
+          const safeLink = (window.koausUrlGuard && window.koausUrlGuard.isSafeHttp(pick.link))  ? pick.link  : '';
+          if (!safeImg || !safeLink) { slot.style.display = 'none'; return; }
+          img.src = safeImg;
           img.alt = pick.alt || '광고 배너';
-          slot.href = pick.link;
+          slot.href = safeLink;
           slot.style.display = '';
         }, err => console.warn('[home] ads 구독 실패', err));
       } catch (e) {}
@@ -806,6 +827,70 @@
       } else { setTimeout(initHeroSwiper, 0); }
       // Swiper CDN 이 늦게 로드되는 경우 대응
       window.addEventListener('load', initHeroSwiper, { once: true });
+    })();
+  </script>
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       KoAus 주(State)별 광고 시스템 — append-only 안전 연동
+       · koaus-ads.js : Firebase compat SDK 의존 (사용자 제공 모듈 — 0 수정)
+       · admin-ads.html : 단독 관리자 페이지 (firebaseConfig 만 채움)
+       · onAd 콜백 : 기존 #heroSwiperHome Swiper 인스턴스에 슬라이드 1장 appendSlide
+       · 기존 hero-banner.js / Swiper 인스턴스는 절대 수정·재초기화 X (두더지 잡기 방지)
+       ════════════════════════════════════════════════════════════════════ -->
+  <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js" defer></script>
+  <script src="koaus-ads.js" defer></script>
+  <script defer>
+    // defer 순서: firebase-compat → koaus-ads → 본 인라인 → DOMContentLoaded → koaus-ads 의 doRender
+    // 즉 onAd 콜백 등록이 첫 render 전에 완료됨 — 인벤토리 fetch 결과를 받아 정상 호출.
+    (function () {
+      if (!window.KoAusAds) return;
+      window.KoAusAds.config.onAd = function (payload) {
+        try {
+          var ad = payload && payload.ad;
+          if (!ad || !ad.img) return;
+          // 1) 기존 Swiper 인스턴스 조회 (Swiper 11+ 가 element 에 자동 노출)
+          var hostEl = document.querySelector('#heroSwiperHome');
+          if (!hostEl || !hostEl.swiper) return;  // 아직 init 전이면 silent skip
+          // 2) URL 화이트리스트 검증 — javascript:/data: 차단 (koaus-url-guard.js 활용)
+          var ug = window.koausUrlGuard;
+          var safeHref = (ug && ug.isSafeHttp(ad.href)) ? ad.href : '';
+          var safeImg  = (ug && ug.isSafeHttp(ad.img))  ? ad.img : '';
+          if (!safeImg) return;
+          // 3) 중복 append 방어 — 같은 ad.id 가 이미 슬라이드에 있으면 skip
+          if (ad.id && hostEl.querySelector('[data-koaus-ad-id="' + String(ad.id).replace(/"/g, '') + '"]')) return;
+          // 4) 기존 buildAdminSlide 와 동일한 HTML 규격 — append-only
+          var esc = function (s) {
+            return String(s == null ? '' : s)
+              .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+              .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+          };
+          var alt   = esc(ad.alt || (payload.label ? payload.label + ' 광고' : '광고 배너'));
+          var img   = esc(safeImg);
+          var href  = esc(safeHref);
+          var adId  = esc(ad.id || '');
+          var state = esc(payload.state || '');
+          var imgEl = '<img src="' + img + '" alt="' + alt + '" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;">';
+          var inner = href
+            ? '<a href="' + href + '" target="_blank" rel="noopener noreferrer sponsored" aria-label="' + alt + '" style="display:block;width:100%;height:100%;">' + imgEl + '</a>'
+            : imgEl;
+          var slideHtml = '<div class="swiper-slide koaus-hero-admin-slide koaus-ads-slide"'
+            + ' data-koaus-ad-id="' + adId + '"'
+            + ' data-koaus-state="' + state + '"'
+            + ' style="background:var(--bg-base,#000);position:relative;">'
+            + inner + '</div>';
+          // 5) Swiper 공식 API — 슬라이드 append (loop/autoplay 자동 재계산)
+          hostEl.swiper.appendSlide(slideHtml);
+        } catch (e) {
+          if (window.console && console.warn) console.warn('[koaus-ads] onAd append 실패:', e);
+        }
+      };
+      // koaus-ads.js 의 첫 init 은 onAd 미설정 시점 (defer 순서상 보통 우리보다 늦음 — 안전).
+      // 만약 이미 첫 render 가 콜백 미설정으로 silent log 됐다면 한 번 더 트리거.
+      //   · 인벤토리 캐시 사용 → 비용 0, 중복 append 는 위 (3) 가드로 방어.
+      if (typeof window.KoAusAds.renderHeroAd === 'function') {
+        setTimeout(function () { try { window.KoAusAds.renderHeroAd(); } catch (e) {} }, 1500);
+      }
     })();
   </script>
 </body>

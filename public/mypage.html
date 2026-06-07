@@ -35,7 +35,10 @@
   <script src="local-analytics.js" defer></script>
   <script src="koaus-gallery.js" defer></script>
   <script src="koaus-dedupe.js" defer></script>
+  <script src="koaus-url-guard.js" defer></script>
+  <script src="koaus-report.js" defer></script>
   <script type="module" src="admin-mark.js"></script>
+  <script type="module" src="koaus-rbac.js"></script>
   <script type="module" src="auth-extra.js"></script>
   <script type="module" src="koaus-phone-auth.js"></script>
 </head>
@@ -112,7 +115,7 @@
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="restaurants.html?state=nsw" class="accord-link accord-link--sub">K-Food</a>
-            <a href="trades.html?state=nsw" class="accord-link accord-link--sub">일상</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -154,7 +157,7 @@
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="restaurants.html?state=vic" class="accord-link accord-link--sub">K-Food</a>
-            <a href="trades.html?state=vic" class="accord-link accord-link--sub">일상</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -196,7 +199,7 @@
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="restaurants.html?state=qld" class="accord-link accord-link--sub">K-Food</a>
-            <a href="trades.html?state=qld" class="accord-link accord-link--sub">일상</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -238,7 +241,7 @@
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="restaurants.html?state=wa" class="accord-link accord-link--sub">K-Food</a>
-            <a href="trades.html?state=wa" class="accord-link accord-link--sub">일상</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -280,7 +283,7 @@
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="restaurants.html?state=sa" class="accord-link accord-link--sub">K-Food</a>
-            <a href="trades.html?state=sa" class="accord-link accord-link--sub">일상</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -322,7 +325,7 @@
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="restaurants.html?state=tas" class="accord-link accord-link--sub">K-Food</a>
-            <a href="trades.html?state=tas" class="accord-link accord-link--sub">일상</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -364,7 +367,7 @@
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="restaurants.html?state=act" class="accord-link accord-link--sub">K-Food</a>
-            <a href="trades.html?state=act" class="accord-link accord-link--sub">일상</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -406,13 +409,13 @@
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="restaurants.html?state=nt" class="accord-link accord-link--sub">K-Food</a>
-            <a href="trades.html?state=nt" class="accord-link accord-link--sub">일상</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
       </div>
       <div class="accord-foot-group">
-        <a href="emergency.html" class="accord-direct-link"><span>긴급연락처 <em>Emergency Contacts</em></span></a>
+        <a href="care.html" class="accord-direct-link"><span>Care <em>호주 생활 케어</em></span></a>
         <a href="calculator.html" class="accord-direct-link"><span>환율 계산 비교 <em>FX Calculator</em></span></a>
         <a href="contact.html" class="accord-direct-link"><span>문의 <em>Inquiry</em></span></a>
       </div>
@@ -517,6 +520,16 @@
           <span class="mp-name-toggle-knob"></span>
         </label>
       </div>
+
+      <!-- 5) Danger Zone — 계정 삭제 (탈퇴) · Privacy Policy §9 (6개월 암호화 보관 후 파기) -->
+      <div class="mypage-account-row" id="mpDeleteRow" style="border-top:2px solid var(--red,#dc2626);margin-top:14px;padding-top:14px;">
+        <div class="mypage-account-row-info">
+          <div class="mypage-account-row-label" style="color:var(--red,#dc2626);">계정 삭제 · Delete Account</div>
+          <div class="mypage-account-row-desc">탈퇴 시 프로필과 서비스 접근 권한이 영구히 제거됩니다. 신중히 결정해 주세요.</div>
+        </div>
+        <button class="mypage-photo-btn" id="mpDeleteBtn" type="button"
+                style="border:1.5px solid var(--red,#dc2626);color:var(--red,#dc2626);font-weight:800;">계정 삭제</button>
+      </div>
     </section>
 
     <div class="mypage-tabs" id="mypageTabs" style="display:none;">
@@ -530,7 +543,17 @@
 
   </main>
 
-  <footer class="site-footer"><p>KoAus</p></footer>
+  <footer class="site-footer-v2">
+    <div class="footer-links">
+      <a href="about.html">KoAus 소개 / About</a>
+      <a href="faq.html">자주 묻는 질문 / FAQ</a>
+      <a href="guide.html">이용 가이드 / Guide</a>
+      <a href="privacy.html">Privacy Policy / 개인정보처리방침</a>
+      <a href="terms.html">Terms of Service / 서비스 이용약관</a>
+      <a href="contact.html">Contact / 문의하기</a>
+    </div>
+    <p class="footer-copy">© 2026 Koaus Community. All rights reserved.</p>
+  </footer>
 
   <script>
     // ── Sidebar / Theme ──
@@ -576,11 +599,18 @@
         <button class="report-close" id="tosClose" type="button" aria-label="닫기">✕</button>
       </div>
       <div class="tos-body">
-        <p><strong>제1조 (목적 및 동의 - Introduction &amp; Acceptance)</strong><br>본 약관은 KoAus(이하 "서비스")가 제공하는 호주 한인 커뮤니티 정보 공유 서비스의 이용 조건을 규정합니다. 본 서비스에 접속하거나 이용함으로써 사용자는 본 약관에 동의하는 것으로 간주되며, 동의하지 않으실 경우 서비스를 이용하실 수 없습니다.</p>
-        <p><strong>제2조 (정보 공유 및 플랫폼의 면책 - Venue &amp; Limitation of Liability)</strong><br>서비스는 이용자 간 정보(구인구직, 쉐어하우스, 중고거래 등) 공유 공간만을 제공하는 온라인 플랫폼(Venue)입니다. 거래 및 계약의 당사자는 사용자 본인이며, 직거래나 정보 활용으로 인해 발생하는 모든 법적·금전적 분쟁과 직간접적 손실에 대해 당사는 법이 허용하는 최대 한도 내에서 책임을 지지 않습니다. 본 서비스는 호주 소비자법(ACL)이 보장하는 소비자 권리를 제한하지 않으며, 당사는 거래 일체에 개입하거나 보장하지 않습니다.</p>
-        <p><strong>제3조 (금지 행위 및 행동 규범 - User Conduct &amp; Online Safety Act)</strong><br>허위 매물, 사기성 정보, 욕설·비방, 타인 사칭, 봇(Bot)을 이용한 스팸 등은 엄격히 금지됩니다. 모든 사용자는 호주의 온라인 안전법 2021(Online Safety Act 2021)을 준수해야 하며, 위반 시 게시물은 사전 통보 없이 즉시 삭제되고 서비스 이용 제한 및 계정이 영구 정지될 수 있습니다.</p>
-        <p><strong>제4조 (준거법 - Governing Law)</strong><br>본 약관은 호주 퀸즐랜드(Queensland)주의 법률을 따르며, 본 웹사이트와 관련된 모든 분쟁은 퀸즐랜드주 법원의 관할에 속합니다.</p>
-        <p class="tos-note">※ 본 약관은 베타 서비스용 요약본이며, 서비스 고도화에 따라 정식 약관으로 대체될 수 있습니다.</p>
+        <p><strong>Operator · 운영자</strong> — KIM SHINHAENG, sole trader trading as <strong>"Koaus Community"</strong> (ABN 27581486613) · 김신행, 사업자명 <strong>"Koaus Community"</strong>. Contact: <a href="mailto:koaus.official@gmail.com">koaus.official@gmail.com</a>. Governing law: State of Queensland, Australia. Effective 5 June 2026 / 시행일 2026년 6월 5일.</p>
+        <p><strong>EN — 1. Introduction &amp; acceptance.</strong> These Terms govern use of the Korean–Australian community information-sharing service ("KoAus"). By accessing the service you agree to these Terms and to the Privacy Policy.</p>
+        <p><strong>EN — 2. Platform nature &amp; limitation of liability.</strong> KoAus is an online venue for users to share information (jobs, sharehouses, second-hand goods, vehicle and care services, etc.). The parties to any transaction are the users themselves. To the maximum extent permitted by law, we are not liable for loss arising from direct dealings. These Terms do not exclude or limit consumer rights guaranteed by the Australian Consumer Law (ACL).</p>
+        <p><strong>EN — 3. Prohibited conduct.</strong> False listings, scam information, abuse, defamation, impersonation, bot-driven spam, and infringing content are prohibited. All users must comply with the Online Safety Act 2021 (Cth).</p>
+        <p><strong>EN — 4. Content ownership &amp; intellectual property.</strong> You retain ownership of your content but grant us a non-exclusive, royalty-free licence to use, display and promote it. "koaus" is a trade mark filed with IP Australia (word mark, Classes 9 and 35); "Koaus Community" is our registered business name (ASIC).</p>
+        <p><strong>EN — 5. Reporting, account &amp; disclaimers.</strong> Report harmful content to <a href="mailto:koaus.official@gmail.com">koaus.official@gmail.com</a>. You may delete your account at any time; we may suspend accounts for breach. Service-specific disclaimers apply — emergency contacts are for reference only (call 000 in emergencies), currency rates are indicative, and visa/legal/business listings are third-party and not endorsements. Governing law: State of Queensland, Australia.</p>
+        <p><strong>KO — 1. 목적·동의.</strong> 본 약관은 김신행(사업자명 "Koaus Community", ABN 27581486613)이 제공하는 호주 한인 커뮤니티 정보공유 서비스("KoAus") 의 이용 조건을 규정합니다. 서비스 이용 시 본 약관 및 개인정보처리방침에 동의한 것으로 간주됩니다.</p>
+        <p><strong>KO — 2. 플랫폼 성격·면책.</strong> KoAus 는 이용자 간 정보(구인구직, 쉐어하우스, 중고거래, 차량·케어 서비스 등)를 공유하는 온라인 플랫폼(Venue) 입니다. 거래·계약의 당사자는 이용자 본인이며, 직거래로 발생하는 손실에 대해 당사는 법이 허용하는 최대한도 내에서 책임지지 않습니다. 호주 소비자법(ACL)이 보장하는 권리는 제한되지 않습니다.</p>
+        <p><strong>KO — 3. 금지행위.</strong> 허위 매물·사기성 정보·욕설·비방·타인 사칭·봇 스팸·불법 콘텐츠 금지. 「Online Safety Act 2021 (Cth)」 준수.</p>
+        <p><strong>KO — 4. 콘텐츠·지적재산.</strong> 게시 콘텐츠 소유권은 이용자에게 있으며, 당사는 서비스 운영·표시·홍보를 위한 비독점적 사용권을 부여받습니다. "koaus" 는 IP Australia 출원 상표(워드마크, Class 9·35), "Koaus Community" 는 ASIC 등록 사업자명입니다.</p>
+        <p><strong>KO — 5. 신고·계정·서비스별 면책.</strong> 유해 콘텐츠 신고 → <a href="mailto:koaus.official@gmail.com">koaus.official@gmail.com</a>. 이용자는 언제든 계정 삭제 요청 가능하며, 약관 위반 시 당사가 계정을 정지·해지할 수 있습니다. 서비스별 면책 — 긴급연락처(실제 응급 시 000)·환율(참고용)·비자/법무/업체 디렉터리(제3자, 당사 보증 아님). 준거법: 호주 퀸즈랜드주.</p>
+        <p class="tos-note">전체 본문 · Full text → <a href="terms.html" target="_blank" rel="noopener">terms.html</a> (12 조항 + 서비스별 면책 상세 · Effective 5 June 2026 · 시행일 2026년 6월 5일)</p>
       </div>
       <div class="report-actions">
         <button class="filter-apply-btn" id="tosConfirm" type="button">확인</button>
@@ -596,13 +626,44 @@
         <button class="report-close" id="privacyClose" type="button" aria-label="닫기">✕</button>
       </div>
       <div class="tos-body">
-        <p><strong>제1조 (개인정보 수집의 원칙 - Collection)</strong><br>당사는 호주 개인정보보호법 1988(Privacy Act 1988) 및 호주 개인정보보호원칙(APPs)을 엄격히 준수합니다. 회원 가입, 보안 인증, 고객 지원 시 이름, 이메일 주소, 접속 IP 등 서비스 제공에 꼭 필요한 최소한의 정보만 수집합니다. 보안 및 봇 차단을 위해 Google reCAPTCHA가 기기 정보를 수집할 수 있습니다.</p>
-        <p><strong>제2조 (정보의 사용 목적 - Use of Information)</strong><br>수집된 개인정보 및 인증 정보는 웹사이트 계정 관리, 커뮤니티 게시판 이용 권한 부여, 고객 지원 응대, 스팸 봇 차단 및 플랫폼 보안 유지 등 서비스 제공 목적 외에는 절대 사용되지 않습니다. 작성한 게시물의 연락처 등 공개 정보는 이용자 본인의 책임 하에 게시됩니다.</p>
-        <p><strong>제3조 (데이터 보안 및 해외 이전 - Data Security &amp; Overseas Disclosure)</strong><br>당사는 수집된 데이터를 안전한 클라우드 서버(Firebase)에 보관합니다. 서비스 제공을 위해 데이터가 호주 외의 국가(미국 등)에 위치한 서버에 저장되거나 처리될 수 있습니다. 무단 접근을 막기 위한 최선의 보안 조치를 취하고 있으며, 심각한 데이터 유출 발생 시 필수 데이터 유출 통지(NDB) 제도에 따라 사용자 및 호주 정보보호위원회(OAIC)에 통보합니다.</p>
-        <p><strong>제4조 (사용자의 권리 - User Rights)</strong><br>사용자는 언제든지 자신의 개인정보에 대한 열람을 요청하거나 프로필을 통해 수정할 수 있습니다. 개인정보 파기 또는 계정 삭제를 원하실 경우 고객센터를 통해 요청하실 수 있으며, 관련 법령에 따라 신속히 파기 절차를 진행합니다.</p>
+        <p><strong>Operator · 운영자</strong> — KIM SHINHAENG, sole trader trading as <strong>"Koaus Community"</strong> (ABN 27581486613) · 김신행, 사업자명 <strong>"Koaus Community"</strong>. Contact: <a href="mailto:koaus.official@gmail.com">koaus.official@gmail.com</a>. Governing law: State of Queensland, Australia. Effective 5 June 2026 / 시행일 2026년 6월 5일.</p>
+        <p><strong>EN — 1. What we collect.</strong> Only what is needed to provide the service: mobile number (SMS verification), email address (Google sign-in or optional contact), account details, content you post, IP address, and device/log information. <strong>We do NOT collect your full legal name.</strong> Google reCAPTCHA may collect device information for security and bot prevention.</p>
+        <p><strong>EN — 2. How we use it.</strong> Only for account management and authentication, connecting posts/bookings/enquiries, customer support, spam and fraud prevention, operating and improving the service, and meeting legal obligations.</p>
+        <p><strong>EN — 3. Disclosure &amp; overseas storage.</strong> When you book or enquire with a business listed on the platform, we pass your contact details to that business so the service can proceed (separate consent at booking). Information is stored on cloud servers (Firebase/Google) and may be processed in countries outside Australia (APP 8). Eligible data breaches are reported to the OAIC under the Notifiable Data Breaches (NDB) scheme.</p>
+        <p><strong>EN — 4. Retention &amp; destruction.</strong> Personal information is destroyed when its purpose is fulfilled or any legal retention period ends. To prevent misuse, essential account details may be retained in encrypted form for 6 months after account closure before destruction.</p>
+        <p><strong>EN — 5. Your rights.</strong> You may request access, correction, or deletion → <a href="mailto:koaus.official@gmail.com">koaus.official@gmail.com</a>. Complaints to the Office of the Australian Information Commissioner (OAIC, <a href="https://www.oaic.gov.au" target="_blank" rel="noopener">www.oaic.gov.au</a>). Service is for users aged 18 and over.</p>
+        <p><strong>KO — 1. 수집 정보.</strong> 당사는 서비스 제공에 필요한 최소한의 정보만 수집합니다 — 휴대전화번호(SMS 본인인증), 이메일 주소(Google 로그인 시 제공되거나 선택적 연락처), 계정 정보, 게시물 내용, 접속 IP 및 기기·로그 정보. <strong>본인 실명(성명)은 수집하지 않습니다.</strong> 보안 및 봇 차단을 위해 Google reCAPTCHA 가 기기 정보를 수집할 수 있습니다.</p>
+        <p><strong>KO — 2. 이용 목적.</strong> 계정 관리·인증, 게시·예약·문의 연동, 고객지원, 스팸·부정이용 차단, 서비스 운영·개선, 법적 의무 이행 목적으로만 이용합니다.</p>
+        <p><strong>KO — 3. 제3자 제공·해외 보관.</strong> 이용자가 플랫폼 내 업체(쉐어하우스, 정비, 렌터카, 견인 등) 에 예약·문의할 경우, 서비스 진행을 위해 해당 업체에 이용자의 연락처가 전달됩니다(예약·문의 시점에 별도 동의). 수집된 정보는 클라우드 서버(Firebase/Google) 에 보관되며 호주 외 국가에서 저장·처리될 수 있습니다(APP 8). 심각한 유출 시 호주 정보보호위원회(OAIC) 에 NDB 제도에 따라 통지합니다.</p>
+        <p><strong>KO — 4. 보관 및 파기.</strong> 개인정보는 이용 목적 달성 또는 법정 보관기간 종료 시 파기합니다. 부정이용 방지를 위해 탈퇴 후 6개월 동안 주요 정보를 암호화 보관 후 파기할 수 있습니다.</p>
+        <p><strong>KO — 5. 이용자의 권리.</strong> 열람·정정·삭제 요청 → <a href="mailto:koaus.official@gmail.com">koaus.official@gmail.com</a>. 민원 → 호주 정보보호위원회(OAIC, <a href="https://www.oaic.gov.au" target="_blank" rel="noopener">www.oaic.gov.au</a>). 본 서비스는 만 18세 이상 대상입니다.</p>
       </div>
       <div class="report-actions">
         <button class="filter-apply-btn" id="privacyConfirm" type="button">확인</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 계정 삭제(탈퇴) 확인 모달 — Privacy Policy §9 (6개월 암호화 보관 후 파기) ── -->
+  <div class="report-overlay" id="deleteAcctOverlay" role="dialog" aria-modal="true" aria-labelledby="deleteAcctTitle">
+    <div class="report-modal">
+      <div class="report-header">
+        <span class="report-title" id="deleteAcctTitle" style="color:var(--red,#dc2626);">⚠ Delete Account · 계정 삭제</span>
+        <button class="report-close" id="deleteAcctCancel" type="button" aria-label="닫기 / Cancel">✕</button>
+      </div>
+      <div class="tos-body">
+        <p><strong>⚠ Warning:</strong> Deleting your account will permanently remove your profile and access. However, in accordance with our <a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a>, your essential account details may be securely held in an encrypted format for 6 months to prevent misuse and comply with legal obligations.</p>
+        <p><strong>⚠ 경고:</strong> 계정을 삭제하면 프로필과 서비스 접근 권한이 영구히 제거됩니다. 다만, <a href="privacy.html" target="_blank" rel="noopener">개인정보처리방침</a>에 따라 부정이용 방지 및 법적 의무 이행을 위해 주요 계정 정보는 6개월간 암호화되어 안전하게 보관된 후 파기됩니다.</p>
+      </div>
+      <div class="report-actions" style="display:flex;gap:8px;">
+        <button class="filter-apply-btn" id="deleteAcctConfirm" type="button"
+                style="flex:1;background:var(--red,#dc2626);border-color:var(--red,#dc2626);color:#fff;font-weight:800;">
+          최종 삭제 확인 · Confirm Delete
+        </button>
+        <button class="filter-apply-btn" id="deleteAcctCancel2" type="button"
+                style="flex:0 0 auto;padding:0 18px;background:transparent;color:var(--text-primary);">
+          취소 · Cancel
+        </button>
       </div>
     </div>
   </div>
@@ -680,10 +741,10 @@
     import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
     import {
       getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut,
-      createUserWithEmailAndPassword, signInWithEmailAndPassword,
+      createUserWithEmailAndPassword, signInWithEmailAndPassword, deleteUser,
     } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
     import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app-check.js';
-    import { getFirestore, doc, getDoc, setDoc, deleteDoc } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
+    import { getFirestore, doc, getDoc, setDoc, deleteDoc, runTransaction } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
     import { compressImage, uploadCompressed } from './compress.js';
 
     const firebaseConfig = {
@@ -700,7 +761,7 @@
     // ── App Check (reCAPTCHA v3) — 봇·외부 스크립트의 백엔드(인증/DB) 접근 차단 ──
     // 사이트 키 발급: Firebase 콘솔 > App Check > 앱 등록(reCAPTCHA v3 공급자)
     // 키를 채우면 자동 활성화됨. (placeholder 상태에서는 운영 사이트를 깨뜨리지 않도록 건너뜀)
-    const APP_CHECK_SITE_KEY = '6LcMRActAAAAALY3ancFhgqgzXbdWogVdb12R1Wf';
+    const APP_CHECK_SITE_KEY = '6Ld1mAwtAAAAADURkCq0J6GOr3wFg9DQVOsxVG5v';
     if (APP_CHECK_SITE_KEY && !APP_CHECK_SITE_KEY.startsWith('TODO')) {
       initializeAppCheck(app, {
         provider: new ReCaptchaV3Provider(APP_CHECK_SITE_KEY),
@@ -842,7 +903,8 @@
             const puid  = p.uid   || p.authorUid;
             const pmail = p.email || p.authorEmail;
             const mine = (u.uid && puid && u.uid === puid) || (u.email && pmail && u.email === pmail);
-            if (mine) out.push({ board, id: p.id, title: p.title, state: p.state || '', author: p.author, authorEmail: pmail || '', date: p.date, time: p.time || '' });
+            // 마이페이지 '내가 쓴 글' — 일시 숨김된 글도 포함 (지시 5/7)
+            if (mine) out.push({ board, id: p.id, title: p.title, state: p.state || '', author: p.author, authorEmail: pmail || '', date: p.date, time: p.time || '', isHidden: !!p.isHidden, fsDocId: p.fsDocId || null });
           });
         });
         return out.sort((a, b) => b.id - a.id);
@@ -886,10 +948,14 @@
           + '<span class="mypage-item-meta">' + meta + '</span>';
         if (mtab === 'mine') {
           const editUrl = boardHref(p.board) + '?state=' + encodeURIComponent(p.state || '') + '&edit=' + encodeURIComponent(p.id);
-          return '<div class="mypage-item">'
-            + head
+          // 일시 숨김 토글 — ⏸️ (노출 중 → 숨김) / ▶️ (숨김 → 다시 노출)
+          const toggleLabel = p.isHidden ? '▶️ 다시 노출' : '⏸️ 일시 숨김';
+          const hiddenMark  = p.isHidden ? '<span class="mp-hidden-mark" title="일시 숨김 상태">⏸️ 숨김</span>' : '';
+          return '<div class="mypage-item' + (p.isHidden ? ' mp-item-hidden' : '') + '">'
+            + head + hiddenMark
             + '<span class="mypage-item-actions">'
             +   '<a class="mp-edit" href="' + editUrl + '">수정</a>'
+            +   '<button class="mp-toggle" data-board="' + p.board + '" data-id="' + p.id + '" data-hidden="' + (p.isHidden ? '1' : '0') + '">' + toggleLabel + '</button>'
             +   '<button class="mp-dup" data-board="' + p.board + '" data-id="' + p.id + '">재업로드</button>'
             +   '<button class="mp-del" data-board="' + p.board + '" data-id="' + p.id + '">삭제</button>'
             + '</span>'
@@ -904,6 +970,34 @@
       el.querySelectorAll('.mp-dup').forEach(b => b.addEventListener('click', e => {
         e.preventDefault(); e.stopPropagation();
         duplicatePost(b.dataset.board, b.dataset.id);
+      }));
+      // 일시 숨김 ⏸️/▶️ 토글 — localStorage 갱신 + (있으면) Firestore 동기화
+      el.querySelectorAll('.mp-toggle').forEach(b => b.addEventListener('click', async e => {
+        e.preventDefault(); e.stopPropagation();
+        const board = b.dataset.board, id = b.dataset.id, willHide = b.dataset.hidden !== '1';
+        if (!confirm(willHide ? '이 글을 일시 숨김 처리하시겠습니까? (메인 리스트에서 제외)' : '다시 노출하시겠습니까?')) return;
+        // 1) localStorage 갱신 — 즉시 UI 반영
+        const sk = boardStoreKey(board);
+        if (sk) {
+          const arr = readJSON(sk);
+          const idx = arr.findIndex(x => String(x.id) === String(id));
+          if (idx >= 0) {
+            arr[idx].isHidden = willHide;
+            arr[idx].status   = willHide ? 'hidden' : 'approved';
+            localStorage.setItem(sk, JSON.stringify(arr));
+          }
+        }
+        // 2) Firestore 동기화 (fsDocId 매핑된 글만 — best-effort, 실패해도 local 반영은 유지)
+        try {
+          const arr2 = sk ? readJSON(sk) : [];
+          const hit = arr2.find(x => String(x.id) === String(id));
+          const fsDocId = hit && (hit.fsDocId || hit._fsDocId);
+          const colName = board === 'jobs' ? 'jobs_posts' : board === 'accom' ? 'accom_posts' : board === 'rent' ? 'rent_posts' : null;
+          if (fsDocId && colName && window.koausRbac && window.koausRbac.toggleHidden) {
+            await window.koausRbac.toggleHidden(colName, String(fsDocId), !willHide);
+          }
+        } catch (err) { console.warn('[mypage] Firestore 토글 실패 (local 반영은 OK):', err); }
+        renderList();
       }));
     }
 
@@ -982,18 +1076,48 @@
         return snap.exists() && snap.data().uid !== u.uid;
       } catch (e) { return false; }
     }
-    // 닉네임 예약: 기존 예약 삭제 + 새 예약 + 유저 문서 갱신 (best-effort)
+    // 닉네임 변경 — 트랜잭션 1세트로 원자 처리 (알박기 방지 + 부분 실패 롤백)
+    //   a) nicknames/{new}.exists 검증 (없거나 본인 소유여야 함) → 없으면 신규 create
+    //   b) 옛 nicknames/{old} delete (점유 해제)
+    //   c) users/{uid}.nickname update
+    //  실패 시 throw → saveNickname 의 catch 가 사용자 메시지 표시 (어느 doc 도 변경되지 않음)
     async function reserveNickname(nick) {
-      try {
-        const u = window.koausAuth && window.koausAuth.user;
-        if (!db || !u) return;
-        const prev = localStorage.getItem('koaus-nickname');
-        if (prev && prev.toLowerCase() !== nick.toLowerCase()) {
-          try { await deleteDoc(doc(db, 'nicknames', prev.toLowerCase())); } catch (e) {}
+      const u = window.koausAuth && window.koausAuth.user;
+      if (!db || !u) throw new Error('DB_NOT_READY');
+      const newNickLow = nick.toLowerCase();
+      await runTransaction(db, async tx => {
+        const userRef    = doc(db, 'users', u.uid);
+        const newNickRef = doc(db, 'nicknames', newNickLow);
+        // ── Reads (모든 read 가 write 보다 앞서야 함) ──
+        const userSnap  = await tx.get(userRef);
+        const userData  = userSnap.exists() ? userSnap.data() : {};
+        const oldNickLow = String(userData.nickname || '').toLowerCase();
+        let newNickAlreadyMine = false;
+        if (newNickLow !== oldNickLow) {
+          const newNickSnap = await tx.get(newNickRef);
+          if (newNickSnap.exists()) {
+            if (newNickSnap.data().uid !== u.uid) throw new Error('NICK_TAKEN');
+            newNickAlreadyMine = true;   // 이전 가입 트랜잭션이 남긴 본인 doc — 덮어쓰기 OK
+          }
         }
-        await setDoc(doc(db, 'nicknames', nick.toLowerCase()), { uid: u.uid, nickname: nick });
-        await setDoc(doc(db, 'users', u.uid), { nickname: nick }, { merge: true });
-      } catch (e) { /* Firestore 미설정 무시 */ }
+        // ── Writes ──
+        // 새 닉네임 doc — 이름만 바뀐 경우(대소문자 변경 포함)도 작성, 옛 doc 과 동일 id 면 skip
+        if (newNickLow !== oldNickLow || newNickAlreadyMine) {
+          tx.set(newNickRef, {
+            uid: u.uid,
+            nickname: nick,
+            email: String(userData.email || '').toLowerCase(),
+            securityA: userData.securityA || '',
+            createdAt: Date.now(),
+          });
+        }
+        // 옛 닉네임 doc 해제 (id 가 다를 때만)
+        if (oldNickLow && oldNickLow !== newNickLow) {
+          tx.delete(doc(db, 'nicknames', oldNickLow));
+        }
+        // 유저 문서 갱신
+        tx.update(userRef, { nickname: nick });
+      });
     }
 
     async function saveNickname() {
@@ -1016,12 +1140,21 @@
       const saveBtn = document.getElementById('mpNickSave');
       saveBtn.disabled = true;
       try {
-        // 금지어·정규식 통과 시에만 Firestore 중복 검사
+        // 금지어·정규식 통과 시에만 Firestore 중복 검사 (pre-check — 공통 케이스)
         if (await isNicknameTaken(nick)) {
           showNickError('이미 사용 중인 닉네임입니다.');
           return;
         }
-        await reserveNickname(nick);
+        // 실제 변경은 트랜잭션 — pre-check 와 commit 사이 race 도 안전하게 차단
+        try {
+          await reserveNickname(nick);
+        } catch (e) {
+          if (e && e.message === 'NICK_TAKEN') { showNickError('이미 사용 중인 닉네임입니다.'); return; }
+          if (e && e.message === 'DB_NOT_READY') { showNickError('잠시 후 다시 시도해 주세요.'); return; }
+          console.warn('[mypage] 닉네임 변경 실패', e);
+          showNickError('저장 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
+          return;
+        }
         localStorage.setItem('koaus-nickname', nick);
         localStorage.setItem('koaus-nickname-changed-at', String(Date.now()));
         applyNick(nick);
@@ -1061,9 +1194,15 @@
           );
           // users 문서에 photoURL 저장
           await setDoc(doc(db, 'users', u.uid), { photoURL: url }, { merge: true });
-          // UI 즉시 반영
+          // UI 즉시 반영 — innerHTML 대신 DOM 생성 (XSS·attribute breakout 방어)
+          //   url 은 방금 Storage 업로드 결과 (firebasestorage.googleapis.com) 라 안전하지만 일관성 유지
           const av = document.getElementById('mpAvatar');
-          if (av) av.innerHTML = `<img src="${url}" alt="프로필 사진" />`;
+          if (av && window.koausUrlGuard && window.koausUrlGuard.isSafeHttp(url)) {
+            av.textContent = '';
+            const imgEl = document.createElement('img');
+            imgEl.src = url; imgEl.alt = '프로필 사진';
+            av.appendChild(imgEl);
+          }
           localStorage.setItem('koaus-photo-url', url);
           alert('프로필 사진이 변경되었습니다.');
         } catch (e) {
@@ -1100,6 +1239,104 @@
       try { location.replace('index.html'); } catch (_) { location.href = 'index.html'; }
     });
 
+    // ── 계정 삭제(탈퇴) 흐름 ──
+    //  Privacy Policy §9 (탈퇴 후 6개월 암호화 보관 후 파기):
+    //   1) Firestore 트랜잭션:
+    //      · users/{uid} update — { deletedAt, deletionStatus: 'pending' }  (6개월 후 Admin SDK 가 파기)
+    //      · nicknames/{nick.lower} delete  (다른 유저가 즉시 재사용 가능)
+    //      · emails/{email.lower} delete   (다른 유저가 즉시 재가입 가능)
+    //   2) Firebase Auth user.delete() — 서비스 접근 권한 즉시 차단
+    //   3) 캐시 wipe (logout 흐름과 동일)
+    //   4) index.html 리다이렉트
+    //  에러 처리: auth/requires-recent-login 시 안내 + 자동 signOut + index 로 (재로그인 유도)
+    const _delOv      = document.getElementById('deleteAcctOverlay');
+    const _delOpen    = document.getElementById('mpDeleteBtn');
+    const _delClose1  = document.getElementById('deleteAcctCancel');
+    const _delClose2  = document.getElementById('deleteAcctCancel2');
+    const _delConfirm = document.getElementById('deleteAcctConfirm');
+    function openDeleteAcctModal() {
+      if (!_delOv) return;
+      _delOv.classList.add('open');
+      try { document.body.style.overflow = 'hidden'; } catch (_) {}
+    }
+    function closeDeleteAcctModal() {
+      if (!_delOv) return;
+      _delOv.classList.remove('open');
+      try { document.body.style.overflow = ''; } catch (_) {}
+    }
+    if (_delOpen)   _delOpen.addEventListener('click', openDeleteAcctModal);
+    if (_delClose1) _delClose1.addEventListener('click', closeDeleteAcctModal);
+    if (_delClose2) _delClose2.addEventListener('click', closeDeleteAcctModal);
+    if (_delOv) _delOv.addEventListener('click', e => { if (e.target === _delOv) closeDeleteAcctModal(); });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && _delOv && _delOv.classList.contains('open')) closeDeleteAcctModal();
+    });
+
+    if (_delConfirm) _delConfirm.addEventListener('click', async () => {
+      const u = auth.currentUser;
+      if (!u) {
+        alert('로그인 상태가 아닙니다.\nYou are not logged in.');
+        closeDeleteAcctModal();
+        return;
+      }
+      const origText = _delConfirm.textContent;
+      _delConfirm.disabled = true;
+      _delConfirm.textContent = '처리 중 · Processing…';
+      try {
+        // Step 1: Firestore 정리 — users 마킹 + nicknames/emails 인덱스 삭제 (트랜잭션 1세트)
+        await runTransaction(db, async tx => {
+          const userRef  = doc(db, 'users', u.uid);
+          const userSnap = await tx.get(userRef);
+          const userData = userSnap.exists() ? userSnap.data() : {};
+          const lowNick  = String(userData.nickname || '').toLowerCase();
+          const lowEmail = String(userData.email || u.email || '').toLowerCase();
+          // users 즉시 삭제 X — deletedAt 마킹으로 6개월 retention 유지
+          tx.update(userRef, {
+            deletedAt:           Date.now(),
+            deletionStatus:      'pending',  // 6개월 후 Admin SDK 가 hard delete
+            deletionRequestedAt: Date.now(),
+          });
+          // 인덱스는 즉시 삭제 — 동일 닉/이메일로 신규 가입 가능
+          if (lowNick)  tx.delete(doc(db, 'nicknames', lowNick));
+          if (lowEmail) tx.delete(doc(db, 'emails',    lowEmail));
+        });
+
+        // Step 2: Firebase Auth 즉시 삭제 (서비스 접근 권한 차단)
+        await deleteUser(u);
+
+        // Step 3: 캐시 wipe (기존 logout 흐름과 동일)
+        ['koaus-admin', 'isAdmin', 'isAdminLoggedIn'].forEach(k => {
+          try { sessionStorage.removeItem(k); } catch (_) {}
+        });
+        ['koaus-nickname', 'koaus-nickname-changed-at', 'koaus-photo-url'].forEach(k => {
+          try { localStorage.removeItem(k); } catch (_) {}
+        });
+        try {
+          Object.keys(localStorage).filter(k => k.startsWith('koaus-duplicate-'))
+            .forEach(k => localStorage.removeItem(k));
+        } catch (_) {}
+
+        // Step 4: 메인 페이지 리다이렉트
+        alert('계정이 삭제되었습니다.\nAccount deleted. Redirecting to home.');
+        try { location.replace('index.html'); } catch (_) { location.href = 'index.html'; }
+      } catch (e) {
+        console.error('[mypage] 계정 삭제 실패', { code: e && e.code, message: e && e.message });
+        if (e && e.code === 'auth/requires-recent-login') {
+          alert(
+            '보안상의 이유로 재로그인이 필요합니다.\n로그아웃 후 다시 로그인하신 뒤 [계정 삭제]를 다시 시도해 주세요.\n\n' +
+            'For security reasons, you must sign in again. Please log back in and try again.'
+          );
+          closeDeleteAcctModal();
+          try { await signOut(auth); } catch (_) {}
+          try { location.replace('index.html'); } catch (_) { location.href = 'index.html'; }
+        } else {
+          alert('계정 삭제 실패 · Delete failed: ' + ((e && e.message) || 'unknown error'));
+          _delConfirm.disabled = false;
+          _delConfirm.textContent = origText;
+        }
+      }
+    });
+
     onAuthStateChanged(auth, user => {
       window.koausAuth.user = user;
       const loginReq = document.getElementById('loginRequired');
@@ -1111,17 +1348,23 @@
         document.getElementById('mpName').textContent = nick;
         const av = document.getElementById('mpAvatar');
         // Firestore users/<uid> 에 저장된 photoURL 우선, 없으면 첫 글자 이니셜
+        // innerHTML 대신 DOM 생성 — 사용자가 photoURL 필드를 변조해도 attribute breakout 차단
+        function setAvatarPhoto(rawUrl) {
+          if (!window.koausUrlGuard || !window.koausUrlGuard.isSafeHttp(rawUrl)) return false;
+          av.textContent = '';
+          const imgEl = document.createElement('img');
+          imgEl.src = rawUrl; imgEl.alt = '프로필 사진';
+          av.appendChild(imgEl);
+          return true;
+        }
         const cachedPhoto = localStorage.getItem('koaus-photo-url');
-        if (cachedPhoto) {
-          av.innerHTML = `<img src="${cachedPhoto}" alt="프로필 사진" />`;
-        } else {
+        if (!setAvatarPhoto(cachedPhoto)) {
           av.textContent = (nick[0] || '?').toUpperCase();
         }
         try {
           getDoc(doc(db, 'users', user.uid)).then(snap => {
             const data = snap && snap.exists() ? snap.data() : null;
-            if (data && data.photoURL) {
-              av.innerHTML = `<img src="${data.photoURL}" alt="프로필 사진" />`;
+            if (data && data.photoURL && setAvatarPhoto(data.photoURL)) {
               localStorage.setItem('koaus-photo-url', data.photoURL);
             }
             // 이름 공개 토글 — Firestore 값 반영 (기본 true)

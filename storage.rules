@@ -74,7 +74,25 @@ service firebase.storage {
                       && (
                         request.auth.token.admin == true
                         || request.auth.token.email == 'sinhang0122@gmail.com'
-                        || request.auth.token.email == 'koaus.official@gmail.com'
+                        // koaus.official@gmail.com 권한 제거 (사용자 명시 sinhang0122 단독)
+                      )
+                      && under5MB()
+                      && isImage();
+    }
+
+    // ════════════════════════════════════════════════════════════
+    // ad-banners/{state}/{filename} — admin-ads.html 광고 배너 업로드
+    //   · admin-ads.html 의 storage.ref().child('ad-banners/' + currentState + '/' + ...)
+    //   · 읽기: 누구나 (홈 슬라이더 이미지 로드)
+    //   · 쓰기: admin 전용 (custom claim or 화이트리스트) + 5MB + image/*
+    // ════════════════════════════════════════════════════════════
+    match /ad-banners/{state}/{filename} {
+      allow read: if true;
+      allow write: if isSignedIn()
+                      && (
+                        request.auth.token.admin == true
+                        || request.auth.token.email == 'sinhang0122@gmail.com'
+                        // koaus.official@gmail.com 권한 제거 (사용자 명시 sinhang0122 단독)
                       )
                       && under5MB()
                       && isImage();
