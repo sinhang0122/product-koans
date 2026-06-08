@@ -59,6 +59,7 @@
         <svg class="ico-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
         <svg class="ico-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
       </button>
+      <a href="mypage.html" class="topbar-my-btn" id="topbarMyBtn" aria-label="내 계정" title="내 계정 (마이페이지)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></a>
       <button class="topbar-menu-btn" id="hamburgerBtn" aria-label="메뉴 열기" aria-expanded="false">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
           <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
@@ -982,14 +983,17 @@
             <div class="accom-card-title">${escHtml(p.title)}</div>
             ${metaParts ? `<div class="accom-card-meta">${metaParts}</div>` : ''}
             ${addrText  ? `<div class="accom-card-meta" style="font-size:11.5px;color:var(--text-muted);">${addrText}</div>` : ''}
-            <div class="accom-card-footer">
-              <span>${authorLabel(p)}</span>
-              <span>${escHtml(p.date)}${p.time ? ' ' + escHtml(p.time) : ''}</span>
-            </div>
-            <div class="post-mini-actions">
-              <button class="mini-btn mini-share" data-id="${p.id}" type="button">공유</button>
-              <button class="mini-btn mini-report" data-id="${p.id}" type="button">신고</button>
-              ${(isMine(p) || window.koausIsAdmin) ? `<button class="mini-btn mini-edit" data-id="${p.id}" type="button">수정</button><button class="mini-btn mini-hide" data-id="${p.id}" type="button">숨김</button><button class="mini-btn mini-del" data-id="${p.id}" type="button">삭제</button>` : ''}
+            <div class="accom-card-bottom-row">
+              <div class="accom-card-footer">
+                <span>${authorLabel(p)}</span>
+                <span>${escHtml(p.date)}${p.time ? ' ' + escHtml(p.time) : ''}</span>
+              </div>
+              <div class="post-mini-actions">
+                <button class="mini-btn mini-share" data-id="${p.id}" type="button">공유</button>
+                ${(!isMine(p) && !window.koausIsAdmin) ? `<button class="mini-btn mini-report" data-id="${p.id}" type="button">신고</button>` : ''}
+                ${(isMine(p) && !window.koausIsAdmin) ? `<button class="mini-btn mini-edit" data-id="${p.id}" type="button">수정</button>` : ''}
+                ${(isMine(p) || window.koausIsAdmin) ? `<button class="mini-btn mini-hide" data-id="${p.id}" type="button">숨김</button><button class="mini-btn mini-del" data-id="${p.id}" type="button">삭제</button>` : ''}
+              </div>
             </div>
           </div>
           <button class="bookmark-btn${saved ? ' is-saved' : ''}" data-id="${p.id}" title="저장한 글" aria-label="저장"
@@ -1710,6 +1714,8 @@
       if (!jobsMap || !window.google) return;
       jobsMarkers.forEach(m => m.setMap(null));
       jobsMarkers = [];
+      // 지시 3/10 — 글쓰기 임시(검정) 마커도 같이 제거 → 최종 빨간 마커와 중복 노출 방지
+      if (pendingMarker) { pendingMarker.setMap(null); pendingMarker = null; }
       // List/Map 동기화 — 검색 키워드도 적용
       let filtered = applyJobsSearchKw(applyFilters(loadPosts()));
       // 지도 마커 [좌표+UID] 병합 — 같은 작성자 같은 위치 최신 1개만
@@ -1758,6 +1764,8 @@
     // ── 필터 (직종/근무형태/급여/지역) + applyFilters ──
     let activeFilter = {};
     function applyFilters(posts) {
+      // 지시 8/10 — 숨김(hidden) 처리 글은 모든 뷰(List/Map)에서 즉시 제외
+      posts = posts.filter(p => !(p.isHidden || p.status === 'hidden'));
       return posts.filter(p => {
         if (areaBounds) {
           if (!(p.lat && p.lng) || !areaBounds.contains({ lat:p.lat, lng:p.lng })) return false;

@@ -58,6 +58,7 @@
         <svg class="ico-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
         <svg class="ico-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
       </button>
+      <a href="mypage.html" class="topbar-my-btn" id="topbarMyBtn" aria-label="내 계정" title="내 계정 (마이페이지)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></a>
       <button class="topbar-menu-btn" id="hamburgerBtn" aria-label="메뉴 열기" aria-expanded="false">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
           <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
@@ -1362,138 +1363,173 @@
       });
     }
 
+    // ─────────────────────────────────────────────────────────────────
+    //  지시 5-B ─ submitPost: Firestore 'services' 컬렉션 + Storage 업로드
+    //  옛 localStorage 꼼수(loadPosts/savePosts) 폐기. firestore.rules 의
+    //  services.create 일반 유저 분기(line 413-428) 정합:
+    //    · status='approved' (즉시 노출) · isOfficial:false · uid 본인 일치
+    //    · 필수: category(='trades'), title, contact
+    //    · 옵션: region/address/summary/body/state/imageUrls
+    //  Storage path: post_images/trades/{auth.uid}/{randomname} — Rules 정합.
+    // ─────────────────────────────────────────────────────────────────
     async function submitPost() {
       const user = window.koausAuth && window.koausAuth.user;
       if (!user) { window.koausAuth && window.koausAuth.openAuthModal(); return; }
 
-      const isFind     = activeMode === 'find';
-      const title      = document.getElementById('wTitle').value.trim();
-      const body       = document.getElementById('wBody').value.trim();
+      const isFind = activeMode === 'find';
+      const title  = document.getElementById('wTitle').value.trim();
+      const body   = document.getElementById('wBody').value.trim();
 
-      // 욕설/금칙어 필터 — 제목·상세 설명 검사
       const wErr = document.getElementById('wError');
       wErr.textContent = '';
       if (hasProfanity(title) || hasProfanity(body)) {
         wErr.textContent = '부적절한 단어가 포함되어 있습니다.';
         return;
       }
+      if (!window.koausDb || !window.koausFs) {
+        wErr.textContent = 'Firestore 미초기화 — 잠시 후 다시 시도해 주세요.';
+        alert('Firestore 미초기화 — 잠시 후 다시 시도해 주세요.');
+        return;
+      }
 
-      let fields, coords = null;
-
+      // 모드별 필드 수집
+      let extra = {}, coords = null, address = '';
       if (isFind) {
-        // ── 방 구하기: 자유 양식 — 제목만 필수 (연락처는 상세 설명에 자유 기재) ──
         if (!title) { alert('제목을 입력해 주세요.'); return; }
-        fields = { mode: 'find', title, body };
+        extra = { mode: 'find' };
       } else {
-        // ── 방 올리기: 제목 · 주소 · 주당 렌트비만 필수, 나머지는 선택 ──
         const types     = [...document.querySelectorAll('#wTypes input:checked')].map(c => c.dataset.type);
         const roomTypes = [...document.querySelectorAll('#wRoomTypes input:checked')].map(c => c.dataset.room);
         const gender    = document.getElementById('wGender').value;
         const availableDate = document.getElementById('wAvailDate').value;
         const contact   = document.getElementById('wContact').value.trim();
-        const _phEl = document.getElementById('wPhone');
-        const _kkEl = document.getElementById('wKakao');
-        const _emEl = document.getElementById('wEmail');
-        const phone     = _phEl ? _phEl.value.trim() : '';
-        const kakaoLink = _kkEl ? _kkEl.value.trim() : '';
-        const email     = _emEl ? _emEl.value.trim() : '';
-        const address  = document.getElementById('wAddress').value.trim();
+        const phone     = (document.getElementById('wPhone')?.value || '').trim();
+        const kakaoLink = (document.getElementById('wKakao')?.value || '').trim();
+        const email     = (document.getElementById('wEmail')?.value || '').trim();
+        address = document.getElementById('wAddress').value.trim();
         const priceVal = document.getElementById('wPrice').value.trim();
-
         if (!title || !address || !priceVal) {
           alert('제목, 주소, 주당 쉐어비는 필수 입력 항목입니다.');
           return;
         }
         const price = parseInt(priceVal, 10);
         if (!(price > 0)) { alert('주당 쉐어비를 숫자로 올바르게 입력해 주세요.'); return; }
-        fields = {
-          mode: 'offer', types, title, body, address, price, roomTypes, gender, availableDate, contact, phone, kakaoLink, email,
+        extra = {
+          mode: 'offer', price, types, roomTypes, gender, availableDate,
+          contact, phone, kakaoLink, email,
           parking:     document.getElementById('wParking').checked,
           petFriendly: document.getElementById('wPet').checked,
           kidsInHouse: document.getElementById('wKids').checked,
           airCon:      document.getElementById('wAirCon').checked,
         };
-        loadMapScript();  // Geocoder 사용을 위해 Maps 스크립트 로드 보장
+        loadMapScript();
         coords = await geocode(address);
       }
 
       const nick = currentNickname()
         || user.displayName?.split(' ')[0] || user.email?.split('@')[0] || '사용자';
-      const now = new Date();
-      const pad = n => String(n).padStart(2, '0');
-      const date = `${pad(now.getMonth() + 1)}/${pad(now.getDate())}`;
-      const time = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
 
-      const posts = loadPosts();
-      let target;
-
+      // 수정은 후속 작업 — 안내만 표시하고 종료
       if (editingId != null) {
-        // ── 수정: 기존 글 업데이트 ──
-        const idx = posts.findIndex(x => String(x.id) === String(editingId));
-        if (idx < 0) { editingId = null; return; }
-        target = posts[idx];
-        Object.assign(target, fields);
-        if (coords) { target.lat = coords.lat; target.lng = coords.lng; }
-        savePosts(posts);
-        recordMyPost(target);  // 마이페이지 제목 등 동기화
+        alert('수정 기능은 곧 지원됩니다. (현재는 신규 등록만 가능)');
         editingId = null;
-      } else {
-        // ── 새 글 작성 ──
-        target = {
-          id: Date.now(), state: currentState,
-          author: nick,
-          uid: user.uid || '', email: user.email || '',
-          authorUid: user.uid || '', authorEmail: user.email || '',
-          date, time, lat: null, lng: null, imageUrls: [], ...fields,
-        };
-        if (coords) { target.lat = coords.lat; target.lng = coords.lng; }
-        posts.push(target);
-        savePosts(posts);
-        recordMyPost(target);
-        console.log('[KoAus] 숙소 글 저장 — uid:', target.uid, '| email:', target.email, '| id:', target.id);
+        return;
       }
 
-      // ── 사진 첨부: 클라이언트 압축 후 Firebase Storage 업로드 → target.imageUrls 저장 ──
-      if (window.pendingPhotoFiles && window.pendingPhotoFiles.length && window.koausPhotos) {
+      const wsb = document.getElementById('writeBtnSubmit');
+      if (wsb) { wsb.disabled = true; wsb.textContent = '등록 중…'; }
+
+      // Firestore Rules 정합 payload (services.create 일반 유저 분기)
+      const contactSafe = (extra.contact || extra.phone || extra.email || '게시글 본문 또는 댓글 참고');
+      const payload = {
+        category: 'trades',
+        title,
+        body: body || ' ',
+        address: address || '',
+        contact: contactSafe,
+        state: currentState || '',
+        status: 'approved',     // 즉시 노출 (자율 등록형 — points.html 패턴)
+        isOfficial: false,      // admin 표시 금지 (룰 강제)
+        isUserPost: true,       // 커뮤니티 자율 등록 마커
+        author: nick,
+        uid: user.uid,          // 룰 보안 — request.auth.uid 일치
+        authorId: user.uid,     // RBAC 작성자 식별
+        authorUid: user.uid,
+        authorEmail: user.email || '',
+        email: extra.email || user.email || '',
+        lat: coords?.lat || null,
+        lng: coords?.lng || null,
+        imageUrls: [],
+        createdAt: window.koausFs.serverTimestamp(),
+        // trades 보조 필드 (Rules optStr/optUrlList 명시 외 — 추가 필드도 허용)
+        mode: extra.mode || 'offer',
+        ...(extra.mode === 'offer' ? {
+          price: extra.price, types: extra.types, roomTypes: extra.roomTypes,
+          gender: extra.gender, availableDate: extra.availableDate,
+          phone: extra.phone, kakaoLink: extra.kakaoLink,
+          parking: extra.parking, petFriendly: extra.petFriendly,
+          kidsInHouse: extra.kidsInHouse, airCon: extra.airCon,
+        } : {}),
+      };
+
+      const { addDoc, collection, doc, updateDoc } = window.koausFs;
+      let docRef;
+      try {
+        docRef = await addDoc(collection(window.koausDb, 'services'), payload);
+      } catch (e) {
+        console.error('[trades] Firestore 등록 실패', { code: e?.code, message: e?.message, error: e });
+        let msg;
+        if (e?.code === 'permission-denied') {
+          msg = '권한 거부 — 로그인 상태 및 필수 필드(제목/주소/연락처)를 확인해 주세요.';
+        } else if (e?.code === 'unavailable') {
+          msg = '서비스 일시 중단 — 인터넷 연결을 확인 후 다시 시도해 주세요.';
+        } else {
+          msg = '등록 실패: ' + (e?.code || e?.message || String(e));
+        }
+        wErr.textContent = msg;
+        alert('❌ ' + msg);
+        if (wsb) { wsb.disabled = false; wsb.textContent = '등록하기'; }
+        return;
+      }
+
+      // ── Storage 이미지 업로드 (post_images/trades/{uid} — 룰 정합) ──
+      if (window.pendingPhotoFiles?.length && window.koausPhotos) {
         try {
-          const wsb = document.getElementById('writeBtnSubmit');
-          if (wsb) { wsb.disabled = true; wsb.textContent = `사진 업로드 중… 0/${window.pendingPhotoFiles.length}`; }
+          if (wsb) wsb.textContent = `사진 업로드 중… 0/${window.pendingPhotoFiles.length}`;
           const urls = await window.koausPhotos.uploadPostImages(
             window.koausPhotos.app,
-            `post_images/accom/${target.id}`,
+            `post_images/trades/${user.uid}`,
             window.pendingPhotoFiles.map(p => p.file),
             { maxDim: 1200, quality: 0.7, onProgress: (i, total) => {
               if (wsb) wsb.textContent = `사진 업로드 중… ${i}/${total}`;
             } }
           );
-          target.imageUrls = urls;
-          // localStorage 갱신
-          const cur = loadPosts();
-          const idx2 = cur.findIndex(x => String(x.id) === String(target.id));
-          if (idx2 >= 0) { cur[idx2].imageUrls = urls; savePosts(cur); }
+          if (urls.length) {
+            await updateDoc(doc(window.koausDb, 'services', docRef.id), { imageUrls: urls });
+          }
           window.pendingPhotoFiles = [];
-          if (wsb) { wsb.disabled = false; wsb.textContent = '등록하기'; }
         } catch (e) {
-          console.error('[accom] 사진 업로드 실패', { code: e && e.code, message: e && e.message, error: e });
-          alert(`사진 업로드 실패: ${(e && e.code) || 'unknown'}\n${(e && e.message) || ''}\n글은 본인 기기에 저장되었습니다. 수정에서 다시 시도해 주세요.`);
+          console.error('[trades] 사진 업로드 실패', { code: e?.code, message: e?.message, error: e });
+          alert(`사진 업로드 실패: ${e?.code || 'unknown'}\n${e?.message || ''}\n글은 등록되었습니다 — 수정에서 다시 시도해 주세요.`);
         }
       }
 
-      currentPage = 1;
-      setWriteMode('create');
-      renderAll();  // 현재 모드 탭 유지하며 재렌더
+      // 마이페이지 연동 — fsDocId 기록
+      try {
+        recordMyPost({
+          id: docRef.id, _fsDocId: docRef.id,
+          title, address, mode: extra.mode || 'offer',
+        });
+      } catch (_) {}
+
+      if (wsb) { wsb.disabled = false; wsb.textContent = '등록하기'; }
       closeWriteModal();
-
-      // 지도 뷰라면 마커 갱신 후 해당 위치로 부드럽게 이동 (프로그램적 이동 → 버튼 억제)
-      if (target.lat && target.lng && mapReady) {
-        programmaticMove = true;
-        updateMapMarkers(applyFilters(loadPosts()));
-        map.setZoom(14);
-        map.panTo({ lat: target.lat, lng: target.lng });
-        setTimeout(() => { programmaticMove = false; }, 600);
-      }
-
       resetWriteForm();
+      currentPage = 1;
+      alert('✅ 등록이 완료되었습니다.\n게시판에 즉시 노출됩니다.');
+      // onSnapshot 콜백이 자동으로 fsItems fetch + renderAll 호출됨.
+      // 안전망: 0.6초 뒤에도 리렌더 (네트워크 지연 대비)
+      setTimeout(() => { try { renderAll(); } catch (_) {} }, 600);
     }
 
     // ── Helpers ──
@@ -1600,6 +1636,8 @@
 
     // ── Filter ──
     function applyFilters(posts) {
+      // 지시 8/10 — 숨김(hidden) 처리 글은 모든 뷰(List/Map)에서 즉시 제외
+      posts = posts.filter(p => !(p.isHidden || p.status === 'hidden'));
       // Dual Range Slider 기반 가격 필터 — 기존 fbPrice 는 max 값으로 폴백 유지
       const minEl = document.getElementById('fbPriceMin');
       const maxEl = document.getElementById('fbPriceMax');
@@ -1701,18 +1739,26 @@
               : '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>'}
           </div>
           <div class="accom-card-info">
-            <div class="accom-card-line1">
-              ${priceHtml}
-              <button class="bookmark-btn${saved ? ' is-saved' : ''}" data-id="${p.id}" title="저장한 글" aria-label="저장">${saved ? '★' : '☆'}</button>
+            <!-- 지시 4/10 — Row 1: 제목(좌) + 액션(우) -->
+            <div class="accom-card-row1">
+              <div class="accom-card-title2">${escHtml(p.title)}${p.isOfficial ? '<span class="koaus-official-badge">Official</span>' : ''}</div>
+              <div class="accom-card-actions">
+                <button class="bookmark-btn${saved ? ' is-saved' : ''}" data-id="${p.id}" title="저장한 글" aria-label="저장">${saved ? '★' : '☆'}</button>
+                <div class="post-mini-actions">
+                  <button class="mini-btn mini-share" data-id="${p.id}" type="button">공유</button>
+                  ${(!isMine(p) && !window.koausIsAdmin) ? `<button class="mini-btn mini-report" data-id="${p.id}" type="button">신고</button>` : ''}
+                  ${(isMine(p) && !window.koausIsAdmin) ? `<button class="mini-btn mini-edit" data-id="${p.id}" type="button">수정</button>` : ''}
+                  ${(isMine(p) || window.koausIsAdmin) ? `<button class="mini-btn mini-hide" data-id="${p.id}" type="button">숨김</button><button class="mini-btn mini-del" data-id="${p.id}" type="button">삭제</button>` : ''}
+                </div>
+              </div>
             </div>
-            <div class="accom-card-title2">${escHtml(p.title)}${p.isOfficial ? '<span class="koaus-official-badge">Official</span>' : ''}</div>
-            ${sub ? `<div class="accom-card-sub">${isFind ? '' : '📍 '}${escHtml(sub)}</div>` : ''}
-            ${chips ? `<div class="accom-card-chips">${chips}</div>` : ''}
-            <div class="post-mini-actions">
-              <button class="mini-btn mini-share" data-id="${p.id}" type="button">공유</button>
-              <button class="mini-btn mini-report" data-id="${p.id}" type="button">신고</button>
-              ${(isMine(p) || window.koausIsAdmin) ? `<button class="mini-btn mini-edit" data-id="${p.id}" type="button">수정</button><button class="mini-btn mini-hide" data-id="${p.id}" type="button">숨김</button><button class="mini-btn mini-del" data-id="${p.id}" type="button">삭제</button>` : ''}
+            <!-- Row 2: 가격(좌) + 위치(우) -->
+            <div class="accom-card-row2">
+              ${priceHtml ? `<div class="accom-card-price-wrap">${priceHtml}</div>` : ''}
+              ${sub ? `<div class="accom-card-sub">${isFind ? '' : '📍 '}${escHtml(sub)}</div>` : ''}
             </div>
+            <!-- Row 3: 세부사항(chips) -->
+            ${chips ? `<div class="accom-card-row3">${chips}</div>` : ''}
           </div>
         </div>`;
       }).join('');
@@ -2426,7 +2472,7 @@
       createUserWithEmailAndPassword, signInWithEmailAndPassword,
     } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
     import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app-check.js';
-    import { getFirestore, doc, getDoc, setDoc, addDoc, collection, serverTimestamp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
+    import { getFirestore, doc, getDoc, setDoc, addDoc, updateDoc, collection, serverTimestamp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
 
     const firebaseConfig = {
       apiKey:            'AIzaSyCamqnt0bNUD9uz1N5BbCuQjSkWLSpPqlU',
@@ -2453,7 +2499,7 @@
 
     const auth = getAuth(app);
     // 최근 검색 기록 동기화용 Firestore (콘솔에서 Firestore 활성화 + users 규칙 배포 시 동작)
-    try { window.koausDb = getFirestore(app); window.koausFs = { doc, getDoc, setDoc, addDoc, collection, serverTimestamp }; } catch (e) { /* Firestore 미설정 무시 */ }
+    try { window.koausDb = getFirestore(app); window.koausFs = { doc, getDoc, setDoc, addDoc, updateDoc, collection, serverTimestamp }; } catch (e) { /* Firestore 미설정 무시 */ }
 
     // 사진 첨부 — 클라이언트 압축 + Firebase Storage 업로드 모듈 노출
     import('./compress.js').then(mod => {
@@ -2659,16 +2705,33 @@
               s.date = `${p(d.getMonth()+1)}/${p(d.getDate())}`;
               s.time = `${p(d.getHours())}:${p(d.getMinutes())}`;
             } else { s.id = Date.now(); }
-            s.adminPost = true;
+            // ── 지시 5-B ── 사용자 글(isUserPost=true)에 adminPost 잘못 부여 차단
+            if (!s.isUserPost) s.adminPost = true;
             s.address   = s.address || s.region;
             s.tagline   = s.tagline || s.summary;
-            // accom 카드 호환 필드 (View 동일 유지)
-            s.mode = 'offer';
-            if (!Array.isArray(s.types))     s.types     = ['any'];
-            if (!Array.isArray(s.roomTypes)) s.roomTypes = [];
+            // 사용자 글은 mode 그대로 보존, admin 글만 'offer' 기본값 부여 (옛 호환)
+            if (!s.isUserPost) {
+              s.mode = s.mode || 'offer';
+              if (!Array.isArray(s.types))     s.types     = ['any'];
+              if (!Array.isArray(s.roomTypes)) s.roomTypes = [];
+            } else {
+              s.mode = s.mode || 'offer';
+              if (!Array.isArray(s.types))     s.types     = s.types || [];
+              if (!Array.isArray(s.roomTypes)) s.roomTypes = s.roomTypes || [];
+            }
           });
-          // trades 페이지는 어드민 데이터만 노출 (로컬 사용자 글 없음)
-          localStorage.setItem(STORE, JSON.stringify(fsItems));
+          // ── 지시 5/10 ── 글쓰기 복구: 로컬 사용자 글 보존 + admin 글 머지 ──
+          //   · 옛 코드: localStorage.setItem(STORE, JSON.stringify(fsItems)) — 사용자 글 wipe.
+          //   · 신규: 로컬 글(_fsDocId 없는 = 사용자 작성) 보존하고 fsItems(admin) 만 위에 머지.
+          //   · 같은 _fsDocId 충돌 시 fsItems 우선 (최신 admin 상태 반영).
+          let existing = [];
+          try { existing = JSON.parse(localStorage.getItem(STORE) || '[]'); } catch (_) { existing = []; }
+          if (!Array.isArray(existing)) existing = [];
+          const userPosts  = existing.filter(p => p && !p._fsDocId);   // 로컬 사용자 글
+          const fsKeySet   = new Set(fsItems.map(s => s._fsDocId));
+          const keptAdmin  = existing.filter(p => p && p._fsDocId && !fsKeySet.has(p._fsDocId));  // 옛 admin 캐시 잔재 정리
+          const merged     = [...userPosts, ...fsItems];   // 사용자 글 + 최신 admin
+          localStorage.setItem(STORE, JSON.stringify(merged));
           window.dispatchEvent(new Event('koaus-services-updated'));
         }, err => console.warn('[trades] services 구독 실패', err));
       } catch (e) { console.warn('[trades] Firestore services subscribe 실패', e); }

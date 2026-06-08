@@ -9,7 +9,10 @@
 //  · admin.html 의 자체 가드와 충돌 없음 (admin-mark.js 는 보조 인프라).
 // ════════════════════════════════════════════════════════════════════
 import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
-import { getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
+import {
+  getAuth, onAuthStateChanged,
+  setPersistence, indexedDBLocalPersistence, browserLocalPersistence, inMemoryPersistence,
+} from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
 import { getFirestore, doc, updateDoc, deleteDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
 
 const firebaseConfig = {
@@ -66,9 +69,21 @@ function writeAdminCache(email) {
 
 const app  = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const auth = getAuth(app);
-// 세션 지속성 — 모든 페이지 동일하게 LOCAL (탭/브라우저 닫아도 토큰 유지).
-//  · 페이지 이동 시 IndexedDB 에서 토큰을 동기적으로 복원 → onAuthStateChanged 첫 발화에 user 직진 도착.
-setPersistence(auth, browserLocalPersistence).catch(e => console.warn('[admin-mark] persistence 설정 실패', e));
+// 지시 6/10 — 모바일 Safari ITP / Private mode 방어: persistence 폴백 체인.
+//  · ① indexedDBLocalPersistence (ITP 영향 적음, Firebase v9+ 권장)
+//  · ② browserLocalPersistence  (데스크탑·기존 사용자 호환)
+//  · ③ inMemoryPersistence      (Private mode 최후 폴백)
+//  · session-timeout.js 와 동일 체인 — 두 모듈 중 먼저 실행되는 쪽이 확정.
+(async () => {
+  try { await setPersistence(auth, indexedDBLocalPersistence); }
+  catch (_) {
+    try { await setPersistence(auth, browserLocalPersistence); }
+    catch (_) {
+      try { await setPersistence(auth, inMemoryPersistence); }
+      catch (e) { console.warn('[admin-mark] persistence 전체 실패', e); }
+    }
+  }
+})();
 let db = null;
 try { db = getFirestore(app); } catch (_) {}
 

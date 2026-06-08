@@ -54,7 +54,7 @@
        ──────────────────────────────────────────────────────────────────── -->
   <style>
     .pac-container { z-index: 99999 !important; }
-    #vwAddressSuggest { z-index: 99999 !important; }
+    #vwAddressSuggest { z-index: 100000 !important; }
     /* visa 모달 안에서 ul 이 모달 박스 밖으로 portal 됐을 때를 위한 fixed 룰 */
     #vwAddressSuggest.koaus-portal {
       position: fixed !important;
@@ -79,6 +79,7 @@
         <svg class="ico-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
         <svg class="ico-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
       </button>
+      <a href="mypage.html" class="topbar-my-btn" id="topbarMyBtn" aria-label="내 계정" title="내 계정 (마이페이지)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></a>
       <button class="topbar-menu-btn" id="hamburgerBtn" aria-label="메뉴 열기" aria-expanded="false">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
           <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
@@ -496,21 +497,11 @@
     <!-- 표준 레이아웃: 검색 → 필터/뷰토글/글쓰기 → 본문 (accom 패턴 100% 통일) -->
     <!-- 조건별 텍스트 검색 (search-bar.js 자동 빌드) — 탭 바로 아래 최상단 -->
     <div data-koaus-search="visa" style="margin-top:0;"></div>
-    <!-- Controls — List/Map 토글 + 상세 필터 칩 + 글쓰기 (accom 패턴) -->
+    <!-- 지시 2/10 — Controls — List/Map 토글·글쓰기 제거, 상세필터·카운트만 유지 -->
     <div class="accom-controls" id="visaControls">
-      <div class="view-toggle" id="visaViewToggle">
-        <button class="view-btn active" id="visaListBtn">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-          List View
-        </button>
-        <button class="view-btn" id="visaMapBtn">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
-          Map View
-        </button>
-      </div>
       <span class="board-count" id="visaBoardCount">총 0건</span>
       <div class="accom-ctrl-actions">
-        <!-- 상세필터 (비자/유학 세부 카테고리) — '+ 글쓰기' 바로 옆 정렬 -->
+        <!-- 상세필터 (비자/유학 세부 카테고리) — 단독 정렬 -->
         <select class="board-write-btn board-write-btn--ghost" id="visaDetailFilter" aria-label="상세 필터">
           <option value="all">상세필터</option>
           <option value="student">학생비자</option>
@@ -519,19 +510,14 @@
           <option value="edu">유학·어학연수</option>
           <option value="legal">일반법률상담</option>
         </select>
-        <button class="board-write-btn" id="visaWriteBtn">+ 글쓰기</button>
       </div>
     </div>
-    <!-- List View — accom-grid 패턴 -->
+    <!-- List View — accom-grid 패턴 (Map View 폐기) -->
     <section class="partner-board partner-board--list-only" id="partnerBoard">
       <div class="partner-list" id="partnerList">
         <div class="post-empty">파트너 정보를 불러오는 중…</div>
       </div>
     </section>
-    <!-- Map View (lat/lng 있는 글만 마커) -->
-    <div id="visaMapView" style="display:none;">
-      <div id="visaMap" style="width:100%;height:480px;border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;background:var(--bg-card);"></div>
-    </div>
 
     <!-- ── 비자/유학 글쓰기 모달 (accom 5:5 패턴, 제목만 required) ── -->
     <div class="write-overlay" id="visaWriteOverlay">
@@ -973,8 +959,7 @@
       document.querySelectorAll('#partnerTabs .accom-tab').forEach(b => b.classList.toggle('active', b.dataset.cat === activeCat));
       const board   = document.getElementById('partnerBoard');
       const points  = document.getElementById('pointsSection');
-      // 히어로 배너: 가채점 탭에서는 노출 안 함 (사용자 요구)
-      const heroSection = document.querySelector('main .koaus-hero');
+      // 지시 2/10 — 히어로 배너: 모든 탭(가채점 포함)에서 항상 노출 (다른 게시판과 동일)
       const pcLegal = document.getElementById('heroPcLegal');
       const pcEdu   = document.getElementById('heroPcEdu');
       const mbLegal = document.getElementById('heroMobileLegal');
@@ -987,13 +972,11 @@
         if (detailFilter) detailFilter.style.display = 'none';
         if (searchBar)    searchBar.style.display    = 'none';
         if (points) points.style.display = '';
-        if (heroSection) heroSection.style.display = 'none';
       } else {
         if (board)  board.style.display  = '';
         if (points) points.style.display = 'none';
         if (detailFilter) detailFilter.style.display = '';
         if (searchBar)    searchBar.style.display    = '';
-        if (heroSection) heroSection.style.display = '';
         // 슬라이더 — legal/edu 분리 hidden 제거, 둘 다 노출
         if (pcLegal) pcLegal.hidden = false;
         if (pcEdu)   pcEdu.hidden   = false;
@@ -1607,19 +1590,15 @@
         const cat = getCat();
         const isLegal = cat === 'legal';
         const isEdu   = cat === 'education';
-        const isPoints = cat === 'points';  // 가채점 — 배너 노출 안 함
-        // PC/모바일: cat 에 해당하는 슬라이더만 노출, 가채점이면 양쪽 모두 숨김
-        const heroSection = document.querySelector('main .koaus-hero');
+        // 지시 2/10 — 가채점 포함 모든 탭에서 .koaus-hero (KoAus admin 배너) 항상 노출
         const pcLegal = document.getElementById('heroPcLegal');
         const pcEdu   = document.getElementById('heroPcEdu');
         const mbLegal = document.getElementById('heroMobileLegal');
         const mbEdu   = document.getElementById('heroMobileEdu');
-        if (heroSection) heroSection.style.display = isPoints ? 'none' : '';
         if (pcLegal) pcLegal.hidden = !isLegal;
         if (pcEdu)   pcEdu.hidden   = !isEdu;
         if (mbLegal) mbLegal.hidden = !isLegal;
         if (mbEdu)   mbEdu.hidden   = !isEdu;
-        if (isPoints) return;  // 가채점 진입 시 Swiper 초기화도 skip
         // Swiper 초기화 — 활성화된 슬라이더만
         if (typeof window.Swiper !== 'function') return;
         const el = document.getElementById(isEdu ? 'heroSwiperEdu' : 'heroSwiperLegal');

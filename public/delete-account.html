@@ -10,6 +10,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;800;900&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
+  <!-- 지시 4/4 — 본문 한정 Tailwind utility (영문/한글 데이터 삭제 안내 마크업용) -->
+  <script src="https://cdn.tailwindcss.com"></script>
   <script>
     (function () {
       const saved = localStorage.getItem('koaus-theme');
@@ -55,6 +57,7 @@
         <svg class="ico-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
         <svg class="ico-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
       </button>
+      <a href="mypage.html" class="topbar-my-btn" id="topbarMyBtn" aria-label="내 계정" title="내 계정 (마이페이지)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></a>
       <button class="topbar-menu-btn" id="hamburgerBtn" aria-label="메뉴 열기" aria-expanded="false">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
           <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
@@ -501,35 +504,18 @@
       <!-- ════════════════════════════════════════════════════════════════
            ENGLISH VERSION (상단 배치)
            ════════════════════════════════════════════════════════════════ -->
-      <div id="del-en">
-        <p style="display:inline-block;font-size:11px;font-weight:800;color:#1e3a8a;background:rgba(30,58,138,0.08);border:1px solid rgba(30,58,138,0.18);padding:3px 10px;border-radius:999px;letter-spacing:0.06em;margin:0 0 14px;">ENGLISH VERSION</p>
-        <h1 style="font-size:30px;font-weight:900;color:var(--text-primary);margin:0 0 6px;letter-spacing:-0.01em;line-height:1.25;">Account &amp; Data Deletion Notice</h1>
-        <p style="font-size:13.5px;color:var(--text-muted);margin:0 0 22px;font-weight:600;">Effective Date: 3 June 2026</p>
+      <div id="del-en" class="tw">
+        <p class="inline-block px-3 py-1 mb-4 rounded-full bg-blue-50 text-blue-900 text-[11px] font-extrabold tracking-widest border border-blue-200">ENGLISH VERSION</p>
+        <h1 class="text-3xl font-black tracking-tight leading-tight mb-1" style="color:var(--text-primary);">Account &amp; Data Deletion</h1>
+        <p class="text-sm font-semibold mb-6" style="color:var(--text-muted);">Effective Date: 3 June 2026</p>
 
-        <section class="legal-article">
-          <p>You may request deletion of your account and associated personal information at any time.</p>
-        </section>
+        <p class="text-[14.5px] leading-relaxed mb-4" style="color:var(--text-secondary);">You may request deletion of your account and associated personal information.</p>
 
-        <section class="legal-article">
-          <h2 class="legal-article-title">1. How to Request Deletion</h2>
-          <ul style="margin:6px 0 0;padding-left:22px;line-height:1.75;">
-            <li><strong>In-App / Website:</strong> Navigate to <a href="mypage.html">[My Page &gt; Delete Account]</a> to submit an automated request.</li>
-            <li><strong>Email Request:</strong> Send an email directly to <a href="mailto:koaus.official@gmail.com?subject=Account%20%26%20Data%20Deletion%20Request">koaus.official@gmail.com</a> from your registered email address with your deletion request.</li>
-          </ul>
-        </section>
-
-        <section class="legal-article">
-          <h2 class="legal-article-title">2. Scope of Deletion</h2>
-          <ul style="margin:6px 0 0;padding-left:22px;line-height:1.75;">
-            <li>Account details and personally identifying information will be permanently purged from our database.</li>
-            <li><strong>Note:</strong> Information that must be retained by law, or kept to prevent fraud and misuse, may be securely held in an encrypted format for <strong>6 months</strong> before complete destruction.</li>
-          </ul>
-        </section>
-
-        <section class="legal-article">
-          <h2 class="legal-article-title">3. Timeframe</h2>
-          <p>Deletion requests will be reviewed and processed within a reasonable time after confirming the user's identity.</p>
-        </section>
+        <ul class="list-disc pl-6 space-y-3 text-[14.5px] leading-relaxed" style="color:var(--text-secondary);">
+          <li><strong>How:</strong> Use <a href="mypage.html" class="text-blue-700 underline hover:no-underline">[My Page &gt; Delete Account]</a> in the app/website, or email <a href="mailto:koaus.official@gmail.com?subject=Account%20%26%20Data%20Deletion%20Request" class="text-blue-700 underline hover:no-underline">koaus.official@gmail.com</a></li>
+          <li><strong>Scope:</strong> Account details and personally identifying information. Information that must be retained by law, or kept to prevent misuse, may be held for 6 months before destruction.</li>
+          <li><strong>Timeframe:</strong> Processed within a reasonable time after we confirm the request.</li>
+        </ul>
       </div>
 
       <!-- ── 영문 / 한글 섹션 사이 구분선 ── -->
@@ -538,35 +524,18 @@
       <!-- ════════════════════════════════════════════════════════════════
            KOREAN VERSION (하단 배치)
            ════════════════════════════════════════════════════════════════ -->
-      <div id="del-ko">
-        <p style="display:inline-block;font-size:11px;font-weight:800;color:#1e3a8a;background:rgba(30,58,138,0.08);border:1px solid rgba(30,58,138,0.18);padding:3px 10px;border-radius:999px;letter-spacing:0.06em;margin:0 0 14px;">한국어 버전</p>
-        <h1 style="font-size:30px;font-weight:900;color:var(--text-primary);margin:0 0 6px;letter-spacing:-0.01em;line-height:1.25;">계정 및 데이터 삭제 안내</h1>
-        <p style="font-size:13.5px;color:var(--text-muted);margin:0 0 22px;font-weight:600;">시행일: 2026년 6월 3일</p>
+      <div id="del-ko" class="tw">
+        <p class="inline-block px-3 py-1 mb-4 rounded-full bg-blue-50 text-blue-900 text-[11px] font-extrabold tracking-widest border border-blue-200">한국어 버전</p>
+        <h1 class="text-3xl font-black tracking-tight leading-tight mb-1" style="color:var(--text-primary);">계정·데이터 삭제 안내</h1>
+        <p class="text-sm font-semibold mb-6" style="color:var(--text-muted);">시행일: 2026년 6월 3일</p>
 
-        <section class="legal-article">
-          <p>이용자는 계정과 관련 개인정보의 삭제를 언제든지 요청할 수 있습니다.</p>
-        </section>
+        <p class="text-[14.5px] leading-relaxed mb-4" style="color:var(--text-secondary);">이용자는 계정과 관련 개인정보의 삭제를 요청할 수 있습니다.</p>
 
-        <section class="legal-article">
-          <h2 class="legal-article-title">1. 신청 방법</h2>
-          <ul style="margin:6px 0 0;padding-left:22px;line-height:1.75;">
-            <li><strong>앱/웹 이용:</strong> 서비스 내 <a href="mypage.html">[마이페이지 &gt; 계정 삭제]</a> 메뉴를 통해 즉시 신청 가능합니다.</li>
-            <li><strong>이메일 이용:</strong> 가입하신 계정 이메일 주소를 사용하여 <a href="mailto:koaus.official@gmail.com?subject=%EA%B3%84%EC%A0%95%20%EC%82%AD%EC%A0%9C%20%EC%8B%A0%EC%B2%AD">koaus.official@gmail.com</a> 으로 삭제 요청 메일을 보내주시면 확인 후 처리해 드립니다.</li>
-          </ul>
-        </section>
-
-        <section class="legal-article">
-          <h2 class="legal-article-title">2. 삭제 범위 및 보관 기간</h2>
-          <ul style="margin:6px 0 0;padding-left:22px;line-height:1.75;">
-            <li>계정 정보 및 개인 식별정보는 데이터베이스에서 완전히 삭제됩니다.</li>
-            <li><strong>단,</strong> 관련 법령상 보관이 필요한 정보 또는 악의적인 탈퇴/재가입 및 부정이용 방지 목적으로 지정된 데이터는 <strong>탈퇴 후 6개월 동안</strong> 안전하게 암호화 보관된 후 파기될 수 있습니다.</li>
-          </ul>
-        </section>
-
-        <section class="legal-article">
-          <h2 class="legal-article-title">3. 처리 기간</h2>
-          <p>이용자 본인 확인 절차를 거친 후 합리적인 기간 내에 신속하게 처리됩니다.</p>
-        </section>
+        <ul class="list-disc pl-6 space-y-3 text-[14.5px] leading-relaxed" style="color:var(--text-secondary);">
+          <li><strong>방법:</strong> 앱/웹의 <a href="mypage.html" class="text-blue-700 underline hover:no-underline">[마이페이지 &gt; 계정 삭제]</a> 또는 <a href="mailto:koaus.official@gmail.com?subject=%EA%B3%84%EC%A0%95%20%EC%82%AD%EC%A0%9C%20%EC%8B%A0%EC%B2%AD" class="text-blue-700 underline hover:no-underline">koaus.official@gmail.com</a> 으로 요청</li>
+          <li><strong>삭제 범위:</strong> 계정 정보 및 개인 식별정보. 단, 법령상 보관이 필요한 정보 또는 부정이용 방지 목적의 정보는 6개월 보관 후 파기될 수 있습니다.</li>
+          <li><strong>처리 기간:</strong> 요청 확인 후 합리적 기간 내 처리</li>
+        </ul>
       </div>
 
       <footer class="legal-meta">

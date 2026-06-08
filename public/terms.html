@@ -8,6 +8,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;800;900&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
+  <!-- 지시 2/4 — 본문 한정 Tailwind utility (영문/한글 약관 본문 마크업용) -->
+  <script src="https://cdn.tailwindcss.com"></script>
   <script>
     (function () {
       const saved = localStorage.getItem('koaus-theme');
@@ -53,6 +55,7 @@
         <svg class="ico-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
         <svg class="ico-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
       </button>
+      <a href="mypage.html" class="topbar-my-btn" id="topbarMyBtn" aria-label="내 계정" title="내 계정 (마이페이지)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></a>
       <button class="topbar-menu-btn" id="hamburgerBtn" aria-label="메뉴 열기" aria-expanded="false">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
           <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
@@ -479,92 +482,79 @@
       <!-- ════════════════════════════════════════════════════════════════
            ENGLISH VERSION (상단 배치)
            ════════════════════════════════════════════════════════════════ -->
-      <div id="terms-en">
-        <p style="display:inline-block;font-size:11px;font-weight:800;color:#1e3a8a;background:rgba(30,58,138,0.08);border:1px solid rgba(30,58,138,0.18);padding:3px 10px;border-radius:999px;letter-spacing:0.06em;margin:0 0 14px;">ENGLISH VERSION</p>
-        <h1 style="font-size:30px;font-weight:900;color:var(--text-primary);margin:0 0 6px;letter-spacing:-0.01em;line-height:1.25;">Terms of Service &amp; Specific Disclaimers</h1>
-        <p style="font-size:13.5px;color:var(--text-muted);margin:0 0 22px;font-weight:600;">Effective Date: 3 June 2026</p>
+      <div id="terms-en" class="tw">
+        <p class="inline-block px-3 py-1 mb-4 rounded-full bg-blue-50 text-blue-900 text-[11px] font-extrabold tracking-widest border border-blue-200">ENGLISH VERSION</p>
+        <h1 class="text-3xl font-black tracking-tight leading-tight mb-1" style="color:var(--text-primary);">Terms of Service</h1>
+        <p class="text-sm font-semibold mb-6" style="color:var(--text-muted);">Effective Date: 3 June 2026</p>
 
-        <section class="legal-article">
-          <h2 class="legal-article-title">1. Introduction and acceptance</h2>
-          <p>These Terms govern use of the Korean&ndash;Australian community information-sharing service (&ldquo;KoAus&rdquo;) provided by KIM SHINHAENG / Koaus Community. By accessing or using the service you are taken to agree to these Terms. On registration you complete a step confirming agreement to these Terms and the <a href="privacy.html">Privacy Policy</a>.</p>
+        <section class="mb-6">
+          <h2 class="text-lg font-bold mb-2" style="color:var(--text-primary);">1. Introduction and acceptance</h2>
+          <p class="text-[14.5px] leading-relaxed" style="color:var(--text-secondary);">These Terms govern use of the Korean&ndash;Australian community information-sharing service (&ldquo;KoAus&rdquo;) provided by KIM SHINHAENG (MR SHINHAENG KIM) / Koaus Community. By accessing or using the service you are taken to agree to these Terms. On registration you complete a step confirming agreement to these Terms and the <a href="privacy.html" class="text-blue-700 underline hover:no-underline">Privacy Policy</a>.</p>
         </section>
 
-        <section class="legal-article">
-          <h2 class="legal-article-title">2. Nature of the platform and limitation of liability</h2>
-          <p>KoAus is an online platform (a &ldquo;venue&rdquo;) for users to share information (jobs, sharehouses, second-hand goods, vehicle and care services, etc.). The parties to any transaction or contract are the users themselves; we do not intervene in or guarantee any transaction. To the maximum extent permitted by law, we are not liable for legal or financial disputes or direct or indirect loss arising from direct dealings or use of information. These Terms do not exclude or limit consumer rights guaranteed by the Australian Consumer Law (ACL).</p>
+        <section class="mb-6">
+          <h2 class="text-lg font-bold mb-2" style="color:var(--text-primary);">2. Nature of the platform and limitation of liability</h2>
+          <p class="text-[14.5px] leading-relaxed" style="color:var(--text-secondary);">KoAus is an online platform (a &ldquo;venue&rdquo;) for users to share information (jobs, sharehouses, second-hand goods, vehicle and care services, etc.). The parties to any transaction or contract are the users themselves; we do not intervene in or guarantee any transaction. To the maximum extent permitted by law, we are not liable for legal or financial disputes or direct or indirect loss arising from direct dealings or use of information. These Terms do not exclude or limit consumer rights guaranteed by the Australian Consumer Law (ACL).</p>
         </section>
 
-        <section class="legal-article">
-          <h2 class="legal-article-title">3. User responsibilities and prohibited conduct</h2>
-          <p>You must provide accurate information. The following are prohibited: false listings or scam information; abuse, defamation or discrimination; impersonation; bot-driven spam; posting illegal or harmful content; and infringing others&rsquo; rights. All users must comply with the Online Safety Act 2021 (Cth).</p>
-          <p>You are responsible for your account and all activity that occurs under it, and must keep your mobile (SMS verification) and any linked Google account secure. Notify us immediately if you become aware of any unauthorised use of your account.</p>
+        <section class="mb-6">
+          <h2 class="text-lg font-bold mb-2" style="color:var(--text-primary);">3. User responsibilities and prohibited conduct</h2>
+          <p class="text-[14.5px] leading-relaxed mb-3" style="color:var(--text-secondary);">You must provide accurate information. The following are prohibited: false listings or scam information; abuse, defamation or discrimination; impersonation; bot-driven spam; posting illegal or harmful content; infringing others&rsquo; rights; commercial or advertising activity without our prior consent; automated bulk collection of information or content (scraping); and copying, selling or commercially reusing information obtained from the service or other people&rsquo;s personal information. All users must comply with the Online Safety Act 2021 (Cth).</p>
+          <p class="text-[14.5px] leading-relaxed" style="color:var(--text-secondary);">You are responsible for your account and all activity that occurs under it, and must keep your mobile (SMS verification) and any linked Google account secure. Notify us immediately if you become aware of any unauthorised use of your account. You may not transfer, lend or assign your account or your status under these Terms to anyone else, or use it as security.</p>
         </section>
 
-        <section class="legal-article">
-          <h2 class="legal-article-title">4. Content ownership and licence</h2>
-          <p>You retain ownership of the content you post. However, you grant us a non-exclusive, royalty-free licence to use, reproduce and display that content for operating, displaying and promoting the service. <em style="font-style:normal;color:var(--text-secondary);">(Provided, however, that sensitive photos containing the user's personal identity or face will never be used for external marketing purposes without prior explicit consent.)</em> &ldquo;koaus&rdquo; (name and logo) is a trade mark of the operator, filed with IP Australia (word mark, Classes 9 and 35), and &ldquo;Koaus Community&rdquo; is our registered business name. The KoAus name, logo, design and software remain our property.</p>
+        <section class="mb-6">
+          <h2 class="text-lg font-bold mb-2" style="color:var(--text-primary);">4. Content ownership and licence</h2>
+          <p class="text-[14.5px] leading-relaxed" style="color:var(--text-secondary);">You retain ownership of the content you post. However, you grant us a non-exclusive, royalty-free licence to use, reproduce and display that content for operating, displaying and promoting the service. &ldquo;koaus&rdquo; (name and logo) is a trade mark of the operator, filed with IP Australia (word mark, Classes 9 and 35), and &ldquo;Koaus Community&rdquo; is our registered business name. The KoAus name, logo, design and software remain our property.</p>
         </section>
 
-        <section class="legal-article">
-          <h2 class="legal-article-title">5. Reporting and content removal</h2>
-          <p>You can report harmful or infringing content to <a href="mailto:koaus.official@gmail.com">koaus.official@gmail.com</a>. We may remove infringing posts without prior notice and may restrict the service for, or permanently suspend, an infringing user&rsquo;s account. Online safety matters may also be reported to the eSafety Commissioner (<a href="https://www.esafety.gov.au" target="_blank" rel="noopener noreferrer">www.esafety.gov.au</a>).</p>
+        <section class="mb-6">
+          <h2 class="text-lg font-bold mb-2" style="color:var(--text-primary);">5. Reporting and content removal</h2>
+          <p class="text-[14.5px] leading-relaxed" style="color:var(--text-secondary);">You can report harmful or infringing content to <a href="mailto:koaus.official@gmail.com" class="text-blue-700 underline hover:no-underline">koaus.official@gmail.com</a>. We may remove infringing posts without prior notice and may restrict the service for, or permanently suspend, an infringing user&rsquo;s account. Online safety matters may also be reported to the eSafety Commissioner (<a href="https://www.esafety.gov.au" target="_blank" rel="noopener noreferrer" class="text-blue-700 underline hover:no-underline">www.esafety.gov.au</a>). If your content is removed or suspended, you may object or request reinstatement within 30 days.</p>
         </section>
 
-        <section class="legal-article">
-          <h2 class="legal-article-title">6. Account suspension, termination and deletion</h2>
-          <p>You may request deletion of your account at any time. We may refuse registration or suspend or terminate an account where: (1) you have used another person&rsquo;s identity or information; (2) you provided false information when registering; (3) you engage in conduct prohibited by these Terms or applicable law; (4) you interfere with other users&rsquo; use of the service or threaten its operation; or (5) you post fraudulent, illegal or harmful content.</p>
-          <p>Before permanently terminating an account we will, where practicable, notify you of the reason and give you an opportunity to respond. However, in urgent or serious cases — such as illegal content, fraud, safety risks, or repeated or serious breaches — we may suspend or terminate immediately without prior notice.</p>
+        <section class="mb-6">
+          <h2 class="text-lg font-bold mb-2" style="color:var(--text-primary);">6. Account suspension, termination and deletion</h2>
+          <p class="text-[14.5px] leading-relaxed mb-3" style="color:var(--text-secondary);">You may request deletion of your account at any time (see &ldquo;Account &amp; Data Deletion&rdquo; below).</p>
+          <p class="text-[14.5px] leading-relaxed mb-3" style="color:var(--text-secondary);">We may refuse registration or suspend or terminate an account where: (1) you have used another person&rsquo;s identity or information; (2) you provided false information when registering; (3) you engage in conduct prohibited by these Terms or applicable law; (4) you interfere with other users&rsquo; use of the service or threaten its operation; or (5) you post fraudulent, illegal or harmful content.</p>
+          <p class="text-[14.5px] leading-relaxed" style="color:var(--text-secondary);">Before permanently terminating an account we will, where practicable, notify you of the reason and give you an opportunity to respond. However, in urgent or serious cases — such as illegal content, fraud, safety risks, or repeated or serious breaches — we may suspend or terminate immediately without prior notice.</p>
         </section>
 
-        <section class="legal-article">
-          <h2 class="legal-article-title">7. Disclaimer of warranties</h2>
-          <p>The service is provided &ldquo;as is&rdquo;, and we do not warrant the accuracy, completeness or currency of posted information. (Consumer guarantees that cannot be excluded under the ACL are not affected.)</p>
+        <section class="mb-6">
+          <h2 class="text-lg font-bold mb-2" style="color:var(--text-primary);">7. Disclaimer of warranties</h2>
+          <p class="text-[14.5px] leading-relaxed mb-3" style="color:var(--text-secondary);">The service is provided &ldquo;as is&rdquo;, and we do not warrant the accuracy, completeness or currency of posted information. (Consumer guarantees that cannot be excluded under the ACL are not affected.)</p>
+          <p class="text-[14.5px] leading-relaxed" style="color:var(--text-secondary);">We may also suspend or change the service temporarily for scheduled maintenance, equipment repairs, system or network failures, force majeure or similar causes, and we are not liable for resulting loss except in the case of our wilful misconduct or gross negligence.</p>
         </section>
 
-        <section class="legal-article">
-          <h2 class="legal-article-title">8. Indemnity</h2>
-          <p>To the extent permitted by law, you indemnify us against loss arising from your breach of these Terms or from your content or conduct.</p>
+        <section class="mb-6">
+          <h2 class="text-lg font-bold mb-2" style="color:var(--text-primary);">8. Indemnity</h2>
+          <p class="text-[14.5px] leading-relaxed" style="color:var(--text-secondary);">To the extent permitted by law, you indemnify us against loss arising from your breach of these Terms or from your content or conduct.</p>
         </section>
 
-        <section class="legal-article">
-          <h2 class="legal-article-title">9. Advertising and sponsorship</h2>
-          <p>We may display advertising or paid listings, and sponsored or promotional content will be identified as such. Separate advertising terms may apply to advertisers.</p>
+        <section class="mb-6">
+          <h2 class="text-lg font-bold mb-2" style="color:var(--text-primary);">9. Advertising and sponsorship</h2>
+          <p class="text-[14.5px] leading-relaxed" style="color:var(--text-secondary);">We may display advertising or paid listings, and sponsored or promotional content will be identified as such. Separate advertising terms may apply to advertisers. Where such separate or service-specific terms conflict with these Terms, the separate terms prevail.</p>
         </section>
 
-        <section class="legal-article">
-          <h2 class="legal-article-title">10. Notices</h2>
-          <p>Unless otherwise stated, we give notices to you by the email address you have provided or by an in-service notification. Notices to users generally may be given by posting an announcement within the service, which replaces individual notice.</p>
+        <section class="mb-6">
+          <h2 class="text-lg font-bold mb-2" style="color:var(--text-primary);">10. Notices</h2>
+          <p class="text-[14.5px] leading-relaxed" style="color:var(--text-secondary);">Unless otherwise stated, we give notices to you by the email address you have provided or by an in-service notification. Notices to users generally may be given by posting an announcement within the service, which replaces individual notice.</p>
         </section>
 
-        <section class="legal-article">
-          <h2 class="legal-article-title">11. Changes to these Terms</h2>
-          <p>We may change these Terms and will notify material changes in accordance with clause 10 (Notices). Continued use after a change is taken as acceptance of it.</p>
+        <section class="mb-6">
+          <h2 class="text-lg font-bold mb-2" style="color:var(--text-primary);">11. Changes to these Terms</h2>
+          <p class="text-[14.5px] leading-relaxed" style="color:var(--text-secondary);">We may change these Terms and will notify material changes in accordance with clause 10 (Notices). Continued use after a change is taken as acceptance of it.</p>
         </section>
 
-        <section class="legal-article">
-          <h2 class="legal-article-title">12. Governing law and jurisdiction</h2>
-          <p>These Terms are governed by the laws of the State of Queensland, Australia, and related disputes are subject to the jurisdiction of the courts of Queensland.</p>
+        <section class="mb-6">
+          <h2 class="text-lg font-bold mb-2" style="color:var(--text-primary);">12. Governing law and jurisdiction</h2>
+          <p class="text-[14.5px] leading-relaxed" style="color:var(--text-secondary);">These Terms are governed by the laws of the State of Queensland, Australia, and related disputes are subject to the jurisdiction of the courts of Queensland.</p>
         </section>
 
-        <section class="legal-article">
-          <h2 class="legal-article-title">13. General</h2>
-          <p>If any provision is invalid, the remaining provisions continue in effect. These Terms constitute the entire agreement between us and the user.</p>
-        </section>
-
-        <!-- ── Service-Specific Disclaimers — 별도 시각적 강조 (callout 박스) ── -->
-        <section class="legal-article" style="margin-top:30px;padding:22px 24px;background:var(--bg-base);border:1px solid var(--border);border-radius:14px;">
-          <h2 class="legal-article-title" style="margin-top:0;">Service-Specific Disclaimers</h2>
-          <p>The following features are provided for information and convenience only, and we do not warrant their accuracy, currency or suitability.</p>
-          <ul style="margin:10px 0 0;padding-left:22px;line-height:1.75;">
-            <li><strong>Emergency contacts:</strong> For reference only. In a real emergency, call <strong>000</strong> (Australia&rsquo;s emergency number) immediately. Contact details may have changed &mdash; verify with official sources.</li>
-            <li><strong>Currency calculator:</strong> Displayed rates are indicative, may differ from actual transaction rates, and may be delayed or inaccurate. This is not financial advice.</li>
-            <li><strong>Powerball / lottery information:</strong> Provided for information only and is not affiliated with any official lottery operator. We do not warrant its accuracy; for users aged 18 and over only.</li>
-            <li><strong>Visa/immigration and legal/education directory:</strong> A list of third-party businesses; not an endorsement or recommendation by us. We do not provide immigration or legal advice. In Australia, paid immigration assistance may only be provided by a registered migration agent (OMARA) or a lawyer.</li>
-            <li><strong>Mechanic, car rental, towing, care and other business listings:</strong> Any transaction is between the user and the business; it is not guaranteed or recommended by us.</li>
-          </ul>
-          <p style="margin:14px 0 0;padding:12px 14px;background:var(--bg-surface);border-left:3px solid var(--accent,#3B82F6);border-radius:6px;font-size:13.5px;line-height:1.7;">
-            <strong>🤖 AI Moderation Appeal:</strong> Automated AI moderation is utilized to maintain a clean platform environment. If your legitimate content is incorrectly flagged or hidden, you may request an immediate review by contacting <a href="mailto:koaus.official@gmail.com">koaus.official@gmail.com</a>.
-          </p>
+        <section class="mb-6">
+          <h2 class="text-lg font-bold mb-2" style="color:var(--text-primary);">13. General</h2>
+          <p class="text-[14.5px] leading-relaxed" style="color:var(--text-secondary);">If any provision is invalid, the remaining provisions continue in effect. These Terms constitute the entire agreement between us and the user.</p>
+          <p class="text-[13px] mt-4" style="color:var(--text-secondary);"><strong>Effective date:</strong> 3 June 2026</p>
         </section>
       </div>
 
@@ -574,93 +564,126 @@
       <!-- ════════════════════════════════════════════════════════════════
            KOREAN VERSION (하단 배치)
            ════════════════════════════════════════════════════════════════ -->
-      <div id="terms-ko">
-        <p style="display:inline-block;font-size:11px;font-weight:800;color:#1e3a8a;background:rgba(30,58,138,0.08);border:1px solid rgba(30,58,138,0.18);padding:3px 10px;border-radius:999px;letter-spacing:0.06em;margin:0 0 14px;">한국어 버전</p>
-        <h1 style="font-size:30px;font-weight:900;color:var(--text-primary);margin:0 0 6px;letter-spacing:-0.01em;line-height:1.25;">서비스 이용약관 및 서비스별 면책고지</h1>
-        <p style="font-size:13.5px;color:var(--text-muted);margin:0 0 22px;font-weight:600;">시행일: 2026년 6월 3일</p>
+      <div id="terms-ko" class="tw">
+        <p class="inline-block px-3 py-1 mb-4 rounded-full bg-blue-50 text-blue-900 text-[11px] font-extrabold tracking-widest border border-blue-200">한국어 버전</p>
+        <h1 class="text-3xl font-black tracking-tight leading-tight mb-1" style="color:var(--text-primary);">이용약관</h1>
+        <p class="text-sm font-semibold mb-6" style="color:var(--text-muted);">시행일: 2026년 6월 3일</p>
 
-        <section class="legal-article">
-          <h2 class="legal-article-title">1. 목적 및 동의</h2>
-          <p>본 약관은 김신행 / Koaus Community이 제공하는 호주 한인 커뮤니티 정보공유 서비스(&ldquo;KoAus&rdquo;)의 이용 조건을 규정합니다. 서비스에 접속·이용하면 본 약관에 동의한 것으로 간주됩니다. 회원가입 시 약관 및 <a href="privacy.html">개인정보처리방침</a>에 대한 동의 절차를 거칩니다.</p>
+        <section class="mb-6">
+          <h2 class="text-lg font-bold mb-2" style="color:var(--text-primary);">1. 목적 및 동의</h2>
+          <p class="text-[14.5px] leading-relaxed" style="color:var(--text-secondary);">본 약관은 김신행 (Koaus Community)이 제공하는 호주 한인 커뮤니티 정보공유 서비스(&ldquo;KoAus&rdquo;)의 이용 조건을 규정합니다. 서비스에 접속·이용하면 본 약관에 동의한 것으로 간주됩니다. 회원가입 시 약관 및 <a href="privacy.html" class="text-blue-700 underline hover:no-underline">개인정보처리방침</a>에 대한 동의 절차를 거칩니다.</p>
         </section>
 
-        <section class="legal-article">
-          <h2 class="legal-article-title">2. 플랫폼의 성격 및 면책</h2>
-          <p>KoAus는 이용자 간 정보(구인구직, 쉐어하우스, 중고거래, 차량·케어 서비스 등)를 공유하는 온라인 플랫폼(Venue)입니다. 거래·계약의 당사자는 이용자 본인이며, 당사는 거래에 개입하거나 이를 보장하지 않습니다. 직거래나 정보 활용으로 발생하는 법적·금전적 분쟁 및 직간접 손실에 대해 당사는 법이 허용하는 최대 한도 내에서 책임을 지지 않습니다. 본 약관은 「호주 소비자법(ACL)」이 보장하는 소비자 권리를 배제·제한하지 않습니다.</p>
+        <section class="mb-6">
+          <h2 class="text-lg font-bold mb-2" style="color:var(--text-primary);">2. 플랫폼의 성격 및 면책</h2>
+          <p class="text-[14.5px] leading-relaxed" style="color:var(--text-secondary);">KoAus는 이용자 간 정보(구인구직, 쉐어하우스, 중고거래, 차량·케어 서비스 등)를 공유하는 온라인 플랫폼(Venue)입니다. 거래·계약의 당사자는 이용자 본인이며, 당사는 거래에 개입하거나 이를 보장하지 않습니다. 직거래나 정보 활용으로 발생하는 법적·금전적 분쟁 및 직간접 손실에 대해 당사는 법이 허용하는 최대 한도 내에서 책임을 지지 않습니다. 본 약관은 「호주 소비자법(ACL)」이 보장하는 소비자 권리를 배제·제한하지 않습니다.</p>
         </section>
 
-        <section class="legal-article">
-          <h2 class="legal-article-title">3. 이용자의 책임 및 금지행위</h2>
-          <p>이용자는 정확한 정보를 제공해야 하며, 다음 행위를 금지합니다: 허위 매물·사기성 정보, 욕설·비방·차별, 타인 사칭, 봇을 이용한 스팸, 불법·유해 콘텐츠 게시, 타인의 권리 침해. 모든 이용자는 「Online Safety Act 2021 (Cth)」을 준수해야 합니다.</p>
-          <p>이용자는 본인 계정 및 본인 계정으로 이루어진 모든 활동에 대해 책임을 지며, 본인의 휴대폰(SMS 인증) 및 연결된 Google 계정을 안전하게 관리해야 합니다. 계정의 무단 사용을 인지한 경우 즉시 당사에 알려야 합니다.</p>
+        <section class="mb-6">
+          <h2 class="text-lg font-bold mb-2" style="color:var(--text-primary);">3. 이용자의 책임 및 금지행위</h2>
+          <p class="text-[14.5px] leading-relaxed mb-3" style="color:var(--text-secondary);">이용자는 정확한 정보를 제공해야 하며, 다음 행위를 금지합니다: 허위 매물·사기성 정보, 욕설·비방·차별, 타인 사칭, 봇을 이용한 스팸, 불법·유해 콘텐츠 게시, 타인의 권리 침해, 당사의 사전 승인 없는 영업·광고 활동, 자동화 수단을 통한 정보·게시물의 대량 수집(스크래핑), 서비스에서 얻은 정보나 타인의 개인정보를 복제·판매하거나 상업적으로 재이용하는 행위. 모든 이용자는 「Online Safety Act 2021 (Cth)」을 준수해야 합니다.</p>
+          <p class="text-[14.5px] leading-relaxed" style="color:var(--text-secondary);">이용자는 본인 계정 및 본인 계정으로 이루어진 모든 활동에 대해 책임을 지며, 본인의 휴대폰(SMS 인증) 및 연결된 Google 계정을 안전하게 관리해야 합니다. 계정의 무단 사용을 인지한 경우 즉시 당사에 알려야 합니다. 또한 이용자는 계정 또는 이용계약상 지위를 타인에게 양도·대여하거나 담보로 제공할 수 없습니다.</p>
         </section>
 
-        <section class="legal-article">
-          <h2 class="legal-article-title">4. 콘텐츠 소유권 및 이용 허락</h2>
-          <p>이용자가 게시한 콘텐츠의 소유권은 이용자에게 있습니다. 다만 이용자는 당사에게 서비스 운영·표시·홍보를 위해 해당 콘텐츠를 사용·복제·게시할 수 있는 비독점적·무상의 사용권을 부여합니다. <em style="font-style:normal;color:var(--text-secondary);">(단, 이용자의 개인 신상이나 얼굴이 포함된 민감한 사진은 사전 동의 없이 외부 마케팅에 사용하지 않습니다.)</em> &ldquo;koaus&rdquo; 명칭·로고는 운영자가 IP Australia에 출원한 상표(워드마크, Class 9·35)이며, &ldquo;Koaus Community&rdquo;는 등록된 사업자명입니다. KoAus의 명칭·로고·디자인·소프트웨어에 대한 권리는 당사에 있습니다.</p>
+        <section class="mb-6">
+          <h2 class="text-lg font-bold mb-2" style="color:var(--text-primary);">4. 콘텐츠 소유권 및 이용 허락</h2>
+          <p class="text-[14.5px] leading-relaxed" style="color:var(--text-secondary);">이용자가 게시한 콘텐츠의 소유권은 이용자에게 있습니다. 다만 이용자는 당사에게 서비스 운영·표시·홍보를 위해 해당 콘텐츠를 사용·복제·게시할 수 있는 비독점적·무상의 사용권을 부여합니다. &ldquo;koaus&rdquo; 명칭·로고는 운영자가 IP Australia에 출원한 상표(워드마크, Class 9·35)이며, &ldquo;Koaus Community&rdquo;는 등록된 사업자명입니다. KoAus의 명칭·로고·디자인·소프트웨어에 대한 권리는 당사에 있습니다.</p>
         </section>
 
-        <section class="legal-article">
-          <h2 class="legal-article-title">5. 신고 및 콘텐츠 삭제</h2>
-          <p>이용자는 유해·위반 콘텐츠를 <a href="mailto:koaus.official@gmail.com">koaus.official@gmail.com</a> 으로 신고할 수 있습니다. 당사는 위반 게시물을 사전 통보 없이 삭제하고, 위반 이용자의 서비스 이용을 제한하거나 계정을 영구 정지할 수 있습니다. 호주 온라인 안전 관련 신고는 eSafety Commissioner(<a href="https://www.esafety.gov.au" target="_blank" rel="noopener noreferrer">www.esafety.gov.au</a>)에도 가능합니다.</p>
+        <section class="mb-6">
+          <h2 class="text-lg font-bold mb-2" style="color:var(--text-primary);">5. 신고 및 콘텐츠 삭제</h2>
+          <p class="text-[14.5px] leading-relaxed" style="color:var(--text-secondary);">이용자는 유해·위반 콘텐츠를 <a href="mailto:koaus.official@gmail.com" class="text-blue-700 underline hover:no-underline">koaus.official@gmail.com</a> 으로 신고할 수 있습니다. 당사는 위반 게시물을 사전 통보 없이 삭제하고, 위반 이용자의 서비스 이용을 제한하거나 계정을 영구 정지할 수 있습니다. 호주 온라인 안전 관련 신고는 eSafety Commissioner(<a href="https://www.esafety.gov.au" target="_blank" rel="noopener noreferrer" class="text-blue-700 underline hover:no-underline">www.esafety.gov.au</a>)에도 가능합니다. 삭제·중단된 게시물에 대해 이용자는 30일 이내에 당사에 이의를 제기하거나 재게시를 요청할 수 있습니다.</p>
         </section>
 
-        <section class="legal-article">
-          <h2 class="legal-article-title">6. 계정 정지·해지 및 삭제</h2>
-          <p>이용자는 언제든 계정 삭제를 요청할 수 있습니다. 당사는 다음 각 호에 해당하는 경우 회원가입을 거부하거나 계정을 정지·해지할 수 있습니다: (1) 타인의 명의·정보를 도용한 경우, (2) 가입 시 필수 정보를 허위로 기재한 경우, (3) 본 약관 또는 관계 법령이 금지하는 행위를 한 경우, (4) 다른 이용자의 서비스 이용을 방해하거나 서비스 운영을 위협하는 경우, (5) 사기·불법·유해 콘텐츠를 게시한 경우.</p>
-          <p>계정을 영구 해지하기 전에는 가능한 경우 이용자에게 그 사유를 통지하고 소명할 기회를 제공합니다. 다만 불법 콘텐츠, 사기, 안전 위협, 반복적·중대한 위반 등 긴급하거나 중대한 경우에는 사전 통지 없이 즉시 정지·해지할 수 있습니다.</p>
+        <section class="mb-6">
+          <h2 class="text-lg font-bold mb-2" style="color:var(--text-primary);">6. 계정 정지·해지 및 삭제</h2>
+          <p class="text-[14.5px] leading-relaxed mb-3" style="color:var(--text-secondary);">이용자는 언제든 계정 삭제를 요청할 수 있습니다(아래 &lsquo;계정·데이터 삭제 안내&rsquo; 참조).</p>
+          <p class="text-[14.5px] leading-relaxed mb-3" style="color:var(--text-secondary);">당사는 다음 각 호에 해당하는 경우 회원가입을 거부하거나 계정을 정지·해지할 수 있습니다: (1) 타인의 명의·정보를 도용한 경우, (2) 가입 시 필수 정보를 허위로 기재한 경우, (3) 본 약관 또는 관계 법령이 금지하는 행위를 한 경우, (4) 다른 이용자의 서비스 이용을 방해하거나 서비스 운영을 위협하는 경우, (5) 사기·불법·유해 콘텐츠를 게시한 경우.</p>
+          <p class="text-[14.5px] leading-relaxed" style="color:var(--text-secondary);">계정을 영구 해지하기 전에는 가능한 경우 이용자에게 그 사유를 통지하고 소명할 기회를 제공합니다. 다만 불법 콘텐츠, 사기, 안전 위협, 반복적·중대한 위반 등 긴급하거나 중대한 경우에는 사전 통지 없이 즉시 정지·해지할 수 있습니다.</p>
         </section>
 
-        <section class="legal-article">
-          <h2 class="legal-article-title">7. 보증의 부인</h2>
-          <p>서비스는 &ldquo;있는 그대로(as is)&rdquo; 제공되며, 당사는 게시 정보의 정확성·완전성·최신성을 보증하지 않습니다. (ACL상 배제할 수 없는 소비자 보증은 영향을 받지 않습니다.)</p>
+        <section class="mb-6">
+          <h2 class="text-lg font-bold mb-2" style="color:var(--text-primary);">7. 보증의 부인</h2>
+          <p class="text-[14.5px] leading-relaxed mb-3" style="color:var(--text-secondary);">서비스는 &ldquo;있는 그대로(as is)&rdquo; 제공되며, 당사는 게시 정보의 정확성·완전성·최신성을 보증하지 않습니다. (ACL상 배제할 수 없는 소비자 보증은 영향을 받지 않습니다.)</p>
+          <p class="text-[14.5px] leading-relaxed" style="color:var(--text-secondary);">또한 당사는 정기 점검, 설비 보수, 시스템·통신 장애, 천재지변 등 불가항력적 사유로 서비스를 일시 중단하거나 변경할 수 있으며, 이로 인해 발생한 손해에 대해 고의 또는 중대한 과실이 없는 한 책임지지 않습니다.</p>
         </section>
 
-        <section class="legal-article">
-          <h2 class="legal-article-title">8. 배상</h2>
-          <p>이용자는 본 약관 위반 또는 자신의 콘텐츠·행위로 인해 당사에 발생한 손해에 대해 법이 허용하는 범위에서 당사를 면책·배상합니다.</p>
+        <section class="mb-6">
+          <h2 class="text-lg font-bold mb-2" style="color:var(--text-primary);">8. 배상</h2>
+          <p class="text-[14.5px] leading-relaxed" style="color:var(--text-secondary);">이용자는 본 약관 위반 또는 자신의 콘텐츠·행위로 인해 당사에 발생한 손해에 대해 법이 허용하는 범위에서 당사를 면책·배상합니다.</p>
         </section>
 
-        <section class="legal-article">
-          <h2 class="legal-article-title">9. 광고 및 협찬</h2>
-          <p>당사는 광고·유료 게시를 게재할 수 있으며, 협찬·광고성 콘텐츠는 그 사실을 표시합니다. 광고주에게는 별도의 광고 약관이 적용될 수 있습니다.</p>
+        <section class="mb-6">
+          <h2 class="text-lg font-bold mb-2" style="color:var(--text-primary);">9. 광고 및 협찬</h2>
+          <p class="text-[14.5px] leading-relaxed" style="color:var(--text-secondary);">당사는 광고·유료 게시를 게재할 수 있으며, 협찬·광고성 콘텐츠는 그 사실을 표시합니다. 광고주에게는 별도의 광고 약관이 적용될 수 있습니다. 이러한 개별·서비스별 약관이 본 약관과 상충하는 경우 해당 개별 약관이 우선 적용됩니다.</p>
         </section>
 
-        <section class="legal-article">
-          <h2 class="legal-article-title">10. 통지</h2>
-          <p>당사가 이용자에게 하는 통지는 별도의 규정이 없는 한 이용자가 제공한 이메일 주소 또는 서비스 내 알림을 통해 합니다. 불특정 다수의 이용자에 대한 통지는 서비스 내 공지사항 게시로 개별 통지를 갈음할 수 있습니다.</p>
+        <section class="mb-6">
+          <h2 class="text-lg font-bold mb-2" style="color:var(--text-primary);">10. 통지</h2>
+          <p class="text-[14.5px] leading-relaxed" style="color:var(--text-secondary);">당사가 이용자에게 하는 통지는 별도의 규정이 없는 한 이용자가 제공한 이메일 주소 또는 서비스 내 알림을 통해 합니다. 불특정 다수의 이용자에 대한 통지는 서비스 내 공지사항 게시로 개별 통지를 갈음할 수 있습니다.</p>
         </section>
 
-        <section class="legal-article">
-          <h2 class="legal-article-title">11. 약관의 변경</h2>
-          <p>당사는 약관을 변경할 수 있으며, 중요한 변경은 제10조(통지)에 따라 안내합니다. 변경 후 계속 이용하면 변경에 동의한 것으로 간주됩니다.</p>
+        <section class="mb-6">
+          <h2 class="text-lg font-bold mb-2" style="color:var(--text-primary);">11. 약관의 변경</h2>
+          <p class="text-[14.5px] leading-relaxed" style="color:var(--text-secondary);">당사는 약관을 변경할 수 있으며, 중요한 변경은 제10조(통지)에 따라 안내합니다. 변경 후 계속 이용하면 변경에 동의한 것으로 간주됩니다.</p>
         </section>
 
-        <section class="legal-article">
-          <h2 class="legal-article-title">12. 준거법 및 관할</h2>
-          <p>본 약관은 호주 퀸즈랜드주 법률을 따르며, 관련 분쟁은 퀸즈랜드주 법원의 관할에 속합니다.</p>
+        <section class="mb-6">
+          <h2 class="text-lg font-bold mb-2" style="color:var(--text-primary);">12. 준거법 및 관할</h2>
+          <p class="text-[14.5px] leading-relaxed" style="color:var(--text-secondary);">본 약관은 호주 퀸즈랜드주 법률을 따르며, 관련 분쟁은 퀸즈랜드주 법원의 관할에 속합니다.</p>
         </section>
 
-        <section class="legal-article">
-          <h2 class="legal-article-title">13. 일반 조항</h2>
-          <p>본 약관의 일부 조항이 무효이더라도 나머지 조항은 유효합니다. 본 약관은 당사와 이용자 간의 완전한 합의를 구성합니다.</p>
+        <section class="mb-6">
+          <h2 class="text-lg font-bold mb-2" style="color:var(--text-primary);">13. 일반 조항</h2>
+          <p class="text-[14.5px] leading-relaxed" style="color:var(--text-secondary);">본 약관의 일부 조항이 무효이더라도 나머지 조항은 유효합니다. 본 약관은 당사와 이용자 간의 완전한 합의를 구성합니다.</p>
+          <p class="text-[13px] mt-4" style="color:var(--text-secondary);"><strong>시행일:</strong> 2026년 6월 3일</p>
         </section>
+      </div>
 
-        <!-- ── 서비스별 면책 및 안내 — 별도 시각적 강조 (callout 박스) ── -->
-        <section class="legal-article" style="margin-top:30px;padding:22px 24px;background:var(--bg-base);border:1px solid var(--border);border-radius:14px;">
-          <h2 class="legal-article-title" style="margin-top:0;">서비스별 면책 및 안내</h2>
-          <p>아래 기능들은 정보 제공·편의 목적이며, 당사는 그 정확성·최신성·적합성을 보증하지 않습니다.</p>
-          <ul style="margin:10px 0 0;padding-left:22px;line-height:1.75;">
-            <li><strong>긴급연락처:</strong> 참고용입니다. 실제 응급 상황에서는 즉시 <strong>000</strong>(호주 긴급전화)으로 연락하세요. 연락처 정보는 변경되었을 수 있으니 공식 출처로 확인하세요.</li>
-            <li><strong>환율 계산기:</strong> 표시 환율은 참고용이며 실제 거래 환율과 다를 수 있고 지연·오차가 있을 수 있습니다. 금융 자문이 아닙니다.</li>
-            <li><strong>파워볼·복권 정보:</strong> 정보 제공용이며 공식 복권사업자와 무관합니다. 정확성을 보증하지 않으며 만 18세 이상만 이용하세요.</li>
-            <li><strong>비자·이민 및 법무·유학 디렉터리:</strong> 제3자 업체 목록이며 당사의 추천·보증이 아닙니다. 당사는 이민·법률 자문을 제공하지 않습니다. 호주에서 유료 이민 지원은 등록 이민 대리인(OMARA) 또는 변호사만 제공할 수 있습니다.</li>
-            <li><strong>정비·렌터카·견인·케어 등 업체 정보:</strong> 거래는 이용자와 해당 업체 간에 이루어지며 당사의 보증·추천이 아닙니다.</li>
-          </ul>
-          <p style="margin:14px 0 0;padding:12px 14px;background:var(--bg-surface);border-left:3px solid var(--accent,#3B82F6);border-radius:6px;font-size:13.5px;line-height:1.7;">
-            <strong>🤖 AI 모더레이션 이의제기:</strong> 쾌적한 커뮤니티 환경 유지를 위해 AI 기반 자동 모더레이션이 작동합니다. 정상적인 게시물이 위반 사항으로 잘못 인식되어 숨김 처리된 경우, <a href="mailto:koaus.official@gmail.com">koaus.official@gmail.com</a> 으로 이의제기를 해주시면 운영자가 확인 후 즉시 조치해 드립니다.
-          </p>
-        </section>
+      <!-- ── 이용약관 ↔ 서비스별 면책고지 구분선 (지시 3/4) ── -->
+      <hr style="margin:54px 0 40px;border:0;border-top:1px solid var(--border);">
+
+      <!-- ════════════════════════════════════════════════════════════════
+           SERVICE-SPECIFIC DISCLAIMERS — ENGLISH VERSION (지시 3/4)
+           ════════════════════════════════════════════════════════════════ -->
+      <div id="disclaimers-en" class="tw">
+        <p class="inline-block px-3 py-1 mb-4 rounded-full bg-amber-50 text-amber-900 text-[11px] font-extrabold tracking-widest border border-amber-200">SERVICE-SPECIFIC DISCLAIMERS · ENGLISH</p>
+        <h1 class="text-3xl font-black tracking-tight leading-tight mb-4" style="color:var(--text-primary);">Service-Specific Disclaimers</h1>
+
+        <p class="text-[14.5px] leading-relaxed mb-4" style="color:var(--text-secondary);">The following features are provided for information and convenience only, and we do not warrant their accuracy, currency or suitability.</p>
+
+        <ul class="list-disc pl-6 space-y-3 text-[14.5px] leading-relaxed" style="color:var(--text-secondary);">
+          <li><strong>Emergency contacts:</strong> For reference only. In a real emergency, call <strong>000</strong> (Australia&rsquo;s emergency number) immediately. Contact details may have changed &mdash; verify with official sources.</li>
+          <li><strong>Currency calculator:</strong> Displayed rates are indicative, may differ from actual transaction rates, and may be delayed or inaccurate. This is not financial advice.</li>
+          <li><strong>Powerball / lottery information:</strong> Provided for information only and is not affiliated with any official lottery operator. We do not warrant its accuracy; for users aged 18 and over only.</li>
+          <li><strong>Visa/immigration and legal/education directory:</strong> A list of third-party businesses; not an endorsement or recommendation by us. We do not provide immigration or legal advice. In Australia, paid immigration assistance may only be provided by a registered migration agent (OMARA) or a lawyer.</li>
+          <li><strong>Mechanic, car rental, towing, care and other business listings:</strong> Any transaction is between the user and the business; it is not guaranteed or recommended by us.</li>
+          <li><strong>Jobs and recruitment:</strong> We are not a party to any employment contract, wages, working conditions, or work-visa (work rights) compliance between employers and job seekers, and we do not guarantee or broker any job or employment relationship. All users must themselves comply with applicable laws, including Australian employment law (Fair Work) and workplace standards, visa work conditions, and tax obligations.</li>
+          <li><strong>Share/rent and used-car listing locations:</strong> The location shown on the map is for reference only. For listings the poster has set to &ldquo;private&rdquo;, only an approximate location (a circle) is shown rather than the exact home or vehicle location, and directions and Street View are not provided. The exact address is provided by the poster directly during contact, and we do not warrant the accuracy of location information. Please take care when sharing or receiving personal information such as addresses.</li>
+        </ul>
+      </div>
+
+      <!-- ── Disclaimers 영문 ↔ 한글 구분선 ── -->
+      <hr style="margin:54px 0 40px;border:0;border-top:1px solid var(--border);">
+
+      <!-- ════════════════════════════════════════════════════════════════
+           SERVICE-SPECIFIC DISCLAIMERS — KOREAN VERSION (지시 3/4)
+           ════════════════════════════════════════════════════════════════ -->
+      <div id="disclaimers-ko" class="tw">
+        <p class="inline-block px-3 py-1 mb-4 rounded-full bg-amber-50 text-amber-900 text-[11px] font-extrabold tracking-widest border border-amber-200">서비스별 면책 및 안내 · 한국어</p>
+        <h1 class="text-3xl font-black tracking-tight leading-tight mb-4" style="color:var(--text-primary);">서비스별 면책 및 안내</h1>
+
+        <p class="text-[14.5px] leading-relaxed mb-4" style="color:var(--text-secondary);">아래 기능들은 정보 제공·편의 목적이며, 당사는 그 정확성·최신성·적합성을 보증하지 않습니다.</p>
+
+        <ul class="list-disc pl-6 space-y-3 text-[14.5px] leading-relaxed" style="color:var(--text-secondary);">
+          <li><strong>긴급연락처:</strong> 참고용입니다. 실제 응급 상황에서는 즉시 <strong>000</strong>(호주 긴급전화)으로 연락하세요. 연락처 정보는 변경되었을 수 있으니 공식 출처로 확인하세요.</li>
+          <li><strong>환율 계산기:</strong> 표시 환율은 참고용이며 실제 거래 환율과 다를 수 있고 지연·오차가 있을 수 있습니다. 금융 자문이 아닙니다.</li>
+          <li><strong>파워볼·복권 정보:</strong> 정보 제공용이며 공식 복권사업자와 무관합니다. 정확성을 보증하지 않으며 만 18세 이상만 이용하세요.</li>
+          <li><strong>비자·이민 및 법무·유학 디렉터리:</strong> 제3자 업체 목록이며 당사의 추천·보증이 아닙니다. 당사는 이민·법률 자문을 제공하지 않습니다. 호주에서 유료 이민 지원은 등록 이민 대리인(OMARA) 또는 변호사만 제공할 수 있습니다.</li>
+          <li><strong>정비·렌터카·견인·케어 등 업체 정보:</strong> 거래는 이용자와 해당 업체 간에 이루어지며 당사의 보증·추천이 아닙니다.</li>
+          <li><strong>구인구직:</strong> 당사는 구인자와 구직자 간의 고용계약·임금·근로조건·취업비자(취업권한) 준수 등 어떤 거래의 당사자도 아니며, 채용·근로관계를 보증하거나 중개하지 않습니다. 모든 이용자는 호주 고용법(Fair Work)·근로기준, 비자 취업조건, 세금 등 관련 법령을 스스로 준수해야 합니다.</li>
+          <li><strong>쉐어/렌트·중고차 매물 위치:</strong> 지도에 표시되는 위치는 참고용입니다. 게시자가 &lsquo;비공개&rsquo;로 설정한 매물은 정확한 집/차량 위치가 아닌 대략적인 위치(원)만 표시되며 길찾기·스트리트뷰는 제공되지 않습니다. 정확한 주소는 게시자가 연락 과정에서 직접 제공하며, 당사는 위치 정보의 정확성을 보증하지 않습니다. 이용자는 주소 등 개인정보를 주고받을 때 주의하시기 바랍니다.</li>
+        </ul>
       </div>
 
       <footer class="legal-meta">

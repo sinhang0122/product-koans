@@ -175,6 +175,36 @@ body {
   text-decoration: none; display: inline-flex; align-items: center;
 }
 .topbar-login-btn:hover { opacity: 0.8; }
+
+/* ── Auth 깜빡임 방어 (지시 2/4 session-timeout.js 연동) ──
+   · html[data-koaus-auth="checking"]: 새 방문자 (sessionStorage 캐시 없음) → 짧게 dim
+   · html[data-koaus-auth="cached-in"]: 직전 페이지에서 로그인된 사용자 → 헤더 깜빡임 봉쇄
+   · onAuthStateChanged 첫 발화로 'in' / 'out' 확정 시 즉시 일반 표시
+   · 0.5초 안에 결정 안 되면 fade 효과로 자연스럽게 노출 */
+html[data-koaus-auth="checking"]  .topbar-login-btn { opacity: 0.45; transition: opacity .35s ease; }
+html[data-koaus-auth="cached-in"] .topbar-login-btn { display: none; }       /* 지시 7/10 — visibility 대신 display:none — 마이페이지 버튼이 같은 자리 대체 */
+html[data-koaus-auth="in"]        .topbar-login-btn { display: none; }       /* 로그인 사용자 — 로그인 버튼 숨김 */
+html[data-koaus-auth="out"]       .topbar-login-btn { opacity: 1; visibility: visible; display: inline-flex; }
+
+/* ── 지시 7/10 ── 마이페이지 아이콘 버튼 (.topbar-my-btn) ─────────────────
+   · 햄버거 직전 자리에 인사용 user 아이콘 버튼 (38×38, B&W 통일)
+   · 로그인 상태(html[data-koaus-auth="in"|"cached-in"])일 때만 노출
+   · 클릭 시 mypage.html — <a> 태그이므로 JS 없이 즉시 이동
+   · 로그아웃 / 인증 확인 중에는 자리 차지 0 (display:none) — 로그인 버튼이 대체 */
+.topbar-my-btn {
+  width: 38px; height: 38px;
+  background: none; border: 1px solid var(--border);
+  border-radius: var(--r-sm); color: var(--text-secondary);
+  display: none;  /* 기본 hide — auth state 에 따라 토글 */
+  align-items: center; justify-content: center;
+  cursor: pointer; text-decoration: none;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.topbar-my-btn:hover { background: var(--bg-card); border-color: var(--accent); color: var(--accent); }
+html[data-koaus-auth="in"]        .topbar-my-btn { display: inline-flex; }
+html[data-koaus-auth="cached-in"] .topbar-my-btn { display: inline-flex; }
+html[data-koaus-auth="out"]       .topbar-my-btn { display: none; }
+html[data-koaus-auth="checking"]  .topbar-my-btn { display: none; }
 .topbar-menu-btn {
   width: 38px; height: 38px;
   background: none; border: 1px solid var(--border);
@@ -1244,6 +1274,17 @@ select.board-write-btn--ghost:focus { outline: none; border-color: var(--text-pr
   box-sizing: border-box;
   overflow: hidden;   /* Swiper 슬라이드가 컨테이너 폭 초과 시 클립 */
 }
+/* ── 지시 1/10 ── hero fetch 전 placeholder (reflow 차단) ──────────────
+   문제: hero-banner.js fetch 완료 전 .koaus-hero 가 세로 0 → fetch 후 swiper(18/7)로 갑자기 부풀어
+   페이지 reflow → notice-section 이 "덮어쓰여지는" 듯한 시각 충돌.
+   해결: 자식이 박히기 전(:empty) 동안에도 swiper와 동일 비율로 자리 확보 → reflow 0.
+   hero-banner.js 가 innerHTML 작성하면 자식 생성 → :empty 매치 해제 → placeholder 룰 자동 해제. */
+.koaus-hero:empty {
+  aspect-ratio: 18 / 7;
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--bg-base, #f3f4f6) 0%, var(--bg-surface, #e5e7eb) 100%);
+  box-shadow: 0 8px 28px rgba(15, 23, 42, .08);
+}
 .koaus-hero-pc, .koaus-hero-mobile {
   width: 100%; max-width: 100%;
   margin: 0 auto;
@@ -1253,12 +1294,19 @@ select.board-write-btn--ghost:focus { outline: none; border-color: var(--text-pr
 .koaus-hero-pc[hidden] { display: none !important; }
 .koaus-hero-pc .swiper {
   width: 100%;
-  aspect-ratio: 18 / 7;  /* 와이드 히어로 — 세로 1/3 증액(24/7 → 18/7) */
-  max-height: 480px;     /* 360 → 480 (1/3 증가) */
+  aspect-ratio: 18 / 7;  /* 전 디바이스 고정 종횡비 (지시 3/3) — 모바일·데스크탑·풀스크린 동일 비율 */
+  /* max-height 캡 제거 — 부모 .koaus-hero 의 max-width:1200px 가 가로 캡 → 세로는 18/7 비율로 자동 유지
+     (1200px × 7/18 ≈ 467px), 1920px 와이드 화면에서도 1200px 캡 안 → 비율 절대 깨지지 않음 */
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 8px 28px rgba(15, 23, 42, .14);
   margin-left: auto; margin-right: auto;  /* 중앙 정렬 안전망 */
+}
+/* swiper-slide 내부 이미지(<img>) — 컨테이너 비율에 맞춰 왜곡 없이 채움 (admin slide / 광고 배너) */
+.koaus-hero-pc .swiper-slide img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
 }
 .koaus-hero-pc .swiper-slide {
   position: relative;
@@ -1336,11 +1384,11 @@ select.board-write-btn--ghost:focus { outline: none; border-color: var(--text-pr
   }
   .koaus-hero-pc { display: block; }       /* 모바일에서도 PC swiper 노출 */
   .koaus-hero-mobile { display: none !important; }   /* 단일카드 폐기 */
-  /* PC swiper 의 모바일 컴팩트 — 슬림 띠 + 4개 슬라이드 동일 노출 + 스와이프 */
+  /* PC swiper 의 모바일 컴팩트 — 전 디바이스 동일 종횡비(18/7) 유지 (지시 3/3)
+     · 옛 'aspect-ratio: unset + height: clamp(120px, 18vh, 180px)' 폐기 — viewport 높이에 따른 늘어남 버그 해소.
+     · 데스크탑 기본 룰(aspect-ratio: 18/7) 그대로 상속 — 모바일에서도 가로 폭 비례로 자연 축소.
+     · border-radius 만 모바일 컴팩트(12px) 로 조정. */
   .koaus-hero-pc .swiper {
-    aspect-ratio: unset;
-    height: clamp(120px, 18vh, 180px);
-    min-height: 110px;
     border-radius: 12px;
   }
   .koaus-hero-pc .swiper-slide { padding: 12px 16px; }
@@ -2573,8 +2621,10 @@ select.filter-mini-input {
    · z-index를 모달 위로 올리고, 모달 내부에서 부모 stacking context 안에서 최상위 */
 .write-overlay .addr-suggest,
 .report-overlay .addr-suggest { z-index: 9999; }
+.write-overlay .pac-container,
+.report-overlay .pac-container { z-index: 100000 !important; }
 /* Google Places Autocomplete native dropdown (.pac-container) 도 모달 위로 */
-.pac-container { z-index: 99999 !important; }
+.pac-container { z-index: 100000 !important; }
 .addr-suggest li {
   padding: 10px 12px; border-radius: var(--r-sm); cursor: pointer;
   font-size: 13px; color: var(--text-primary);
@@ -2660,12 +2710,24 @@ select.filter-mini-input {
    우측: flex flex-col justify-between flex-1 min-w-0   (= .accom-card-info/.accom-card-body)
    상단: 가격·제목·별만 우측 / 하단: 태그·버튼 한 묶음 flex-wrap items-center gap-2 */
 .accom-grid--compact .accom-card {
-  flex-direction: row; align-items: stretch; gap: 10px; padding: 8px; border-radius: var(--r-md);
-  min-height: 96px;   /* 썸네일 80px + padding 8px×2 — 사진 세로축에 카드 세로 일치 (사용자 명시) */
+  /* 지시 4/10 — 카드 세로 자유 (텍스트 겹침 해소). align-items: stretch → flex-start.
+     min-height 92 → 96 (썸네일 80 + padding 16). 콘텐츠가 길면 카드도 자연 신장. */
+  flex-direction: row; align-items: flex-start; gap: 10px; padding: 8px;
+  border-radius: var(--r-md);
+  min-height: 96px;
 }
-/* line1 내부: 자연 흐름. 별(.bookmark-btn) 은 자체 룰(line 1554) 의 margin-left 로 우측 정렬됨.
-   다른 자식(가격/제목 등) 은 좌측 자연 흐름 — 옛 강제 ':last-child margin-left:auto' 제거 (태그 우측 날아가던 버그). */
-.accom-grid--compact .accom-card .accom-card-line1 { justify-content: flex-start; gap: 8px; }
+/* 옛 .accom-card-line1 (지시 4/4) — 마크업 폐기. 잔존 페이지(auto) 안전망. */
+.accom-grid--compact .accom-card .accom-card-line1 {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  gap: 6px; margin: 0;
+}
+.accom-grid--compact .accom-card .accom-card-line1 .bookmark-btn {
+  position: static !important; top: auto; right: auto;
+  width: 22px; height: 22px; margin: 0; padding: 0;
+  font-size: 16px; line-height: 1; flex-shrink: 0;
+  background: transparent; border: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+}
 
 /* visa(points) 상세 필터 select — 가로 폭 컴팩트 (글쓰기 버튼 옆 규격) */
 #visaDetailFilter { max-width: 110px; width: auto; min-width: 90px; }
@@ -2690,16 +2752,101 @@ select.filter-mini-input {
 .accom-grid--compact .accom-card .accom-card-body,
 .accom-grid--compact .accom-card .accom-card-info {
   flex: 1; min-width: 0;
-  display: flex; flex-direction: column; justify-content: space-between; gap: 4px;
+  display: flex; flex-direction: column; justify-content: flex-start;
+  /* 지시 4/10 — gap 1 → 4 회복 (행간 너무 좁아 텍스트 겹침 해소) */
+  gap: 4px;
 }
-/* 카드 하단 액션 묶음 — 태그(.accom-card-chips) + 액션 버튼(.accom-card-footer / .post-mini-actions)
-   이 형제 위치일 때 한 라인에 오밀조밀 모이도록. 사용자 명시 'flex-wrap items-center gap-2'. */
+/* ─── 지시 4/10 ─ 텍스트 겹침 해결: 옛 nowrap/ellipsis 강제 해제 ─────
+   증상: 지난 압축(지시 3/4) 의 white-space:nowrap + truncate 가 모바일에서
+   긴 제목·주소를 잘라 옆 텍스트와 시각적으로 겹쳐 보임.
+   해결: 자연 줄바꿈 허용 + 2줄 line-clamp 로 우아하게 제한. */
+.accom-grid--compact .accom-card .accom-card-title2 {
+  font-size: 13px; line-height: 1.3; font-weight: 700; margin: 0;
+  /* 줄바꿈 허용 + 최대 2줄 우아한 clamp */
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  white-space: normal; overflow: hidden; word-break: break-word;
+}
+.accom-grid--compact .accom-card .accom-card-sub {
+  font-size: 12px; line-height: 1.3; color: var(--text-muted); margin: 0;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  white-space: normal; overflow: hidden; word-break: break-word;
+}
+.accom-grid--compact .accom-card .accom-card-meta {
+  font-size: 11.5px; line-height: 1.3; margin: 0;
+  white-space: normal; word-break: break-word;
+}
+.accom-grid--compact .accom-card .accom-price,
+.accom-grid--compact .accom-card .accom-card-find {
+  font-size: 13px; line-height: 1.3; font-weight: 800; margin: 0;
+  white-space: nowrap;  /* 가격은 짧으므로 줄바꿈 X — 단 영역 안에 자연 정렬 */
+}
+
+/* ─── 지시 4/10 ─ 3단 row 레이아웃 재구축 ──────────────────────────────
+   Row 1: 제목(좌, flex:1) + 액션 그룹(우 — 별★ + 5 미니버튼)
+   Row 2: 가격(좌) + 위치(우, flex:1)
+   Row 3: 세부사항(chips — flex-wrap 자유)
+   — 공간 부족 시 제목·주소 줄바꿈 우아하게 허용, 칩은 자연 줄넘김 */
+.accom-grid--compact .accom-card .accom-card-row1 {
+  display: flex; align-items: flex-start; gap: 6px;
+  min-width: 0;
+}
+.accom-grid--compact .accom-card .accom-card-row1 > .accom-card-title2 {
+  flex: 1 1 auto; min-width: 0;
+}
+.accom-grid--compact .accom-card .accom-card-actions {
+  display: flex; align-items: center; gap: 4px;
+  flex: 0 0 auto; flex-wrap: wrap; justify-content: flex-end;
+}
+.accom-grid--compact .accom-card .accom-card-actions .bookmark-btn {
+  position: static !important; top: auto; right: auto;
+  width: 24px; height: 24px; margin: 0; padding: 0;
+  font-size: 17px; line-height: 1; flex-shrink: 0;
+  background: transparent; border: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.accom-grid--compact .accom-card .accom-card-actions .post-mini-actions {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 3px;
+}
+.accom-grid--compact .accom-card .accom-card-row2 {
+  display: flex; align-items: baseline; gap: 8px;
+  flex-wrap: wrap; min-width: 0;
+}
+.accom-grid--compact .accom-card .accom-card-row2 > .accom-card-price-wrap {
+  flex: 0 0 auto;
+}
+.accom-grid--compact .accom-card .accom-card-row2 > .accom-card-sub {
+  flex: 1 1 auto; min-width: 0;
+}
+.accom-grid--compact .accom-card .accom-card-row3 {
+  display: flex; flex-wrap: wrap; gap: 4px;
+  min-width: 0;
+}
+.accom-grid--compact .accom-card .accom-card-row3 .accom-tag {
+  font-size: 10.5px; padding: 1px 6px; line-height: 1.3;
+}
+/* mini-btn — text-xs py-0.5 px-1.5 컴팩트 */
+.accom-grid--compact .accom-card .mini-btn {
+  font-size: 10px; padding: 2px 6px; line-height: 1.3;
+  min-height: 0; border-radius: 4px;
+}
+
+/* ─── 옛 마크업(line1 + bottom-row + chips 단독) 잔존 페이지(auto/jobs) — 텍스트 겹침 해제 ─
+   jobs/auto 는 카드 빌더 마크업이 다른 패턴 (footer / 외부 absolute bookmark 등).
+   3단 wrapper 미적용. 그러나 nowrap 해제는 일관 적용. */
 .accom-grid--compact .accom-card .accom-card-chips {
-  display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
-  justify-content: flex-start;   /* 옛 'flex-end' 제거 — 태그가 우측으로 날아가던 버그 해소 */
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px;
+  overflow: visible;   /* nowrap 해제 — 칩 줄넘김 자유 */
+}
+.accom-grid--compact .accom-card .accom-card-chips .accom-tag {
+  font-size: 10.5px; padding: 1px 6px; line-height: 1.3;
 }
 .accom-grid--compact .accom-card .accom-card-footer {
-  display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px;
+  font-size: 10.5px; line-height: 1.3;
+}
+.accom-grid--compact .accom-card .accom-card-bottom-row {
+  display: flex; flex-wrap: wrap; align-items: center;
+  justify-content: space-between; gap: 6px; width: 100%;
 }
 
 /* 글쓰기 모달 사진 첨부 영역 (accom·car-rent 공통) */
@@ -3293,7 +3440,7 @@ body.is-admin .admin-only.admin-only--block { display: block !important; }
 /* 약관/개인정보 모달은 회원가입 모달(z-index 3000) 위에 떠야 함 (모달 위 모달) */
 #tosOverlay, #privacyOverlay { z-index: 9999; }
 /* Google Places Autocomplete dropdown 이 write-modal 위로 올라오도록 z-index 보정 */
-.pac-container { z-index: 99999 !important; }
+.pac-container { z-index: 100000 !important; }
 .report-modal {
   background: var(--bg-base); border: 1px solid var(--border); border-radius: var(--r-xl);
   width: 100%; max-width: 420px; max-height: 88vh; overflow-y: auto; padding: 24px;

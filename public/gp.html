@@ -58,6 +58,7 @@
         <svg class="ico-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
         <svg class="ico-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
       </button>
+      <a href="mypage.html" class="topbar-my-btn" id="topbarMyBtn" aria-label="내 계정" title="내 계정 (마이페이지)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></a>
       <button class="topbar-menu-btn" id="hamburgerBtn" aria-label="메뉴 열기" aria-expanded="false">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
           <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
@@ -1566,6 +1567,8 @@
 
     // ── Filter ──
     function applyFilters(posts) {
+      // 지시 8/10 — 숨김(hidden) 처리 글은 모든 뷰(List/Map)에서 즉시 제외
+      posts = posts.filter(p => !(p.isHidden || p.status === 'hidden'));
       // Dual Range Slider 기반 가격 필터 — 기존 fbPrice 는 max 값으로 폴백 유지
       const minEl = document.getElementById('fbPriceMin');
       const maxEl = document.getElementById('fbPriceMax');
@@ -1663,18 +1666,26 @@
               : '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>'}
           </div>
           <div class="accom-card-info">
-            <div class="accom-card-line1">
-              ${priceHtml}
-              <button class="bookmark-btn${saved ? ' is-saved' : ''}" data-id="${p.id}" title="저장한 글" aria-label="저장">${saved ? '★' : '☆'}</button>
+            <!-- 지시 4/10 — Row 1: 제목(좌) + 액션(우) -->
+            <div class="accom-card-row1">
+              <div class="accom-card-title2">${escHtml(p.title)}${p.isOfficial ? '<span class="koaus-official-badge">Official</span>' : ''}</div>
+              <div class="accom-card-actions">
+                <button class="bookmark-btn${saved ? ' is-saved' : ''}" data-id="${p.id}" title="저장한 글" aria-label="저장">${saved ? '★' : '☆'}</button>
+                <div class="post-mini-actions">
+                  <button class="mini-btn mini-share" data-id="${p.id}" type="button">공유</button>
+                  ${(!isMine(p) && !window.koausIsAdmin) ? `<button class="mini-btn mini-report" data-id="${p.id}" type="button">신고</button>` : ''}
+                  ${(isMine(p) && !window.koausIsAdmin) ? `<button class="mini-btn mini-edit" data-id="${p.id}" type="button">수정</button>` : ''}
+                  ${(isMine(p) || window.koausIsAdmin) ? `<button class="mini-btn mini-hide" data-id="${p.id}" type="button">숨김</button><button class="mini-btn mini-del" data-id="${p.id}" type="button">삭제</button>` : ''}
+                </div>
+              </div>
             </div>
-            <div class="accom-card-title2">${escHtml(p.title)}${p.isOfficial ? '<span class="koaus-official-badge">Official</span>' : ''}</div>
-            ${sub ? `<div class="accom-card-sub">${isFind ? '' : '📍 '}${escHtml(sub)}</div>` : ''}
-            ${chips ? `<div class="accom-card-chips">${chips}</div>` : ''}
-            <div class="post-mini-actions">
-              <button class="mini-btn mini-share" data-id="${p.id}" type="button">공유</button>
-              <button class="mini-btn mini-report" data-id="${p.id}" type="button">신고</button>
-              ${(isMine(p) || window.koausIsAdmin) ? `<button class="mini-btn mini-edit" data-id="${p.id}" type="button">수정</button><button class="mini-btn mini-hide" data-id="${p.id}" type="button">숨김</button><button class="mini-btn mini-del" data-id="${p.id}" type="button">삭제</button>` : ''}
+            <!-- Row 2: 가격(좌) + 위치(우) -->
+            <div class="accom-card-row2">
+              ${priceHtml ? `<div class="accom-card-price-wrap">${priceHtml}</div>` : ''}
+              ${sub ? `<div class="accom-card-sub">${isFind ? '' : '📍 '}${escHtml(sub)}</div>` : ''}
             </div>
+            <!-- Row 3: 세부사항(chips) -->
+            ${chips ? `<div class="accom-card-row3">${chips}</div>` : ''}
           </div>
         </div>`;
       }).join('');

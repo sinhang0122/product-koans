@@ -64,20 +64,15 @@ function start() {
   const $next    = document.getElementById('tickerNext');
   if (!$row || !$track || !$item) return;  // notice-section 없는 페이지면 조용히 종료
 
-  // ── X 닫기 버튼 동적 inject — 모든 페이지 HTML 수정 없이 ‹/› 버튼 옆에 추가 ──
+  // ── X 닫기 버튼 — 전면 제거 (지시 2/3 · CLAUDE.md 상단 컴포넌트 배치 규격) ──
+  //   · 옛 동적 inject 패턴 폐기 — 유저가 공지를 닫지 못하도록 원천 차단.
+  //   · ‹/› 이전·다음 슬라이드 내비게이션만 유지.
+  //   · 옛 .ticker-dismiss 마크업이 잔존하더라도 안전하게 제거 (사이드이펙트 0).
   const $navGroup = $row.querySelector('.ticker-nav-group');
-  let $dismiss = null;
-  if ($navGroup && !$navGroup.querySelector('.ticker-dismiss')) {
-    $dismiss = document.createElement('button');
-    $dismiss.type = 'button';
-    $dismiss.className = 'ticker-nav ticker-dismiss';
-    $dismiss.setAttribute('aria-label', '이 공지 24시간 동안 숨기기');
-    $dismiss.setAttribute('title', '24시간 동안 숨기기');
-    $dismiss.textContent = '×';
-    $navGroup.appendChild($dismiss);
-  } else if ($navGroup) {
-    $dismiss = $navGroup.querySelector('.ticker-dismiss');
+  if ($navGroup) {
+    $navGroup.querySelectorAll('.ticker-dismiss').forEach(b => b.remove());
   }
+  const $dismiss = null;
 
   const items = [];
   let idx = 0;

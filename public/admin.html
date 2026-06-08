@@ -75,6 +75,7 @@
         <svg class="ico-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
         <svg class="ico-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
       </button>
+      <a href="mypage.html" class="topbar-my-btn" id="topbarMyBtn" aria-label="내 계정" title="내 계정 (마이페이지)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></a>
       <button class="topbar-menu-btn" id="hamburgerBtn" aria-label="메뉴 열기" aria-expanded="false">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
           <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
@@ -977,7 +978,7 @@
     //  initializeApp 직접 호출 시 'app/duplicate-app' 에러 발생 → 어드민 먹통.
     //  getApps().length 체크 후 기존 app 재사용.
     import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
-    import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, setPersistence, browserLocalPersistence } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
+    import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, setPersistence, indexedDBLocalPersistence, browserLocalPersistence, inMemoryPersistence } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
     import { getFirestore, collection, addDoc, deleteDoc, doc, getDoc, setDoc, updateDoc, onSnapshot, query, orderBy, limit, serverTimestamp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
 
     const firebaseConfig = {
@@ -993,10 +994,18 @@
     const app  = getApps().length ? getApp() : initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db   = getFirestore(app);
-    // 세션 지속성 — LOCAL (IndexedDB) 명시. 페이지 이동 / 탭 재오픈 시 토큰 자동 복원.
-    //  · admin-mark.js 도 동일 호출 (모든 페이지에서 동일 persistence 유지 — race condition 방어)
-    try { await setPersistence(auth, browserLocalPersistence); }
-    catch (e) { console.warn('[admin] persistence 설정 실패 — IndexedDB 비활성/시크릿 모드 가능', e); }
+    // 지시 6/10 — 세션 지속성 폴백 체인 (모바일 Safari ITP / Private mode 방어).
+    //  · ① indexedDBLocalPersistence (ITP 영향 적음, Firebase v9+ 권장)
+    //  · ② browserLocalPersistence  (데스크탑·기존 사용자 호환)
+    //  · ③ inMemoryPersistence      (Private mode 최후 폴백)
+    try { await setPersistence(auth, indexedDBLocalPersistence); }
+    catch (_) {
+      try { await setPersistence(auth, browserLocalPersistence); }
+      catch (_) {
+        try { await setPersistence(auth, inMemoryPersistence); }
+        catch (e) { console.warn('[admin] persistence 전체 실패', e); }
+      }
+    }
 
     // 관리자 화이트리스트 — admin-mark.js / firestore.rules 의 isAdmin() 과 동기화.
     //  · TDZ 회피 위해 fast-path / onAuthStateChanged 보다 먼저 정의.

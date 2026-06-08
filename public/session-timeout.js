@@ -11,7 +11,10 @@
 import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
 import {
   getAuth, onAuthStateChanged, signOut,
-  setPersistence, browserLocalPersistence,
+  setPersistence,
+  indexedDBLocalPersistence,
+  browserLocalPersistence,
+  inMemoryPersistence,
 } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
 
 const cfg = {
@@ -31,11 +34,49 @@ if (!window.__koausSessionInited) {
     const app  = getApps().length ? getApp() : initializeApp(cfg);
     const auth = getAuth(app);
 
-    // 1) Persistence 를 LOCAL 로 강제 — 페이지 이동·새로고침 후에도 세션 유지.
-    //    (Firebase v9+ 기본값도 LOCAL 이지만 모바일 일부 환경에서 SESSION 으로
-    //    초기화되는 사례 방지 차원에서 명시적으로 호출.)
-    setPersistence(auth, browserLocalPersistence)
-      .catch(err => console.warn('[session] setPersistence 실패 — 기본값으로 진행', err));
+    // 1) Persistence 폴백 체인 — 모바일 Safari ITP / Private mode 방어 (지시 6/10) ────
+    //    iOS Safari 의 Intelligent Tracking Prevention 은 localStorage 를 7일 후 wipe,
+    //    Private mode 는 localStorage 자체를 차단함. 단일 browserLocalPersistence 로는
+    //    페이지 이동 간 세션이 풀리는 사례 발생. 우선순위:
+    //      ① indexedDBLocalPersistence  — ITP 영향 적음, Firebase v9+ 권장
+    //      ② browserLocalPersistence    — 데스크탑·기존 사용자 호환
+    //      ③ inMemoryPersistence        — Private mode 최후 폴백 (탭 닫기 전까지 유지)
+    //    awaits 보장 — onAuthStateChanged / signIn 호출 전 persistence 확정.
+    (async () => {
+      try {
+        await setPersistence(auth, indexedDBLocalPersistence);
+        console.debug('[session] persistence: indexedDB');
+      } catch (e1) {
+        console.warn('[session] indexedDB persistence 실패 → browserLocal 시도', e1?.code || e1);
+        try {
+          await setPersistence(auth, browserLocalPersistence);
+          console.debug('[session] persistence: browserLocal');
+        } catch (e2) {
+          console.warn('[session] browserLocal persistence 실패 → inMemory 폴백', e2?.code || e2);
+          try {
+            await setPersistence(auth, inMemoryPersistence);
+            console.debug('[session] persistence: inMemory (Private mode 추정)');
+          } catch (e3) {
+            console.error('[session] persistence 전체 실패 — 기본값으로 진행', e3);
+          }
+        }
+      }
+    })();
+
+    // 1-2) 헤더 깜빡임 방어 — sessionStorage 캐시 fast-path (지시 2/4) ─────
+    //   · 옛 user 가 있었던 페이지면 진입 즉시 html[data-koaus-auth="cached-in"] 부여
+    //   · onAuthStateChanged 첫 발화 후 'in' / 'out' 으로 정정
+    //   · 페이지별 헤더 코드는 그대로 두고 CSS 가 깜빡임만 봉쇄
+    try {
+      const cachedUid = sessionStorage.getItem('koaus-auth-uid');
+      if (cachedUid) {
+        document.documentElement.setAttribute('data-koaus-auth', 'cached-in');
+      } else {
+        document.documentElement.setAttribute('data-koaus-auth', 'checking');
+      }
+    } catch (_) {
+      document.documentElement.setAttribute('data-koaus-auth', 'checking');
+    }
 
     // 2) 미활동 자동 로그아웃 ─────────────────────────────────────────
     const INACTIVITY_MS = 60 * 60 * 1000;  // 1 시간
@@ -128,8 +169,13 @@ if (!window.__koausSessionInited) {
       isLoggingOut = false;
       if (user) {
         resetTimer();
+        // 다음 페이지 진입 시 fast-path 용 sessionStorage 캐시 (지시 2/4)
+        try { sessionStorage.setItem('koaus-auth-uid', String(user.uid || '')); } catch (_) {}
+        document.documentElement.setAttribute('data-koaus-auth', 'in');
       } else {
         stopTimer();
+        try { sessionStorage.removeItem('koaus-auth-uid'); } catch (_) {}
+        document.documentElement.setAttribute('data-koaus-auth', 'out');
       }
     });
   } catch (e) {

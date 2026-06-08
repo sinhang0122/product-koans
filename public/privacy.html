@@ -8,6 +8,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;800;900&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
+  <!-- 지시 1/4 — 본문 한정 Tailwind utility (영문/한글 정책 본문 마크업용) -->
+  <script src="https://cdn.tailwindcss.com"></script>
   <script>
     (function () {
       const saved = localStorage.getItem('koaus-theme');
@@ -53,6 +55,7 @@
         <svg class="ico-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
         <svg class="ico-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
       </button>
+      <a href="mypage.html" class="topbar-my-btn" id="topbarMyBtn" aria-label="내 계정" title="내 계정 (마이페이지)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></a>
       <button class="topbar-menu-btn" id="hamburgerBtn" aria-label="메뉴 열기" aria-expanded="false">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
           <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
@@ -479,74 +482,74 @@
       <!-- ════════════════════════════════════════════════════════════════
            ENGLISH VERSION (상단 배치)
            ════════════════════════════════════════════════════════════════ -->
-      <div id="privacy-en">
-        <p style="display:inline-block;font-size:11px;font-weight:800;color:#1e3a8a;background:rgba(30,58,138,0.08);border:1px solid rgba(30,58,138,0.18);padding:3px 10px;border-radius:999px;letter-spacing:0.06em;margin:0 0 14px;">ENGLISH VERSION</p>
-        <h1 style="font-size:30px;font-weight:900;color:var(--text-primary);margin:0 0 6px;letter-spacing:-0.01em;line-height:1.25;">Privacy Policy</h1>
-        <p style="font-size:13.5px;color:var(--text-muted);margin:0 0 22px;font-weight:600;">Effective Date: 3 June 2026</p>
+      <div id="privacy-en" class="tw">
+        <p class="inline-block px-3 py-1 mb-4 rounded-full bg-blue-50 text-blue-900 text-[11px] font-extrabold tracking-widest border border-blue-200">ENGLISH VERSION</p>
+        <h1 class="text-3xl font-black tracking-tight leading-tight mb-1" style="color:var(--text-primary);">Privacy Policy</h1>
+        <p class="text-sm font-semibold mb-6" style="color:var(--text-muted);">Effective Date: 3 June 2026</p>
 
-        <section class="legal-article">
-          <p>KIM SHINHAENG (MR SHINHAENG KIM), trading as &ldquo;Koaus Community&rdquo; (&ldquo;KoAus&rdquo;, &ldquo;we&rdquo;, &ldquo;us&rdquo;) is committed to complying with the Privacy Act 1988 (Cth) and the Australian Privacy Principles (APPs). This policy explains how we collect, use, store and disclose personal information.</p>
+        <p class="text-[14.5px] leading-relaxed mb-6" style="color:var(--text-secondary);">KIM SHINHAENG (MR SHINHAENG KIM), trading as &ldquo;Koaus Community&rdquo; (&ldquo;KoAus&rdquo;, &ldquo;we&rdquo;, &ldquo;us&rdquo;) is committed to complying with the Privacy Act 1988 (Cth) and the Australian Privacy Principles (APPs). This policy explains how we collect, use, store and disclose personal information.</p>
+
+        <section class="mb-6">
+          <h2 class="text-lg font-bold mb-2" style="color:var(--text-primary);">1. Information we collect</h2>
+          <p class="text-[14.5px] leading-relaxed" style="color:var(--text-secondary);">We collect only the information needed to provide the service: name, mobile number (used for SMS identity verification), email address (provided via Google sign-in or as an optional contact), account details, content you post, IP address and device/log information. Google reCAPTCHA may collect device information for mobile verification, security and bot prevention. We also collect listing location information (address and coordinates) when you post a share/rent or used-car listing.</p>
         </section>
 
-        <section class="legal-article">
-          <h2 class="legal-article-title">1. Information we collect</h2>
-          <p>We collect only the information needed to provide the service: name, mobile number (used for SMS identity verification), email address (provided via Google sign-in or as an optional contact), account details, content you post, IP address and device/log information. Google reCAPTCHA may collect device information for mobile verification, security and bot prevention.</p>
+        <section class="mb-6">
+          <h2 class="text-lg font-bold mb-2" style="color:var(--text-primary);">2. How we collect it</h2>
+          <p class="text-[14.5px] leading-relaxed" style="color:var(--text-secondary);">We collect information when you register and verify your identity by mobile (SMS), sign in with Google, post content, make bookings or enquiries, and contact support. Mobile verification works by sending an SMS code to the mobile number you provide to confirm it is you. If you use Google sign-in, we may receive your email, name and profile information from Google.</p>
         </section>
 
-        <section class="legal-article">
-          <h2 class="legal-article-title">2. How we collect it</h2>
-          <p>We collect information when you register and verify your identity by mobile (SMS), sign in with Google, post content, make bookings or enquiries, and contact support. Mobile verification works by sending an SMS code to the mobile number you provide to confirm it is you. If you use Google sign-in, we may receive your email, name and profile information from Google.</p>
+        <section class="mb-6">
+          <h2 class="text-lg font-bold mb-2" style="color:var(--text-primary);">3. How we use it</h2>
+          <p class="text-[14.5px] leading-relaxed" style="color:var(--text-secondary);">We use information only for account management and authentication, connecting posts/bookings/enquiries, customer support, spam and fraud prevention, operating and improving the service, and meeting legal obligations.</p>
         </section>
 
-        <section class="legal-article">
-          <h2 class="legal-article-title">3. How we use it</h2>
-          <p>We use information only for account management and authentication, connecting posts/bookings/enquiries, customer support, spam and fraud prevention, operating and improving the service, and meeting legal obligations.</p>
+        <section class="mb-6">
+          <h2 class="text-lg font-bold mb-2" style="color:var(--text-primary);">4. Cookies and analytics</h2>
+          <p class="text-[14.5px] leading-relaxed" style="color:var(--text-secondary);">We may use cookies and similar technologies for essential functions (such as keeping you logged in) and for Google Analytics. You can refuse cookies in your browser settings, though some features may not work.</p>
         </section>
 
-        <section class="legal-article">
-          <h2 class="legal-article-title">4. Cookies and analytics</h2>
-          <p>We may use cookies and similar technologies for essential functions (such as keeping you logged in) and for Google Analytics. You can refuse cookies in your browser settings, though some features may not work.</p>
+        <section class="mb-6">
+          <h2 class="text-lg font-bold mb-2" style="color:var(--text-primary);">5. Disclosure to third parties</h2>
+          <p class="text-[14.5px] leading-relaxed mb-3" style="color:var(--text-secondary);">When you book or enquire with a business listed on the platform (sharehouse, mechanic, car rental, towing, etc.), we pass your name and contact details to that business so the service can proceed. We do not otherwise sell or disclose your personal information to third parties except as required by law. We obtain separate consent for this disclosure at the time of the booking or enquiry.</p>
+          <p class="text-[14.5px] leading-relaxed" style="color:var(--text-secondary);">For share/rent and used-car listings, if the poster selects &ldquo;private&rdquo;, only an approximate location is shown publicly and the exact address is restricted to the poster and administrators. The exact address or contact details may be shared with another user where the poster chooses to provide them during contact, or (where a booking feature is used) with a user whose booking has been approved. Any such sharing between users is at the users&rsquo; own discretion and responsibility.</p>
         </section>
 
-        <section class="legal-article">
-          <h2 class="legal-article-title">5. Disclosure to third parties</h2>
-          <p>When you book or enquire with a business listed on the platform (sharehouse, mechanic, car rental, towing, etc.), we pass your name and contact details to that business solely for the purpose of ensuring smooth consultation and service delivery. We do not otherwise sell or disclose your personal information to third parties except as required by law. We obtain separate consent for this disclosure at the time of the booking or enquiry.</p>
+        <section class="mb-6">
+          <h2 class="text-lg font-bold mb-2" style="color:var(--text-primary);">6. Marketing and notifications</h2>
+          <p class="text-[14.5px] leading-relaxed" style="color:var(--text-secondary);">If we send marketing or promotional messages, we comply with the Spam Act 2003 (Cth): we obtain consent and include sender details and an unsubscribe option in every message. Essential service notifications may not be subject to opt-out.</p>
         </section>
 
-        <section class="legal-article">
-          <h2 class="legal-article-title">6. Marketing and notifications</h2>
-          <p>If we send marketing or promotional messages, we comply with the Spam Act 2003 (Cth): we obtain consent and include sender details and an unsubscribe option in every message. Essential service notifications may not be subject to opt-out.</p>
+        <section class="mb-6">
+          <h2 class="text-lg font-bold mb-2" style="color:var(--text-primary);">7. Data security and overseas disclosure</h2>
+          <p class="text-[14.5px] leading-relaxed" style="color:var(--text-secondary);">Information is stored on cloud servers (Firebase/Google) and may be stored or processed in countries outside Australia (e.g. the United States) to deliver the service (APP 8). We take reasonable steps to protect it from unauthorised access.</p>
         </section>
 
-        <section class="legal-article">
-          <h2 class="legal-article-title">7. Data security and overseas disclosure</h2>
-          <p>Information is stored on cloud servers (Firebase/Google) and is stored or processed in Australia to deliver the service (APP 8). We take reasonable steps to protect it from unauthorised access.</p>
+        <section class="mb-6">
+          <h2 class="text-lg font-bold mb-2" style="color:var(--text-primary);">8. Data breach notification</h2>
+          <p class="text-[14.5px] leading-relaxed" style="color:var(--text-secondary);">In the event of an eligible data breach, we will notify affected individuals and the Office of the Australian Information Commissioner (OAIC) under the Notifiable Data Breaches (NDB) scheme.</p>
         </section>
 
-        <section class="legal-article">
-          <h2 class="legal-article-title">8. Data breach notification</h2>
-          <p>In the event of an eligible data breach, we will notify affected individuals and the Office of the Australian Information Commissioner (OAIC) under the Notifiable Data Breaches (NDB) scheme.</p>
+        <section class="mb-6">
+          <h2 class="text-lg font-bold mb-2" style="color:var(--text-primary);">9. Retention and destruction</h2>
+          <p class="text-[14.5px] leading-relaxed" style="color:var(--text-secondary);">We destroy personal information when its purpose is fulfilled or any legal retention period ends. To prevent misuse, we may retain it in encrypted form for 6 months after account closure before destruction.</p>
         </section>
 
-        <section class="legal-article">
-          <h2 class="legal-article-title">9. Retention and destruction</h2>
-          <p>We destroy personal information when its purpose is fulfilled or any legal retention period ends. To prevent fraud, transaction scams, and malicious re-registration, we may securely retain personal identifying information in an encrypted format for 6 months after account closure before permanent destruction.</p>
+        <section class="mb-6">
+          <h2 class="text-lg font-bold mb-2" style="color:var(--text-primary);">10. Automated decision-making</h2>
+          <p class="text-[14.5px] leading-relaxed" style="color:var(--text-secondary);">We may use automated processing (e.g. automated spam filtering/blocking) that could significantly affect you, and we provide information about it and its effects. (Australia&rsquo;s automated decision-making transparency obligations are due to commence on 10 December 2026.)</p>
         </section>
 
-        <section class="legal-article">
-          <h2 class="legal-article-title">10. Automated decision-making</h2>
-          <p>We use automated processing, including automated spam filtering and AI-driven content moderation/blocking, to protect the platform from harmful or fraudulent activities. This may affect the visibility of certain posts or restrict access for violating accounts. If a legitimate post is mistakenly hidden or restricted by the AI filtering system, please contact our support email (<a href="mailto:koaus.official@gmail.com">koaus.official@gmail.com</a>) for immediate review and restoration.</p>
+        <section class="mb-6">
+          <h2 class="text-lg font-bold mb-2" style="color:var(--text-primary);">11. Minors</h2>
+          <p class="text-[14.5px] leading-relaxed" style="color:var(--text-secondary);">This service is intended for people aged 18 and over. If we become aware that a user is under 18, we may delete the relevant account and information.</p>
         </section>
 
-        <section class="legal-article">
-          <h2 class="legal-article-title">11. Minors</h2>
-          <p>This service is intended for people aged 18 and over. If we become aware that a user is under 18, we may delete the relevant account and information.</p>
-        </section>
-
-        <section class="legal-article">
-          <h2 class="legal-article-title">12. Your rights, enquiries and complaints</h2>
-          <p>You may request access to, correction of, or deletion of your personal information. Send requests and privacy complaints to <a href="mailto:koaus.official@gmail.com">koaus.official@gmail.com</a>; we will respond within a reasonable time. If you are not satisfied with our response, you may complain to the Office of the Australian Information Commissioner (OAIC, <a href="https://www.oaic.gov.au" target="_blank" rel="noopener noreferrer">www.oaic.gov.au</a>).</p>
-          <p style="margin-top:14px;font-size:13px;color:var(--text-secondary);"><strong>Privacy Officer email:</strong> <a href="mailto:koaus.official@gmail.com">koaus.official@gmail.com</a></p>
+        <section class="mb-6">
+          <h2 class="text-lg font-bold mb-2" style="color:var(--text-primary);">12. Your rights, enquiries and complaints</h2>
+          <p class="text-[14.5px] leading-relaxed" style="color:var(--text-secondary);">You may request access to, correction of, or deletion of your personal information. Send requests and privacy complaints to <a href="mailto:koaus.official@gmail.com" class="text-blue-700 underline hover:no-underline">koaus.official@gmail.com</a>; we will respond within a reasonable time. If you are not satisfied with our response, you may complain to the Office of the Australian Information Commissioner (OAIC, <a href="https://www.oaic.gov.au" target="_blank" rel="noopener noreferrer" class="text-blue-700 underline hover:no-underline">www.oaic.gov.au</a>).</p>
+          <p class="text-[13px] mt-4" style="color:var(--text-secondary);"><strong>Privacy Officer email:</strong> <a href="mailto:koaus.official@gmail.com" class="text-blue-700 underline hover:no-underline">koaus.official@gmail.com</a></p>
+          <p class="text-[13px] mt-2" style="color:var(--text-secondary);"><strong>Effective date:</strong> 3 June 2026</p>
         </section>
       </div>
 
@@ -556,74 +559,74 @@
       <!-- ════════════════════════════════════════════════════════════════
            KOREAN VERSION (하단 배치)
            ════════════════════════════════════════════════════════════════ -->
-      <div id="privacy-ko">
-        <p style="display:inline-block;font-size:11px;font-weight:800;color:#1e3a8a;background:rgba(30,58,138,0.08);border:1px solid rgba(30,58,138,0.18);padding:3px 10px;border-radius:999px;letter-spacing:0.06em;margin:0 0 14px;">한국어 버전</p>
-        <h1 style="font-size:30px;font-weight:900;color:var(--text-primary);margin:0 0 6px;letter-spacing:-0.01em;line-height:1.25;">개인정보처리방침</h1>
-        <p style="font-size:13.5px;color:var(--text-muted);margin:0 0 22px;font-weight:600;">시행일: 2026년 6월 3일</p>
+      <div id="privacy-ko" class="tw">
+        <p class="inline-block px-3 py-1 mb-4 rounded-full bg-blue-50 text-blue-900 text-[11px] font-extrabold tracking-widest border border-blue-200">한국어 버전</p>
+        <h1 class="text-3xl font-black tracking-tight leading-tight mb-1" style="color:var(--text-primary);">개인정보처리방침</h1>
+        <p class="text-sm font-semibold mb-6" style="color:var(--text-muted);">시행일: 2026년 6월 3일</p>
 
-        <section class="legal-article">
-          <p>김신행 (MR SHINHAENG KIM), 사업자명 &ldquo;Koaus Community&rdquo;(이하 &ldquo;KoAus&rdquo;, &ldquo;당사&rdquo;)은 「Privacy Act 1988 (Cth)」 및 호주 개인정보보호원칙(APPs)을 준수하기 위해 노력합니다. 본 방침은 당사가 개인정보를 어떻게 수집·이용·보관·공개하는지 설명합니다.</p>
+        <p class="text-[14.5px] leading-relaxed mb-6" style="color:var(--text-secondary);">김신행 (MR SHINHAENG KIM), 사업자명 &ldquo;Koaus Community&rdquo;(이하 &ldquo;KoAus&rdquo;, &ldquo;당사&rdquo;)은 「Privacy Act 1988 (Cth)」 및 호주 개인정보보호원칙(APPs)을 준수하기 위해 노력합니다. 본 방침은 당사가 개인정보를 어떻게 수집·이용·보관·공개하는지 설명합니다.</p>
+
+        <section class="mb-6">
+          <h2 class="text-lg font-bold mb-2" style="color:var(--text-primary);">1. 수집하는 정보</h2>
+          <p class="text-[14.5px] leading-relaxed" style="color:var(--text-secondary);">당사는 서비스 제공에 필요한 최소한의 정보만 수집합니다: 성명, 휴대전화번호(SMS 본인인증에 사용), 이메일 주소(Google 로그인 시 제공되거나 선택적 연락처), 계정 정보, 게시물 내용, 접속 IP 및 기기·로그 정보. 휴대폰 본인인증 및 봇 차단을 위해 Google reCAPTCHA가 기기 정보를 수집할 수 있습니다. 또한 쉐어/렌트 및 중고차 매물을 등록할 때 매물 위치 정보(주소 및 좌표)를 수집합니다.</p>
         </section>
 
-        <section class="legal-article">
-          <h2 class="legal-article-title">1. 수집하는 정보</h2>
-          <p>당사는 서비스 제공에 필요한 최소한의 정보만 수집합니다: 성명, 휴대전화번호(SMS 본인인증에 사용), 이메일 주소(Google 로그인 시 제공되거나 선택적 연락처), 계정 정보, 게시물 내용, 접속 IP 및 기기·로그 정보. 휴대폰 본인인증 및 봇 차단을 위해 Google reCAPTCHA가 기기 정보를 수집할 수 있습니다.</p>
+        <section class="mb-6">
+          <h2 class="text-lg font-bold mb-2" style="color:var(--text-primary);">2. 수집 방법</h2>
+          <p class="text-[14.5px] leading-relaxed" style="color:var(--text-secondary);">회원가입 및 휴대폰(SMS) 본인인증, Google 로그인, 게시물 작성, 예약·문의, 고객지원 과정에서 수집합니다. 휴대폰 인증은 입력하신 휴대전화번호로 SMS 인증코드를 발송하여 본인 여부를 확인하는 방식입니다. Google 로그인 이용 시 Google로부터 이메일·이름·프로필 정보를 받을 수 있습니다.</p>
         </section>
 
-        <section class="legal-article">
-          <h2 class="legal-article-title">2. 수집 방법</h2>
-          <p>회원가입 및 휴대폰(SMS) 본인인증, Google 로그인, 게시물 작성, 예약·문의, 고객지원 과정에서 수집합니다. 휴대폰 인증은 입력하신 휴대전화번호로 SMS 인증코드를 발송하여 본인 여부를 확인하는 방식입니다. Google 로그인 이용 시 Google로부터 이메일·이름·프로필 정보를 받을 수 있습니다.</p>
+        <section class="mb-6">
+          <h2 class="text-lg font-bold mb-2" style="color:var(--text-primary);">3. 이용 목적</h2>
+          <p class="text-[14.5px] leading-relaxed" style="color:var(--text-secondary);">계정 관리·인증, 게시·예약·문의 연동, 고객지원, 스팸·부정이용 차단, 서비스 운영·개선, 법적 의무 이행 목적으로만 이용합니다.</p>
         </section>
 
-        <section class="legal-article">
-          <h2 class="legal-article-title">3. 이용 목적</h2>
-          <p>계정 관리·인증, 게시·예약·문의 연동, 고객지원, 스팸·부정이용 차단, 서비스 운영·개선, 법적 의무 이행 목적으로만 이용합니다.</p>
+        <section class="mb-6">
+          <h2 class="text-lg font-bold mb-2" style="color:var(--text-primary);">4. 쿠키 및 분석</h2>
+          <p class="text-[14.5px] leading-relaxed" style="color:var(--text-secondary);">당사는 로그인 유지 등 필수 기능과 Google Analytics를 위해 쿠키 및 유사 기술을 사용할 수 있습니다. 브라우저 설정에서 쿠키를 거부할 수 있으나 일부 기능이 제한될 수 있습니다.</p>
         </section>
 
-        <section class="legal-article">
-          <h2 class="legal-article-title">4. 쿠키 및 분석</h2>
-          <p>당사는 로그인 유지 등 필수 기능과 Google Analytics를 위해 쿠키 및 유사 기술을 사용할 수 있습니다. 브라우저 설정에서 쿠키를 거부할 수 있으나 일부 기능이 제한될 수 있습니다.</p>
+        <section class="mb-6">
+          <h2 class="text-lg font-bold mb-2" style="color:var(--text-primary);">5. 제3자 제공</h2>
+          <p class="text-[14.5px] leading-relaxed mb-3" style="color:var(--text-secondary);">이용자가 플랫폼 내 업체(쉐어하우스, 정비, 렌터카, 견인 등)에 예약·문의할 경우, 서비스 진행을 위해 해당 업체에 이용자의 성명·연락처가 전달됩니다. 당사는 이 외에 법령에 의한 경우를 제외하고 개인정보를 제3자에게 판매·제공하지 않습니다. 이 제공에 대해서는 예약·문의 시점에 별도 동의를 받습니다.</p>
+          <p class="text-[14.5px] leading-relaxed" style="color:var(--text-secondary);">쉐어/렌트 및 중고차 매물의 경우, 게시자가 &lsquo;비공개&rsquo;로 설정하면 공개 화면에는 대략적인 위치만 표시되고 정확한 주소는 게시자와 관리자에게만 접근이 제한됩니다. 정확한 주소·연락처는 게시자가 연락 과정에서 직접 제공하거나, (예약 기능 이용 시) 예약이 승인된 이용자에게 공유될 수 있습니다. 이용자 간 이러한 정보 공유는 본인의 선택과 책임 하에 이루어집니다.</p>
         </section>
 
-        <section class="legal-article">
-          <h2 class="legal-article-title">5. 제3자 제공</h2>
-          <p>이용자가 플랫폼 내 업체(쉐어하우스, 정비, 렌터카, 견인 등)에 예약·문의할 경우, 원활한 상담과 서비스 진행을 위해 해당 업체에 이용자의 성명·연락처가 전달됩니다. 당사는 이 외에 법령에 의한 경우를 제외하고 개인정보를 제3자에게 판매·제공하지 않습니다. 이 제공에 대해서는 예약·문의 시점에 별도 동의를 받습니다.</p>
+        <section class="mb-6">
+          <h2 class="text-lg font-bold mb-2" style="color:var(--text-primary);">6. 마케팅 및 알림</h2>
+          <p class="text-[14.5px] leading-relaxed" style="color:var(--text-secondary);">당사가 마케팅·홍보성 메시지를 보내는 경우 「Spam Act 2003 (Cth)」에 따라 사전 동의를 받고, 모든 메시지에 발신자 정보와 수신거부(unsubscribe) 수단을 포함합니다. 서비스 운영상 필수 알림은 수신거부 대상이 아닐 수 있습니다.</p>
         </section>
 
-        <section class="legal-article">
-          <h2 class="legal-article-title">6. 마케팅 및 알림</h2>
-          <p>당사가 마케팅·홍보성 메시지를 보내는 경우 「Spam Act 2003 (Cth)」에 따라 사전 동의를 받고, 모든 메시지에 발신자 정보와 수신거부(unsubscribe) 수단을 포함합니다. 서비스 운영상 필수 알림은 수신거부 대상이 아닐 수 있습니다.</p>
+        <section class="mb-6">
+          <h2 class="text-lg font-bold mb-2" style="color:var(--text-primary);">7. 데이터 보안 및 해외 이전</h2>
+          <p class="text-[14.5px] leading-relaxed" style="color:var(--text-secondary);">수집된 정보는 클라우드 서버(Firebase/Google)에 보관되며, 서비스 제공을 위해 호주 외 국가(미국 등)에 저장·처리될 수 있습니다(APP 8). 당사는 무단 접근을 막기 위한 합리적 보안 조치를 취합니다.</p>
         </section>
 
-        <section class="legal-article">
-          <h2 class="legal-article-title">7. 데이터 보안 및 해외 이전</h2>
-          <p>수집된 정보는 클라우드 서버(Firebase/Google)에 보관되며, 서비스 제공을 위해 호주 내 서버에서 저장·처리됩니다(APP 8). 당사는 무단 접근을 막기 위한 합리적 보안 조치를 취합니다.</p>
+        <section class="mb-6">
+          <h2 class="text-lg font-bold mb-2" style="color:var(--text-primary);">8. 데이터 유출 통지</h2>
+          <p class="text-[14.5px] leading-relaxed" style="color:var(--text-secondary);">심각한(eligible) 데이터 유출 발생 시 「Notifiable Data Breaches(NDB)」 제도에 따라 영향을 받는 이용자와 호주 정보보호위원회(OAIC)에 통지합니다.</p>
         </section>
 
-        <section class="legal-article">
-          <h2 class="legal-article-title">8. 데이터 유출 통지</h2>
-          <p>심각한(eligible) 데이터 유출 발생 시 「Notifiable Data Breaches(NDB)」 제도에 따라 영향을 받는 이용자와 호주 정보보호위원회(OAIC)에 통지합니다.</p>
+        <section class="mb-6">
+          <h2 class="text-lg font-bold mb-2" style="color:var(--text-primary);">9. 보관 및 파기</h2>
+          <p class="text-[14.5px] leading-relaxed" style="color:var(--text-secondary);">개인정보는 이용 목적 달성 또는 법정 보관기간 종료 시 파기합니다. 부정이용 방지를 위해 탈퇴 후 6개월 동안 암호화 보관 후 파기할 수 있습니다.</p>
         </section>
 
-        <section class="legal-article">
-          <h2 class="legal-article-title">9. 보관 및 파기</h2>
-          <p>개인정보는 이용 목적 달성 또는 법정 보관기간 종료 시 파기합니다. 단, 중고거래 사기, 먹튀 등 범죄 피해를 예방하고 악의적인 재가입을 막기 위해 탈퇴 후 6개월 동안 식별 정보를 안전하게 암호화 보관한 후 파기합니다.</p>
+        <section class="mb-6">
+          <h2 class="text-lg font-bold mb-2" style="color:var(--text-primary);">10. 자동화된 의사결정</h2>
+          <p class="text-[14.5px] leading-relaxed" style="color:var(--text-secondary);">당사는 자동 스팸 필터링·차단 등 이용자에게 중대한 영향을 줄 수 있는 자동화 처리를 사용할 수 있으며, 그 내용과 영향에 대한 정보를 제공합니다. (호주의 자동화된 의사결정 투명성 의무는 2026년 12월 10일 시행 예정입니다.)</p>
         </section>
 
-        <section class="legal-article">
-          <h2 class="legal-article-title">10. 자동화된 의사결정</h2>
-          <p>당사는 플랫폼 내 유해 및 사기 활동 방지를 위해 자동 스팸 필터링 및 AI 기반 콘텐츠 모더레이션/차단 등 자동화된 처리를 사용합니다. 이는 특정 게시물의 노출 여부에 영향을 주거나 이용 정책 위반 계정의 접근을 제한할 수 있습니다. 만약 정상적인 게시물이 AI의 오판으로 인해 차단되거나 숨김 처리된 경우, 고객센터 이메일(<a href="mailto:koaus.official@gmail.com">koaus.official@gmail.com</a>)로 문의하시면 확인 후 즉시 복구해 드립니다.</p>
+        <section class="mb-6">
+          <h2 class="text-lg font-bold mb-2" style="color:var(--text-primary);">11. 미성년자</h2>
+          <p class="text-[14.5px] leading-relaxed" style="color:var(--text-secondary);">본 서비스는 만 18세 이상을 대상으로 합니다. 만 18세 미만임을 인지한 경우 해당 계정·정보를 삭제할 수 있습니다.</p>
         </section>
 
-        <section class="legal-article">
-          <h2 class="legal-article-title">11. 미성년자</h2>
-          <p>본 서비스는 만 18세 이상을 대상으로 합니다. 만 18세 미만임을 인지한 경우 해당 계정·정보를 삭제할 수 있습니다.</p>
-        </section>
-
-        <section class="legal-article">
-          <h2 class="legal-article-title">12. 이용자의 권리 및 문의·민원</h2>
-          <p>이용자는 자신의 개인정보 열람·정정·삭제를 요청할 수 있습니다. 요청 및 개인정보 관련 민원은 <a href="mailto:koaus.official@gmail.com">koaus.official@gmail.com</a> 으로 접수하며, 당사는 합리적 기간 내에 처리합니다. 처리 결과에 만족하지 못할 경우 호주 정보보호위원회(OAIC, <a href="https://www.oaic.gov.au" target="_blank" rel="noopener noreferrer">www.oaic.gov.au</a>)에 민원을 제기할 수 있습니다.</p>
-          <p style="margin-top:14px;font-size:13px;color:var(--text-secondary);"><strong>개인정보보호책임자 이메일:</strong> <a href="mailto:koaus.official@gmail.com">koaus.official@gmail.com</a></p>
+        <section class="mb-6">
+          <h2 class="text-lg font-bold mb-2" style="color:var(--text-primary);">12. 이용자의 권리 및 문의·민원</h2>
+          <p class="text-[14.5px] leading-relaxed" style="color:var(--text-secondary);">이용자는 자신의 개인정보 열람·정정·삭제를 요청할 수 있습니다. 요청 및 개인정보 관련 민원은 <a href="mailto:koaus.official@gmail.com" class="text-blue-700 underline hover:no-underline">koaus.official@gmail.com</a> 으로 접수하며, 당사는 합리적 기간 내에 처리합니다. 처리 결과에 만족하지 못할 경우 호주 정보보호위원회(OAIC, <a href="https://www.oaic.gov.au" target="_blank" rel="noopener noreferrer" class="text-blue-700 underline hover:no-underline">www.oaic.gov.au</a>)에 민원을 제기할 수 있습니다.</p>
+          <p class="text-[13px] mt-4" style="color:var(--text-secondary);"><strong>개인정보보호책임자 이메일:</strong> <a href="mailto:koaus.official@gmail.com" class="text-blue-700 underline hover:no-underline">koaus.official@gmail.com</a></p>
+          <p class="text-[13px] mt-2" style="color:var(--text-secondary);"><strong>시행일:</strong> 2026년 6월 3일</p>
         </section>
       </div>
 

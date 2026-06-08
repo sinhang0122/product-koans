@@ -57,6 +57,7 @@
         <svg class="ico-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
         <svg class="ico-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
       </button>
+      <a href="mypage.html" class="topbar-my-btn" id="topbarMyBtn" aria-label="내 계정" title="내 계정 (마이페이지)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></a>
       <button class="topbar-menu-btn" id="hamburgerBtn" aria-label="메뉴 열기" aria-expanded="false">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
           <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
@@ -845,19 +846,35 @@
     // 즉 onAd 콜백 등록이 첫 render 전에 완료됨 — 인벤토리 fetch 결과를 받아 정상 호출.
     (function () {
       if (!window.KoAusAds) return;
+      // koaus-ads.js 가 OPTIONS.mountSelector('#heroAd') 기반 자동 inject 모드로 변하지 않도록
+      // 명시적으로 callback 모드 + onlyOnHome 재고정 (방어 가드 — koaus-ads.js 옵션 외부 변경 차단).
+      try {
+        window.KoAusAds.config.renderMode  = 'callback';
+        window.KoAusAds.config.onlyOnHome  = true;
+        // mountSelector 가 우연히 .notice-section 부모(.page-container 등)를 가리키지 않도록 무효 ID 강제.
+        window.KoAusAds.config.mountSelector = '#__koaus_ads_disabled_mount__';
+      } catch (_) {}
       window.KoAusAds.config.onAd = function (payload) {
         try {
           var ad = payload && payload.ad;
           if (!ad || !ad.img) return;
-          // 1) 기존 Swiper 인스턴스 조회 (Swiper 11+ 가 element 에 자동 노출)
-          var hostEl = document.querySelector('#heroSwiperHome');
-          if (!hostEl || !hostEl.swiper) return;  // 아직 init 전이면 silent skip
-          // 2) URL 화이트리스트 검증 — javascript:/data: 차단 (koaus-url-guard.js 활용)
+          // 1) 히어로 Swiper 인스턴스 — 엄격하게 #heroSwiperHome 만 한정 (지시 1/4 — 타겟 충돌 방지).
+          //    절대 .notice-section / .page-container / body 영역으로 fallback 하지 않음.
+          var hostEl = document.querySelector('#heroSwiperHome.swiper');
+          if (!hostEl) hostEl = document.querySelector('#heroSwiperHome');   // id 만 매칭 — 추가 안전망
+          if (!hostEl) { if (window.console && console.warn) console.warn('[koaus-ads] #heroSwiperHome 미존재 — append 중단'); return; }
+          if (!hostEl.swiper) { if (window.console && console.warn) console.warn('[koaus-ads] Swiper 인스턴스 미준비 — append 중단'); return; }
+          // 2) 추가 sanity check — hostEl 이 notice-section 안에 있지 않은지 검증 (방어적)
+          if (hostEl.closest && hostEl.closest('.notice-section')) {
+            console.warn('[koaus-ads] hostEl 이 .notice-section 안에 위치 — 안전상 append 중단');
+            return;
+          }
+          // 3) URL 화이트리스트 검증 — javascript:/data: 차단 (koaus-url-guard.js 활용)
           var ug = window.koausUrlGuard;
           var safeHref = (ug && ug.isSafeHttp(ad.href)) ? ad.href : '';
           var safeImg  = (ug && ug.isSafeHttp(ad.img))  ? ad.img : '';
           if (!safeImg) return;
-          // 3) 중복 append 방어 — 같은 ad.id 가 이미 슬라이드에 있으면 skip
+          // 4) 중복 append 방어 — 같은 ad.id 가 이미 슬라이드에 있으면 skip
           if (ad.id && hostEl.querySelector('[data-koaus-ad-id="' + String(ad.id).replace(/"/g, '') + '"]')) return;
           // 4) 기존 buildAdminSlide 와 동일한 HTML 규격 — append-only
           var esc = function (s) {

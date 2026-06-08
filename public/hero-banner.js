@@ -453,7 +453,13 @@
   }
 
   async function run() {
-    const containers = Array.from(document.querySelectorAll('[data-koaus-hero-cat]'));
+    // ── 지시 1/10 ── notice-section 보호 가드 ────────────────────────
+    // 1) data-koaus-hero-cat 컨테이너가 .notice-section 의 자손이면 무시 (마크업 회귀 방어)
+    // 2) 컨테이너 자체가 .notice-section 의 형제로 직전에 있을 경우에도 fetch 결과 innerHTML 작성은
+    //    그 컨테이너 안에만 일어남 — notice 의 부모/형제 DOM 은 절대 건드리지 않음.
+    // 3) 옛 inline placeholder 가 있을 경우(아직 :empty 가 아님) 그대로 innerHTML 로 교체.
+    const containers = Array.from(document.querySelectorAll('[data-koaus-hero-cat]'))
+      .filter(c => !c.closest('.notice-section'));
     if (!containers.length) return;
     // 1) admin 배너 fetch (단일 fetch 캐시, 모든 컨테이너 공통)
     //    fetch 결과 없으면 SLOTS fallback 으로 즉시 진입
