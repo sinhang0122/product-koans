@@ -491,45 +491,51 @@ service cloud.firestore {
     //   · 비admin write 거부 / 임의 필드는 옵션 검증으로만 통제 (보안 약화 0)
     match /notices/{id} {
       allow read: if true;
-      allow create, update, delete: if isAdmin()
-                                       && reqStr('text', 1, 1000)
-                                       && optStr('link', 500)
-                                       && optStr('url', 500)
-                                       && optStr('sponsor', 100)
-                                       && optStr('action', 30)
-                                       && optInt('priority', 0, 9999)
-                                       && optBool('active');
+      // delete 는 데이터 검증과 분리 — delete 요청엔 request.resource.data 가 없어
+      // create/update 와 묶으면 reqStr 평가가 에러 → admin 도 삭제 불가 버그 (2026-06 수정)
+      allow create, update: if isAdmin()
+                               && reqStr('text', 1, 1000)
+                               && optStr('link', 500)
+                               && optStr('url', 500)
+                               && optStr('sponsor', 100)
+                               && optStr('action', 30)
+                               && optInt('priority', 0, 9999)
+                               && optBool('active');
+      allow delete: if isAdmin();
       allow list: if limitedList();
     }
 
     // 광고주 / 스폰서 (홈 상단 광고 마퀴)
     match /sponsors/{id} {
       allow read: if true;
-      allow create, update, delete: if isAdmin()
+      allow create, update: if isAdmin()
                                        && reqStr('name', 1, 200)
                                        && optStr('link', 500)
                                        && optStr('memo', 500);
+      allow delete: if isAdmin();
       allow list: if limitedList();
     }
 
     // 전역 롤링 배너 (모든 페이지 상단 ticker — sponsor + content + linkUrl)
     match /global_ticker/{id} {
       allow read: if true;
-      allow create, update, delete: if isAdmin()
+      allow create, update: if isAdmin()
                                        && reqStr('sponsor', 1, 100)
                                        && reqStr('content', 1, 500)
                                        && optStr('linkUrl', 500);
+      allow delete: if isAdmin();
       allow list: if limitedList();
     }
 
     // 관리자 광고 배너 (홈 광고칸 — 이미지 + 클릭 URL)  [LEGACY — admin UI에서 제거됨, 데이터 보존용]
     match /ads/{id} {
       allow read: if true;
-      allow create, update, delete: if isAdmin()
+      allow create, update: if isAdmin()
                                        && reqStr('image', 1, 500)
                                        && reqStr('link', 1, 500)
                                        && optStr('alt', 200)
                                        && optStr('memo', 500);
+      allow delete: if isAdmin();
       allow list: if limitedList();
     }
 
@@ -545,12 +551,13 @@ service cloud.firestore {
     match /hero_banners/{id} {
       allow read: if true;
       allow list: if limitedList();
-      allow create, update, delete: if isAdmin()
+      allow create, update: if isAdmin()
                                        && reqStr('imageUrl', 1, 500)
                                        && optStr('linkUrl', 500)
                                        && optStr('alt', 200)
                                        && request.resource.data.regions is list
                                        && request.resource.data.regions.size() <= 9;
+      allow delete: if isAdmin();
     }
 
     // ════════════════════════════════════════════════════════════════
@@ -645,10 +652,11 @@ service cloud.firestore {
     // ════════════════════════════════════════════════════════════════
     match /board_pinned_notices/{board} {
       allow read: if true;
-      allow create, update, delete: if isAdmin()
+      allow create, update: if isAdmin()
                                        && reqStr('text', 1, 1000)
                                        && optStr('title', 200)
                                        && optStr('board', 30);
+      allow delete: if isAdmin();
       allow list: if limitedList();
     }
 
@@ -678,11 +686,12 @@ service cloud.firestore {
     match /top_notices/{id} {
       allow read: if true;
       allow list: if limitedList();
-      allow create, update, delete: if isAdmin()
+      allow create, update: if isAdmin()
                                        && reqStr('sponsor', 1, 100)
                                        && reqStr('text', 1, 1000)
                                        && optStr('url', 500)
                                        && optStr('action', 30);
+      allow delete: if isAdmin();
     }
 
     // ── 앱 전역 설정 (지시 7/7) ──

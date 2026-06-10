@@ -80,7 +80,7 @@ function start() {
   function render() {
     const t = items[idx];
     if (!t) return;
-    // sponsor 라벨은 공지 전용으로 '📢 공지' 고정 (notices 컬렉션엔 광고주 필드 없음)
+    // sponsor 라벨 — admin 등록 시 입력한 광고주/게시자명, 비어있으면 '📢 공지' 폴백
     if ($sponsor) $sponsor.textContent = t.sponsor || '📢 공지';
     if ($content) $content.textContent = t.content || '';
     if ($arrow && $item) {
@@ -161,12 +161,17 @@ function start() {
         //   사용자가 한번 닫으면 24h 동안 isDismissed=true → 공지 영원히 차단 (X 마크업
         //   자체는 이미 제거됐으나 옛 플래그 보유 사용자 화면에선 노출 0).
         //   해결: !isDismissed(...) 필터 제거 → 텍스트 있는 모든 공지 무조건 노출.
+        // 정렬: priority asc(낮을수록 앞 — admin 카드 2 ▲/▼ 순서) → 동률 시 createdAt desc(최신 우선)
+        //   · priority 없는 옛 공지는 100(폼 기본값)으로 간주 — 마이그레이션 불필요
+        const _pri = d => (typeof d.priority === 'number' ? d.priority : 100);
+        const _ts  = d => (d.createdAt && typeof d.createdAt.toMillis === 'function') ? d.createdAt.toMillis() : 0;
         const next = snap.docs
           .map(d => ({ id: d.id, data: d.data() }))
           .filter(({ data }) => data && (data.text || '').trim())
+          .sort((a, b) => (_pri(a.data) - _pri(b.data)) || (_ts(b.data) - _ts(a.data)))
           .map(({ id, data }) => ({
             id,
-            sponsor: '📢 공지',
+            sponsor: (data.sponsor || '').trim() || '📢 공지',
             content: data.text,
             linkUrl: (data.link || '').trim() || '',
           }));
