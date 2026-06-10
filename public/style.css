@@ -2830,6 +2830,21 @@ select.filter-mini-input {
   min-height: 0; border-radius: 4px;
 }
 
+/* ─── B-1 (배치) ─ 카드에서 액션 버튼 그룹 제거 → 상세 모달로만 ──────────
+   사용자 요구: 카드는 사진+가격+핵심정보만. 액션(공유/신고/수정/숨김/삭제) 은
+   카드 탭 → 상세 모달 안의 액션 영역에서 처리. 별표(찜) 만 카드 유지.
+   · 마크업 변경 0 — display:none 으로 즉시 hide (회귀 위험 0)
+   · 상세 모달 안의 액션 영역은 영향 없음 (.post-mini-actions 셀렉터가
+     .accom-grid--compact .accom-card 하위에서만 hide)
+   · 카드 row2(가격+위치) 의 주소 텍스트(.accom-card-sub) 는 유지 — 사용자가
+     원하면 후속 단계에서 추가 정리. */
+.accom-grid--compact .accom-card .post-mini-actions {
+  display: none !important;
+}
+
+/* 카드 사이 세로 간격 약간 축소 — gap 12 → 8 (페이지의 .accom-grid 기본값 보존) */
+.accom-grid--compact { row-gap: 8px; gap: 8px; }
+
 /* ─── 옛 마크업(line1 + bottom-row + chips 단독) 잔존 페이지(auto/jobs) — 텍스트 겹침 해제 ─
    jobs/auto 는 카드 빌더 마크업이 다른 패턴 (footer / 외부 absolute bookmark 등).
    3단 wrapper 미적용. 그러나 nowrap 해제는 일관 적용. */
@@ -4598,3 +4613,46 @@ html, body { max-width: 100vw; overflow-x: hidden; }
 /* 8) 작은 화면에서 모든 카드/이미지/iframe 이 부모 폭을 넘지 못하도록 글로벌 가드 */
 img, iframe, video, canvas, svg, table { max-width: 100%; }
 .accom-card, .care-card, .exchange-card, .home-shortcut, .state-card, .state-hub-card { max-width: 100%; }
+
+/* ─── 지시 3/5 ─ 위치 비공개 토글 (글쓰기 폼) ───────────────────────────
+   accom/rent/auto-used 글쓰기 모달 안 주소 입력 직후에 노출.
+   기본 ON (프라이버시 우선). 체크 시 정확 위치는 private_data 서브컬렉션에. */
+.privacy-toggle-field {
+  background: rgba(0, 0, 0, 0.04);
+  border: 1px dashed var(--border, #d1d5db);
+  border-radius: var(--r-md, 8px);
+  padding: 10px 12px;
+  margin: 6px 0;
+}
+.privacy-toggle {
+  display: flex; align-items: flex-start; gap: 10px;
+  cursor: pointer; user-select: none;
+}
+.privacy-toggle input[type="checkbox"] {
+  flex-shrink: 0; width: 18px; height: 18px; margin: 2px 0 0; cursor: pointer;
+  accent-color: var(--accent, #0070f3);
+}
+.privacy-toggle-text { display: flex; flex-direction: column; gap: 2px; }
+.privacy-toggle-text strong {
+  font-size: 13.5px; font-weight: 700; color: var(--text-primary);
+  line-height: 1.3;
+}
+.privacy-toggle-text em {
+  font-style: normal; font-size: 11.5px; color: var(--text-muted);
+  line-height: 1.4;
+}
+
+/* 상세 페이지 — 비공개 매물 안내 텍스트 */
+.detail-privacy-notice {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 11.5px; font-weight: 700; color: #555;
+  background: rgba(0, 0, 0, 0.06);
+  padding: 3px 8px; border-radius: 999px; margin-left: 6px;
+}
+.detail-private-owner-info {
+  margin-top: 8px; padding: 8px 10px;
+  background: #fff9e6; border: 1px solid #f3d97a;
+  border-radius: var(--r-sm, 6px);
+  font-size: 12.5px; line-height: 1.5; color: #4a3a00;
+}
+.detail-private-owner-info strong { color: #1a1a1a; }

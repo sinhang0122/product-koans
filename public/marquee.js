@@ -119,19 +119,15 @@ function start() {
   if ($prev) $prev.addEventListener('click', () => jump(-1));
   if ($next) $next.addEventListener('click', () => jump(+1));
 
-  // ── X 닫기 버튼 — 현재 노출 중인 notice 차단 + 다음 항목 즉시 회전 ──
-  //   · localStorage 저장 → 24h 동안 다음 페이지 로드에서도 자동 제외
-  //   · items 가 비면 notice-section 자체를 hide (불필요한 노출 차단)
+  // ── X 닫기 버튼 — 제거됨 ($dismiss = null), 본 핸들러는 dead code (안전망 보존)
+  //   · A-1 재진단 (배치): 옛 X 닫기 로직 안의 notice-section hide 잘못 호출 방지
+  //     → 만약 우연히 호출되어도 hide 안 함. items 0 시 기본 마크업 텍스트 유지.
   if ($dismiss) $dismiss.addEventListener('click', () => {
-    if (!items.length) { $row.parentElement && ($row.parentElement.style.display = 'none'); return; }
+    if (!items.length) return;
     const cur = items[idx];
     if (cur && cur.id) markDismissed('notice', cur.id);
     items.splice(idx, 1);
-    if (!items.length) {
-      const section = $row.closest('.notice-section');
-      if (section) section.style.display = 'none';
-      return;
-    }
+    if (!items.length) return;
     if (idx >= items.length) idx = 0;
     render();
     restart();
@@ -160,9 +156,14 @@ function start() {
     onSnapshot(
       query(collection(db, 'notices'), orderBy('createdAt', 'desc'), limit(20)),
       snap => {
+        // ── A-1 (배치) ─ dismiss 필터 제거 — 옛 X 닫기 플래그 무시, 공지 무조건 표시 ──
+        //   원인: 옛 X 버튼이 localStorage 'koaus-dismissed-ads' 에 'notice:<id>' 저장 →
+        //   사용자가 한번 닫으면 24h 동안 isDismissed=true → 공지 영원히 차단 (X 마크업
+        //   자체는 이미 제거됐으나 옛 플래그 보유 사용자 화면에선 노출 0).
+        //   해결: !isDismissed(...) 필터 제거 → 텍스트 있는 모든 공지 무조건 노출.
         const next = snap.docs
           .map(d => ({ id: d.id, data: d.data() }))
-          .filter(({ id, data }) => data && (data.text || '').trim() && !isDismissed('notice', id))
+          .filter(({ data }) => data && (data.text || '').trim())
           .map(({ id, data }) => ({
             id,
             sponsor: '📢 공지',
@@ -172,9 +173,14 @@ function start() {
         items.length = 0;
         next.forEach(t => items.push(t));
         if (!items.length) {
-          // 모든 항목 차단되었으면 notice-section 자체 hide
-          const section = $row.closest('.notice-section');
-          if (section) section.style.display = 'none';
+          // ─── A-1 재진단 (배치) ─ '메인 OK / 섹션 X' 원인 수정 ──────────
+          //   옛: items 0 일 때 notice-section 자체를 display:none 처리
+          //       → 섹션 페이지 App Check race condition 또는 빈 결과 도착 시
+          //         기본 마크업 안내 텍스트("숙소·구인구직·차량 ...")까지 함께 사라짐.
+          //       → 메인은 App Check 없어 데이터 즉시 도착 → render 정상,
+          //         섹션은 빈 결과 가능성으로 hide 발동 → 영구 안 보임.
+          //   해결: hide 호출 제거. items 0 이면 기본 마크업(line 445 ticker-content) 그대로 유지.
+          //         사용자 진입 시 항상 최소한의 안내 텍스트 노출 보장.
           return;
         }
         if (idx >= items.length) idx = 0;

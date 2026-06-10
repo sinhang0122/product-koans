@@ -37,6 +37,8 @@
   <script src="koaus-gallery.js" defer></script>
   <script src="koaus-dedupe.js" defer></script>
   <script src="koaus-map-cluster.js" defer></script>
+  <script src="koaus-listing-privacy.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/@googlemaps/markerclusterer@2.5.3/dist/index.min.js" defer></script>
   <script src="koaus-url-guard.js" defer></script>
   <script src="koaus-report.js" defer></script>
   <script type="module" src="admin-mark.js"></script>
@@ -700,6 +702,16 @@
             <input class="write-input" id="rRegion" type="text" autocomplete="off" placeholder="예: Strathfield NSW" maxlength="80" />
             <ul class="addr-suggest" id="rRegionSuggest"></ul>
           </div>
+          <!-- 지시 3/5 — 위치 비공개 옵션 (used/중고차 개인 판매 한정, 기본 ON) -->
+          <div class="write-field privacy-toggle-field" data-privacy-for="used">
+            <label class="privacy-toggle">
+              <input type="checkbox" id="wLocationPrivate" checked />
+              <span class="privacy-toggle-text">
+                <strong>🔒 위치 비공개</strong>
+                <em>지도엔 대략 위치(원)만 표시되고, 정확 주소·길찾기는 연락 시 직접 공유합니다. (해제 시 정확 위치 공개)</em>
+              </span>
+            </label>
+          </div>
           <div class="write-field">
             <label class="write-label" for="rPhone">📞 전화번호 Phone <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택 · 전화 + 문자 둘 다 활성)</em></label>
             <input class="write-input" id="rPhone" type="tel" placeholder="04xx xxx xxx" maxlength="30" autocomplete="tel" />
@@ -1176,7 +1188,7 @@
     // 한 번에 20개씩만 렌더(페이지네이션). 향후 Firestore 전환 시:
     //   query(collection(db,'accom_posts'), orderBy('id','desc'), limit(PER_PAGE))
     //   다음 페이지는 startAfter(lastDoc) 커서로만 추가 조회 → read 비용 최소화.
-    const PER_PAGE     = 20;
+    const PER_PAGE     = 10;
 
     // ── 카테고리 탭 전환 (렌트카 / 동행 인스펙션 / 정비 / 긴급출동·견인) ──
     document.querySelectorAll('#autoTabs .accom-tab').forEach(btn => {
@@ -1720,6 +1732,35 @@
           // 첨부 사진 (Storage 업로드 후 imageUrls 로 매핑됨)
           imageUrls:  Array.isArray(window.__usedPhotoUrls) ? window.__usedPhotoUrls.slice(0, 6) : [],
         };
+        // ─── 지시 3/5 ─ 위치 비공개 분기 (used/중고차 한정) ───────────────
+        //   · rRegion 자동완성 dataset.lat/lng 우선 사용 (이미 코드에서 set됨)
+        //   · 비공개 ON: 부모에 오프셋 좌표 + redact region. 정확 위치는 별도 필드(exact*) 보관
+        //   · 비공개 OFF: 정확 좌표·region 그대로
+        if (activeCategory === 'used') {
+          const rRegionEl = document.getElementById('rRegion');
+          let coords = null;
+          if (rRegionEl && rRegionEl.dataset.lat && rRegionEl.dataset.lng) {
+            coords = { lat: Number(rRegionEl.dataset.lat), lng: Number(rRegionEl.dataset.lng) };
+          }
+          const _privacyEl = document.getElementById('wLocationPrivate');
+          const isPrivate  = _privacyEl ? _privacyEl.checked : true;   // default ON
+          if (coords && isPrivate && window.koausListingPrivacy) {
+            fields.locationPrivate = true;
+            fields.exactAddress    = fields.region;
+            fields.exactLat        = coords.lat;
+            fields.exactLng        = coords.lng;
+            const offsetted = window.koausListingPrivacy.offsetCoords(coords.lat, coords.lng);
+            fields.lat = offsetted.lat;
+            fields.lng = offsetted.lng;
+            fields.region = window.koausListingPrivacy.redactAddress(fields.region) || fields.region;
+          } else if (coords) {
+            fields.lat = coords.lat;
+            fields.lng = coords.lng;
+            fields.locationPrivate = false;
+          } else {
+            fields.locationPrivate = false;
+          }
+        }
       } else if (activeCategory === 'inspection') {
         const title = _fv('iName'), body = _fv('iBody');
         if (hasProfanity(title) || hasProfanity(body)) { wErr.textContent = '부적절한 단어가 포함되어 있습니다.'; return; }
@@ -1765,6 +1806,17 @@
           authorUid: user.uid || '', authorEmail: user.email || '',
           date, time, ...fields,
         };
+        // ── [마이그레이션 가이드] 향후 Firestore(auto_posts) 연동 시 ──────────
+        //   used 카테고리만 위치 비공개 대상. 다른 카테고리(rental/inspection/...)는 무관.
+        //     ① const safe = window.koausListingPrivacy.stripPrivateFields(target);
+        //        const ref = await addDoc(collection(db, 'auto_posts'), safe);
+        //     ② if (activeCategory === 'used' && target.locationPrivate) {
+        //          await window.koausListingPrivacy.savePrivateLocation(
+        //            db, fs, 'auto_posts', ref.id,
+        //            { exactAddress: target.exactAddress, exactLat: target.exactLat, exactLng: target.exactLng },
+        //            user.uid);
+        //        }
+        // ──────────────────────────────────────────────────────────────
         posts.push(target);
         savePosts(posts);
         recordMyPost(target);
@@ -2068,12 +2120,23 @@
 
       pager.innerHTML = '';
       if (totalPages > 1) {
-        for (let i = 1; i <= totalPages; i++) {
-          pager.innerHTML += `<button class="pagination-btn${i === currentPage ? ' active' : ''}" data-page="${i}">${i}</button>`;
+        // 슬라이딩 윈도우 — 번호 버튼 최대 5개 (현재 페이지 중심)
+        let winStart = Math.max(1, currentPage - 2);
+        const winEnd = Math.min(totalPages, winStart + 4);
+        winStart = Math.max(1, winEnd - 4);
+        const parts = [];
+        parts.push(`<button class="pagination-btn pagination-nav" data-page="${currentPage - 1}"${currentPage === 1 ? ' disabled' : ''} aria-label="이전 페이지">‹</button>`);
+        for (let i = winStart; i <= winEnd; i++) {
+          parts.push(`<button class="pagination-btn${i === currentPage ? ' active' : ''}" data-page="${i}">${i}</button>`);
         }
+        parts.push(`<button class="pagination-btn pagination-nav" data-page="${currentPage + 1}"${currentPage === totalPages ? ' disabled' : ''} aria-label="다음 페이지">›</button>`);
+        pager.innerHTML = parts.join('');
         pager.querySelectorAll('.pagination-btn').forEach(b => {
           b.addEventListener('click', () => {
-            currentPage = parseInt(b.dataset.page);
+            if (b.disabled) return;
+            const target = parseInt(b.dataset.page, 10);
+            if (!Number.isFinite(target) || target < 1 || target > totalPages) return;
+            currentPage = target;
             renderAll();
             window.scrollTo({ top: 0, behavior: 'smooth' });
           });
@@ -2212,22 +2275,156 @@
       const rc = document.querySelector('.rea-content'); if (rc) rc.scrollTop = 0;
     }
 
-    function deletePost(id) {
+    // ─── 지시 (좀비 데이터 방어) ─ auto-used 글 삭제 클린업 ─────────────
+    //   accom/rent 동일 패턴 — koausRbac.selfDelete 가 ① private_data ② Storage ③ 부모
+    //   순서로 안전 클린업 + 부분 실패 시 deletion_errors 로그 기록.
+    //   · used 카테고리만 위치 비공개 적용 — 다른 카테고리(rental/inspection/...)는
+    //     locationPrivate 자체 없음 → private_data 단계가 not-found 로 자연 통과.
+    //   · 옛 글(_fsDocId 없음) → localStorage 만 정리, Firestore 호출 생략.
+    async function deletePost(id) {
       if (!confirm('정말 이 게시글을 삭제하시겠습니까?')) return;
+      const post = loadPosts().find(x => String(x.id) === String(id));
+      const fsDocId = post && post._fsDocId;
+      if (fsDocId && window.koausRbac && window.koausRbac.selfDelete) {
+        try {
+          await window.koausRbac.selfDelete('auto_posts', String(fsDocId));
+        } catch (e) {
+          console.error('[auto] Firestore 삭제 실패', e);
+          alert('삭제 실패: ' + (e?.code || e?.message || e));
+          return;
+        }
+      }
       savePosts(loadPosts().filter(x => String(x.id) !== String(id)));
       removeRecord(MYPOSTS_KEY, id);
       removeRecord(SAVED_KEY, id);
       removeRecord(RECENT_KEY, id);
       document.getElementById('detailOverlay').classList.remove('open');
       renderAll();
+      console.log('[KoAus] auto 글 삭제 완료 — id:', id, '| fsDocId:', fsDocId || '(local-only)');
     }
 
-    const closeDetail = () => document.getElementById('detailOverlay').classList.remove('open');
+    // ─── 지시 1/3 ─ 상세 모달 딥링크 (?id) + popstate 단일 원천 (accom 동일 패턴) ──
+    let _suppressDetailPushState = false;
+    function _hardCloseDetail() {
+      const ov = document.getElementById('detailOverlay');
+      if (ov) ov.classList.remove('open');
+      try { document.body.style.overflow = ''; } catch (_) {}
+    }
+    function closeDetail() {
+      if (history.state && history.state.koausDetail) {
+        history.back();
+      } else {
+        _hardCloseDetail();
+        const url = new URL(location.href);
+        if (url.searchParams.has('id')) {
+          url.searchParams.delete('id');
+          history.replaceState(null, '', url);
+        }
+      }
+    }
+    const _origOpenDetailAuto = openDetail;
+    openDetail = function (id) {
+      const cur = history.state && history.state.koausDetail;
+      _origOpenDetailAuto(id);
+      if (!_suppressDetailPushState && String(cur || '') !== String(id)) {
+        const url = new URL(location.href);
+        url.searchParams.set('id', String(id));
+        history.pushState({ koausDetail: String(id) }, '', url);
+      }
+    };
+    window.addEventListener('popstate', () => {
+      const ovOpen = document.getElementById('detailOverlay')?.classList.contains('open');
+      const id = new URLSearchParams(location.search).get('id');
+      if (id) {
+        if (!ovOpen) {
+          _suppressDetailPushState = true;
+          try { openDetail(id); } finally { _suppressDetailPushState = false; }
+        }
+      } else {
+        _hardCloseDetail();
+      }
+    });
     document.getElementById('detailClose').addEventListener('click', closeDetail);
     document.getElementById('detailCloseX').addEventListener('click', closeDetail);
     document.getElementById('detailOverlay').addEventListener('click', e => {
-      if (e.target === e.currentTarget) document.getElementById('detailOverlay').classList.remove('open');
+      if (e.target === e.currentTarget) closeDetail();
     });
+
+    // ─── 지시 2/3 ─ 페이지 로드 ?id 자동 인식 + Firestore Direct Fetch + 폴백 (accom 동일) ──
+    (function _initDetailDeepLink() {
+      const COLLECTION = 'auto_posts';
+      const initialId = new URLSearchParams(location.search).get('id');
+      if (!initialId) return;
+      function _toast(msg) {
+        if (typeof showToast === 'function') showToast(msg);
+        else try { alert(msg); } catch (_) {}
+      }
+      function _normalize(data, fsId) {
+        const out = Object.assign({}, data, { _fsDocId: fsId, id: fsId });
+        if (!Array.isArray(out.imageUrls)) out.imageUrls = [];
+        if (data.createdAt && data.createdAt.toMillis) {
+          const dt = data.createdAt.toDate(); const p = n => String(n).padStart(2,'0');
+          out.date = data.date || (p(dt.getMonth()+1) + '/' + p(dt.getDate()));
+          out.time = data.time || (p(dt.getHours()) + ':' + p(dt.getMinutes()));
+        }
+        return out;
+      }
+      function _waitForFirstSnapshot() {
+        return new Promise(resolve => {
+          const handler = () => { window.removeEventListener('koaus-services-updated', handler); resolve(); };
+          window.addEventListener('koaus-services-updated', handler);
+          setTimeout(() => { window.removeEventListener('koaus-services-updated', handler); resolve(); }, 2000);
+        });
+      }
+      async function _run() {
+        await _waitForFirstSnapshot();
+        try {
+          const list = (typeof loadPosts === 'function') ? loadPosts() : [];
+          const found = list.find(p => String(p.id) === String(initialId) || String(p._fsDocId || '') === String(initialId));
+          if (found) {
+            _suppressDetailPushState = true;
+            try { openDetail(found.id); } finally { _suppressDetailPushState = false; }
+            return;
+          }
+        } catch (_) {}
+        if (window.koausDb && window.koausFs && window.koausFs.getDoc && window.koausFs.doc) {
+          try {
+            const snap = await window.koausFs.getDoc(window.koausFs.doc(window.koausDb, COLLECTION, String(initialId)));
+            if (snap.exists()) {
+              const data = snap.data();
+              const myUid = window.koausAuth && window.koausAuth.user && window.koausAuth.user.uid;
+              const isOwner = data.uid && myUid && String(data.uid) === String(myUid);
+              const blocked = (data.status === 'hidden' || data.status === 'closed' || data.isHidden || data.status === 'pending');
+              if (blocked && !isOwner && !window.koausIsAdmin) {
+                _toast('존재하지 않거나 비공개된 게시물입니다.');
+              } else {
+                const post = _normalize(data, String(initialId));
+                try {
+                  const cur = JSON.parse(localStorage.getItem(STORE_KEY) || '[]');
+                  if (!cur.find(p => String(p._fsDocId || p.id) === String(initialId))) {
+                    cur.unshift(post);
+                    localStorage.setItem(STORE_KEY, JSON.stringify(cur));
+                  }
+                } catch (_) {}
+                _suppressDetailPushState = true;
+                try { openDetail(post.id); } finally { _suppressDetailPushState = false; }
+                return;
+              }
+            } else {
+              _toast('존재하지 않거나 삭제된 게시물입니다.');
+            }
+          } catch (e) {
+            console.warn('[auto] 딥링크 fetch 실패', e?.code || e?.message);
+            _toast('게시물을 불러오지 못했습니다.');
+          }
+        }
+        const url = new URL(location.href);
+        url.searchParams.delete('id');
+        try { history.replaceState(null, '', url); } catch (_) {}
+      }
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', _run, { once: true });
+      else _run();
+    })();
 
     // ── 토스트 알림 ──
     function showToast(msg) {
@@ -2256,7 +2453,15 @@
 
     // ── 공유하기 (모바일: 네이티브 / PC: 드롭다운) ──
     const shareMenu = document.getElementById('detailShareMenu');
-    function shareUrl() { return location.href; }
+    // 지시 3/3 — 공유 URL: origin + pathname + ?id=<글ID> 강제 조립
+    function shareUrl() {
+      const fromUrl = new URLSearchParams(location.search).get('id');
+      if (fromUrl) return location.origin + location.pathname + '?id=' + encodeURIComponent(fromUrl);
+      const p = (typeof currentDetailPost !== 'undefined') ? currentDetailPost : null;
+      const pid = p && (p._fsDocId || p.id);
+      if (pid) return location.origin + location.pathname + '?id=' + encodeURIComponent(pid);
+      return location.origin + location.pathname;
+    }
     document.getElementById('detailShareBtn').addEventListener('click', e => {
       e.stopPropagation();
       const p = currentDetailPost; if (!p) return;
@@ -2343,40 +2548,89 @@
       }, 150);
       setTimeout(() => clearInterval(iv), 8000);
     }
+    // ─── 지시 3/5 ─ 위치 비공개 매물 상세 페이지 분기 (used 한정) ────────
+    //   · auto.html: 다양한 카테고리 (used/rental/inspection/maintenance/towing)
+    //   · 비공개 적용 대상: used (개인 중고차) 만. 다른 카테고리(업체)는 정상 흐름.
+    //   · p.locationPrivate true: 마커 X / Circle / 길찾기·스트릿뷰 hide
+    let _autoDetailPrivacyCircle = null;
     async function setupDetailLocation(p) {
       const sec = document.getElementById('detailLocation');
-      if (!p.address) { sec.style.display = 'none'; detailCoords = null; return; }
+      // auto.html은 address 가 없어도 region 사용 — 둘 다 없으면 hide
+      const addr = p.address || p.region || '';
+      if (!addr) { sec.style.display = 'none'; detailCoords = null; return; }
       sec.style.display = '';
-      detailAddr = p.address;
-      // 길찾기 / 스트릿뷰 리스트 버튼 외부 링크
-      document.getElementById('detailDirBtn').href =
-        `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(p.address)}&travelmode=transit`;
+      detailAddr = addr;
+      const dirBtn = document.getElementById('detailDirBtn');
+      const svBtn  = document.getElementById('detailSvBtn');
+      const isPrivate = !!p.locationPrivate;
+      const isOwnerOrAdmin = (typeof isMine === 'function' && isMine(p)) || window.koausIsAdmin;
+
+      // 옛 Circle/마커 정리
+      if (_autoDetailPrivacyCircle) { try { _autoDetailPrivacyCircle.setMap(null); } catch(_){} _autoDetailPrivacyCircle = null; }
+      if (miniMarker) { try { miniMarker.setMap(null); } catch(_){} miniMarker = null; }
+
+      if (isPrivate) {
+        if (dirBtn) dirBtn.style.display = 'none';
+        if (svBtn)  svBtn.style.display  = 'none';
+      } else {
+        if (dirBtn) {
+          dirBtn.style.display = '';
+          dirBtn.href = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(addr)}&travelmode=transit`;
+        }
+        if (svBtn) svBtn.style.display = '';
+      }
       const setSvHref = () => {
-        document.getElementById('detailSvBtn').href = detailCoords
+        if (!svBtn || isPrivate) return;
+        svBtn.href = detailCoords
           ? `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${detailCoords.lat},${detailCoords.lng}`
-          : `https://www.google.com/maps?q=${encodeURIComponent(p.address)}&layer=c`;
+          : `https://www.google.com/maps?q=${encodeURIComponent(addr)}&layer=c`;
       };
       detailCoords = (p.lat && p.lng) ? { lat: p.lat, lng: p.lng } : null;
       setSvHref();
-      if (!detailCoords) {            // 좌표 없으면 주소로 지오코딩 (best-effort)
+      if (!detailCoords && !isPrivate) {
         loadMapScript();
-        detailCoords = await geocode(p.address);
+        detailCoords = await geocode(addr);
         setSvHref();
       }
       const el = document.getElementById('detailMiniMap');
       if (!detailCoords) { el.innerHTML = '<div class="map-empty">지도 위치를 찾을 수 없습니다.</div>'; return; }
+
+      // 본인/admin 정확 위치 노출
+      const oldOwnerInfo = sec.querySelector('.detail-private-owner-info');
+      if (oldOwnerInfo) oldOwnerInfo.remove();
+      if (isPrivate && isOwnerOrAdmin) {
+        let exact = (p.exactAddress && p.exactLat && p.exactLng) ? p : null;
+        if (!exact && window.koausListingPrivacy && window.koausDb && window.koausFs && p._fsDocId) {
+          exact = await window.koausListingPrivacy.fetchPrivateLocation(
+            window.koausDb, window.koausFs, 'auto_posts', p._fsDocId
+          );
+        }
+        if (exact) {
+          const info = document.createElement('div');
+          info.className = 'detail-private-owner-info';
+          info.innerHTML = '<strong>🔓 정확 위치 (본인/관리자 전용)</strong><br>' +
+                           '📍 ' + (exact.exactAddress || '').replace(/[<>&"]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
+          sec.appendChild(info);
+        }
+      }
+
       const c = detailCoords;
       whenMapsReady(() => {
         if (!miniMapObj) {
           miniMapObj = new google.maps.Map(el, { gestureHandling: 'greedy',
-            center: c, zoom: 15, disableDefaultUI: true, clickableIcons: false,
+            center: c, zoom: isPrivate ? 13 : 15, disableDefaultUI: true, clickableIcons: false,
           });
         } else {
           google.maps.event.trigger(miniMapObj, 'resize');
-          miniMapObj.setCenter(c); miniMapObj.setZoom(15);
+          miniMapObj.setCenter(c); miniMapObj.setZoom(isPrivate ? 13 : 15);
         }
-        if (miniMarker) miniMarker.setMap(null);
-        miniMarker = new google.maps.Marker({ position: c, map: miniMapObj });
+        if (isPrivate) {
+          if (window.koausListingPrivacy && window.koausListingPrivacy.drawPrivacyCircle) {
+            _autoDetailPrivacyCircle = window.koausListingPrivacy.drawPrivacyCircle(miniMapObj, c.lat, c.lng, { radius: 400 });
+          }
+        } else {
+          miniMarker = new google.maps.Marker({ position: c, map: miniMapObj });
+        }
       });
     }
 
@@ -2424,8 +2678,17 @@
       const arr = visitedIds(); const s = String(id);
       if (!arr.includes(s)) { arr.push(s); try { localStorage.setItem(VISITED_KEY, JSON.stringify(arr.slice(-500))); } catch (_) {} }
     }
-    function markerIcon(id) {
+    // ─── 지시 4/5 ─ 가격 핀 (텍스트 마커) — used 카테고리는 "$8,500" 형식 ─────
+    function markerIcon(p) {
+      const isObj = typeof p === 'object' && p !== null;
+      const id    = isObj ? p.id    : p;
+      const price = isObj ? p.price : null;
       const v = isVisited(id);
+      if (window.koausListingPrivacy && window.koausListingPrivacy.pricePinSvg && price > 0) {
+        // auto: used 카테고리는 'auto' (천단위 콤마), 그 외(rental 등)는 미사용 — 그러나 안전 폴백
+        const txt = window.koausListingPrivacy.formatPriceText(price, 'auto');
+        return window.koausListingPrivacy.pricePinSvg(txt, v);
+      }
       return {
         path: google.maps.SymbolPath.CIRCLE, scale: 10,
         fillColor: v ? '#ffffff' : '#000000', fillOpacity: 1,
@@ -2564,12 +2827,22 @@
       if (window.koausMapCluster) {
         const n = window.koausMapCluster.attachMarkers({
           map, infoWindow, posts: filteredPosts, markers, bounds,
-          markerIcon: p => markerIcon(p.id),
+          markerIcon: p => markerIcon(p),
           buildCardHtml,
-          onSingleClick: p => markVisited(p.id),
+          skipInfoWindowOnSingle: true,   // B-2 (배치) — 미리보기 카드 제거
+          onSingleClick: p => { markVisited(p.id); try { openDetail(p.id); } catch (e) { console.warn('[auto] map → openDetail 실패', e); } },
         });
         if (n > 0) hasCoord = true;
       }
+      // ─── 지시 4/5 ─ MarkerClusterer 거리 기반 클러스터링 (auto 한정) ─────
+      try {
+        if (window.markerClusterer && window.markerClusterer.MarkerClusterer) {
+          if (window._autoCluster) { try { window._autoCluster.clearMarkers(); } catch (_) {} }
+          window._autoCluster = new window.markerClusterer.MarkerClusterer({
+            map: map, markers: markers,
+          });
+        }
+      } catch (e) { console.warn('[auto] MarkerClusterer init 실패', e); }
       // 중심은 initMap(주별 도시) 및 글 등록 시 지오코딩 좌표로 제어 — 여기선 마커만 갱신.
     }
 

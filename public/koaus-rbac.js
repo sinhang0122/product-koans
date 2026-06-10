@@ -22,7 +22,7 @@
 // ════════════════════════════════════════════════════════════════════
 import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
 import {
-  getFirestore, doc, getDoc, updateDoc, deleteDoc, serverTimestamp,
+  getFirestore, doc, getDoc, addDoc, collection, updateDoc, deleteDoc, serverTimestamp,
 } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
 import {
   getStorage, ref as storageRef, deleteObject,
@@ -75,27 +75,105 @@ function _urlToStoragePath(url) {
   } catch (_) { return null; }
 }
 
-async function _deleteStorageImages(urls) {
-  if (!storage || !urls || !urls.length) return;
-  // 병렬 best-effort — 한 건 실패가 다른 건 차단 X
-  await Promise.allSettled(urls.map(async url => {
-    const path = _urlToStoragePath(url);
-    if (!path) return;
-    try { await deleteObject(storageRef(storage, path)); }
-    catch (e) { console.warn('[rbac] storage 이미지 삭제 실패 (orphan 방치 가능):', path, e && e.code); }
-  }));
+// ── 삭제 결과 집계 (지시 — 부분 실패 진단용) ──────────────────────────
+//   { ok: bool, failed: ['private_data'|'storage'|'parent', ...], err, remainingImageUrls, exactAddress }
+//   호출자는 ok=false 시 deletion_errors 로그 컬렉션에 기록.
+function _newDeleteResult() {
+  return { ok: true, failed: [], err: null, remainingImageUrls: [], exactAddress: null };
 }
 
-// 삭제 전 doc 의 imageUrls 를 가져와서 Storage 정리. 실패해도 doc 삭제는 진행.
-async function _purgeImagesBeforeDelete(collection, docId) {
-  if (!db) return;
+// not-found 코드 정규화 (Firestore: 'not-found', Storage: 'storage/object-not-found')
+function _isNotFound(e) {
+  const code = e && e.code;
+  return code === 'not-found' || code === 'storage/object-not-found';
+}
+
+async function _deleteStorageImages(urls, result) {
+  if (!storage || !urls || !urls.length) return;
+  // 병렬 best-effort — 한 건 실패가 다른 건 차단 X
+  const settled = await Promise.allSettled(urls.map(async url => {
+    const path = _urlToStoragePath(url);
+    if (!path) return { url };
+    try { await deleteObject(storageRef(storage, path)); return { url }; }
+    catch (e) {
+      if (_isNotFound(e)) return { url };  // 이미 깨끗함 — 정상으로 간주
+      console.warn('[rbac] storage 이미지 삭제 실패:', path, e && e.code);
+      throw Object.assign(new Error(e?.message || 'storage delete failed'), { url, code: e?.code });
+    }
+  }));
+  if (result) {
+    const failed = settled.filter(s => s.status === 'rejected').map(s => s.reason && s.reason.url).filter(Boolean);
+    if (failed.length) {
+      result.failed.push('storage');
+      result.err = result.err || ('storage 이미지 ' + failed.length + '건 삭제 실패');
+      result.remainingImageUrls = failed;
+    }
+  }
+}
+
+// 삭제 전 doc 의 imageUrls / exactAddress 를 스냅샷 (로그 기록 + 정리용)
+//   반환: { snapData, urls, exactAddress }
+async function _readDocBeforeDelete(collection, docId) {
+  if (!db) return { snapData: null, urls: [], exactAddress: null };
   try {
     const snap = await getDoc(doc(db, collection, docId));
-    if (!snap.exists()) return;
-    const urls = _extractImageUrls(snap.data());
-    if (urls.length) await _deleteStorageImages(urls);
+    if (!snap.exists()) return { snapData: null, urls: [], exactAddress: null };
+    const data = snap.data() || {};
+    const urls = _extractImageUrls(data);
+    // exactAddress 는 보통 부모 doc 에 없음(stripPrivateFields 검문). private_data 에서 읽어 와야 정확.
+    return { snapData: data, urls, exactAddress: null };
+  } catch (_) {
+    return { snapData: null, urls: [], exactAddress: null };
+  }
+}
+
+// ── private_data 서브컬렉션 정리 (정확 위치 — 가장 먼저 삭제) ─────────────
+//   민감정보를 부모보다 먼저 제거 → 부모 삭제 실패해도 정확 주소는 흔적 X.
+//   not-found 는 이미 깨끗 → 정상.
+//   권한 거부 / 네트워크 오류 → throw → 부모 doc 삭제 중단 (사용자 명시 4번 정책).
+async function _purgePrivateDataFirst(collection, docId, result) {
+  if (!db) return;
+  // 정확 주소 로그용 스냅샷 (best-effort)
+  try {
+    const ps = await getDoc(doc(db, collection, docId, 'private_data', 'location'));
+    if (ps.exists() && result) {
+      result.exactAddress = (ps.data() || {}).exactAddress || null;
+    }
+  } catch (_) { /* 스냅샷 실패는 무시 */ }
+  // 실제 삭제
+  try {
+    await deleteDoc(doc(db, collection, docId, 'private_data', 'location'));
   } catch (e) {
-    console.warn('[rbac] orphan 이미지 조회/삭제 실패 — doc 삭제는 계속 진행:', e && e.message);
+    if (_isNotFound(e)) return;  // 이미 깨끗
+    if (result) {
+      result.ok = false;
+      result.failed.push('private_data');
+      result.err = (e && e.message) || 'private_data delete failed';
+    }
+    throw e;   // 멈춤 — 부모 doc 삭제 진행 X
+  }
+}
+
+// ── deletion_errors 로그 (Firestore 신설 컬렉션) ──────────────────────
+//   부분 실패 시 호출. admin 만 read, 본인만 create (firestore.rules 강제)
+async function _logDeletionError(collectionName, docId, result, user) {
+  if (!db || !result) return;
+  if (result.ok) return;
+  const uid = (user && user.uid) || (window.koausAuth && window.koausAuth.user && window.koausAuth.user.uid) || null;
+  if (!uid) return;
+  try {
+    await addDoc(collection(db, 'deletion_errors'), {
+      board:    String(collectionName).slice(0, 30),
+      docId:    String(docId).slice(0, 100),
+      uid:      String(uid),
+      failed:   Array.isArray(result.failed) ? result.failed : [],
+      errorMsg: String(result.err || '').slice(0, 500),
+      remainingImageUrls: Array.isArray(result.remainingImageUrls) ? result.remainingImageUrls.slice(0, 8) : [],
+      exactAddress: result.exactAddress ? String(result.exactAddress).slice(0, 500) : null,
+      createdAt: serverTimestamp(),
+    });
+  } catch (e) {
+    console.warn('[rbac] deletion_errors 로그 기록 실패 (admin 검토용):', e?.code || e?.message);
   }
 }
 
@@ -158,9 +236,42 @@ async function markCompleted(collection, docId) {
 }
 
 // 작성자 본인 삭제 (Rules에서 본인 uid 검증) — 연결된 Storage 이미지도 함께 정리
-async function selfDelete(collection, docId) {
-  await _purgeImagesBeforeDelete(collection, docId);
-  await deleteDoc(_ref(collection, docId));
+async function selfDelete(collectionName, docId) {
+  // 지시 (좀비 데이터 방어) — 삭제 순서 재배치 (사용자 명시 4번 정책):
+  //   ① private_data/location (정확 주소 — 가장 민감) — 실패 시 멈춤 + 로그
+  //   ② Storage 이미지 (imageUrls 배열의 특정 파일들만, 폴더 전체 X)
+  //   ③ 부모 doc (accom_posts/{id} 등) — 위 2 단계 완료 후
+  const result = _newDeleteResult();
+  const user = (window.koausAuth && window.koausAuth.user) || null;
+  // 부모 doc 스냅샷 — imageUrls 추출 (Storage 삭제 입력)
+  const pre = await _readDocBeforeDelete(collectionName, docId);
+  // ① private_data 최우선 (실패 시 throw → 부모 삭제 중단)
+  try {
+    await _purgePrivateDataFirst(collectionName, docId, result);
+  } catch (e) {
+    await _logDeletionError(collectionName, docId, result, user);
+    throw Object.assign(new Error('private_data 삭제 실패 — 부모 doc 삭제 중단'), {
+      code: e?.code || 'private-data-fail', cause: e
+    });
+  }
+  // ② Storage 이미지 (개별 파일 단위 — 다른 글 사진 영향 0)
+  if (pre.urls && pre.urls.length) {
+    await _deleteStorageImages(pre.urls, result);
+  }
+  // ③ 부모 doc — 위 단계 일부 실패해도 부모 doc 은 삭제 (요청 정책: 부모는 무조건 완료)
+  try {
+    await deleteDoc(_ref(collectionName, docId));
+  } catch (e) {
+    if (!_isNotFound(e)) {
+      result.ok = false;
+      result.failed.push('parent');
+      result.err = (result.err ? result.err + ' / ' : '') + (e?.message || 'parent delete failed');
+    }
+  }
+  // 부분 실패 로그 (admin 검토용)
+  if (!result.ok || (result.failed && result.failed.length)) {
+    await _logDeletionError(collectionName, docId, result, user);
+  }
 }
 
 // 작성자 본인 수정 — patch 로 받은 필드만 업데이트
@@ -190,10 +301,35 @@ async function forceUpdate(collection, docId, patch) {
 }
 
 // 강제 삭제 — admin 권한으로 doc 자체 제거 + 연결된 Storage 이미지 정리 (orphan 방지)
-async function forceDelete(collection, docId) {
+async function forceDelete(collectionName, docId) {
   if (!isAdmin()) throw new Error('관리자 권한 필요');
-  await _purgeImagesBeforeDelete(collection, docId);
-  await deleteDoc(_ref(collection, docId));
+  // 지시 (좀비 데이터 방어) — selfDelete 동일 순서 (private_data 최우선, Storage 개별, 부모 마지막)
+  const result = _newDeleteResult();
+  const user = (window.koausAuth && window.koausAuth.user) || null;
+  const pre = await _readDocBeforeDelete(collectionName, docId);
+  try {
+    await _purgePrivateDataFirst(collectionName, docId, result);
+  } catch (e) {
+    await _logDeletionError(collectionName, docId, result, user);
+    throw Object.assign(new Error('[admin] private_data 삭제 실패 — 부모 doc 삭제 중단'), {
+      code: e?.code || 'private-data-fail', cause: e
+    });
+  }
+  if (pre.urls && pre.urls.length) {
+    await _deleteStorageImages(pre.urls, result);
+  }
+  try {
+    await deleteDoc(_ref(collectionName, docId));
+  } catch (e) {
+    if (!_isNotFound(e)) {
+      result.ok = false;
+      result.failed.push('parent');
+      result.err = (result.err ? result.err + ' / ' : '') + (e?.message || 'parent delete failed');
+    }
+  }
+  if (!result.ok || (result.failed && result.failed.length)) {
+    await _logDeletionError(collectionName, docId, result, user);
+  }
 }
 
 // ── 통합 헬퍼 ──

@@ -899,7 +899,7 @@
     // 한 번에 20개씩만 렌더(페이지네이션). 향후 Firestore 전환 시:
     //   query(collection(db,'accom_posts'), orderBy('id','desc'), limit(PER_PAGE))
     //   다음 페이지는 startAfter(lastDoc) 커서로만 추가 조회 → read 비용 최소화.
-    const PER_PAGE     = 20;
+    const PER_PAGE     = 10;
 
     // ── 모드 탭 전환 (방 올리기 / 방 구하기) ──
     // restaurants.html: modeTabs DOM 없음 — querySelectorAll 빈 NodeList, forEach no-op
@@ -1755,12 +1755,23 @@
 
       pager.innerHTML = '';
       if (totalPages > 1) {
-        for (let i = 1; i <= totalPages; i++) {
-          pager.innerHTML += `<button class="pagination-btn${i === currentPage ? ' active' : ''}" data-page="${i}">${i}</button>`;
+        // 슬라이딩 윈도우 — 번호 버튼 최대 5개 (현재 페이지 중심)
+        let winStart = Math.max(1, currentPage - 2);
+        const winEnd = Math.min(totalPages, winStart + 4);
+        winStart = Math.max(1, winEnd - 4);
+        const parts = [];
+        parts.push(`<button class="pagination-btn pagination-nav" data-page="${currentPage - 1}"${currentPage === 1 ? ' disabled' : ''} aria-label="이전 페이지">‹</button>`);
+        for (let i = winStart; i <= winEnd; i++) {
+          parts.push(`<button class="pagination-btn${i === currentPage ? ' active' : ''}" data-page="${i}">${i}</button>`);
         }
+        parts.push(`<button class="pagination-btn pagination-nav" data-page="${currentPage + 1}"${currentPage === totalPages ? ' disabled' : ''} aria-label="다음 페이지">›</button>`);
+        pager.innerHTML = parts.join('');
         pager.querySelectorAll('.pagination-btn').forEach(b => {
           b.addEventListener('click', () => {
-            currentPage = parseInt(b.dataset.page);
+            if (b.disabled) return;
+            const target = parseInt(b.dataset.page, 10);
+            if (!Number.isFinite(target) || target < 1 || target > totalPages) return;
+            currentPage = target;
             renderAll();
             window.scrollTo({ top: 0, behavior: 'smooth' });
           });
@@ -1952,7 +1963,15 @@
 
     // ── 공유하기 (모바일: 네이티브 / PC: 드롭다운) ──
     const shareMenu = document.getElementById('detailShareMenu');
-    function shareUrl() { return location.href; }
+    // 지시 3/3 — 공유 URL: origin + pathname + ?id=<글ID> 강제 조립
+    function shareUrl() {
+      const fromUrl = new URLSearchParams(location.search).get('id');
+      if (fromUrl) return location.origin + location.pathname + '?id=' + encodeURIComponent(fromUrl);
+      const p = (typeof currentDetailPost !== 'undefined') ? currentDetailPost : null;
+      const pid = p && (p._fsDocId || p.id);
+      if (pid) return location.origin + location.pathname + '?id=' + encodeURIComponent(pid);
+      return location.origin + location.pathname;
+    }
     document.getElementById('detailShareBtn').addEventListener('click', e => {
       e.stopPropagation();
       const p = currentDetailPost; if (!p) return;

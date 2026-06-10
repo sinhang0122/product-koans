@@ -100,6 +100,7 @@ service cloud.firestore {
         && optInt('payAmount', 0, 9999999)   // jobs (시급/연봉)
         && optStr('empType',   30)           // jobs
         && optStr('payUnit',   20)           // jobs
+        && optStr('minStay',   10)           // accom/rent — 미니멈 스테이 코드값 ('1w'~'12m')
         && optBool('visaEligible')           // jobs — 세컨/써드 비자 자격 카운트 가능 여부
         // 사진 URL 배열 (post_images Storage) — 최대 8개로 여유
         && optUrlList('imageUrls', 8);
@@ -183,6 +184,103 @@ service cloud.firestore {
                             && noModeratorFieldChange()
                             && statusAllowedForOwner() );
       allow delete: if isAdmin() || ownerOnExisting();
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    // 정확 위치 정보 서브컬렉션 (지시 2/5 — 위치 프라이버시 대공사)
+    //   각 매물 글이 '비공개(locationPrivate:true)'로 등록된 경우,
+    //   부모 doc 의 lat/lng/address 는 300~500m 오프셋된 대략 위치만 저장하고
+    //   정확한 주소·좌표는 본 서브컬렉션 (private_data/location) 에 별도 저장.
+    //
+    //   접근 제어 (보안 차단막):
+    //     · get:    작성자 본인(ownerUid==auth.uid) 또는 admin 만 허용
+    //     · list:   완전 차단 — 도큐먼트 ID(예: 'location') 알아야 read 가능
+    //                (어뷰징·대량 수집·역지오코딩 공격 방어)
+    //     · create: 본인(ownerUid==auth.uid) + 부모 doc 의 uid 도 본인 일치 강제
+    //                (다른 사람 글에 정확 위치 강제 부여 차단)
+    //     · update/delete: 작성자 본인 또는 admin
+    //
+    //   필드 검증:
+    //     · exactAddress (required, 1-500): 정확 도로명·번지 포함 주소
+    //     · exactLat, exactLng (required number): 정확 좌표 (-90~90, -180~180)
+    //     · ownerUid (required string): 부모 doc 의 uid 와 동일 — read 검증용
+    //     · createdAt (serverTimestamp 권장): 작성 시점
+    //
+    //   향후 확장 포인트: 예약 승인 흐름 도입 시 'approvedBookingUids' 같은
+    //                       필드 + 조건문 추가하여 승인된 다른 사용자에게도 read 개방.
+    // ════════════════════════════════════════════════════════════════
+    match /accom_posts/{postId}/private_data/{docId} {
+      allow get:  if isSignedIn()
+                     && (isAdmin() || resource.data.ownerUid == request.auth.uid);
+      allow list: if false;
+      allow create: if isAdmin()
+                       || ( isSignedIn()
+                            && request.resource.data.ownerUid == request.auth.uid
+                            && get(/databases/$(database)/documents/accom_posts/$(postId)).data.uid == request.auth.uid
+                            && reqStr('exactAddress', 1, 500)
+                            && request.resource.data.exactLat is number
+                            && request.resource.data.exactLng is number
+                            && request.resource.data.exactLat >= -90
+                            && request.resource.data.exactLat <= 90
+                            && request.resource.data.exactLng >= -180
+                            && request.resource.data.exactLng <= 180 );
+      allow update, delete: if isAdmin()
+                               || (isSignedIn() && resource.data.ownerUid == request.auth.uid);
+    }
+    match /rent_posts/{postId}/private_data/{docId} {
+      allow get:  if isSignedIn()
+                     && (isAdmin() || resource.data.ownerUid == request.auth.uid);
+      allow list: if false;
+      allow create: if isAdmin()
+                       || ( isSignedIn()
+                            && request.resource.data.ownerUid == request.auth.uid
+                            && get(/databases/$(database)/documents/rent_posts/$(postId)).data.uid == request.auth.uid
+                            && reqStr('exactAddress', 1, 500)
+                            && request.resource.data.exactLat is number
+                            && request.resource.data.exactLng is number
+                            && request.resource.data.exactLat >= -90
+                            && request.resource.data.exactLat <= 90
+                            && request.resource.data.exactLng >= -180
+                            && request.resource.data.exactLng <= 180 );
+      allow update, delete: if isAdmin()
+                               || (isSignedIn() && resource.data.ownerUid == request.auth.uid);
+    }
+    // ════════════════════════════════════════════════════════════════
+    // deletion_errors — 매물 삭제 부분 실패 로그 (좀비 데이터 추적)
+    //   · 클라이언트 삭제(selfDelete/forceDelete) 가 원자적이지 않아
+    //     private_data / Storage / 부모 doc 중 일부 실패 시 본 컬렉션에
+    //     [board, docId, uid, failed, errorMsg, remainingImageUrls, exactAddress]
+    //     를 기록 → admin 이 일괄 정리 가능.
+    //   · ⚠️ 보안 강제: exactAddress 등 민감정보 포함 → admin 만 read.
+    //     일반 사용자는 create 만 가능 (자기 글 실패 기록).
+    //   · update / delete — admin 만 (운영자 정리 후 처리)
+    // ════════════════════════════════════════════════════════════════
+    match /deletion_errors/{logId} {
+      allow get, list: if isAdmin();
+      allow create: if isSignedIn()
+                       && request.resource.data.uid == request.auth.uid
+                       && reqStr('board', 1, 30)
+                       && reqStr('docId', 1, 100);
+      allow update, delete: if isAdmin();
+    }
+
+    match /auto_posts/{postId}/private_data/{docId} {
+      allow get:  if isSignedIn()
+                     && (isAdmin() || resource.data.ownerUid == request.auth.uid);
+      allow list: if false;
+      allow create: if isAdmin()
+                       || ( isSignedIn()
+                            && request.resource.data.ownerUid == request.auth.uid
+                            && get(/databases/$(database)/documents/auto_posts/$(postId)).data.uid == request.auth.uid
+                            && reqStr('exactAddress', 1, 500)
+                            && request.resource.data.exactLat is number
+                            && request.resource.data.exactLng is number
+                            && request.resource.data.exactLat >= -90
+                            && request.resource.data.exactLat <= 90
+                            && request.resource.data.exactLng >= -180
+                            && request.resource.data.exactLng <= 180 );
+      allow update, delete: if isAdmin()
+                               || (isSignedIn() && resource.data.ownerUid == request.auth.uid);
     }
 
     // ── 문의 메일 (contact.html → 'mail' 컬렉션, 쓰기 전용) ──
@@ -295,12 +393,24 @@ service cloud.firestore {
     //   - 목록:  limit ≤ 20 강제 (요금 폭탄 방어)
     // ════════════════════════════════════════════════════════════════
 
-    // 흐르는 공지사항 (홈 상단 마퀴)
+    // 흐르는 공지사항 (홈 상단 마퀴 — marquee.js onSnapshot 대상)
+    //   · 읽기: 누구나 (마퀴 노출)
+    //   · 쓰기: isAdmin() 만 (3중 안전망 그대로 — Custom Claim OR sinhang0122 OR users/{uid}.isAdmin)
+    //   · 필수: text (마퀴 본문)
+    //   · 옵션: link/url (클릭 이동 URL), sponsor (좌측 라벨), action ('link'),
+    //          priority (정렬 가중치), active (노출 토글)
+    //          → admin.html 카드 2 (상단 노출 공지) 풀 payload 호환
+    //   · 비admin write 거부 / 임의 필드는 옵션 검증으로만 통제 (보안 약화 0)
     match /notices/{id} {
       allow read: if true;
       allow create, update, delete: if isAdmin()
-                                       && reqStr('text', 1, 500)
-                                       && optStr('link', 500);
+                                       && reqStr('text', 1, 1000)
+                                       && optStr('link', 500)
+                                       && optStr('url', 500)
+                                       && optStr('sponsor', 100)
+                                       && optStr('action', 30)
+                                       && optInt('priority', 0, 9999)
+                                       && optBool('active');
       allow list: if limitedList();
     }
 

@@ -475,6 +475,7 @@
       <div id="postList"></div>
     </div>
 
+    <div class="pagination" id="pagination"></div>
 
   </main>
 
@@ -637,14 +638,21 @@
       return !!(u && p && p.uid && p.uid === u.uid);
     }
     let editingId = null;  // 편집 모드 추적
+    let currentPage = 1;
+    const PER_PAGE = 10;
     function renderPosts() {
       const posts = loadPosts();
       document.getElementById('boardCount').textContent = `총 ${posts.length}건`;
       const list = document.getElementById('postList');
-      if (!posts.length) { list.innerHTML = '<div class="post-empty">등록된 글이 없습니다. 첫 글을 작성해보세요!</div>'; return; }
-      list.innerHTML = posts.slice().reverse().map((p, i) => `
+      const pager = document.getElementById('pagination');
+      if (!posts.length) { list.innerHTML = '<div class="post-empty">등록된 글이 없습니다. 첫 글을 작성해보세요!</div>'; pager.innerHTML = ''; return; }
+      const sorted = posts.slice().reverse();
+      const totalPages = Math.max(1, Math.ceil(sorted.length / PER_PAGE));
+      if (currentPage > totalPages) currentPage = totalPages;
+      const start = (currentPage - 1) * PER_PAGE;
+      list.innerHTML = sorted.slice(start, start + PER_PAGE).map((p, i) => `
         <div class="post-row${isMine(p) ? ' my-post-highlight' : ''}" data-id="${p.id}" style="cursor:pointer">
-          <span class="post-num">${posts.length - i}</span>
+          <span class="post-num">${posts.length - (start + i)}</span>
           <span class="post-title" style="color:var(--text-primary);font-weight:500;">
             <span class="post-title-text">${escHtml(p.title)}</span>
             <span class="post-mini-actions">
@@ -690,6 +698,31 @@
         } catch (_) {}
         alert('신고가 접수되었습니다. 관리자 검토 후 조치됩니다.');
       }));
+
+      // ── 페이지네이션: ‹ + 번호(최대 5, 슬라이딩 윈도우) + › ──
+      pager.innerHTML = '';
+      if (totalPages > 1) {
+        let winStart = Math.max(1, currentPage - 2);
+        const winEnd = Math.min(totalPages, winStart + 4);
+        winStart = Math.max(1, winEnd - 4);
+        const parts = [];
+        parts.push(`<button class="pagination-btn pagination-nav" data-page="${currentPage - 1}"${currentPage === 1 ? ' disabled' : ''} aria-label="이전 페이지">‹</button>`);
+        for (let i = winStart; i <= winEnd; i++) {
+          parts.push(`<button class="pagination-btn${i === currentPage ? ' active' : ''}" data-page="${i}">${i}</button>`);
+        }
+        parts.push(`<button class="pagination-btn pagination-nav" data-page="${currentPage + 1}"${currentPage === totalPages ? ' disabled' : ''} aria-label="다음 페이지">›</button>`);
+        pager.innerHTML = parts.join('');
+        pager.querySelectorAll('.pagination-btn').forEach(b => {
+          b.addEventListener('click', () => {
+            if (b.disabled) return;
+            const target = parseInt(b.dataset.page, 10);
+            if (!Number.isFinite(target) || target < 1 || target > totalPages) return;
+            currentPage = target;
+            renderPosts();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          });
+        });
+      }
     }
     window.renderPosts = renderPosts;  // module 스크립트의 auth 콜백에서 재호출
     function deletePost(id) {
@@ -767,6 +800,7 @@
       }
       savePosts(posts);
       editingId = null;
+      currentPage = 1;  // 등록/수정 후 첫 페이지로 (새 글이 최신순 맨 앞)
       renderPosts();
       writeOverlay.classList.remove('open');
       ['wTitle','wBody','wAuthor','wContact','wPhone','wKakao','wEmail'].forEach(id => { const _el = document.getElementById(id); if (_el) _el.value = ''; });

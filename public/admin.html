@@ -1259,7 +1259,11 @@
       }
     });
 
-    // ── 카드 2 · 상단 노출 공지 (top_notices) ──
+    // ── 카드 2 · 상단 노출 공지 (notices — marquee.js 와 동일 컬렉션) ──
+    //   회귀 수정: 옛 top_notices 에 저장 → marquee.js 가 notices 구독해서 노출 X.
+    //   해결: 동일 'notices' 컬렉션 사용. payload 는 marquee.js 가 기대하는
+    //         text + link 필수 + admin UI 추가 필드 (sponsor/priority/url/action/active) 동시 저장.
+    //         firestore.rules /notices/{id} 룰에 옵션 필드 모두 통과 가능 (보안 약화 0).
     const _tnForm = document.getElementById('dashTopNoticeForm');
     if (_tnForm) _tnForm.addEventListener('submit', async e => {
       e.preventDefault();
@@ -1274,14 +1278,18 @@
         const text     = (document.getElementById('dashNoticeText').value || '').trim();
         if (!sponsor || !text) { flashNote(note, '스폰서명과 본문은 필수입니다.', false); return; }
         if (btn) { btn.disabled = true; btn.textContent = '저장 중…'; }
-        await addDoc(collection(db, 'top_notices'), {
-          sponsor, priority, action, url, text, active: true,
+        // payload 통일: text(필수, marquee.js data.text) + link(marquee.js data.link 호환, url 와 동일값)
+        await addDoc(collection(db, 'notices'), {
+          text,                          // 마퀴 본문 (marquee.js 읽음)
+          link: url || '',               // marquee.js data.link — 클릭 이동 URL
+          url,                           // admin UI 옵션 (link 와 같은 값, 향후 분리 대비)
+          sponsor, priority, action, active: true,
           createdAt: serverTimestamp(), uid: auth.currentUser.uid,
         });
         flashNote(note, '✅ 상단 공지 등록 완료', true);
         _tnForm.reset();
       } catch (err) {
-        console.error('[admin] top_notices 저장 실패', err);
+        console.error('[admin] notices 저장 실패', err);
         flashNote(note, '❌ 등록 실패: ' + (err.message || err), false);
       } finally {
         if (btn) { btn.disabled = false; btn.textContent = '저장하기'; }

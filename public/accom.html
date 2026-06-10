@@ -37,6 +37,8 @@
   <script src="koaus-gallery.js" defer></script>
   <script src="koaus-dedupe.js" defer></script>
   <script src="koaus-map-cluster.js" defer></script>
+  <script src="koaus-listing-privacy.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/@googlemaps/markerclusterer@2.5.3/dist/index.min.js" defer></script>
   <script src="koaus-url-guard.js" defer></script>
   <script src="koaus-report.js" defer></script>
   <script type="module" src="admin-mark.js"></script>
@@ -613,6 +615,16 @@
               <ul class="addr-suggest" id="wAddressSuggest"></ul>
             </div>
           </div>
+          <!-- 지시 3/5 — 위치 비공개 옵션 (기본 ON, 프라이버시 우선) -->
+          <div class="write-field offer-only privacy-toggle-field">
+            <label class="privacy-toggle">
+              <input type="checkbox" id="wLocationPrivate" checked />
+              <span class="privacy-toggle-text">
+                <strong>🔒 위치 비공개</strong>
+                <em>지도엔 대략 위치(원)만 표시되고, 정확 주소·길찾기는 연락 시 직접 공유합니다. (해제 시 정확 위치 공개)</em>
+              </span>
+            </label>
+          </div>
           <div class="write-field offer-only">
             <label class="write-label" for="wPrice">주당 쉐어비 Price / wk ($)<span class="required-mark">*</span></label>
             <input class="write-input" id="wPrice" type="number" placeholder="숫자만 입력" min="0" />
@@ -659,6 +671,19 @@
           <div class="write-field offer-only">
             <label class="write-label" for="wAvailDate">입주 가능한 날 Available Date</label>
             <input class="write-input" id="wAvailDate" type="date" />
+          </div>
+          <div class="write-field offer-only">
+            <label class="write-label" for="wMinStay">미니멈 스테이 Minimum Stay <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택)</em></label>
+            <select class="write-input" id="wMinStay">
+              <option value="">선택 안 함</option>
+              <option value="1w">1주</option>
+              <option value="2w">2주</option>
+              <option value="4w">4주(1개월)</option>
+              <option value="2m">2개월</option>
+              <option value="3m">3개월</option>
+              <option value="6m">6개월</option>
+              <option value="12m">1년 이상</option>
+            </select>
           </div>
           <div class="write-field offer-only">
             <label class="write-label" for="wGender">성별 조건 Gender</label>
@@ -1053,7 +1078,7 @@
     // 한 번에 20개씩만 렌더(페이지네이션). 향후 Firestore 전환 시:
     //   query(collection(db,'accom_posts'), orderBy('id','desc'), limit(PER_PAGE))
     //   다음 페이지는 startAfter(lastDoc) 커서로만 추가 조회 → read 비용 최소화.
-    const PER_PAGE     = 20;
+    const PER_PAGE     = 10;
 
     // ── 모드 탭 전환 (방 올리기 / 방 구하기) ──
     document.querySelectorAll('#modeTabs .accom-tab').forEach(btn => {
@@ -1274,6 +1299,7 @@
       ['wParking','wPet','wKids','wAirCon'].forEach(id => { document.getElementById(id).checked = false; });
       document.querySelectorAll('#wTypes input, #wRoomTypes input').forEach(c => { c.checked = false; });
       document.getElementById('wGender').value = '';
+      document.getElementById('wMinStay').value = '';
     }
     // 로그인 사용자 닉네임 (작성자 고정값)
     function currentNickname() {
@@ -1332,6 +1358,7 @@
       set('wKakao',   d.kakaoLink);
       set('wEmail',   d.email);
       set('wAvailDate', d.availableDate);
+      set('wMinStay', d.minStay);
       set('wGender', d.gender);
       setTypeChecks(Array.isArray(d.types) ? d.types : []);
       // 방 형태 체크 (roomTypes)
@@ -1353,6 +1380,7 @@
       document.querySelectorAll('#wRoomTypes input').forEach(c => { c.checked = roomSet.has(c.dataset.room); });
       document.getElementById('wGender').value = p.gender || '';
       document.getElementById('wAvailDate').value = p.availableDate || '';
+      document.getElementById('wMinStay').value = p.minStay || '';
       document.getElementById('wContact').value = p.contact || '';
       const _ph = document.getElementById('wPhone'); if (_ph) _ph.value = p.phone || '';
       const _kk = document.getElementById('wKakao'); if (_kk) _kk.value = p.kakaoLink || '';
@@ -1536,6 +1564,7 @@
         const roomTypes = [...document.querySelectorAll('#wRoomTypes input:checked')].map(c => c.dataset.room);
         const gender    = document.getElementById('wGender').value;
         const availableDate = document.getElementById('wAvailDate').value;
+        const minStay   = document.getElementById('wMinStay').value;
         const contact   = document.getElementById('wContact').value.trim();
         const _phEl = document.getElementById('wPhone');
         const _kkEl = document.getElementById('wKakao');
@@ -1553,7 +1582,7 @@
         const price = parseInt(priceVal, 10);
         if (!(price > 0)) { alert('주당 쉐어비를 숫자로 올바르게 입력해 주세요.'); return; }
         fields = {
-          mode: 'offer', types, title, body, address, price, roomTypes, gender, availableDate, contact, phone, kakaoLink, email,
+          mode: 'offer', types, title, body, address, price, roomTypes, gender, availableDate, minStay, contact, phone, kakaoLink, email,
           parking:     document.getElementById('wParking').checked,
           petFriendly: document.getElementById('wPet').checked,
           kidsInHouse: document.getElementById('wKids').checked,
@@ -1561,6 +1590,26 @@
         };
         loadMapScript();  // Geocoder 사용을 위해 Maps 스크립트 로드 보장
         coords = await geocode(address);
+
+        // ─── 지시 3/5 ─ 위치 비공개 분기 ────────────────────────────────
+        //   체크박스 ON (기본): 부모에 오프셋 좌표(300~500m) + redact 주소 저장
+        //     · 정확 좌표·주소는 별도 필드(exactLat/exactLng/exactAddress)로 본인 기기 localStorage 보관
+        //       (향후 Firestore 전환 시 private_data 서브컬렉션으로 자동 마이그레이션)
+        //     · 다른 사용자에겐 displayLat/displayLng/displayAddress (오프셋·redact) 만 노출
+        //   체크박스 OFF: 정확 좌표·주소 그대로 (옛 흐름)
+        const _privacyEl = document.getElementById('wLocationPrivate');
+        const isPrivate  = _privacyEl ? _privacyEl.checked : true;   // default ON
+        if (coords && isPrivate && window.koausListingPrivacy) {
+          fields.locationPrivate = true;
+          fields.exactAddress    = address;                          // 본인 기기만 보관 (localStorage)
+          fields.exactLat        = coords.lat;
+          fields.exactLng        = coords.lng;
+          const offsetted = window.koausListingPrivacy.offsetCoords(coords.lat, coords.lng);
+          coords = { lat: offsetted.lat, lng: offsetted.lng };       // 부모 doc 좌표 = 오프셋
+          fields.address = window.koausListingPrivacy.redactAddress(address) || address;
+        } else {
+          fields.locationPrivate = false;
+        }
       }
 
       const nick = currentNickname()
@@ -1570,58 +1619,133 @@
       const date = `${pad(now.getMonth() + 1)}/${pad(now.getDate())}`;
       const time = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
 
-      const posts = loadPosts();
-      let target;
+      // ═══════════════════════════════════════════════════════════════════
+      //  지시 2/4 — Firestore (accom_posts) 전환 + 검문소 통과
+      //   · 옛 localStorage savePosts(직접 저장) 제거. onSnapshot 콜백이 캐싱.
+      //   · body 빈 값 → 공백 1자 자동 (firestore.rules reqStr body 1자↑ 정합)
+      //   · stripPrivateFields → 공개 doc 에 exact* 누수 차단
+      //   · locationPrivate 시 savePrivateLocation → private_data 서브컬렉션
+      //   · status: 'approved' 강제 (즉시 노출)
+      // ═══════════════════════════════════════════════════════════════════
+      if (!window.koausDb || !window.koausFs) {
+        alert('Firestore 미초기화 — 잠시 후 다시 시도해 주세요.');
+        return;
+      }
+      const { addDoc, updateDoc, doc: _fsDoc, collection: _fsCol, serverTimestamp } = window.koausFs;
 
+      let target;
       if (editingId != null) {
-        // ── 수정: 기존 글 업데이트 ──
-        const idx = posts.findIndex(x => String(x.id) === String(editingId));
-        if (idx < 0) { editingId = null; return; }
-        target = posts[idx];
-        Object.assign(target, fields);
+        // ── 수정 ──
+        //   editingId 가 Firestore docId 형태(20자 이상 영숫자)이면 updateDoc.
+        //   옛 localStorage 글(timestamp) 이면 수정 불가 — 사용자 결정(옛 글 폐기)
+        const isFsId = typeof editingId === 'string' && /^[A-Za-z0-9_-]{16,}$/.test(editingId);
+        if (!isFsId) {
+          alert('옛 글은 더 이상 수정할 수 없습니다. 다시 작성해 주세요.');
+          editingId = null;
+          return;
+        }
+        target = Object.assign({}, fields);
         if (coords) { target.lat = coords.lat; target.lng = coords.lng; }
-        savePosts(posts);
-        recordMyPost(target);  // 마이페이지 제목 등 동기화
+        // 본문 공백 보정 (룰 정합)
+        if (!String(target.body || '').trim()) target.body = ' ';
+        const updatePayload = window.koausListingPrivacy.stripPrivateFields(
+          Object.assign({}, target, { updatedAt: serverTimestamp() })
+        );
+        try {
+          await updateDoc(_fsDoc(window.koausDb, 'accom_posts', String(editingId)), updatePayload);
+        } catch (e) {
+          console.error('[accom] 수정 실패', e);
+          alert('수정 실패: ' + (e?.code || e?.message || e));
+          return;
+        }
+        // private_data 갱신 — 비공개 매물 시
+        if (target.locationPrivate && target.exactAddress && window.koausListingPrivacy.savePrivateLocation) {
+          try {
+            await window.koausListingPrivacy.savePrivateLocation(
+              window.koausDb, window.koausFs, 'accom_posts', String(editingId),
+              { exactAddress: target.exactAddress, exactLat: target.exactLat, exactLng: target.exactLng },
+              user.uid
+            );
+          } catch (e) { console.warn('[accom] private_data 수정 실패', e); }
+        }
+        target.id = editingId;
+        target._fsDocId = editingId;
+        recordMyPost(target);
         editingId = null;
+        console.log('[KoAus] accom 글 수정 — fsDocId:', target._fsDocId);
       } else {
         // ── 새 글 작성 ──
         target = {
-          id: Date.now(), state: currentState,
+          state: currentState,
           author: nick,
           uid: user.uid || '', email: user.email || '',
           authorUid: user.uid || '', authorEmail: user.email || '',
           date, time, lat: null, lng: null, imageUrls: [], ...fields,
+          status: 'approved',     // 즉시 노출 (firestore.rules accom_posts 정합)
         };
         if (coords) { target.lat = coords.lat; target.lng = coords.lng; }
-        posts.push(target);
-        savePosts(posts);
+        // 본문 공백 보정 — firestore.rules reqStr('body', 1, 5000) 정합
+        if (!String(target.body || '').trim()) target.body = ' ';
+        // 공개 부모 doc — stripPrivateFields 검문소 통과 (exact* 누수 차단)
+        const safePayload = window.koausListingPrivacy.stripPrivateFields(
+          Object.assign({}, target, { createdAt: serverTimestamp() })
+        );
+        let docRef;
+        try {
+          docRef = await addDoc(_fsCol(window.koausDb, 'accom_posts'), safePayload);
+        } catch (e) {
+          console.error('[accom] Firestore 등록 실패', e);
+          alert('등록 실패: ' + (e?.code === 'permission-denied' ? '권한 거부 — 로그인 상태 및 필수 필드 확인' : (e?.code || e?.message || e)));
+          return;
+        }
+        // private_data 서브컬렉션 — 비공개 매물 정확 위치만 별도 저장
+        if (target.locationPrivate && target.exactAddress && window.koausListingPrivacy.savePrivateLocation) {
+          try {
+            await window.koausListingPrivacy.savePrivateLocation(
+              window.koausDb, window.koausFs, 'accom_posts', docRef.id,
+              { exactAddress: target.exactAddress, exactLat: target.exactLat, exactLng: target.exactLng },
+              user.uid
+            );
+          } catch (e) { console.warn('[accom] private_data 저장 실패 — 글은 등록됨', e); }
+        }
+        target.id = docRef.id;
+        target._fsDocId = docRef.id;
         recordMyPost(target);
-        console.log('[KoAus] 숙소 글 저장 — uid:', target.uid, '| email:', target.email, '| id:', target.id);
+        console.log('[KoAus] accom 글 Firestore 저장 — fsDocId:', docRef.id, '| locationPrivate:', !!target.locationPrivate);
       }
 
-      // ── 사진 첨부: 클라이언트 압축 후 Firebase Storage 업로드 → target.imageUrls 저장 ──
+      // ── 사진 첨부 (지시 2/4 — Storage path 버그 수정 + Firestore 갱신) ──
+      //   · Storage 룰: post_images/{board}/{uid}/{filename} — auth.uid 일치 강제
+      //     옛 path: 'post_images/accom/${target.id}' (timestamp) → 일반 유저 거부
+      //     신규: 'post_images/accom/${user.uid}' → 룰 정합 통과
+      //   · 업로드 완료 후 Firestore doc 의 imageUrls 도 updateDoc 으로 갱신
       if (window.pendingPhotoFiles && window.pendingPhotoFiles.length && window.koausPhotos) {
         try {
           const wsb = document.getElementById('writeBtnSubmit');
           if (wsb) { wsb.disabled = true; wsb.textContent = `사진 업로드 중… 0/${window.pendingPhotoFiles.length}`; }
           const urls = await window.koausPhotos.uploadPostImages(
             window.koausPhotos.app,
-            `post_images/accom/${target.id}`,
+            `post_images/accom/${user.uid}`,
             window.pendingPhotoFiles.map(p => p.file),
             { maxDim: 1200, quality: 0.7, onProgress: (i, total) => {
               if (wsb) wsb.textContent = `사진 업로드 중… ${i}/${total}`;
             } }
           );
           target.imageUrls = urls;
-          // localStorage 갱신
-          const cur = loadPosts();
-          const idx2 = cur.findIndex(x => String(x.id) === String(target.id));
-          if (idx2 >= 0) { cur[idx2].imageUrls = urls; savePosts(cur); }
+          // Firestore doc 의 imageUrls 갱신 (옛 글 — _fsDocId 없으면 skip)
+          if (target._fsDocId && window.koausDb && window.koausFs && window.koausFs.updateDoc && window.koausFs.doc) {
+            try {
+              await window.koausFs.updateDoc(
+                window.koausFs.doc(window.koausDb, 'accom_posts', String(target._fsDocId)),
+                { imageUrls: urls }
+              );
+            } catch (e) { console.warn('[accom] imageUrls Firestore 갱신 실패', e); }
+          }
           window.pendingPhotoFiles = [];
           if (wsb) { wsb.disabled = false; wsb.textContent = '등록하기'; }
         } catch (e) {
           console.error('[accom] 사진 업로드 실패', { code: e && e.code, message: e && e.message, error: e });
-          alert(`사진 업로드 실패: ${(e && e.code) || 'unknown'}\n${(e && e.message) || ''}\n글은 본인 기기에 저장되었습니다. 수정에서 다시 시도해 주세요.`);
+          alert(`사진 업로드 실패: ${(e && e.code) || 'unknown'}\n${(e && e.message) || ''}\n글은 등록되었습니다 — 수정에서 다시 시도해 주세요.`);
         }
       }
 
@@ -1651,6 +1775,15 @@
     }
     const ROOM_LABELS = { master:'마스터룸', second:'세컨룸', single:'독방', living_share:'거실쉐어', sunroom:'썬룸', share:'쉐어' };
     const GENDER_LABELS = { male:'남', female:'여', any:'성별 무관' };
+    const MINSTAY_LABELS = { '1w':'1주', '2w':'2주', '4w':'4주(1개월)', '2m':'2개월', '3m':'3개월', '6m':'6개월', '12m':'1년 이상' };
+    // 주소 문자열 → Suburb 만 추출 (koaus-listing-privacy.js redactAddress 1순위 정규식과 동일 패턴)
+    //   위치 비공개 글의 address 는 이미 'Suburb State Postcode' 형태라 그대로 매칭됨.
+    //   매칭 실패 시 '' 반환 — 전체 주소 폴백 금지 (프라이버시 우선, 표시 생략)
+    function extractSuburb(address) {
+      if (!address || typeof address !== 'string') return '';
+      const m = address.match(/([A-Za-z][A-Za-z\s\-']*?)\s+(NSW|VIC|QLD|WA|SA|ACT|NT|TAS)\s+\d{4}/i);
+      return m ? m[1].trim().replace(/\s+/g, ' ') : '';
+    }
     // 욕설/금칙어 필터 — 제목/상세 설명/닉네임 검사용 (부분 포함 시 차단)
     const BAD_WORDS = ['시발','씨발','시팔','씨팔','씨발년','개새끼','새끼','병신','지랄','존나','좆','좆같','니미','닥쳐','꺼져','엿먹어','미친놈','미친년','썅','등신','후레','보지','자지','걸레','창녀','fuck','fucking','fuck you','shit','bitch','asshole','bastard','dick','cunt','motherfucker','slut','whore','retard'];
     function hasProfanity(text) {
@@ -1668,6 +1801,7 @@
       rooms.forEach(r => { if (ROOM_LABELS[r]) tags.push('🛏 ' + ROOM_LABELS[r]); });
       if (p.gender && GENDER_LABELS[p.gender]) tags.push('👤 ' + GENDER_LABELS[p.gender]);
       if (p.availableDate) tags.push('🗓 입주 ' + p.availableDate);
+      if (p.minStay && MINSTAY_LABELS[p.minStay]) tags.push('⏱ 미니멈 ' + MINSTAY_LABELS[p.minStay]);
       if (p.parking)     tags.push('🅿 주차 가능');
       if (p.petFriendly) tags.push('🐾 반려동물 가능');
       if (p.kidsInHouse) tags.push('👶 아이 있는 집');
@@ -1870,6 +2004,7 @@
           if (p.gender && GENDER_LABELS[p.gender]) cs.push('👤 ' + GENDER_LABELS[p.gender]);
           const ds = Array.isArray(p.types) ? p.types : (p.type ? [p.type] : []);
           ds.forEach(t => { if (TYPE_LABELS[t]) cs.push('📅 ' + TYPE_LABELS[t].ko); });
+          if (p.minStay && MINSTAY_LABELS[p.minStay]) cs.push('⏱ 미니멈 ' + MINSTAY_LABELS[p.minStay]);
           chips = cs.map(c => `<span class="accom-tag">${escHtml(c)}</span>`).join('');
         }
         const priceHtml = isFind
@@ -1969,13 +2104,49 @@
       }));
 
       pager.innerHTML = '';
-      if (totalPages > 1) {
-        for (let i = 1; i <= totalPages; i++) {
-          pager.innerHTML += `<button class="pagination-btn${i === currentPage ? ' active' : ''}" data-page="${i}">${i}</button>`;
+      // 하이브리드: 마지막 페이지 + Firestore에 더 옛 글 가능성 → › 를 '더 불러오기'로 활성 유지
+      const olderReady = currentPage === totalPages
+        && typeof window.koausLoadOlder === 'function'
+        && window.koausOlderState && window.koausOlderState.hasMore;
+      if (totalPages > 1 || olderReady) {
+        // 슬라이딩 윈도우 — 번호 버튼 최대 5개 (현재 페이지 중심)
+        let winStart = Math.max(1, currentPage - 2);
+        const winEnd = Math.min(totalPages, winStart + 4);
+        winStart = Math.max(1, winEnd - 4);
+        const parts = [];
+        parts.push(`<button class="pagination-btn pagination-nav" data-page="${currentPage - 1}"${currentPage === 1 ? ' disabled' : ''} aria-label="이전 페이지">‹</button>`);
+        for (let i = winStart; i <= winEnd; i++) {
+          parts.push(`<button class="pagination-btn${i === currentPage ? ' active' : ''}" data-page="${i}">${i}</button>`);
         }
+        parts.push(`<button class="pagination-btn pagination-nav" data-page="${currentPage + 1}"${olderReady ? ' data-load-older="1"' : (currentPage === totalPages ? ' disabled' : '')} aria-label="다음 페이지">›</button>`);
+        pager.innerHTML = parts.join('');
         pager.querySelectorAll('.pagination-btn').forEach(b => {
           b.addEventListener('click', () => {
-            currentPage = parseInt(b.dataset.page);
+            if (b.disabled) return;
+            if (b.dataset.loadOlder) {
+              if (window.koausOlderState.loading) return;
+              b.disabled = true; b.textContent = '…';
+              window.koausLoadOlder().then(count => {
+                if (count > 0) {
+                  currentPage += 1;
+                  renderAll();
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                } else {
+                  alert(window.koausOlderState.hasMore
+                    ? '이전 글을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.'
+                    : '더 이상 글이 없습니다.');
+                  renderAll();
+                }
+              }).catch(err => {
+                console.warn('[accom] 이전 글 조회 실패', err);
+                alert('이전 글을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.');
+                renderAll();
+              });
+              return;
+            }
+            const target = parseInt(b.dataset.page, 10);
+            if (!Number.isFinite(target) || target < 1 || target > totalPages) return;
+            currentPage = target;
             renderAll();
             window.scrollTo({ top: 0, behavior: 'smooth' });
           });
@@ -2050,6 +2221,7 @@
       if (p.gender && GENDER_LABELS[p.gender]) sum.push('👤 ' + GENDER_LABELS[p.gender]);
       const durs = Array.isArray(p.types) ? p.types : (p.type ? [p.type] : []);
       durs.forEach(t => { if (TYPE_LABELS[t]) sum.push('📅 ' + TYPE_LABELS[t].ko); });
+      if (p.minStay && MINSTAY_LABELS[p.minStay]) sum.push('⏱ 미니멈 ' + MINSTAY_LABELS[p.minStay]);
       document.getElementById('detailSummary').innerHTML = sum.map(s => `<span class="rea-chip">${escHtml(s)}</span>`).join('');
 
       // Description (+ 더보기)
@@ -2110,22 +2282,178 @@
       const rc = document.querySelector('.rea-content'); if (rc) rc.scrollTop = 0;
     }
 
-    function deletePost(id) {
+    // ─── 지시 QA 4/4 ─ 글 삭제 시 고아 데이터(Orphan) 클린업 ──────────────────
+    //   삭제 순서 (best-effort — 일부 실패해도 부모 doc 삭제는 무조건 진행):
+    //     ① Storage 사진 (post_images/accom/{uid}/...) deleteObject
+    //     ② private_data/location 서브문서 deleteDoc
+    //     ③ 부모 doc (accom_posts/{id}) deleteDoc
+    //   · Firestore 글 (_fsDocId 있음): koausRbac.selfDelete 호출 — 위 3단계 통합
+    //   · 옛 localStorage 글 (_fsDocId 없음): localStorage 캐시만 제거
+    //   · 마이페이지·저장·최근본 캐시는 항상 정리
+    async function deletePost(id) {
       if (!confirm('정말 이 게시글을 삭제하시겠습니까?')) return;
+      const post = loadPosts().find(x => String(x.id) === String(id));
+      const fsDocId = post && post._fsDocId;
+      if (fsDocId && window.koausRbac && window.koausRbac.selfDelete) {
+        try {
+          await window.koausRbac.selfDelete('accom_posts', String(fsDocId));
+        } catch (e) {
+          console.error('[accom] Firestore 삭제 실패', e);
+          alert('삭제 실패: ' + (e?.code || e?.message || e));
+          return;
+        }
+      }
+      // 로컬 캐시 정리 (Firestore 글이든 옛 글이든 공통)
       savePosts(loadPosts().filter(x => String(x.id) !== String(id)));
       removeRecord(MYPOSTS_KEY, id);
       removeRecord(SAVED_KEY, id);
       removeRecord(RECENT_KEY, id);
       document.getElementById('detailOverlay').classList.remove('open');
       renderAll();
+      console.log('[KoAus] accom 글 삭제 완료 — id:', id, '| fsDocId:', fsDocId || '(local-only)');
     }
 
-    const closeDetail = () => document.getElementById('detailOverlay').classList.remove('open');
+    // ─── 지시 1/3 ─ 상세 모달 딥링크 (?id) + popstate 단일 원천 ──────────────
+    //   ① 카드 클릭 → openDetail(id) → pushState({koausDetail:id}, '?id='+id)
+    //     · 같은 글 중복 클릭 가드 (state.koausDetail === id 면 skip)
+    //     · _suppressPushState 플래그로 popstate→openDetail 재진입 시 중복 push 차단
+    //   ② 닫기 — 두 케이스 구분:
+    //     · 카드 클릭으로 연 경우 (state.koausDetail 있음): history.back() → popstate가 닫음
+    //     · 페이지 로드 시 ?id 직접 진입 (지시 2/3, state 없음): replaceState 로 ?id 제거 + 직접 닫음
+    //   ③ popstate 단일 원천: id 있으면 openDetail(id), 없으면 hardClose
+    let _suppressDetailPushState = false;
+    function _hardCloseDetail() {
+      const ov = document.getElementById('detailOverlay');
+      if (ov) ov.classList.remove('open');
+      try { document.body.style.overflow = ''; } catch (_) {}
+    }
+    function closeDetail() {
+      if (history.state && history.state.koausDetail) {
+        history.back();   // popstate 트리거 → URL 의 ?id 제거 + hardClose
+      } else {
+        _hardCloseDetail();
+        const url = new URL(location.href);
+        if (url.searchParams.has('id')) {
+          url.searchParams.delete('id');
+          history.replaceState(null, '', url);
+        }
+      }
+    }
+    // openDetail wrap — 본체는 그대로 두고 pushState 만 주입
+    const _origOpenDetailAccom = openDetail;
+    openDetail = function (id) {
+      const cur = history.state && history.state.koausDetail;
+      _origOpenDetailAccom(id);
+      if (!_suppressDetailPushState && String(cur || '') !== String(id)) {
+        const url = new URL(location.href);
+        url.searchParams.set('id', String(id));
+        history.pushState({ koausDetail: String(id) }, '', url);
+      }
+    };
+    window.addEventListener('popstate', () => {
+      const ovOpen = document.getElementById('detailOverlay')?.classList.contains('open');
+      const id = new URLSearchParams(location.search).get('id');
+      if (id) {
+        if (!ovOpen) {
+          _suppressDetailPushState = true;
+          try { openDetail(id); } finally { _suppressDetailPushState = false; }
+        }
+      } else {
+        _hardCloseDetail();
+      }
+    });
     document.getElementById('detailClose').addEventListener('click', closeDetail);
     document.getElementById('detailCloseX').addEventListener('click', closeDetail);
     document.getElementById('detailOverlay').addEventListener('click', e => {
-      if (e.target === e.currentTarget) document.getElementById('detailOverlay').classList.remove('open');
+      if (e.target === e.currentTarget) closeDetail();
     });
+
+    // ─── 지시 2/3 ─ 페이지 로드 시 ?id 자동 인식 + Firestore Direct Fetch + 폴백 ──
+    //   ① 목록 캐시(loadPosts)에 있으면 openDetail 직접 호출 (pushState 우회)
+    //   ② 없으면 부모 doc(accom_posts/{id}) 만 getDoc — private_data 자동 fetch 절대 X
+    //   ③ 비공개/숨김/마감 상태인데 작성자 아니면 차단 — 딥링크 우회 방지
+    //   ④ 문서 없음 → ?id 제거 + 가벼운 토스트 폴백
+    (function _initDetailDeepLink() {
+      const COLLECTION = 'accom_posts';
+      const initialId = new URLSearchParams(location.search).get('id');
+      if (!initialId) return;
+      function _toast(msg) {
+        if (typeof showToast === 'function') showToast(msg);
+        else try { alert(msg); } catch (_) {}
+      }
+      function _normalize(data, fsId) {
+        const out = Object.assign({}, data, { _fsDocId: fsId, id: fsId });
+        out.mode = out.mode || 'offer';
+        if (!Array.isArray(out.types))     out.types     = [];
+        if (!Array.isArray(out.roomTypes)) out.roomTypes = [];
+        if (!Array.isArray(out.imageUrls)) out.imageUrls = [];
+        if (data.createdAt && data.createdAt.toMillis) {
+          const dt = data.createdAt.toDate(); const p = n => String(n).padStart(2,'0');
+          out.date = data.date || (p(dt.getMonth()+1) + '/' + p(dt.getDate()));
+          out.time = data.time || (p(dt.getHours()) + ':' + p(dt.getMinutes()));
+        }
+        return out;
+      }
+      function _waitForFirstSnapshot() {
+        return new Promise(resolve => {
+          const handler = () => { window.removeEventListener('koaus-services-updated', handler); resolve(); };
+          window.addEventListener('koaus-services-updated', handler);
+          setTimeout(() => { window.removeEventListener('koaus-services-updated', handler); resolve(); }, 2000);
+        });
+      }
+      async function _run() {
+        await _waitForFirstSnapshot();
+        // 1순위: 목록에 있나?
+        try {
+          const list = (typeof loadPosts === 'function') ? loadPosts() : [];
+          const found = list.find(p => String(p.id) === String(initialId) || String(p._fsDocId || '') === String(initialId));
+          if (found) {
+            _suppressDetailPushState = true;
+            try { openDetail(found.id); } finally { _suppressDetailPushState = false; }
+            return;
+          }
+        } catch (_) {}
+        // 2순위: Firestore 부모 doc 직접 fetch (private_data 자동 fetch 금지)
+        if (window.koausDb && window.koausFs && window.koausFs.getDoc && window.koausFs.doc) {
+          try {
+            const snap = await window.koausFs.getDoc(window.koausFs.doc(window.koausDb, COLLECTION, String(initialId)));
+            if (snap.exists()) {
+              const data = snap.data();
+              const myUid = window.koausAuth && window.koausAuth.user && window.koausAuth.user.uid;
+              const isOwner = data.uid && myUid && String(data.uid) === String(myUid);
+              const blocked = (data.status === 'hidden' || data.status === 'closed' || data.isHidden || data.status === 'pending');
+              if (blocked && !isOwner && !window.koausIsAdmin) {
+                _toast('존재하지 않거나 비공개된 게시물입니다.');
+              } else {
+                const post = _normalize(data, String(initialId));
+                // 메인 캐시에 일시 추가 (openDetail 이 loadPosts 에서 찾을 수 있도록)
+                try {
+                  const cur = JSON.parse(localStorage.getItem(STORE_KEY) || '[]');
+                  if (!cur.find(p => String(p._fsDocId || p.id) === String(initialId))) {
+                    cur.unshift(post);
+                    localStorage.setItem(STORE_KEY, JSON.stringify(cur));
+                  }
+                } catch (_) {}
+                _suppressDetailPushState = true;
+                try { openDetail(post.id); } finally { _suppressDetailPushState = false; }
+                return;
+              }
+            } else {
+              _toast('존재하지 않거나 삭제된 게시물입니다.');
+            }
+          } catch (e) {
+            console.warn('[accom] 딥링크 fetch 실패', e?.code || e?.message);
+            _toast('게시물을 불러오지 못했습니다.');
+          }
+        }
+        // 폴백: ?id 제거
+        const url = new URL(location.href);
+        url.searchParams.delete('id');
+        try { history.replaceState(null, '', url); } catch (_) {}
+      }
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', _run, { once: true });
+      else _run();
+    })();
 
     // ── 토스트 알림 ──
     function showToast(msg) {
@@ -2154,7 +2482,18 @@
 
     // ── 공유하기 (모바일: 네이티브 / PC: 드롭다운) ──
     const shareMenu = document.getElementById('detailShareMenu');
-    function shareUrl() { return location.href; }
+    // 지시 3/3 — 공유 URL: origin + pathname + ?id=<글ID> 강제 조립 (location.href 의존 X)
+    function shareUrl() {
+      // 1순위: URL ?id (지시 1/3 로 모달 열림 시 자동 동기화)
+      const fromUrl = new URLSearchParams(location.search).get('id');
+      if (fromUrl) return location.origin + location.pathname + '?id=' + encodeURIComponent(fromUrl);
+      // 2순위: currentDetailPost.id 또는 _fsDocId (closure 변수)
+      const p = (typeof currentDetailPost !== 'undefined') ? currentDetailPost : null;
+      const pid = p && (p._fsDocId || p.id);
+      if (pid) return location.origin + location.pathname + '?id=' + encodeURIComponent(pid);
+      // 3순위: 폴백 (페이지 base URL)
+      return location.origin + location.pathname;
+    }
     document.getElementById('detailShareBtn').addEventListener('click', e => {
       e.stopPropagation();
       const p = currentDetailPost; if (!p) return;
@@ -2241,40 +2580,92 @@
       }, 150);
       setTimeout(() => clearInterval(iv), 8000);
     }
+    // ─── 지시 3/5 ─ 위치 비공개 매물 상세 페이지 분기 ────────────────────
+    //   · p.locationPrivate true: 정확 마커 X / Circle 400m 만 / 길찾기·스트릿뷰 hide
+    //   · 본인(isMine) 또는 admin: 정확 위치(exactLat/exactLng/exactAddress) 추가 노출
+    //   · 공개 매물: 옛 흐름 그대로 (마커 + 길찾기 + 스트릿뷰)
+    let _detailPrivacyCircle = null;
     async function setupDetailLocation(p) {
       const sec = document.getElementById('detailLocation');
       if (!p.address) { sec.style.display = 'none'; detailCoords = null; return; }
       sec.style.display = '';
       detailAddr = p.address;
-      // 길찾기 / 스트릿뷰 리스트 버튼 외부 링크
-      document.getElementById('detailDirBtn').href =
-        `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(p.address)}&travelmode=transit`;
+      const dirBtn = document.getElementById('detailDirBtn');
+      const svBtn  = document.getElementById('detailSvBtn');
+      const isPrivate = !!p.locationPrivate;
+      const isOwnerOrAdmin = (typeof isMine === 'function' && isMine(p)) || window.koausIsAdmin;
+
+      // 옛 Circle/마커 정리 (재진입 안전)
+      if (_detailPrivacyCircle) { try { _detailPrivacyCircle.setMap(null); } catch(_){} _detailPrivacyCircle = null; }
+      if (miniMarker) { try { miniMarker.setMap(null); } catch(_){} miniMarker = null; }
+
+      // 비공개 매물: 길찾기·스트릿뷰 UI hide + 안내 텍스트
+      if (isPrivate) {
+        if (dirBtn) dirBtn.style.display = 'none';
+        if (svBtn)  svBtn.style.display  = 'none';
+      } else {
+        if (dirBtn) {
+          dirBtn.style.display = '';
+          dirBtn.href = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(p.address)}&travelmode=transit`;
+        }
+        if (svBtn) svBtn.style.display = '';
+      }
       const setSvHref = () => {
-        document.getElementById('detailSvBtn').href = detailCoords
+        if (!svBtn || isPrivate) return;
+        svBtn.href = detailCoords
           ? `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${detailCoords.lat},${detailCoords.lng}`
           : `https://www.google.com/maps?q=${encodeURIComponent(p.address)}&layer=c`;
       };
       detailCoords = (p.lat && p.lng) ? { lat: p.lat, lng: p.lng } : null;
       setSvHref();
-      if (!detailCoords) {            // 좌표 없으면 주소로 지오코딩 (best-effort)
+      if (!detailCoords && !isPrivate) {
         loadMapScript();
         detailCoords = await geocode(p.address);
         setSvHref();
       }
       const el = document.getElementById('detailMiniMap');
       if (!detailCoords) { el.innerHTML = '<div class="map-empty">지도 위치를 찾을 수 없습니다.</div>'; return; }
+
+      // 본인/admin 일 때 정확 위치 노출 영역 추가 (옛 영역 정리 후 새로 그림)
+      const oldOwnerInfo = sec.querySelector('.detail-private-owner-info');
+      if (oldOwnerInfo) oldOwnerInfo.remove();
+      if (isPrivate && isOwnerOrAdmin) {
+        // 1순위: localStorage 부모 doc 에 저장된 exactAddress (본인 기기 한정)
+        let exact = (p.exactAddress && p.exactLat && p.exactLng) ? p : null;
+        // 2순위: Firestore private_data 서브컬렉션 fetch (향후 Firestore 전환 대비)
+        if (!exact && window.koausListingPrivacy && window.koausDb && window.koausFs && p._fsDocId) {
+          exact = await window.koausListingPrivacy.fetchPrivateLocation(
+            window.koausDb, window.koausFs, 'accom_posts', p._fsDocId
+          );
+        }
+        if (exact) {
+          const info = document.createElement('div');
+          info.className = 'detail-private-owner-info';
+          info.innerHTML = '<strong>🔓 정확 위치 (본인/관리자 전용)</strong><br>' +
+                           '📍 ' + (exact.exactAddress || '').replace(/[<>&"]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
+          sec.appendChild(info);
+        }
+      }
+
       const c = detailCoords;
       whenMapsReady(() => {
         if (!miniMapObj) {
           miniMapObj = new google.maps.Map(el, { gestureHandling: 'greedy',
-            center: c, zoom: 15, disableDefaultUI: true, clickableIcons: false,
+            center: c, zoom: isPrivate ? 13 : 15, disableDefaultUI: true, clickableIcons: false,
           });
         } else {
           google.maps.event.trigger(miniMapObj, 'resize');
-          miniMapObj.setCenter(c); miniMapObj.setZoom(15);
+          miniMapObj.setCenter(c); miniMapObj.setZoom(isPrivate ? 13 : 15);
         }
-        if (miniMarker) miniMarker.setMap(null);
-        miniMarker = new google.maps.Marker({ position: c, map: miniMapObj });
+        if (isPrivate) {
+          // 비공개 매물 — Circle 만 (마커 X)
+          if (window.koausListingPrivacy && window.koausListingPrivacy.drawPrivacyCircle) {
+            _detailPrivacyCircle = window.koausListingPrivacy.drawPrivacyCircle(miniMapObj, c.lat, c.lng, { radius: 400 });
+          }
+        } else {
+          // 공개 매물 — 정확 마커
+          miniMarker = new google.maps.Marker({ position: c, map: miniMapObj });
+        }
       });
     }
 
@@ -2363,8 +2754,21 @@
     }
     const ICON_BOX     = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>';
     const ICON_CHECKED = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><polyline points="7 12 11 16 17 8"/></svg>';
-    function markerIcon(id) {
+    // ─── 지시 4/5 ─ 가격 핀 (텍스트 마커) ────────────────────────────────
+    //   · isVisited 에 따라 색상 분기: 안읽음=검정/흰글자, 읽음=흰배경/검정외곽+그림자
+    //   · 가격이 있으면 "$240 p/w" 형식, 없으면 '협의' (협의는 옛 도트 마커 폴백)
+    //   · koausListingPrivacy.pricePinSvg 헬퍼 사용 (공용)
+    function markerIcon(p) {
+      // 호환: 옛 호출이 id 만 넘긴 경우 — p 가 string 이면 visited 만 판단 (가격은 옛 도트)
+      const isObj = typeof p === 'object' && p !== null;
+      const id    = isObj ? p.id    : p;
+      const price = isObj ? p.price : null;
       const v = isVisited(id);
+      if (window.koausListingPrivacy && window.koausListingPrivacy.pricePinSvg && price > 0) {
+        const txt = window.koausListingPrivacy.formatPriceText(price, 'wk');
+        return window.koausListingPrivacy.pricePinSvg(txt, v);
+      }
+      // 가격 없는 글(협의) — 옛 도트 마커 폴백
       return {
         path: google.maps.SymbolPath.CIRCLE, scale: 10,
         fillColor: v ? '#ffffff' : '#000000', fillOpacity: 1,
@@ -2549,7 +2953,7 @@
         if (!groups.has(key)) groups.set(key, []);
         groups.get(key).push(p);
       });
-      // 단일 카드 HTML 빌더 — 단일 마커와 클러스터 그룹에 동일 카드 사용
+      // 클러스터 그룹용 카드 HTML 빌더 (제목 포함 — 다중 글 중 선택용)
       // (iw-card[data-pid] selector 가 페이지 위임 click 으로 markVisited + openDetail 처리)
       function buildAccomCard(p) {
         const iwTags = filterTags(p).slice(0, 3).map(t =>
@@ -2576,6 +2980,39 @@
           </div>`;
       }
 
+      // D — 단일 마커 전용 미리보기 카드 (지시: 방 형태 / Suburb만 / 주당 가격 / 입주일 / 미니멈 스테이 / 대표 사진)
+      //   · 제목·전체 주소 미노출 — suburb 추출 실패 시 위치 줄 생략 (전체 주소 폴백 금지)
+      //   · iw-card[data-pid] 클래스 유지 → 기존 페이지 위임 click 이 markVisited + openDetail 처리
+      function buildAccomPreview(p) {
+        const roomChips = (Array.isArray(p.roomTypes) ? p.roomTypes : (p.roomType ? [p.roomType] : []))
+          .filter(r => ROOM_LABELS[r])
+          .map(r => `<span style="display:inline-block;font-size:10px;color:#000;background:#fff;border:1px solid #000;border-radius:999px;padding:1px 7px;margin:2px 3px 0 0;white-space:nowrap;">🛏 ${escHtml(ROOM_LABELS[r])}</span>`)
+          .join('');
+        const suburb = extractSuburb(p.address);
+        const minStayLabel = (p.minStay && MINSTAY_LABELS[p.minStay]) ? MINSTAY_LABELS[p.minStay] : '';
+        const thumb = (Array.isArray(p.imageUrls) && p.imageUrls.length)
+          ? `<img src="${escHtml(p.imageUrls[0])}" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;" />`
+          : `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#777" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>`;
+        const starOn = isSaved(p.id);
+        const cOn = isContacted(p.id);
+        return `
+          <div class="iw-card" data-pid="${p.id}" style="position:relative;display:flex;gap:10px;max-width:270px;padding:4px 56px 4px 2px;cursor:pointer;font-family:'Urbanist','Noto Sans KR',sans-serif;">
+            <div class="iw-actions" style="position:absolute;top:-2px;right:-4px;display:inline-flex;align-items:center;gap:2px;">
+              <button class="iw-star" data-pid="${p.id}" aria-label="찜하기" style="width:28px;height:28px;border:none;background:transparent;font-size:18px;line-height:1;cursor:pointer;color:${starOn ? '#000' : '#777'};padding:0;display:inline-flex;align-items:center;justify-content:center;">${starOn ? '★' : '☆'}</button>
+              <button class="iw-contact ${cOn ? 'contacted' : ''}" data-pid="${p.id}" aria-label="연락 완료 표시" style="width:28px;height:28px;border:none;background:transparent;line-height:1;cursor:pointer;padding:0;display:inline-flex;align-items:center;justify-content:center;color:${cOn ? '#d92626' : '#777'};">${cOn ? ICON_CHECKED : ICON_BOX}</button>
+            </div>
+            <div style="flex-shrink:0;width:72px;height:72px;border-radius:6px;overflow:hidden;border:1px solid #000;background:#f5f5f5;display:flex;align-items:center;justify-content:center;">${thumb}</div>
+            <div style="min-width:0;flex:1;">
+              ${roomChips ? `<div style="line-height:1.4;">${roomChips}</div>` : ''}
+              ${suburb ? `<div style="font-size:11px;font-weight:600;color:#333;margin-top:3px;">📍 ${escHtml(suburb)}</div>` : ''}
+              <div style="font-size:14px;font-weight:800;color:#000;margin-top:3px;">${p.price ? `$${p.price}<span style="font-size:10px;font-weight:500;">/wk</span>` : '가격 협의'}</div>
+              <div style="font-size:11px;color:#333;margin-top:2px;">🗓 입주 ${escHtml(p.availableDate || '협의')}</div>
+              ${minStayLabel ? `<div style="font-size:11px;color:#333;margin-top:2px;">⏱ 미니멈 ${escHtml(minStayLabel)}</div>` : ''}
+              <div style="font-size:10px;color:#666;margin-top:4px;">탭하여 상세 보기 →</div>
+            </div>
+          </div>`;
+      }
+
       groups.forEach((postsAtSameSpot) => {
         const p = postsAtSameSpot[0];
         const isCluster = postsAtSameSpot.length > 1;
@@ -2585,23 +3022,41 @@
           title: isCluster ? `${p.title} (외 ${postsAtSameSpot.length - 1}건)` : p.title,
           icon: isCluster
             ? (window.koausMapCluster ? window.koausMapCluster.clusterIconSvg(postsAtSameSpot.length) : clusterIcon(postsAtSameSpot.length))
-            : markerIcon(p.id),
+            : markerIcon(p),
         });
         marker.addListener('click', () => {
+          // 히스토리: B-2 (배치) 에서 미리보기 카드 제거 → openDetail 직행이었으나,
+          //   D 지시로 미리보기 복원 — 단일 마커도 미리보기 카드(buildAccomPreview) 먼저, 카드 클릭 시 상세.
+          //   · 단일 마커: 미리보기 InfoWindow 오픈 + 읽음 처리 + 핀 색 갱신 (restaurants 패턴)
+          //     → 카드 클릭은 페이지 위임(iw-card[data-pid])이 openDetail 처리
+          //   · 클러스터(같은 좌표 다중): 기존 InfoWindow 유지 — 어떤 글 열지 사용자 선택 필요
           if (isCluster && window.koausMapCluster) {
-            // 그룹: N개 카드 InfoWindow (스크롤). 카드별 위임 click 이 자동으로 상세 모달 오픈
             infoWindow.setContent(window.koausMapCluster.groupIwHtml(postsAtSameSpot, buildAccomCard));
+            infoWindow.open(map, marker);
           } else {
-            infoWindow.setContent(buildAccomCard(p));
             markVisited(p.id);
-            marker.setIcon(markerIcon(p.id));
+            marker.setIcon(markerIcon(p));
+            infoWindow.setContent(buildAccomPreview(p));
+            infoWindow.open(map, marker);
           }
-          infoWindow.open(map, marker);
         });
         markers.push(marker);
         bounds.extend({ lat: p.lat, lng: p.lng });
         hasCoord = true;
       });
+      // ─── 지시 4/5 ─ MarkerClusterer 거리 기반 클러스터링 ────────────────
+      //   · 동일 좌표 매물은 이미 위 forEach 에서 한 마커로 그룹화 (자체 4자리 dedup)
+      //   · 더 넓은 거리(픽셀 기반)에 몰린 가격 핀들은 @googlemaps/markerclusterer 가
+      //     자동으로 묶음. 줌 인 시 자연스럽게 풀림.
+      //   · 옛 인스턴스가 있으면 clearMarkers 후 재생성 (재렌더 안전)
+      try {
+        if (window.markerClusterer && window.markerClusterer.MarkerClusterer) {
+          if (window._accomCluster) { try { window._accomCluster.clearMarkers(); } catch (_) {} }
+          window._accomCluster = new window.markerClusterer.MarkerClusterer({
+            map: map, markers: markers,
+          });
+        }
+      } catch (e) { console.warn('[accom] MarkerClusterer init 실패', e); }
       // 중심은 initMap(주별 도시) 및 글 등록 시 지오코딩 좌표로 제어 — 여기선 마커만 갱신.
     }
 
@@ -2690,7 +3145,7 @@
       createUserWithEmailAndPassword, signInWithEmailAndPassword,
     } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
     import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app-check.js';
-    import { getFirestore, doc, getDoc, setDoc, addDoc, collection, serverTimestamp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
+    import { getFirestore, doc, getDoc, setDoc, addDoc, updateDoc, collection, serverTimestamp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
 
     const firebaseConfig = {
       apiKey:            'AIzaSyCamqnt0bNUD9uz1N5BbCuQjSkWLSpPqlU',
@@ -2717,7 +3172,7 @@
 
     const auth = getAuth(app);
     // 최근 검색 기록 동기화용 Firestore (콘솔에서 Firestore 활성화 + users 규칙 배포 시 동작)
-    try { window.koausDb = getFirestore(app); window.koausFs = { doc, getDoc, setDoc, addDoc, collection, serverTimestamp }; } catch (e) { /* Firestore 미설정 무시 */ }
+    try { window.koausDb = getFirestore(app); window.koausFs = { doc, getDoc, setDoc, addDoc, updateDoc, collection, serverTimestamp }; } catch (e) { /* Firestore 미설정 무시 */ }
 
     // 사진 첨부 — 클라이언트 압축 + Firebase Storage 업로드 모듈 노출
     import('./compress.js').then(mod => {
@@ -2900,7 +3355,7 @@
   <!-- ── Firestore services 컬렉션 실시간 구독 (쉐어하우스 관리자 글 자동 노출) ── -->
   <script type="module">
     import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
-    import { getFirestore, collection, query, orderBy, limit, where, onSnapshot } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
+    import { getFirestore, collection, query, orderBy, limit, where, onSnapshot, startAfter, getDocsFromServer } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
     const firebaseConfig = {
       apiKey:'AIzaSyCamqnt0bNUD9uz1N5BbCuQjSkWLSpPqlU', authDomain:'koaus-f564c.firebaseapp.com',
       projectId:'koaus-f564c', storageBucket:'koaus-f564c.firebasestorage.app',
@@ -2910,33 +3365,137 @@
     let db; try { db = getFirestore(app); } catch (e) { console.warn('[accom] Firestore 미초기화', e); }
     if (db) {
       const STORE = 'koaus-accom-posts';
+
+      // ─── 지시 2/4 ─ 옛 localStorage 글 일괄 폐기 (사용자 결정 — 옛 글 완전 폐기) ───
+      //   첫 진입 시 _fsDocId 없는 옛 글 모두 제거. onSnapshot 결과만 캐시.
       try {
-        onSnapshot(query(collection(db, 'services'), where('status', '==', 'approved'), orderBy('createdAt', 'desc'), limit(20)), snap => {
-          const fsItems = snap.docs
-            .map(d => ({ _fsDocId: d.id, ...d.data() }))
-            .filter(s => s.category === 'accom' && s.status !== 'pending' && s.status !== 'hidden' && !s.isHidden);
-          fsItems.forEach(s => {
-            if (s.createdAt && s.createdAt.toMillis) {
-              const d = s.createdAt.toDate(); const p = n => String(n).padStart(2,'0');
-              s.id   = s.createdAt.toMillis();
-              s.date = `${p(d.getMonth()+1)}/${p(d.getDate())}`;
-              s.time = `${p(d.getHours())}:${p(d.getMinutes())}`;
-            } else { s.id = Date.now(); }
-            s.adminPost = true;
-            s.address   = s.address || s.region;
-            s.tagline   = s.tagline || s.summary;
-            // accom 호환 필수 필드
-            s.mode = 'offer';
-            if (!Array.isArray(s.types))     s.types     = ['any'];
-            if (!Array.isArray(s.roomTypes)) s.roomTypes = [];
-          });
-          const cur = (() => { try { return JSON.parse(localStorage.getItem(STORE) || '[]'); } catch { return []; } })();
-          const localOnly = cur.filter(p => !p._fsDocId);
-          const fsIds = new Set(fsItems.map(x => String(x.id)));
-          const merged = localOnly.filter(p => !fsIds.has(String(p.id))).concat(fsItems);
-          localStorage.setItem(STORE, JSON.stringify(merged));
-          window.dispatchEvent(new Event('koaus-services-updated'));
-        }, err => console.warn('[accom] services 구독 실패', err));
+        const cur = JSON.parse(localStorage.getItem(STORE) || '[]');
+        const cleaned = (Array.isArray(cur) ? cur : []).filter(p => p && p._fsDocId);
+        if (cleaned.length !== cur.length) {
+          localStorage.setItem(STORE, JSON.stringify(cleaned));
+        }
+      } catch (_) { try { localStorage.setItem(STORE, '[]'); } catch (__) {} }
+
+      // ─── 지시 2/4 ─ 사용자 글 (accom_posts) + admin 글 (services) 통합 캐시 ───
+      let _accomFsCache   = [];   // accom_posts onSnapshot 결과 (사용자 글, 실시간 윈도우)
+      let _accomAdminCache = [];   // services 글 (admin 글, category='accom')
+      // ── 하이브리드 페이지네이션 캐시 ──
+      let _accomOverflow  = [];   // 실시간 윈도우에서 밀려난 글 보존 (세션 한정, 비실시간)
+      let _accomOlder     = [];   // startAfter 커서로 추가 조회한 더 옛 글 (비실시간)
+      let _accomCursorDoc = null; // 다음 커서 (QueryDocumentSnapshot)
+      window.koausOlderState = { hasMore: false, loading: false };
+
+      function _accomMergeAndPersist() {
+        // admin 글 먼저(기존 표시 순서 유지) + 사용자 글은 _fsDocId dedupe(실시간 우선) 후 최신순
+        const seen = new Set();
+        const users = [..._accomFsCache, ..._accomOverflow, ..._accomOlder].filter(p => {
+          if (!p || !p._fsDocId || seen.has(p._fsDocId)) return false;
+          seen.add(p._fsDocId); return true;
+        }).sort((a, b) => (b._ts || 0) - (a._ts || 0));
+        const merged = [..._accomAdminCache, ...users];
+        try { localStorage.setItem(STORE, JSON.stringify(merged)); } catch (_) {}
+        try { window.dispatchEvent(new Event('koaus-services-updated')); } catch (_) {}
+      }
+
+      function _accomMapDoc(d) {
+        const data = d.data() || {};
+        const out = { ...data, _fsDocId: d.id, id: d.id };
+        out._ts = (data.createdAt && data.createdAt.toMillis) ? data.createdAt.toMillis() : 0;
+        if (data.createdAt && data.createdAt.toMillis) {
+          const dt = data.createdAt.toDate(); const p = n => String(n).padStart(2,'0');
+          out.date = data.date || `${p(dt.getMonth()+1)}/${p(dt.getDate())}`;
+          out.time = data.time || `${p(dt.getHours())}:${p(dt.getMinutes())}`;
+        }
+        // 옛 호환 — 카드 빌더가 mode/types 참조
+        out.mode = out.mode || 'offer';
+        if (!Array.isArray(out.types))     out.types     = [];
+        if (!Array.isArray(out.roomTypes)) out.roomTypes = [];
+        if (!Array.isArray(out.imageUrls)) out.imageUrls = [];
+        return out;
+      }
+
+      // ── 사용자 글 구독 (accom_posts) — 실시간 최신 20건 윈도우 ──
+      try {
+        onSnapshot(
+          query(collection(db, 'accom_posts'), where('status', '==', 'approved'), orderBy('createdAt', 'desc'), limit(20)),
+          snap => {
+            const prevUsers = [..._accomFsCache, ..._accomOverflow];
+            _accomFsCache = snap.docs.map(_accomMapDoc);
+            if (snap.docs.length < 20) {
+              // 윈도우가 approved 전체를 커버 — 윈도우 밖 글은 존재하지 않음
+              _accomOverflow = []; _accomOlder = []; _accomCursorDoc = null;
+              window.koausOlderState.hasMore = false;
+            } else {
+              const winIds = new Set(_accomFsCache.map(p => p._fsDocId));
+              const oldIds = new Set(_accomOlder.map(p => p._fsDocId));
+              const winMin = _accomFsCache[_accomFsCache.length - 1]._ts || 0;
+              // 윈도우 범위(_ts >= winMin)인데 스냅샷에 없으면 삭제/비승인 → 제거.
+              // 그보다 옛 글(_ts < winMin)은 윈도우 밖으로 밀려난 것 → overflow 보존 (갭 방지).
+              _accomOverflow = prevUsers.filter(p =>
+                p._fsDocId && !winIds.has(p._fsDocId) && !oldIds.has(p._fsDocId) && (p._ts || 0) < winMin);
+              if (!_accomOlder.length) {
+                _accomCursorDoc = snap.docs[snap.docs.length - 1];
+                window.koausOlderState.hasMore = true;
+              }
+            }
+            _accomMergeAndPersist();
+          },
+          err => console.warn('[accom] accom_posts 구독 실패', err)
+        );
+      } catch (e) { console.warn('[accom] accom_posts subscribe 실패', e); }
+
+      // ── 하이브리드: 더 옛 글 커서 조회 — 회당 ≤20건 (rules limitedList 준수) ──
+      window.koausLoadOlder = async function () {
+        const st = window.koausOlderState;
+        if (st.loading || !st.hasMore || !_accomCursorDoc) return 0;
+        st.loading = true;
+        try {
+          let fresh = 0;
+          // 배치 전부가 overflow와 중복인 드문 경우 대비 — 최대 3회 재시도 (각 ≤20건)
+          for (let attempt = 0; attempt < 3 && st.hasMore && !fresh; attempt++) {
+            // getDocsFromServer: 오프라인이면 빈 캐시 반환 대신 명시적 throw → 실패 alert 경로 (침묵 금지)
+            const snap = await getDocsFromServer(query(
+              collection(db, 'accom_posts'), where('status', '==', 'approved'),
+              orderBy('createdAt', 'desc'), startAfter(_accomCursorDoc), limit(20)));
+            if (snap.docs.length) _accomCursorDoc = snap.docs[snap.docs.length - 1];
+            st.hasMore = snap.docs.length === 20;
+            const known = new Set([..._accomFsCache, ..._accomOverflow, ..._accomOlder].map(p => p._fsDocId));
+            const add = snap.docs.map(_accomMapDoc).filter(p => !known.has(p._fsDocId));
+            _accomOlder = [..._accomOlder, ...add];
+            fresh = add.length;
+          }
+          if (fresh) _accomMergeAndPersist();
+          return fresh;
+        } finally { st.loading = false; }
+      };
+
+      // ── admin 글 구독 (services, category='accom') — 기존 패턴, 머지 통합 ──
+      try {
+        onSnapshot(
+          query(collection(db, 'services'), where('status', '==', 'approved'), orderBy('createdAt', 'desc'), limit(20)),
+          snap => {
+            const fsItems = snap.docs
+              .map(d => ({ _fsDocId: d.id, ...d.data() }))
+              .filter(s => s.category === 'accom' && s.status !== 'pending' && s.status !== 'hidden' && !s.isHidden);
+            fsItems.forEach(s => {
+              if (s.createdAt && s.createdAt.toMillis) {
+                const d = s.createdAt.toDate(); const p = n => String(n).padStart(2,'0');
+                s.id   = s.createdAt.toMillis();
+                s.date = `${p(d.getMonth()+1)}/${p(d.getDate())}`;
+                s.time = `${p(d.getHours())}:${p(d.getMinutes())}`;
+              } else { s.id = Date.now(); }
+              s.adminPost = true;
+              s.address   = s.address || s.region;
+              s.tagline   = s.tagline || s.summary;
+              s.mode = 'offer';
+              if (!Array.isArray(s.types))     s.types     = ['any'];
+              if (!Array.isArray(s.roomTypes)) s.roomTypes = [];
+            });
+            _accomAdminCache = fsItems;
+            _accomMergeAndPersist();
+          },
+          err => console.warn('[accom] services 구독 실패', err)
+        );
       } catch (e) { console.warn('[accom] Firestore services subscribe 실패', e); }
     }
   </script>

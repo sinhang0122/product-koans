@@ -46,11 +46,14 @@ service firebase.storage {
                        && under5MB()
                        && isImage();
 
-      // 덮어쓰기·삭제 — 본인만 (또는 admin)
-      allow update, delete: if isSignedIn()
-                               && request.auth.uid == uid
-                               && under5MB()
-                               && isImage();
+      // 덮어쓰기 — 본인만 + 5MB + image/*
+      allow update: if isSignedIn()
+                       && request.auth.uid == uid
+                       && under5MB()
+                       && isImage();
+      // 삭제 — 본인만 (under5MB/isImage 는 request.resource 가 null 인 delete 에 적용 시
+      //          null 참조로 항상 거부 → 좀비 누적). 본인 uid path 매칭만 검증.
+      allow delete: if isSignedIn() && request.auth.uid == uid;
     }
 
     // ════════════════════════════════════════════════════════════

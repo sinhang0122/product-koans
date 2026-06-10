@@ -830,6 +830,135 @@
     <p class="footer-copy">© 2026 Koaus Community. All rights reserved.</p>
   </footer>
 
+  <!-- ── 글쓰기 모달 (유저 직접 작성 · accom 패턴 5:5) ── -->
+  <div class="write-overlay" id="writeOverlay">
+    <div class="write-modal write-modal--tall">
+      <div class="write-modal-header">
+        <div class="write-modal-title">글쓰기 <em>Write Post</em></div>
+        <span class="write-author-badge">작성자 : <b id="wAuthorName">-</b></span>
+        <button class="write-modal-close" id="writeBtnClose">✕</button>
+      </div>
+
+      <!-- 작성 주의사항 안내 박스 — 다음 작업에서 본문 inject -->
+      <div class="write-rules-box" role="note" aria-label="작성 주의사항">
+        <span class="wrb-icon" aria-hidden="true">⚠️</span>
+        <div class="wrb-body">
+          <strong class="wrb-title">작성 전 주의사항</strong>
+          <p>💡 업체 및 서비스 등록 시 정확한 상호명, ABN, 공식 연락처 및 영업시간을 기재해 주세요. 커뮤니티의 신뢰도를 저해하는 허위 리뷰나 부정 홍보성 게시글은 즉시 삭제됩니다.</p>
+        </div>
+      </div>
+
+      <div class="write-grid" id="writeGrid">
+        <div class="write-col">
+          <div class="write-field">
+            <label class="write-label" for="wTitle">제목 Title<span class="required-mark">*</span></label>
+            <input class="write-input" id="wTitle" type="text" placeholder="예: 스트라스필드 한식당 ○○ · 점심특선 맛집" maxlength="80" />
+          </div>
+          <div class="write-field">
+            <label class="write-label" for="wAddress">주소 Address</label>
+            <div class="addr-ac">
+              <input class="write-input" id="wAddress" type="text" autocomplete="off" placeholder="도로명·지역명만 입력해도 OK (예: 1 Albert Rd, Strathfield NSW)" />
+              <ul class="addr-suggest" id="wAddressSuggest"></ul>
+            </div>
+          </div>
+          <div class="write-field">
+            <span class="write-label">음식 종류 Cuisine (중복 선택 가능)</span>
+            <div class="write-opts" id="wCuisines">
+              <label class="write-opt"><input type="checkbox" data-cuisine="korean"> 한식</label>
+              <label class="write-opt"><input type="checkbox" data-cuisine="chinese"> 중식</label>
+              <label class="write-opt"><input type="checkbox" data-cuisine="japanese"> 일식</label>
+              <label class="write-opt"><input type="checkbox" data-cuisine="chicken"> 치킨</label>
+              <label class="write-opt"><input type="checkbox" data-cuisine="bunsik"> 분식</label>
+              <label class="write-opt"><input type="checkbox" data-cuisine="bbq"> BBQ/구이</label>
+              <label class="write-opt"><input type="checkbox" data-cuisine="cafe"> 카페</label>
+              <label class="write-opt"><input type="checkbox" data-cuisine="dessert"> 디저트</label>
+              <label class="write-opt"><input type="checkbox" data-cuisine="bar"> 주점</label>
+              <label class="write-opt"><input type="checkbox" data-cuisine="delivery"> 배달</label>
+              <label class="write-opt"><input type="checkbox" data-cuisine="other"> 기타</label>
+            </div>
+          </div>
+          <div class="write-field">
+            <label class="write-label" for="wPhone">📞 전화번호 Phone <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택 · 전화 + 문자 둘 다 활성)</em></label>
+            <input class="write-input" id="wPhone" type="tel" placeholder="04xx xxx xxx" maxlength="30" autocomplete="tel" />
+          </div>
+          <div class="write-field">
+            <label class="write-label" for="wKakao">💛 카톡 오픈채팅 링크 <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택)</em></label>
+            <input class="write-input" id="wKakao" type="url" placeholder="https://open.kakao.com/o/..." maxlength="500" />
+          </div>
+          <div class="write-field">
+            <label class="write-label" for="wEmail">✉️ 이메일 Email <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택)</em></label>
+            <input class="write-input" id="wEmail" type="email" placeholder="example@gmail.com" maxlength="200" autocomplete="email" />
+          </div>
+          <div class="write-field">
+            <label class="write-label" for="wContact">기타 통합 입력 Misc <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택 · 위 분리 필드 우선)</em></label>
+            <input class="write-input" id="wContact" type="text" placeholder="기타 연락 수단·시간대·메모 등 자유 입력" maxlength="200" />
+          </div>
+        </div>
+
+        <div class="write-col">
+          <div class="write-field">
+            <label class="write-label" for="wHours">영업시간 Hours <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택 · 자유 입력)</em></label>
+            <input class="write-input" id="wHours" type="text" placeholder="예: 매일 11:00–21:00 · 월요일 휴무" maxlength="100" />
+          </div>
+          <div class="write-field">
+            <span class="write-label">편의시설 Amenities</span>
+            <div class="write-opts">
+              <label class="write-opt"><input type="checkbox" id="wParking"> 🅿 주차</label>
+              <label class="write-opt"><input type="checkbox" id="wDelivery"> 🚚 배달</label>
+              <label class="write-opt"><input type="checkbox" id="wTakeaway"> 📦 포장</label>
+            </div>
+          </div>
+          <div class="write-field write-field--grow">
+            <label class="write-label" for="wBody" id="wBodyLabel">상세 설명 Comments</label>
+            <textarea class="write-textarea" id="wBody" placeholder="자세한 조건·시설·환경 등을 적어주세요"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- 사진 첨부 (최대 6장, 클라이언트 압축 후 Firebase Storage 업로드) -->
+      <div class="write-field">
+        <label class="write-label">사진 첨부 Photos <em style="font-style:normal;color:var(--text-muted);font-size:11px;">최대 6장 · 자동 압축됩니다</em></label>
+        <div class="photo-upload" id="wPhotoBox">
+          <input type="file" id="wPhotoInput" accept="image/*" multiple hidden />
+          <button type="button" class="photo-add-btn" id="wPhotoAddBtn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            <span>사진 추가</span>
+          </button>
+          <div class="photo-thumbs" id="wPhotoThumbs"></div>
+        </div>
+        <p class="duplicate-notice" id="duplicateNotice" hidden>* 안전한 개인정보 보호를 위해 사진은 새로 첨부해 주셔야 합니다.</p>
+      </div>
+
+      <div class="caution-box" aria-label="주의사항 및 공지사항">
+        <div class="caution-title">⚠ 주의사항 및 공지사항</div>
+        <ol>
+          <li>욕설, 혐오 발언 및 타인 비방 금지</li>
+          <li>환전 및 담배 등 호주 내 불법·편법 거래 금지</li>
+          <li>호주 법률 위반 글 또는 타인의 초상권·저작권 침해 사진 업로드 시 무통보 삭제 및 사이트 영구 이용 불가</li>
+          <li>1일 2회 등록 가능 (주소만 살짝 바꾸는 중복 도배 글은 동일 글로 간주하여 제재)</li>
+          <li>단기 렌트·쉐어 거래 시 보증금(Deposit) 사기 및 먹튀에 각별히 주의하세요.</li>
+          <li>상세 정보 없이 외부 메신저(카카오톡 등)로 유도하는 글은 피싱 사기일 확률이 높습니다.</li>
+        </ol>
+      </div>
+
+      <p class="auth-error" id="wError"></p>
+        <!-- [필수] 게시 규정 동의 — agent.md §2-C Mandatory Consent (글쓰기 표준 철칙) -->
+        <div class="write-consent-row" style="display:flex;align-items:flex-start;gap:8px;padding:10px 12px;margin:14px 0 8px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-sm);">
+          <input type="checkbox" id="writeConsent" style="flex-shrink:0;width:18px;height:18px;margin-top:1px;cursor:pointer;" />
+          <label for="writeConsent" style="flex:1;font-size:12.5px;line-height:1.5;color:var(--text-primary);cursor:pointer;">
+            <strong style="color:var(--red,#dc2626);">[필수]</strong>
+            <a href="terms.html" target="_blank" rel="noopener" style="color:var(--text-primary);text-decoration:underline;font-weight:700;"
+               title="이용약관 §3 (금지행위 — 허위 매물·사기·욕설·타인 사칭·봇 스팸·불법 콘텐츠 금지) + §10 (서비스별 면책)">이용약관 및 주의사항</a>을 확인하였으며,
+            서비스 규정 위반 시 게시물 삭제 및 계정 제재가 이루어질 수 있음에 동의합니다.
+          </label>
+        </div>
+      <div class="write-modal-actions">
+        <button class="write-cancel-btn" id="writeBtnCancel">취소</button>
+        <button class="write-submit-btn" id="writeBtnSubmit">등록하기</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     // ── 구글 클라우드 API 키 ──
     const GOOGLE_MAPS_KEY = 'AIzaSyDwogQ55V0-JqZ-ZYRTpYgNZWOdp_-5vOQ';
@@ -898,7 +1027,7 @@
     // 한 번에 20개씩만 렌더(페이지네이션). 향후 Firestore 전환 시:
     //   query(collection(db,'accom_posts'), orderBy('id','desc'), limit(PER_PAGE))
     //   다음 페이지는 startAfter(lastDoc) 커서로만 추가 조회 → read 비용 최소화.
-    const PER_PAGE     = 20;
+    const PER_PAGE     = 10;
 
     // ── 모드 탭 전환 (방 올리기 / 방 구하기) ──
     // restaurants.html: modeTabs DOM 없음 — querySelectorAll 빈 NodeList, forEach no-op
@@ -907,10 +1036,14 @@
     });
 
     function updateBoardTitle() {
+      // A-4 (배치) — 옛 회귀 수정: '쉐어 방 올리기' → K-Food 정합 제목
+      //   원인: accom 의 boardTitle 패턴(board='쉐어' + MODE_LABELS) 카피본 잔존.
+      //   K-Food 는 find/offer 모드 컨셉이 부적절 → 단일 제목 + 부제목.
       const st = STATE_NAMES[currentState];
-      const board = '쉐어';
-      document.getElementById('boardTitle').textContent = `🏠 ${st ? st + ' ' : ''}${board} ${MODE_LABELS[activeMode]}`;
-      document.getElementById('boardSubtitle').textContent = `${st ? st + ' · ' : ''}${board} ${MODE_LABELS[activeMode]} 게시판`;
+      document.getElementById('boardTitle').textContent = `🍱 ${st ? st + ' ' : ''}K-Food`;
+      document.getElementById('boardSubtitle').textContent = st
+        ? `${st} · 한식·맛집·푸드트럭 디렉터리`
+        : '한식·맛집·푸드트럭 디렉터리';
     }
 
     function switchMode(mode) {
@@ -1118,23 +1251,22 @@
       const isEdit = mode === 'edit';
       document.querySelector('.write-modal-title').innerHTML = isEdit
         ? '글 수정 <em>Edit Post</em>'
-        : `글쓰기 <em>쉐어 · ${MODE_LABELS[activeMode]}</em>`;
+        : '글쓰기 <em>K-Food · 한식/맛집</em>';
       document.getElementById('writeBtnSubmit').textContent = isEdit ? '수정 완료' : '등록하기';
     }
     function resetWriteForm() {
-      ['wTitle','wAddress','wPrice','wBody','wAvailDate','wContact','wPhone','wKakao','wEmail'].forEach(id => { const _el = document.getElementById(id); if (_el) _el.value = ''; });
-      ['wParking','wPet','wKids','wAirCon'].forEach(id => { document.getElementById(id).checked = false; });
-      document.querySelectorAll('#wTypes input, #wRoomTypes input').forEach(c => { c.checked = false; });
-      document.getElementById('wGender').value = '';
+      ['wTitle','wAddress','wBody','wHours','wContact','wPhone','wKakao','wEmail'].forEach(id => { const _el = document.getElementById(id); if (_el) _el.value = ''; });
+      ['wParking','wDelivery','wTakeaway'].forEach(id => { const _el = document.getElementById(id); if (_el) _el.checked = false; });
+      document.querySelectorAll('#wCuisines input').forEach(c => { c.checked = false; });
     }
     // 로그인 사용자 닉네임 (작성자 고정값)
     function currentNickname() {
       const u = window.koausAuth && window.koausAuth.user;
       return localStorage.getItem('koaus-nickname') || u?.displayName?.split(' ')[0] || u?.email?.split('@')[0] || '';
     }
-    function setTypeChecks(arr) {
+    function setCuisineChecks(arr) {
       const set = new Set(arr || []);
-      document.querySelectorAll('#wTypes input').forEach(c => { c.checked = set.has(c.dataset.type); });
+      document.querySelectorAll('#wCuisines input').forEach(c => { c.checked = set.has(c.dataset.cuisine); });
     }
     // 모드에 따라 글쓰기 폼 표시 (방 구하기 = 자유 양식: 제목/코멘트/연락처만)
     function applyWriteModeUI() {
@@ -1149,7 +1281,7 @@
     function openWriteModal() {
       editingId = null;
       setWriteMode('create');
-      setTypeChecks([]);  // 기간 체크 초기화
+      setCuisineChecks([]);  // 음식 종류 체크 초기화
       applyWriteModeUI();
       document.getElementById('wAuthorName').textContent = currentNickname() || '-';  // 헤더 작성자 배지
       loadMapScript();              // Places(주소 자동완성) 미리 로드
@@ -1177,42 +1309,31 @@
       applyWriteModeUI();
       set('wTitle', d.title);
       set('wAddress', d.address);
-      set('wPrice', d.price);
       set('wBody',  d.body);
+      set('wHours', d.hours);
       set('wContact', d.contact);
       set('wPhone',   d.phone);
       set('wKakao',   d.kakaoLink);
       set('wEmail',   d.email);
-      set('wAvailDate', d.availableDate);
-      set('wGender', d.gender);
-      setTypeChecks(Array.isArray(d.types) ? d.types : []);
-      // 방 형태 체크 (roomTypes)
-      const rooms = new Set(Array.isArray(d.roomTypes) ? d.roomTypes : (d.roomType ? [d.roomType] : []));
-      document.querySelectorAll('#wRoomTypes input').forEach(c => { c.checked = rooms.has(c.dataset.room); });
+      setCuisineChecks(Array.isArray(d.cuisines) ? d.cuisines : []);
       check('wParking',  d.parking);
-      check('wPet',      d.petFriendly);
-      check('wKids',     d.kidsInHouse);
-      check('wAirCon',   d.airCon);
+      check('wDelivery', d.delivery);
+      check('wTakeaway', d.takeaway);
       if (notice) notice.hidden = false;
     }
     function openWriteModalForEdit(p) {
       editingId = p.id;
-      setTypeChecks(Array.isArray(p.types) ? p.types : (p.type ? [p.type] : []));
+      setCuisineChecks(Array.isArray(p.cuisines) ? p.cuisines : []);
       document.getElementById('wTitle').value    = p.title || '';
       document.getElementById('wAddress').value  = p.address || '';
-      document.getElementById('wPrice').value    = p.price || '';
-      const roomSet = new Set(Array.isArray(p.roomTypes) ? p.roomTypes : (p.roomType ? [p.roomType] : []));
-      document.querySelectorAll('#wRoomTypes input').forEach(c => { c.checked = roomSet.has(c.dataset.room); });
-      document.getElementById('wGender').value = p.gender || '';
-      document.getElementById('wAvailDate').value = p.availableDate || '';
+      const _hr = document.getElementById('wHours'); if (_hr) _hr.value = p.hours || '';
       document.getElementById('wContact').value = p.contact || '';
       const _ph = document.getElementById('wPhone'); if (_ph) _ph.value = p.phone || '';
       const _kk = document.getElementById('wKakao'); if (_kk) _kk.value = p.kakaoLink || '';
       const _em = document.getElementById('wEmail'); if (_em) _em.value = p.email || '';
       document.getElementById('wParking').checked = !!p.parking;
-      document.getElementById('wPet').checked     = !!p.petFriendly;
-      document.getElementById('wKids').checked    = !!p.kidsInHouse;
-      document.getElementById('wAirCon').checked  = !!p.airCon;
+      const _dv = document.getElementById('wDelivery'); if (_dv) _dv.checked = !!p.delivery;
+      const _tw = document.getElementById('wTakeaway'); if (_tw) _tw.checked = !!p.takeaway;
       document.getElementById('wBody').value     = p.body || '';
       document.getElementById('wAuthorName').textContent = p.author || currentNickname() || '-';
       setWriteMode('edit');
@@ -1379,41 +1500,33 @@
 
       let fields, coords = null;
 
-      if (isFind) {
-        // ── 방 구하기: 자유 양식 — 제목만 필수 (연락처는 상세 설명에 자유 기재) ──
-        if (!title) { alert('제목을 입력해 주세요.'); return; }
-        fields = { mode: 'find', title, body };
-      } else {
-        // ── 방 올리기: 제목 · 주소 · 주당 렌트비만 필수, 나머지는 선택 ──
-        const types     = [...document.querySelectorAll('#wTypes input:checked')].map(c => c.dataset.type);
-        const roomTypes = [...document.querySelectorAll('#wRoomTypes input:checked')].map(c => c.dataset.room);
-        const gender    = document.getElementById('wGender').value;
-        const availableDate = document.getElementById('wAvailDate').value;
-        const contact   = document.getElementById('wContact').value.trim();
-        const _phEl = document.getElementById('wPhone');
-        const _kkEl = document.getElementById('wKakao');
-        const _emEl = document.getElementById('wEmail');
-        const phone     = _phEl ? _phEl.value.trim() : '';
-        const kakaoLink = _kkEl ? _kkEl.value.trim() : '';
-        const email     = _emEl ? _emEl.value.trim() : '';
-        const address  = document.getElementById('wAddress').value.trim();
-        const priceVal = document.getElementById('wPrice').value.trim();
+      // ── A-2 (배치) — K-Food 회귀 수정: 쉐어 패턴 카피 → K-Food 필드 정합 ──
+      //   원인: 옛 코드가 accom 패턴 그대로 (mode='find/offer' + 주당 렌트비 필수 alert)
+      //         → 사용자가 K-Food 글 등록 시 "주당 쉐어비 필수" alert 차단.
+      //   해결: 제목만 필수. 주소·연락처·본문 옵션. mode 분기 제거 (K-Food 통합 양식).
+      if (true /* K-Food 통합 — find/offer 분기 폐기 */) {
+        const cuisines  = [...document.querySelectorAll('#wCuisines input:checked')].map(c => c.dataset.cuisine);
+        const hours     = (document.getElementById('wHours')?.value || '').trim();
+        const contact   = (document.getElementById('wContact')?.value || '').trim();
+        const phone     = (document.getElementById('wPhone')?.value || '').trim();
+        const kakaoLink = (document.getElementById('wKakao')?.value || '').trim();
+        const email     = (document.getElementById('wEmail')?.value || '').trim();
+        const address   = (document.getElementById('wAddress')?.value || '').trim();
 
-        if (!title || !address || !priceVal) {
-          alert('제목, 주소, 주당 쉐어비는 필수 입력 항목입니다.');
+        if (!title) {
+          alert('제목은 필수 입력 항목입니다.');
           return;
         }
-        const price = parseInt(priceVal, 10);
-        if (!(price > 0)) { alert('주당 쉐어비를 숫자로 올바르게 입력해 주세요.'); return; }
         fields = {
-          mode: 'offer', types, title, body, address, price, roomTypes, gender, availableDate, contact, phone, kakaoLink, email,
-          parking:     document.getElementById('wParking').checked,
-          petFriendly: document.getElementById('wPet').checked,
-          kidsInHouse: document.getElementById('wKids').checked,
-          airCon:      document.getElementById('wAirCon').checked,
+          mode: 'offer', title, body, address, cuisines, hours, contact, phone, kakaoLink, email,
+          parking:  document.getElementById('wParking')?.checked || false,
+          delivery: document.getElementById('wDelivery')?.checked || false,
+          takeaway: document.getElementById('wTakeaway')?.checked || false,
         };
-        loadMapScript();  // Geocoder 사용을 위해 Maps 스크립트 로드 보장
-        coords = await geocode(address);
+        if (address) {
+          loadMapScript();
+          coords = await geocode(address);
+        }
       }
 
       const nick = currentNickname()
@@ -1504,6 +1617,7 @@
     }
     const ROOM_LABELS = { master:'마스터룸', second:'세컨룸', single:'독방', living_share:'거실쉐어', sunroom:'썬룸', share:'쉐어' };
     const GENDER_LABELS = { male:'남', female:'여', any:'성별 무관' };
+    const CUISINE_LABELS = { korean:'한식', chinese:'중식', japanese:'일식', chicken:'치킨', bunsik:'분식', bbq:'BBQ/구이', cafe:'카페', dessert:'디저트', bar:'주점', delivery:'배달', other:'기타' };
     // 욕설/금칙어 필터 — 제목/상세 설명/닉네임 검사용 (부분 포함 시 차단)
     const BAD_WORDS = ['시발','씨발','시팔','씨팔','씨발년','개새끼','새끼','병신','지랄','존나','좆','좆같','니미','닥쳐','꺼져','엿먹어','미친놈','미친년','썅','등신','후레','보지','자지','걸레','창녀','fuck','fucking','fuck you','shit','bitch','asshole','bastard','dick','cunt','motherfucker','slut','whore','retard'];
     function hasProfanity(text) {
@@ -1514,6 +1628,8 @@
     // 게시글의 상세 필터 항목들을 태그 텍스트 배열로
     function filterTags(p) {
       const tags = [];
+      // K-Food — 음식 종류 우선 표시 (지도 말풍선 태그는 앞 3개만 노출)
+      (Array.isArray(p.cuisines) ? p.cuisines : []).forEach(c => { if (CUISINE_LABELS[c]) tags.push('🍽 ' + CUISINE_LABELS[c]); });
       const ptypes = Array.isArray(p.types) ? p.types : (p.type ? [p.type] : []);
       ptypes.forEach(t => { if (TYPE_LABELS[t]) tags.push('📅 ' + TYPE_LABELS[t].ko); });
       if (p.propType) tags.push(propTypeLabel(p.propType));
@@ -1679,20 +1795,12 @@
       grid.innerHTML = pageItems.map(p => {
         const saved  = isSaved(p.id);
         const isFind = (p.mode || 'offer') === 'find';
-        // 칩 (방형태 / 성별 / 숙박기간) — 방 올리기만
-        let chips = '';
-        if (!isFind) {
-          const cs = [];
-          const rooms = Array.isArray(p.roomTypes) ? p.roomTypes : (p.roomType ? [p.roomType] : []);
-          rooms.forEach(r => { if (ROOM_LABELS[r]) cs.push('🛏 ' + ROOM_LABELS[r]); });
-          if (p.gender && GENDER_LABELS[p.gender]) cs.push('👤 ' + GENDER_LABELS[p.gender]);
-          const ds = Array.isArray(p.types) ? p.types : (p.type ? [p.type] : []);
-          ds.forEach(t => { if (TYPE_LABELS[t]) cs.push('📅 ' + TYPE_LABELS[t].ko); });
-          chips = cs.map(c => `<span class="accom-tag">${escHtml(c)}</span>`).join('');
-        }
-        const priceHtml = isFind
-          ? '<span class="accom-card-find">방 구하기</span>'
-          : (p.price ? `<span class="accom-price">$${p.price}<small>/wk</small></span>` : '<span class="accom-card-find">가격 협의</span>');
+        // 칩 — 음식 종류 (K-Food). 기존 쉐어 패턴 글(cuisines 없음)은 칩 없이 표시.
+        const cs = [];
+        (Array.isArray(p.cuisines) ? p.cuisines : []).forEach(c => { if (CUISINE_LABELS[c]) cs.push('🍽 ' + CUISINE_LABELS[c]); });
+        const chips = cs.map(c => `<span class="accom-tag">${escHtml(c)}</span>`).join('');
+        // 가격 자리 — K-Food 는 영업시간 표시 (없으면 빈칸, '가격 협의' 쉐어 용어 폐기)
+        const priceHtml = p.hours ? `<span class="accom-card-find">🕒 ${escHtml(p.hours)}</span>` : '';
         const sub = isFind ? (p.body || '') : (p.address || '');
         return `
         <div class="accom-card${isMine(p) ? ' my-post-highlight' : ''}" data-id="${p.id}">
@@ -1788,12 +1896,23 @@
 
       pager.innerHTML = '';
       if (totalPages > 1) {
-        for (let i = 1; i <= totalPages; i++) {
-          pager.innerHTML += `<button class="pagination-btn${i === currentPage ? ' active' : ''}" data-page="${i}">${i}</button>`;
+        // 슬라이딩 윈도우 — 번호 버튼 최대 5개 (현재 페이지 중심)
+        let winStart = Math.max(1, currentPage - 2);
+        const winEnd = Math.min(totalPages, winStart + 4);
+        winStart = Math.max(1, winEnd - 4);
+        const parts = [];
+        parts.push(`<button class="pagination-btn pagination-nav" data-page="${currentPage - 1}"${currentPage === 1 ? ' disabled' : ''} aria-label="이전 페이지">‹</button>`);
+        for (let i = winStart; i <= winEnd; i++) {
+          parts.push(`<button class="pagination-btn${i === currentPage ? ' active' : ''}" data-page="${i}">${i}</button>`);
         }
+        parts.push(`<button class="pagination-btn pagination-nav" data-page="${currentPage + 1}"${currentPage === totalPages ? ' disabled' : ''} aria-label="다음 페이지">›</button>`);
+        pager.innerHTML = parts.join('');
         pager.querySelectorAll('.pagination-btn').forEach(b => {
           b.addEventListener('click', () => {
-            currentPage = parseInt(b.dataset.page);
+            if (b.disabled) return;
+            const target = parseInt(b.dataset.page, 10);
+            if (!Number.isFinite(target) || target < 1 || target > totalPages) return;
+            currentPage = target;
             renderAll();
             window.scrollTo({ top: 0, behavior: 'smooth' });
           });
@@ -1845,13 +1964,15 @@
       }
 
       document.getElementById('detailNavTitle').textContent = p.title;
-      // 상태 + 입주 가능일
-      document.getElementById('detailStatus').innerHTML =
-        `⚪ 쉐어 <span class="rea-dot">•</span> 입주 가능일: <strong>${escHtml(p.availableDate || '협의')}</strong>`;
-      // 가격 (Huge Bold)
-      document.getElementById('detailPrice').innerHTML = p.price
-        ? `$${p.price} <span class="rea-price-unit">per week</span>`
-        : '<span class="rea-price-na">가격 협의</span>';
+      // 상태 — K-Food: 음식 종류 표시 (쉐어·입주 가능일 용어 폐기)
+      const _dCuisines = (Array.isArray(p.cuisines) ? p.cuisines : []).map(c => CUISINE_LABELS[c]).filter(Boolean);
+      document.getElementById('detailStatus').innerHTML = _dCuisines.length
+        ? `🍱 K-Food <span class="rea-dot">•</span> 음식 종류: <strong>${escHtml(_dCuisines.join(', '))}</strong>`
+        : '🍱 K-Food';
+      // 가격 자리 — 영업시간 표시 (없으면 빈칸, '가격 협의' 쉐어 용어 폐기)
+      document.getElementById('detailPrice').innerHTML = p.hours
+        ? `<span class="rea-price-na">🕒 ${escHtml(p.hours)}</span>`
+        : '';
       // 주소 + 복사
       const addrText = document.getElementById('detailAddrText');
       const addrCopy = document.getElementById('detailAddrCopy');
@@ -1985,7 +2106,15 @@
 
     // ── 공유하기 (모바일: 네이티브 / PC: 드롭다운) ──
     const shareMenu = document.getElementById('detailShareMenu');
-    function shareUrl() { return location.href; }
+    // 지시 3/3 — 공유 URL: origin + pathname + ?id=<글ID> 강제 조립
+    function shareUrl() {
+      const fromUrl = new URLSearchParams(location.search).get('id');
+      if (fromUrl) return location.origin + location.pathname + '?id=' + encodeURIComponent(fromUrl);
+      const p = (typeof currentDetailPost !== 'undefined') ? currentDetailPost : null;
+      const pid = p && (p._fsDocId || p.id);
+      if (pid) return location.origin + location.pathname + '?id=' + encodeURIComponent(pid);
+      return location.origin + location.pathname;
+    }
     document.getElementById('detailShareBtn').addEventListener('click', e => {
       e.stopPropagation();
       const p = currentDetailPost; if (!p) return;
@@ -2784,152 +2913,6 @@
     } catch (e) { console.warn('[restaurants] pinned-notice 초기화 실패', e); }
   </script>
 
-  <!-- ── 글쓰기 모달 (유저 직접 작성 · accom 패턴 5:5) ── -->
-  <div class="write-overlay" id="writeOverlay">
-    <div class="write-modal write-modal--tall">
-      <div class="write-modal-header">
-        <div class="write-modal-title">글쓰기 <em>Write Post</em></div>
-        <span class="write-author-badge">작성자 : <b id="wAuthorName">-</b></span>
-        <button class="write-modal-close" id="writeBtnClose">✕</button>
-      </div>
-
-      <!-- 작성 주의사항 안내 박스 — 다음 작업에서 본문 inject -->
-      <div class="write-rules-box" role="note" aria-label="작성 주의사항">
-        <span class="wrb-icon" aria-hidden="true">⚠️</span>
-        <div class="wrb-body">
-          <strong class="wrb-title">작성 전 주의사항</strong>
-          <p>💡 업체 및 서비스 등록 시 정확한 상호명, ABN, 공식 연락처 및 영업시간을 기재해 주세요. 커뮤니티의 신뢰도를 저해하는 허위 리뷰나 부정 홍보성 게시글은 즉시 삭제됩니다.</p>
-        </div>
-      </div>
-
-      <div class="write-grid" id="writeGrid">
-        <div class="write-col">
-          <div class="write-field">
-            <label class="write-label" for="wTitle">제목 Title<span class="required-mark">*</span></label>
-            <input class="write-input" id="wTitle" type="text" placeholder="예: 멜번 Box Hill 싱글룸 · 주 $210" maxlength="80" />
-          </div>
-          <div class="write-field offer-only">
-            <label class="write-label" for="wAddress">주소 Address<span class="required-mark">*</span></label>
-            <div class="addr-ac">
-              <input class="write-input" id="wAddress" type="text" autocomplete="off" placeholder="도로명·지역명만 입력해도 OK (예: Coronation Dr, Green Valley NSW)" />
-              <ul class="addr-suggest" id="wAddressSuggest"></ul>
-            </div>
-          </div>
-          <div class="write-field offer-only">
-            <label class="write-label" for="wPrice">주당 쉐어비 Price / wk ($)<span class="required-mark">*</span></label>
-            <input class="write-input" id="wPrice" type="number" placeholder="숫자만 입력" min="0" />
-          </div>
-          <div class="write-field offer-only">
-            <span class="write-label">방 형태 Room Type (중복 선택 가능)</span>
-            <div class="write-opts" id="wRoomTypes">
-              <label class="write-opt"><input type="checkbox" data-room="master"> 마스터룸</label>
-              <label class="write-opt"><input type="checkbox" data-room="second"> 세컨룸</label>
-              <label class="write-opt"><input type="checkbox" data-room="single"> 독방</label>
-              <label class="write-opt"><input type="checkbox" data-room="living_share"> 거실쉐어</label>
-              <label class="write-opt"><input type="checkbox" data-room="sunroom"> 썬룸</label>
-            </div>
-          </div>
-          <div class="write-field offer-only">
-            <span class="write-label">숙박 기간 Duration (중복 선택 가능)</span>
-            <div class="write-opts" id="wTypes">
-              <label class="write-opt"><input type="checkbox" data-type="ultra_short"> 초단기 (1일~2주)</label>
-              <label class="write-opt"><input type="checkbox" data-type="short"> 단기 (2주~4주)</label>
-              <label class="write-opt"><input type="checkbox" data-type="mid"> 중단기 (1달~2달)</label>
-              <label class="write-opt"><input type="checkbox" data-type="long"> 장기 (2달 이상)</label>
-              <label class="write-opt"><input type="checkbox" data-type="any"> 기간 상관 없음</label>
-            </div>
-          </div>
-          <div class="write-field offer-only">
-            <label class="write-label" for="wPhone">📞 전화번호 Phone <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택 · 전화 + 문자 둘 다 활성)</em></label>
-            <input class="write-input" id="wPhone" type="tel" placeholder="04xx xxx xxx" maxlength="30" autocomplete="tel" />
-          </div>
-          <div class="write-field offer-only">
-            <label class="write-label" for="wKakao">💛 카톡 오픈채팅 링크 <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택)</em></label>
-            <input class="write-input" id="wKakao" type="url" placeholder="https://open.kakao.com/o/..." maxlength="500" />
-          </div>
-          <div class="write-field offer-only">
-            <label class="write-label" for="wEmail">✉️ 이메일 Email <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택)</em></label>
-            <input class="write-input" id="wEmail" type="email" placeholder="example@gmail.com" maxlength="200" autocomplete="email" />
-          </div>
-          <div class="write-field offer-only">
-            <label class="write-label" for="wContact">기타 통합 입력 Misc <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택 · 위 분리 필드 우선)</em></label>
-            <input class="write-input" id="wContact" type="text" placeholder="기타 연락 수단·시간대·메모 등 자유 입력" maxlength="200" />
-          </div>
-        </div>
-
-        <div class="write-col">
-          <div class="write-field offer-only">
-            <label class="write-label" for="wAvailDate">입주 가능한 날 Available Date</label>
-            <input class="write-input" id="wAvailDate" type="date" />
-          </div>
-          <div class="write-field offer-only">
-            <label class="write-label" for="wGender">성별 조건 Gender</label>
-            <select class="write-input" id="wGender">
-              <option value="">선택 안 함</option>
-              <option value="male">남</option>
-              <option value="female">여</option>
-              <option value="any">성별 무관</option>
-            </select>
-          </div>
-          <div class="write-field offer-only">
-            <span class="write-label">옵션 Options</span>
-            <div class="write-opts">
-              <label class="write-opt"><input type="checkbox" id="wParking"> 🅿 주차</label>
-              <label class="write-opt"><input type="checkbox" id="wPet"> 🐾 반려동물</label>
-              <label class="write-opt"><input type="checkbox" id="wKids"> 👶 아이</label>
-              <label class="write-opt"><input type="checkbox" id="wAirCon"> ❄ 에어컨</label>
-            </div>
-          </div>
-          <div class="write-field write-field--grow">
-            <label class="write-label" for="wBody" id="wBodyLabel">상세 설명 Comments</label>
-            <textarea class="write-textarea" id="wBody" placeholder="자세한 조건·시설·환경 등을 적어주세요"></textarea>
-          </div>
-        </div>
-      </div>
-
-      <!-- 사진 첨부 (최대 6장, 클라이언트 압축 후 Firebase Storage 업로드) -->
-      <div class="write-field">
-        <label class="write-label">사진 첨부 Photos <em style="font-style:normal;color:var(--text-muted);font-size:11px;">최대 6장 · 자동 압축됩니다</em></label>
-        <div class="photo-upload" id="wPhotoBox">
-          <input type="file" id="wPhotoInput" accept="image/*" multiple hidden />
-          <button type="button" class="photo-add-btn" id="wPhotoAddBtn">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-            <span>사진 추가</span>
-          </button>
-          <div class="photo-thumbs" id="wPhotoThumbs"></div>
-        </div>
-        <p class="duplicate-notice" id="duplicateNotice" hidden>* 안전한 개인정보 보호를 위해 사진은 새로 첨부해 주셔야 합니다.</p>
-      </div>
-
-      <div class="caution-box" aria-label="주의사항 및 공지사항">
-        <div class="caution-title">⚠ 주의사항 및 공지사항</div>
-        <ol>
-          <li>욕설, 혐오 발언 및 타인 비방 금지</li>
-          <li>환전 및 담배 등 호주 내 불법·편법 거래 금지</li>
-          <li>호주 법률 위반 글 또는 타인의 초상권·저작권 침해 사진 업로드 시 무통보 삭제 및 사이트 영구 이용 불가</li>
-          <li>1일 2회 등록 가능 (주소만 살짝 바꾸는 중복 도배 글은 동일 글로 간주하여 제재)</li>
-          <li>단기 렌트·쉐어 거래 시 보증금(Deposit) 사기 및 먹튀에 각별히 주의하세요.</li>
-          <li>상세 정보 없이 외부 메신저(카카오톡 등)로 유도하는 글은 피싱 사기일 확률이 높습니다.</li>
-        </ol>
-      </div>
-
-      <p class="auth-error" id="wError"></p>
-        <!-- [필수] 게시 규정 동의 — agent.md §2-C Mandatory Consent (글쓰기 표준 철칙) -->
-        <div class="write-consent-row" style="display:flex;align-items:flex-start;gap:8px;padding:10px 12px;margin:14px 0 8px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-sm);">
-          <input type="checkbox" id="writeConsent" style="flex-shrink:0;width:18px;height:18px;margin-top:1px;cursor:pointer;" />
-          <label for="writeConsent" style="flex:1;font-size:12.5px;line-height:1.5;color:var(--text-primary);cursor:pointer;">
-            <strong style="color:var(--red,#dc2626);">[필수]</strong>
-            <a href="terms.html" target="_blank" rel="noopener" style="color:var(--text-primary);text-decoration:underline;font-weight:700;"
-               title="이용약관 §3 (금지행위 — 허위 매물·사기·욕설·타인 사칭·봇 스팸·불법 콘텐츠 금지) + §10 (서비스별 면책)">이용약관 및 주의사항</a>을 확인하였으며,
-            서비스 규정 위반 시 게시물 삭제 및 계정 제재가 이루어질 수 있음에 동의합니다.
-          </label>
-        </div>
-      <div class="write-modal-actions">
-        <button class="write-cancel-btn" id="writeBtnCancel">취소</button>
-        <button class="write-submit-btn" id="writeBtnSubmit">등록하기</button>
-      </div>
-    </div>
-  </div>
 
   <!-- ── 상세 필터 후처리 (restaurants: 음식 종류·영업 상태·편의시설) ── -->
   <script>

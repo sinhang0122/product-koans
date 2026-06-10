@@ -81,6 +81,9 @@
   //     markerIcon    — (p) => google.maps.Icon | undefined  (단일 마커 아이콘, 옵션)
   //     buildCardHtml — (p) => '<div class="iw-card" data-pid="…">…</div>'  (필수)
   //                     단일/그룹 InfoWindow 공통. iw-card[data-pid] 위임 click 으로 상세 모달 오픈.
+  //     buildPreviewHtml — (p) => html  (옵션, D 지시) 단일 마커 InfoWindow 전용 미리보기 빌더.
+  //                     미지정 시 buildCardHtml 그대로 사용 (하위 호환 — 기존 호출자 무영향).
+  //                     클러스터 그룹 InfoWindow 는 항상 buildCardHtml (제목 포함, 선택용).
   //     onSingleClick — (p) => void  (단일 마커 클릭 시 부수 효과: markVisited 등, 옵션)
   //     markers       — Marker[] (마커 push 대상, 옵션)
   //     bounds        — google.maps.LatLngBounds (extend 대상, 옵션)
@@ -101,16 +104,27 @@
                          : (typeof opts.markerIcon === 'function' ? opts.markerIcon(p0) : undefined),
       });
       marker.addListener('click', function () {
+        // B-2 (배치) — opts.skipInfoWindowOnSingle=true 인 호출자(auto/jobs)는
+        //   단일 마커 클릭 시 InfoWindow 미리보기 카드 X → onSingleClick(보통 openDetail)만.
+        //   (히스토리: accom/rent 도 B-2 로 직행이었으나 D 지시로 미리보기 복원 — rent 는
+        //    buildPreviewHtml 옵션, accom 은 자체 마커 루프에서 처리)
+        //   클러스터(같은 좌표 다중)는 사용자 선택 필요 → InfoWindow 유지.
         if (isCluster) {
           iw.setContent(groupIwHtml(arr, opts.buildCardHtml));
-        } else {
-          iw.setContent(opts.buildCardHtml(p0));
+          iw.open(map, marker);
+        } else if (opts.skipInfoWindowOnSingle) {
           if (typeof opts.onSingleClick === 'function') opts.onSingleClick(p0);
           if (typeof opts.markerIcon === 'function') {
             try { marker.setIcon(opts.markerIcon(p0)); } catch (_) {}
           }
+        } else {
+          iw.setContent((typeof opts.buildPreviewHtml === 'function' ? opts.buildPreviewHtml : opts.buildCardHtml)(p0));
+          if (typeof opts.onSingleClick === 'function') opts.onSingleClick(p0);
+          if (typeof opts.markerIcon === 'function') {
+            try { marker.setIcon(opts.markerIcon(p0)); } catch (_) {}
+          }
+          iw.open(map, marker);
         }
-        iw.open(map, marker);
       });
       if (Array.isArray(opts.markers)) opts.markers.push(marker);
       if (opts.bounds && typeof opts.bounds.extend === 'function') {

@@ -497,9 +497,8 @@
     <!-- 표준 레이아웃: 검색 → 필터/뷰토글/글쓰기 → 본문 (accom 패턴 100% 통일) -->
     <!-- 조건별 텍스트 검색 (search-bar.js 자동 빌드) — 탭 바로 아래 최상단 -->
     <div data-koaus-search="visa" style="margin-top:0;"></div>
-    <!-- 지시 2/10 — Controls — List/Map 토글·글쓰기 제거, 상세필터·카운트만 유지 -->
+    <!-- A-5 (배치) — '총 0건' 카운트 제거 (사용자 요구). 상세필터만 유지. -->
     <div class="accom-controls" id="visaControls">
-      <span class="board-count" id="visaBoardCount">총 0건</span>
       <div class="accom-ctrl-actions">
         <!-- 상세필터 (비자/유학 세부 카테고리) — 단독 정렬 -->
         <select class="board-write-btn board-write-btn--ghost" id="visaDetailFilter" aria-label="상세 필터">
@@ -510,6 +509,7 @@
           <option value="edu">유학·어학연수</option>
           <option value="legal">일반법률상담</option>
         </select>
+        <button class="board-write-btn" id="visaWriteBtn">+ 글쓰기</button>
       </div>
     </div>
     <!-- List View — accom-grid 패턴 (Map View 폐기) -->
@@ -517,6 +517,7 @@
       <div class="partner-list" id="partnerList">
         <div class="post-empty">파트너 정보를 불러오는 중…</div>
       </div>
+      <div class="pagination" id="pagination"></div>
     </section>
 
     <!-- ── 비자/유학 글쓰기 모달 (accom 5:5 패턴, 제목만 required) ── -->
@@ -966,16 +967,19 @@
       const mbEdu   = document.getElementById('heroMobileEdu');
       // visaFilterPills 폐기 — 상세필터는 #visaDetailFilter (select) 로 통합
       const detailFilter = document.getElementById('visaDetailFilter');
+      const writeBtnEl   = document.getElementById('visaWriteBtn');
       const searchBar    = document.querySelector('[data-koaus-search="visa"]');
       if (activeCat === 'points') {
         if (board)  board.style.display  = 'none';
         if (detailFilter) detailFilter.style.display = 'none';
+        if (writeBtnEl)   writeBtnEl.style.display   = 'none';
         if (searchBar)    searchBar.style.display    = 'none';
         if (points) points.style.display = '';
       } else {
         if (board)  board.style.display  = '';
         if (points) points.style.display = 'none';
         if (detailFilter) detailFilter.style.display = '';
+        if (writeBtnEl)   writeBtnEl.style.display   = '';
         if (searchBar)    searchBar.style.display    = '';
         // 슬라이더 — legal/edu 분리 hidden 제거, 둘 다 노출
         if (pcLegal) pcLegal.hidden = false;
@@ -991,6 +995,7 @@
     window.__koausVisaFilter = window.__koausVisaFilter || 'all';
     window.koausSearch_visa = function (kw, scope) {
       window.__koausVisaSearch = { kw: (kw || '').toLowerCase().trim(), scope: scope || 'both' };
+      currentPage = 1;  // 검색 변경 시 첫 페이지로
       renderList();
     };
     // 상세필터 드롭다운 — accom-ctrl-actions 안의 select 와이어
@@ -998,6 +1003,7 @@
     if (visaDetailFilterEl) {
       visaDetailFilterEl.addEventListener('change', () => {
         window.__koausVisaFilter = visaDetailFilterEl.value || 'all';
+        currentPage = 1;  // 필터 변경 시 첫 페이지로
         if (typeof renderList === 'function') renderList();
       });
     }
@@ -1037,8 +1043,10 @@
           return true;
       }
     }
+    let currentPage = 1;
+    const PER_PAGE = 10;
     function renderList() {
-      if (activeCat === 'points') return;
+      if (activeCat === 'points') return;  // 가채점 탭 — 목록/페이지네이션 렌더 자체 안 함
       // 비자/유학 통합 — 상세필터로 좁힘
       const filter = window.__koausVisaFilter || 'all';
       const accept = (p) => {
@@ -1056,15 +1064,21 @@
           return bt - at;
         });
       const listEl = document.getElementById('partnerList');
+      const pager  = document.getElementById('pagination');
       if (!items.length) {
         listEl.innerHTML = `<div class="post-empty">등록된 ${CAT_LABEL[activeCat]} 정보가 아직 없습니다.<br>관련 업체·후기·정보가 있다면 우측 상단 [+ 글쓰기] 버튼으로 직접 등록해 주세요. (커뮤니티 디렉터리 게시판)</div>`;
+        if (pager) pager.innerHTML = '';
         return;
       }
+      const totalPages = Math.max(1, Math.ceil(items.length / PER_PAGE));
+      if (currentPage > totalPages) currentPage = totalPages;
+      const start = (currentPage - 1) * PER_PAGE;
+      const pageItems = items.slice(start, start + PER_PAGE);
       // 현재 로그인 사용자 (RBAC 작성자 본인 분기)
       const _curUser  = (window.koausAuth && window.koausAuth.user) || null;
       const _curUid   = _curUser ? String(_curUser.uid || '') : '';
       const _isAuthor = (p) => _curUid && (String(p.authorId || p.uid || p.authorUid || '') === _curUid);
-      listEl.innerHTML = items.map(p => {
+      listEl.innerHTML = pageItems.map(p => {
         const mine = _isAuthor(p);
         const fsId = p._fsDocId || '';
         const status = p.status || '';
@@ -1091,6 +1105,33 @@
           </div>` : ''}
         </div>`;
       }).join('');
+
+      // ── 페이지네이션: ‹ + 번호(최대 5, 슬라이딩 윈도우) + › ──
+      if (pager) {
+        pager.innerHTML = '';
+        if (totalPages > 1) {
+          let winStart = Math.max(1, currentPage - 2);
+          const winEnd = Math.min(totalPages, winStart + 4);
+          winStart = Math.max(1, winEnd - 4);
+          const parts = [];
+          parts.push(`<button class="pagination-btn pagination-nav" data-page="${currentPage - 1}"${currentPage === 1 ? ' disabled' : ''} aria-label="이전 페이지">‹</button>`);
+          for (let i = winStart; i <= winEnd; i++) {
+            parts.push(`<button class="pagination-btn${i === currentPage ? ' active' : ''}" data-page="${i}">${i}</button>`);
+          }
+          parts.push(`<button class="pagination-btn pagination-nav" data-page="${currentPage + 1}"${currentPage === totalPages ? ' disabled' : ''} aria-label="다음 페이지">›</button>`);
+          pager.innerHTML = parts.join('');
+          pager.querySelectorAll('.pagination-btn').forEach(b => {
+            b.addEventListener('click', () => {
+              if (b.disabled) return;
+              const target = parseInt(b.dataset.page, 10);
+              if (!Number.isFinite(target) || target < 1 || target > totalPages) return;
+              currentPage = target;
+              renderList();
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+          });
+        }
+      }
 
       // ── 작성자 미니 액션 위임 click (페이지 1회만 등록) ──
       if (!window._visaMiniActionsBound) {
@@ -1133,6 +1174,7 @@
     document.querySelectorAll('#partnerTabs .accom-tab').forEach(btn => {
       btn.addEventListener('click', () => {
         activeCat = btn.dataset.cat;
+        currentPage = 1;  // 탭 전환 시 첫 페이지로
         applyActiveCat();
         renderList();
       });

@@ -1049,18 +1049,46 @@
         });
       });
 
-      // ── 페이지네이션: [Prev] [1] [2] ... [Next] ──
+      // ── 페이지네이션: ‹ + 번호(최대 5, 슬라이딩 윈도우) + › ──
       pager.innerHTML = '';
-      if (totalPages > 1) {
+      // 하이브리드: 마지막 페이지 + Firestore에 더 옛 글 가능성 → › 를 '더 불러오기'로 활성 유지
+      const olderReady = currentPage === totalPages
+        && typeof window.koausLoadOlder === 'function'
+        && window.koausOlderState && window.koausOlderState.hasMore;
+      if (totalPages > 1 || olderReady) {
+        let winStart = Math.max(1, currentPage - 2);
+        const winEnd = Math.min(totalPages, winStart + 4);
+        winStart = Math.max(1, winEnd - 4);
         const parts = [];
-        parts.push(`<button class="pagination-btn pagination-nav" data-page="${currentPage - 1}"${currentPage === 1 ? ' disabled' : ''}>‹ Prev</button>`);
-        for (let i = 1; i <= totalPages; i++) {
+        parts.push(`<button class="pagination-btn pagination-nav" data-page="${currentPage - 1}"${currentPage === 1 ? ' disabled' : ''} aria-label="이전 페이지">‹</button>`);
+        for (let i = winStart; i <= winEnd; i++) {
           parts.push(`<button class="pagination-btn${i === currentPage ? ' active' : ''}" data-page="${i}">${i}</button>`);
         }
-        parts.push(`<button class="pagination-btn pagination-nav" data-page="${currentPage + 1}"${currentPage === totalPages ? ' disabled' : ''}>Next ›</button>`);
+        parts.push(`<button class="pagination-btn pagination-nav" data-page="${currentPage + 1}"${olderReady ? ' data-load-older="1"' : (currentPage === totalPages ? ' disabled' : '')} aria-label="다음 페이지">›</button>`);
         pager.innerHTML = parts.join('');
         pager.querySelectorAll('.pagination-btn').forEach(b => b.addEventListener('click', () => {
           if (b.disabled) return;
+          if (b.dataset.loadOlder) {
+            if (window.koausOlderState.loading) return;
+            b.disabled = true; b.textContent = '…';
+            window.koausLoadOlder().then(count => {
+              if (count > 0) {
+                currentPage += 1;
+                renderPosts();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              } else {
+                alert(window.koausOlderState.hasMore
+                  ? '이전 글을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.'
+                  : '더 이상 글이 없습니다.');
+                renderPosts();
+              }
+            }).catch(err => {
+              console.warn('[jobs] 이전 글 조회 실패', err);
+              alert('이전 글을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.');
+              renderPosts();
+            });
+            return;
+          }
           const target = parseInt(b.dataset.page, 10);
           if (!Number.isFinite(target) || target < 1 || target > totalPages) return;
           currentPage = target;
@@ -1315,9 +1343,20 @@
         postTitle: titleEl ? titleEl.textContent : '',
       });
     });
-    // 공유 메뉴 토글
+    // 지시 3/3 — 공유 URL: origin + pathname + ?id=<글ID> 강제 조립
+    function shareUrl() {
+      const fromUrl = new URLSearchParams(location.search).get('id');
+      if (fromUrl) return location.origin + location.pathname + '?id=' + encodeURIComponent(fromUrl);
+      return location.origin + location.pathname;
+    }
+    // 공유 메뉴 토글 — 모바일이면 네이티브 share 우선
     safeOn('detailShareBtn', 'click', e => {
       e.stopPropagation();
+      const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+      if (isMobile && navigator.share) {
+        navigator.share({ title: 'KoAus Jobs', url: shareUrl() }).catch(() => {});
+        return;
+      }
       const menu = document.getElementById('detailShareMenu');
       if (menu) menu.classList.toggle('show');
     });
@@ -1330,7 +1369,7 @@
     });
     document.querySelectorAll('#detailShareMenu button').forEach(b => {
       b.addEventListener('click', () => {
-        const url = location.href;
+        const url = shareUrl();   // 지시 3/3 — ?id URL 강제
         if (b.dataset.share === 'copy') copyText(url, '링크가 복사되었습니다.');
         else if (b.dataset.share === 'facebook') window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank', 'noopener');
         else if (b.dataset.share === 'kakao') copyText(url, '링크가 복사되었습니다. 카카오톡에 붙여넣어 주세요.');
@@ -1747,6 +1786,8 @@
           map: jobsMap, infoWindow: window._jobsIw,
           posts: filtered, markers: jobsMarkers,
           buildCardHtml,
+          skipInfoWindowOnSingle: true,   // B-2 (배치) — 미리보기 카드 제거
+          onSingleClick: p => { try { openDetail(p.id); } catch (e) { console.warn('[jobs] map → openDetail 실패', e); } },
         });
       }
     }
@@ -2080,7 +2121,7 @@
       createUserWithEmailAndPassword, signInWithEmailAndPassword,
     } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
     import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app-check.js';
-    import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, limit, serverTimestamp, where, getDocs, doc, deleteDoc } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
+    import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, limit, serverTimestamp, where, getDocs, doc, deleteDoc, startAfter, getDocsFromServer } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
 
     const firebaseConfig = {
       apiKey:            'AIzaSyCamqnt0bNUD9uz1N5BbCuQjSkWLSpPqlU',
@@ -2325,29 +2366,91 @@
       },
     };
 
-    // 실시간 구독 → localStorage(koaus-jobs-posts)에 미러 + 화면 갱신 이벤트
+    // 실시간 구독(최신 20건 윈도우) + 하이브리드 커서 페이지네이션 → localStorage 미러 + 화면 갱신 이벤트
     try {
-      onSnapshot(query(collection(db, 'jobs_posts'), orderBy('createdAt', 'desc'), limit(20)), snap => {
-        const STORE = 'koaus-jobs-posts';
-        const fsItems = snap.docs.map(d => {
-          const data = d.data();
-          let id = data.id; let date = data.date; let time = data.time;
-          if (data.createdAt && data.createdAt.toMillis) {
-            const dt = data.createdAt.toDate(); const p = n => String(n).padStart(2,'0');
-            id   = id   || data.createdAt.toMillis();
-            date = date || `${p(dt.getMonth()+1)}/${p(dt.getDate())}`;
-            time = time || `${p(dt.getHours())}:${p(dt.getMinutes())}`;
-          }
-          return { ...data, id: id || Date.now(), date, time, _fsDocId: d.id };
-        });
+      const STORE = 'koaus-jobs-posts';
+      let _jobsFsCache   = [];   // 실시간 윈도우 (최신 20건)
+      let _jobsOverflow  = [];   // 실시간 윈도우에서 밀려난 글 보존 (세션 한정, 비실시간)
+      let _jobsOlder     = [];   // startAfter 커서로 추가 조회한 더 옛 글 (비실시간)
+      let _jobsCursorDoc = null; // 다음 커서 (QueryDocumentSnapshot)
+      window.koausOlderState = { hasMore: false, loading: false };
+
+      const _jobsMapDoc = d => {
+        const data = d.data();
+        let id = data.id; let date = data.date; let time = data.time; let ts = 0;
+        if (data.createdAt && data.createdAt.toMillis) {
+          const dt = data.createdAt.toDate(); const p = n => String(n).padStart(2,'0');
+          ts   = data.createdAt.toMillis();
+          id   = id   || ts;
+          date = date || `${p(dt.getMonth()+1)}/${p(dt.getDate())}`;
+          time = time || `${p(dt.getHours())}:${p(dt.getMinutes())}`;
+        }
+        return { ...data, id: id || Date.now(), date, time, _fsDocId: d.id, _ts: ts };
+      };
+
+      function _jobsMergeAndPersist() {
+        // Firestore 글: _fsDocId dedupe(실시간 우선) 후 최신순
+        const seen = new Set();
+        const fsAll = [..._jobsFsCache, ..._jobsOverflow, ..._jobsOlder].filter(p => {
+          if (!p || !p._fsDocId || seen.has(p._fsDocId)) return false;
+          seen.add(p._fsDocId); return true;
+        }).sort((a, b) => (b._ts || 0) - (a._ts || 0));
         let cur = []; try { cur = JSON.parse(localStorage.getItem(STORE) || '[]'); } catch {}
         // 1) 기존에 미러된 fs 항목 제거 / 2) 로컬 항목 중 Firestore에 같은 id로 들어온 것 제거 (중복 카드 방지)
         const localOnly = cur.filter(p => !p._fsDocId);
-        const fsIds = new Set(fsItems.map(x => String(x.id)));
-        const merged = localOnly.filter(p => !fsIds.has(String(p.id))).concat(fsItems);
+        const fsIds = new Set(fsAll.map(x => String(x.id)));
+        const merged = localOnly.filter(p => !fsIds.has(String(p.id))).concat(fsAll);
         localStorage.setItem(STORE, JSON.stringify(merged));
         window.dispatchEvent(new Event('koaus-jobs-updated'));
+      }
+
+      onSnapshot(query(collection(db, 'jobs_posts'), orderBy('createdAt', 'desc'), limit(20)), snap => {
+        const prevUsers = [..._jobsFsCache, ..._jobsOverflow];
+        _jobsFsCache = snap.docs.map(_jobsMapDoc);
+        if (snap.docs.length < 20) {
+          // 윈도우가 전체를 커버 — 윈도우 밖 글은 존재하지 않음
+          _jobsOverflow = []; _jobsOlder = []; _jobsCursorDoc = null;
+          window.koausOlderState.hasMore = false;
+        } else {
+          const winIds = new Set(_jobsFsCache.map(p => p._fsDocId));
+          const oldIds = new Set(_jobsOlder.map(p => p._fsDocId));
+          const winMin = _jobsFsCache[_jobsFsCache.length - 1]._ts || 0;
+          // 윈도우 범위(_ts >= winMin)인데 스냅샷에 없으면 삭제된 것 → 제거.
+          // 그보다 옛 글(_ts < winMin)은 윈도우 밖으로 밀려난 것 → overflow 보존 (갭 방지).
+          _jobsOverflow = prevUsers.filter(p =>
+            p._fsDocId && !winIds.has(p._fsDocId) && !oldIds.has(p._fsDocId) && (p._ts || 0) < winMin);
+          if (!_jobsOlder.length) {
+            _jobsCursorDoc = snap.docs[snap.docs.length - 1];
+            window.koausOlderState.hasMore = true;
+          }
+        }
+        _jobsMergeAndPersist();
       }, err => console.warn('[jobs] jobs_posts 구독 실패', err));
+
+      // ── 하이브리드: 더 옛 글 커서 조회 — 회당 ≤20건 (rules limitedList 준수) ──
+      window.koausLoadOlder = async function () {
+        const st = window.koausOlderState;
+        if (st.loading || !st.hasMore || !_jobsCursorDoc) return 0;
+        st.loading = true;
+        try {
+          let fresh = 0;
+          // 배치 전부가 overflow와 중복인 드문 경우 대비 — 최대 3회 재시도 (각 ≤20건)
+          for (let attempt = 0; attempt < 3 && st.hasMore && !fresh; attempt++) {
+            // getDocsFromServer: 오프라인이면 빈 캐시 반환 대신 명시적 throw → 실패 alert 경로 (침묵 금지)
+            const snap = await getDocsFromServer(query(
+              collection(db, 'jobs_posts'),
+              orderBy('createdAt', 'desc'), startAfter(_jobsCursorDoc), limit(20)));
+            if (snap.docs.length) _jobsCursorDoc = snap.docs[snap.docs.length - 1];
+            st.hasMore = snap.docs.length === 20;
+            const known = new Set([..._jobsFsCache, ..._jobsOverflow, ..._jobsOlder].map(p => p._fsDocId));
+            const add = snap.docs.map(_jobsMapDoc).filter(p => !known.has(p._fsDocId));
+            _jobsOlder = [..._jobsOlder, ...add];
+            fresh = add.length;
+          }
+          if (fresh) _jobsMergeAndPersist();
+          return fresh;
+        } finally { st.loading = false; }
+      };
     } catch (e) { console.warn('[jobs] Firestore 구독 초기화 실패', e); }
   </script>
 
