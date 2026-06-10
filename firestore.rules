@@ -102,6 +102,8 @@ service cloud.firestore {
     function validBaseCreate(d) {
       return isSignedIn() && 'uid' in d && d.uid == request.auth.uid
         && pReqStr(d, 'title', 1, 120)
+        // 공백만으로 채운 제목 차단 (M5) — body 는 제외: 클라이언트가 빈 본문을 ' ' 로 보정하는 기존 설계 유지
+        && d.title.trim().size() >= 1
         && pReqStr(d, 'body', 1, 5000)
         && pOptStr(d, 'state', 10)
         && pOptStr(d, 'mode', 20)

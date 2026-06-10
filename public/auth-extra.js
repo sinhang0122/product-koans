@@ -2,7 +2,7 @@
 //  KoAus · 인증 확장 — 아이디/비번 찾기 + 회원가입 확장 (글로벌 자동 mount)
 //  · 모든 페이지 <head> 에 한 줄 로드: <script type="module" src="auth-extra.js"></script>
 //  · 페이지 본체 마크업 0 건드림 — 로그인 모달/회원가입 폼이 있으면 자동으로 보강
-//  · 보안 질문 답변은 trim+lowercase 평문 저장 (필요시 후속 해시화)
+//  · 보안 질문 답변은 PBKDF2-SHA256 해시 저장 (per-user salt) — 평문 저장 금지 (H3, 2026-06)
 // ════════════════════════════════════════════════════════════════════
 import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
 import { getAuth, onAuthStateChanged, sendPasswordResetEmail } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
@@ -30,6 +30,27 @@ const SECURITY_QUESTIONS = [
 ];
 const SEC_Q_CUSTOM = '__custom__';   // select value sentinel — 절대 사용자 질문과 충돌하지 않음
 const norm = s => String(s || '').trim().toLowerCase();
+
+// ── 보안답변 해싱 (H3) — PBKDF2-SHA256 + per-user salt ──────────────
+//   · emails/{email} 은 get: if true (비번찾기 흐름) 라 doc 내용이 비로그인 노출됨
+//     → 단순 SHA-256 이 아닌 고반복 PBKDF2 로 저엔트로피 답변의 오프라인 대입 비용 상승
+//   · 마이그레이션 스크립트(Node crypto.pbkdf2)와 파라미터 반드시 동일 유지: iter/keyLen/digest
+const SECA_ITER = 150000;
+const _bytesToHex = b => Array.from(b, x => x.toString(16).padStart(2, '0')).join('');
+const _hexToBytes = h => new Uint8Array((h.match(/.{2}/g) || []).map(x => parseInt(x, 16)));
+function newSaltHex() {
+  const b = new Uint8Array(16);
+  crypto.getRandomValues(b);
+  return _bytesToHex(b);
+}
+async function hashSecA(normAnswer, saltHex, iterations) {
+  const key = await crypto.subtle.importKey(
+    'raw', new TextEncoder().encode(normAnswer), 'PBKDF2', false, ['deriveBits']);
+  const bits = await crypto.subtle.deriveBits(
+    { name: 'PBKDF2', hash: 'SHA-256', salt: _hexToBytes(saltHex), iterations: iterations || SECA_ITER },
+    key, 256);
+  return _bytesToHex(new Uint8Array(bits));
+}
 const esc  = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 function maskEmail(email) {
   if (!email) return '';
@@ -321,8 +342,12 @@ async function onResetPw() {
       msg.textContent = '질문 또는 답변이 일치하지 않습니다.';
       msg.style.color = 'var(--red, #dc2626)'; return;
     }
-    // secA 매칭: trim + lowercase (norm) — 가입 시 norm 적용 평문 저장과 동일 정책
-    if (norm(data.securityA) !== secA) {
+    // secA 매칭 — PBKDF2 동일 유도 후 비교 (H3). 평문 폴백 제거됨 (2026-06-10 마이그레이션 + 잔존 0건 검증 완료)
+    //   해시 필드 없는 doc 은 무조건 불일치 처리 — 응답 메시지는 동일 유지 (enumeration 차단)
+    const inputHash = (data.securityAHash && data.securityASalt)
+      ? await hashSecA(secA, data.securityASalt, Number(data.securityAIter) || SECA_ITER)
+      : null;
+    if (!inputHash || inputHash !== data.securityAHash) {
       msg.textContent = '질문 또는 답변이 일치하지 않습니다.';
       msg.style.color = 'var(--red, #dc2626)'; return;
     }
@@ -356,6 +381,9 @@ onAuthStateChanged(auth, async user => {
   const lowNick  = String(pending.nickname || '').toLowerCase();
   const now      = Date.now();
   try {
+    // 보안답변 해시 — 평문은 트랜잭션에 절대 넣지 않음 (H3)
+    const secASalt = newSaltHex();
+    const secAHash = await hashSecA(pending.securityA, secASalt, SECA_ITER);
     // users + nicknames + emails 3개 doc 을 트랜잭션 1세트로 원자적 작성
     // (race 차단: 동시 가입자가 같은 닉/이메일 선점 시 한쪽이 NICK_TAKEN/EMAIL_TAKEN 으로 롤백)
     await runTransaction(db, async tx => {
@@ -372,21 +400,25 @@ onAuthStateChanged(auth, async user => {
         email: lowEmail,
         nickname: pending.nickname,
         securityQ: pending.securityQ,
-        securityA: pending.securityA,
+        securityAHash: secAHash,
+        securityASalt: secASalt,
+        securityAIter: SECA_ITER,
         nameVisible: false,  // 이름 필드 폐기 — 항상 false
         createdAt: now,
       }, { merge: true });
+      // nicknames 측 securityA 미러 — 아이디 찾기 폐기로 미사용, 평문 사본 자체를 제거 (H3)
       tx.set(nickRef, {
         uid: user.uid,
         nickname: pending.nickname,
         email: lowEmail,
-        securityA: pending.securityA,   // 비번 재설정 시 secA 매칭용 (norm 적용 평문, nicknames 측 미러)
         createdAt: now,
       });
       tx.set(emailRef, {
         uid: user.uid,
         securityQ: pending.securityQ,   // 비번 재설정 시 secQ 매칭용 (질문 텍스트 자체)
-        securityA: pending.securityA,   // 비번 재설정 시 secA 매칭용 (norm 적용 평문)
+        securityAHash: secAHash,        // 비번 재설정 시 secA 매칭용 (PBKDF2 해시)
+        securityASalt: secASalt,
+        securityAIter: SECA_ITER,
         createdAt: now,
       });
     });
