@@ -1903,9 +1903,9 @@
       // 상태 + 입주 가능일
       document.getElementById('detailStatus').innerHTML =
         `⚪ 쉐어 <span class="rea-dot">•</span> 입주 가능일: <strong>${escHtml(p.availableDate || '협의')}</strong>`;
-      // 가격 (Huge Bold)
+      // 가격 (Huge Bold) — XSS 방어: p.price escape (firestore.rules optInt 와 이중 방어)
       document.getElementById('detailPrice').innerHTML = p.price
-        ? `$${p.price} <span class="rea-price-unit">per week</span>`
+        ? `$${escHtml(String(p.price))} <span class="rea-price-unit">per week</span>`
         : '<span class="rea-price-na">가격 협의</span>';
       // 주소 + 복사
       const addrText = document.getElementById('detailAddrText');

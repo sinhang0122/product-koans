@@ -88,6 +88,7 @@ service cloud.firestore {
         && optStr('category', 40)
         && optStr('propType', 30)
         && optStr('address', 300)
+        && optStr('region',  300)            // auto used/inspection — 자동완성 region 텍스트
         && optStr('contact', 100)
         && optStr('phone', 30)
         && optStr('kakaoLink', 500)   // 카톡 오픈채팅 URL (작성자 입력 분리 필드)
@@ -102,8 +103,75 @@ service cloud.firestore {
         && optStr('payUnit',   20)           // jobs
         && optStr('minStay',   10)           // accom/rent — 미니멈 스테이 코드값 ('1w'~'12m')
         && optBool('visaEligible')           // jobs — 세컨/써드 비자 자격 카운트 가능 여부
+        // accom/rent/auto used — 가격(주당 쉐어비 / 렌트비 / 차값) · 숫자 강제 (XSS 1차 방어)
+        && optInt('price', 0, 9999999)
+        // auto used — 자동차 정보 (브랜드/모델/연식/주행거리 등은 자유 텍스트, 길이 제한만)
+        && optStr('brand',      40)
+        && optStr('model',      60)
+        && optStr('year',       10)
+        && optStr('mileage',    20)
+        && optStr('rwc',        20)
+        && optStr('regoExpiry', 20)
+        && optBool('isPremium')              // auto used — 운영 표기 (작성자 입력 X)
+        // auto inspection — 점검·긴급출동 서비스
+        && optStr('timeSlot', 60)
+        && optBool('inspectionAvailable')
+        && optInt('inspectionPrice', 0, 9999999)
+        && optBool('emergencyAvailable')
+        && optInt('emergencyPrice',  0, 9999999)
+        // accom/rent — 매물 옵션 (bool)
+        && optBool('parking')
+        && optBool('petFriendly')
+        && optBool('kidsInHouse')
+        && optBool('airCon')
+        // accom/rent — 위치 비공개 토글 (true 면 부모 doc 은 redact 주소만)
+        && optBool('locationPrivate')
         // 사진 URL 배열 (post_images Storage) — 최대 8개로 여유
-        && optUrlList('imageUrls', 8);
+        && optUrlList('imageUrls', 8)
+        // accom/rent — 매물 유형 / 방 타입 / 성별 / 입주일 (리스트·코드값)
+        && optUrlList('types', 10)
+        && optUrlList('roomTypes', 10)
+        && optStr('gender', 20)
+        && optStr('availableDate', 30)
+        // jobs — postType (구인/구직 구분 코드)
+        && optStr('postType', 20)
+        // ── 스키마 화이트리스트 (빌링폭탄·필드오염 차단) ────────────────────────
+        //   목적: 클라이언트가 임의 필드(예: garbage:"A".repeat(1MB))를 주입해
+        //         Firestore 문서를 부풀리는 공격 차단. 알려진 필드만 허용.
+        //   update 경로에는 적용 X — admin 의 블라인드/숨김 필드(isHidden, hiddenAt 등)
+        //         운영을 깨지 않기 위해. 신규 문서 폭탄(create) 이 주 공격 경로이므로
+        //         create 만 막아도 빌링 안전망으로 충분.
+        //   필드 추가 시: 이 목록도 함께 갱신 (단일 진입점).
+        && data().keys().hasOnly([
+             // 메타 (필수/자동)
+             'uid', 'email', 'authorUid', 'authorEmail', 'author',
+             'state', 'status', 'date', 'time',
+             'createdAt', 'updatedAt',
+             // 레거시 클라 timestamp id (jobs.html post 객체 spread)
+             'id',
+             // 위치
+             'address', 'region', 'lat', 'lng', 'locationPrivate',
+             // 미디어
+             'imageUrls',
+             // 컨텐츠 기본
+             'title', 'body', 'mode', 'category', 'postType', 'propType',
+             // accom/rent 상세
+             'types', 'roomTypes', 'gender', 'availableDate', 'minStay',
+             'bedrooms', 'bathrooms', 'carSpaces',
+             'parking', 'petFriendly', 'kidsInHouse', 'airCon',
+             // jobs 전용
+             'empType', 'payAmount', 'payUnit', 'visaEligible',
+             // 공통 연락처
+             'contact', 'phone', 'kakaoLink',
+             // 가격 (accom/rent/auto)
+             'price',
+             // auto used 자동차 정보
+             'brand', 'model', 'year', 'mileage', 'rwc', 'regoExpiry', 'isPremium',
+             // auto inspection 서비스
+             'timeSlot',
+             'inspectionAvailable', 'inspectionPrice',
+             'emergencyAvailable',  'emergencyPrice'
+           ]);
     }
 
     // ── 작성자 update 가드 (운영자 모더레이션 필드 변조 차단) ──
@@ -365,7 +433,7 @@ service cloud.firestore {
                        && data().reporterUid == request.auth.uid;
       allow get:    if isAdmin()
                        || (isSignedIn() && resource.data.reporterUid == request.auth.uid);
-      allow list:   if isAdmin() && request.query.limit <= 200;
+      allow list:   if isAdmin() && request.query.limit <= 100;
       allow update, delete: if isAdmin();
     }
 
@@ -571,7 +639,7 @@ service cloud.firestore {
     //   · list: admin 페이지가 active==true 전체 fetch (limit 미명시) → 광고 수 적음, 안전
     match /ad_banners/{id} {
       allow get:    if true;
-      allow list:   if true;
+      allow list:   if limitedList();    // ≤20 — 빌링폭탄 방어 (옛 무제한 list 제거)
       allow create, update: if isAdmin()
                                && reqStr('img',    1, 1000)
                                && optStr('href',         1500)

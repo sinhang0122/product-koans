@@ -1947,7 +1947,7 @@
       // 네비 헤더 + 가격 + 주소 + 요약 칩
       document.getElementById('detailNavTitle').textContent = p.title || '';
       document.getElementById('detailPrice').innerHTML = p.price
-        ? `$${p.price} <span class="rea-price-unit">per week</span>`
+        ? `$${escHtml(String(p.price))} <span class="rea-price-unit">per week</span>`
         : '<span class="rea-price-na">가격 협의</span>';
       document.getElementById('detailAddrText').textContent = p.address || '';
       const summary = [];
