@@ -3,7 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>구인구직 — KoAus</title>
+  <title>호주 구인구직 — 한인 일자리·워홀 알바 | KoAus</title>
+  <meta name="description" content="호주 한인 구인구직 게시판 — 시드니·멜버른 일자리, 워홀 알바, 직종·경력·지역별 구인 정보를 확인하고 무료로 등록하세요." />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="KoAus" />
+  <meta property="og:title" content="호주 구인구직 — 한인 일자리·워홀 알바 | KoAus" />
+  <meta property="og:description" content="호주 한인 구인구직 게시판 — 시드니·멜버른 일자리, 워홀 알바, 직종·경력·지역별 구인 정보를 확인하고 무료로 등록하세요." />
+  <meta property="og:url" content="https://koaus.com.au/jobs.html" />
+  <meta property="og:image" content="https://koaus.com.au/og-image.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;800;900&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet" />
@@ -921,6 +928,10 @@
         return t.includes(kw) || b.includes(kw);
       });
     }
+    // TDZ 방어 — renderPosts 가 외부 스크립트(search-bar.js) 경유로 아래 let 선언
+    // 실행 전에 호출될 수 있어 두 선언을 renderPosts 정의 앞으로 끌어올림.
+    let jobsMap = null, mapReady = false, jobsMarkers = [], areaBounds = null;
+    let activeFilter = {};
     function renderPosts() {
       let all;
       try {
@@ -1735,7 +1746,6 @@
       nt:  { center:{lat:-12.4634,lng:130.8456}, zoom:11 },
     };
     const AUS_VIEW = { center:{lat:-25.2744,lng:133.7751}, zoom:4 };
-    let jobsMap = null, mapReady = false, jobsMarkers = [], areaBounds = null;
     window.initMapJobs = function () {
       mapScriptLoaded = true; mapScriptLoading = false;
       const el = document.getElementById('jobsMap');
@@ -1803,7 +1813,6 @@
     }
 
     // ── 필터 (직종/근무형태/급여/지역) + applyFilters ──
-    let activeFilter = {};
     function applyFilters(posts) {
       // 지시 8/10 — 숨김(hidden) 처리 글은 모든 뷰(List/Map)에서 즉시 제외
       posts = posts.filter(p => !(p.isHidden || p.status === 'hidden'));

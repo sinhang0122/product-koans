@@ -59,8 +59,8 @@
 - **세션**: `session-timeout.js` — 비활성 타임아웃 + 캐시 wipe
 
 ### App Check (reCAPTCHA v3)
-봇·외부 스크립트의 백엔드 접근 차단. **현재 키:** `6LcMRActAAAAALY3ancFhgqgzXbdWogVdb12R1Wf`
-- `app.js:24` (글로벌 init) + 9개 페이지에 자체 init 블록 복제 (`accom/auto/gp/jobs/mypage/rent/restaurants/salon/trades`)
+봇·외부 스크립트의 백엔드 접근 차단. **현재 키:** `6Ld1mAwtAAAAADURkCq0J6GOr3wFg9DQVOsxVG5v`
+- `app.js:24` (글로벌 init) + 10개 페이지에 자체 init 블록 복제 (`accom/admin/auto/gp/jobs/mypage/rent/restaurants/salon/trades`)
 - `contact.html`은 Formspree 폼 토큰 발급용으로 별도 사용
 
 ### 가입 시 visible reCAPTCHA v2
@@ -98,7 +98,7 @@ npm run deploy:rules:dryrun    # firestore dry-run
 ## 작업 시 주의사항
 
 - **사이드바·헤더 일괄 변경:** 21개 페이지에 복제되어 있으므로 `cd public && for f in *.html; do perl -i -pe '...' "$f"; done` 패턴으로 처리. 빠진 페이지 없는지 grep 검증 필수.
-- **App Check 키 변경:** 9개 페이지 + `app.js` + `contact.html` 모두 일괄 교체. 빠진 페이지 있으면 그 페이지에서 Firestore 호출이 거부됨.
+- **App Check 키 변경:** 10개 페이지 + `app.js` + `contact.html` 모두 일괄 교체. 빠진 페이지 있으면 그 페이지에서 Firestore 호출이 거부됨.
 - **Firestore 규칙 변경:** `deploy:rules:dryrun` → 실제 배포. 페이지네이션 20개 제한, 필드 길이 제한은 빌링 안전망이므로 완화하지 말 것.
 - **관리자 권한:** custom claim과 화이트리스트 이메일 둘 다 작동(이중 안전망). 화이트리스트 추가 시 3곳 동기화.
 - **이미지 업로드:** 반드시 `compress.js`로 압축 후 업로드 (Storage 비용 방어).

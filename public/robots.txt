@@ -1,0 +1,8 @@
+User-agent: *
+Disallow: /admin.html
+Disallow: /admin-ads.html
+Disallow: /mypage.html
+Disallow: /exchange.html
+Allow: /
+
+Sitemap: https://koaus.com.au/sitemap.xml

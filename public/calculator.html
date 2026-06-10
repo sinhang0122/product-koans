@@ -3,7 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>오늘의 환율 — KoAus</title>
+  <title>호주 환율 계산기 — AUD KRW 송금 비교 | KoAus</title>
+  <meta name="description" content="오늘의 호주 달러 환율 — AUD↔KRW 실시간 환율과 주요 송금 앱 수수료·한도를 비교하는 환율 계산기." />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="KoAus" />
+  <meta property="og:title" content="호주 환율 계산기 — AUD KRW 송금 비교 | KoAus" />
+  <meta property="og:description" content="오늘의 호주 달러 환율 — AUD↔KRW 실시간 환율과 주요 송금 앱 수수료·한도를 비교하는 환율 계산기." />
+  <meta property="og:url" content="https://koaus.com.au/calculator.html" />
+  <meta property="og:image" content="https://koaus.com.au/og-image.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;800;900&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet" />
@@ -494,9 +501,9 @@
       <p>현재 본 플랫폼은 <strong>호주 달러(AUD)와 한국 원화(KRW)</strong> 간의 송금 비교 서비스를 최우선으로 최적화하여 지원하고 있습니다. 다른 통화 쌍의 어플 비교 기능은 추후 업데이트 예정입니다.</p>
     </div>
 
-    <p class="exchange-updated" id="exchangeUpdated">기준일: 2026. 05. 30. (토) 매매기준율</p>
+    <p class="exchange-updated" id="exchangeUpdated">기준일: 실시간 환율 불러오는 중…</p>
 
-    <p class="exchange-disclaimer">※ 무료 API는 하루 1번만 갱신됩니다.<br>※ 각 어플을 비교하며 비교한 날 기준 정확한 차이를 입력했지만 각 어플이 기준으로 삼는 매매기준율이 상이하고 실시간으로 조금씩 다르므로, 기준 금액 입력 시 약 ±0.4불 내외의 오차가 발생할 수 있습니다.<br>※ 제공되는 환율은 단순 참고용 매매기준율이며, 실제 송금 시 업체별 적용 환율이 다를 수 있습니다 <em>(*어플 기준)</em> 또 프로모션, 이벤트 등을 통해 수수료 발생이 하지 않을 수도 있습니다</p>
+    <p class="exchange-disclaimer">※ 무료 API는 하루 1번만 갱신됩니다.<br>※ 각 어플을 비교하며 비교한 날 기준 정확한 차이를 입력했지만 각 어플이 기준으로 삼는 매매기준율이 상이하고 실시간으로 조금씩 다르므로, 기준 금액 입력 시 약 ±0.4불 내외의 오차가 발생할 수 있습니다.<br>※ 제공되는 환율은 단순 참고용 매매기준율이며, 실제 송금 시 업체별 적용 환율이 다를 수 있습니다 <em>(*어플 기준)</em> 또 프로모션, 이벤트 등에 따라 수수료가 발생하지 않을 수도 있습니다.</p>
 
   </main>
 
@@ -843,13 +850,14 @@
           return;
         }
       }
-      el.textContent = '기준일: 2026. 05. 30. (토) 매매기준율';  // 폴백
+      // 가짜 날짜 박제 금지 — API 실패 시 저장값(하드코딩) 기준임을 정직하게 표기
+      el.textContent = '기준일: 실시간 갱신 실패 — 저장된 기준 환율 표시 중';
     }
     async function initRates() {
       render();  // 폴백(하드코딩) 기준 환율로 1차 즉시 렌더
       setLiveRateBadge(APPS[0].rate, false);
       const result = await fetchLiveRate();
-      if (!result) { setLiveRateBadge(null, false); return; }  // 실패 시 폴백 유지
+      if (!result) { setLiveRateBadge(null, false); setUpdatedFromApi(null); return; }  // 실패 시 폴백 + 실패 문구
       // API 수신: baseRate를 API 매매기준율로 갱신 (사용자가 직접 입력하지 않은 경우만)
       apiBaseRate = +result.rate.toFixed(2);
       const userTouched = baseRateInput.value !== '' && parseFloat(baseRateInput.value) > 0;
