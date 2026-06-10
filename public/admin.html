@@ -979,6 +979,7 @@
     //  getApps().length 체크 후 기존 app 재사용.
     import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
     import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, setPersistence, indexedDBLocalPersistence, browserLocalPersistence, inMemoryPersistence } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
+    import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app-check.js';
     import { getFirestore, collection, addDoc, deleteDoc, doc, getDoc, setDoc, updateDoc, onSnapshot, query, orderBy, limit, serverTimestamp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
 
     const firebaseConfig = {
@@ -992,6 +993,20 @@
     };
     // 멱등 초기화 — 같은 페이지에서 다른 module 이 default app 을 만들었어도 안전.
     const app  = getApps().length ? getApp() : initializeApp(firebaseConfig);
+
+    // ── App Check (reCAPTCHA v3) — Firestore/Storage ENFORCED 환경에서 admin 페이지 호출 허용 ──
+    // 본 페이지는 app.js 미로드 + 자체 init 누락으로 ENFORCED 전환 후 모든 read/write 가 거부되던 버그 수정.
+    // (placeholder 상태에서는 운영 사이트를 깨뜨리지 않도록 건너뜀 — mypage.html 패턴 동일)
+    const APP_CHECK_SITE_KEY = '6Ld1mAwtAAAAADURkCq0J6GOr3wFg9DQVOsxVG5v';
+    if (APP_CHECK_SITE_KEY && !APP_CHECK_SITE_KEY.startsWith('TODO')) {
+      try {
+        initializeAppCheck(app, {
+          provider: new ReCaptchaV3Provider(APP_CHECK_SITE_KEY),
+          isTokenAutoRefreshEnabled: true,
+        });
+      } catch (_) { /* 다른 module 이 이미 init 한 경우(appCheck/already-initialized) — 재사용 */ }
+    }
+
     const auth = getAuth(app);
     const db   = getFirestore(app);
     // 지시 6/10 — 세션 지속성 폴백 체인 (모바일 Safari ITP / Private mode 방어).
