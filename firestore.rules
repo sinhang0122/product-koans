@@ -71,106 +71,126 @@ service cloud.firestore {
     }
 
     // ── 게시판 글 검증 ──
-    // 작성자 uid 는 반드시 로그인한 본인 (위조 불가)
-    function ownerOnCreate() {
-      return isSignedIn() && 'uid' in data() && data().uid == request.auth.uid;
-    }
+    // 작성자 본인 확인 (update/delete 용) — create 시 위조 차단은 validBaseCreate 가 담당
     function ownerOnExisting() {
       return isSignedIn() && resource.data.uid == request.auth.uid;
     }
-    // 신규 글: 필수/선택 필드 + 타입 + 길이 빡빡하게 검증
-    function validPostCreate() {
-      return ownerOnCreate()
-        && reqStr('title', 1, 120)
-        && reqStr('body', 1, 5000)
-        && optStr('state', 10)
-        && optStr('mode', 20)
-        && optStr('category', 40)
-        && optStr('propType', 30)
-        && optStr('address', 300)
-        && optStr('region',  300)            // auto used/inspection — 자동완성 region 텍스트
-        && optStr('contact', 100)
-        && optStr('phone', 30)
-        && optStr('kakaoLink', 500)   // 카톡 오픈채팅 URL (작성자 입력 분리 필드)
-        && optStr('author', 50)
-        && optStr('email', 200)
-        // 렌트(rent_posts) — 새 숫자/리스트 필드
-        && optInt('bedrooms',  0, 20)
-        && optInt('bathrooms', 0, 20)
-        && optInt('carSpaces', 0, 20)
-        && optInt('payAmount', 0, 9999999)   // jobs (시급/연봉)
-        && optStr('empType',   30)           // jobs
-        && optStr('payUnit',   20)           // jobs
-        && optStr('minStay',   10)           // accom/rent — 미니멈 스테이 코드값 ('1w'~'12m')
-        && optBool('visaEligible')           // jobs — 세컨/써드 비자 자격 카운트 가능 여부
-        // accom/rent/auto used — 가격(주당 쉐어비 / 렌트비 / 차값) · 숫자 강제 (XSS 1차 방어)
-        && optInt('price', 0, 9999999)
-        // auto used — 자동차 정보 (브랜드/모델/연식/주행거리 등은 자유 텍스트, 길이 제한만)
-        && optStr('brand',      40)
-        && optStr('model',      60)
-        && optStr('year',       10)
-        && optStr('mileage',    20)
-        && optStr('rwc',        20)
-        && optStr('regoExpiry', 20)
-        && optBool('isPremium')              // auto used — 운영 표기 (작성자 입력 X)
-        // auto inspection — 점검·긴급출동 서비스
-        && optStr('timeSlot', 60)
-        && optBool('inspectionAvailable')
-        && optInt('inspectionPrice', 0, 9999999)
-        && optBool('emergencyAvailable')
-        && optInt('emergencyPrice',  0, 9999999)
-        // accom/rent — 매물 옵션 (bool)
-        && optBool('parking')
-        && optBool('petFriendly')
-        && optBool('kidsInHouse')
-        && optBool('airCon')
-        // accom/rent — 위치 비공개 토글 (true 면 부모 doc 은 redact 주소만)
-        && optBool('locationPrivate')
-        // 사진 URL 배열 (post_images Storage) — 최대 8개로 여유
-        && optUrlList('imageUrls', 8)
-        // accom/rent — 매물 유형 / 방 타입 / 성별 / 입주일 (리스트·코드값)
-        && optUrlList('types', 10)
-        && optUrlList('roomTypes', 10)
-        && optStr('gender', 20)
-        && optStr('availableDate', 30)
-        // jobs — postType (구인/구직 구분 코드)
-        && optStr('postType', 20)
-        // ── 스키마 화이트리스트 (빌링폭탄·필드오염 차단) ────────────────────────
-        //   목적: 클라이언트가 임의 필드(예: garbage:"A".repeat(1MB))를 주입해
-        //         Firestore 문서를 부풀리는 공격 차단. 알려진 필드만 허용.
-        //   update 경로에는 적용 X — admin 의 블라인드/숨김 필드(isHidden, hiddenAt 등)
-        //         운영을 깨지 않기 위해. 신규 문서 폭탄(create) 이 주 공격 경로이므로
-        //         create 만 막아도 빌링 안전망으로 충분.
-        //   필드 추가 시: 이 목록도 함께 갱신 (단일 진입점).
-        && data().keys().hasOnly([
-             // 메타 (필수/자동)
+    // ── 게시판 검증 v2 — 1,000 표현식 평가 한도(공식 limit) 방어 구조 ──
+    //   배경: 기존 단일 검증기의 ~57개 && 체인 + 헬퍼마다 data() 함수 재호출이
+    //         Firestore rules 의 요청당 "최대 1,000 표현식 평가" 한도를 초과
+    //         → 필드 많은 accom/rent create 가 무조건 deny 되는 회귀 발생 (2026-06).
+    //   대책: ① request.resource.data 를 let 으로 1회 바인딩 후 인자(d)로 전달
+    //         ② 게시판별 검증기 분리 — 해당 게시판 필드만 평가 (비용↓ + 교차 필드 주입 차단↑)
+    //   주의: 필드 추가 시 해당 게시판 검증기 + hasOnly 목록만 갱신. 전 게시판 공통이면 validBaseCreate.
+    function pReqStr(d, field, minLen, maxLen) {
+      return field in d && d[field] is string
+        && d[field].size() >= minLen && d[field].size() <= maxLen;
+    }
+    function pOptStr(d, field, maxLen) {
+      return !(field in d) || (d[field] is string && d[field].size() <= maxLen);
+    }
+    function pOptInt(d, field, minVal, maxVal) {
+      return !(field in d) || (d[field] is int && d[field] >= minVal && d[field] <= maxVal);
+    }
+    function pOptList(d, field, maxCount) {
+      return !(field in d) || (d[field] is list && d[field].size() <= maxCount);
+    }
+    function pOptBool(d, field) {
+      return !(field in d) || d[field] is bool;
+    }
+    // 전 게시판 공통 메타/연락처 검증 (소유자 위조 차단 포함)
+    function validBaseCreate(d) {
+      return isSignedIn() && 'uid' in d && d.uid == request.auth.uid
+        && pReqStr(d, 'title', 1, 120)
+        && pReqStr(d, 'body', 1, 5000)
+        && pOptStr(d, 'state', 10)
+        && pOptStr(d, 'mode', 20)
+        && pOptStr(d, 'address', 300)
+        && pOptStr(d, 'contact', 100)
+        && pOptStr(d, 'phone', 30)
+        && pOptStr(d, 'kakaoLink', 500)
+        && pOptStr(d, 'author', 50)
+        && pOptStr(d, 'email', 200);
+    }
+    // accom(쉐어) + rent(렌트) — 매물 필드 + 스키마 화이트리스트
+    function validShareRentCreate() {
+      let d = request.resource.data;
+      return validBaseCreate(d)
+        && pOptStr(d, 'propType', 30)
+        && pOptStr(d, 'minStay', 10)
+        && pOptStr(d, 'gender', 20)
+        && pOptStr(d, 'availableDate', 30)
+        && pOptInt(d, 'price', 0, 9999999)
+        && pOptInt(d, 'bedrooms', 0, 20)
+        && pOptInt(d, 'bathrooms', 0, 20)
+        && pOptInt(d, 'carSpaces', 0, 20)
+        && pOptBool(d, 'parking')
+        && pOptBool(d, 'petFriendly')
+        && pOptBool(d, 'kidsInHouse')
+        && pOptBool(d, 'airCon')
+        && pOptBool(d, 'locationPrivate')
+        && pOptList(d, 'imageUrls', 8)
+        && pOptList(d, 'types', 10)
+        && pOptList(d, 'roomTypes', 10)
+        && d.keys().hasOnly([
              'uid', 'email', 'authorUid', 'authorEmail', 'author',
-             'state', 'status', 'date', 'time',
-             'createdAt', 'updatedAt',
-             // 레거시 클라 timestamp id (jobs.html post 객체 spread)
-             'id',
-             // 위치
-             'address', 'region', 'lat', 'lng', 'locationPrivate',
-             // 미디어
-             'imageUrls',
-             // 컨텐츠 기본
-             'title', 'body', 'mode', 'category', 'postType', 'propType',
-             // accom/rent 상세
-             'types', 'roomTypes', 'gender', 'availableDate', 'minStay',
+             'state', 'status', 'date', 'time', 'createdAt', 'updatedAt', 'id',
+             'title', 'body', 'mode', 'contact', 'phone', 'kakaoLink',
+             'address', 'lat', 'lng', 'locationPrivate', 'imageUrls',
+             'propType', 'types', 'roomTypes', 'gender', 'availableDate', 'minStay',
              'bedrooms', 'bathrooms', 'carSpaces',
-             'parking', 'petFriendly', 'kidsInHouse', 'airCon',
-             // jobs 전용
-             'empType', 'payAmount', 'payUnit', 'visaEligible',
-             // 공통 연락처
-             'contact', 'phone', 'kakaoLink',
-             // 가격 (accom/rent/auto)
-             'price',
-             // auto used 자동차 정보
-             'brand', 'model', 'year', 'mileage', 'rwc', 'regoExpiry', 'isPremium',
-             // auto inspection 서비스
-             'timeSlot',
+             'parking', 'petFriendly', 'kidsInHouse', 'airCon', 'price'
+           ]);
+    }
+    // jobs(구인구직) — 고용 필드 + 스키마 화이트리스트
+    function validJobsCreate() {
+      let d = request.resource.data;
+      return validBaseCreate(d)
+        && pOptStr(d, 'postType', 20)
+        && pOptStr(d, 'category', 40)
+        && pOptStr(d, 'empType', 30)
+        && pOptStr(d, 'payUnit', 20)
+        && pOptInt(d, 'payAmount', 0, 9999999)
+        && pOptBool(d, 'visaEligible')
+        && pOptList(d, 'imageUrls', 8)
+        && d.keys().hasOnly([
+             'uid', 'email', 'authorUid', 'authorEmail', 'author',
+             'state', 'status', 'date', 'time', 'createdAt', 'updatedAt', 'id',
+             'title', 'body', 'mode', 'contact', 'phone', 'kakaoLink',
+             'address', 'lat', 'lng', 'imageUrls',
+             'postType', 'category', 'empType', 'payUnit', 'payAmount', 'visaEligible'
+           ]);
+    }
+    // auto(차량) — 중고차/점검·긴급출동 필드 + 스키마 화이트리스트
+    function validAutoCreate() {
+      let d = request.resource.data;
+      return validBaseCreate(d)
+        && pOptStr(d, 'category', 40)
+        && pOptStr(d, 'region', 300)
+        && pOptStr(d, 'brand', 40)
+        && pOptStr(d, 'model', 60)
+        && pOptStr(d, 'year', 10)
+        && pOptStr(d, 'mileage', 20)
+        && pOptStr(d, 'rwc', 20)
+        && pOptStr(d, 'regoExpiry', 20)
+        && pOptStr(d, 'timeSlot', 60)
+        && pOptInt(d, 'price', 0, 9999999)
+        && pOptInt(d, 'inspectionPrice', 0, 9999999)
+        && pOptInt(d, 'emergencyPrice', 0, 9999999)
+        && pOptBool(d, 'isPremium')
+        && pOptBool(d, 'inspectionAvailable')
+        && pOptBool(d, 'emergencyAvailable')
+        && pOptBool(d, 'locationPrivate')
+        && pOptList(d, 'imageUrls', 8)
+        && d.keys().hasOnly([
+             'uid', 'email', 'authorUid', 'authorEmail', 'author',
+             'state', 'status', 'date', 'time', 'createdAt', 'updatedAt', 'id',
+             'title', 'body', 'mode', 'contact', 'phone', 'kakaoLink',
+             'address', 'lat', 'lng', 'locationPrivate', 'imageUrls',
+             'category', 'region', 'brand', 'model', 'year', 'mileage',
+             'rwc', 'regoExpiry', 'isPremium', 'timeSlot',
              'inspectionAvailable', 'inspectionPrice',
-             'emergencyAvailable',  'emergencyPrice'
+             'emergencyAvailable', 'emergencyPrice', 'price'
            ]);
     }
 
@@ -212,7 +232,7 @@ service cloud.firestore {
     match /accom_posts/{postId} {
       allow get:    if true;
       allow list:   if limitedList();
-      allow create: if validPostCreate();
+      allow create: if validShareRentCreate();
       allow update: if isAdmin()
                        || ( ownerOnExisting()
                             && uidLocked()
@@ -223,7 +243,7 @@ service cloud.firestore {
     match /rent_posts/{postId} {
       allow get:    if true;
       allow list:   if limitedList();
-      allow create: if validPostCreate();
+      allow create: if validShareRentCreate();
       allow update: if isAdmin()
                        || ( ownerOnExisting()
                             && uidLocked()
@@ -234,7 +254,7 @@ service cloud.firestore {
     match /jobs_posts/{postId} {
       allow get:    if true;
       allow list:   if limitedList();
-      allow create: if validPostCreate();
+      allow create: if validJobsCreate();
       allow update: if isAdmin()
                        || ( ownerOnExisting()
                             && uidLocked()
@@ -245,7 +265,7 @@ service cloud.firestore {
     match /auto_posts/{postId} {
       allow get:    if true;
       allow list:   if limitedList();
-      allow create: if validPostCreate();
+      allow create: if validAutoCreate();
       allow update: if isAdmin()
                        || ( ownerOnExisting()
                             && uidLocked()
