@@ -502,8 +502,8 @@
             </svg>
           </div>
           <div>
-            <h2 class="text-xl font-bold text-gray-900 leading-tight">히어로 배너 슬라이더</h2>
-            <p class="text-xs text-gray-500 mt-0.5">서브 페이지 상단 swiper 에 노출될 이미지 배너 등록</p>
+            <h2 class="text-xl font-bold text-gray-900 leading-tight">히어로 배너 <span class="text-sm font-semibold text-gray-500">(서브 게시판 상단 · 교체형)</span></h2>
+            <p class="text-xs text-gray-500 mt-0.5">쉐어·렌트·구인구직 등 서브 페이지 상단 슬라이더에 노출 — 활성 배너가 1개라도 있으면 기본 슬라이드를 <strong>통째로 대체</strong>합니다. 메인 홈 광고는 별도의 <a href="admin-ads.html" class="text-blue-600 underline">광고 배너 관리자</a>에서.</p>
           </div>
         </header>
 
@@ -573,6 +573,7 @@
             <input id="dashHbImage" name="image" type="file" accept="image/*"
                    class="w-full p-3 border border-gray-300 rounded-lg text-sm text-gray-900 file:mr-4 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:bg-blue-50 file:text-blue-700 file:font-semibold file:cursor-pointer hover:file:bg-blue-100 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
             <p class="mt-1.5 text-xs text-gray-500">JPG / PNG / WebP — 장당 최대 <strong class="text-gray-700">5 MB</strong> · 자동 압축 후 업로드 (1200px / 70% 품질).</p>
+            <p id="dashHbImageHint" class="mt-1.5 text-xs text-blue-600" hidden>수정 모드 — 이미지를 새로 선택하지 않으면 기존 이미지가 유지됩니다.</p>
           </div>
 
           <!-- 저장 버튼 -->
@@ -585,12 +586,27 @@
                   <polyline points="17 21 17 13 7 13 7 21"/>
                   <polyline points="7 3 7 8 15 8"/>
                 </svg>
-                배너 저장
+                <span id="dashHbSubmitLabel">배너 저장</span>
               </span>
             </button>
             <p id="dashHbNote" class="mt-3 text-sm text-center" role="status" aria-live="polite"></p>
+            <button type="button" id="dashHbCancelEdit" hidden
+                    class="w-full mt-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2.5 px-6 rounded-lg text-sm transition-colors">
+              수정 취소
+            </button>
           </div>
         </form>
+
+        <!-- 히어로 배너 관리 — 등록된 배너 목록 (조회 / 수정 / 삭제 / 활성 토글 / ▲▼ 순서 변경) -->
+        <div id="dashHbManage" class="mt-8 pt-6 border-t border-gray-200">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-bold text-gray-900">등록된 배너 <span id="dashHbCount" class="text-blue-600"></span></h3>
+            <p class="text-xs text-gray-500">▲/▼ 순서 변경 · 목록 위쪽이 먼저 노출</p>
+          </div>
+          <ul id="dashHbList" class="space-y-2">
+            <li class="text-sm text-gray-400">불러오는 중…</li>
+          </ul>
+        </div>
       </section>
 
       <!-- ══════════════════════════════════════════════════
@@ -1309,8 +1325,42 @@
       el.textContent = msg;
       el.style.color = ok ? '#16a34a' : '#dc2626';
     }
-    // ── 카드 1 · 히어로 배너 (hero_banners) ──
+    // ── 카드 1 · 히어로 배너 (hero_banners) — 등록 / 수정 / 목록 / 삭제 / ▲▼ ──
+    //   notices 카드(2-b) 패턴 이식. 신규 doc 은 imagePath(Storage 경로)도 저장 —
+    //   옛 doc 은 imageUrl 의 /o/<path> 세그먼트에서 역산 (삭제 시 Storage 동반 정리).
     const _hbForm = document.getElementById('dashHeroBannerForm');
+    let _hbEditId = null;     // 수정 모드 — 대상 docId (null = 신규 등록)
+    let _hbEditData = null;   // 수정 모드 — 기존 doc (이미지 미교체 시 유지용)
+    const _hbCancelBtn = document.getElementById('dashHbCancelEdit');
+
+    function _hbStoragePath(d) {
+      if (d && d.imagePath) return d.imagePath;
+      const u = (d && d.imageUrl) || '';
+      if (u.indexOf('firebasestorage') < 0) return null;
+      const m = u.match(/\/o\/([^?]+)/);
+      try { return m ? decodeURIComponent(m[1]) : null; } catch (_) { return null; }
+    }
+    async function _hbDeleteStorage(path) {
+      if (!path) return;
+      try {
+        const { getStorage, ref: storageRef, deleteObject } =
+          await import('https://www.gstatic.com/firebasejs/12.13.0/firebase-storage.js');
+        await deleteObject(storageRef(getStorage(app), path));
+      } catch (err) {
+        console.warn('[admin] hero_banners Storage 삭제 실패(무시):', err && err.message);
+      }
+    }
+    function exitHbEditMode() {
+      _hbEditId = null; _hbEditData = null;
+      if (_hbForm) _hbForm.reset();
+      const lbl = document.getElementById('dashHbSubmitLabel');
+      if (lbl) lbl.textContent = '배너 저장';
+      const hint = document.getElementById('dashHbImageHint');
+      if (hint) hint.hidden = true;
+      if (_hbCancelBtn) _hbCancelBtn.hidden = true;
+    }
+    if (_hbCancelBtn) _hbCancelBtn.addEventListener('click', exitHbEditMode);
+
     if (_hbForm) _hbForm.addEventListener('submit', async e => {
       e.preventDefault();
       const note = document.getElementById('dashHbNote');
@@ -1325,34 +1375,228 @@
         const linkUrl = (urlEl && urlEl.value.trim()) || '';
         const imgEl   = document.getElementById('dashHbImage');
         const file    = imgEl && imgEl.files && imgEl.files[0];
-        if (!file) { flashNote(note, '이미지 파일을 선택해 주세요.', false); return; }
-        if (btn) { btn.disabled = true; btn.textContent = '업로드 중…'; }
-        // 압축 + Storage 업로드
-        if (!window.koausPhotos) {
-          try { const mod = await import('./compress.js'); window.koausPhotos = mod; } catch (_) {}
+        if (!file && !_hbEditId) { flashNote(note, '이미지 파일을 선택해 주세요.', false); return; }
+        if (btn) btn.disabled = true;
+        flashNote(note, file ? '이미지 업로드 중…' : '저장 중…', true);
+
+        let imageUrl  = _hbEditData ? (_hbEditData.imageUrl || '') : '';
+        let imagePath = _hbEditData ? (_hbEditData.imagePath || null) : null;
+        let oldPath   = null;
+        if (file) {
+          // 압축 + Storage 업로드
+          if (!window.koausPhotos) {
+            try { const mod = await import('./compress.js'); window.koausPhotos = mod; } catch (_) {}
+          }
+          const mod = window.koausPhotos || (await import('./compress.js'));
+          const blob = await mod.compressImage(file, { maxDim: 1600, quality: 0.82 });
+          const { getStorage, ref: storageRef, uploadBytes, getDownloadURL } =
+            await import('https://www.gstatic.com/firebasejs/12.13.0/firebase-storage.js');
+          const storage = getStorage(app);
+          const path = `admin/hero_banners/${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
+          const r = storageRef(storage, path);
+          await uploadBytes(r, blob, { contentType: 'image/jpeg' });
+          if (_hbEditId) oldPath = _hbStoragePath(_hbEditData);
+          imageUrl  = await getDownloadURL(r);
+          imagePath = path;
         }
-        const mod = window.koausPhotos || (await import('./compress.js'));
-        const blob = await mod.compressImage(file, { maxDim: 1600, quality: 0.82 });
-        const { getStorage, ref: storageRef, uploadBytes, getDownloadURL } =
-          await import('https://www.gstatic.com/firebasejs/12.13.0/firebase-storage.js');
-        const storage = getStorage(app);
-        const path = `admin/hero_banners/${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
-        const r = storageRef(storage, path);
-        await uploadBytes(r, blob, { contentType: 'image/jpeg' });
-        const imageUrl = await getDownloadURL(r);
-        await addDoc(collection(db, 'hero_banners'), {
-          imageUrl, linkUrl, alt: '히어로 배너', regions, order, action, active: true,
-          createdAt: serverTimestamp(), uid: auth.currentUser.uid,
-        });
-        flashNote(note, '✅ 히어로 배너 등록 완료', true);
-        _hbForm.reset();
+
+        if (_hbEditId) {
+          const patch = { imageUrl, linkUrl, regions, order, action, updatedAt: serverTimestamp() };
+          if (imagePath) patch.imagePath = imagePath;
+          await updateDoc(doc(db, 'hero_banners', _hbEditId), patch);
+          if (oldPath && oldPath !== imagePath) _hbDeleteStorage(oldPath);  // 교체된 옛 이미지 best-effort 정리
+          flashNote(note, '✅ 히어로 배너 수정 완료', true);
+          exitHbEditMode();
+        } else {
+          const docData = {
+            imageUrl, linkUrl, alt: '히어로 배너', regions, order, action, active: true,
+            createdAt: serverTimestamp(), uid: auth.currentUser.uid,
+          };
+          if (imagePath) docData.imagePath = imagePath;
+          await addDoc(collection(db, 'hero_banners'), docData);
+          flashNote(note, '✅ 히어로 배너 등록 완료', true);
+          _hbForm.reset();
+        }
       } catch (err) {
         console.error('[admin] hero_banners 저장 실패', err);
-        flashNote(note, '❌ 등록 실패: ' + (err.message || err), false);
+        flashNote(note, '❌ 저장 실패: ' + (err.message || err), false);
       } finally {
-        if (btn) { btn.disabled = false; btn.textContent = '저장하기'; }
+        if (btn) btn.disabled = false;
       }
     });
+
+    // ── 카드 1-b · 히어로 배너 관리 — 목록 / 활성 토글 / 수정 / 삭제 / ▲▼ ──
+    const _hbList  = document.getElementById('dashHbList');
+    const _hbCount = document.getElementById('dashHbCount');
+    let _hbRows = [];
+    const _hbOrd = d => (typeof d.order === 'number' ? d.order : 99);
+    const _hbTs  = d => (d.createdAt && typeof d.createdAt.toMillis === 'function') ? d.createdAt.toMillis() : 0;
+    const HB_REGION_LABEL = { all: '전 지역', nsw: 'NSW', vic: 'VIC', qld: 'QLD', wa: 'WA', sa: 'SA', tas: 'TAS', act: 'ACT', nt: 'NT' };
+
+    function renderHbList() {
+      if (!_hbList) return;
+      _hbList.textContent = '';
+      if (_hbCount) _hbCount.textContent = `(${_hbRows.length}개)`;
+      if (!_hbRows.length) {
+        const li = document.createElement('li');
+        li.className = 'text-sm text-gray-400';
+        li.textContent = '등록된 배너가 없습니다. (0건이면 서브 페이지는 기본 슬라이드로 폴백)';
+        _hbList.appendChild(li);
+        return;
+      }
+      _hbRows.forEach((row, i) => {
+        const d = row.data;
+        const isActive = d.active !== false;
+        const li = document.createElement('li');
+        li.className = 'flex items-center gap-2 p-3 bg-gray-50 border border-gray-200 rounded-lg' + (isActive ? '' : ' opacity-60');
+
+        // ▲▼ 순서 버튼
+        const orderBox = document.createElement('div');
+        orderBox.className = 'flex flex-col gap-0.5 flex-shrink-0';
+        [['▲', -1], ['▼', +1]].forEach(([sym, delta]) => {
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.textContent = sym;
+          b.className = 'w-7 h-6 text-xs leading-none bg-white border border-gray-300 rounded hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed';
+          b.disabled = (delta === -1 && i === 0) || (delta === 1 && i === _hbRows.length - 1);
+          b.addEventListener('click', () => moveHb(i, delta));
+          orderBox.appendChild(b);
+        });
+        li.appendChild(orderBox);
+
+        // 썸네일 (textContent/속성 할당만 사용: XSS 안전)
+        const thumb = document.createElement('img');
+        thumb.className = 'w-16 h-10 object-cover rounded border border-gray-200 flex-shrink-0 bg-white';
+        thumb.alt = d.alt || '히어로 배너';
+        thumb.loading = 'lazy';
+        thumb.src = d.imageUrl || '';
+        li.appendChild(thumb);
+
+        // 본문 — 지역 + 순서 + 상태 + 등록일
+        const body = document.createElement('div');
+        body.className = 'flex-1 min-w-0';
+        const top = document.createElement('p');
+        top.className = 'text-sm font-semibold text-gray-900 truncate';
+        const regions = Array.isArray(d.regions) && d.regions.length ? d.regions : ['all'];
+        top.textContent = regions.map(r => HB_REGION_LABEL[r] || r).join(' · ');
+        const mid = document.createElement('p');
+        mid.className = 'text-xs text-gray-700 truncate';
+        mid.textContent = (isActive ? '🟢 노출 중' : '⚪ 숨김') + ' · 순서 ' + _hbOrd(d) + (d.linkUrl ? ' · ' + d.linkUrl : '');
+        const bot = document.createElement('p');
+        bot.className = 'text-xs text-gray-400 mt-0.5';
+        const ts = _hbTs(d);
+        bot.textContent = ts ? new Date(ts).toLocaleString('ko-KR', { dateStyle: 'medium', timeStyle: 'short' }) : '등록일 없음';
+        body.appendChild(top); body.appendChild(mid); body.appendChild(bot);
+        li.appendChild(body);
+
+        // 토글 / 수정 / 삭제 버튼
+        const actBox = document.createElement('div');
+        actBox.className = 'flex flex-col gap-1 flex-shrink-0';
+        const togBtn = document.createElement('button');
+        togBtn.type = 'button';
+        togBtn.textContent = isActive ? '숨김' : '노출';
+        togBtn.className = 'px-2.5 py-1 text-xs font-semibold text-gray-700 bg-gray-100 border border-gray-300 rounded hover:bg-gray-200';
+        togBtn.addEventListener('click', () => toggleHbActive(row));
+        const editBtn = document.createElement('button');
+        editBtn.type = 'button';
+        editBtn.textContent = '수정';
+        editBtn.className = 'px-2.5 py-1 text-xs font-semibold text-blue-600 bg-blue-50 border border-blue-200 rounded hover:bg-blue-100';
+        editBtn.addEventListener('click', () => startHbEdit(row));
+        const delBtn = document.createElement('button');
+        delBtn.type = 'button';
+        delBtn.textContent = '삭제';
+        delBtn.className = 'px-2.5 py-1 text-xs font-semibold text-red-600 bg-red-50 border border-red-200 rounded hover:bg-red-100';
+        delBtn.addEventListener('click', () => deleteHb(row));
+        actBox.appendChild(togBtn); actBox.appendChild(editBtn); actBox.appendChild(delBtn);
+        li.appendChild(actBox);
+
+        _hbList.appendChild(li);
+      });
+    }
+
+    function startHbEdit(row) {
+      const d = row.data;
+      _hbEditId = row.id; _hbEditData = d;
+      const sel = document.getElementById('dashHbState');
+      if (sel) {
+        const regions = Array.isArray(d.regions) && d.regions.length ? d.regions : ['all'];
+        Array.from(sel.options).forEach(o => { o.selected = regions.indexOf(o.value) >= 0; });
+      }
+      document.getElementById('dashHbOrder').value  = _hbOrd(d) === 99 ? 1 : _hbOrd(d);
+      document.getElementById('dashHbAction').value = d.action || 'external';
+      document.getElementById('dashHbUrl').value    = d.linkUrl || '';
+      document.getElementById('dashHbImage').value  = '';
+      const lbl = document.getElementById('dashHbSubmitLabel');
+      if (lbl) lbl.textContent = '배너 수정 저장';
+      const hint = document.getElementById('dashHbImageHint');
+      if (hint) hint.hidden = false;
+      if (_hbCancelBtn) _hbCancelBtn.hidden = false;
+      if (_hbForm) _hbForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    async function toggleHbActive(row) {
+      try {
+        await updateDoc(doc(db, 'hero_banners', row.id), {
+          active: !(row.data.active !== false), updatedAt: serverTimestamp(),
+        });
+      } catch (err) {
+        console.error('[admin] hero_banners 토글 실패', err);
+        alert('상태 변경 실패: ' + (err.code || err.message || err));
+      }
+    }
+
+    async function deleteHb(row) {
+      const regions = Array.isArray(row.data.regions) ? row.data.regions.join(', ') : 'all';
+      if (!confirm('이 히어로 배너를 삭제할까요?\n\n노출 지역: ' + regions + '\n(Storage 이미지도 함께 삭제됩니다)')) return;
+      try {
+        await deleteDoc(doc(db, 'hero_banners', row.id));
+        _hbDeleteStorage(_hbStoragePath(row.data));  // doc 삭제 성공 후 best-effort
+        if (_hbEditId === row.id) exitHbEditMode();
+      } catch (err) {
+        console.error('[admin] hero_banners 삭제 실패', err);
+        alert('삭제 실패: ' + (err.code || err.message || err));
+      }
+    }
+
+    async function moveHb(i, delta) {
+      const j = i + delta;
+      if (j < 0 || j >= _hbRows.length) return;
+      const reordered = _hbRows.slice();
+      const [moved] = reordered.splice(i, 1);
+      reordered.splice(j, 0, moved);
+      try {
+        // 화면 순서 기준 1,2,3… 정규화 — 값이 달라진 doc 만 updateDoc
+        const jobs = [];
+        reordered.forEach((row, idx) => {
+          const want = idx + 1;
+          if (_hbOrd(row.data) !== want) {
+            jobs.push(updateDoc(doc(db, 'hero_banners', row.id), { order: want }));
+          }
+        });
+        await Promise.all(jobs);
+      } catch (err) {
+        console.error('[admin] hero_banners 순서 변경 실패', err);
+        alert('순서 변경 실패: ' + (err.code || err.message || err));
+      }
+    }
+
+    if (_hbList) onSnapshot(
+      query(collection(db, 'hero_banners'), orderBy('createdAt', 'desc'), limit(20)),
+      snap => {
+        _hbRows = snap.docs
+          .map(d => ({ id: d.id, data: d.data() }))
+          .sort((a, b) => (_hbOrd(a.data) - _hbOrd(b.data)) || (_hbTs(b.data) - _hbTs(a.data)));
+        renderHbList();
+      },
+      err => {
+        console.error('[admin] hero_banners 목록 구독 실패', err);
+        _hbList.textContent = '';
+        const li = document.createElement('li');
+        li.className = 'text-sm text-red-500';
+        li.textContent = '목록 조회 실패: ' + (err.code || err.message || '');
+        _hbList.appendChild(li);
+      }
+    );
 
     // ── 카드 2 · 상단 노출 공지 (notices — marquee.js 와 동일 컬렉션) ──
     //   회귀 수정: 옛 top_notices 에 저장 → marquee.js 가 notices 구독해서 노출 X.

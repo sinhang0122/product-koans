@@ -114,7 +114,7 @@
 <body>
 
 <div class="bar">
-  <div class="brand">Ko<b>Aus</b> · 광고 관리자</div>
+  <div class="brand">Ko<b>Aus</b> · 홈 광고 배너 <span style="font-weight:400;font-size:12px;opacity:.75">(메인 히어로 · 추가형)</span></div>
   <div class="who" id="who"></div>
 </div>
 
@@ -158,7 +158,7 @@
 
   <section class="panel">
     <h2>새 배너 추가 — <span id="addLabel">NSW · 시드니</span></h2>
-    <p class="sub">이미지를 올리거나(권장) 외부 이미지 주소를 넣으세요. 비율은 가로로 긴 배너(약 16:5)를 권장합니다.</p>
+    <p class="sub">메인 홈(index) 히어로 슬라이더 <b>뒤에 추가</b>로 노출됩니다 (기본 슬라이드 유지). 서브 게시판 상단 배너는 <a href="admin.html">관리자 대시보드 → 히어로 배너</a>에서. 이미지를 올리거나(권장) 외부 이미지 주소를 넣으세요. 비율은 가로로 긴 배너(약 16:5)를 권장합니다.</p>
     <div class="form">
       <div class="field full">
         <label>배너 이미지</label>
@@ -324,20 +324,22 @@ $('addBtn') && $('addBtn').addEventListener('click', function(){
 
   var go = file ? uploadImage(file) : Promise.resolve({url:imgUrl, path:null});
   go.then(function(img){
-    return db.collection(ADS_COLLECTION).add({
+    // rules optStr 은 null 을 거부 — 빈 선택 필드는 키 자체를 생략해야 한다
+    var doc = {
       state: currentState,
       img: img.url,
-      imgPath: img.path,
       href: href,
       alt: $('fAlt').value.trim(),
       weight: parseInt($('fWeight').value,10) || 1,
-      start: $('fStart').value || null,
-      end: $('fEnd').value || null,
       active: $('fActive').checked,
       order: Date.now(),
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
+    };
+    if (img.path) doc.imgPath = img.path;
+    if ($('fStart').value) doc.start = $('fStart').value;
+    if ($('fEnd').value) doc.end = $('fEnd').value;
+    return db.collection(ADS_COLLECTION).add(doc);
   }).then(function(){
     $('fFile').value=''; $('fImgUrl').value=''; $('fHref').value=''; $('fAlt').value='';
     $('fWeight').value='1'; $('fStart').value=''; $('fEnd').value=''; $('fActive').checked=true;
@@ -400,12 +402,13 @@ function renderList(rows){
 function val(item, f){ var el=item.querySelector('[data-f="'+f+'"]'); return el ? (el.type==='checkbox'? el.checked : el.value) : null; }
 function saveItem(item, id){
   var btn=item.querySelector('[data-act="save"]'); btn.disabled=true; btn.textContent='저장 중…';
+  // rules optStr 은 null 을 거부 — 빈 기간은 FieldValue.delete() 로 필드 제거
   db.collection(ADS_COLLECTION).doc(id).update({
     href: (val(item,'href')||'').trim(),
     alt: (val(item,'alt')||'').trim(),
     weight: parseInt(val(item,'weight'),10)||1,
-    start: val(item,'start')||null,
-    end: val(item,'end')||null,
+    start: val(item,'start') || firebase.firestore.FieldValue.delete(),
+    end: val(item,'end') || firebase.firestore.FieldValue.delete(),
     active: !!val(item,'active'),
     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
   }).then(function(){

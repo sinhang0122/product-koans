@@ -20,39 +20,8 @@ const firebaseConfig = {
   measurementId: 'G-DERZ9MTKPL',
 };
 
-// ── 유저 닫기 상태 저장 — localStorage 'koaus-dismissed-ads' (hero-banner.js 와 동일 키) ──
-//   · 키 형식: "{type}:{docId}" = timestamp, TTL 24h
-//   · 자가 청소: 만료 항목은 다음 조회 시 즉시 삭제
-const DISMISS_KEY = 'koaus-dismissed-ads';
-const DISMISS_TTL_MS = 24 * 60 * 60 * 1000;
-function readDismissMap() {
-  try {
-    const raw = localStorage.getItem(DISMISS_KEY);
-    const obj = raw ? JSON.parse(raw) : {};
-    const now = Date.now();
-    let dirty = false;
-    for (const k in obj) {
-      const ts = +obj[k] || 0;
-      if (!ts || (now - ts) >= DISMISS_TTL_MS) { delete obj[k]; dirty = true; }
-    }
-    if (dirty) { try { localStorage.setItem(DISMISS_KEY, JSON.stringify(obj)); } catch (_) {} }
-    return obj;
-  } catch (_) { return {}; }
-}
-function isDismissed(type, id) {
-  if (!id) return false;
-  const map = readDismissMap();
-  const ts = +map[type + ':' + id] || 0;
-  return ts > 0 && (Date.now() - ts) < DISMISS_TTL_MS;
-}
-function markDismissed(type, id) {
-  if (!id) return;
-  try {
-    const map = readDismissMap();
-    map[type + ':' + id] = Date.now();
-    localStorage.setItem(DISMISS_KEY, JSON.stringify(map));
-  } catch (_) {}
-}
+// 옛 24h 숨기기(X 버튼) localStorage 잔재 정리 — 닫기 기능 자체가 폐지됨 (2026-06)
+try { localStorage.removeItem('koaus-dismissed-ads'); } catch (_) {}
 
 function start() {
   const $row     = document.getElementById('tickerRow');
@@ -73,8 +42,6 @@ function start() {
   if ($navGroup) {
     $navGroup.querySelectorAll('.ticker-dismiss').forEach(b => b.remove());
   }
-  const $dismiss = null;
-
   const items = [];
   let idx = 0;
 
@@ -120,20 +87,6 @@ function start() {
   if ($prev) $prev.addEventListener('click', () => jump(-1));
   if ($next) $next.addEventListener('click', () => jump(+1));
 
-  // ── X 닫기 버튼 — 제거됨 ($dismiss = null), 본 핸들러는 dead code (안전망 보존)
-  //   · A-1 재진단 (배치): 옛 X 닫기 로직 안의 notice-section hide 잘못 호출 방지
-  //     → 만약 우연히 호출되어도 hide 안 함. items 0 시 기본 마크업 텍스트 유지.
-  if ($dismiss) $dismiss.addEventListener('click', () => {
-    if (!items.length) return;
-    const cur = items[idx];
-    if (cur && cur.id) markDismissed('notice', cur.id);
-    items.splice(idx, 1);
-    if (!items.length) return;
-    if (idx >= items.length) idx = 0;
-    render();
-    restart();
-  });
-
   // Firestore notices 구독 — text → content, link → linkUrl 매핑
   //   · 데이터 0건이면 페이지에 박힌 기본 문구 유지
   //   · limit 20 — firestore.rules limitedList() 와 일치
@@ -157,11 +110,7 @@ function start() {
     onSnapshot(
       query(collection(db, 'notices'), orderBy('createdAt', 'desc'), limit(20)),
       snap => {
-        // ── A-1 (배치) ─ dismiss 필터 제거 — 옛 X 닫기 플래그 무시, 공지 무조건 표시 ──
-        //   원인: 옛 X 버튼이 localStorage 'koaus-dismissed-ads' 에 'notice:<id>' 저장 →
-        //   사용자가 한번 닫으면 24h 동안 isDismissed=true → 공지 영원히 차단 (X 마크업
-        //   자체는 이미 제거됐으나 옛 플래그 보유 사용자 화면에선 노출 0).
-        //   해결: !isDismissed(...) 필터 제거 → 텍스트 있는 모든 공지 무조건 노출.
+        // 닫기(X)/dismiss 기능 없음 — 텍스트 있는 공지는 무조건 노출 (정책)
         // 정렬: priority asc(낮을수록 앞 — admin 카드 2 ▲/▼ 순서) → 동률 시 createdAt desc(최신 우선)
         //   · priority 없는 옛 공지는 100(폼 기본값)으로 간주 — 마이그레이션 불필요
         const _pri = d => (typeof d.priority === 'number' ? d.priority : 100);

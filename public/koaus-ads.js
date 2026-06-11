@@ -54,7 +54,7 @@
     mountSelector: '#heroAd',
     injectMode: 'replace',        // 'replace' | 'prepend' | 'append'
     adClass: 'koaus-ad',
-    onlyOnHome: true,             // 홈에서만 광고 렌더(방문 집계는 모든 페이지)
+    onlyOnHome: true,             // 홈에서만 광고 렌더 (방문 집계는 local-analytics.js 가 전 페이지에서 수행)
     frequencyCapPerSession: 3,
 
     // 콜백(선택)
@@ -285,8 +285,8 @@
   }
 
   /* ===== 8) 초기화 & 공개 API ===== */
-  var _autoRecorded = false;
-  function autoRecordOnce() { if (_autoRecorded) return; _autoRecorded = true; recordStateVisit(); }
+  // 방문 점수 적립(koaus_state_scores 쓰기)은 local-analytics.js 가 전 페이지에서 전담 —
+  // 이 모듈은 읽기 전용 (이중 집계 방지). recordStateVisit 은 수동 호출용 API 로만 유지.
   function shouldRenderHere() {
     if (OPTIONS.onlyOnHome && !isHomePage()) return false;
     if (OPTIONS.renderMode === 'inject') return !!document.querySelector(OPTIONS.mountSelector);
@@ -300,7 +300,6 @@
   function init(userOptions) {
     if (userOptions) for (var k in userOptions) if (userOptions.hasOwnProperty(k)) OPTIONS[k] = userOptions[k];
     HL_MS = OPTIONS.halfLifeDays * 86400000;
-    autoRecordOnce();
     var doRender = function () { if (shouldRenderHere()) renderHeroAd(); };
     if (OPTIONS.useFirebase) loadInventory().then(function () { whenDomReady(doRender); });
     else whenDomReady(doRender);

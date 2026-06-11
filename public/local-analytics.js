@@ -80,12 +80,35 @@
     return out.slice(0, N);
   }
 
+  // ── 광고 타겟팅 점수 적립 (koaus_state_scores) ──
+  //   · koaus-ads.js(홈 광고)가 읽는 단일 소스 — 쓰기는 이 파일이 전 페이지에서 전담
+  //     (koaus-ads.js 는 index 에만 로드되어 서브 페이지 방문이 집계되지 않던 회귀 수정)
+  //   · 21일 반감기 지수 감쇠 — 이사 등으로 주 이용 주가 바뀌면 자연 전환
+  const SCORE_KEY = 'koaus_state_scores';
+  const SCORE_STATES = ['nsw', 'vic', 'qld', 'wa', 'sa', 'tas', 'act', 'nt'];
+  const SCORE_HALF_LIFE_MS = 21 * 24 * 60 * 60 * 1000;
+  function recordAdScore(state) {
+    if (SCORE_STATES.indexOf(state) === -1) return;
+    try {
+      const now = Date.now();
+      const raw = localStorage.getItem(SCORE_KEY);
+      const parsed = raw ? JSON.parse(raw) : {};
+      const scores = (parsed && typeof parsed === 'object') ? parsed : {};
+      const cur = scores[state] || { score: 0, last: 0 };
+      const decayed = cur.last
+        ? (cur.score || 0) * Math.pow(0.5, Math.max(0, now - cur.last) / SCORE_HALF_LIFE_MS)
+        : (cur.score || 0);
+      scores[state] = { score: decayed + 1, last: now };
+      localStorage.setItem(SCORE_KEY, JSON.stringify(scores));
+    } catch (_) {}
+  }
+
   // ── 자동 기록 — 페이지 진입 시 ?state= 파라미터 1회 push ──
   try {
     const params = new URLSearchParams(location.search);
     const state = (params.get('state') || params.get('id') || '').toLowerCase();
-    if (state) record(state);
+    if (state) { record(state); recordAdScore(state); }
   } catch (_) {}
 
-  window.koausAnalytics = { record, getDistribution, allocateSlots };
+  window.koausAnalytics = { record, getDistribution, allocateSlots, recordAdScore };
 })();
