@@ -46,7 +46,7 @@
       gradients: ['hero-bg--legal2', 'hero-bg--home1', 'hero-bg--legal3', 'hero-bg--edu3'],
       slides: [
         { eyebrow: '🚗 Auto',               title: '한인 정비·견인·렌트카.',             sub: '24시간 출동·한국어 응대·합리적인 가격',                       cta: { href: '#postGrid', label: '서비스 보기 →' } },
-        { eyebrow: '동행 인스펙션',         title: '중고차 구입 전 전문가 동행.',        sub: '계약 전 상태·키로미터·정비 이력 점검 후 안전 구매',           cta: null },
+        { eyebrow: '정비소 · 견인',         title: '한인 정비소·견인 한 곳에서.',        sub: '견적 비교 · 긴급 견인 · 한국어 응대',                         cta: null },
         { eyebrow: '중고차 매물',           title: '개인·딜러 매물 한 곳에서.',          sub: '연식·주행거리·가격대로 빠르게 비교',                          cta: null },
         { eyebrow: '렌트카',                title: '단기·장기 렌트카 한인 업체.',         sub: '공항 인수·자차·보험까지 한국어로 안내',                       cta: null },
       ],
@@ -100,7 +100,7 @@
       gradients: ['hero-bg--legal2', 'hero-bg--home1', 'hero-bg--legal3', 'hero-bg--edu3'],
       slides: [
         { eyebrow: '🚗 중고차 판매',        title: '한인 중고차 매물 한 곳에서.',         sub: '개인 · 딜러 매물 — 연식 · 주행 · 가격대 비교',                cta: { href: '#postGrid', label: '매물 보기 →' } },
-        { eyebrow: '안심 거래',             title: '계약 전 인스펙션 동행 가능.',         sub: 'VIN · 정비 이력 · 누수 점검까지 한국어로',                     cta: null },
+        { eyebrow: '꼼꼼한 확인',           title: '계약 전 차량 상태 직접 확인.',        sub: 'VIN · 정비 이력 · REGO 확인은 필수',                           cta: null },
         { eyebrow: '시세 비교',             title: '같은 모델 · 같은 연식 가격 한눈에.',  sub: 'CarsGuide · CarSales 가격 참고',                              cta: null },
         { eyebrow: '딜러 · 개인',           title: '딜러 · 개인 매물 함께 보기.',         sub: '판매 유형 필터로 원하는 매물만',                              cta: null },
       ],
