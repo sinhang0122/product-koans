@@ -662,7 +662,6 @@
         <button class="rea-contact-btn" id="detailContactBtn" type="button" style="flex:1;min-width:0;">📞 연락처 보기</button>
         <!-- 동적 연락 버튼 컨테이너 — 다음 지시에서 JS 가 작성자 연락처에 맞춰 1~4개 버튼 inject -->
         <div id="contact-action-container" class="contact-action-container" aria-label="연락 수단"></div>
-        <a class="rea-contact-btn" href="contact.html?type=owner-verify&amp;board=trades" style="flex:1;min-width:0;background:#1f2937;color:#fff;text-decoration:none;display:flex;align-items:center;justify-content:center;">🛡 Official 검증</a>
       </div>
     </div>
   </div>
@@ -1374,7 +1373,7 @@
     //  지시 5-B ─ submitPost: Firestore 'services' 컬렉션 + Storage 업로드
     //  옛 localStorage 꼼수(loadPosts/savePosts) 폐기. firestore.rules 의
     //  services.create 일반 유저 분기(line 413-428) 정합:
-    //    · status='approved' (즉시 노출) · isOfficial:false · uid 본인 일치
+    //    · status='approved' (즉시 노출) · uid 본인 일치
     //    · 필수: category(='trades'), title, contact
     //    · 옵션: region/address/summary/body/state/imageUrls
     //  Storage path: post_images/trades/{auth.uid}/{randomname} — Rules 정합.
@@ -1456,7 +1455,6 @@
         contact: contactSafe,
         state: currentState || '',
         status: 'approved',     // 즉시 노출 (자율 등록형 — points.html 패턴)
-        isOfficial: false,      // admin 표시 금지 (룰 강제)
         isUserPost: true,       // 커뮤니티 자율 등록 마커
         author: nick,
         uid: user.uid,          // 룰 보안 — request.auth.uid 일치
@@ -1748,7 +1746,7 @@
           <div class="accom-card-info">
             <!-- 지시 4/10 — Row 1: 제목(좌) + 액션(우) -->
             <div class="accom-card-row1">
-              <div class="accom-card-title2">${escHtml(p.title)}${p.isOfficial ? '<span class="koaus-official-badge">Official</span>' : ''}</div>
+              <div class="accom-card-title2">${escHtml(p.title)}</div>
               <div class="accom-card-actions">
                 <button class="bookmark-btn${saved ? ' is-saved' : ''}" data-id="${p.id}" title="저장한 글" aria-label="저장">${saved ? '★' : '☆'}</button>
                 <div class="post-mini-actions">

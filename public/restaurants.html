@@ -656,12 +656,11 @@
       </div>
      </div><!-- /rea-scroll -->
 
-      <!-- Sticky 하단 액션바 (K-Food — 사장님 인증 + 연락처) -->
+      <!-- Sticky 하단 액션바 (K-Food — 연락처) -->
       <div class="rea-actionbar" style="display:flex;gap:8px;flex-wrap:wrap;">
         <button class="rea-contact-btn" id="detailContactBtn" type="button" style="flex:1;min-width:0;">📞 연락처 보기</button>
         <!-- 동적 연락 버튼 컨테이너 — 다음 지시에서 JS 가 작성자 연락처에 맞춰 1~4개 버튼 inject -->
         <div id="contact-action-container" class="contact-action-container" aria-label="연락 수단"></div>
-        <a class="rea-contact-btn" id="detailOwnerVerifyBtn" href="contact.html?type=owner-verify" style="flex:1;min-width:0;background:#1f2937;color:#fff;text-decoration:none;display:flex;align-items:center;justify-content:center;">🛡 Official 검증</a>
       </div>
     </div>
   </div>
@@ -1819,7 +1818,7 @@
           <div class="accom-card-info">
             <!-- 지시 4/10 — Row 1: 제목(좌) + 액션(우) — 옛 line1(가격+별) 폐기 -->
             <div class="accom-card-row1">
-              <div class="accom-card-title2">${escHtml(p.title)}${p.isOfficial ? '<span class="koaus-official-badge">Official</span>' : ''}</div>
+              <div class="accom-card-title2">${escHtml(p.title)}</div>
               <div class="accom-card-actions">
                 <button class="bookmark-btn${saved ? ' is-saved' : ''}" data-id="${p.id}" title="저장한 글" aria-label="저장">${saved ? '★' : '☆'}</button>
                 <div class="post-mini-actions">

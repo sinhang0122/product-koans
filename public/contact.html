@@ -462,12 +462,6 @@
       <a href="index.html" class="page-back">← 홈으로</a>
     </div>
 
-    <!-- 사장님 공식 인증 진입 시(type=owner-verify) 안내 카드 노출 -->
-    <div id="ownerVerifyBanner" hidden style="margin:0 12px 14px;padding:14px 16px;border-radius:12px;background:linear-gradient(135deg,#2563eb 0%,#1d4ed8 100%);color:#fff;box-shadow:0 6px 18px rgba(37,99,235,.25);">
-      <div style="font-size:15px;font-weight:800;margin-bottom:4px;">🛡 사장님 공식 인증</div>
-      <div style="font-size:13px;line-height:1.55;opacity:.95;">이 업체의 실제 소유주이신가요? 인증 시 공식 마크(<span style="display:inline-block;background:#fff;color:#1d4ed8;padding:1px 7px;border-radius:999px;font-size:11px;font-weight:900;">✓ Official</span>)를 부여해 드립니다. 아래에 업체명·운영자 본인 정보·증빙(사업자 등록증 사진 또는 가게 사진 등)을 함께 적어주세요. 관리자 검토 후 1~2 영업일 내에 회신드립니다.</div>
-    </div>
-
     <form class="contact-form" id="contactForm" action="https://formspree.io/f/xojbbypv" method="POST" novalidate>
       <input type="hidden" name="_subject" id="contactSubject" value="[KoAus 문의] 홈페이지에서 새로운 문의가 접수되었습니다.">
       <input type="hidden" name="_inquiry_type" id="contactInquiryType" value="general">
@@ -516,31 +510,6 @@
   </footer>
 
   <script>
-    // ── URL ?type=owner-verify 진입 시 사장님 공식 인증 모드로 UI 전환 ──
-    (function () {
-      try {
-        const params = new URLSearchParams(location.search);
-        if (params.get('type') !== 'owner-verify') return;
-        const board = params.get('board') || '';
-        const BOARD_LABEL = { trades:'기술직', gp:'GP', restaurants:'K-Food', maintenance:'정비소', towing:'견인', inspection:'동행 및 긴급출동', legal:'법무법인', education:'유학원' };
-        const boardName = BOARD_LABEL[board] || '비즈니스';
-        const titleEl = document.getElementById('contactPageTitle');
-        const subEl   = document.getElementById('contactPageSubtitle');
-        const subjEl  = document.getElementById('contactSubject');
-        const typeEl  = document.getElementById('contactInquiryType');
-        const banner  = document.getElementById('ownerVerifyBanner');
-        if (titleEl) titleEl.textContent = '🛡 사장님 공식 인증 신청';
-        if (subEl)   subEl.textContent   = `${boardName} 업체 운영자 인증 — 검토 후 ✓ Official 마크가 부여됩니다`;
-        if (subjEl)  subjEl.value = `[KoAus 사장님 인증] ${boardName} 업체 공식 인증 신청`;
-        if (typeEl)  typeEl.value = 'owner-verify';
-        if (banner)  banner.hidden = false;
-        // 메시지 placeholder 유도 (있다면)
-        const msg = document.getElementById('contactMessage') || document.querySelector('textarea[name="message"]');
-        if (msg && !msg.value) {
-          msg.placeholder = `[${boardName}] 업체 공식 인증 신청\n\n· 업체명:\n· 게시글 ID 또는 URL:\n· 운영자 이름:\n· 연락처(전화·카톡 오픈챗):\n· 증빙(사업자 등록증·가게 사진 등 링크):\n\n관리자 검토 후 회신드립니다.`;
-        }
-      } catch (_) {}
-    })();
     // ── Sidebar ──
     const hBtn = document.getElementById('hamburgerBtn');
     const cBtn = document.getElementById('sidebarCloseBtn');

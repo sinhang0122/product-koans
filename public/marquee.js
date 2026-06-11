@@ -6,6 +6,7 @@
 //  - 우 → 좌 끊임없는 흐름 (CSS @keyframes koaus-marquee)
 //  - 호버 시 일시정지(CSS :hover) · ‹/› 버튼: 즉시 다음/이전 항목으로 우측 재등장
 // ════════════════════════════════════════════════════════════════════
+import './koaus-appcheck-init.js';   // App Check 공용 init — 자체 init 없는 페이지의 Enforce 차단 방지 (전 페이지 커버)
 import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
 import { getFirestore, collection, query, orderBy, limit, onSnapshot, doc, getDoc } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
 

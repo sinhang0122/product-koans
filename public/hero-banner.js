@@ -54,10 +54,10 @@
     trades: {
       gradients: ['hero-bg--legal1', 'hero-bg--legal2', 'hero-bg--home3', 'hero-bg--edu1'],
       slides: [
-        { eyebrow: '🔧 Skilled Trades',     title: '한인 기술자 — 전기·배관·페인팅·핸디맨.', sub: '자격증·보험·ABN 보유 업체만 — 출장비·경력 비교',           cta: { href: '#postGrid', label: '기술자 보기 →' } },
-        { eyebrow: '관리자 검토',           title: '광고가 아닌 진짜 한인 기술자.',      sub: '관리자 검토 후 등록 → 견적 요청 가능',                        cta: null },
+        { eyebrow: '🔧 Skilled Trades',     title: '한인 기술자 — 전기·배관·페인팅·핸디맨.', sub: '출장비·경력·서비스 지역을 한 페이지에서 비교',             cta: { href: '#postGrid', label: '기술자 보기 →' } },
+        { eyebrow: '한국어 소통',           title: '한국어로 소통하는 기술자 찾기.',     sub: '분야별 모아 보기 → 바로 견적 문의',                           cta: null },
         { eyebrow: '견적 요청',             title: '한 번에 여러 업체 견적 비교.',       sub: '평일·주말·공휴일 출동 가능 여부 확인',                        cta: null },
-        { eyebrow: '🛡 Official 인증',      title: '인증된 한인 기술자만 노출.',          sub: '신원 + 자격증 + 보험 검토 완료 업체',                         cta: null },
+        { eyebrow: '분야 필터',             title: '필요한 분야만 골라 보기.',            sub: '출장 지역 · 연락처를 한 페이지에서',                          cta: null },
       ],
     },
     restaurants: {
@@ -66,7 +66,7 @@
         { eyebrow: '🍱 K-Food', title: '등록된 K-Food, 지도와 함께.', sub: '한식·중식·치킨·BBQ·카페 — 가격대와 영업시간을 한눈에',     cta: { href: '#postGrid', label: '식당 보기 →' } },
         { eyebrow: '편의시설 필터',         title: '주차·배달·포장·할랄 옵션까지.',      sub: '음식 종류 + 편의시설 + 영업 상태로 빠르게 검색',              cta: null },
         { eyebrow: '영업 시간',             title: '요일별 영업·휴무를 7일 표로.',       sub: '오늘 영업 중인 가게만 골라 보기',                             cta: null },
-        { eyebrow: '🛡 Official 인증',      title: '관리자 검토 후 등록된 가게.',         sub: '한인 사장님 직접 등록 + 검토',                                cta: null },
+        { eyebrow: '사장님 직접 등록',      title: '한인 사장님이 직접 등록한 가게.',     sub: '메뉴 · 가격 · 영업시간 최신 정보',                            cta: null },
       ],
     },
     salon: {
@@ -75,7 +75,7 @@
         { eyebrow: '💇 한인 미용실',        title: '커트·펌·염색·매직 한 곳에서.',       sub: '한국 스타일 · 한국어 디자이너 · 가격 투명',                   cta: { href: '#postGrid', label: '미용실 보기 →' } },
         { eyebrow: '서비스 필터',           title: '커트·펌·염색·붙임머리까지.',         sub: '내가 원하는 서비스만 빠르게 검색',                            cta: null },
         { eyebrow: '커트 가격',             title: '디자이너별 커트 · 펌 가격 비교.',    sub: '학생 할인 · 주차 · 카드 결제 옵션도 확인',                    cta: null },
-        { eyebrow: '🛡 Official 인증',      title: '관리자 검토 미용실 우선 노출.',       sub: '한인 디자이너 + 정식 등록 사업장',                            cta: null },
+        { eyebrow: '지도 보기',             title: '내 주변 한인 미용실 찾기.',           sub: '지도에서 위치 · 연락처 바로 확인',                            cta: null },
       ],
     },
     gp: {
@@ -102,7 +102,7 @@
         { eyebrow: '🚗 중고차 판매',        title: '한인 중고차 매물 한 곳에서.',         sub: '개인 · 딜러 매물 — 연식 · 주행 · 가격대 비교',                cta: { href: '#postGrid', label: '매물 보기 →' } },
         { eyebrow: '안심 거래',             title: '계약 전 인스펙션 동행 가능.',         sub: 'VIN · 정비 이력 · 누수 점검까지 한국어로',                     cta: null },
         { eyebrow: '시세 비교',             title: '같은 모델 · 같은 연식 가격 한눈에.',  sub: 'CarsGuide · CarSales 가격 참고',                              cta: null },
-        { eyebrow: '🛡 검증된 딜러',        title: '한인 딜러 우선 노출.',                sub: '관리자 검토 후 등록된 사업장만',                              cta: null },
+        { eyebrow: '딜러 · 개인',           title: '딜러 · 개인 매물 함께 보기.',         sub: '판매 유형 필터로 원하는 매물만',                              cta: null },
       ],
     },
     mypage: {

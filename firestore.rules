@@ -206,7 +206,7 @@ service cloud.firestore {
       // ⚠️ isHidden / hiddenAt 는 작성자도 본인 글 '일시 숨김' 토글 가능 (마이페이지 ⏸️/▶️)
       //    → 운영자 전용 잠금 목록에서 제외. 운영자/작성자 둘 다 토글 허용.
       //    단, uid 잠금(uidLocked) + status 화이트리스트(statusAllowedForOwner)는 그대로 유지.
-      return ['isOfficial', 'reportCount', 'role',
+      return ['reportCount', 'role',
               'approvedAt', 'heldAt', 'pausedAt', 'closedAt'];
     }
     function noModeratorFieldChange() {
@@ -588,11 +588,11 @@ service cloud.firestore {
     //   - admin:   list 시 limit ≤ 200 허용 (대기열 일괄 조회).
     // ════════════════════════════════════════════════════════════════
     match /services/{id} {
-      // 읽기: admin 전체 / 비admin 은 approved 이거나 공식 인증(isOfficial:true) 글만
-      // (공식 인증 글은 status 와 무관하게 노출 — admin 직권 등록 시 자동 통과)
+      // 읽기: admin 전체 / 비admin 은 approved 글만
+      // (오피셜 인증 기능 폐기 2026-06-11 — isOfficial 조건 제거. 기존 isOfficial 데이터는
+      //  전수 approved 였고 필드도 Admin SDK 로 일괄 삭제 — 노출 범위 불변)
       allow get: if isAdmin()
-                    || resource.data.status == 'approved'
-                    || resource.data.isOfficial == true;
+                    || resource.data.status == 'approved';
 
       // list 평가: doc 별 read 룰이 모두 통과해야 전체 쿼리 통과
       // → 비admin 은 클라이언트에서 where('status','==','approved') 필수
@@ -615,14 +615,11 @@ service cloud.firestore {
         )
         // ② 일반 로그인 유저 등록 — 자율 등록형 게시판 (UGC):
         //    status 는 'pending' 또는 'approved' 둘 다 허용 (비자/유학 등 즉시 노출 컨셉)
-        //    · isOfficial:false 강제 (admin 표시 금지 — admin 만 isOfficial:true 부여 가능)
         //    · authorId / uid 본인 일치 강제 (오너십 보안)
         || ( isSignedIn()
              && (request.resource.data.status == 'pending'
                  || request.resource.data.status == 'approved')
              && request.resource.data.uid == request.auth.uid
-             && ( !('isOfficial' in request.resource.data)
-                  || request.resource.data.isOfficial == false )
              && reqStr('category', 1, 50)
              && reqStr('title', 1, 200)
              && reqStr('contact', 1, 200)

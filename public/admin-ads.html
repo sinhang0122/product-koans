@@ -206,11 +206,12 @@
 
 <div class="toast" id="toast"></div>
 
-<!-- Firebase compat SDK (사이트가 쓰는 버전과 맞춰도 됩니다) -->
-<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-storage-compat.js"></script>
+<!-- Firebase compat SDK — 사이트 표준 12.13.0 통일 (N1) + App Check (Enforce 토큰 첨부) -->
+<script src="https://www.gstatic.com/firebasejs/12.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.13.0/firebase-app-check-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.13.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.13.0/firebase-storage-compat.js"></script>
 
 <script>
 /* ============================================================================
@@ -247,6 +248,8 @@ function configFilled(){ return firebaseConfig.apiKey && firebaseConfig.apiKey.i
   if (!configFilled()){ show('cfgView'); return; }
   try {
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    // App Check Enforce — 토큰 미첨부 시 Firestore/Storage 전면 차단
+    try { firebase.appCheck().activate('6Ld1mAwtAAAAADURkCq0J6GOr3wFg9DQVOsxVG5v', true); } catch (e) { console.warn('App Check init 실패:', e && e.message); }
     auth = firebase.auth(); db = firebase.firestore(); storage = firebase.storage();
   } catch(e){ show('cfgView'); return; }
 
@@ -284,7 +287,7 @@ function buildTabs(){
 }
 function refreshCounts(){
   STATES.forEach(function(s){
-    db.collection(ADS_COLLECTION).where('state','==',s).get().then(function(snap){
+    db.collection(ADS_COLLECTION).where('state','==',s).limit(20).get().then(function(snap){
       var el=$('cnt-'+s); if(el) el.textContent = snap.size;
     }).catch(function(){});
   });
@@ -355,7 +358,7 @@ function inWindow(d){
 }
 function loadList(){
   $('list').innerHTML = '<div class="empty-list"><span class="spin" style="border-color:#ccc;border-top-color:#888"></span> 불러오는 중…</div>';
-  db.collection(ADS_COLLECTION).where('state','==',currentState).get().then(function(snap){
+  db.collection(ADS_COLLECTION).where('state','==',currentState).limit(20).get().then(function(snap){
     var rows=[]; snap.forEach(function(doc){ rows.push(Object.assign({id:doc.id}, doc.data())); });
     rows.sort(function(a,b){ return (a.order||0)-(b.order||0); });
     renderList(rows); updatePreview(rows);

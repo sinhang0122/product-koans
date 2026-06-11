@@ -458,12 +458,12 @@
                 <span class="hero-cta">쉐어 보러가기 →</span>
               </div>
             </a>
-            <a class="swiper-slide hero-bg--home3" data-koaus-slot="2" href="trades.html">
+            <a class="swiper-slide hero-bg--home3" data-koaus-slot="2" href="about.html">
               <div class="hero-content">
-                <span class="hero-eyebrow">관리자 검토 게시판</span>
-                <h2 class="hero-title">믿을 수 있는 한인 기술자·식당·GP.</h2>
-                <p class="hero-sub">관리자가 등록 검토 후 표시 — 무분별한 광고 zero</p>
-                <span class="hero-cta">기술직 보러가기 →</span>
+                <span class="hero-eyebrow">KoAus</span>
+                <h2 class="hero-title">미래는 호주에서, 추억은 한국에서.</h2>
+                <p class="hero-sub">둘 다 KoAus에서.</p>
+                <span class="hero-cta">KoAus 소개 보기 →</span>
               </div>
             </a>
             <a class="swiper-slide hero-bg--legal3" data-koaus-slot="3" href="points.html?cat=visa-edu">
@@ -841,18 +841,24 @@
 
   <!-- ════════════════════════════════════════════════════════════════════
        KoAus 주(State)별 광고 시스템 — append-only 안전 연동
-       · koaus-ads.js : Firebase compat SDK 의존 (사용자 제공 모듈 — 0 수정)
+       · koaus-ads.js : Firebase compat SDK 의존 (limit(20) + App Check 최소 수정)
+       · koaus-compat-init.js : compat [DEFAULT] 앱 init + App Check activate
+         — 반드시 compat 체인 직후 · koaus-ads.js 직전 (defer 실행 순서 의존)
        · admin-ads.html : 단독 관리자 페이지 (firebaseConfig 만 채움)
        · onAd 콜백 : 기존 #heroSwiperHome Swiper 인스턴스에 슬라이드 1장 appendSlide
        · 기존 hero-banner.js / Swiper 인스턴스는 절대 수정·재초기화 X (두더지 잡기 방지)
        ════════════════════════════════════════════════════════════════════ -->
-  <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js" defer></script>
-  <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/12.13.0/firebase-app-compat.js" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/12.13.0/firebase-app-check-compat.js" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore-compat.js" defer></script>
+  <script src="koaus-compat-init.js" defer></script>
   <script src="koaus-ads.js" defer></script>
-  <script defer>
-    // defer 순서: firebase-compat → koaus-ads → 본 인라인 → DOMContentLoaded → koaus-ads 의 doRender
-    // 즉 onAd 콜백 등록이 첫 render 전에 완료됨 — 인벤토리 fetch 결과를 받아 정상 호출.
+  <script>
+    // 인라인 script 는 defer 가 무시되어 파싱 시점(KoAusAds 정의 전)에 실행된다.
+    // → DOMContentLoaded 로 미뤄 KoAusAds 정의 후 config·onAd 적용.
+    //   (파싱 시 등록된 본 리스너가 koaus-ads 의 doRender 리스너보다 먼저 발화)
     (function () {
+      function setupKoausAds() {
       if (!window.KoAusAds) return;
       // koaus-ads.js 가 OPTIONS.mountSelector('#heroAd') 기반 자동 inject 모드로 변하지 않도록
       // 명시적으로 callback 모드 + onlyOnHome 재고정 (방어 가드 — koaus-ads.js 옵션 외부 변경 차단).
@@ -910,12 +916,14 @@
           if (window.console && console.warn) console.warn('[koaus-ads] onAd append 실패:', e);
         }
       };
-      // koaus-ads.js 의 첫 init 은 onAd 미설정 시점 (defer 순서상 보통 우리보다 늦음 — 안전).
-      // 만약 이미 첫 render 가 콜백 미설정으로 silent log 됐다면 한 번 더 트리거.
+      // 만약 첫 render 가 콜백 미설정 시점에 silent log 됐다면 한 번 더 트리거.
       //   · 인벤토리 캐시 사용 → 비용 0, 중복 append 는 위 (3) 가드로 방어.
       if (typeof window.KoAusAds.renderHeroAd === 'function') {
         setTimeout(function () { try { window.KoAusAds.renderHeroAd(); } catch (e) {} }, 1500);
       }
+      }
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setupKoausAds);
+      else setupKoausAds();
     })();
   </script>
 </body>

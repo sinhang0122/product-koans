@@ -157,7 +157,7 @@
       if (!firebaseReady()) { resolve(null); return; }
       try {
         firebase.firestore().collection(OPTIONS.adsCollection)
-          .where('active', '==', true).get()
+          .where('active', '==', true).limit(20).get()   // rules limitedList(≤20) 정합
           .then(function (snap) {
             var map = {}; STATES.forEach(function (s) { map[s] = []; }); map['default'] = [];
             snap.forEach(function (doc) {

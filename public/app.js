@@ -1,5 +1,4 @@
 import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
-import { getAnalytics } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-analytics.js';
 import {
   getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut,
   createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile,
@@ -29,7 +28,11 @@ if (APP_CHECK_SITE_KEY && !APP_CHECK_SITE_KEY.startsWith('TODO')) {
   });
 }
 
-const analytics   = getAnalytics(firebaseApp);
+// Analytics 는 동적 import — 광고차단기가 firebase-analytics.js 를 차단해도
+// 모듈 전체(App Check init 포함)가 죽지 않도록 분리 (2026-06-10 구조 약점 E-1)
+import('https://www.gstatic.com/firebasejs/12.13.0/firebase-analytics.js')
+  .then(m => { try { m.getAnalytics(firebaseApp); } catch (_) {} })
+  .catch(() => {});
 const auth        = getAuth(firebaseApp);
 const provider    = new GoogleAuthProvider();
 

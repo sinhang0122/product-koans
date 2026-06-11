@@ -657,12 +657,11 @@
       </div>
      </div><!-- /rea-scroll -->
 
-      <!-- Sticky 하단 액션바 (K-Food — 사장님 인증 + 연락처) -->
+      <!-- Sticky 하단 액션바 -->
       <div class="rea-actionbar" style="display:flex;gap:8px;flex-wrap:wrap;">
         <button class="rea-contact-btn" id="detailContactBtn" type="button" style="flex:1;min-width:0;">📞 연락처 보기</button>
         <!-- 동적 연락 버튼 컨테이너 — 다음 지시에서 JS 가 작성자 연락처에 맞춰 1~4개 버튼 inject -->
         <div id="contact-action-container" class="contact-action-container" aria-label="연락 수단"></div>
-        <a class="rea-contact-btn" id="detailOwnerVerifyBtn" href="contact.html?type=owner-verify" style="flex:1;min-width:0;background:#1f2937;color:#fff;text-decoration:none;display:flex;align-items:center;justify-content:center;">🛡 Official 검증</a>
       </div>
     </div>
   </div>
@@ -1678,7 +1677,7 @@
           <div class="accom-card-info">
             <!-- 지시 4/10 — Row 1: 제목(좌) + 액션(우) -->
             <div class="accom-card-row1">
-              <div class="accom-card-title2">${escHtml(p.title)}${p.isOfficial ? '<span class="koaus-official-badge">Official</span>' : ''}</div>
+              <div class="accom-card-title2">${escHtml(p.title)}</div>
               <div class="accom-card-actions">
                 <button class="bookmark-btn${saved ? ' is-saved' : ''}" data-id="${p.id}" title="저장한 글" aria-label="저장">${saved ? '★' : '☆'}</button>
                 <div class="post-mini-actions">
@@ -2760,14 +2759,14 @@
     } catch (e) { console.warn('[salon] pinned-notice 초기화 실패', e); }
   </script>
 
-  <!-- ── 등록 요청 모달 (유저 → services 컬렉션, status='pending') ── -->
+  <!-- ── 등록 요청 모달 (유저 → services 컬렉션, status='approved' 즉시 노출) ── -->
   <div class="request-overlay" id="requestOverlay" hidden>
     <div class="request-modal">
       <div class="request-header">
         <h3 class="request-title">사장님 글쓰기 <em>Owner Submission</em></h3>
         <button type="button" class="request-close" id="requestClose" aria-label="닫기">✕</button>
       </div>
-      <p class="request-info">⚠ 관리자 검토 후 게시판에 노출됩니다. 가게 사장님이 직접 작성하셔도 좋고, 등록된 정보만 통과합니다.</p>
+      <p class="request-info">⚠ 등록 즉시 게시판에 노출됩니다. 가게 사장님이 직접 작성하셔도 좋습니다. 규정 위반 시 사전 통보 없이 삭제될 수 있습니다.</p>
       <form id="requestForm">
         <div class="request-field"><label>상호명 <span class="required">*</span></label><input type="text" id="rqTitle" maxlength="80" required placeholder="예: 김밥천국 Strathfield"></div>
         <div class="request-field"><label>📞 전화번호 <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택 · 전화 + 문자 둘 다 활성)</em></label><input type="tel" id="rqPhone" maxlength="30" placeholder="04xx xxx xxx" autocomplete="tel"></div>
@@ -2875,7 +2874,7 @@
           });
           form.reset(); hide();
           window.dispatchEvent(new Event('koaus-rq-form-reset'));
-          alert('✅ 사장님 등록이 요청되었습니다.\n관리자 검토 후 게시판에 노출됩니다.');
+          alert('✅ 등록되었습니다.\n규정 위반 시 사전 통보 없이 삭제될 수 있습니다.');
         } catch (err) {
           console.error('[koaus] request submit 실패', err);
           note.textContent = '❌ 등록 실패: ' + (err.message || err); note.classList.add('is-error');

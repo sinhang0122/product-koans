@@ -1538,7 +1538,6 @@
         const { addDoc, collection, serverTimestamp } = window.koausFs;
         // Firestore Rules 정합 (services.create 일반 사용자 — 자율 등록형 UGC 분기):
         //   · status === 'approved' (자율 등록형 — 즉시 노출, 사용자 명시 기획 의도)
-        //   · isOfficial:false 명시 (admin 표시 금지 — 일반 유저는 false 만 허용)
         //   · reqStr('contact', 1, 200) — 빈 값일 때 안내 자동 채움 (룰 위반 회피)
         //   · authorId 추가 — RBAC 작성자 본인 식별 표준 필드
         const contactSafe = contact || '게시글 본문 또는 댓글 참고';
@@ -1548,7 +1547,6 @@
           address, contact: contactSafe, visaType,
           phone, kakaoLink,           // 분리 연락처 — koaus-contact-actions.js 자동 버튼 렌더
           status:     'approved',     // ✅ 자율 등록형 — 즉시 노출 (사용자 명시 의도)
-          isOfficial: false,          // admin 표시 금지 (룰 정합)
           isUserPost: true,           // 커뮤니티 자율 등록 게시판 마커
           author:    (u.displayName || (u.email||'').split('@')[0] || '익명'),
           uid:       u.uid,

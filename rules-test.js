@@ -3,10 +3,11 @@
 //  · 사용법:  node rules-test.js [rules파일경로]   (기본: ./firestore.rules)
 //  · 토큰:   firebase-tools 로그인 세션에서 실행 시점에 취득 — 디스크 저장 없음
 //            (env RULES_TEST_TOKEN 으로 수동 주입 가능)
-//  · 구성:   ① create/update 검증 14케이스 (게시판 검증기 v2 + M5 trim)
-//            ② 비로그인 공개 read 15케이스 (2026-06-10 회귀 의심 사건 후 상시화 —
-//               notices/ads/ad_banners/emails/nicknames/accom_posts/핀공지,
-//               실제 클라이언트 쿼리 형태 그대로: orderBy 포함 · limit 유/무)
+//  · 구성:   ① create/update 검증 15케이스 (게시판 검증기 v2 + M5 trim + services UGC)
+//            ② 비로그인 공개 read 21케이스 (2026-06-10 회귀 의심 사건 후 상시화 —
+//               notices/ads/ad_banners/emails/nicknames/accom_posts/핀공지/services,
+//               실제 클라이언트 쿼리 형태 그대로: orderBy 포함 · limit 유/무.
+//               services 4케이스는 오피셜 폐기(2026-06-11) 노출 범위 불변 검증)
 //  · 주의:   App Check Enforce 계층 차단은 본 스위트로 못 잡는다 — 콘솔 작업(K4류)
 //            후엔 운영 도메인에서 공개 페이지 1회 열람 확인 병행할 것.
 // ════════════════════════════════════════════════════════════════════
@@ -103,10 +104,12 @@ function mkUpdate(authUid, expectation, label) {
     resource: { data: Object.assign({}, accomData) },
   };
 }
-function mkUnauth(expectation, coll, method, query, label) {
+function mkUnauth(expectation, coll, method, query, label, resourceData) {
   const req = { auth: null, path: `/databases/(default)/documents/${coll}`, method, time: '2026-06-10T00:00:00Z' };
   if (query) req.query = query;
-  return { _label: label, expectation, request: req };
+  const c = { _label: label, expectation, request: req };
+  if (resourceData) c.resource = { data: resourceData };
+  return c;
 }
 
 const cases = [
@@ -141,6 +144,20 @@ const cases = [
   mkUnauth('DENY',  'accom_posts/abc', 'list', { limit: 100 },                            'unauth: accom_posts list limit 100 → 거부'),
   mkUnauth('ALLOW', 'board_pinned_notices/accom', 'get', null,                            'unauth: 핀공지 get'),
   mkUnauth('DENY',  'users/someuid',  'get',  null,                                       'unauth: users get → 거부'),
+  // ③ services 공개 read — 오피셜 폐기(2026-06-11) 후 노출 범위 불변 검증
+  //    (잔존 데이터 전수: status='approved' + isOfficial 필드 삭제 완료 — 케이스 1이 현 데이터 형태)
+  mkUnauth('ALLOW', 'services/abc', 'get', null, 'unauth: services approved get',                          { status: 'approved', category: 'trades', title: 't' }),
+  mkUnauth('ALLOW', 'services/abc', 'get', null, 'unauth: services approved+옛isOfficial get (불변 검증)', { status: 'approved', isOfficial: true, category: 'trades', title: 't' }),
+  mkUnauth('DENY',  'services/abc', 'get', null, 'unauth: services pending get → 거부',                    { status: 'pending', category: 'trades', title: 't' }),
+  mkUnauth('DENY',  'services/abc', 'get', null, 'unauth: services pending+isOfficial get → 거부 (의도)',  { status: 'pending', isOfficial: true, category: 'trades', title: 't' }),
+  mkUnauth('ALLOW', 'services/abc', 'list', { limit: 50 },  'unauth: services list limit 50'),
+  mkUnauth('DENY',  'services/abc', 'list', { limit: 100 }, 'unauth: services list limit 100 → 거부'),
+  // 일반 유저 services create — isOfficial 없는 신규 클라이언트 payload (points/trades 패턴)
+  mkCreate({ category: 'trades', title: '테스트 업체', contact: '0400000000', body: ' ',
+             address: '', state: 'qld', status: 'approved', isUserPost: true, author: 'a',
+             uid: 'testuser123', authorId: 'testuser123', authorUid: 'testuser123',
+             authorEmail: 'e@e.com', email: 'e@e.com', lat: null, lng: null },
+           'ALLOW', 'services', 'create: services 일반유저 isOfficial 無 payload'),
 ];
 
 (async () => {

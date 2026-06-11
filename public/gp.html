@@ -663,7 +663,6 @@
         <button class="rea-contact-btn" id="detailContactBtn" type="button" style="flex:1;min-width:0;">📞 연락처 보기</button>
         <!-- 동적 연락 버튼 컨테이너 — 다음 지시에서 JS 가 작성자 연락처에 맞춰 1~4개 버튼 inject -->
         <div id="contact-action-container" class="contact-action-container" aria-label="연락 수단"></div>
-        <a class="rea-contact-btn" href="contact.html?type=owner-verify&amp;board=gp" style="flex:1;min-width:0;background:#1f2937;color:#fff;text-decoration:none;display:flex;align-items:center;justify-content:center;">🛡 Official 검증</a>
       </div>
     </div>
   </div>
@@ -1675,7 +1674,7 @@
           <div class="accom-card-info">
             <!-- 지시 4/10 — Row 1: 제목(좌) + 액션(우) -->
             <div class="accom-card-row1">
-              <div class="accom-card-title2">${escHtml(p.title)}${p.isOfficial ? '<span class="koaus-official-badge">Official</span>' : ''}</div>
+              <div class="accom-card-title2">${escHtml(p.title)}</div>
               <div class="accom-card-actions">
                 <button class="bookmark-btn${saved ? ' is-saved' : ''}" data-id="${p.id}" title="저장한 글" aria-label="저장">${saved ? '★' : '☆'}</button>
                 <div class="post-mini-actions">
@@ -2757,14 +2756,14 @@
     } catch (e) { console.warn('[gp] pinned-notice 초기화 실패', e); }
   </script>
 
-  <!-- ── 등록 요청 모달 (유저 → services 컬렉션, status='pending') ── -->
+  <!-- ── 등록 요청 모달 (유저 → services 컬렉션, status='approved' 즉시 노출) ── -->
   <div class="request-overlay" id="requestOverlay" hidden>
     <div class="request-modal">
       <div class="request-header">
         <h3 class="request-title">등록 요청하기 <em>Submit Request</em></h3>
         <button type="button" class="request-close" id="requestClose" aria-label="닫기">✕</button>
       </div>
-      <p class="request-info">⚠ 관리자 검토 후 게시판에 노출됩니다. 허위·광고성 정보 등록 시 영구 차단됩니다.</p>
+      <p class="request-info">⚠ 등록 즉시 게시판에 노출됩니다. 허위·광고성 정보 등록 시 사전 통보 없이 삭제 및 계정 제재될 수 있습니다.</p>
       <form id="requestForm">
         <div class="request-field"><label>식당 이름 <span class="required">*</span></label><input type="text" id="rqTitle" maxlength="80" required placeholder="예: 김밥천국 Strathfield"></div>
         <div class="request-field"><label>📞 전화번호 <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택 · 전화 + 문자 둘 다 활성)</em></label><input type="tel" id="rqPhone" maxlength="30" placeholder="04xx xxx xxx" autocomplete="tel"></div>
@@ -2842,7 +2841,7 @@
             createdAt: serverTimestamp(),
           });
           form.reset(); hide();
-          alert('✅ 등록이 요청되었습니다.\n관리자 검토 후 게시판에 노출됩니다.');
+          alert('✅ 등록되었습니다.\n규정 위반 시 사전 통보 없이 삭제될 수 있습니다.');
         } catch (err) {
           console.error('[koaus] request submit 실패', err);
           note.textContent = '❌ 등록 실패: ' + (err.message || err); note.classList.add('is-error');
