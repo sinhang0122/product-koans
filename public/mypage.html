@@ -510,19 +510,6 @@
         <button class="mypage-photo-btn" id="mpPhotoBtn">사진 교체</button>
       </div>
 
-      <!-- 4) 이름 공개 토글 (활성 시 초록색 — 예외 허용) -->
-      <div class="mypage-account-row" id="mpNameVisibleRow">
-        <div class="mypage-account-row-info">
-          <div class="mypage-account-row-label">이름(Name) 공개</div>
-          <div class="mypage-account-row-desc">기본은 별명(Nickname) 노출. 켜면 본인 이름도 함께 노출됩니다.</div>
-        </div>
-        <label class="mp-name-toggle" aria-label="이름 공개 토글">
-          <input type="checkbox" id="mpNameVisible" checked />
-          <span class="mp-name-toggle-slider"></span>
-          <span class="mp-name-toggle-knob"></span>
-        </label>
-      </div>
-
       <!-- 5) Danger Zone — 계정 삭제 (탈퇴) · Privacy Policy §9 (6개월 암호화 보관 후 파기) -->
       <div class="mypage-account-row" id="mpDeleteRow" style="border-top:2px solid var(--red,#dc2626);margin-top:14px;padding-top:14px;">
         <div class="mypage-account-row-info">
@@ -889,7 +876,6 @@
     // ── My Page rendering ──
     const readJSON = k => { try { return JSON.parse(localStorage.getItem(k) || '[]'); } catch { return []; } };
     const escHtml = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    const maskEmailPrefix = email => email ? escHtml(String(email).split('@')[0].slice(0,4)) + '***' : '';
     const boardLabel = b => b === 'accom' ? '쉐어' : b === 'rent' ? '렌트' : b === 'jobs' ? 'Work' : b;
     const boardHref  = b => b === 'accom' ? 'accom.html' : b === 'rent' ? 'rent.html' : b === 'jobs' ? 'jobs.html' : '#';
 
@@ -979,7 +965,7 @@
       const el = document.getElementById('mypageList');
       if (!items.length) { el.innerHTML = '<div class="post-empty">' + emptyMsg[mtab] + '</div>'; return; }
       el.innerHTML = items.map(p => {
-        const meta = escHtml(p.author || '') + (p.authorEmail ? ' (' + maskEmailPrefix(p.authorEmail) + ')' : '') + ' · ' + (p.date || '') + (p.time ? ' ' + p.time : '');
+        const meta = escHtml(p.author || '') + ' · ' + (p.date || '') + (p.time ? ' ' + p.time : '');
         const head = '<span class="mypage-item-badge">' + boardLabel(p.board) + '</span>'
           + '<span class="mypage-item-title">' + escHtml(p.title || '') + '</span>'
           + '<span class="mypage-item-meta">' + meta + '</span>';
@@ -1416,22 +1402,8 @@
             if (data && data.photoURL && setAvatarPhoto(data.photoURL)) {
               localStorage.setItem('koaus-photo-url', data.photoURL);
             }
-            // 이름 공개 토글 — Firestore 값 반영 (기본 true)
-            const tgl = document.getElementById('mpNameVisible');
-            if (tgl) tgl.checked = !(data && data.nameVisible === false);
           });
         } catch (_) {}
-
-        // 토글 변경 시 즉시 Firestore 동기화
-        const tgl = document.getElementById('mpNameVisible');
-        if (tgl && !tgl.__koausWired) {
-          tgl.addEventListener('change', async () => {
-            try {
-              await setDoc(doc(db, 'users', user.uid), { nameVisible: !!tgl.checked }, { merge: true });
-            } catch (e) { console.warn('[mypage] nameVisible 저장 실패', e); }
-          });
-          tgl.__koausWired = true;
-        }
         document.getElementById('mpEmail').textContent = user.email || '';
         loginReq.style.display = 'none';
         prof.style.display = ''; tabs.style.display = ''; list.style.display = '';

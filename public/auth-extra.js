@@ -187,7 +187,6 @@ function mountSignupExtra() {
       window.__koausPendingSignup = {
         email: (document.getElementById('authSignupEmail')?.value || '').trim().toLowerCase(),
         nickname: nick, securityQ: secQ, securityA: norm(secA),
-        nameVisible: false,  // 이름 미수집 → 닉네임만 노출
       };
     }, true);  // capture phase
     btn.__koausExtraHook = true;
@@ -403,7 +402,6 @@ onAuthStateChanged(auth, async user => {
         securityAHash: secAHash,
         securityASalt: secASalt,
         securityAIter: SECA_ITER,
-        nameVisible: false,  // 이름 필드 폐기 — 항상 false
         createdAt: now,
       }, { merge: true });
       // nicknames 측 securityA 미러 — 아이디 찾기 폐기로 미사용, 평문 사본 자체를 제거 (H3)

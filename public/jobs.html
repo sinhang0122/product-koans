@@ -652,10 +652,6 @@
             <input class="write-input" id="wKakao" type="url" placeholder="https://open.kakao.com/o/..." maxlength="500" />
           </div>
           <div class="write-field">
-            <label class="write-label" for="wEmail">✉️ 이메일 Email <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택)</em></label>
-            <input class="write-input" id="wEmail" type="email" placeholder="example@gmail.com" maxlength="200" autocomplete="email" />
-          </div>
-          <div class="write-field">
             <label class="write-label" for="wContact">기타 통합 입력 Misc <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택 · 위 분리 필드 우선, 자유 형식 추가 메모용)</em></label>
             <input class="write-input" id="wContact" type="text" placeholder="기타 연락 수단·시간대·메모 등 자유 입력" maxlength="100" />
           </div>
@@ -869,12 +865,8 @@
       if (u.email && pmail && u.email === pmail) return true;
       return false;
     }
-    function maskEmailPrefix(email) {
-      if (!email) return '';
-      return escHtml(String(email).split('@')[0].slice(0, 4)) + '***';
-    }
     function authorLabel(p) {
-      return escHtml(p.author) + (p.authorEmail ? ` (${maskEmailPrefix(p.authorEmail)})` : '');
+      return escHtml(p.author);
     }
 
     function escHtml(s) {
@@ -1430,7 +1422,6 @@
       set('wContact',   d.contact);
       set('wPhone',     d.phone);
       set('wKakao',     d.kakaoLink);
-      set('wEmail',     d.email);
       set('wBody',      d.body);
       // 세컨/써드 비자 카운트 — checkbox
       const _veSet = document.getElementById('wVisaEligible');
@@ -1444,7 +1435,6 @@
       document.getElementById('wContact').value = p.contact || '';
       const elPh = document.getElementById('wPhone');       if (elPh) elPh.value     = p.phone      || '';
       const elKk = document.getElementById('wKakao');       if (elKk) elKk.value     = p.kakaoLink  || '';
-      const elEm = document.getElementById('wEmail');       if (elEm) elEm.value     = p.email      || '';
       const elVe = document.getElementById('wVisaEligible'); if (elVe) elVe.checked  = !!p.visaEligible;
       const elAd = document.getElementById('wAddress');     if (elAd) elAd.value     = p.address    || '';
       const elEt = document.getElementById('wEmpType');     if (elEt) elEt.value     = p.empType    || '';
@@ -1517,7 +1507,6 @@
         const elContact  = document.getElementById('wContact');
         const elPhone    = document.getElementById('wPhone');
         const elKakao    = document.getElementById('wKakao');
-        const elEmail    = document.getElementById('wEmail');
         const elAuthor   = document.getElementById('wAuthor');
         const elCategory = document.getElementById('wCategory');
         const elEmpType  = document.getElementById('wEmpType');
@@ -1556,7 +1545,6 @@
         // 분리 필드 — koaus-contact-actions.js 가 post.phone/kakaoLink/email 로 자동 버튼 렌더
         const phone     = (elPhone && elPhone.value.trim())  || '';
         const kakaoLink = (elKakao && elKakao.value.trim())  || '';
-        const email     = (elEmail && elEmail.value.trim())  || '';
         // 세컨/써드 비자 카운트 가능 여부 — checkbox
         const _veEl     = document.getElementById('wVisaEligible');
         const visaEligible = !!(_veEl && _veEl.checked);
@@ -1595,9 +1583,9 @@
           const post = {
             id: Date.now(), postType, title, body: bodySafe,
             state: currentState, author: nick,
-            uid: user.uid || '', email: user.email || '',
-            authorUid: user.uid || '', authorEmail: user.email || '',
-            contact, phone, kakaoLink, email, visaEligible, date, time,
+            uid: user.uid || '',
+            authorUid: user.uid || '',
+            contact, phone, kakaoLink, visaEligible, date, time,
             category, empType, payUnit, payAmount, address, lat, lng,
           };
           posts.push(post);
@@ -1621,7 +1609,7 @@
 
         setWriteMode('create');
         writeOverlay.classList.remove('open');
-        ['wTitle','wBody','wAuthor','wContact','wPhone','wKakao','wEmail'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+        ['wTitle','wBody','wAuthor','wContact','wPhone','wKakao'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
         const _veReset = document.getElementById('wVisaEligible'); if (_veReset) _veReset.checked = false;
         switchTab(postType);
       } catch (error) {
@@ -2333,9 +2321,7 @@
         const payload = {
           ...post,
           uid:   u.uid,                 // ownerOnCreate 규칙용 (필수)
-          email: u.email || '',
           authorUid:   u.uid,
-          authorEmail: u.email || '',
           createdAt: serverTimestamp(),
         };
         console.log('🚀 Firestore 전송 시도 데이터: ', payload, '| collection=jobs_posts | uid=', u.uid);

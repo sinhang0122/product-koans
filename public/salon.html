@@ -1418,8 +1418,8 @@
         target = {
           id: Date.now(), state: currentState,
           author: nick,
-          uid: user.uid || '', email: user.email || '',
-          authorUid: user.uid || '', authorEmail: user.email || '',
+          uid: user.uid || '',
+          authorUid: user.uid || '',
           date, time, lat: null, lng: null, imageUrls: [], ...fields,
         };
         if (coords) { target.lat = coords.lat; target.lng = coords.lng; }
@@ -1564,14 +1564,8 @@
       if (u.email && pmail && u.email === pmail) return true;
       return false;
     }
-    function maskEmailPrefix(email) {
-      if (!email) return '';
-      const local = String(email).split('@')[0];
-      return escHtml(local.slice(0, 4)) + '***';
-    }
     function authorLabel(p) {
-      const masked = p.authorEmail ? ` (${maskEmailPrefix(p.authorEmail)})` : '';
-      return escHtml(p.author) + masked;
+      return escHtml(p.author);
     }
 
     // ── Filter ──
@@ -2758,7 +2752,6 @@
         <div class="request-field"><label>상호명 <span class="required">*</span></label><input type="text" id="rqTitle" maxlength="80" required placeholder="예: 김밥천국 Strathfield"></div>
         <div class="request-field"><label>📞 전화번호 <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택 · 전화 + 문자 둘 다 활성)</em></label><input type="tel" id="rqPhone" maxlength="30" placeholder="04xx xxx xxx" autocomplete="tel"></div>
         <div class="request-field"><label>💛 카톡 오픈채팅 링크 <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택)</em></label><input type="url" id="rqKakao" maxlength="500" placeholder="https://open.kakao.com/o/..."></div>
-        <div class="request-field"><label>✉️ 이메일 <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택)</em></label><input type="email" id="rqEmail" maxlength="200" placeholder="example@gmail.com" autocomplete="email"></div>
         <div class="request-field"><label>기타 통합 입력 <span class="required">*</span></label><input type="text" id="rqContact" maxlength="200" placeholder="기타 연락 수단·시간대·메모 (위 분리 필드 우선, 자유 입력)" required></div>
         <div class="request-field"><label>주소</label><input type="text" id="rqAddress" maxlength="200" placeholder="예: 8 Albert Rd, Strathfield NSW 2135"></div>
 
@@ -2830,7 +2823,6 @@
         const title = $('rqTitle').value.trim(), contact = $('rqContact').value.trim();
         const phone     = ($('rqPhone') && $('rqPhone').value.trim()) || '';
         const kakaoLink = ($('rqKakao') && $('rqKakao').value.trim()) || '';
-        const emailFld  = ($('rqEmail') && $('rqEmail').value.trim()) || '';
         if (!title || !contact) { note.textContent = '상호명과 연락처는 필수입니다.'; note.classList.add('is-error'); return; }
         const address = $('rqAddress').value.trim(), summary = $('rqSummary').value.trim();
         // 사진 6장 (window.__rqPhotoUrls 에 Storage 업로드 URL 누적)
@@ -2856,7 +2848,7 @@
             status: 'approved',
             adminPost: false,
             author: (u.displayName || (u.email ? u.email.split('@')[0] : '익명')),
-            uid: u.uid, email: emailFld || u.email,    // 분리 필드 우선, 없으면 계정 이메일
+            uid: u.uid,
             createdAt: serverTimestamp(),
           });
           form.reset(); hide();

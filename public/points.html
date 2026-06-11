@@ -592,10 +592,6 @@
             <input class="write-input" id="vwKakao" type="url" placeholder="https://open.kakao.com/o/..." maxlength="500" />
           </div>
           <div class="write-field write-field--full">
-            <label class="write-label" for="vwEmail">✉️ 이메일 Email <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택)</em></label>
-            <input class="write-input" id="vwEmail" type="email" placeholder="example@gmail.com" maxlength="200" autocomplete="email" />
-          </div>
-          <div class="write-field write-field--full">
             <label class="write-label" for="vwContact">기타 통합 입력 (선택 · 위 분리 필드 우선)</label>
             <input class="write-input" id="vwContact" type="text" maxlength="100" placeholder="기타 연락 수단·시간대·메모 등 자유 입력" />
           </div>
@@ -1227,7 +1223,7 @@
         try { ensureVisaMap(); } catch (_) {}
         try { wireVisaAddressAutocomplete(); } catch (_) {}
       }
-      function closeWrite() { overlay.classList.remove('open'); ['vwTitle','vwBody','vwAddress','vwContact','vwPhone','vwKakao','vwEmail'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; }); document.getElementById('vwError').textContent = ''; const sg = document.getElementById('vwAddressSuggest'); if (sg) { sg.classList.remove('show'); sg.innerHTML = ''; } }
+      function closeWrite() { overlay.classList.remove('open'); ['vwTitle','vwBody','vwAddress','vwContact','vwPhone','vwKakao'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; }); document.getElementById('vwError').textContent = ''; const sg = document.getElementById('vwAddressSuggest'); if (sg) { sg.classList.remove('show'); sg.innerHTML = ''; } }
 
       // ── 주소 자동완성 (Google Places AutocompleteService) ──
       // · Maps API 비동기 로드 후 wire — google.maps.places 가 준비되면 즉시 연결
@@ -1515,10 +1511,8 @@
         const contact  = document.getElementById('vwContact').value.trim();
         const _phEl = document.getElementById('vwPhone');
         const _kkEl = document.getElementById('vwKakao');
-        const _emEl = document.getElementById('vwEmail');
         const phone     = _phEl ? _phEl.value.trim() : '';
         const kakaoLink = _kkEl ? _kkEl.value.trim() : '';
-        const emailFld  = _emEl ? _emEl.value.trim() : '';
         if (!title) {
           errEl.textContent = '제목을 입력해 주세요.';
           alert('제목을 입력해 주세요.');
@@ -1551,9 +1545,7 @@
           author:    (u.displayName || (u.email||'').split('@')[0] || '익명'),
           uid:       u.uid,
           authorId:  u.uid,           // RBAC 작성자 식별 표준 필드 (agent.md §2-E)
-          email:     emailFld || u.email || '',   // 분리 필드 우선, 없으면 계정 이메일
           authorUid: u.uid,
-          authorEmail: u.email || '',
           createdAt: serverTimestamp(),
         };
         submitBtn.disabled = true; submitBtn.textContent = '등록 중…';

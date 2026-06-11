@@ -512,10 +512,6 @@
         <input class="write-input" id="wKakao" type="url" placeholder="https://open.kakao.com/o/..." maxlength="500" />
       </div>
       <div class="write-field">
-        <label class="write-label" for="wEmail">✉️ 이메일 Email <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택)</em></label>
-        <input class="write-input" id="wEmail" type="email" placeholder="example@gmail.com" maxlength="200" autocomplete="email" />
-      </div>
-      <div class="write-field">
         <label class="write-label" for="wContact">기타 통합 입력 (선택)</label>
         <input class="write-input" id="wContact" type="text" placeholder="기타 연락 수단·시간대·메모 등 자유 입력" maxlength="60" />
       </div>
@@ -731,7 +727,6 @@
       document.getElementById('wContact').value = p.contact || '';
       const _ph = document.getElementById('wPhone'); if (_ph) _ph.value = p.phone || '';
       const _kk = document.getElementById('wKakao'); if (_kk) _kk.value = p.kakaoLink || '';
-      const _em = document.getElementById('wEmail'); if (_em) _em.value = p.email || '';
       writeOverlay.classList.add('open');
     }
     function openDetail(id) {
@@ -768,10 +763,8 @@
       const contact = document.getElementById('wContact').value.trim();
       const _phEl = document.getElementById('wPhone');
       const _kkEl = document.getElementById('wKakao');
-      const _emEl = document.getElementById('wEmail');
       const phone     = _phEl ? _phEl.value.trim() : '';
       const kakaoLink = _kkEl ? _kkEl.value.trim() : '';
-      const email     = _emEl ? _emEl.value.trim() : '';
       if (!title) { alert('제목을 입력해 주세요.'); return; }
       if (!body)  { alert('내용을 입력해 주세요.'); return; }
       const u = window.koausAuth && window.koausAuth.user;
@@ -781,12 +774,11 @@
       if (editingId != null) {
         const idx = posts.findIndex(x => String(x.id) === String(editingId));
         if (idx >= 0) {
-          posts[idx] = { ...posts[idx], title, body, author, contact, phone, kakaoLink, email };
+          posts[idx] = { ...posts[idx], title, body, author, contact, phone, kakaoLink };
         }
       } else {
         posts.push({
           id: Date.now(), title, body, author, contact, phone, kakaoLink, date,
-          email: email || (u && u.email ? u.email : ''),
           uid:   u && u.uid   ? u.uid   : '',   // 본인 글 식별용
         });
       }
@@ -795,7 +787,7 @@
       currentPage = 1;  // 등록/수정 후 첫 페이지로 (새 글이 최신순 맨 앞)
       renderPosts();
       writeOverlay.classList.remove('open');
-      ['wTitle','wBody','wAuthor','wContact','wPhone','wKakao','wEmail'].forEach(id => { const _el = document.getElementById(id); if (_el) _el.value = ''; });
+      ['wTitle','wBody','wAuthor','wContact','wPhone','wKakao'].forEach(id => { const _el = document.getElementById(id); if (_el) _el.value = ''; });
     });
     renderPosts();
   </script>

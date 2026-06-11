@@ -63,6 +63,23 @@ if (!window.__koausSessionInited) {
       }
     })();
 
+    // 1-1) 헤더 My 버튼 별명 표기 (A5) — 아이콘 옆 별명 span 주입/제거 ─────
+    //   · 별명 출처: localStorage 'koaus-nickname' (로그아웃 시 app.js 가 wipe)
+    //   · 모바일 말줄임은 style.css .topbar-my-nick 가 담당
+    function setTopbarNick(nick) {
+      const btn = document.getElementById('topbarMyBtn');
+      if (!btn) return;
+      let span = btn.querySelector('.topbar-my-nick');
+      if (!nick) { if (span) span.remove(); return; }
+      if (!span) {
+        span = document.createElement('span');
+        span.className = 'topbar-my-nick';
+        btn.appendChild(span);
+      }
+      span.textContent = nick;
+    }
+    window.koausSetTopbarNick = setTopbarNick;
+
     // 1-2) 헤더 깜빡임 방어 — sessionStorage 캐시 fast-path (지시 2/4) ─────
     //   · 옛 user 가 있었던 페이지면 진입 즉시 html[data-koaus-auth="cached-in"] 부여
     //   · onAuthStateChanged 첫 발화 후 'in' / 'out' 으로 정정
@@ -71,6 +88,7 @@ if (!window.__koausSessionInited) {
       const cachedUid = sessionStorage.getItem('koaus-auth-uid');
       if (cachedUid) {
         document.documentElement.setAttribute('data-koaus-auth', 'cached-in');
+        try { setTopbarNick(localStorage.getItem('koaus-nickname') || ''); } catch (_) {}
       } else {
         document.documentElement.setAttribute('data-koaus-auth', 'checking');
       }
@@ -172,10 +190,14 @@ if (!window.__koausSessionInited) {
         // 다음 페이지 진입 시 fast-path 용 sessionStorage 캐시 (지시 2/4)
         try { sessionStorage.setItem('koaus-auth-uid', String(user.uid || '')); } catch (_) {}
         document.documentElement.setAttribute('data-koaus-auth', 'in');
+        let nick = '';
+        try { nick = localStorage.getItem('koaus-nickname') || ''; } catch (_) {}
+        setTopbarNick(nick || (user.displayName || '').split(' ')[0] || '');
       } else {
         stopTimer();
         try { sessionStorage.removeItem('koaus-auth-uid'); } catch (_) {}
         document.documentElement.setAttribute('data-koaus-auth', 'out');
+        setTopbarNick('');
       }
     });
   } catch (e) {

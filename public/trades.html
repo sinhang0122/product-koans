@@ -1130,7 +1130,7 @@
       document.getElementById('writeBtnSubmit').textContent = isEdit ? '수정 완료' : '등록하기';
     }
     function resetWriteForm() {
-      ['wTitle','wAddress','wPrice','wBody','wAvailDate','wContact','wPhone','wKakao','wEmail'].forEach(id => { const _el = document.getElementById(id); if (_el) _el.value = ''; });
+      ['wTitle','wAddress','wPrice','wBody','wAvailDate','wContact','wPhone','wKakao'].forEach(id => { const _el = document.getElementById(id); if (_el) _el.value = ''; });
       ['wParking','wPet','wKids','wAirCon'].forEach(id => { document.getElementById(id).checked = false; });
       document.querySelectorAll('#wTypes input, #wRoomTypes input').forEach(c => { c.checked = false; });
       document.getElementById('wGender').value = '';
@@ -1190,7 +1190,6 @@
       set('wContact', d.contact);
       set('wPhone',   d.phone);
       set('wKakao',   d.kakaoLink);
-      set('wEmail',   d.email);
       set('wAvailDate', d.availableDate);
       set('wGender', d.gender);
       setTypeChecks(Array.isArray(d.types) ? d.types : []);
@@ -1216,7 +1215,6 @@
       document.getElementById('wContact').value = p.contact || '';
       const _ph = document.getElementById('wPhone'); if (_ph) _ph.value = p.phone || '';
       const _kk = document.getElementById('wKakao'); if (_kk) _kk.value = p.kakaoLink || '';
-      const _em = document.getElementById('wEmail'); if (_em) _em.value = p.email || '';
       document.getElementById('wParking').checked = !!p.parking;
       document.getElementById('wPet').checked     = !!p.petFriendly;
       document.getElementById('wKids').checked    = !!p.kidsInHouse;
@@ -1411,7 +1409,6 @@
         const contact   = document.getElementById('wContact').value.trim();
         const phone     = (document.getElementById('wPhone')?.value || '').trim();
         const kakaoLink = (document.getElementById('wKakao')?.value || '').trim();
-        const email     = (document.getElementById('wEmail')?.value || '').trim();
         address = document.getElementById('wAddress').value.trim();
         const priceVal = document.getElementById('wPrice').value.trim();
         if (!title || !address || !priceVal) {
@@ -1422,7 +1419,7 @@
         if (!(price > 0)) { alert('주당 쉐어비를 숫자로 올바르게 입력해 주세요.'); return; }
         extra = {
           mode: 'offer', price, types, roomTypes, gender, availableDate,
-          contact, phone, kakaoLink, email,
+          contact, phone, kakaoLink,
           parking:     document.getElementById('wParking').checked,
           petFriendly: document.getElementById('wPet').checked,
           kidsInHouse: document.getElementById('wKids').checked,
@@ -1446,7 +1443,7 @@
       if (wsb) { wsb.disabled = true; wsb.textContent = '등록 중…'; }
 
       // Firestore Rules 정합 payload (services.create 일반 유저 분기)
-      const contactSafe = (extra.contact || extra.phone || extra.email || '게시글 본문 또는 댓글 참고');
+      const contactSafe = (extra.contact || extra.phone || '게시글 본문 또는 댓글 참고');
       const payload = {
         category: 'trades',
         title,
@@ -1460,8 +1457,6 @@
         uid: user.uid,          // 룰 보안 — request.auth.uid 일치
         authorId: user.uid,     // RBAC 작성자 식별
         authorUid: user.uid,
-        authorEmail: user.email || '',
-        email: extra.email || user.email || '',
         lat: coords?.lat || null,
         lng: coords?.lng || null,
         imageUrls: [],
@@ -1629,14 +1624,8 @@
       if (u.email && pmail && u.email === pmail) return true;
       return false;
     }
-    function maskEmailPrefix(email) {
-      if (!email) return '';
-      const local = String(email).split('@')[0];
-      return escHtml(local.slice(0, 4)) + '***';
-    }
     function authorLabel(p) {
-      const masked = p.authorEmail ? ` (${maskEmailPrefix(p.authorEmail)})` : '';
-      return escHtml(p.author) + masked;
+      return escHtml(p.author);
     }
 
     // ── Filter ──
@@ -2899,10 +2888,6 @@
           <div class="write-field offer-only">
             <label class="write-label" for="wKakao">💛 카톡 오픈채팅 링크 <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택)</em></label>
             <input class="write-input" id="wKakao" type="url" placeholder="https://open.kakao.com/o/..." maxlength="500" />
-          </div>
-          <div class="write-field offer-only">
-            <label class="write-label" for="wEmail">✉️ 이메일 Email <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택)</em></label>
-            <input class="write-input" id="wEmail" type="email" placeholder="example@gmail.com" maxlength="200" autocomplete="email" />
           </div>
           <div class="write-field offer-only">
             <label class="write-label" for="wContact">기타 통합 입력 Misc <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택 · 위 분리 필드 우선)</em></label>

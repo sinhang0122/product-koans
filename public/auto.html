@@ -715,10 +715,6 @@
             <input class="write-input" id="rKakao" type="url" placeholder="https://open.kakao.com/o/..." maxlength="500" />
           </div>
           <div class="write-field">
-            <label class="write-label" for="rEmail">✉️ 이메일 Email <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택)</em></label>
-            <input class="write-input" id="rEmail" type="email" placeholder="example@gmail.com" maxlength="200" autocomplete="email" />
-          </div>
-          <div class="write-field">
             <label class="write-label" for="rContact">기타 통합 입력 Misc <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택 · 위 분리 필드 우선)</em></label>
             <input class="write-input" id="rContact" type="text" placeholder="기타 연락 수단·시간대·메모 등 자유 입력" maxlength="200" />
           </div>
@@ -1465,7 +1461,7 @@
     }
 
     function resetWriteForm() {
-      ['rTitle','rBrand','rModel','rYear','rMileage','rRwc','rRego','rPrice','rRegion','rContact','rPhone','rKakao','rEmail','rBody'].forEach(id => {
+      ['rTitle','rBrand','rModel','rYear','rMileage','rRwc','rRego','rPrice','rRegion','rContact','rPhone','rKakao','rBody'].forEach(id => {
         const el = document.getElementById(id); if (el) el.value = '';
       });
     }
@@ -1496,7 +1492,7 @@
         _set('rTitle', p.title); _set('rBrand', p.brand); _set('rModel', p.model);
         _set('rYear', p.year); _set('rMileage', p.mileage); _set('rRwc', p.rwc);
         _set('rRego', p.regoExpiry); _set('rPrice', p.price); _set('rRegion', p.region);
-        _set('rContact', p.contact); _set('rPhone', p.phone); _set('rKakao', p.kakaoLink); _set('rEmail', p.email); _set('rBody', p.body);
+        _set('rContact', p.contact); _set('rPhone', p.phone); _set('rKakao', p.kakaoLink); _set('rBody', p.body);
       }
       document.getElementById('wAuthorName').textContent = p.author || currentNickname() || '-';
       setWriteMode('edit');
@@ -1640,7 +1636,6 @@
           contact:    _fv('rContact'),
           phone:      _fv('rPhone'),
           kakaoLink:  _fv('rKakao'),
-          email:      _fv('rEmail'),
           // 첨부 사진 (Storage 업로드 후 imageUrls 로 매핑됨)
           imageUrls:  Array.isArray(window.__usedPhotoUrls) ? window.__usedPhotoUrls.slice(0, 6) : [],
         };
@@ -1694,8 +1689,8 @@
       } else {
         const target = {
           id: Date.now(), state: currentState, category: activeCategory, isPremium: false,
-          author: nick, uid: user.uid || '', email: user.email || '',
-          authorUid: user.uid || '', authorEmail: user.email || '',
+          author: nick, uid: user.uid || '',
+          authorUid: user.uid || '',
           date, time, ...fields,
         };
         // ── [마이그레이션 가이드] 향후 Firestore(auto_posts) 연동 시 ──────────
@@ -1813,14 +1808,8 @@
       if (u.email && pmail && u.email === pmail) return true;
       return false;
     }
-    function maskEmailPrefix(email) {
-      if (!email) return '';
-      const local = String(email).split('@')[0];
-      return escHtml(local.slice(0, 4)) + '***';
-    }
     function authorLabel(p) {
-      const masked = p.authorEmail ? ` (${maskEmailPrefix(p.authorEmail)})` : '';
-      return escHtml(p.author) + masked;
+      return escHtml(p.author);
     }
 
     // ── Filter ──
@@ -3079,7 +3068,7 @@
             status: 'approved',
             adminPost: false,
             author: (u.displayName || (u.email ? u.email.split('@')[0] : '익명')),
-            uid: u.uid, email: u.email,
+            uid: u.uid,
             createdAt: serverTimestamp(),
           });
           form.reset(); hide();

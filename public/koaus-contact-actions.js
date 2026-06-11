@@ -2,7 +2,7 @@
 //  KoAus · 동적 연락 버튼 렌더러
 //  -----------------------------------------------------------------
 //  · 게시글 상세 모달의 #contact-action-container 에 작성자 연락처에 따라
-//    1~4개 버튼을 동적 inject. 데이터 없는 항목은 자동 제외.
+//    1~3개 버튼을 동적 inject. 데이터 없는 항목은 자동 제외.
 //
 //  사용법 (각 페이지의 상세 모달 렌더 함수 안에 1줄 추가):
 //      window.koausContactActions && window.koausContactActions.render(post);
@@ -10,13 +10,11 @@
 //  지원 필드 (post 데이터):
 //    · post.phone      → [📞 전화] (tel:)  + [💬 문자] (sms:)
 //    · post.kakaoLink  → [💛 카톡 오픈채팅] (target="_blank")
-//    · post.email      → [✉️ 이메일] (mailto:)
 //
 //  주의:
 //    · 모든 사용자 입력은 escape 처리 (XSS 방어).
 //    · phone: 숫자/+/공백/-/( ) 만 추출 → tel: / sms: URI 정규화.
 //    · kakaoLink: http(s) 만 허용 (javascript:, data: 등 차단).
-//    · email: 간단한 @ 검증.
 //    · 모든 필드 비어있으면 컨테이너 자체 display:none (CSS :empty 와 함께 이중 안전망).
 // ════════════════════════════════════════════════════════════════════
 (function () {
@@ -53,12 +51,6 @@
       const u = new URL(url.trim());
       return u.protocol === 'http:' || u.protocol === 'https:';
     } catch (_) { return false; }
-  }
-
-  // 간단한 이메일 검증
-  function isValidEmail(email) {
-    if (!email || typeof email !== 'string') return false;
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
   }
 
   // ── 메인 렌더 함수 ──────────────────────────────────────────────
@@ -101,18 +93,6 @@
         '</a>';
     }
 
-    // ── D) post.email → 메일 보내기 ──
-    const email = (post && post.email ? String(post.email).trim() : '');
-    if (email && isValidEmail(email)) {
-      contactHTML +=
-        '<a class="contact-action-btn contact-action-btn--email"' +
-        ' href="mailto:' + esc(email) + '"' +
-        ' aria-label="이메일 보내기">' +
-          '<span class="ca-ico" aria-hidden="true">✉️</span>' +
-          '<span class="ca-label">이메일</span>' +
-        '</a>';
-    }
-
     // ── E) 아무 연락처도 없으면 컨테이너 자체 hide ──
     if (!contactHTML) {
       container.innerHTML = '';
@@ -128,7 +108,7 @@
   window.koausContactActions = { render: render };
 
   // ── 글로벌 위임: 연락처 액세스 로그인 게이트 (지시 1/2) ─────────────────────
-  //   · 셀렉터: koaus-contact-actions.js 동적 버튼(.contact-action-btn — 전화/문자/카톡/이메일)
+  //   · 셀렉터: koaus-contact-actions.js 동적 버튼(.contact-action-btn — 전화/문자/카톡)
   //             + 각 페이지 sticky 연락처 버튼(#detailContactBtn)
   //   · 비로그인 클릭 → preventDefault + alert + openAuthModal
   //   · 로그인 사용자는 그대로 통과 (자체 href / onclick 정상 작동)

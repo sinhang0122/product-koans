@@ -192,13 +192,22 @@ html[data-koaus-auth="out"]       .topbar-login-btn { opacity: 1; visibility: vi
    · 클릭 시 mypage.html — <a> 태그이므로 JS 없이 즉시 이동
    · 로그아웃 / 인증 확인 중에는 자리 차지 0 (display:none) — 로그인 버튼이 대체 */
 .topbar-my-btn {
-  width: 38px; height: 38px;
+  min-width: 38px; height: 38px;
+  padding: 0 9px;
   background: none; border: 1px solid var(--border);
   border-radius: var(--r-sm); color: var(--text-secondary);
   display: none;  /* 기본 hide — auth state 에 따라 토글 */
-  align-items: center; justify-content: center;
+  align-items: center; justify-content: center; gap: 6px;
   cursor: pointer; text-decoration: none;
   transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+/* A5 — 아이콘 옆 별명 (session-timeout.js 가 주입) */
+.topbar-my-btn .topbar-my-nick {
+  font-size: 13px; font-weight: 700; color: inherit;
+  max-width: 10em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+@media (max-width: 640px) {
+  .topbar-my-btn .topbar-my-nick { max-width: 6em; }  /* 모바일 약 6자 말줄임 */
 }
 .topbar-my-btn:hover { background: var(--bg-card); border-color: var(--accent); color: var(--accent); }
 html[data-koaus-auth="in"]        .topbar-my-btn { display: inline-flex; }
@@ -2056,7 +2065,6 @@ select.write-input {
 .contact-action-btn--call  { background: #16a34a; border-color: #16a34a; color: #fff; }
 .contact-action-btn--sms   { background: #3b82f6; border-color: #3b82f6; color: #fff; }
 .contact-action-btn--kakao { background: #FEE500; border-color: #FEE500; color: #181818; }
-.contact-action-btn--email { background: #6b7280; border-color: #6b7280; color: #fff; }
 .contact-action-btn--web,
 .contact-action-btn--ghost {
   background: var(--bg-card); color: var(--text-primary); border-color: var(--border);
@@ -4000,26 +4008,6 @@ body.is-admin .admin-only.admin-only--block { display: block !important; }
   font-size: 12px; color: var(--text-muted); margin-top: 2px; line-height: 1.45;
 }
 
-/* 토글 — 비활성: 무채색(B&W), 활성: 초록 (사용자 예외 허용)
-   · 슬라이딩: cubic-bezier 로 부드러운 spring 느낌
-   · 활성 시 슬라이더 배경 + knob 위치가 동시에 매끄럽게 전환 */
-.mp-name-toggle {
-  position: relative; display: inline-block;
-  width: 46px; height: 26px; cursor: pointer; flex-shrink: 0;
-}
-.mp-name-toggle input { opacity: 0; width: 0; height: 0; }
-.mp-name-toggle-slider {
-  position: absolute; inset: 0;
-  background: var(--border); border-radius: 999px;
-  transition: background-color 0.22s ease, box-shadow 0.22s ease;
-}
-.mp-name-toggle-knob {
-  position: absolute; top: 3px; left: 3px;
-  width: 20px; height: 20px; background: #fff; border-radius: 50%;
-  transition: transform 0.28s cubic-bezier(0.34, 1.30, 0.64, 1), box-shadow 0.22s ease;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.20), 0 0 0 0.5px rgba(0,0,0,0.04);
-  will-change: transform;
-}
 .mypage-avatar {
   width: 60px; height: 60px; flex-shrink: 0; border-radius: 50%;
   background: var(--accent); color: var(--accent-text);
@@ -4325,25 +4313,6 @@ a.legal-meta-val:hover { border-bottom: 1px solid var(--text-primary); }
   transition: border-color 0.15s, background 0.15s;
 }
 .admin-logout:hover { border-color: var(--text-primary); background: var(--bg-elevated); }
-
-/* ── 마이페이지 이름 공개 토글 — 활성 시 초록색 (Tailwind bg-green-500) ──
-   · 비활성: var(--border) 무채색 → 활성: #22c55e 초록 (background-color transition)
-   · knob: translateX(20px) + cubic-bezier 슬라이딩 (오버슈트 살짝)
-   · 활성 시 slider 내부에 미세한 inset shadow 로 입체감 */
-.mp-name-toggle input:checked ~ .mp-name-toggle-slider {
-  background-color: #22c55e;
-  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.04), 0 1px 4px rgba(34,197,94,0.28);
-}
-.mp-name-toggle input:checked ~ .mp-name-toggle-knob {
-  transform: translateX(20px);
-  box-shadow: 0 2px 5px rgba(0,0,0,0.22), 0 0 0 0.5px rgba(0,0,0,0.06);
-}
-.mp-name-toggle:hover .mp-name-toggle-slider { filter: brightness(0.97); }
-.mp-name-toggle:active .mp-name-toggle-knob { transform: translateX(20px) scale(1.06); }
-.mp-name-toggle input:not(:checked):active ~ .mp-name-toggle-knob { transform: scale(1.06); }
-.mp-name-toggle input:focus-visible ~ .mp-name-toggle-slider {
-  outline: 2px solid #22c55e; outline-offset: 2px;
-}
 
 /* ════════════════════════════════════════════════════════════════════════
    KoAus 2.1 — Fluid Responsive Layout (maplescouter.com 레퍼런스)

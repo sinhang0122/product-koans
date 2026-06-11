@@ -298,6 +298,7 @@ document.getElementById('myAcctEditBtn').addEventListener('click', () => {
   localStorage.setItem(NICK_KEY, String(Date.now()));
   document.getElementById('myAcctName').textContent   = trimmed;
   document.getElementById('myAcctAvatar').textContent = trimmed[0].toUpperCase();
+  try { window.koausSetTopbarNick && window.koausSetTopbarNick(trimmed); } catch (_) {}
   updateProfile(auth.currentUser, { displayName: trimmed }).catch(() => {});
 });
 
