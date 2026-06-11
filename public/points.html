@@ -1599,7 +1599,7 @@
   <!-- Firestore: services 컬렉션 중 legal/education만 실시간 구독 -->
   <script type="module">
     import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
-    import { getFirestore, collection, query, orderBy, limit, onSnapshot, addDoc, where, getDocs, doc, deleteDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
+    import { getFirestore, collection, query, orderBy, limit, onSnapshot, addDoc, setDoc, where, getDocs, doc, deleteDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
     const firebaseConfig = {
       apiKey:'AIzaSyCamqnt0bNUD9uz1N5BbCuQjSkWLSpPqlU', authDomain:'koaus-f564c.firebaseapp.com',
       projectId:'koaus-f564c', storageBucket:'koaus-f564c.firebasestorage.app',
@@ -1608,7 +1608,7 @@
     const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
     let db; try { db = getFirestore(app); } catch (e) { console.warn('[points] Firestore 미초기화', e); }
     // 글쓰기 핸들러(classic script) 가 사용할 Firestore 인스턴스 + 함수 노출
-    try { window.koausDb = db; window.koausFs = { addDoc, collection, query, where, getDocs, doc, deleteDoc, limit, serverTimestamp }; } catch (_) {}
+    try { window.koausDb = db; window.koausFs = { addDoc, setDoc, collection, query, where, getDocs, doc, deleteDoc, limit, serverTimestamp }; } catch (_) {}
     if (db) {
       try {
         // 규칙상 비admin 의 services list 는 where('status','==','approved') 필수 —
@@ -1748,6 +1748,7 @@
         'auth/wrong-password':       '비밀번호가 틀렸습니다.',
         'auth/user-not-found':       '등록되지 않은 이메일입니다.',
         'auth/invalid-credential':   '이메일 또는 비밀번호가 올바르지 않습니다.',
+        'auth/user-disabled':        '관리자에 의해 계정이 일시정지된 상태입니다. 문의하기(Contact) 페이지를 통해 이의신청할 수 있습니다.',
         'auth/too-many-requests':    '잠시 후 다시 시도해 주세요.',
       };
       return map[code] || '오류가 발생했습니다. 다시 시도해 주세요.';

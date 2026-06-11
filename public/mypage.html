@@ -746,7 +746,7 @@
       createUserWithEmailAndPassword, signInWithEmailAndPassword, deleteUser,
     } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
     import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app-check.js';
-    import { getFirestore, doc, getDoc, setDoc, deleteDoc, runTransaction } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
+    import { getFirestore, doc, getDoc, setDoc, deleteDoc, runTransaction, collection, getDocs, query, where, limit } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
     import { compressImage, uploadCompressed } from './compress.js';
 
     const firebaseConfig = {
@@ -807,6 +807,7 @@
         'auth/wrong-password':       '비밀번호가 틀렸습니다.',
         'auth/user-not-found':       '등록되지 않은 이메일입니다.',
         'auth/invalid-credential':   '이메일 또는 비밀번호가 올바르지 않습니다.',
+        'auth/user-disabled':        '관리자에 의해 계정이 일시정지된 상태입니다. 문의하기(Contact) 페이지를 통해 이의신청할 수 있습니다.',
         'auth/too-many-requests':    '잠시 후 다시 시도해 주세요.',
       };
       return map[code] || '오류가 발생했습니다. 다시 시도해 주세요.';
@@ -894,6 +895,37 @@
 
     let mtab = 'mine';
     const emptyMsg = { mine: '아직 작성한 글이 없습니다.', recent: '최근 본 글이 없습니다.', saved: '저장한 글이 없습니다.', contacted: '연락한 글이 없습니다.' };
+    // ── 본인 글 Firestore 직접 조회 (accom/rent/jobs) ──────────────────
+    //   게시판 캐시는 approved 스냅샷으로 통째 덮어써서 숨김/블라인드 글이 증발 —
+    //   localStorage 만으로는 ▶️ 되살리기·운영자 블라인드 표기가 불가능하다.
+    //   where('uid'==본인) limit 20 × 3 (단일 필드 — 복합 인덱스 불필요, 클라 정렬).
+    let _fsMine = [];
+    async function fetchMyFsPosts(uid) {
+      if (!uid) { _fsMine = []; return; }
+      const cols = [['accom', 'accom_posts'], ['rent', 'rent_posts'], ['jobs', 'jobs_posts']];
+      const out = [];
+      for (const [board, col] of cols) {
+        try {
+          const snap = await getDocs(query(collection(db, col), where('uid', '==', uid), limit(20)));
+          snap.docs.forEach(d => {
+            const p = d.data() || {};
+            let date = p.date || '', time = p.time || '', ts = 0;
+            try {
+              if (p.createdAt && p.createdAt.toDate) {
+                const dt = p.createdAt.toDate(); const z = n => String(n).padStart(2, '0');
+                ts = p.createdAt.toMillis();
+                date = date || (z(dt.getMonth() + 1) + '/' + z(dt.getDate()));
+                time = time || (z(dt.getHours()) + ':' + z(dt.getMinutes()));
+              }
+            } catch (_) {}
+            out.push({ board, id: d.id, title: p.title, state: p.state || '', author: p.author,
+                       authorEmail: p.email || p.authorEmail || '', date, time, _ts: ts,
+                       isHidden: !!p.isHidden, hiddenBy: p.hiddenBy || '', fsDocId: d.id });
+          });
+        } catch (e) { console.warn('[mypage] ' + col + ' 본인 글 조회 실패', e); }
+      }
+      _fsMine = out;
+    }
     function dataFor(tab) {
       if (tab === 'mine') {
         // 게시판 원본에서 현재 유저(uid/email)의 글만 직접 필터링 — 누락 방지
@@ -906,10 +938,13 @@
             const pmail = p.email || p.authorEmail;
             const mine = (u.uid && puid && u.uid === puid) || (u.email && pmail && u.email === pmail);
             // 마이페이지 '내가 쓴 글' — 일시 숨김된 글도 포함 (지시 5/7)
-            if (mine) out.push({ board, id: p.id, title: p.title, state: p.state || '', author: p.author, authorEmail: pmail || '', date: p.date, time: p.time || '', isHidden: !!p.isHidden, fsDocId: p.fsDocId || null });
+            if (mine) out.push({ board, id: p.id, title: p.title, state: p.state || '', author: p.author, authorEmail: pmail || '', date: p.date, time: p.time || '', _ts: p._ts || 0, isHidden: !!p.isHidden, hiddenBy: p.hiddenBy || '', fsDocId: p.fsDocId || p._fsDocId || null });
           });
         });
-        return out.sort((a, b) => b.id - a.id);
+        // Firestore 본인 글 병합 — 같은 글은 Firestore 쪽(최신 상태) 우선
+        const seen = new Set(_fsMine.map(p => p.board + ':' + String(p.fsDocId || p.id)));
+        const localOnly = out.filter(p => !seen.has(p.board + ':' + String(p.fsDocId || p.id)));
+        return _fsMine.concat(localOnly).sort((a, b) => (b._ts || +b.id || 0) - (a._ts || +a.id || 0));
       }
       if (tab === 'recent') return readJSON('koaus-recent-posts');
       if (tab === 'contacted') {
@@ -950,14 +985,20 @@
           + '<span class="mypage-item-meta">' + meta + '</span>';
         if (mtab === 'mine') {
           const editUrl = boardHref(p.board) + '?state=' + encodeURIComponent(p.state || '') + '&edit=' + encodeURIComponent(p.id);
-          // 일시 숨김 토글 — ⏸️ (노출 중 → 숨김) / ▶️ (숨김 → 다시 노출)
+          // 운영자 블라인드 (hiddenBy:'admin') — 작성자 자가 해제 불가 (rules adminBlindLock).
+          // ▶️ 토글 미노출 + 안내 표기. 일반 ⏸️ 자가 숨김만 토글 허용.
+          const adminBlind  = p.isHidden && p.hiddenBy === 'admin';
           const toggleLabel = p.isHidden ? '▶️ 다시 노출' : '⏸️ 일시 숨김';
-          const hiddenMark  = p.isHidden ? '<span class="mp-hidden-mark" title="일시 숨김 상태">⏸️ 숨김</span>' : '';
+          const hiddenMark  = adminBlind
+            ? '<span class="mp-hidden-mark" style="color:#b91c1c;" title="운영 정책 위반으로 숨김 처리된 글입니다. 이의신청은 문의하기(Contact) 페이지를 이용해 주세요.">🚫 운영자에 의해 숨김 처리됨</span>'
+            : (p.isHidden ? '<span class="mp-hidden-mark" title="일시 숨김 상태">⏸️ 숨김</span>' : '');
           return '<div class="mypage-item' + (p.isHidden ? ' mp-item-hidden' : '') + '">'
             + head + hiddenMark
             + '<span class="mypage-item-actions">'
             +   '<a class="mp-edit" href="' + editUrl + '">수정</a>'
-            +   '<button class="mp-toggle" data-board="' + p.board + '" data-id="' + p.id + '" data-hidden="' + (p.isHidden ? '1' : '0') + '">' + toggleLabel + '</button>'
+            +   (adminBlind
+                  ? '<button class="mp-toggle-locked" type="button" style="color:#9ca3af;cursor:not-allowed;" title="운영자 숨김은 직접 해제할 수 없습니다.">🔒 해제 불가</button>'
+                  : '<button class="mp-toggle" data-board="' + p.board + '" data-id="' + p.id + '" data-hidden="' + (p.isHidden ? '1' : '0') + '">' + toggleLabel + '</button>')
             +   '<button class="mp-dup" data-board="' + p.board + '" data-id="' + p.id + '">재업로드</button>'
             +   '<button class="mp-del" data-board="' + p.board + '" data-id="' + p.id + '">삭제</button>'
             + '</span>'
@@ -972,6 +1013,11 @@
       el.querySelectorAll('.mp-dup').forEach(b => b.addEventListener('click', e => {
         e.preventDefault(); e.stopPropagation();
         duplicatePost(b.dataset.board, b.dataset.id);
+      }));
+      // 운영자 블라인드 글 — 해제 불가 안내
+      el.querySelectorAll('.mp-toggle-locked').forEach(b => b.addEventListener('click', e => {
+        e.preventDefault(); e.stopPropagation();
+        alert('운영자에 의해 숨김 처리된 글은 직접 되살릴 수 없습니다.\n이의신청은 문의하기(Contact) 페이지를 이용해 주세요.');
       }));
       // 일시 숨김 ⏸️/▶️ 토글 — localStorage 갱신 + (있으면) Firestore 동기화
       el.querySelectorAll('.mp-toggle').forEach(b => b.addEventListener('click', async e => {
@@ -989,14 +1035,16 @@
             localStorage.setItem(sk, JSON.stringify(arr));
           }
         }
-        // 2) Firestore 동기화 (fsDocId 매핑된 글만 — best-effort, 실패해도 local 반영은 유지)
+        // 2) Firestore 동기화 — localStorage 매핑 또는 _fsMine(캐시에서 증발한 숨김 글) 폴백
         try {
           const arr2 = sk ? readJSON(sk) : [];
           const hit = arr2.find(x => String(x.id) === String(id));
-          const fsDocId = hit && (hit.fsDocId || hit._fsDocId);
+          const fsHit = _fsMine.find(x => x.board === board && String(x.id) === String(id));
+          const fsDocId = (hit && (hit.fsDocId || hit._fsDocId)) || (fsHit && fsHit.fsDocId) || null;
           const colName = board === 'jobs' ? 'jobs_posts' : board === 'accom' ? 'accom_posts' : board === 'rent' ? 'rent_posts' : null;
           if (fsDocId && colName && window.koausRbac && window.koausRbac.toggleHidden) {
             await window.koausRbac.toggleHidden(colName, String(fsDocId), !willHide);
+            if (fsHit) { fsHit.isHidden = willHide; }
           }
         } catch (err) { console.warn('[mypage] Firestore 토글 실패 (local 반영은 OK):', err); }
         renderList();
@@ -1388,8 +1436,10 @@
         loginReq.style.display = 'none';
         prof.style.display = ''; tabs.style.display = ''; list.style.display = '';
         renderList();
+        fetchMyFsPosts(user.uid).then(() => { try { renderList(); } catch (_) {} });
         if (tlb) tlb.textContent = nick;
       } else {
+        _fsMine = [];
         loginReq.style.display = ''; prof.style.display = 'none'; tabs.style.display = 'none'; list.style.display = 'none';
         if (tlb) tlb.textContent = '로그인';
       }

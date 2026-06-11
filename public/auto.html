@@ -2157,6 +2157,7 @@
       const p = posts.find(x => String(x.id) === String(id));
       if (!p) return;
       currentDetailPost = p;
+      window.currentDetailPost = p; // koaus-report.js 신고 스냅샷용 노출 (id 일치 시에만 소비)
 
       document.getElementById('detailNavTitle').textContent = p.title;
       const cat = groupOf(p.category);
@@ -2237,6 +2238,7 @@
         _btns.push('<button class="detail-action-btn detail-hide-btn" id="detailHideBtn">' + (p.isHidden ? '▶️ 다시 노출' : '⏸️ 일시 숨김') + '</button>');
       } else if (_isAdminFlag) {
         _btns.push('<button class="detail-action-btn detail-hide-btn" id="detailHideBtn">' + (p.isHidden ? '▶️ 다시 노출' : '⏸️ 일시 숨김') + '</button>');
+        _btns.push('<button class="detail-action-btn detail-delete-btn" id="detailAdminDelBtn">🗑 강제 삭제</button>');
       }
       _btns.push('<button class="detail-action-btn detail-share2-btn" id="detailShareBtn2">🔗 공유</button>');
       _btns.push('<button class="detail-action-btn detail-save2-btn" id="detailSaveBtn2">' + (isSaved(p.id) ? '★ 저장됨' : '☆ 찜하기') + '</button>');
@@ -2261,6 +2263,16 @@
           alert(willHide ? '⏸️ 일시 숨김 처리 완료' : '▶️ 다시 노출 처리 완료');
           document.getElementById('detailOverlay').classList.remove('open'); renderAll();
         } catch (e) { alert('상태 변경 실패: ' + (e.message || e)); }
+      };
+      const _bAd = document.getElementById('detailAdminDelBtn'); if (_bAd) _bAd.onclick = async () => {
+        if (!confirm('관리자 권한으로 이 글을 영구 삭제하시겠습니까? (사진·위치정보 포함 완전 삭제)')) return;
+        try {
+          const fsId = p.fsDocId || p._fsDocId || p.id;
+          await _rbac.forceDelete('services', String(fsId));
+          savePosts(loadPosts().filter(x => String(x.id) !== String(p.id)));
+          alert('🗑 강제 삭제 완료');
+          document.getElementById('detailOverlay').classList.remove('open'); renderAll();
+        } catch (e) { alert('강제 삭제 실패: ' + (e.message || e)); }
       };
       const _bSh2 = document.getElementById('detailShareBtn2'); if (_bSh2) _bSh2.onclick = () => { const sb = document.getElementById('detailShareBtn'); if (sb) sb.click(); };
       const _bSv2 = document.getElementById('detailSaveBtn2');  if (_bSv2) _bSv2.onclick = () => { toggleSaved(p); _bSv2.textContent = isSaved(p.id) ? '★ 저장됨' : '☆ 찜하기'; const sb = document.getElementById('detailSaveBtn'); if (sb) { sb.textContent = isSaved(p.id) ? '★' : '☆'; sb.classList.toggle('saved', isSaved(p.id)); } };
@@ -2515,32 +2527,6 @@
       r.addEventListener('change', () => {
         document.getElementById('reportEtc').style.display = (r.value === '기타' && r.checked) ? '' : 'none';
       });
-    });
-    document.getElementById('reportSubmit').addEventListener('click', async () => {
-      const errEl = document.getElementById('reportError');
-      const sel = document.querySelector('input[name="reportReason"]:checked');
-      if (!sel) { errEl.textContent = '신고 사유를 선택해 주세요.'; return; }
-      const user = window.koausAuth && window.koausAuth.user;
-      if (!user) { errEl.textContent = '신고하려면 로그인이 필요합니다.'; window.koausAuth && window.koausAuth.openAuthModal(); return; }
-      let reason = sel.value;
-      if (reason === '기타') {
-        const etc = document.getElementById('reportEtc').value.trim();
-        if (!etc) { errEl.textContent = '기타 사유를 입력해 주세요.'; return; }
-        reason = '기타: ' + etc;
-      }
-      const btn = document.getElementById('reportSubmit'); btn.disabled = true;
-      try {
-        if (window.koausDb && window.koausFs) {
-          const { addDoc, collection, serverTimestamp } = window.koausFs;
-          await addDoc(collection(window.koausDb, 'reports'), {
-            postId: String(reportingPostId), board: 'auto', reason,
-            reporterUid: user.uid || '', reporterEmail: user.email || '', createdAt: serverTimestamp(),
-          });
-        }
-      } catch (e) { /* Firestore 미설정 시에도 접수 처리 */ }
-      finally { btn.disabled = false; }
-      closeReport();
-      showToast('신고가 접수되었습니다. 검토 후 조치하겠습니다.');
     });
 
     // ── 상세보기 Location 미니맵 + 전체화면 확대 모달 ──
@@ -2977,6 +2963,7 @@
         'auth/wrong-password':       '비밀번호가 틀렸습니다.',
         'auth/user-not-found':       '등록되지 않은 이메일입니다.',
         'auth/invalid-credential':   '이메일 또는 비밀번호가 올바르지 않습니다.',
+        'auth/user-disabled':        '관리자에 의해 계정이 일시정지된 상태입니다. 문의하기(Contact) 페이지를 통해 이의신청할 수 있습니다.',
         'auth/too-many-requests':    '잠시 후 다시 시도해 주세요.',
       };
       return map[code] || '오류가 발생했습니다. 다시 시도해 주세요.';

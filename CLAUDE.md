@@ -1,6 +1,6 @@
 # KoAus (코오스)
 
-호주 한인 커뮤니티 웹사이트 — `koaus.com.au`. Firebase Hosting + Firestore + Storage + Auth + App Check 기반 정적 다중 페이지 앱. 백엔드 서버 없음(클라이언트 직접 SDK 호출 + 보안 규칙으로 게이트).
+호주 한인 커뮤니티 웹사이트 — `koaus.com.au`. Firebase Hosting + Firestore + Storage + Auth + App Check + Cloud Functions(제재 callable 2종만) 기반 정적 다중 페이지 앱. 일반 기능은 클라이언트 직접 SDK 호출 + 보안 규칙으로 게이트, 운영자 제재만 callable 경유.
 
 - **Firebase project:** `koaus-f564c` (`.firebaserc`)
 - **운영자 이메일:** `sinhang0122@gmail.com`, `koaus.official@gmail.com` (관리자 화이트리스트)
@@ -19,6 +19,7 @@
 | `public/style.css` | 단일 글로벌 스타일시트(~200KB) |
 | `public/ads.txt` | AdSense 인증 |
 | 루트 `firebase.json` `.firebaserc` `firestore.rules` `storage.rules` | Firebase 설정 |
+| 루트 `functions/` | Cloud Functions (Node 22, 시드니 리전) — `suspendUser`/`unsuspendUser` callable 2종만. `node_modules`는 gitignore |
 | 루트 `setAdmin.js` | Node Admin SDK 스크립트 — 관리자 custom claim 부여 |
 | 루트 `koaus-f564c-firebase-adminsdk-*.json` | 서비스 계정 키 (`.gitignore` 처리) |
 | 루트 `package.json` | `firebase-admin` 의존성 + `deploy:rules` 스크립트 |
@@ -41,10 +42,10 @@
 
 ## Firebase 인프라
 
-### Firestore (`firestore.rules`, 304줄)
+### Firestore (`firestore.rules`, ~780줄)
 설계 원칙(상단 주석에 명시): **빌링 폭탄 방어 우선**.
-- 쓰기: 로그인 + 필드/타입/길이 검증 + 본인 소유만
-- 수정/삭제: 작성자 본인만
+- 쓰기: 로그인 + 정지 아님(`notSuspended()`) + 필드/타입/길이 검증 + 본인 소유만
+- 수정/삭제: 작성자 본인만 (단 `hiddenBy:'admin'` 글은 작성자가 status/isHidden 변경 불가)
 - list: 페이지당 **최대 20개** 강제
 - 미정의 경로: deny-all
 - 관리자: Admin SDK가 부여한 `custom claim {admin: true}` **또는** 화이트리스트 이메일 (이중 안전망)
@@ -66,6 +67,14 @@
 ### 가입 시 visible reCAPTCHA v2
 인증 모달 안의 "로봇이 아닙니다" 체크박스. **사이트 키:** `6LcUgAItAAAAAElFzz2TQxoCSR0uSPvcVS4N6PiO`
 - 12개 페이지의 `<div class="g-recaptcha" data-sitekey="…">`에 박혀 있음
+
+### Cloud Functions (`functions/index.js`) — 제재 callable 2종
+`suspendUser` / `unsuspendUser` (v2 onCall). **리전 `australia-southeast1`(시드니) 고정** — admin.html 의 `getFunctions(app, 'australia-southeast1')` 및 firebase.json CSP `connect-src` 의 cloudfunctions.net 도메인과 한 세트.
+- 호출 게이트: `enforceAppCheck: true` + 함수 내부 `request.auth.token.admin === true` 검증 (화이트리스트 이메일은 **불충분** — custom claim 필수, `node setAdmin.js` 선행)
+- 동작: Auth disable/enable + `revokeRefreshTokens` + `users/{uid}.status` 동기화 + `moderation_logs` 기록
+- `moderation_logs` 는 **Admin SDK 전용 쓰기** — firestore.rules 에서 클라이언트 create/update/delete 전부 `false`. 클라에서 쓰는 코드를 만들지 말 것.
+- `maxInstances: 2` 는 빌링 방어 — 늘리지 말 것.
+- 정지 강제의 실시간 차단은 rules 의 `notSuspended()` (users/{uid}.status get 체크)가 담당 — Auth disable 만으로는 기존 ID 토큰이 최대 1시간 살아 있음.
 
 ### 관리자 (`setAdmin.js`)
 ```
@@ -91,7 +100,12 @@ npm run deploy:rules           # firestore
 npm run deploy:storage         # storage
 npm run deploy:all-rules       # 양쪽
 npm run deploy:rules:dryrun    # firestore dry-run
+
+# Cloud Functions (제재 callable)
+npm run deploy:functions
 ```
+
+**functions·rules·클라이언트가 같이 바뀌는 변경은 배포 순서 고정: functions → rules → hosting.** (클라가 먼저 나가면 아직 없는 callable/규칙을 호출해 첫 사용이 깨진다.)
 
 ---
 
@@ -99,11 +113,13 @@ npm run deploy:rules:dryrun    # firestore dry-run
 
 - **사이드바·헤더 일괄 변경:** 21개 페이지에 복제되어 있으므로 `cd public && for f in *.html; do perl -i -pe '...' "$f"; done` 패턴으로 처리. 빠진 페이지 없는지 grep 검증 필수.
 - **App Check 키 변경:** 10개 페이지 + `app.js` + `contact.html` 모두 일괄 교체. 빠진 페이지 있으면 그 페이지에서 Firestore 호출이 거부됨.
-- **Firestore 규칙 변경:** `npm run test:rules`(루트 `rules-test.js` — create/update 14 + 비로그인 공개 read 15 = 29케이스 회귀 스위트, Rules 공식 테스트 API 사용) 통과 → `deploy:rules:dryrun` → 실제 배포. 페이지네이션 20개 제한, 필드 길이 제한은 빌링 안전망이므로 완화하지 말 것. 단, App Check Enforce 계층 차단은 이 스위트로 못 잡으므로 콘솔 작업(키/도메인 제한 변경) 후엔 운영 도메인에서 공개 페이지 1회 열람 확인 병행.
+- **Firestore 규칙 변경:** `npm run test:rules`(루트 `rules-test.js` — 47케이스 회귀 스위트: create/update + 비로그인 공개 read + 제재 시스템(정지/신고/moderation_logs/hiddenBy), Rules 공식 테스트 API 사용. ⚠️ 모킹 없는 `exists()/get()` 은 테스트 API 가 에러 처리하므로 러너가 기본 `exists→false` functionMocks 를 주입함 — 새 케이스 추가 시 `mk()` 빌더 사용) 통과 → `deploy:rules:dryrun` → 실제 배포. 페이지네이션 20개 제한, 필드 길이 제한은 빌링 안전망이므로 완화하지 말 것. 단, App Check Enforce 계층 차단은 이 스위트로 못 잡으므로 콘솔 작업(키/도메인 제한 변경) 후엔 운영 도메인에서 공개 페이지 1회 열람 확인 병행.
 - **게시글 스키마 필드 추가 시:** 게시판 create 검증은 **게시판별 검증기 3개** — `validShareRentCreate()`(accom+rent) / `validJobsCreate()` / `validAutoCreate()` (공통 메타는 `validBaseCreate(d)`). 클라이언트 payload 에 새 키를 넣으려면 **해당 게시판 검증기의 `hasOnly([...])` 화이트리스트**를 갱신하고 필요시 `pOptStr/pOptInt/pOptBool/pOptList(d, ...)` 검증도 추가하라. 누락 시 `create` 가 `permission-denied` 로 거부되어 글쓰기가 즉시 멈춘다. 배포 순서는 **룰 먼저(`npm run deploy:rules`) → 새 클라이언트 나중(`firebase deploy --only hosting`)**. 순서를 거꾸로 하면 옛 룰이 새 키를 차단해 출시 직후 첫 글쓰기가 깨진다. ⚠️ **검증기를 다시 단일 함수로 합치거나 헬퍼 안에서 `data()` 류 함수를 재호출하는 구조로 되돌리지 말 것** — Firestore rules 는 요청당 **최대 1,000개 표현식 평가 한도**가 있어, 필드 많은 게시판(accom/rent)의 create 가 한도 초과로 전부 deny 되는 회귀가 실제 발생했다(2026-06). 변경 후엔 Firebase Rules 공식 테스트 API(`firebaserules.googleapis.com/v1/projects/koaus-f564c:test`)로 실페이로드 시뮬레이션 검증 권장.
 - **관리자 권한:** custom claim과 화이트리스트 이메일 둘 다 작동(이중 안전망). 화이트리스트 추가 시 3곳 동기화.
 - **이미지 업로드:** 반드시 `compress.js`로 압축 후 업로드 (Storage 비용 방어).
 - **Phone Auth:** 가입·로그인 시점 강제 (액션 시점 정책 폐기). 우회 흐름 만들지 말 것.
+- **신고(reports):** 접수 진입점은 `koaus-report.js` 단일 (capture-phase 가 `.mini-report`/`.rea-report`/`#detailReportBtn` 전부 가로챔). 페이지 인라인 `addDoc(reports)` 핸들러를 다시 만들지 말 것 — 2026-06 dead code 14곳 제거됨. 문서 ID 는 `{postId}_{reporterUid}` 고정 (rules 가 ID 패턴 검증 → 중복 신고는 update 취급되어 permission-denied = 클라가 "이미 신고" 안내). admin 신고 큐 구독은 `limit(100)` — rules `limitedList ≤100` 초과 시 구독 전체가 거부된다(F-G 회귀).
+- **제재(정지/블라인드):** 계정 정지는 admin.html → callable `suspendUser`/`unsuspendUser` 만 사용 (클라에서 `users/{uid}.status` 직접 쓰기 금지 — rules 가 본인 status 변조도 차단). admin 블라인드는 `hiddenBy:'admin'` 기록 → 작성자가 status/isHidden 으로 자가 해제 불가(`adminBlindLock()`). `koaus-rbac.js toggleHidden` 의 isAdmin 분기(작성자 patch 에 hiddenBy 미포함)를 깨뜨리지 말 것.
 - **지도/필터 UI 추가 시:** `.claude/agents/agent.md` §2-B (Map + Filter UX Standard) 강제. 신규 페이지에 Map View 가 들어가면 **공용 헬퍼 `window.koausMapCluster.attachMarkers()` 호출 1세트** 로 마커 생성 (자체 `forEach + new google.maps.Marker` 금지). 리스트 필터가 같이 있다면 `applyFilters` 안 `areaBounds AND` 분기 항상 포함, `runSearch` 의 region-없음 else 분기에서 `areaBounds = null` 금지.
 - **외부 API 변경 시:** `.claude/agents/agent.md` §3-A (External API Standard) 강제. 도메인/키 변경 시 Google Cloud Console (Maps/Places key restrictions) + reCAPTCHA Admin (v2/v3 키 각각의 Allowed Domains) + Firebase Auth Authorized Domains **3개 콘솔을 한 세트** 로 점검.
 - **신규 글쓰기 폼 추가 시:** `.claude/agents/agent.md` §2-C (Write-Form Mandatory Consent) 강제. 제출 버튼 위에 표준 `id="writeConsent"` 체크박스 + 라벨(`[필수] 이용약관 및 주의사항을 확인하였으며, 서비스 규정 위반 시 게시물 삭제 및 계정 제재가 이루어질 수 있음에 동의합니다.`) 필수. submit 핸들러 최상단에 표준 검증 블록(`if (!_consent.checked) { alert(...); focus + scrollIntoView; return; }`) 강제.

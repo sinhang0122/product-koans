@@ -135,6 +135,7 @@ function authErrMsg(code) {
     'auth/wrong-password':       '비밀번호가 틀렸습니다.',
     'auth/user-not-found':       '등록되지 않은 이메일입니다.',
     'auth/invalid-credential':   '이메일 또는 비밀번호가 올바르지 않습니다.',
+    'auth/user-disabled':        '관리자에 의해 계정이 일시정지된 상태입니다. 문의하기(Contact) 페이지를 통해 이의신청할 수 있습니다.',
     'auth/too-many-requests':    '잠시 후 다시 시도해 주세요.',
   };
   return map[code] || '오류가 발생했습니다. 다시 시도해 주세요.';

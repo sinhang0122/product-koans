@@ -1627,6 +1627,7 @@
     }
 
     // ── Render ──
+    document.addEventListener('koaus-admin-ready', () => { try { renderAll(); } catch (_) {} }); // admin claim 확정 후 카드 admin 버튼 재렌더
     function renderAll() {
       const posts    = loadPosts();
       const filtered = applyFilters(posts);
@@ -1682,7 +1683,7 @@
                 <button class="bookmark-btn${saved ? ' is-saved' : ''}" data-id="${p.id}" title="저장한 글" aria-label="저장">${saved ? '★' : '☆'}</button>
                 <div class="post-mini-actions">
                   <button class="mini-btn mini-share" data-id="${p.id}" type="button">공유</button>
-                  ${(!isMine(p) && !window.koausIsAdmin) ? `<button class="mini-btn mini-report" data-id="${p.id}" type="button">신고</button>` : ''}
+                  ${(!isMine(p) && !window.koausIsAdmin) ? `<button class="mini-btn mini-report" data-id="${p.id}" data-uid="${p.uid || p.authorUid || ''}" type="button">신고</button>` : ''}
                   ${(isMine(p) && !window.koausIsAdmin) ? `<button class="mini-btn mini-edit" data-id="${p.id}" type="button">수정</button>` : ''}
                   ${(isMine(p) || window.koausIsAdmin) ? `<button class="mini-btn mini-hide" data-id="${p.id}" type="button">숨김</button><button class="mini-btn mini-del" data-id="${p.id}" type="button">삭제</button>` : ''}
                 </div>
@@ -1743,21 +1744,6 @@
         }
         alert('링크가 복사되었습니다.');
       }));
-      grid.querySelectorAll('.mini-report').forEach(btn => btn.addEventListener('click', async e => {
-        e.stopPropagation();
-        const postId = btn.dataset.id;
-        const user = window.koausAuth && window.koausAuth.user;
-        try {
-          if (window.koausDb && window.koausFs && user) {
-            const { addDoc, collection, serverTimestamp } = window.koausFs;
-            await addDoc(collection(window.koausDb, 'reports'), {
-              postId: String(postId), board: 'accom', reason: '게시글 신고 (카드)',
-              reporterUid: user.uid || '', reporterEmail: user.email || '', createdAt: serverTimestamp(),
-            });
-          }
-        } catch (_) { /* Firestore 실패해도 사용자에겐 접수 안내 */ }
-        alert('신고가 접수되었습니다. 관리자 검토 후 조치됩니다.');
-      }));
 
       pager.innerHTML = '';
       if (totalPages > 1) {
@@ -1791,6 +1777,7 @@
       const p = posts.find(x => String(x.id) === String(id));
       if (!p) return;
       currentDetailPost = p;
+      window.currentDetailPost = p; // koaus-report.js 신고 스냅샷용 노출 (id 일치 시에만 소비)
 
       // Hero 영역에 첨부 사진(있을 시) — 가로 스크롤 갤러리 + 카운터 동기화 + 클릭 시 라이트박스
       const hero = document.getElementById('detailHero');
@@ -1903,6 +1890,31 @@
         actEl.innerHTML = `<button class="detail-edit-btn" id="detailEditBtn">수정하기</button><button class="detail-delete-btn" id="detailDeleteBtn">삭제하기</button>`;
         document.getElementById('detailEditBtn').onclick   = () => openWriteModalForEdit(p);
         document.getElementById('detailDeleteBtn').onclick = () => deletePost(p.id);
+        actEl.style.display = 'flex';
+      } else if (window.koausIsAdmin && p._fsDocId && window.koausRbac) {
+        // 운영자 (타인 글): 블라인드 토글 + 강제 삭제 — 신고 큐 "글 보기" 동선 즉석 제재
+        actEl.innerHTML = `<button class="detail-delete-btn" id="detailAdminHideBtn">${p.isHidden ? '▶️ 블라인드 해제' : '⏸️ 블라인드'}</button><button class="detail-delete-btn" id="detailAdminDelBtn">🗑 강제 삭제</button>`;
+        document.getElementById('detailAdminHideBtn').onclick = async () => {
+          const willHide = !p.isHidden;
+          if (!confirm(willHide ? '이 글을 블라인드 처리하시겠습니까? (작성자 자가 해제 불가)' : '블라인드를 해제하시겠습니까?')) return;
+          try {
+            await window.koausRbac.toggleHidden('services', String(p._fsDocId), !!p.isHidden);
+            const arr = loadPosts(); const hit = arr.find(x => String(x.id) === String(p.id));
+            if (hit) { hit.isHidden = willHide; hit.status = willHide ? 'hidden' : 'approved'; hit.hiddenBy = willHide ? 'admin' : ''; savePosts(arr); }
+            p.isHidden = willHide;
+            alert(willHide ? '⏸️ 블라인드 처리 완료' : '▶️ 블라인드 해제 완료');
+            document.getElementById('detailOverlay').classList.remove('open'); renderAll();
+          } catch (e) { alert('블라인드 실패: ' + (e.message || e)); }
+        };
+        document.getElementById('detailAdminDelBtn').onclick = async () => {
+          if (!confirm('관리자 권한으로 이 글을 영구 삭제하시겠습니까? (사진·위치정보 포함 완전 삭제)')) return;
+          try {
+            await window.koausRbac.forceDelete('services', String(p._fsDocId));
+            savePosts(loadPosts().filter(x => String(x.id) !== String(p.id)));
+            alert('🗑 강제 삭제 완료');
+            document.getElementById('detailOverlay').classList.remove('open'); renderAll();
+          } catch (e) { alert('강제 삭제 실패: ' + (e.message || e)); }
+        };
         actEl.style.display = 'flex';
       } else { actEl.innerHTML = ''; actEl.style.display = 'none'; }
 
@@ -2024,32 +2036,6 @@
       r.addEventListener('change', () => {
         document.getElementById('reportEtc').style.display = (r.value === '기타' && r.checked) ? '' : 'none';
       });
-    });
-    document.getElementById('reportSubmit').addEventListener('click', async () => {
-      const errEl = document.getElementById('reportError');
-      const sel = document.querySelector('input[name="reportReason"]:checked');
-      if (!sel) { errEl.textContent = '신고 사유를 선택해 주세요.'; return; }
-      const user = window.koausAuth && window.koausAuth.user;
-      if (!user) { errEl.textContent = '신고하려면 로그인이 필요합니다.'; window.koausAuth && window.koausAuth.openAuthModal(); return; }
-      let reason = sel.value;
-      if (reason === '기타') {
-        const etc = document.getElementById('reportEtc').value.trim();
-        if (!etc) { errEl.textContent = '기타 사유를 입력해 주세요.'; return; }
-        reason = '기타: ' + etc;
-      }
-      const btn = document.getElementById('reportSubmit'); btn.disabled = true;
-      try {
-        if (window.koausDb && window.koausFs) {
-          const { addDoc, collection, serverTimestamp } = window.koausFs;
-          await addDoc(collection(window.koausDb, 'reports'), {
-            postId: String(reportingPostId), board: 'accom', reason,
-            reporterUid: user.uid || '', reporterEmail: user.email || '', createdAt: serverTimestamp(),
-          });
-        }
-      } catch (e) { /* Firestore 미설정 시에도 접수 처리 */ }
-      finally { btn.disabled = false; }
-      closeReport();
-      showToast('신고가 접수되었습니다. 검토 후 조치하겠습니다.');
     });
 
     // ── 상세보기 Location 미니맵 + 전체화면 확대 모달 ──
@@ -2505,6 +2491,7 @@
         'auth/wrong-password':       '비밀번호가 틀렸습니다.',
         'auth/user-not-found':       '등록되지 않은 이메일입니다.',
         'auth/invalid-credential':   '이메일 또는 비밀번호가 올바르지 않습니다.',
+        'auth/user-disabled':        '관리자에 의해 계정이 일시정지된 상태입니다. 문의하기(Contact) 페이지를 통해 이의신청할 수 있습니다.',
         'auth/too-many-requests':    '잠시 후 다시 시도해 주세요.',
       };
       return map[code] || '오류가 발생했습니다. 다시 시도해 주세요.';

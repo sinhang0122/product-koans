@@ -931,6 +931,65 @@
         </div>
       </section>
 
+      <!-- ══════════════════════════════════════════════════
+           카드 5 · 블라인드 글 관리
+           4컬렉션 status=='hidden' 조회 — 해제 / 강제 삭제 (해제 동선 보장)
+           ══════════════════════════════════════════════════ -->
+      <section class="admin-card bg-white rounded-xl shadow-sm border border-gray-200 p-7">
+        <header class="flex items-center gap-3 pb-4 mb-6 border-b border-gray-200">
+          <div class="flex items-center justify-center w-10 h-10 bg-gray-700 rounded-lg flex-shrink-0">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+              <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+              <line x1="1" y1="1" x2="23" y2="23"/>
+            </svg>
+          </div>
+          <div>
+            <h2 class="text-xl font-bold text-gray-900 leading-tight">블라인드 글 관리</h2>
+            <p class="text-xs text-gray-500 mt-0.5">숨김 상태(status=hidden) 글 조회 · 운영자 블라인드/작성자 일시 숨김 구분 · 해제 / 강제 삭제</p>
+          </div>
+          <span class="ml-auto inline-flex items-center px-3 py-1 rounded-full bg-gray-100 text-gray-700 text-xs font-bold" id="dashHiddenCount">0건</span>
+          <button type="button" id="dashHiddenRefresh"
+                  style="padding:6px 14px;font-size:12px;font-weight:700;background:#1f2937;color:#fff;border:none;border-radius:6px;cursor:pointer;">↻ 새로고침</button>
+        </header>
+        <div id="dashHiddenList" class="space-y-2"
+             style="max-height:440px;overflow-y:auto;font-size:13px;">
+          <div class="text-sm text-gray-500 text-center py-8">로딩 중…</div>
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════════════════════════
+           카드 6 · 제재 관리
+           정지 계정 목록(users status=='suspended') + moderation_logs 이력
+           ══════════════════════════════════════════════════ -->
+      <section class="admin-card bg-white rounded-xl shadow-sm border border-gray-200 p-7">
+        <header class="flex items-center gap-3 pb-4 mb-6 border-b border-gray-200">
+          <div class="flex items-center justify-center w-10 h-10 bg-amber-600 rounded-lg flex-shrink-0">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+            </svg>
+          </div>
+          <div>
+            <h2 class="text-xl font-bold text-gray-900 leading-tight">제재 관리</h2>
+            <p class="text-xs text-gray-500 mt-0.5">현재 정지 중 계정 + 제재 이력(moderation_logs 최근 100건)</p>
+          </div>
+          <span class="ml-auto inline-flex items-center px-3 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-bold" id="dashSuspendedCount">0명</span>
+          <button type="button" id="dashSanctionRefresh"
+                  style="padding:6px 14px;font-size:12px;font-weight:700;background:#92400e;color:#fff;border:none;border-radius:6px;cursor:pointer;">↻ 새로고침</button>
+        </header>
+        <h3 class="text-sm font-bold text-gray-900 mb-2">🚫 정지 중 계정</h3>
+        <div id="dashSuspendedList" class="space-y-2 mb-6"
+             style="max-height:300px;overflow-y:auto;font-size:13px;">
+          <div class="text-sm text-gray-500 text-center py-8">로딩 중…</div>
+        </div>
+        <h3 class="text-sm font-bold text-gray-900 mb-2">📜 제재 이력 (최근 100건)</h3>
+        <div id="dashModLogList" class="space-y-1"
+             style="max-height:300px;overflow-y:auto;font-size:12.5px;">
+          <div class="text-sm text-gray-500 text-center py-8">로딩 중…</div>
+        </div>
+      </section>
+
     </div><!-- /.admin-dashboard -->
 
   </main>
@@ -996,7 +1055,8 @@
     import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
     import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, setPersistence, indexedDBLocalPersistence, browserLocalPersistence, inMemoryPersistence } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
     import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app-check.js';
-    import { getFirestore, collection, addDoc, deleteDoc, doc, getDoc, setDoc, updateDoc, onSnapshot, query, orderBy, limit, serverTimestamp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
+    import { getFirestore, collection, addDoc, deleteDoc, doc, getDoc, getDocs, setDoc, updateDoc, onSnapshot, query, where, orderBy, limit, serverTimestamp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
+    import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-functions.js';
 
     const firebaseConfig = {
       apiKey:            'AIzaSyCamqnt0bNUD9uz1N5BbCuQjSkWLSpPqlU',
@@ -1025,6 +1085,10 @@
 
     const auth = getAuth(app);
     const db   = getFirestore(app);
+    // 제재 callable — functions/index.js (시드니 리전, enforceAppCheck + admin claim 검증)
+    const fns  = getFunctions(app, 'australia-southeast1');
+    const callSuspendUser   = httpsCallable(fns, 'suspendUser');
+    const callUnsuspendUser = httpsCallable(fns, 'unsuspendUser');
     // 지시 6/10 — 세션 지속성 폴백 체인 (모바일 Safari ITP / Private mode 방어).
     //  · ① indexedDBLocalPersistence (ITP 영향 적음, Firebase v9+ 권장)
     //  · ② browserLocalPersistence  (데스크탑·기존 사용자 호환)
@@ -1559,10 +1623,12 @@
     }
 
     // ════════════════════════════════════════════════════════════════════════
-    // 카드 4 · 신고 관리 (지시 6/7)
-    //   · reports 컬렉션 onSnapshot 실시간 구독 (orderBy createdAt desc, limit 200)
-    //   · 카테고리/신고자/대상글/사유/처리 액션 (삭제 / 해결 / 무시)
-    //   · firestore.rules: list isAdmin only ≤ 200, update/delete isAdmin
+    // 카드 4 · 신고 관리 (지시 6/7 + 제재 시스템 확장)
+    //   · reports 컬렉션 onSnapshot 실시간 구독 (orderBy createdAt desc, limit 100)
+    //     ⚠️ rules 의 limitedList 는 ≤100 — 100 초과 쿼리는 전체 거부됨 (F-G 회귀 주의)
+    //   · 카테고리/신고자/대상글/스냅샷/사유/처리 액션 (삭제 / 해결 / 무시)
+    //   · 글 보기 링크 + 작성자 정지/해제 (callable suspendUser/unsuspendUser)
+    //   · firestore.rules: list isAdmin only ≤ 100, update/delete isAdmin
     // ════════════════════════════════════════════════════════════════════════
     function escHtmlAdmin(s) {
       return String(s == null ? '' : s)
@@ -1591,10 +1657,17 @@
         +   '<b>대상:</b> [' + escHtmlAdmin(r.board || '?') + '] ' + escHtmlAdmin(r.postTitle || r.postId || '(제목 없음)')
         + '</div>'
         + '<div style="font-size:12px;color:#6b7280;"><b>신고자:</b> ' + escHtmlAdmin(reporter) + ' · postId=' + escHtmlAdmin(r.postId || '') + '</div>'
+        + (r.postAuthorUid ? '<div style="font-size:12px;color:#6b7280;"><b>작성자 uid:</b> ' + escHtmlAdmin(r.postAuthorUid) + '</div>' : '')
+        + (r.postBodyExcerpt ? '<div style="font-size:12px;color:#4b5563;background:#fff;padding:6px 8px;border-radius:6px;border:1px solid #e5e7eb;"><b>본문 요약:</b> ' + escHtmlAdmin(r.postBodyExcerpt) + '</div>' : '')
         + (r.detail ? '<div style="font-size:12px;color:#4b5563;background:#fff;padding:6px 8px;border-radius:6px;border:1px solid #e5e7eb;"><b>상세:</b> ' + escHtmlAdmin(r.detail) + '</div>' : '')
-        + '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:2px;">'
+        + '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:2px;flex-wrap:wrap;">'
         +   '<span>' + status + '</span>'
-        +   '<span style="display:flex;gap:6px;">'
+        +   '<span style="display:flex;gap:6px;flex-wrap:wrap;">'
+        +     (r.board && r.board !== 'unknown' ? '<a href="' + escHtmlAdmin(r.board) + '.html" target="_blank" rel="noopener" style="padding:4px 10px;font-size:11.5px;font-weight:700;background:#eff6ff;color:#1d4ed8;border:1px solid #93c5fd;border-radius:5px;text-decoration:none;">📄 글 보기</a>' : '')
+        +     (r.postAuthorUid
+                ? '<button class="admin-report-act" data-act="suspend" data-id="' + escHtmlAdmin(r._id) + '" data-uid="' + escHtmlAdmin(r.postAuthorUid) + '" style="padding:4px 10px;font-size:11.5px;font-weight:700;background:#fef3c7;color:#92400e;border:1px solid #fcd34d;border-radius:5px;cursor:pointer;">🚫 작성자 정지</button>'
+                  + '<button class="admin-report-act" data-act="unsuspend" data-id="' + escHtmlAdmin(r._id) + '" data-uid="' + escHtmlAdmin(r.postAuthorUid) + '" style="padding:4px 10px;font-size:11.5px;font-weight:700;background:#ecfdf5;color:#065f46;border:1px solid #6ee7b7;border-radius:5px;cursor:pointer;">♻️ 정지 해제</button>'
+                : '<span style="padding:4px 10px;font-size:11.5px;color:#9ca3af;border:1px dashed #d1d5db;border-radius:5px;" title="옛 신고 — 작성자 uid 스냅샷 없음">정지 불가(uid 없음)</span>')
         +     '<button class="admin-report-act" data-act="resolve" data-id="' + escHtmlAdmin(r._id) + '" style="padding:4px 10px;font-size:11.5px;font-weight:700;background:#dcfce7;color:#166534;border:1px solid #86efac;border-radius:5px;cursor:pointer;">✅ 해결</button>'
         +     '<button class="admin-report-act" data-act="ignore"  data-id="' + escHtmlAdmin(r._id) + '" style="padding:4px 10px;font-size:11.5px;font-weight:700;background:#f3f4f6;color:#374151;border:1px solid #d1d5db;border-radius:5px;cursor:pointer;">— 무시</button>'
         +     '<button class="admin-report-act" data-act="delete"  data-id="' + escHtmlAdmin(r._id) + '" style="padding:4px 10px;font-size:11.5px;font-weight:700;background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;border-radius:5px;cursor:pointer;">🗑 영구 삭제</button>'
@@ -1607,7 +1680,7 @@
       const countEl = document.getElementById('dashReportsCount');
       if (!listEl) return;
       try {
-        const q = query(collection(db, 'reports'), orderBy('createdAt', 'desc'), limit(200));
+        const q = query(collection(db, 'reports'), orderBy('createdAt', 'desc'), limit(100));
         onSnapshot(q, snap => {
           const arr = snap.docs.map(d => Object.assign({ _id: d.id }, d.data()));
           if (countEl) countEl.textContent = arr.length + '건';
@@ -1634,7 +1707,19 @@
       if (!act || !id) return;
       btn.disabled = true;
       try {
-        if (act === 'delete') {
+        if (act === 'suspend' || act === 'unsuspend') {
+          const uid = btn.dataset.uid;
+          if (!uid) { alert('작성자 uid 정보가 없는 신고입니다.'); btn.disabled = false; return; }
+          const label = act === 'suspend' ? '정지' : '정지 해제';
+          if (!confirm('작성자(uid: ' + uid + ') 계정을 ' + label + '하시겠습니까?')) { btn.disabled = false; return; }
+          const reason = prompt(label + ' 사유를 입력하세요 (moderation_logs 에 기록):', '');
+          if (reason === null) { btn.disabled = false; return; }
+          const call = act === 'suspend' ? callSuspendUser : callUnsuspendUser;
+          const res = await call({ uid, reason });
+          alert('✅ ' + label + ' 완료 — uid: ' + (res.data && res.data.uid || uid) + ' / status: ' + (res.data && res.data.status || ''));
+          btn.disabled = false;
+          if (btn.dataset.id === 'sanction') loadSanctions();  // 제재 관리 카드 경유 시 목록 갱신
+        } else if (act === 'delete') {
           if (!confirm('이 신고 기록을 영구 삭제하시겠습니까?')) { btn.disabled = false; return; }
           await deleteDoc(doc(db, 'reports', id));
         } else {
@@ -1646,11 +1731,157 @@
         btn.disabled = false;
       }
     });
+    // ════════════════════════════════════════════════════════════
+    // 카드 5 · 블라인드 글 관리 — 4컬렉션 status=='hidden' 조회 (새로고침 버튼식)
+    //   해제/강제 삭제는 window.koausRbac (toggleHidden/forceDelete) 경유 —
+    //   forceDelete 는 Storage 이미지 + private_data 고아 정리 포함.
+    // ════════════════════════════════════════════════════════════
+    const HIDDEN_COLS = [
+      ['accom_posts', '쉐어'],
+      ['rent_posts',  '렌트'],
+      ['jobs_posts',  'Work'],
+      ['services',    '서비스'],
+    ];
+    function _tsToStr(ts) {
+      try { return (ts && ts.toDate) ? ts.toDate().toLocaleString('ko-KR') : ''; } catch (_) { return ''; }
+    }
+    function hiddenRowHtml(col, label, id, p) {
+      const byAdmin = p.hiddenBy === 'admin';
+      const badge = byAdmin
+        ? '<span style="padding:2px 8px;font-size:11px;font-weight:800;background:#fee2e2;color:#991b1b;border-radius:999px;">운영자 블라인드</span>'
+        : '<span style="padding:2px 8px;font-size:11px;font-weight:800;background:#f3f4f6;color:#374151;border-radius:999px;">작성자 일시 숨김</span>';
+      return '<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:5px;">'
+        + '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">'
+        +   '<b style="color:#1f2937;">[' + escHtmlAdmin(label) + ']</b> '
+        +   '<span>' + escHtmlAdmin(p.title || '(제목 없음)') + '</span>' + badge
+        + '</div>'
+        + '<div style="font-size:12px;color:#6b7280;">작성자 uid: ' + escHtmlAdmin(p.uid || p.authorUid || '?')
+        +   (p.hiddenAt ? ' · 숨김: ' + escHtmlAdmin(_tsToStr(p.hiddenAt)) : '') + ' · docId=' + escHtmlAdmin(id) + '</div>'
+        + '<div style="display:flex;gap:6px;flex-wrap:wrap;">'
+        +   '<button class="admin-hidden-act" data-act="unhide" data-col="' + escHtmlAdmin(col) + '" data-id="' + escHtmlAdmin(id) + '" style="padding:4px 10px;font-size:11.5px;font-weight:700;background:#ecfdf5;color:#065f46;border:1px solid #6ee7b7;border-radius:5px;cursor:pointer;">▶️ 블라인드 해제</button>'
+        +   '<button class="admin-hidden-act" data-act="fdelete" data-col="' + escHtmlAdmin(col) + '" data-id="' + escHtmlAdmin(id) + '" style="padding:4px 10px;font-size:11.5px;font-weight:700;background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;border-radius:5px;cursor:pointer;">🗑 강제 삭제</button>'
+        + '</div>'
+        + '</div>';
+    }
+    async function loadHiddenPosts() {
+      const listEl  = document.getElementById('dashHiddenList');
+      const countEl = document.getElementById('dashHiddenCount');
+      if (!listEl) return;
+      listEl.innerHTML = '<div class="text-sm text-gray-500 text-center py-8">로딩 중…</div>';
+      const rows = []; let total = 0;
+      for (const [col, label] of HIDDEN_COLS) {
+        try {
+          const snap = await getDocs(query(collection(db, col), where('status', '==', 'hidden'), limit(20)));
+          snap.docs.forEach(d => { total++; rows.push(hiddenRowHtml(col, label, d.id, d.data() || {})); });
+        } catch (e) {
+          console.error('[admin] hidden 조회 실패 (' + col + ')', e);
+          rows.push('<div class="text-sm text-red-600">' + escHtmlAdmin(label) + ' 조회 실패: ' + escHtmlAdmin(e.message || e) + '</div>');
+        }
+      }
+      if (countEl) countEl.textContent = total + '건';
+      listEl.innerHTML = rows.length ? rows.join('')
+        : '<div class="text-sm text-gray-500 text-center py-8">블라인드/숨김 상태의 글이 없습니다.</div>';
+    }
+    document.addEventListener('click', async e => {
+      const btn = e.target.closest('.admin-hidden-act[data-act][data-col][data-id]');
+      if (!btn) return;
+      const { act, col, id } = btn.dataset;
+      const rbac = window.koausRbac;
+      if (!rbac) { alert('권한 모듈(koaus-rbac.js) 미로드'); return; }
+      btn.disabled = true;
+      try {
+        if (act === 'unhide') {
+          if (!confirm('이 글의 블라인드/숨김을 해제하시겠습니까? (퍼블릭 재노출)')) { btn.disabled = false; return; }
+          await rbac.toggleHidden(col, id, true);   // currentHidden=true → 해제
+          alert('▶️ 해제 완료 — 퍼블릭 재노출');
+        } else if (act === 'fdelete') {
+          if (!confirm('관리자 권한으로 이 글을 영구 삭제하시겠습니까? (사진·위치정보 포함 완전 삭제)')) { btn.disabled = false; return; }
+          await rbac.forceDelete(col, id);
+          alert('🗑 강제 삭제 완료');
+        }
+        loadHiddenPosts();
+      } catch (err) {
+        console.error('[admin] 블라인드 처리 실패', err);
+        alert('처리 실패: ' + (err.message || err));
+        btn.disabled = false;
+      }
+    });
+    const _hidRefresh = document.getElementById('dashHiddenRefresh');
+    if (_hidRefresh) _hidRefresh.addEventListener('click', loadHiddenPosts);
+
+    // ════════════════════════════════════════════════════════════
+    // 카드 6 · 제재 관리 — 정지 계정 목록 + moderation_logs 이력
+    //   users list 는 rules 에서 admin 한정 limit ≤100 허용 (enumeration 차단 유지)
+    //   사유는 moderation_logs 의 해당 uid 최신 suspend 건에서 매칭.
+    // ════════════════════════════════════════════════════════════
+    async function loadSanctions() {
+      const susEl   = document.getElementById('dashSuspendedList');
+      const logEl   = document.getElementById('dashModLogList');
+      const countEl = document.getElementById('dashSuspendedCount');
+      if (!susEl || !logEl) return;
+      susEl.innerHTML = logEl.innerHTML = '<div class="text-sm text-gray-500 text-center py-8">로딩 중…</div>';
+      let logs = [];
+      try {
+        const logSnap = await getDocs(query(collection(db, 'moderation_logs'), orderBy('createdAt', 'desc'), limit(100)));
+        logs = logSnap.docs.map(d => d.data() || {});
+      } catch (e) {
+        console.error('[admin] moderation_logs 조회 실패', e);
+        logEl.innerHTML = '<div class="text-sm text-red-600 text-center py-4">이력 조회 실패: ' + escHtmlAdmin(e.message || e) + '</div>';
+      }
+      // ── 정지 계정 ──
+      try {
+        const snap = await getDocs(query(collection(db, 'users'), where('status', '==', 'suspended'), limit(100)));
+        if (countEl) countEl.textContent = snap.size + '명';
+        if (!snap.size) {
+          susEl.innerHTML = '<div class="text-sm text-gray-500 text-center py-8">정지 중인 계정이 없습니다.</div>';
+        } else {
+          susEl.innerHTML = snap.docs.map(d => {
+            const u = d.data() || {};
+            const latest = logs.find(l => l.action === 'suspend' && l.targetUid === d.id);
+            return '<div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:4px;">'
+              + '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">'
+              +   '<b style="color:#92400e;">' + escHtmlAdmin(u.email || (latest && latest.targetEmail) || '(이메일 미상)') + '</b>'
+              +   '<span style="font-size:11.5px;color:#6b7280;">uid: ' + escHtmlAdmin(d.id) + '</span>'
+              + '</div>'
+              + '<div style="font-size:12px;color:#6b7280;">정지 일시: ' + escHtmlAdmin(_tsToStr(u.suspendedAt) || '?')
+              +   (latest && latest.reason ? ' · 사유: ' + escHtmlAdmin(latest.reason) : ' · 사유: (기록 없음)') + '</div>'
+              + '<div><button class="admin-report-act" data-act="unsuspend" data-id="sanction" data-uid="' + escHtmlAdmin(d.id) + '" style="padding:4px 10px;font-size:11.5px;font-weight:700;background:#ecfdf5;color:#065f46;border:1px solid #6ee7b7;border-radius:5px;cursor:pointer;">♻️ 정지 해제</button></div>'
+              + '</div>';
+          }).join('');
+        }
+      } catch (e) {
+        console.error('[admin] suspended users 조회 실패', e);
+        if (countEl) countEl.textContent = '?';
+        susEl.innerHTML = '<div class="text-sm text-red-600 text-center py-4">정지 계정 조회 실패: ' + escHtmlAdmin(e.message || e) + '</div>';
+      }
+      // ── 이력 뷰 ──
+      if (logs.length) {
+        logEl.innerHTML = logs.map(l => {
+          const isSus = l.action === 'suspend';
+          return '<div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;padding:6px 10px;border-bottom:1px solid #f3f4f6;">'
+            + '<span style="font-weight:800;color:' + (isSus ? '#b91c1c' : '#065f46') + ';">' + (isSus ? '🚫 정지' : '♻️ 해제') + '</span>'
+            + '<span style="color:#374151;">' + escHtmlAdmin(l.targetEmail || l.targetUid || '?') + '</span>'
+            + (l.reason ? '<span style="color:#6b7280;">— ' + escHtmlAdmin(l.reason) + '</span>' : '')
+            + '<span style="margin-left:auto;font-size:11px;color:#9ca3af;">' + escHtmlAdmin(_tsToStr(l.createdAt)) + ' · by ' + escHtmlAdmin(l.actorEmail || l.actorUid || '?') + '</span>'
+            + '</div>';
+        }).join('');
+      } else if (!logEl.querySelector('.text-red-600')) {
+        logEl.innerHTML = '<div class="text-sm text-gray-500 text-center py-8">제재 이력이 없습니다.</div>';
+      }
+    }
+    const _sanRefresh = document.getElementById('dashSanctionRefresh');
+    if (_sanRefresh) _sanRefresh.addEventListener('click', loadSanctions);
+
     // 인증 후 구독 시작 — showAdmin 호출 직후 한 번만
     const _origShowAdmin = showAdmin;
     showAdmin = function (user) {
       _origShowAdmin(user);
-      if (!showAdmin._reportsStarted) { showAdmin._reportsStarted = true; startReportsSubscription(); }
+      if (!showAdmin._reportsStarted) {
+        showAdmin._reportsStarted = true;
+        startReportsSubscription();
+        loadHiddenPosts();
+        loadSanctions();
+      }
     };
   </script>
 

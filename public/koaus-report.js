@@ -9,15 +9,18 @@
 //    window.koausReport.open({ postId, board, postTitle });
 //    또는 카드/상세 신고 버튼 click 핸들러에서 한 줄로 호출.
 //
-//  Payload (Firestore reports/{id}):
+//  Payload (Firestore reports/{postId}_{reporterUid}):
 //    {
 //      postId, board, postTitle,
 //      category, reason (= category + detail 결합 — rules reqStr 호환),
 //      detail,
 //      reporterUid, reporterEmail,
+//      postAuthorUid, postBodyExcerpt,   ← 신고 시점 스냅샷 (원글 삭제 후에도 검토 가능)
 //      status: 'pending',
 //      createdAt: serverTimestamp(),
 //    }
+//  · 문서 ID = {postId}_{reporterUid} (setDoc) — 같은 글 재신고는 rules 가 거부
+//    (기존 doc 에 대한 create=update 취급 → admin 전용) → '이미 신고' 안내.
 // ════════════════════════════════════════════════════════════════════
 (function () {
   if (typeof window === 'undefined' || window.koausReport) return;
@@ -139,30 +142,43 @@
       note.textContent = 'Firestore 미초기화 — 잠시 후 다시 시도해 주세요.';
       note.className = 'koaus-report-note is-error'; return;
     }
+    const postId = String((_ctx && _ctx.postId) || '').trim();
+    if (!postId) {
+      note.textContent = '신고 대상 글을 식별하지 못했습니다 — 새로고침 후 다시 시도해 주세요.';
+      note.className = 'koaus-report-note is-error'; return;
+    }
     btn.disabled = true; btn.textContent = '접수 중…';
     try {
-      const { addDoc, collection, serverTimestamp } = window.koausFs;
+      const { setDoc, doc, serverTimestamp } = window.koausFs;
       const catLabel = (CATEGORIES.find(c => c.value === cat) || {}).label || cat;
       const reason   = catLabel + (det ? ' — ' + det : '');
-      await addDoc(collection(window.koausDb, 'reports'), {
-        postId:        String((_ctx && _ctx.postId) || ''),
-        board:         String((_ctx && _ctx.board)  || ''),
-        postTitle:     String((_ctx && _ctx.postTitle) || ''),
-        category:      cat,
-        reason:        reason,        // firestore.rules reqStr('reason', 1, 1000) 호환
-        detail:        det,
-        reporterUid:   user.uid,
-        reporterEmail: user.email || '',
-        status:        'pending',
-        createdAt:     serverTimestamp(),
+      // 문서 ID = {postId}_{reporterUid} — firestore.rules 의 ID 패턴 강제와 한 쌍 (중복 신고 차단)
+      await setDoc(doc(window.koausDb, 'reports', postId + '_' + user.uid), {
+        postId:          postId,
+        board:           String((_ctx && _ctx.board)  || 'unknown'),
+        postTitle:       String((_ctx && _ctx.postTitle) || '').slice(0, 200),
+        category:        cat,
+        reason:          reason,        // firestore.rules reqStr('reason', 1, 1000) 호환
+        detail:          det,
+        reporterUid:     user.uid,
+        reporterEmail:   user.email || '',
+        postAuthorUid:   String((_ctx && _ctx.postAuthorUid) || '').slice(0, 128),
+        postBodyExcerpt: String((_ctx && _ctx.postBodyExcerpt) || '').slice(0, 300),
+        status:          'pending',
+        createdAt:       serverTimestamp(),
       });
       note.textContent = '✅ 신고가 접수되었습니다. 운영팀 검토 후 조치합니다.';
       note.className = 'koaus-report-note is-ok';
       setTimeout(close, 1200);
     } catch (err) {
       console.error('[koausReport] 접수 실패', err);
-      note.textContent = '❌ 접수 실패: ' + (err && err.message ? err.message : err);
-      note.className = 'koaus-report-note is-error';
+      // 동일 글 재신고 = 기존 doc 의 create→update 취급 → rules 거부(permission-denied).
+      // 로그인 유저의 permission-denied 는 사실상 중복 신고 케이스.
+      const isDup = err && (err.code === 'permission-denied' || /permission/i.test(err.message || ''));
+      note.textContent = isDup
+        ? 'ℹ️ 이미 신고하신 게시글입니다. 운영팀이 검토 중입니다.'
+        : '❌ 접수 실패: ' + (err && err.message ? err.message : err);
+      note.className = isDup ? 'koaus-report-note is-ok' : 'koaus-report-note is-error';
       btn.disabled = false; btn.textContent = '신고 접수';
     }
   }
@@ -188,11 +204,37 @@
         ''
       );
     }
+    if (!postId) {
+      // 직접 링크(?id=) 진입 폴백 — 각 페이지가 pushState 로 상세 열림/닫힘과 ?id= 를
+      // 동기화하므로(카드 클릭→'?id='+id, 닫기→id 제거) 상세가 열린 시점엔 신뢰 가능.
+      try { postId = new URLSearchParams(location.search).get('id') || ''; } catch (_) {}
+    }
     var fname = (location.pathname.split('/').pop() || '').toLowerCase().replace(/\.html$/, '');
     var board = fname || 'unknown';
     var titleEl = document.querySelector('.post-detail-overlay.open #detailNavTitle, .post-detail-overlay.open .rea-nav-title');
     var postTitle = titleEl ? (titleEl.textContent || '').trim() : '';
-    return { postId: String(postId), board: board, postTitle: postTitle };
+    // ── 신고 시점 스냅샷 (best-effort) — 원글 삭제 후에도 admin 큐에서 검토 가능 ──
+    //   · 각 페이지 openDetail 이 window.currentDetailPost = p 로 노출 (2026-06 동기화).
+    //   · ⚠️ stale 방어: 노출된 post 의 id 가 '신고 대상 postId 와 일치할 때만' 사용 —
+    //     상세를 닫고 리스트의 다른 글 카드를 신고하면 직전 상세의 작성자가
+    //     스냅샷에 박혀 admin 이 엉뚱한 계정을 정지할 수 있다. 불일치 시 공백('').
+    var post = (window.currentDetailPost
+                && String(window.currentDetailPost.id) === String(postId))
+      ? window.currentDetailPost : null;
+    var postAuthorUid = String((post && (post.uid || post.authorUid)) || '');
+    if (!postAuthorUid) {
+      // 카드 경유 신고 폴백 — 카드 mini-report 버튼의 data-uid (렌더 시점 작성자 uid 스냅샷)
+      postAuthorUid = String((btn.dataset && btn.dataset.uid) || btn.getAttribute('data-uid') || '');
+    }
+    var postBodyExcerpt = (post && post.body) ? String(post.body) : '';
+    if (!postBodyExcerpt && post) {
+      var bodyEl = document.querySelector('.post-detail-overlay.open #detailBody');
+      if (bodyEl) postBodyExcerpt = (bodyEl.textContent || '').trim();
+    }
+    return {
+      postId: String(postId), board: board, postTitle: postTitle,
+      postAuthorUid: postAuthorUid, postBodyExcerpt: postBodyExcerpt.slice(0, 300),
+    };
   }
   document.addEventListener('click', function (e) {
     var btn = e.target && e.target.closest && e.target.closest('.mini-report, .rea-report, #detailReportBtn');

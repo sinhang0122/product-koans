@@ -556,7 +556,7 @@
   <script type="module">
     import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
     import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
-    import { getFirestore, collection, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
+    import { getFirestore, collection, addDoc, doc, setDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
     const firebaseConfig = {
       apiKey: 'AIzaSyCamqnt0bNUD9uz1N5BbCuQjSkWLSpPqlU',
       authDomain: 'koaus-f564c.firebaseapp.com',
@@ -570,7 +570,7 @@
     const auth = getAuth(app);
     let db; try { db = getFirestore(app); } catch (e) { console.warn('[car-sale] Firestore 미초기화', e); }
     window.koausAuth = window.koausAuth || { user: null };
-    if (db) { window.koausDb = db; window.koausFs = { addDoc, collection, serverTimestamp }; }
+    if (db) { window.koausDb = db; window.koausFs = { addDoc, doc, setDoc, collection, serverTimestamp }; }
     onAuthStateChanged(auth, user => {
       window.koausAuth.user = user;
       window.dispatchEvent(new Event('koausAuthReady'));
@@ -665,7 +665,7 @@
             <span class="post-mini-actions">
               ${isMine(p) ? `<button class="mini-btn mini-edit" data-id="${p.id}" type="button">수정</button><button class="mini-btn mini-del" data-id="${p.id}" type="button">삭제</button>` : ''}
               <button class="mini-btn mini-share" data-id="${p.id}" type="button">공유</button>
-              <button class="mini-btn mini-report" data-id="${p.id}" type="button">신고</button>
+              <button class="mini-btn mini-report" data-id="${p.id}" data-uid="${p.uid || p.authorUid || ''}" type="button">신고</button>
             </span>
           </span>
           <span class="post-author">${escHtml(p.author)}</span>
@@ -689,21 +689,6 @@
           ta.select(); try { document.execCommand('copy'); } catch (_) {} ta.remove();
         }
         alert('링크가 복사되었습니다.');
-      }));
-      list.querySelectorAll('.mini-report').forEach(btn => btn.addEventListener('click', async e => {
-        e.stopPropagation();
-        const postId = btn.dataset.id;
-        const user = window.koausAuth && window.koausAuth.user;
-        try {
-          if (window.koausDb && window.koausFs && user) {
-            const { addDoc, collection, serverTimestamp } = window.koausFs;
-            await addDoc(collection(window.koausDb, 'reports'), {
-              postId: String(postId), board: 'car-sale', reason: '게시글 신고 (카드)',
-              reporterUid: user.uid || '', reporterEmail: user.email || '', createdAt: serverTimestamp(),
-            });
-          }
-        } catch (_) {}
-        alert('신고가 접수되었습니다. 관리자 검토 후 조치됩니다.');
       }));
 
       // ── 페이지네이션: ‹ + 번호(최대 5, 슬라이딩 윈도우) + › ──

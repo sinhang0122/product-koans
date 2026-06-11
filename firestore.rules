@@ -69,11 +69,23 @@ service cloud.firestore {
     function limitedList() {
       return request.query.limit <= 20;
     }
+    // ── 정지 계정 쓰기 차단 (제재 시스템 1단계) ──
+    //   · suspendUser callable(Functions)이 Auth disable + users/{uid}.status='suspended' 부여.
+    //     Auth disable 후에도 기존 ID 토큰이 최대 1시간 유효 → 본 체크가 그 창을 닫는다.
+    //   · doc 없음 / status 필드 없음 = active 취급 (옛 가입자 에러 0 — 마이그레이션 불필요)
+    //   · 비용: 같은 요청 내 동일 doc 의 get/exists 는 캐시되어 1회만 과금 —
+    //     isAdmin() ③ 이 이미 users/{uid} 를 읽는 경로(소유자 update/delete, services create)는
+    //     추가 read 0. 게시판 create 만 +1 read/쓰기 (빈도 낮음 — 무시 가능).
+    function notSuspended() {
+      return !exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('status', 'active') != 'suspended';
+    }
 
     // ── 게시판 글 검증 ──
     // 작성자 본인 확인 (update/delete 용) — create 시 위조 차단은 validBaseCreate 가 담당
+    //   · notSuspended — 정지 계정은 본인 글 수정/삭제도 차단 (제재 1단계)
     function ownerOnExisting() {
-      return isSignedIn() && resource.data.uid == request.auth.uid;
+      return isSignedIn() && resource.data.uid == request.auth.uid && notSuspended();
     }
     // ── 게시판 검증 v2 — 1,000 표현식 평가 한도(공식 limit) 방어 구조 ──
     //   배경: 기존 단일 검증기의 ~57개 && 체인 + 헬퍼마다 data() 함수 재호출이
@@ -101,6 +113,7 @@ service cloud.firestore {
     // 전 게시판 공통 메타/연락처 검증 (소유자 위조 차단 포함)
     function validBaseCreate(d) {
       return isSignedIn() && 'uid' in d && d.uid == request.auth.uid
+        && notSuspended()
         && pReqStr(d, 'title', 1, 120)
         // 공백만으로 채운 제목 차단 (M5) — body 는 제외: 클라이언트가 빈 본문을 ' ' 로 보정하는 기존 설계 유지
         && d.title.trim().size() >= 1
@@ -206,8 +219,18 @@ service cloud.firestore {
       // ⚠️ isHidden / hiddenAt 는 작성자도 본인 글 '일시 숨김' 토글 가능 (마이페이지 ⏸️/▶️)
       //    → 운영자 전용 잠금 목록에서 제외. 운영자/작성자 둘 다 토글 허용.
       //    단, uid 잠금(uidLocked) + status 화이트리스트(statusAllowedForOwner)는 그대로 유지.
-      return ['reportCount', 'role',
+      return ['reportCount', 'role', 'hiddenBy',
               'approvedAt', 'heldAt', 'pausedAt', 'closedAt'];
+    }
+    // ── admin 블라인드 잠금 (F-A) ──
+    //   · admin 블라인드(hold)는 hiddenBy:'admin' 을 함께 저장 (admin-mark.js / koaus-rbac.js).
+    //   · hiddenBy=='admin' 인 글은 작성자가 status/isHidden 을 되돌릴 수 없다
+    //     (마이페이지 ▶️ 재노출 토글로 운영자 블라인드 자가 해제하던 구멍 봉쇄).
+    //   · 작성자 본인 일시숨김은 hiddenBy 미보유 → 본 가드 통과 (기존 토글 유지).
+    //   · hiddenBy 필드 자체는 moderatorOnlyFields 로 작성자 부여/변조 차단.
+    function adminBlindLock() {
+      return resource.data.get('hiddenBy', '') != 'admin'
+        || !request.resource.data.diff(resource.data).affectedKeys().hasAny(['status', 'isHidden']);
     }
     function noModeratorFieldChange() {
       return !request.resource.data.diff(resource.data).affectedKeys()
@@ -239,7 +262,8 @@ service cloud.firestore {
                        || ( ownerOnExisting()
                             && uidLocked()
                             && noModeratorFieldChange()
-                            && statusAllowedForOwner() );
+                            && statusAllowedForOwner()
+                            && adminBlindLock() );
       allow delete: if isAdmin() || ownerOnExisting();
     }
     match /rent_posts/{postId} {
@@ -250,7 +274,8 @@ service cloud.firestore {
                        || ( ownerOnExisting()
                             && uidLocked()
                             && noModeratorFieldChange()
-                            && statusAllowedForOwner() );
+                            && statusAllowedForOwner()
+                            && adminBlindLock() );
       allow delete: if isAdmin() || ownerOnExisting();
     }
     match /jobs_posts/{postId} {
@@ -261,7 +286,8 @@ service cloud.firestore {
                        || ( ownerOnExisting()
                             && uidLocked()
                             && noModeratorFieldChange()
-                            && statusAllowedForOwner() );
+                            && statusAllowedForOwner()
+                            && adminBlindLock() );
       allow delete: if isAdmin() || ownerOnExisting();
     }
     match /auto_posts/{postId} {
@@ -272,7 +298,8 @@ service cloud.firestore {
                        || ( ownerOnExisting()
                             && uidLocked()
                             && noModeratorFieldChange()
-                            && statusAllowedForOwner() );
+                            && statusAllowedForOwner()
+                            && adminBlindLock() );
       allow delete: if isAdmin() || ownerOnExisting();
     }
 
@@ -387,20 +414,23 @@ service cloud.firestore {
 
     // ── 사용자 문서 ──
     //   · 본인 직접 get/write: 본인 uid 만
-    //   · 관리자: 강제 권한 (운영·민원 처리·계정 제재 목적 — get/update/delete 가능, list 는 enumeration 차단 유지)
-    //   · list: 전면 차단 — 옛 'where(field+securityA) limit 1' 우회 enumeration 봉쇄
+    //   · 관리자: 강제 권한 (운영·민원 처리·계정 제재 목적 — get/update/delete + list ≤100 가능)
+    //   · list: admin 한정 ≤100 (제재 관리 카드 — status=='suspended' 조회용)
+    //     · 비admin 은 전면 차단 유지 — 옛 'where(field+securityA) limit 1' 우회 enumeration 봉쇄
     //     · 아이디/비번 찾기는 nicknames/{nick}, emails/{email} 단일 get 으로 분리됨
     //   · ⚠️ 권한 무결성: 본인이 자기 자신을 admin으로 만드는 변조 차단.
     //     - 본인 update 경로에서는 isAdmin/email 필드를 새로 추가하거나 값 변경 금지 (inline 가드).
     //     - admin이 직접 콘솔 또는 setAdmin.js로 부여하는 경우(admin update 경로)만 가능.
     match /users/{uid} {
       allow get:    if isAdmin() || (isSignedIn() && request.auth.uid == uid);
-      allow list:   if false;
+      allow list:   if isAdmin() && request.query.limit <= 100;
       allow create: if isSignedIn() && request.auth.uid == uid
                        // 가입 시점 isAdmin 자체 부여 차단 — admin 전용 권한은 setAdmin.js 로만
                        && (!('isAdmin' in request.resource.data) || request.resource.data.isAdmin == false)
                        // role 필드 자체 부여 차단 (시스템 향후 확장 대비 — 'user' 외 값 봉쇄)
-                       && (!('role' in request.resource.data) || request.resource.data.role == 'user');
+                       && (!('role' in request.resource.data) || request.resource.data.role == 'user')
+                       // status 자체 부여 차단 — 제재 상태는 suspendUser callable(Admin SDK) 전용
+                       && !('status' in request.resource.data);
       allow update: if isAdmin()
                        || ( isSignedIn()
                             && request.auth.uid == uid
@@ -413,6 +443,9 @@ service cloud.firestore {
                             // role 필드 변조 금지 (없거나 / 기존 값 동일)
                             && (!('role' in request.resource.data)
                                 || (('role' in resource.data) && request.resource.data.role == resource.data.role))
+                            // status 변조 금지 (F-B) — 정지자가 자기 status 를 'active' 로 되돌리는 우회 차단
+                            && (!('status' in request.resource.data)
+                                || (('status' in resource.data) && request.resource.data.status == resource.data.status))
                           );
       allow delete: if isAdmin() || (isSignedIn() && request.auth.uid == uid);
     }
@@ -445,18 +478,46 @@ service cloud.firestore {
       allow delete: if isSignedIn() && resource.data.uid == request.auth.uid;
     }
 
-    // ── 신고(reports) — 로그인 사용자가 생성만 가능, 운영자(admin) + 본인만 조회 ──
-    //   · 관리자가 admin 페이지에서 신고 큐를 처리하거나 본인이 자기 신고 이력을 확인할 수 있도록 허용
-    //   · list 는 enumeration 차단을 위해 관리자 전용 유지
-    //   · update/delete 는 운영 처리 전용 → 관리자만
+    // ── 신고(reports) — 제재 시스템 3단계 (2026-06-11 확장) ──
+    //   · 문서 ID = {postId}_{reporterUid} — 같은 글 재신고는 동일 ID create 시도
+    //     → Firestore 가 이미 존재하는 doc 의 create 를 거부 (중복 신고 원천 차단).
+    //     rules 의 ID 패턴 강제는 임의 ID(addDoc 등)로 패턴을 우회하는 경로 차단.
+    //   · 신고 시점 스냅샷(postAuthorUid/postTitle/postBodyExcerpt) — 원글 삭제 후에도 검토 가능.
+    //   · read/update/delete: admin 전용 — 옛 '신고자 본인 get' 회수
+    //     (클라이언트에 자기 신고 조회 기능 없음 — 영향 0, 최소권한 환원).
+    //   · list limit 100 — admin.html 구독 limit 과 정합 (F-G: 옛 200 구독이 거부되던 버그).
     match /reports/{reportId} {
       allow create: if isSignedIn()
+                       && notSuspended()
+                       && data().reporterUid == request.auth.uid
+                       && reqStr('postId', 1, 100)
+                       && reportId == data().postId + '_' + request.auth.uid
                        && reqStr('reason', 1, 1000)
-                       && data().reporterUid == request.auth.uid;
-      allow get:    if isAdmin()
-                       || (isSignedIn() && resource.data.reporterUid == request.auth.uid);
+                       && reqStr('board', 1, 30)
+                       && optStr('postTitle', 200)
+                       && optStr('category', 30)
+                       && optStr('detail', 1000)
+                       && optStr('reporterEmail', 200)
+                       && optStr('postAuthorUid', 128)
+                       && optStr('postBodyExcerpt', 300)
+                       && optStr('status', 30)
+                       && data().keys().hasOnly([
+                            'postId', 'board', 'postTitle', 'category', 'reason', 'detail',
+                            'reporterUid', 'reporterEmail', 'postAuthorUid', 'postBodyExcerpt',
+                            'status', 'createdAt'
+                          ]);
+      allow get:    if isAdmin();
       allow list:   if isAdmin() && request.query.limit <= 100;
       allow update, delete: if isAdmin();
+    }
+
+    // ── 제재 로그(moderation_logs) — suspendUser/unsuspendUser callable 전용 기록 ──
+    //   · 쓰기: Functions(Admin SDK) 만 — rules 우회. 클라이언트 쓰기 전면 차단.
+    //   · 읽기: admin 만 (대상 이메일 등 PII 포함).
+    match /moderation_logs/{logId} {
+      allow get:  if isAdmin();
+      allow list: if isAdmin() && request.query.limit <= 100;
+      allow create, update, delete: if false;
     }
 
     // ── 차량/렌터카 문의(listing_inquiries) — auto.html 인콰이어리 모달 silent backup ──
@@ -617,6 +678,7 @@ service cloud.firestore {
         //    status 는 'pending' 또는 'approved' 둘 다 허용 (비자/유학 등 즉시 노출 컨셉)
         //    · authorId / uid 본인 일치 강제 (오너십 보안)
         || ( isSignedIn()
+             && notSuspended()
              && (request.resource.data.status == 'pending'
                  || request.resource.data.status == 'approved')
              && request.resource.data.uid == request.auth.uid
@@ -638,11 +700,13 @@ service cloud.firestore {
       allow update: if isAdmin()
                        || ( isSignedIn()
                             && resource.data.uid == request.auth.uid
+                            && notSuspended()
                             && uidLocked()
                             && noModeratorFieldChange()
-                            && statusAllowedForOwner() );
+                            && statusAllowedForOwner()
+                            && adminBlindLock() );
       allow delete: if isAdmin()
-                       || (isSignedIn() && resource.data.uid == request.auth.uid);
+                       || (isSignedIn() && resource.data.uid == request.auth.uid && notSuspended());
     }
 
     // ════════════════════════════════════════════════════════════════

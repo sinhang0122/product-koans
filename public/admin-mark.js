@@ -64,6 +64,11 @@ function writeAdminCache(email) {
     window.koausAdminEmail = c.email || '';
     if (document.body) document.body.classList.add('is-admin');
     else document.addEventListener('DOMContentLoaded', () => document.body.classList.add('is-admin'), { once: true });
+    // fast-path 도 재렌더 신호 발화 (setAdminFlag 경유 안 함) — 카드 admin 버튼 즉시 부활
+    if (!window.__koausAdminReadyFired) {
+      window.__koausAdminReadyFired = true;
+      try { document.dispatchEvent(new CustomEvent('koaus-admin-ready')); } catch (_) {}
+    }
   }
 })();
 
@@ -111,6 +116,12 @@ function setAdminFlag(flag) {
   if (typeof document === 'undefined' || !document.body) return;
   document.body.classList.toggle('is-admin', !!flag);
   window.koausIsAdmin = !!flag;
+  // 카드 템플릿이 JS 삼항으로 admin 버튼을 분기하므로, 비동기 claim 확정 후
+  // 페이지가 재렌더할 수 있게 1회 신호 (renderAll 은 그 전에 이미 실행됨)
+  if (flag && !window.__koausAdminReadyFired) {
+    window.__koausAdminReadyFired = true;
+    try { document.dispatchEvent(new CustomEvent('koaus-admin-ready')); } catch (_) {}
+  }
 }
 
 function setAdminEmail(email) {
@@ -134,14 +145,15 @@ function lookupFsDocId(localId) {
 //   · 그 외 services 컬렉션 (restaurants/trades/salon/gp/auto)
 // ── 통합 정책 (지시 5/7) ──
 //   · 옛 hold(pending)/hide(hidden) 2개 액션 → 'hold' (일시 숨김) 하나로 통합.
-//   · DB: { isHidden:true, status:'hidden', hiddenAt:serverTimestamp() } 일관 적용.
+//   · DB: { isHidden:true, status:'hidden', hiddenAt:serverTimestamp(), hiddenBy:'admin' } 일관 적용.
+//     hiddenBy:'admin' = F-A 잠금 — 작성자가 마이페이지 ▶️ 로 재노출 불가 (rules adminBlindLock).
 //   · 메인 리스트 fetch: where('status','==','approved') + 클라이언트 `!p.isHidden` 이중 안전망으로 즉시 제외.
 //   · 작성자가 마이페이지에서 ⏸️/▶️ 토글 가능 (firestore.rules statusAllowedForOwner 허용).
 const DEFAULT_CONFIG = {
   collection: 'services',
   actions: {
-    approve: { status: 'approved', icon: '✅', title: '다시 노출 (일시 숨김 해제)', toast: '✅ 다시 노출 — 퍼블릭 표시', tsField: 'approvedAt', extra: { isHidden: false } },
-    hold:    { status: 'hidden',   icon: '⏸', title: '일시 숨김 (퍼블릭 제외)',  toast: '⏸ 일시 숨김 — 일반 리스트 제외', tsField: 'hiddenAt', extra: { isHidden: true } },
+    approve: { status: 'approved', icon: '✅', title: '다시 노출 (일시 숨김 해제)', toast: '✅ 다시 노출 — 퍼블릭 표시', tsField: 'approvedAt', extra: { isHidden: false, hiddenBy: '' } },
+    hold:    { status: 'hidden',   icon: '⏸', title: '일시 숨김 (퍼블릭 제외)',  toast: '⏸ 일시 숨김 — 일반 리스트 제외', tsField: 'hiddenAt', extra: { isHidden: true, hiddenBy: 'admin' } },
     delete:  { hard: true,         icon: '🗑', title: '영구 삭제',             toast: '🗑 영구 삭제 완료' },
   },
 };
@@ -150,7 +162,7 @@ const PAGE_CONFIG = {
     collection: 'jobs_posts',
     actions: {
       approve: { status: 'closed', icon: '✅', title: '구인 마감하기',     toast: '✅ 구인 마감 처리 완료',    tsField: 'closedAt' },
-      hold:    { status: 'hidden', icon: '⏸', title: '일시 숨김 (퍼블릭 제외)', toast: '⏸ 공고 일시 숨김 처리', tsField: 'hiddenAt', extra: { isHidden: true } },
+      hold:    { status: 'hidden', icon: '⏸', title: '일시 숨김 (퍼블릭 제외)', toast: '⏸ 공고 일시 숨김 처리', tsField: 'hiddenAt', extra: { isHidden: true, hiddenBy: 'admin' } },
       delete:  { hard: true,       icon: '🗑', title: '공고 영구 삭제',   toast: '🗑 공고 영구 삭제 완료' },
     },
   },

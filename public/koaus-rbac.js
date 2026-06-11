@@ -284,13 +284,19 @@ async function selfUpdate(collection, docId, patch) {
 
 // 블라인드 토글 — isHidden:true/false + status='hidden'/'approved' 동시 갱신
 //   currentHidden 미전달 시 isHidden:true 강제
+//   · admin 호출 시 hiddenBy:'admin' 잠금 부여 (F-A) — 작성자가 마이페이지 ▶️ 로
+//     운영자 블라인드를 자가 해제하지 못하도록 firestore.rules adminBlindLock 과 한 쌍.
+//   · 작성자 일시숨김 경로는 hiddenBy 미기록 — rules 의 moderatorOnlyFields 가
+//     작성자 update 에 hiddenBy 포함 시 거부하므로 분기 필수.
 async function toggleHidden(collection, docId, currentHidden) {
   const next = !currentHidden;
-  await updateDoc(_ref(collection, docId), {
+  const patch = {
     isHidden: next,
     status:   next ? 'hidden' : 'approved',
     hiddenAt: next ? serverTimestamp() : null,
-  });
+  };
+  if (isAdmin()) patch.hiddenBy = next ? 'admin' : '';
+  await updateDoc(_ref(collection, docId), patch);
 }
 
 // 강제 수정 — admin 권한으로 임의 필드 업데이트

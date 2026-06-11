@@ -932,6 +932,7 @@
     // 실행 전에 호출될 수 있어 두 선언을 renderPosts 정의 앞으로 끌어올림.
     let jobsMap = null, mapReady = false, jobsMarkers = [], areaBounds = null;
     let activeFilter = {};
+    document.addEventListener('koaus-admin-ready', () => { try { renderPosts(); } catch (_) {} }); // admin claim 확정 후 카드 admin 버튼 재렌더
     function renderPosts() {
       let all;
       try {
@@ -1001,7 +1002,7 @@
               </div>
               <div class="post-mini-actions">
                 <button class="mini-btn mini-share" data-id="${p.id}" type="button">공유</button>
-                ${(!isMine(p) && !window.koausIsAdmin) ? `<button class="mini-btn mini-report" data-id="${p.id}" type="button">신고</button>` : ''}
+                ${(!isMine(p) && !window.koausIsAdmin) ? `<button class="mini-btn mini-report" data-id="${p.id}" data-uid="${p.uid || p.authorUid || ''}" type="button">신고</button>` : ''}
                 ${(isMine(p) && !window.koausIsAdmin) ? `<button class="mini-btn mini-edit" data-id="${p.id}" type="button">수정</button>` : ''}
                 ${(isMine(p) || window.koausIsAdmin) ? `<button class="mini-btn mini-hide" data-id="${p.id}" type="button">숨김</button><button class="mini-btn mini-del" data-id="${p.id}" type="button">삭제</button>` : ''}
               </div>
@@ -1034,21 +1035,6 @@
           ta.select(); try { document.execCommand('copy'); } catch (_) {} ta.remove();
         }
         alert('링크가 복사되었습니다.');
-      }));
-      list.querySelectorAll('.mini-report').forEach(btn => btn.addEventListener('click', async e => {
-        e.stopPropagation();
-        const postId = btn.dataset.id;
-        const user = window.koausAuth && window.koausAuth.user;
-        try {
-          if (window.koausDb && window.koausFs && user) {
-            const { addDoc, collection, serverTimestamp } = window.koausFs;
-            await addDoc(collection(window.koausDb, 'reports'), {
-              postId: String(postId), board: 'jobs', reason: '게시글 신고 (카드)',
-              reporterUid: user.uid || '', reporterEmail: user.email || '', createdAt: serverTimestamp(),
-            });
-          }
-        } catch (_) {}
-        alert('신고가 접수되었습니다. 관리자 검토 후 조치됩니다.');
       }));
       list.querySelectorAll('.bookmark-btn').forEach(btn => {
         btn.addEventListener('click', e => {
@@ -1225,8 +1211,9 @@
         // 본인 글 일시 숨김 토글 — ⏸️ 일시 숨김 ↔ ▶️ 다시 노출
         _btns.push('<button class="detail-action-btn detail-hide-btn" id="detailHideBtn">' + (p.isHidden ? '▶️ 다시 노출' : '⏸️ 일시 숨김') + '</button>');
       } else if (_isAdminFlag) {
-        // 운영자 (타인 글) — 동일 일시 숨김 토글 (작성자 권한 우회)
+        // 운영자 (타인 글) — 동일 일시 숨김 토글 (작성자 권한 우회) + 강제 삭제
         _btns.push('<button class="detail-action-btn detail-hide-btn" id="detailHideBtn">' + (p.isHidden ? '▶️ 다시 노출' : '⏸️ 일시 숨김') + '</button>');
+        _btns.push('<button class="detail-action-btn detail-delete-btn" id="detailAdminDelBtn">🗑 강제 삭제</button>');
       }
       // 누구나: 공유·찜 (본문 액션바 통합 — hero-top 과 중복 노출)
       _btns.push('<button class="detail-action-btn detail-share2-btn" id="detailShareBtn2">🔗 공유</button>');
@@ -1256,6 +1243,16 @@
           document.getElementById('detailOverlay').classList.remove('open'); renderPosts();
         } catch (e) { alert('상태 변경 실패: ' + (e.message || e)); }
       };
+      const _bAd = document.getElementById('detailAdminDelBtn'); if (_bAd) _bAd.onclick = async () => {
+        if (!confirm('관리자 권한으로 이 글을 영구 삭제하시겠습니까? (사진·위치정보 포함 완전 삭제)')) return;
+        try {
+          const fsId = p.fsDocId || p._fsDocId || p.id;
+          await _rbac.forceDelete('jobs_posts', String(fsId));
+          savePosts(loadPosts().filter(x => String(x.id) !== String(p.id)));
+          alert('🗑 강제 삭제 완료');
+          document.getElementById('detailOverlay').classList.remove('open'); renderPosts();
+        } catch (e) { alert('강제 삭제 실패: ' + (e.message || e)); }
+      };
       const _bSh2 = document.getElementById('detailShareBtn2'); if (_bSh2) _bSh2.onclick = () => { const sb = document.getElementById('detailShareBtn'); if (sb) sb.click(); };
       const _bSv2 = document.getElementById('detailSaveBtn2');  if (_bSv2) _bSv2.onclick = () => { toggleSaved(p); _bSv2.textContent = isSaved(p.id) ? '★ 저장됨' : '☆ 찜하기'; const sb = document.getElementById('detailSaveBtn'); if (sb) { sb.textContent = isSaved(p.id) ? '★' : '☆'; sb.classList.toggle('saved', isSaved(p.id)); } };
 
@@ -1276,6 +1273,7 @@
       recordRecent(p);
       // 신고 모달이 detail postId 를 식별할 수 있도록 글로벌 변수 노출
       window.__jobsDetailPostId = String(p.id || '');
+      window.currentDetailPost = p; // koaus-report.js 신고 스냅샷용 노출 (id 일치 시에만 소비)
       document.getElementById('detailOverlay').classList.add('open');
       const rc = document.querySelector('.rea-content'); if (rc) rc.scrollTop = 0;
     }
@@ -2130,7 +2128,7 @@
       createUserWithEmailAndPassword, signInWithEmailAndPassword,
     } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
     import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app-check.js';
-    import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, limit, serverTimestamp, where, getDocs, doc, deleteDoc, startAfter, getDocsFromServer } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
+    import { getFirestore, collection, addDoc, setDoc, onSnapshot, query, orderBy, limit, serverTimestamp, where, getDocs, doc, deleteDoc, startAfter, getDocsFromServer } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
 
     const firebaseConfig = {
       apiKey:            'AIzaSyCamqnt0bNUD9uz1N5BbCuQjSkWLSpPqlU',
@@ -2204,6 +2202,7 @@
         'auth/wrong-password':       '비밀번호가 틀렸습니다.',
         'auth/user-not-found':       '등록되지 않은 이메일입니다.',
         'auth/invalid-credential':   '이메일 또는 비밀번호가 올바르지 않습니다.',
+        'auth/user-disabled':        '관리자에 의해 계정이 일시정지된 상태입니다. 문의하기(Contact) 페이지를 통해 이의신청할 수 있습니다.',
         'auth/too-many-requests':    '잠시 후 다시 시도해 주세요.',
       };
       return map[code] || '오류가 발생했습니다. 다시 시도해 주세요.';
@@ -2320,7 +2319,7 @@
     const db = getFirestore(app);
     // 클래식 스크립트(renderPosts 등)에서 reports addDoc 등에 접근하기 위한 노출
     window.koausDb = db;
-    window.koausFs = { addDoc, collection, serverTimestamp };
+    window.koausFs = { addDoc, doc, setDoc, collection, serverTimestamp };
 
     // 글쓰기 인라인 스크립트에서 사용할 write 헬퍼
     // 컬렉션은 무조건 'jobs_posts' (Firestore rules의 /jobs_posts/{postId}와 일치)

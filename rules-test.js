@@ -8,6 +8,10 @@
 //               notices/ads/ad_banners/emails/nicknames/accom_posts/핀공지/services,
 //               실제 클라이언트 쿼리 형태 그대로: orderBy 포함 · limit 유/무.
 //               services 4케이스는 오피셜 폐기(2026-06-11) 노출 범위 불변 검증)
+//            ③ 제재 시스템 11케이스 (2026-06-11) — 정지 계정 쓰기 차단(notSuspended,
+//               functionMocks 로 users/{uid} get/exists 모킹) · reports 복합 ID 패턴 ·
+//               reports admin 전용 read 회수 · users.status 자가 변조 차단(F-B) ·
+//               moderation_logs 클라 접근 차단 · admin 블라인드 잠금(F-A, hiddenBy)
 //  · 주의:   App Check Enforce 계층 차단은 본 스위트로 못 잡는다 — 콘솔 작업(K4류)
 //            후엔 운영 도메인에서 공개 페이지 1회 열람 확인 병행할 것.
 // ════════════════════════════════════════════════════════════════════
@@ -111,6 +115,39 @@ function mkUnauth(expectation, coll, method, query, label, resourceData) {
   if (resourceData) c.resource = { data: resourceData };
   return c;
 }
+// 범용 케이스 빌더 (제재 시스템 ③) — functionMocks 지원
+//   · userDocStatus 지정 시 users/{uid} 의 exists/get 을 모킹 →
+//     notSuspended() 의 정지/활성 분기를 시뮬레이션.
+//   · 모킹 없으면 테스트 API 의 exists() 는 false (doc 없음 = active 취급 경로).
+//   · isAdmin() ③ 의 get 도 같은 모킹에 걸리지만 data.isAdmin 부재 → 에러 →
+//     rules 의 에러 흡수(||) 로 false 처리 — 의도된 동작.
+function mk(opts) {
+  const req = {
+    auth: opts.uid ? { uid: opts.uid, token: Object.assign({ firebase: { sign_in_provider: 'password' } }, opts.admin ? { admin: true } : {}) } : null,
+    path: `/databases/(default)/documents/${opts.path}`,
+    method: opts.method,
+    time: '2026-06-10T00:00:00Z',
+  };
+  if (opts.data)  req.resource = { data: opts.data };
+  if (opts.query) req.query = opts.query;
+  const c = { _label: opts.label, expectation: opts.expectation, request: req };
+  if (opts.resourceData) c.resource = { data: opts.resourceData };
+  if (opts.userDocStatus !== undefined) {
+    c.functionMocks = [
+      { function: 'exists', args: [{ anyValue: {} }], result: { value: true } },
+      { function: 'get',    args: [{ anyValue: {} }], result: { value: { data: { status: opts.userDocStatus } } } },
+    ];
+  }
+  return c;
+}
+// reports 표준 페이로드 — koaus-report.js 신규 스키마 (복합 ID + 스냅샷)
+const reportData = {
+  postId: 'post123', board: 'accom', postTitle: '테스트 글', category: 'spam',
+  reason: '🚫 스팸 · 홍보성 콘텐츠 — 테스트', detail: '테스트',
+  reporterUid: 'testuser123', reporterEmail: 'e@e.com',
+  postAuthorUid: 'author456', postBodyExcerpt: '본문 요약',
+  status: 'pending', createdAt: '2026-06-10T00:00:00Z',
+};
 
 const cases = [
   // ① create / update
@@ -158,7 +195,63 @@ const cases = [
              uid: 'testuser123', authorId: 'testuser123', authorUid: 'testuser123',
              authorEmail: 'e@e.com', email: 'e@e.com', lat: null, lng: null },
            'ALLOW', 'services', 'create: services 일반유저 isOfficial 無 payload'),
+  // ④ 제재 시스템 (2026-06-11) — notSuspended / reports 강화 / users.status 잠금 / hiddenBy
+  mk({ label: '정지 계정 accom create → 거부 (notSuspended)', expectation: 'DENY',
+       path: 'accom_posts/newdoc2', method: 'create', uid: 'testuser123',
+       data: accomData, userDocStatus: 'suspended' }),
+  mk({ label: 'active 계정 accom create → 허용 (status 필드 보유 변형)', expectation: 'ALLOW',
+       path: 'accom_posts/newdoc2', method: 'create', uid: 'testuser123',
+       data: accomData, userDocStatus: 'active' }),
+  mk({ label: 'reports create 복합 ID {postId}_{uid} → 허용', expectation: 'ALLOW',
+       path: 'reports/post123_testuser123', method: 'create', uid: 'testuser123',
+       data: reportData }),
+  mk({ label: 'reports create ID 패턴 불일치(임의 ID) → 거부', expectation: 'DENY',
+       path: 'reports/randomid999', method: 'create', uid: 'testuser123',
+       data: reportData }),
+  mk({ label: 'reports get 신고자 본인 → 거부 (admin 전용 회수)', expectation: 'DENY',
+       path: 'reports/post123_testuser123', method: 'get', uid: 'testuser123',
+       resourceData: reportData }),
+  mk({ label: 'reports list 일반유저 limit 20 → 거부', expectation: 'DENY',
+       path: 'reports/abc', method: 'list', uid: 'testuser123', query: { limit: 20 } }),
+  mk({ label: 'users 본인 status 자가 변조(suspended→active) → 거부 (F-B)', expectation: 'DENY',
+       path: 'users/testuser123', method: 'update', uid: 'testuser123',
+       data:         { email: 'e@e.com', nickname: 'n', status: 'active' },
+       resourceData: { email: 'e@e.com', nickname: 'n', status: 'suspended' } }),
+  mk({ label: 'moderation_logs get 일반유저 → 거부', expectation: 'DENY',
+       path: 'moderation_logs/log1', method: 'get', uid: 'testuser123',
+       resourceData: { action: 'suspend', targetUid: 'x' } }),
+  mk({ label: 'moderation_logs create 클라이언트 → 거부 (Functions 전용)', expectation: 'DENY',
+       path: 'moderation_logs/log2', method: 'create', uid: 'testuser123',
+       data: { action: 'suspend', targetUid: 'x' } }),
+  mk({ label: 'admin 블라인드 글 작성자 status 복귀 → 거부 (F-A hiddenBy)', expectation: 'DENY',
+       path: 'accom_posts/blinddoc1', method: 'update', uid: 'testuser123',
+       data:         Object.assign({}, accomData, { status: 'approved', isHidden: false, hiddenBy: 'admin' }),
+       resourceData: Object.assign({}, accomData, { status: 'hidden',   isHidden: true,  hiddenBy: 'admin' }) }),
+  mk({ label: '본인 일시숨김 글(hiddenBy 無) 재노출 토글 → 허용 (기존 흐름 보존)', expectation: 'ALLOW',
+       path: 'accom_posts/pausedoc1', method: 'update', uid: 'testuser123',
+       data:         Object.assign({}, accomData, { status: 'approved', isHidden: false }),
+       resourceData: Object.assign({}, accomData, { status: 'hidden',   isHidden: true }) }),
+  // ⑤ 제재 관리 카드 (2026-06-11) — users list admin 한정 ≤100
+  mk({ label: 'users list admin limit 100 → 허용 (제재 관리 카드)', expectation: 'ALLOW',
+       path: 'users/someuid', method: 'list', uid: 'adminuid1', admin: true, query: { limit: 100 } }),
+  mk({ label: 'users list admin limit 200 → 거부 (빌링 안전망)', expectation: 'DENY',
+       path: 'users/someuid', method: 'list', uid: 'adminuid1', admin: true, query: { limit: 200 } }),
+  mk({ label: 'users list 일반유저 limit 100 → 거부 (enumeration 차단 유지)', expectation: 'DENY',
+       path: 'users/someuid', method: 'list', uid: 'testuser123', query: { limit: 100 } }),
 ];
+
+// ── 기본 functionMocks 주입 ──
+//   테스트 API 는 모킹 없는 exists()/get() 호출 시 'Function not found' 에러 →
+//   notSuspended() 도입(2026-06-11) 후 모든 쓰기 케이스가 users/{uid} exists 를 호출.
+//   기본값: exists=false (users doc 없음 = active 취급 — 실제 rules 의 옛 가입자 경로).
+//   정지/활성 시뮬레이션 케이스는 mk({userDocStatus}) 가 자체 모킹으로 덮어씀.
+for (const c of cases) {
+  if (!c.functionMocks) {
+    c.functionMocks = [
+      { function: 'exists', args: [{ anyValue: {} }], result: { value: false } },
+    ];
+  }
+}
 
 (async () => {
   const token = await getToken();
