@@ -691,6 +691,15 @@ service cloud.firestore {
              && optStr('body',   5000)
              && optStr('state',    10)
              && optUrlList('imageUrls', 8)
+             // [B4] legal(법무법인/비자·이민) 글은 MARN 7자리 필수 — OMARA 등록 대리인만
+             //      유료 이민 자문 가능 (소비자 보호). 다른 카테고리는 marn 없어도 통과.
+             && (request.resource.data.category != 'legal'
+                 || ('marn' in request.resource.data
+                     && request.resource.data.marn is string
+                     && request.resource.data.marn.matches('^[0-9]{7}$')))
+             && optStr('marn', 7)
+             && optStr('providedBy', 100)
+             && optStr('lastReviewedAt', 30)
            );
 
       // 본인 글 수정/삭제 허용 (RBAC 작성자 액션) + admin 강제 권한
