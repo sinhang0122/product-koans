@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>KoAus · 광고 관리자</title>
+<title>KoAus · 배너 관리자</title>
   <meta name="robots" content="noindex" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -109,12 +109,39 @@
   .toast.show{opacity:1}
   .spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:r .7s linear infinite;vertical-align:-2px}
   @keyframes r{to{transform:rotate(360deg)}}
+
+  /* 최상위 모드 탭 — 타겟 광고 / 히어로 배너 */
+  .modes{display:flex;gap:8px;margin-bottom:18px}
+  .mode{flex:1;cursor:pointer;border:1px solid var(--line);background:#fff;border-radius:13px;
+    padding:13px 14px;font-family:inherit;font-size:14px;font-weight:600;color:var(--ink);text-align:left;transition:.14s}
+  .mode small{display:block;font-weight:400;font-size:11.5px;color:var(--ink-soft);margin-top:2px}
+  .mode.active{background:var(--ink);color:#fff;border-color:transparent}
+  .mode.active small{color:rgba(255,255,255,.65)}
+
+  /* 히어로 배너 — 주별 4슬롯 현황 그리드 */
+  .hb-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:14px 16px}
+  @media(max-width:680px){.hb-grid{grid-template-columns:repeat(2,1fr)}}
+  .hb-cell{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#F7F2E9;min-height:96px;
+    display:flex;flex-direction:column}
+  .hb-cell .num{font-size:11px;font-weight:700;color:var(--ink-soft);padding:5px 9px 3px;display:flex;justify-content:space-between;align-items:center}
+  .hb-cell .num .warnc{color:var(--warn);font-weight:600}
+  .hb-cell img{width:100%;aspect-ratio:16/7;object-fit:cover;display:block;background:#EFE7DA}
+  .hb-cell .deflt{flex:1;display:flex;align-items:center;justify-content:center;text-align:center;
+    color:var(--ink-soft);font-size:12px;padding:8px;line-height:1.4}
+  .hb-cell.filled{background:#fff;border-color:var(--accent-2)}
+  .hb-cell .cap{font-size:11px;color:var(--ink);padding:4px 9px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+  /* 히어로 배너 목록 — 슬롯 칩 */
+  .chips{display:flex;flex-wrap:wrap;gap:4px}
+  .chip{font-size:10.5px;font-weight:600;border-radius:999px;padding:2px 8px;background:#EAF1F8;color:var(--accent-2);border:1px solid #CFE0EF}
+  .chip.allc{background:#F1EADD;color:var(--ink-soft);border-color:var(--line)}
+  select.hbsel{border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-family:inherit;font-size:13px;background:#fff;color:var(--ink)}
 </style>
 </head>
 <body>
 
 <div class="bar">
-  <div class="brand">Ko<b>Aus</b> · 홈 광고 배너 <span style="font-weight:400;font-size:12px;opacity:.75">(메인 히어로 · 추가형)</span></div>
+  <div class="brand">Ko<b>Aus</b> · 배너 관리자</div>
   <div class="who" id="who"></div>
 </div>
 
@@ -143,6 +170,13 @@
 <!-- 관리자 앱 -->
 <div id="appView" class="wrap" style="display:none">
 
+  <div class="modes">
+    <button class="mode active" id="modeAds">🎯 타겟 광고<small>메인 홈 히어로 · 방문자의 주 활동 지역 기준 · 추가형</small></button>
+    <button class="mode" id="modeHero">🖼 히어로 배너<small>서브 게시판 히어로 · 페이지 주(?state=) 기준 · 슬롯 교체형</small></button>
+  </div>
+
+  <div id="adsMode">
+
   <section class="hero">
     <div class="hero-head">
       <span class="t">미리보기 — <span id="pvLabel">NSW · 시드니</span> 방문자에게 보이는 모습</span>
@@ -158,7 +192,7 @@
 
   <section class="panel">
     <h2>새 배너 추가 — <span id="addLabel">NSW · 시드니</span></h2>
-    <p class="sub">메인 홈(index) 히어로 슬라이더 <b>뒤에 추가</b>로 노출됩니다 (기본 슬라이드 유지). 서브 게시판 상단 배너는 <a href="admin.html">관리자 대시보드 → 히어로 배너</a>에서. 이미지를 올리거나(권장) 외부 이미지 주소를 넣으세요. 비율은 가로로 긴 배너(약 16:5)를 권장합니다.</p>
+    <p class="sub">메인 홈(index) 히어로 슬라이더 <b>뒤에 추가</b>로 노출됩니다 (기본 슬라이드 유지). 서브 게시판 상단 배너는 위 <b>히어로 배너</b> 탭에서. 이미지를 올리거나(권장) 외부 이미지 주소를 넣으세요. 비율은 가로로 긴 배너(약 16:5)를 권장합니다.</p>
     <div class="form">
       <div class="field full">
         <label>배너 이미지</label>
@@ -202,6 +236,74 @@
     <p class="sub">링크·가중치·기간을 바꾸고 저장하거나, 노출을 켜고 끌 수 있습니다.</p>
     <div class="list" id="list"></div>
   </section>
+
+  </div><!-- /adsMode -->
+
+  <!-- ════════ 히어로 배너 (hero_banners · 서브 게시판 슬롯 교체형) ════════ -->
+  <div id="heroMode" style="display:none">
+
+    <div class="tabs" id="hbTabs"></div>
+
+    <section class="hero">
+      <div class="hero-head">
+        <span class="t">슬롯 현황 — <span id="hbGridLabel">전 지역(All)</span> 페이지 히어로 4슬롯</span>
+        <span class="pill" id="hbGridPill">·</span>
+      </div>
+      <div class="hb-grid" id="hbGrid"></div>
+      <p class="sub" style="padding:0 16px 12px;margin:0;color:var(--ink-soft);font-size:12px">
+        기본 슬라이드 칸은 각 게시판(쉐어·구인구직 등)의 고유 콘텐츠가 노출됩니다.
+        특정 주 배너가 전 지역(All) 배너보다 우선하고, 같은 슬롯이 겹치면 최신 등록이 우선합니다.</p>
+    </section>
+
+    <section class="panel">
+      <h2>새 히어로 배너 추가 — <span id="hbAddLabel">전 지역(All)</span></h2>
+      <p class="sub">선택한 주의 서브 게시판 히어로에서 <b>기본 슬라이드 N번 자리를 교체</b>합니다.
+        등록 후 목록에서 다른 주의 슬롯도 따로 지정할 수 있습니다 (주별 독립 — 한 주 변경이 다른 주에 영향 없음).
+        이미지는 자동 압축되며 가로로 긴 배너(약 16:5)를 권장합니다.</p>
+      <div class="form">
+        <div class="field full">
+          <label>배너 이미지</label>
+          <div class="file">
+            <input type="file" id="hbFile" accept="image/*">
+            <img class="thumbprev" id="hbPrev" alt="">
+          </div>
+          <span class="hintmini">또는 외부 이미지 URL ↓ (파일을 고르면 이쪽은 무시됩니다)</span>
+          <input type="url" id="hbImgUrl" placeholder="https://...">
+        </div>
+        <div class="field">
+          <label>클릭 시 이동할 링크 (선택)</label>
+          <input type="url" id="hbHref" placeholder="https://...  (비우면 클릭 없음)">
+        </div>
+        <div class="field">
+          <label>설명(대체텍스트)</label>
+          <input type="text" id="hbAlt" placeholder="예) ○○ 법무법인 비자 상담">
+        </div>
+        <div class="field">
+          <label>슬롯 (이 주에서 교체할 기본 슬라이드 번호)</label>
+          <select class="hbsel" id="hbSlot">
+            <option value="1">1번 — 첫 슬라이드</option>
+            <option value="2">2번</option>
+            <option value="3">3번</option>
+            <option value="4">4번</option>
+          </select>
+        </div>
+        <div class="field full">
+          <div class="row">
+            <span class="switch"><input type="checkbox" id="hbActive" checked> 바로 노출(활성)</span>
+            <button class="btn primary" id="hbAddBtn">＋ 배너 추가</button>
+            <span class="hintmini" id="hbAddMsg"></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>등록된 히어로 배너 <span class="hintmini" id="hbTotal"></span></h2>
+      <p class="sub">목록은 전체 배너입니다. <b>슬롯 선택은 현재 탭(<span id="hbListLabel">전 지역(All)</span>)에만 적용</b>되고
+        다른 주의 슬롯은 바뀌지 않습니다. 칩은 주별 슬롯 배정 현황입니다.</p>
+      <div class="list" id="hbList"></div>
+    </section>
+  </div><!-- /heroMode -->
 </div>
 
 <div class="toast" id="toast"></div>
@@ -212,6 +314,8 @@
 <script src="https://www.gstatic.com/firebasejs/12.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.13.0/firebase-storage-compat.js"></script>
+<!-- window.koausHeroSlots(기본 슬라이드 데이터) 참조용 — 컨테이너 없는 페이지라 렌더는 무동작 -->
+<script src="hero-banner.js" defer></script>
 
 <script>
 /* ============================================================================
@@ -274,8 +378,22 @@ function configFilled(){ return firebaseConfig.apiKey && firebaseConfig.apiKey.i
     show('appView');
     buildTabs();
     selectState('nsw');
+    hbBuildTabs();
+    hbSelect('all');
+    hbLoad();
+    setMode(location.hash === '#hero' ? 'hero' : 'ads');
   });
 })();
+
+/* ── 최상위 모드 전환 — 타겟 광고 / 히어로 배너 ── */
+function setMode(m){
+  $('adsMode').style.display  = (m === 'ads')  ? '' : 'none';
+  $('heroMode').style.display = (m === 'hero') ? '' : 'none';
+  $('modeAds').classList.toggle('active',  m === 'ads');
+  $('modeHero').classList.toggle('active', m === 'hero');
+}
+$('modeAds').addEventListener('click',  function(){ setMode('ads'); });
+$('modeHero').addEventListener('click', function(){ setMode('hero'); });
 
 /* ── 주 탭 ── */
 function buildTabs(){
@@ -438,6 +556,248 @@ function updatePreview(rows){
     $('pvPill').textContent='노출 없음'; $('pvPill').className='pill';
   }
 }
+
+/* ════════════════════════════════════════════════════════════════════════
+ *  히어로 배너 (hero_banners) — 서브 게시판 히어로 슬롯 교체형 · 주별 독립 슬롯
+ *  · slots 맵({nsw:1, qld:2, all:3 …})이 단일 진실 — 한 주 변경이 다른 주에 영향 0
+ *  · regions 는 slots 키에서 파생해 동기 기록 (firestore.rules `regions is list` 필수)
+ *  · 옛 문서(order 단일 + regions)는 hbNormSlots 가 읽기 시점에 동일 의미로 해석
+ *  · 그리드 승자 규칙은 hero-banner.js resolveSlot/specificity 와 동일하게 유지할 것
+ * ══════════════════════════════════════════════════════════════════════ */
+const HB_COLLECTION = 'hero_banners';
+const HB_STATES = ['all','nsw','vic','qld','wa','sa','tas','act','nt'];
+const HB_LABELS = {all:'전 지역(All)',nsw:'NSW · 시드니',vic:'VIC · 멜버른',qld:'QLD · 브리즈번',
+                   wa:'WA · 퍼스',sa:'SA · 애들레이드',tas:'TAS · 호바트',act:'ACT · 캔버라',nt:'NT · 다윈'};
+let hbState = 'all', hbRows = [];
+
+function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function hbSlotCount(){
+  try { return window.koausHeroSlots.accom.slides.length; } catch(_) { return 4; }
+}
+function hbTs(d){ return (d.createdAt && typeof d.createdAt.toMillis==='function') ? d.createdAt.toMillis() : 0; }
+
+/* slots 맵 정규화 — slots 없으면 옛 order+regions 에서 파생 */
+function hbNormSlots(d){
+  var out = {}, max = hbSlotCount();
+  if (d.slots && typeof d.slots === 'object'){
+    Object.keys(d.slots).forEach(function(k){
+      var v = Number(d.slots[k]);
+      if (HB_STATES.indexOf(k) >= 0 && isFinite(v) && v >= 1 && v <= max) out[k] = v;
+    });
+    return out;
+  }
+  var ord = Number(d.order);
+  if (!isFinite(ord) || ord < 1 || ord > max) ord = 1;
+  (Array.isArray(d.regions) ? d.regions : []).forEach(function(r){
+    if (HB_STATES.indexOf(r) >= 0) out[r] = ord;
+  });
+  return out;
+}
+/* 시청 주 st 기준 (slot, specificity) — 방문자에게 실제 적용될 슬롯 */
+function hbViewSlot(d, st){
+  var m = hbNormSlots(d);
+  if (st === 'all') return (m.all != null) ? {slot:m.all, spec:0} : null;
+  if (m[st]  != null) return {slot:m[st],  spec:1};
+  if (m.all  != null) return {slot:m.all, spec:0};
+  return null;
+}
+
+/* ── 주 탭 ── */
+function hbBuildTabs(){
+  var html = '';
+  HB_STATES.forEach(function(s){ html += '<button class="tab" data-s="'+s+'" id="hbtab-'+s+'">'+HB_LABELS[s]+'<span class="c" id="hbcnt-'+s+'">·</span></button>'; });
+  $('hbTabs').innerHTML = html;
+  $('hbTabs').onclick = function(e){ var b = e.target.closest('.tab'); if (b) hbSelect(b.getAttribute('data-s')); };
+}
+function hbSelect(s){
+  hbState = s;
+  HB_STATES.forEach(function(x){ var t = $('hbtab-'+x); if (t) t.classList.toggle('active', x === s); });
+  $('hbGridLabel').textContent = HB_LABELS[s];
+  $('hbAddLabel').textContent  = HB_LABELS[s];
+  $('hbListLabel').textContent = HB_LABELS[s];
+  hbRenderGrid(); hbRenderList();
+}
+function hbRefreshCounts(){
+  HB_STATES.forEach(function(s){
+    var n = hbRows.filter(function(d){ return hbNormSlots(d)[s] != null; }).length;
+    var el = $('hbcnt-'+s); if (el) el.textContent = n;
+  });
+}
+
+/* ── 로드 (limit 20 — firestore.rules limitedList 와 일치) ── */
+function hbLoad(){
+  $('hbList').innerHTML = '<div class="empty-list"><span class="spin" style="border-color:#ccc;border-top-color:#888"></span> 불러오는 중…</div>';
+  db.collection(HB_COLLECTION).limit(20).get().then(function(snap){
+    hbRows = []; snap.forEach(function(doc){ hbRows.push(Object.assign({id:doc.id}, doc.data())); });
+    hbRows.sort(function(a,b){ return hbTs(b) - hbTs(a); });
+    $('hbTotal').textContent = '('+hbRows.length+'개)';
+    hbRefreshCounts(); hbRenderGrid(); hbRenderList();
+  }).catch(function(e){
+    $('hbList').innerHTML = '<div class="empty-list">불러오기 실패: '+(e.message||e)+'</div>';
+  });
+}
+
+/* ── 4슬롯 현황 그리드 — 기본 슬라이드 vs 업로드 배너 ── */
+function hbRenderGrid(){
+  var n = hbSlotCount(), cells = [], i;
+  for (i = 0; i < n; i++) cells.push({ win:null, count:0 });
+  hbRows.forEach(function(d){
+    if (d.active === false) return;
+    var v = hbViewSlot(d, hbState); if (!v) return;
+    var c = cells[v.slot - 1]; if (!c) return;
+    c.count++;
+    if (!c.win || v.spec > c.win.spec || (v.spec === c.win.spec && hbTs(d) > hbTs(c.win.d))) c.win = { d:d, spec:v.spec };
+  });
+  var html = '';
+  cells.forEach(function(c, idx){
+    var no = idx + 1;
+    if (c.win){
+      var d = c.win.d;
+      html += '<div class="hb-cell filled"><div class="num"><span>슬롯 '+no+' — 업로드 배너</span>'
+        + (c.count > 1 ? '<span class="warnc">⚠ '+c.count+'개 겹침 · 최신 우선</span>' : '') + '</div>'
+        + '<img src="'+esc(d.imageUrl||'')+'" alt="">'
+        + '<div class="cap">'+esc(d.alt||'히어로 배너')
+        + (c.win.spec === 0 && hbState !== 'all' ? ' <span style="color:var(--ink-soft)">(전 지역 배너)</span>' : '')
+        + '</div></div>';
+    } else {
+      html += '<div class="hb-cell"><div class="num"><span>슬롯 '+no+'</span></div>'
+        + '<div class="deflt">기본 슬라이드 '+no+'<br>(게시판 고유 콘텐츠)</div></div>';
+    }
+  });
+  $('hbGrid').innerHTML = html;
+  var replaced = cells.filter(function(c){ return c.win; }).length;
+  $('hbGridPill').textContent = replaced ? ('배너 '+replaced+' · 기본 '+(n-replaced)) : '전부 기본 슬라이드';
+  $('hbGridPill').className = 'pill' + (replaced ? ' on' : '');
+}
+
+/* ── 목록 (전체 배너 — 슬롯 선택만 현재 탭 적용) ── */
+function hbChips(d){
+  var m = hbNormSlots(d);
+  var keys = HB_STATES.filter(function(s){ return m[s] != null; });
+  if (!keys.length) return '<span class="chip allc">미노출</span>';
+  return keys.map(function(k){
+    return '<span class="chip'+(k==='all'?' allc':'')+'">'+(k==='all'?'전체':k.toUpperCase())+' · 슬롯 '+m[k]+'</span>';
+  }).join('');
+}
+function hbRenderList(){
+  if (!hbRows.length){ $('hbList').innerHTML = '<div class="empty-list">아직 등록된 히어로 배너가 없습니다. 위에서 추가해 보세요.</div>'; return; }
+  var html = '';
+  hbRows.forEach(function(d){
+    var cur = hbNormSlots(d)[hbState];
+    var active = d.active !== false;
+    var opts = '<option value="">미노출</option>';
+    for (var i = 1; i <= hbSlotCount(); i++) opts += '<option value="'+i+'"'+(cur===i?' selected':'')+'>'+i+'번</option>';
+    html += ''
+    + '<div class="item" data-id="'+esc(d.id)+'">'
+    +   '<img class="thumb" src="'+esc(d.imageUrl||'')+'" alt="">'
+    +   '<div class="fields">'
+    +     '<div class="full"><label>링크 (선택)</label><input type="url" data-f="href" value="'+esc(d.linkUrl||'')+'"></div>'
+    +     '<div class="full"><label>설명</label><input type="text" data-f="alt" value="'+esc(d.alt||'')+'"></div>'
+    +     '<div><label>'+HB_LABELS[hbState]+' 슬롯</label><br><select class="hbsel" data-f="slot">'+opts+'</select></div>'
+    +     '<div><label>주별 배정</label><div class="chips">'+hbChips(d)+'</div></div>'
+    +     '<div class="full"><span class="switch"><input type="checkbox" data-f="active" '+(active?'checked':'')+'> 활성</span> '
+    +        '<span class="badge '+(active?'on':'off')+'">'+(active?'노출 중':'꺼짐')+'</span></div>'
+    +   '</div>'
+    +   '<div class="ops">'
+    +     '<button class="btn primary" data-act="save">저장</button>'
+    +     '<button class="btn danger" data-act="del">삭제</button>'
+    +   '</div>'
+    + '</div>';
+  });
+  $('hbList').innerHTML = html;
+  $('hbList').querySelectorAll('.item').forEach(function(item){
+    var id = item.getAttribute('data-id');
+    item.querySelector('[data-act="save"]').onclick = function(){ hbSaveItem(item, id); };
+    item.querySelector('[data-act="del"]').onclick  = function(){ hbDelItem(id); };
+  });
+}
+
+/* ── 저장 — 현재 탭의 슬롯 키만 갱신, 다른 주 배정은 그대로 ── */
+function hbSaveItem(item, id){
+  var rec = hbRows.filter(function(r){ return r.id === id; })[0] || {};
+  var m = hbNormSlots(rec);
+  var sv = val(item, 'slot');
+  if (sv) m[hbState] = Number(sv); else delete m[hbState];
+  var regions = HB_STATES.filter(function(s){ return m[s] != null; });
+  var btn = item.querySelector('[data-act="save"]'); btn.disabled = true; btn.textContent = '저장 중…';
+  db.collection(HB_COLLECTION).doc(id).update({
+    linkUrl: (val(item,'href')||'').trim(),
+    alt: (val(item,'alt')||'').trim() || '히어로 배너',
+    slots: m,
+    regions: regions,
+    active: !!val(item,'active'),
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(function(){
+    btn.disabled = false; btn.textContent = '저장'; toast('저장되었습니다.'); hbLoad();
+  }).catch(function(e){ btn.disabled = false; btn.textContent = '저장'; toast('저장 실패: '+(e.message||e)); });
+}
+
+/* ── 삭제 — doc 삭제 성공 후 Storage 이미지 best-effort 정리 ── */
+function hbStoragePath(d){
+  if (d && d.imagePath) return d.imagePath;
+  var u = (d && d.imageUrl) || '';
+  if (u.indexOf('firebasestorage') < 0) return null;
+  var mch = u.match(/\/o\/([^?]+)/);
+  try { return mch ? decodeURIComponent(mch[1]) : null; } catch(_) { return null; }
+}
+function hbDelItem(id){
+  var rec = hbRows.filter(function(r){ return r.id === id; })[0] || {};
+  var keys = HB_STATES.filter(function(s){ return hbNormSlots(rec)[s] != null; });
+  if (!confirm('이 히어로 배너를 삭제할까요?\n\n배정된 주: '+(keys.length?keys.join(', '):'없음')+'\n(Storage 이미지도 함께 삭제, 되돌릴 수 없습니다)')) return;
+  db.collection(HB_COLLECTION).doc(id).delete().then(function(){
+    var p = hbStoragePath(rec);
+    if (p){ storage.ref().child(p).delete().catch(function(){}); }
+    toast('삭제되었습니다.'); hbLoad();
+  }).catch(function(e){ toast('삭제 실패: '+(e.message||e)); });
+}
+
+/* ── 추가 — 압축(compress.js) 후 admin/hero_banners/ 업로드 ── */
+$('hbFile') && $('hbFile').addEventListener('change', function(){
+  var f = this.files && this.files[0]; var p = $('hbPrev');
+  if (f){ p.src = URL.createObjectURL(f); p.style.display = 'block'; } else { p.style.display = 'none'; }
+});
+function hbUploadImage(file){
+  return import('./compress.js').then(function(mod){
+    return mod.compressImage(file, { maxDim: 1600, quality: 0.82 });
+  }).then(function(blob){
+    var path = 'admin/hero_banners/'+Date.now()+'-'+Math.random().toString(36).slice(2)+'.jpg';
+    var ref = storage.ref().child(path);
+    return ref.put(blob, { contentType: 'image/jpeg' }).then(function(snap){
+      return snap.ref.getDownloadURL().then(function(url){ return { url:url, path:path }; });
+    });
+  });
+}
+$('hbAddBtn') && $('hbAddBtn').addEventListener('click', function(){
+  var btn = this;
+  var file = $('hbFile').files && $('hbFile').files[0];
+  var imgUrl = $('hbImgUrl').value.trim();
+  if (!file && !imgUrl){ toast('이미지 파일을 올리거나 이미지 URL을 넣어주세요.'); return; }
+  btn.disabled = true; $('hbAddMsg').innerHTML = '<span class="spin"></span> 저장 중…';
+  var go = file ? hbUploadImage(file) : Promise.resolve({ url:imgUrl, path:null });
+  go.then(function(img){
+    var slots = {}; slots[hbState] = parseInt($('hbSlot').value, 10) || 1;
+    var docData = {
+      imageUrl: img.url,
+      linkUrl: $('hbHref').value.trim(),
+      alt: $('hbAlt').value.trim() || '히어로 배너',
+      slots: slots,
+      regions: [hbState],
+      active: $('hbActive').checked,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      uid: auth.currentUser.uid
+    };
+    if (img.path) docData.imagePath = img.path;
+    return db.collection(HB_COLLECTION).add(docData);
+  }).then(function(){
+    $('hbFile').value=''; $('hbImgUrl').value=''; $('hbHref').value=''; $('hbAlt').value='';
+    $('hbSlot').value='1'; $('hbActive').checked=true; $('hbPrev').style.display='none'; $('hbAddMsg').textContent='';
+    btn.disabled = false; toast('히어로 배너가 추가되었습니다.'); hbLoad();
+  }).catch(function(e){
+    btn.disabled = false; $('hbAddMsg').textContent = '';
+    toast('저장 실패: '+(e.message||e));
+  });
+});
 </script>
 </body>
 </html>

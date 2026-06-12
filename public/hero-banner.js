@@ -116,6 +116,9 @@
     },
   };
 
+  // admin 화면(admin-ads.html 히어로 탭)이 "기본 슬라이드 N" 라벨 표시에 참조 — 복제 금지
+  window.koausHeroSlots = SLOTS;
+
   function escHtml(s) {
     return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
@@ -144,9 +147,10 @@
 
   // ════════════════════════════════════════════════════════════════════
   //  관리자 등록 배너 (Firestore hero_banners) — 슬롯 N번 자리만 교체
-  //   · admin.html ② 히어로 배너 관리 에서 등록된 데이터
-  //   · regions 배열에 'all' 또는 현재 페이지 ?state=xxx 가 포함된 배너만 핀셋 필터
-  //   · order N(1~4) 배너가 기본 슬라이드 N번 자리만 교체 — 나머지 기본 슬라이드 유지
+  //   · admin-ads.html 히어로 배너 탭에서 등록된 데이터
+  //   · slots 맵({nsw:1, qld:2, all:3 …})이 주별 독립 슬롯 — 현재 페이지 ?state=xxx
+  //     키 우선, 없으면 'all' 키. slots 없는 옛 문서는 order(단일) + regions 로 fallback
+  //   · 슬롯 N(1~4) 배너가 기본 슬라이드 N번 자리만 교체 — 나머지 기본 슬라이드 유지
   //   · 같은 슬롯 충돌: 특정 주 배너 > 'all' 배너, 같은 구체성이면 최신 등록(createdAt) 우선
   //   · 매칭 배너 0건 또는 fetch 실패 → SLOTS 전체 노출 (기존 사용자 경험 보존)
   //   · IIFE 안에서 dynamic import 로 Firebase SDK 로드 (페이지 script 태그 변경 불필요)
@@ -184,11 +188,15 @@
           fb.limit(20),
         ));
         const state = currentState();
+        const matchesPage = b => {
+          if (b.slots && typeof b.slots === 'object'
+              && (b.slots.all != null || (state && b.slots[state] != null))) return true;
+          return Array.isArray(b.regions) && b.regions.length
+                 && (b.regions.includes('all') || (state && b.regions.includes(state)));
+        };
         return snap.docs
           .map(d => ({ id: d.id, ...d.data() }))
-          .filter(b => Array.isArray(b.regions) && b.regions.length
-                       && (b.regions.includes('all') || (state && b.regions.includes(state))))
-          .sort((a, b) => ((a.order ?? 100) - (b.order ?? 100)));
+          .filter(matchesPage);
       } catch (e) {
         console.warn('[hero-banner] admin 배너 fetch 실패 — SLOTS fallback', e);
         return [];
@@ -215,19 +223,33 @@
     return `<div class="swiper-slide koaus-hero-admin-slide" data-koaus-slot="${idx}" data-koaus-banner-id="${docId}" style="background:var(--bg-base,#000);position:relative;">${wrap}</div>`;
   }
 
-  // 매칭 배너 → 슬롯 배정: order N 배너가 N-1 인덱스 슬롯 차지 (배열 길이 = 기본 슬라이드 수)
+  // 매칭 배너 → 슬롯 배정: 슬롯 N 배너가 N-1 인덱스 차지 (배열 길이 = 기본 슬라이드 수)
+  //   슬롯 번호 해석: slots[현재 주] > slots.all > 옛 order (단일 필드 fallback)
   //   충돌 규칙: ① 특정 주 배너 > 'all' 배너 ② 같은 구체성이면 createdAt 최신 우선
-  //   order 누락/범위 밖(옛 doc 기본 99 등) → 1로 간주
+  //   슬롯 누락/범위 밖(옛 doc 기본 99 등) → 1로 간주
+  function resolveSlot(b, state, slotCount) {
+    let ord;
+    if (b.slots && typeof b.slots === 'object') {
+      if (state && b.slots[state] != null) ord = Number(b.slots[state]);
+      else if (b.slots.all != null)        ord = Number(b.slots.all);
+    }
+    if (ord == null || !Number.isFinite(ord)) ord = Number(b.order);
+    if (!Number.isFinite(ord) || ord < 1 || ord > slotCount) ord = 1;
+    return ord;
+  }
   function assignSlots(banners, slotCount) {
     const slots = new Array(slotCount).fill(null);
     if (!banners || !banners.length) return slots;
     const state = currentState();
-    const specificity = b => (state && Array.isArray(b.regions) && b.regions.includes(state)) ? 1 : 0;
+    const specificity = b => {
+      if (state && b.slots && typeof b.slots === 'object' && b.slots[state] != null) return 1;
+      if (state && Array.isArray(b.regions) && b.regions.includes(state)
+          && !(b.slots && typeof b.slots === 'object' && b.slots.all != null)) return 1;
+      return 0;
+    };
     const ts = b => (b.createdAt && typeof b.createdAt.toMillis === 'function') ? b.createdAt.toMillis() : 0;
     banners.forEach(b => {
-      let ord = Number(b.order);
-      if (!Number.isFinite(ord) || ord < 1 || ord > slotCount) ord = 1;
-      const i = ord - 1;
+      const i = resolveSlot(b, state, slotCount) - 1;
       const cur = slots[i];
       if (!cur
           || specificity(b) > specificity(cur)
@@ -407,10 +429,21 @@
     //    fetch 결과 없으면 SLOTS fallback 으로 즉시 진입
     let banners = [];
     try { banners = await fetchAdminBanners(); } catch (_) {}
-    // 2) 컨테이너별 렌더 — order N 배너가 기본 슬라이드 N번 자리만 교체
+    // 2) 컨테이너별 렌더 — 슬롯 N 배너가 기본 슬라이드 N번 자리만 교체
     containers.forEach(c => render(c, banners));
-    // 3) Swiper init (admin·SLOTS 공통)
-    ensureSwiperLoaded(() => containers.forEach(initSwipers));
+    // 3) Swiper init (admin·SLOTS 공통) → koaus:hero-ready 발행
+    //    — 광고 모듈(koaus-ads) 등이 swiper 준비 후 슬라이드 append 가능 (확장 포인트)
+    ensureSwiperLoaded(() => {
+      containers.forEach(initSwipers);
+      containers.forEach(c => {
+        try {
+          c.dispatchEvent(new CustomEvent('koaus:hero-ready', {
+            bubbles: true,
+            detail: { cat: c.getAttribute('data-koaus-hero-cat') },
+          }));
+        } catch (_) {}
+      });
+    });
   }
 
   if (document.readyState === 'loading') {
