@@ -81,8 +81,8 @@
   }
 
   // ── 광고 타겟팅 점수 적립 (koaus_state_scores) ──
-  //   · koaus-ads.js(홈 광고)가 읽는 단일 소스 — 쓰기는 이 파일이 전 페이지에서 전담
-  //     (koaus-ads.js 는 index 에만 로드되어 서브 페이지 방문이 집계되지 않던 회귀 수정)
+  //   · hero-banner.js(통합 배너 — 유저 성향 주 판정)가 읽는 단일 소스
+  //     쓰기는 이 파일이 전 페이지에서 전담 (배너 모듈은 읽기 전용)
   //   · 21일 반감기 지수 감쇠 — 이사 등으로 주 이용 주가 바뀌면 자연 전환
   const SCORE_KEY = 'koaus_state_scores';
   const SCORE_STATES = ['nsw', 'vic', 'qld', 'wa', 'sa', 'tas', 'act', 'nt'];
