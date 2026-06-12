@@ -1690,8 +1690,7 @@
       const posts    = loadPosts();
       const filtered = applyFilters(posts);
       document.getElementById('boardCount').textContent = `총 ${filtered.length}건`;
-      // 최신 글이 위로 (내림차순)
-      const sorted = filtered.slice().sort((a, b) => b.id - a.id);
+      const sorted = filtered.slice().sort((a, b) => a.id - b.id);   // 등록순(오래된 글 먼저) — 초기 입점 업체 상단 노출 보장
       const totalPages = Math.max(1, Math.ceil(sorted.length / PER_PAGE));
       if (currentPage > totalPages) currentPage = totalPages;
       renderListView(sorted, totalPages);
@@ -2694,7 +2693,7 @@
       // trades 페이지는 accom의 LocalStorage 패턴을 재활용 (저장 키는 trades 전용으로 분리)
       const STORE = 'koaus-trades-posts';
       try {
-        onSnapshot(query(collection(db, 'services'), where('status', '==', 'approved'), orderBy('createdAt', 'desc'), limit(50)), snap => {
+        onSnapshot(query(collection(db, 'services'), where('status', '==', 'approved'), orderBy('createdAt', 'asc'), limit(50)), snap => {
           const fsItems = snap.docs
             .map(d => ({ _fsDocId: d.id, ...d.data() }))
             .filter(s => s.category === 'trades' && s.status !== 'pending' && s.status !== 'hidden' && !s.isHidden);

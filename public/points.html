@@ -1076,7 +1076,7 @@
           if (pa !== pb) return pb - pa;
           const at = a.createdAt && a.createdAt.toMillis ? a.createdAt.toMillis() : 0;
           const bt = b.createdAt && b.createdAt.toMillis ? b.createdAt.toMillis() : 0;
-          return bt - at;
+          return at - bt;   // 등록순(오래된 글 먼저) — 초기 입점 업체 상단 노출 보장 (isPremium 우선은 유지)
         });
       const listEl = document.getElementById('partnerList');
       const pager  = document.getElementById('pagination');
@@ -1651,7 +1651,7 @@
       try {
         // 규칙상 비admin 의 services list 는 where('status','==','approved') 필수 —
         // 누락 시 쿼리 전체가 거부되어 일반 계정에서 파트너가 영원히 안 보임.
-        onSnapshot(query(collection(db, 'services'), where('status', '==', 'approved'), orderBy('createdAt', 'desc'), limit(20)), snap => {
+        onSnapshot(query(collection(db, 'services'), where('status', '==', 'approved'), orderBy('createdAt', 'asc'), limit(20)), snap => {
           window.partners = snap.docs
             .map(d => ({ id: d.id, ...d.data() }))
             .filter(p => p.category === 'legal' || p.category === 'education');
