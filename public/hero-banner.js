@@ -143,11 +143,12 @@
   try { localStorage.removeItem('koaus-dismissed-ads'); } catch (_) {}
 
   // ════════════════════════════════════════════════════════════════════
-  //  관리자 등록 배너 (Firestore hero_banners) — 지역 매칭 후 우선 노출
+  //  관리자 등록 배너 (Firestore hero_banners) — 슬롯 N번 자리만 교체
   //   · admin.html ② 히어로 배너 관리 에서 등록된 데이터
   //   · regions 배열에 'all' 또는 현재 페이지 ?state=xxx 가 포함된 배너만 핀셋 필터
-  //   · 매칭 배너 1건 이상 → SLOTS(하드코딩) 완전 대체
-  //   · 매칭 배너 0건 또는 fetch 실패 → SLOTS fallback (기존 사용자 경험 보존)
+  //   · order N(1~4) 배너가 기본 슬라이드 N번 자리만 교체 — 나머지 기본 슬라이드 유지
+  //   · 같은 슬롯 충돌: 특정 주 배너 > 'all' 배너, 같은 구체성이면 최신 등록(createdAt) 우선
+  //   · 매칭 배너 0건 또는 fetch 실패 → SLOTS 전체 노출 (기존 사용자 경험 보존)
   //   · IIFE 안에서 dynamic import 로 Firebase SDK 로드 (페이지 script 태그 변경 불필요)
   // ════════════════════════════════════════════════════════════════════
   function currentState() {
@@ -207,37 +208,37 @@
     const img  = escHtml(safeImg);
     const docId = escHtml(banner.id || '');
     const imgEl = `<img src="${img}" alt="${alt}" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;">`;
+    // position:relative;z-index:1 — 슬라이드 ::before 오버레이보다 위 (클릭 가로채기 방지 안전망)
     const wrap = link
-      ? `<a href="${escHtml(link)}" target="_blank" rel="noopener noreferrer" aria-label="${alt}" style="display:block;width:100%;height:100%;">${imgEl}</a>`
+      ? `<a href="${escHtml(link)}" target="_blank" rel="noopener noreferrer" aria-label="${alt}" style="display:block;width:100%;height:100%;position:relative;z-index:1;">${imgEl}</a>`
       : imgEl;
     return `<div class="swiper-slide koaus-hero-admin-slide" data-koaus-slot="${idx}" data-koaus-banner-id="${docId}" style="background:var(--bg-base,#000);position:relative;">${wrap}</div>`;
   }
 
-  // admin 배너로 컨테이너 렌더 시도 — true 반환 시 SLOTS 렌더 skip
-  function renderAdminBanners(container, banners) {
-    if (!banners || !banners.length) return false;
-    if (container.__koausHeroRendered) return true;
-    container.__koausHeroRendered = true;
-    container.classList.add('koaus-hero');
-    const slidesHtml = banners.map((b, i) => buildAdminSlide(b, i)).join('');
-    const cat = container.getAttribute('data-koaus-hero-cat') || 'admin';
-    container.setAttribute('data-koaus-hero-source', 'admin');
-    container.setAttribute('data-koaus-hero-region', currentState() || 'all');
-    container.innerHTML = `
-      <div class="koaus-hero-pc">
-        <div class="swiper" data-koaus-hero-swiper="${escHtml(cat)}">
-          <div class="swiper-wrapper" data-koaus-hero-slots="${escHtml(cat)}" data-koaus-cap="${banners.length}">
-            ${slidesHtml}
-          </div>
-          <div class="swiper-pagination"></div>
-          <div class="swiper-button-prev"></div>
-          <div class="swiper-button-next"></div>
-        </div>
-      </div>`;
-    return true;
+  // 매칭 배너 → 슬롯 배정: order N 배너가 N-1 인덱스 슬롯 차지 (배열 길이 = 기본 슬라이드 수)
+  //   충돌 규칙: ① 특정 주 배너 > 'all' 배너 ② 같은 구체성이면 createdAt 최신 우선
+  //   order 누락/범위 밖(옛 doc 기본 99 등) → 1로 간주
+  function assignSlots(banners, slotCount) {
+    const slots = new Array(slotCount).fill(null);
+    if (!banners || !banners.length) return slots;
+    const state = currentState();
+    const specificity = b => (state && Array.isArray(b.regions) && b.regions.includes(state)) ? 1 : 0;
+    const ts = b => (b.createdAt && typeof b.createdAt.toMillis === 'function') ? b.createdAt.toMillis() : 0;
+    banners.forEach(b => {
+      let ord = Number(b.order);
+      if (!Number.isFinite(ord) || ord < 1 || ord > slotCount) ord = 1;
+      const i = ord - 1;
+      const cur = slots[i];
+      if (!cur
+          || specificity(b) > specificity(cur)
+          || (specificity(b) === specificity(cur) && ts(b) > ts(cur))) {
+        slots[i] = b;
+      }
+    });
+    return slots;
   }
 
-  function render(container) {
+  function render(container, banners) {
     const cat = container.getAttribute('data-koaus-hero-cat');
     const data = SLOTS[cat];
     if (!data) {
@@ -248,6 +249,10 @@
     if (container.__koausHeroRendered) return;
     container.__koausHeroRendered = true;
     container.classList.add('koaus-hero');
+
+    // ── admin 배너 슬롯 배정 — order N 배너가 기본 슬라이드 N번 자리만 교체 ──
+    const slotBanners = assignSlots(banners, data.slides.length);
+    const adminCount = slotBanners.filter(Boolean).length;
 
     // ── 로컬 애널리틱스 — 14일 활동 기반 4 슬롯 지역 분배 ──
     //   · allocateSlots 가 ['nsw','nsw','vic','sa'] 같은 4개 지역 배열 반환
@@ -262,6 +267,8 @@
     // 데스크톱 + 모바일 동일 swiper — 모바일 단일카드 패턴 폐기
     const slidesHtml = data.slides
       .map((s, i) => {
+        // admin 배너가 배정된 슬롯은 교체, 나머지는 기본 슬라이드 유지
+        if (slotBanners[i]) return buildAdminSlide(slotBanners[i], i);
         // 지역별 슬롯 분배 — slotStates[i] 가 있으면 eyebrow 에 지역 태그 prepend
         const st = slotStates[i];
         const stagged = st ? Object.assign({}, s, {
@@ -270,6 +277,10 @@
         return buildSlide(stagged, data.gradients[i % data.gradients.length], i);
       })
       .join('');
+    // 디버깅 단서 — 일부 교체 'mixed' / 전체 교체 'admin'
+    if (adminCount) {
+      container.setAttribute('data-koaus-hero-source', adminCount === data.slides.length ? 'admin' : 'mixed');
+    }
     // data-koaus-hero-region (분배 결과) — 별도 광고 모듈이 후속 덮어쓰기 가능 (확장 포인트)
     container.setAttribute('data-koaus-hero-region', slotStates.join(','));
     container.innerHTML = `
@@ -396,11 +407,8 @@
     //    fetch 결과 없으면 SLOTS fallback 으로 즉시 진입
     let banners = [];
     try { banners = await fetchAdminBanners(); } catch (_) {}
-    // 2) 컨테이너별 렌더 — admin 배너 있으면 SLOTS 대체, 없으면 SLOTS fallback
-    containers.forEach(c => {
-      const used = renderAdminBanners(c, banners);
-      if (!used) render(c);
-    });
+    // 2) 컨테이너별 렌더 — order N 배너가 기본 슬라이드 N번 자리만 교체
+    containers.forEach(c => render(c, banners));
     // 3) Swiper init (admin·SLOTS 공통)
     ensureSwiperLoaded(() => containers.forEach(initSwipers));
   }
