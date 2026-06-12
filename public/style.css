@@ -1357,6 +1357,32 @@ select.board-write-btn--ghost:focus { outline: none; border-color: var(--text-pr
 }
 .koaus-hero-pc .hero-cta:hover { background: #f1f5f9; transform: translateY(-1px); }
 
+/* ── 띠 배너 variant (care/exchange/powerball/calculator/state) ──────────
+   전면 히어로(18/7) 대신 슬림 스트립 — 같은 렌더러(hero-banner.js), 높이만 다름.
+   :empty placeholder 도 같은 높이로 오버라이드 (reflow 0 정책 유지) */
+.koaus-hero--strip:empty,
+.koaus-hero--strip .koaus-hero-pc .swiper {
+  aspect-ratio: auto;
+  height: 104px;
+  border-radius: 12px;
+}
+.koaus-hero--strip .koaus-hero-pc .swiper-slide { padding: 10px 48px; }
+.koaus-hero--strip .koaus-hero-pc .hero-content {
+  flex-direction: row; flex-wrap: wrap;
+  align-items: center; justify-content: center;
+  gap: 6px 14px; max-width: 920px;
+}
+.koaus-hero--strip .koaus-hero-pc .hero-eyebrow { font-size: 11px; padding: 4px 10px; }
+.koaus-hero--strip .koaus-hero-pc .hero-title { font-size: clamp(15px, 1.8vw, 20px); }
+.koaus-hero--strip .koaus-hero-pc .hero-sub { font-size: 13px; }
+.koaus-hero--strip .koaus-hero-pc .hero-cta { margin-top: 0; padding: 6px 14px; font-size: 12px; }
+@media (max-width: 640px) {
+  .koaus-hero--strip:empty,
+  .koaus-hero--strip .koaus-hero-pc .swiper { height: 84px; }
+  .koaus-hero--strip .koaus-hero-pc .hero-sub { display: none; }
+  .koaus-hero--strip .koaus-hero-pc .swiper-slide { padding: 8px 36px; }
+}
+
 /* Swiper 페이지네이션·네비게이션 컬러 (히어로 한정) */
 .koaus-hero-pc .swiper-pagination-bullet { background: #fff; opacity: .55; width: 8px; height: 8px; }
 .koaus-hero-pc .swiper-pagination-bullet-active { opacity: 1; width: 24px; border-radius: 4px; }

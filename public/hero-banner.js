@@ -1,12 +1,14 @@
 // ════════════════════════════════════════════════════════════════════
-//  KoAus · 전역 히어로 배너 (서브 페이지 공통)
+//  KoAus · 전역 히어로 배너 (전 페이지 공통 — 통합 배너 시스템)
 //  - 사용법: 페이지 헤더 직하단에 컨테이너 한 줄 삽입
 //      <section class="koaus-hero" data-koaus-hero-cat="accom"></section>
+//      띠 배너 페이지는 data-koaus-hero-variant="strip" + class koaus-hero--strip 추가
 //    그리고 <script src="hero-banner.js" defer></script> 로드.
-//  - 카테고리별 4개 슬라이드 자동 렌더링 — PC + 모바일 동일 swiper, 동일 콘텐츠
+//  - 타겟 기준은 "유저의 주 이용 주" 단일 (koaus_state_scores, 21일 반감기):
+//      ① 성향 주(점수 ≥1.5) → ② 페이지 ?state= (성향 미확정 폴백) → ③ all 배너
+//      → ④ 하우스 광고(house:true 문서) → ⑤ 하드코딩 SLOTS
+//  - 카테고리별 기본 슬라이드 자동 렌더링 — PC + 모바일 동일 swiper, 동일 콘텐츠
 //  - Swiper CDN 이 이미 페이지에 로드돼 있으면 자동 활성화, 없으면 동적 로드
-//  - data-koaus-hero-slots / data-koaus-cap 속성을 부여 — 로컬 애널리틱스
-//    타겟팅 광고 로직(별도 모듈) 이 이 속성을 보고 슬롯을 교체 가능 (확장 포인트)
 // ════════════════════════════════════════════════════════════════════
 (function () {
   if (typeof window === 'undefined' || window.__koausHeroBannerInited) return;
@@ -114,6 +116,45 @@
         { eyebrow: '이름 공개 설정',        title: '이름(Name) 공개 ON/OFF.',            sub: '기본은 별명 노출 — 마이페이지에서 토글',                       cta: null },
       ],
     },
+    // ── 홈 (index) — 슬라이드 전체가 클릭 영역(href) — 옛 index 인라인 마크업 이관 ──
+    home: {
+      gradients: ['hero-bg--home1', 'hero-bg--home2', 'hero-bg--home3', 'hero-bg--legal3'],
+      slides: [
+        { href: '#sectionShortcuts',        eyebrow: 'KoAus · Korea ↔ Australia', title: '호주 한인 생활의 모든 것, 한 곳에서.', sub: '쉐어·렌트·구인구직·정비·식당·법무·유학 — 한인 커뮤니티 포털', cta: { label: '서비스 둘러보기 →' } },
+        { href: 'accom.html',               eyebrow: '실시간 매물 · 지도 보기',   title: '쉐어·렌트, 위치까지 한눈에.',          sub: '시드니·멜버른·브리즈번 — 한인 매물을 지도와 사진으로 확인하세요', cta: { label: '쉐어 보러가기 →' } },
+        { href: 'about.html',               eyebrow: 'KoAus',                     title: '미래는 호주에서, 추억은 한국에서.',     sub: '둘 다 KoAus에서.',                                            cta: { label: 'KoAus 소개 보기 →' } },
+        { href: 'points.html?cat=visa-edu', eyebrow: 'Visa · 법무 · 유학',        title: '호주 정착부터 비자까지 한 페이지.',     sub: '법무법인·유학원 추천 + 기술심사 가채점 도구 무료 제공',        cta: { label: '상담 시작 →' } },
+      ],
+    },
+    // ── 띠 배너(strip variant) 페이지 — 슬림 2슬라이드 기본 (광고 미배정 시 폴백) ──
+    care: {
+      gradients: ['hero-bg--edu2', 'hero-bg--home1'],
+      slides: [
+        { eyebrow: '🤝 Care',     title: '긴급 연락처 · 영사관 · 상비약 정보.',        sub: '000 · 영사콜센터 · 한인 의료 정보를 한 페이지에', cta: null },
+        { eyebrow: '📢 KoAus',    title: '쉐어 · 구인 · 중고차 — 한인 게시판.',        sub: '호주 한인 커뮤니티 포털',                          cta: { href: 'index.html', label: '둘러보기 →' } },
+      ],
+    },
+    powerball: {
+      gradients: ['hero-bg--legal2', 'hero-bg--home3'],
+      slides: [
+        { eyebrow: '🎱 Powerball', title: '호주 파워볼 당첨 번호 확인.',               sub: '최신 회차 결과를 한눈에',                          cta: null },
+        { eyebrow: '📢 KoAus',    title: '쉐어 · 구인 · 중고차 — 한인 게시판.',        sub: '호주 한인 커뮤니티 포털',                          cta: { href: 'index.html', label: '둘러보기 →' } },
+      ],
+    },
+    calculator: {
+      gradients: ['hero-bg--edu1', 'hero-bg--legal3'],
+      slides: [
+        { eyebrow: '💸 송금 비교', title: '환율 · 송금 수수료 한눈에 비교.',           sub: 'AUD ↔ KRW 송금 전 필수 체크',                      cta: null },
+        { eyebrow: '📢 KoAus',    title: '쉐어 · 구인 · 중고차 — 한인 게시판.',        sub: '호주 한인 커뮤니티 포털',                          cta: { href: 'index.html', label: '둘러보기 →' } },
+      ],
+    },
+    state: {
+      gradients: ['hero-bg--home2', 'hero-bg--edu2'],
+      slides: [
+        { eyebrow: '🗺 주별 정보', title: 'NSW · VIC · QLD — 주별 생활 정보 허브.',    sub: '교통 · 의료 · 교육 정보를 주별로',                 cta: null },
+        { eyebrow: '📢 KoAus',    title: '쉐어 · 구인 · 중고차 — 한인 게시판.',        sub: '호주 한인 커뮤니티 포털',                          cta: { href: 'index.html', label: '둘러보기 →' } },
+      ],
+    },
   };
 
   // admin 화면(admin-ads.html 히어로 탭)이 "기본 슬라이드 N" 라벨 표시에 참조 — 복제 금지
@@ -124,17 +165,22 @@
   }
 
   function buildSlide(slide, gradientCls, idx) {
+    // slide.href — 슬라이드 전체가 클릭 영역(home 등). 이때 cta 는 시각 표시만(span)
     const cta = slide.cta
-      ? `<a class="hero-cta" href="${escHtml(slide.cta.href)}">${escHtml(slide.cta.label)}</a>`
+      ? (slide.href
+          ? `<span class="hero-cta">${escHtml(slide.cta.label)}</span>`
+          : `<a class="hero-cta" href="${escHtml(slide.cta.href)}">${escHtml(slide.cta.label)}</a>`)
       : '';
-    return `<div class="swiper-slide ${gradientCls}" data-koaus-slot="${idx}">
-      <div class="hero-content">
+    const content = `<div class="hero-content">
         <span class="hero-eyebrow">${escHtml(slide.eyebrow)}</span>
         <h2 class="hero-title">${escHtml(slide.title)}</h2>
         <p class="hero-sub">${escHtml(slide.sub)}</p>
         ${cta}
-      </div>
-    </div>`;
+      </div>`;
+    if (slide.href) {
+      return `<a class="swiper-slide ${gradientCls}" data-koaus-slot="${idx}" href="${escHtml(slide.href)}">${content}</a>`;
+    }
+    return `<div class="swiper-slide ${gradientCls}" data-koaus-slot="${idx}">${content}</div>`;
   }
 
   // ── 지역 코드 → 한국어 라벨 (로컬 애널리틱스 슬롯 분배 시 eyebrow 보강) ──
@@ -147,17 +193,67 @@
 
   // ════════════════════════════════════════════════════════════════════
   //  관리자 등록 배너 (Firestore hero_banners) — 슬롯 N번 자리만 교체
-  //   · admin-ads.html 히어로 배너 탭에서 등록된 데이터
-  //   · slots 맵({nsw:1, qld:2, all:3 …})이 주별 독립 슬롯 — 현재 페이지 ?state=xxx
-  //     키 우선, 없으면 'all' 키. slots 없는 옛 문서는 order(단일) + regions 로 fallback
+  //   · admin-ads.html 에서 등록된 데이터 (광고주 배너 + house:true 하우스 광고)
+  //   · slots 맵({nsw:1, qld:2, all:3 …})이 주별 독립 슬롯 — "타겟 주" 키 우선,
+  //     없으면 'all' 키. slots 없는 옛 문서는 order(단일) + regions 로 fallback
+  //   · 타겟 주 = ① 유저 성향 주(koaus_state_scores ≥1.5) → ② 페이지 ?state= → ③ 없음(all만)
   //   · 슬롯 N(1~4) 배너가 기본 슬라이드 N번 자리만 교체 — 나머지 기본 슬라이드 유지
-  //   · 같은 슬롯 충돌: 특정 주 배너 > 'all' 배너, 같은 구체성이면 최신 등록(createdAt) 우선
+  //   · 같은 슬롯 충돌: 광고주 > 하우스(house:true), 특정 주 > 'all',
+  //     같은 구체성이면 최신 등록(createdAt) 우선
+  //   · start/end(YYYY-MM-DD) 기간 밖 배너는 제외 (광고 계약 기간)
   //   · 매칭 배너 0건 또는 fetch 실패 → SLOTS 전체 노출 (기존 사용자 경험 보존)
   //   · IIFE 안에서 dynamic import 로 Firebase SDK 로드 (페이지 script 태그 변경 불필요)
   // ════════════════════════════════════════════════════════════════════
   function currentState() {
     try { return (new URLSearchParams(location.search).get('state') || '').toLowerCase(); }
     catch (_) { return ''; }
+  }
+
+  // ── 유저 성향 주 판정 — local-analytics.js 의 koaus_state_scores 를 읽기 전용 사용 ──
+  //   · 점수 쓰기는 local-analytics.js recordAdScore 가 전 페이지에서 전담 (여기서 쓰지 말 것)
+  //   · 반감기·minScore 는 옛 koaus-ads.js OPTIONS 와 동일 값 유지 (21일 / 1.5)
+  //   · koaus_state_override(localStorage, JSON 문자열 예: "nsw") 로 강제 지정 — 디버그·실연용
+  const TARGET_STATES = ['nsw', 'vic', 'qld', 'wa', 'sa', 'tas', 'act', 'nt'];
+  const SCORE_HALF_LIFE_MS = 21 * 86400000;
+  const SCORE_MIN = 1.5;
+  function dominantState() {
+    try {
+      const ov = JSON.parse(localStorage.getItem('koaus_state_override') || 'null');
+      if (TARGET_STATES.indexOf(ov) !== -1) return ov;
+    } catch (_) {}
+    try {
+      const raw = JSON.parse(localStorage.getItem('koaus_state_scores') || '{}') || {};
+      const now = Date.now();
+      let best = null, bestVal = 0;
+      TARGET_STATES.forEach(s => {
+        const e = raw[s];
+        if (!e) return;
+        const v = e.last
+          ? (e.score || 0) * Math.pow(0.5, Math.max(0, now - e.last) / SCORE_HALF_LIFE_MS)
+          : (e.score || 0);
+        if (v > bestVal) { bestVal = v; best = s; }
+      });
+      if (best && bestVal >= SCORE_MIN) return best;
+    } catch (_) {}
+    return null;
+  }
+  let _targetState;
+  function targetState() {
+    if (_targetState === undefined) {
+      const cs = currentState();
+      _targetState = dominantState() || (TARGET_STATES.indexOf(cs) !== -1 ? cs : '') || '';
+    }
+    return _targetState;
+  }
+
+  // 기간 필터 — 옛 koaus-ads.js 와 동일 해석 (start 00:00:00 ~ end 23:59:59, 로컬 시간)
+  function inPeriod(b) {
+    try {
+      const now = Date.now();
+      if (b.start && new Date(b.start + 'T00:00:00').getTime() > now) return false;
+      if (b.end   && new Date(b.end   + 'T23:59:59').getTime() < now) return false;
+    } catch (_) {}
+    return true;
   }
 
   // 페이지 진입 시 1회만 fetch — 결과 캐시 (다중 컨테이너 재사용)
@@ -187,8 +283,8 @@
           fb.where('active', '==', true),
           fb.limit(20),
         ));
-        const state = currentState();
-        const matchesPage = b => {
+        const state = targetState();
+        const matchesTarget = b => {
           if (b.slots && typeof b.slots === 'object'
               && (b.slots.all != null || (state && b.slots[state] != null))) return true;
           return Array.isArray(b.regions) && b.regions.length
@@ -196,7 +292,7 @@
         };
         return snap.docs
           .map(d => ({ id: d.id, ...d.data() }))
-          .filter(matchesPage);
+          .filter(b => matchesTarget(b) && inPeriod(b));
       } catch (e) {
         console.warn('[hero-banner] admin 배너 fetch 실패 — SLOTS fallback', e);
         return [];
@@ -240,12 +336,15 @@
   function assignSlots(banners, slotCount) {
     const slots = new Array(slotCount).fill(null);
     if (!banners || !banners.length) return slots;
-    const state = currentState();
+    const state = targetState();
+    // 우선순위: 광고주(+2) > 하우스(house:true, +0), 특정 주(+1) > all(+0)
+    //   → 광고주 특정주 3 > 광고주 all 2 > 하우스 특정주 1 > 하우스 all 0
     const specificity = b => {
-      if (state && b.slots && typeof b.slots === 'object' && b.slots[state] != null) return 1;
-      if (state && Array.isArray(b.regions) && b.regions.includes(state)
-          && !(b.slots && typeof b.slots === 'object' && b.slots.all != null)) return 1;
-      return 0;
+      let s = b.house === true ? 0 : 2;
+      if (state && b.slots && typeof b.slots === 'object' && b.slots[state] != null) s += 1;
+      else if (state && Array.isArray(b.regions) && b.regions.includes(state)
+          && !(b.slots && typeof b.slots === 'object' && b.slots.all != null)) s += 1;
+      return s;
     };
     const ts = b => (b.createdAt && typeof b.createdAt.toMillis === 'function') ? b.createdAt.toMillis() : 0;
     banners.forEach(b => {
@@ -271,6 +370,9 @@
     if (container.__koausHeroRendered) return;
     container.__koausHeroRendered = true;
     container.classList.add('koaus-hero');
+    if (container.getAttribute('data-koaus-hero-variant') === 'strip') {
+      container.classList.add('koaus-hero--strip');
+    }
 
     // ── admin 배너 슬롯 배정 — order N 배너가 기본 슬라이드 N번 자리만 교체 ──
     const slotBanners = assignSlots(banners, data.slides.length);

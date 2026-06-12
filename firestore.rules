@@ -609,6 +609,8 @@ service cloud.firestore {
     //   · regions:  노출 지역 배열 — ['all'] 또는 ['nsw','vic',...] (max 9)
     //   · order:    정렬 순서 (낮을수록 앞)
     //   · active:   노출 여부
+    //   · start/end: 노출 기간 'YYYY-MM-DD' (optional — 빈 값은 키 생략/삭제)
+    //   · house:    하우스 광고 여부 (optional bool — 광고주 배너보다 낮은 우선순위)
     //   · read:     누구나 — 서브 페이지에서 클라이언트가 직접 fetch 후 필터링
     //   · write:    관리자만 — 이미지/링크 URL 길이 + regions 배열 크기 강제 (빌링 안전망)
     match /hero_banners/{id} {
@@ -618,6 +620,9 @@ service cloud.firestore {
                                        && reqStr('imageUrl', 1, 500)
                                        && optStr('linkUrl', 500)
                                        && optStr('alt', 200)
+                                       && optStr('start', 10)
+                                       && optStr('end', 10)
+                                       && optBool('house')
                                        && request.resource.data.regions is list
                                        && request.resource.data.regions.size() <= 9;
       allow delete: if isAdmin();
