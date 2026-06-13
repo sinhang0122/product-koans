@@ -48,8 +48,8 @@ function start() {
   function render() {
     const t = items[idx];
     if (!t) return;
-    // sponsor 라벨 — admin 등록 시 입력한 광고주/게시자명, 비어있으면 '📢 공지' 폴백
-    if ($sponsor) $sponsor.textContent = t.sponsor || '📢 공지';
+    // 배지 고정 — 운영자 알림 전용 (광고주명 렌더 폐기, 회귀 방지)
+    if ($sponsor) $sponsor.textContent = '📢 KoAus';
     if ($content) $content.textContent = t.content || '';
     if ($arrow && $item) {
       if (t.linkUrl) {
@@ -121,7 +121,8 @@ function start() {
           .sort((a, b) => (_pri(a.data) - _pri(b.data)) || (_ts(b.data) - _ts(a.data)))
           .map(({ id, data }) => ({
             id,
-            sponsor: (data.sponsor || '').trim() || '📢 공지',
+            // 마퀴 = 운영자 한 줄 알림 전용 (2026-06). sponsor/광고주명 렌더 폐기 —
+            //   광고주 강조는 히어로 배너+타겟 광고로 일원화. 배지는 고정(render).
             content: data.text,
             linkUrl: (data.link || '').trim() || '',
           }));
