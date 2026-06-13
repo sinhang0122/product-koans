@@ -237,6 +237,32 @@ document.getElementById('authLoginSubmit').addEventListener('click', async () =>
   } catch (e) { errEl.textContent = authErrMsg(e.code); }
 });
 
+// Enter 키 제출 — 로그인/가입 폼 공통 (모바일·데스크탑 동일)
+//   · 로그인: 이메일/비밀번호 어디서든 Enter → loginSubmit click
+//   · 가입: 이메일/비밀번호/재입력 어디서든 Enter → signupSubmit click
+//     단 약관·reCAPTCHA 미통과로 disabled 면 무시 (click 도 동일하게 무시되어 무동작 일관)
+//   · IME 조합 중 Enter(한글 변환 확정) 는 e.isComposing 으로 거름 — 폼 제출 오동작 차단
+['authLoginEmail', 'authLoginPw'].forEach(id => {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.addEventListener('keydown', e => {
+    if (e.key !== 'Enter' || e.isComposing) return;
+    e.preventDefault();
+    const btn = document.getElementById('authLoginSubmit');
+    if (btn) btn.click();
+  });
+});
+['authSignupEmail', 'authSignupPw', 'authSignupPwConfirm'].forEach(id => {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.addEventListener('keydown', e => {
+    if (e.key !== 'Enter' || e.isComposing) return;
+    e.preventDefault();
+    const btn = document.getElementById('authSignupSubmit');
+    if (btn && !btn.disabled) btn.click();
+  });
+});
+
 // Google sign-in (modal button)
 document.getElementById('authGoogle').addEventListener('click', () => {
   signInWithPopup(auth, new GoogleAuthProvider())

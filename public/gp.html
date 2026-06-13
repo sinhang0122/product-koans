@@ -2621,10 +2621,18 @@
     if (db) {
       const STORE = 'koaus-gp-posts';
       try {
-        onSnapshot(query(collection(db, 'services'), where('status', '==', 'approved'), orderBy('createdAt', 'asc'), limit(50)), snap => {
+        // category 서버사이드 필터 — windowing 방지 (services 50건 초과 시 안전망)
+        //   복합 인덱스: (category ASC, status ASC, createdAt ASC)
+        onSnapshot(query(
+          collection(db, 'services'),
+          where('category', '==', 'gp'),
+          where('status', '==', 'approved'),
+          orderBy('createdAt', 'asc'),
+          limit(50)
+        ), snap => {
           const fsItems = snap.docs
             .map(d => ({ _fsDocId: d.id, ...d.data() }))
-            .filter(s => s.category === 'gp' && s.status !== 'pending' && s.status !== 'hidden' && !s.isHidden);
+            .filter(s => !s.isHidden);
           fsItems.forEach(s => {
             if (s.createdAt && s.createdAt.toMillis) {
               const d = s.createdAt.toDate(); const p = n => String(n).padStart(2,'0');

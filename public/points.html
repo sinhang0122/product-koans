@@ -1651,10 +1651,18 @@
       try {
         // 규칙상 비admin 의 services list 는 where('status','==','approved') 필수 —
         // 누락 시 쿼리 전체가 거부되어 일반 계정에서 파트너가 영원히 안 보임.
-        onSnapshot(query(collection(db, 'services'), where('status', '==', 'approved'), orderBy('createdAt', 'asc'), limit(20)), snap => {
+        //   · category in 필터는 windowing 방지 — services 전체 limit(20) 안에 legal 글이
+        //     밀려나는 회귀 차단 (2026-06-13 fix: services 26건↑ 상황에서 새 legal 글 미표시)
+        //   · 복합 인덱스: (category ASC, status ASC, createdAt ASC) — firestore.indexes.json
+        onSnapshot(query(
+          collection(db, 'services'),
+          where('category', 'in', ['legal', 'education']),
+          where('status', '==', 'approved'),
+          orderBy('createdAt', 'asc'),
+          limit(20)
+        ), snap => {
           window.partners = snap.docs
-            .map(d => ({ id: d.id, ...d.data() }))
-            .filter(p => p.category === 'legal' || p.category === 'education');
+            .map(d => ({ id: d.id, ...d.data() }));
           // 인라인 스크립트의 partners 배열 갱신 (글로벌 통해 전달)
           if (typeof window.__renderPartners === 'function') {
             window.__renderPartners(window.partners);
