@@ -1269,7 +1269,10 @@ select.board-write-btn--ghost:focus { outline: none; border-color: var(--text-pr
 .koaus-hero {
   /* Swiper 가로폭 계산 안정 — display:flex 절대 금지 (슬라이드 폭 0으로 계산되어 우측 치우침) */
   display: block;
-  width: 100%; max-width: 1200px;
+  /* 단일 캐논 폭 (2026-06 규격 통일): 부모 컨테이너가 홈(.home-main 1100px)·서브(.page-container
+     1200px)로 달라도 히어로는 항상 동일 폭으로 렌더. 1040px = 두 부모의 usable 폭(홈 ~1052/서브 ~1144)
+     안에 모두 들어가는 공통값 → 데스크톱(≥1100px)에서 홈·서브·strip 픽셀 동일. (모바일 ≤767 은 아래 max-width:100%) */
+  width: 100%; max-width: 1040px;
   margin: 14px auto 18px;
   padding: 0 16px;
   box-sizing: border-box;
@@ -1296,8 +1299,8 @@ select.board-write-btn--ghost:focus { outline: none; border-color: var(--text-pr
 .koaus-hero-pc .swiper {
   width: 100%;
   aspect-ratio: 18 / 7;  /* 전 디바이스 고정 종횡비 (지시 3/3) — 모바일·데스크탑·풀스크린 동일 비율 */
-  /* max-height 캡 제거 — 부모 .koaus-hero 의 max-width:1200px 가 가로 캡 → 세로는 18/7 비율로 자동 유지
-     (1200px × 7/18 ≈ 467px), 1920px 와이드 화면에서도 1200px 캡 안 → 비율 절대 깨지지 않음 */
+  /* max-height 캡 제거 — 부모 .koaus-hero 의 max-width:1040px 가 가로 캡 → 세로는 18/7 비율로 자동 유지
+     (1040px × 7/18 ≈ 404px), 와이드 화면에서도 1040px 캡 안 → 비율 절대 깨지지 않음 */
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 8px 28px rgba(15, 23, 42, .14);
