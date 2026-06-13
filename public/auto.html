@@ -645,7 +645,7 @@
         <span class="wrb-icon" aria-hidden="true">⚠️</span>
         <div class="wrb-body">
           <strong class="wrb-title">작성 전 주의사항</strong>
-          <p>💡 차량 매매 및 대여 시 RWC(정비점검표) 발급 여부와 레지(Rego) 만료일을 반드시 명시해 주세요. 거래 전 차량 인스펙션 및 시승을 필수적으로 진행하는 것을 권장합니다.</p>
+          <p id="writeRulesText">💡 차량 매매 및 대여 시 RWC(정비점검표) 발급 여부와 레지(Rego) 만료일을 반드시 명시해 주세요. 거래 전 차량 인스펙션 및 시승을 필수적으로 진행하는 것을 권장합니다.</p>
         </div>
       </div>
 
@@ -732,6 +732,53 @@
           </button>
           <input type="file" id="usedPhotoInput" accept="image/*" multiple style="display:none;" />
           <div class="photo-thumbs" id="usedPhotoThumbs" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;"></div>
+        </div>
+      </div>
+
+      <!-- ── 정비소/견인(Maintenance) 글쓰기 폼 — 업체 자율 등록 (차량 필드 제외, gp/salon/trades 패턴) ── -->
+      <div class="write-grid cat-form" data-form="maintenance" style="display:none;">
+        <div class="write-col">
+          <div class="write-field">
+            <label class="write-label" for="mTitle">업체명 / 제목 Title<span class="required-mark">*</span></label>
+            <input class="write-input" id="mTitle" type="text" placeholder="예: 스트라스필드 한인 정비소 · 24시 견인" maxlength="80" />
+          </div>
+          <div class="write-field addr-ac">
+            <label class="write-label" for="mRegion">위치 Region / Address<span class="required-mark">*</span></label>
+            <input class="write-input" id="mRegion" type="text" autocomplete="off" placeholder="예: 8 Albert Rd, Strathfield NSW" maxlength="200" />
+            <ul class="addr-suggest" id="mRegionSuggest"></ul>
+          </div>
+          <div class="write-field">
+            <label class="write-label" for="mHours">영업시간 Hours <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택)</em></label>
+            <input class="write-input" id="mHours" type="text" placeholder="예: 평일 9:00–18:00 · 토 9:00–13:00 · 견인 24시" maxlength="60" />
+          </div>
+        </div>
+        <div class="write-col">
+          <div class="write-field">
+            <label class="write-label" for="mPhone">📞 전화번호 Phone<span class="required-mark">*</span> <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(전화 + 문자 둘 다 활성)</em></label>
+            <input class="write-input" id="mPhone" type="tel" placeholder="04xx xxx xxx" maxlength="30" autocomplete="tel" />
+          </div>
+          <div class="write-field">
+            <label class="write-label" for="mKakao">💛 카톡 오픈채팅 링크 <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택)</em></label>
+            <input class="write-input" id="mKakao" type="url" placeholder="https://open.kakao.com/o/..." maxlength="500" />
+          </div>
+          <div class="write-field">
+            <label class="write-label" for="mContact">기타 통합 입력 Misc <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택 · 위 분리 필드 우선)</em></label>
+            <input class="write-input" id="mContact" type="text" placeholder="기타 연락 수단·예약 방법·메모 등 자유 입력" maxlength="200" />
+          </div>
+        </div>
+        <div class="write-field write-field--grow" style="grid-column:1/-1;">
+          <label class="write-label" for="mBody">서비스 설명 Comments</label>
+          <textarea class="write-textarea" id="mBody" placeholder="제공 서비스(정비·검사·견인 등)·전문 분야·요금 안내·예약 방법 등을 자유롭게 적어주세요"></textarea>
+        </div>
+        <!-- 사진 첨부 (선택 6장) -->
+        <div class="write-field" style="grid-column:1/-1;">
+          <label class="write-label">업체 사진 Photos <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택 · 최대 6장)</em></label>
+          <button type="button" class="photo-upload-btn" id="maintPhotoBtn" style="display:flex;align-items:center;gap:8px;padding:11px 16px;border:1.5px dashed var(--border);border-radius:10px;background:var(--bg-input);color:var(--text-muted);font-size:14px;font-weight:600;cursor:pointer;width:100%;justify-content:center;">
+            <span aria-hidden="true">📷</span>
+            <span id="maintPhotoBtnLabel">사진 첨부 (0/6)</span>
+          </button>
+          <input type="file" id="maintPhotoInput" accept="image/*" multiple style="display:none;" />
+          <div class="photo-thumbs" id="maintPhotoThumbs" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;"></div>
         </div>
       </div>
 
@@ -1175,18 +1222,16 @@
         if (cfg.write === 'user') { wb.style.display = ''; wb.textContent = '+ 글쓰기'; }
         else                       { wb.style.display = 'none'; }
       }
-      // 등록 요청 버튼: 렌트카(none) 와 used(직접 글쓰기) 에서는 비노출
+      // 등록 요청/문의 모달 진입점 전면 폐기 (2026-06: 정비소/견인도 직접 글쓰기로 통일).
+      //   · '등록 요청' 버튼 — 어느 카테고리에서도 노출 안 함.
       const rq = document.getElementById('requestBtnOpen');
-      if (rq) {
-        const REQ_OK = new Set(['maintenance','towing']);
-        rq.hidden = !REQ_OK.has(cat);
-      }
+      if (rq) rq.hidden = true;
       // 견인 카테고리에서만 하단 외부 견인 서비스 안내 배너 노출
       const tb = document.getElementById('towBanner');
       if (tb) tb.style.display = (cat === 'towing') ? '' : 'none';
-      // 페이지 헤더 우측 [문의하기] 버튼: 인스펙션/정비소/견인에서만 노출 (렌트카 제외)
+      // 페이지 헤더 우측 [문의하기] 버튼 — 등록 문의 흐름 폐기로 전 카테고리 비노출
       const iq = document.getElementById('autoInquiryBtn');
-      if (iq) iq.style.display = (cat === 'rental') ? 'none' : '';
+      if (iq) iq.style.display = 'none';
       // 카테고리별 하단 주의사항 갱신
       const AUTO_DISCLAIMER = {
         rental:      '※ 이용자 본인의 사정에 따른 실제 차량 대여, 보험 및 계약 조건은 해당 렌트카 업체와 직접 확인해 주세요.',
@@ -1458,12 +1503,19 @@
       document.querySelectorAll('#writeOverlay .cat-form').forEach(f => {
         f.style.display = (f.dataset.form === activeCategory) ? '' : 'none';
       });
+      // 카테고리별 작성 주의사항 문구 갱신 (used=차량 / maintenance=업체 자율 등록)
+      const rt = document.getElementById('writeRulesText');
+      if (rt) rt.textContent = (activeCategory === 'maintenance')
+        ? '💡 실제 운영 중인 업체 정보만 등록해 주세요. 업체명·위치·연락처·영업시간을 정확히 기재하고, 제공 서비스와 요금 안내는 본문에 적어주세요. 허위·과장 정보는 제재 대상입니다.'
+        : '💡 차량 매매 및 대여 시 RWC(정비점검표) 발급 여부와 레지(Rego) 만료일을 반드시 명시해 주세요. 거래 전 차량 인스펙션 및 시승을 필수적으로 진행하는 것을 권장합니다.';
     }
 
     function resetWriteForm() {
-      ['rTitle','rBrand','rModel','rYear','rMileage','rRwc','rRego','rPrice','rRegion','rContact','rPhone','rKakao','rBody'].forEach(id => {
+      ['rTitle','rBrand','rModel','rYear','rMileage','rRwc','rRego','rPrice','rRegion','rContact','rPhone','rKakao','rBody',
+       'mTitle','mRegion','mHours','mPhone','mKakao','mContact','mBody'].forEach(id => {
         const el = document.getElementById(id); if (el) el.value = '';
       });
+      try { window.dispatchEvent(new Event('koaus-maint-form-reset')); } catch (_) {}
     }
     // 로그인 사용자 닉네임 (작성자 고정값)
     function currentNickname() {
@@ -1488,11 +1540,14 @@
     function openWriteModalForEdit(p) {
       editingId = p.id;
       const cat = groupOf(p.category);
-      if (cat === 'rental') {
+      if (cat === 'used' || cat === 'rental') {
         _set('rTitle', p.title); _set('rBrand', p.brand); _set('rModel', p.model);
         _set('rYear', p.year); _set('rMileage', p.mileage); _set('rRwc', p.rwc);
         _set('rRego', p.regoExpiry); _set('rPrice', p.price); _set('rRegion', p.region);
         _set('rContact', p.contact); _set('rPhone', p.phone); _set('rKakao', p.kakaoLink); _set('rBody', p.body);
+      } else if (cat === 'maintenance') {
+        _set('mTitle', p.title); _set('mRegion', p.region || p.address); _set('mHours', p.hours);
+        _set('mPhone', p.phone); _set('mKakao', p.kakaoLink); _set('mContact', p.contact); _set('mBody', p.body);
       }
       document.getElementById('wAuthorName').textContent = p.author || currentNickname() || '-';
       setWriteMode('edit');
@@ -1588,6 +1643,7 @@
     //   · maintenance/towing 카테고리는 글쓰기 = inquiry 폼이라 글쓰기 자동완성 대상 외.
     function initAddressAutocomplete() {
       wireAutocomplete('rRegion', 'rRegionSuggest');     // used 글쓰기
+      wireAutocomplete('mRegion', 'mRegionSuggest');     // maintenance 글쓰기 (업체 위치)
       wireAutocomplete('ffRegion', 'ffRegionSuggest');   // 필터 모달 (used)
     }
 
@@ -1668,8 +1724,33 @@
             fields.locationPrivate = false;
           }
         }
+      } else if (activeCategory === 'maintenance') {
+        // 정비소/견인: 업체 자율 등록 (차량 필드 없음). 필수 = 업체명·위치·연락처.
+        const title = _fv('mTitle'), body = _fv('mBody');
+        if (hasProfanity(title) || hasProfanity(body)) { wErr.textContent = '부적절한 단어가 포함되어 있습니다.'; return; }
+        if (!title) { alert('업체명(제목)을 입력해 주세요.'); return; }
+        const region = _fv('mRegion');
+        if (!region) { alert('위치(주소)를 입력해 주세요.'); return; }
+        const phone = _fv('mPhone'), contact = _fv('mContact');
+        if (!phone && !contact) { alert('연락처(전화번호 또는 기타 연락 수단)를 입력해 주세요.'); return; }
+        fields = {
+          title, body,
+          region,
+          address:   region,                 // 지도/상세 위치 표시는 address 사용
+          hours:     _fv('mHours'),
+          phone,
+          kakaoLink: _fv('mKakao'),
+          contact,
+          imageUrls: Array.isArray(window.__maintPhotoUrls) ? window.__maintPhotoUrls.slice(0, 6) : [],
+        };
+        // 좌표(자동완성 dataset) — 업체는 위치 공개 (locationPrivate 미적용)
+        const mRegionEl = document.getElementById('mRegion');
+        if (mRegionEl && mRegionEl.dataset.lat && mRegionEl.dataset.lng) {
+          fields.lat = Number(mRegionEl.dataset.lat);
+          fields.lng = Number(mRegionEl.dataset.lng);
+        }
       } else {
-        return;  // 정비소/견인은 직접 글쓰기 불가 (관리자 등록 문의)
+        return;  // 그 외 카테고리(rental 조회 전용 등)는 직접 글쓰기 불가
       }
 
       const nick = currentNickname() || user.displayName?.split(' ')[0] || user.email?.split('@')[0] || '사용자';
@@ -1899,31 +1980,31 @@
     }
 
     // ── 카테고리별 카드 렌더러 ──
-    // 렌트카: 쉐어(accom)와 동일 크기 세로형 카드 (가격 총액 $, 본인글 파란 테두리, 북마크)
+    // 렌트카(중고차/렌트): accom 카드 마크업 100% 동일 — 제목(좌+액션) / 가격·지역 2줄 고정.
+    //   · brand/model/year/mileage/rwc/regoExpiry 칩은 상세 모달로 이관 (카드 높이 통일).
     function rentalCardHtml(p) {
       const saved = isSaved(p.id);
-      const priceHtml = p.price ? `<span class="accom-price">$${escHtml(String(p.price))}</span>` : '<span class="accom-card-find">가격 협의</span>';
-      const cs = [];
-      const bm = [p.brand, p.model].filter(Boolean).join(' ');
-      if (bm) cs.push('🚗 ' + bm);
-      if (p.year) cs.push('📅 ' + p.year + '년');
-      if (p.mileage) cs.push('🛣 ' + Number(p.mileage).toLocaleString() + 'km');
-      if (p.rwc === 'yes') cs.push('✅ RWC 있음'); else if (p.rwc === 'no') cs.push('RWC 없음');
-      if (p.regoExpiry) cs.push('🗓 REGO ' + p.regoExpiry);
-      const chips = cs.map(c => `<span class="accom-tag">${escHtml(c)}</span>`).join('');
+      const priceHtml = p.price
+        ? `<span class="accom-price">$${escHtml(String(p.price))}</span>`
+        : '<span class="accom-card-find">가격 협의</span>';
       return `
         <div class="accom-card${isMine(p) ? ' my-post-highlight' : ''}${p.isPremium ? ' is-premium' : ''}" data-id="${p.id}">
           <div class="accom-card-thumb">
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l1.5-4.5A2 2 0 0 1 8.4 7h7.2a2 2 0 0 1 1.9 1.5L19 13"/><path d="M3 13h18v4a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1v-1H6v1a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><circle cx="7.5" cy="15.5" r="1"/><circle cx="16.5" cy="15.5" r="1"/></svg>
+            ${(Array.isArray(p.imageUrls) && p.imageUrls.length)
+              ? `<img src="${escHtml(p.imageUrls[0])}" alt="${escHtml(p.title || '')}" loading="lazy" />`
+              : '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l1.5-4.5A2 2 0 0 1 8.4 7h7.2a2 2 0 0 1 1.9 1.5L19 13"/><path d="M3 13h18v4a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1v-1H6v1a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><circle cx="7.5" cy="15.5" r="1"/><circle cx="16.5" cy="15.5" r="1"/></svg>'}
           </div>
           <div class="accom-card-info">
-            <div class="accom-card-line1">
-              ${priceHtml}
-              <button class="bookmark-btn${saved ? ' is-saved' : ''}" data-id="${p.id}" title="저장한 글" aria-label="저장">${saved ? '★' : '☆'}</button>
+            <div class="accom-card-row1">
+              <div class="accom-card-title2">${p.isPremium ? '<span class="insp-ad-badge">AD</span> ' : ''}${escHtml(p.title)}</div>
+              <div class="accom-card-actions">
+                <button class="bookmark-btn${saved ? ' is-saved' : ''}" data-id="${p.id}" title="저장한 글" aria-label="저장">${saved ? '★' : '☆'}</button>
+              </div>
             </div>
-            <div class="accom-card-title2">${p.isPremium ? '<span class="insp-ad-badge">AD</span> ' : ''}${escHtml(p.title)}</div>
-            ${p.region ? `<div class="accom-card-sub">📍 ${escHtml(p.region)}</div>` : ''}
-            ${chips ? `<div class="accom-card-chips">${chips}</div>` : ''}
+            <div class="accom-card-row2">
+              <div class="accom-card-price-wrap">${priceHtml}</div>
+              ${p.region ? `<div class="accom-card-sub">📍 ${escHtml(p.region)}</div>` : ''}
+            </div>
           </div>
         </div>`;
     }
@@ -1940,11 +2021,31 @@
           <button class="auto-li-btn" data-id="${p.id}" type="button">${btnLabel}</button>
         </div>`;
     }
+    // 정비소/견인: accom 카드 마크업 통일 — 제목(좌+북마크) / 위치(좌)·영업시간(우) 2줄 고정.
+    //   · 세부(연락처·서비스 설명·사진 갤러리)는 상세 모달로 이관 (카드 높이 통일).
     function maintenanceCardHtml(p) {
-      const f = [_field('📞', p.contact || '연락처 문의')];
-      if (p.price) f.push(_field('💲', '$' + p.price));
-      if (p.region || p.address) f.push(_field('📍', p.region || p.address));
-      return autoMiniCard(p, f.join(''), '문의하기');
+      const saved = isSaved(p.id);
+      const loc   = p.region || p.address || '';
+      return `
+        <div class="accom-card${isMine(p) ? ' my-post-highlight' : ''}${p.isPremium ? ' is-premium' : ''}" data-id="${p.id}">
+          <div class="accom-card-thumb">
+            ${(Array.isArray(p.imageUrls) && p.imageUrls.length)
+              ? `<img src="${escHtml(p.imageUrls[0])}" alt="${escHtml(p.title || '')}" loading="lazy" />`
+              : '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>'}
+          </div>
+          <div class="accom-card-info">
+            <div class="accom-card-row1">
+              <div class="accom-card-title2">${p.isPremium ? '<span class="insp-ad-badge">AD</span> ' : ''}${escHtml(p.title || '업체')}</div>
+              <div class="accom-card-actions">
+                <button class="bookmark-btn${saved ? ' is-saved' : ''}" data-id="${p.id}" title="저장한 글" aria-label="저장">${saved ? '★' : '☆'}</button>
+              </div>
+            </div>
+            <div class="accom-card-row2">
+              ${loc ? `<div class="accom-card-price-wrap"><span class="accom-card-find">📍 ${escHtml(loc)}</span></div>` : ''}
+              ${p.hours ? `<div class="accom-card-sub">🕒 ${escHtml(p.hours)}</div>` : ''}
+            </div>
+          </div>
+        </div>`;
     }
     function towingCardHtml(p) {
       const f = [_field('📞', p.contact || '연락처 문의')];
@@ -2025,8 +2126,10 @@
       // 상태 (카테고리)
       document.getElementById('detailStatus').innerHTML =
         `⚪ ${escHtml(CAT_LABELS[cat] || 'Auto')}${p.isPremium ? ' <span class="rea-dot">•</span> ⭐ 추천' : ''}`;
-      // 가격 (총액 $ — 주당 표기 제거)
-      const priceHtml = p.price ? `$${escHtml(String(p.price))}` : '<span class="rea-price-na">가격 협의</span>';
+      // 가격 (총액 $ — 주당 표기 제거). 정비소/견인(업체)은 가격 필드 없음 → 영업시간/문의 안내.
+      const priceHtml = (cat === 'maintenance')
+        ? (p.hours ? `<span class="rea-price-na">🕒 ${escHtml(p.hours)}</span>` : '<span class="rea-price-na">문의</span>')
+        : (p.price ? `$${escHtml(String(p.price))}` : '<span class="rea-price-na">가격 협의</span>');
       document.getElementById('detailPrice').innerHTML = priceHtml;
       // 지역/주소 + 복사
       const addrText = document.getElementById('detailAddrText');
@@ -2048,6 +2151,7 @@
         if (p.regoExpiry) sum.push('🗓 REGO ' + p.regoExpiry);
         if (p.contact) sum.push('📞 ' + p.contact);
       } else {
+        if (p.hours) sum.push('🕒 ' + p.hours);
         if (p.contact) sum.push('📞 ' + p.contact);
       }
       document.getElementById('detailSummary').innerHTML = sum.map(s => `<span class="rea-chip">${escHtml(s)}</span>`).join('');
@@ -3196,6 +3300,105 @@
       (window.__usedPhotoFiles || []).forEach(p => p.previewUrl && URL.revokeObjectURL(p.previewUrl));
       window.__usedPhotoFiles = [];
       window.__usedPhotoUrls  = [];
+      renderThumbs(); updateLabel();
+    });
+  </script>
+
+  <!-- ── 정비소/견인 사진 6장 첨부 + 미리보기 + Storage 업로드 (used 모듈과 동일 패턴, 격리) ── -->
+  <script type="module">
+    import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
+    import { getAuth } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
+    import { getStorage, ref, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-storage.js';
+    const cfg = {
+      apiKey:'AIzaSyCamqnt0bNUD9uz1N5BbCuQjSkWLSpPqlU', authDomain:'koaus-f564c.firebaseapp.com',
+      projectId:'koaus-f564c', storageBucket:'koaus-f564c.firebasestorage.app',
+      messagingSenderId:'663988594088', appId:'1:663988594088:web:ef30c2fd557407b00b299d',
+    };
+    const app  = getApps().length ? getApp() : initializeApp(cfg);
+    const auth = getAuth(app);
+    const storage = getStorage(app);
+
+    const MAX_PHOTOS = 6;
+    window.__maintPhotoUrls  = [];
+    window.__maintPhotoFiles = [];
+
+    const $$ = id => document.getElementById(id);
+    function updateLabel() {
+      const lb = $$('maintPhotoBtnLabel');
+      if (lb) lb.textContent = `사진 첨부 (${(window.__maintPhotoFiles || []).length}/${MAX_PHOTOS})`;
+    }
+    function renderThumbs() {
+      const wrap = $$('maintPhotoThumbs');
+      if (!wrap) return;
+      wrap.innerHTML = (window.__maintPhotoFiles || []).map((p, i) => `
+        <div style="position:relative;width:72px;height:72px;border-radius:8px;overflow:hidden;border:1px solid var(--border);background:var(--bg-elevated);">
+          <img src="${p.previewUrl}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;" />
+          <button type="button" data-idx="${i}" class="maint-photo-del" aria-label="삭제"
+            style="position:absolute;top:2px;right:2px;width:20px;height:20px;border-radius:50%;border:none;background:rgba(0,0,0,.65);color:#fff;font-size:11px;line-height:1;cursor:pointer;">×</button>
+          <span style="position:absolute;bottom:2px;left:4px;font-size:10px;color:#fff;background:rgba(0,0,0,.55);padding:1px 5px;border-radius:6px;">${i + 1}</span>
+        </div>`).join('');
+      wrap.querySelectorAll('.maint-photo-del').forEach(b => {
+        b.addEventListener('click', e => {
+          e.preventDefault();
+          const idx = Number(b.dataset.idx);
+          const item = window.__maintPhotoFiles[idx];
+          if (item && item.previewUrl) URL.revokeObjectURL(item.previewUrl);
+          window.__maintPhotoFiles.splice(idx, 1);
+          window.__maintPhotoUrls.splice(idx, 1);
+          renderThumbs(); updateLabel();
+        });
+      });
+    }
+    async function compressImage(file, maxW = 1280, quality = 0.82) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+        img.onload = () => {
+          const scale = Math.min(1, maxW / img.width);
+          const w = Math.round(img.width * scale), h = Math.round(img.height * scale);
+          const cvs = document.createElement('canvas');
+          cvs.width = w; cvs.height = h;
+          cvs.getContext('2d').drawImage(img, 0, 0, w, h);
+          cvs.toBlob(b => { URL.revokeObjectURL(url); b ? resolve(b) : reject(new Error('compress failed')); }, 'image/jpeg', quality);
+        };
+        img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('image load failed')); };
+        img.src = url;
+      });
+    }
+    function bindMaintPhoto() {
+      const btn = $$('maintPhotoBtn'), inp = $$('maintPhotoInput');
+      if (!btn || !inp) return;
+      btn.addEventListener('click', () => inp.click());
+      inp.addEventListener('change', async e => {
+        const files = Array.from(e.target.files || []);
+        e.target.value = '';
+        const remain = MAX_PHOTOS - (window.__maintPhotoFiles || []).length;
+        if (remain <= 0) { alert('최대 6장까지 첨부할 수 있습니다.'); return; }
+        const u = auth.currentUser;
+        if (!u) { alert('사진 업로드는 로그인 후 이용 가능합니다.'); return; }
+        for (const f of files.slice(0, remain)) {
+          try {
+            const blob = await compressImage(f);
+            const previewUrl = URL.createObjectURL(blob);
+            window.__maintPhotoFiles.push({ blob, previewUrl, name: f.name });
+            renderThumbs(); updateLabel();
+            const idx  = window.__maintPhotoFiles.length - 1;
+            const path = `post_images/maintenance/${u.uid}/${Date.now()}-${idx}.jpg`;
+            try {
+              const sref = ref(storage, path);
+              await uploadBytes(sref, blob, { contentType: 'image/jpeg' });
+              window.__maintPhotoUrls[idx] = await getDownloadURL(sref);
+            } catch (upErr) { console.warn('[maintenance] 사진 업로드 실패', upErr); }
+          } catch (cErr) { console.warn('[maintenance] 사진 압축 실패', cErr); }
+        }
+      });
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bindMaintPhoto, { once: true });
+    else bindMaintPhoto();
+    window.addEventListener('koaus-maint-form-reset', () => {
+      (window.__maintPhotoFiles || []).forEach(p => p.previewUrl && URL.revokeObjectURL(p.previewUrl));
+      window.__maintPhotoFiles = [];
+      window.__maintPhotoUrls  = [];
       renderThumbs(); updateLabel();
     });
   </script>

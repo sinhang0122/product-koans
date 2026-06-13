@@ -971,38 +971,41 @@
       const start = (currentPage - 1) * PER_PAGE;
       const pageItems = sorted.slice(start, start + PER_PAGE);
 
-      // accom(쉐어) 의 .accom-card 마크업 100% 동일 패턴 — jobs 데이터 매핑
-      //  · 백엔드(jobs_posts) 필드 0건 수정 — 시각 매핑만 (title/payAmount/empType/address)
+      // accom(쉐어) 카드 마크업 100% 동일 — 카드 높이 통일 (시안 2번).
+      //   · 카드 = 제목(좌+액션) / 시급(좌) · 위치(우, 서버브 단위) 2줄 고정.
+      //   · 고용형태·비자자격·작성일·작성자 표시는 카드에서 제거 → 상세 모달에서 노출.
       list.innerHTML = pageItems.map((p, i) => {
         const saved = isSaved(p.id);
-        const payText = p.payAmount ? `💵 $${escHtml(p.payAmount)} / ${escHtml(p.payUnit || '시간')}` : '';
-        const empText = p.empType   ? `🕒 ${escHtml(p.empType)}` : '';
-        const visaText= p.visaEligible ? '🌏 세컨/써드 가능' : '';
-        const addrText= p.address   ? `📍 ${escHtml(p.address)}` : '';
-        const metaParts = [payText, empText, visaText].filter(Boolean).join(' · ');
+        const payText = p.payAmount
+          ? `<span class="accom-price">$${escHtml(p.payAmount)}<small>/${escHtml(p.payUnit || '시간')}</small></span>`
+          : '<span class="accom-card-find">면접 후 협의</span>';
+        const addr = p.address || '';
         return `
-        <a class="accom-card${isMine(p) ? ' my-post-highlight' : ''}" data-id="${p.id}" style="cursor:pointer;text-decoration:none;color:inherit;">
-          <div class="accom-card-img">💼</div>
-          <div class="accom-card-body">
-            <div class="accom-card-title">${escHtml(p.title)}</div>
-            ${metaParts ? `<div class="accom-card-meta">${metaParts}</div>` : ''}
-            ${addrText  ? `<div class="accom-card-meta" style="font-size:11.5px;color:var(--text-muted);">${addrText}</div>` : ''}
-            <div class="accom-card-bottom-row">
-              <div class="accom-card-footer">
-                <span>${authorLabel(p)}</span>
-                <span>${escHtml(p.date)}${p.time ? ' ' + escHtml(p.time) : ''}</span>
-              </div>
-              <div class="post-mini-actions">
-                <button class="mini-btn mini-share" data-id="${p.id}" type="button">공유</button>
-                ${(!isMine(p) && !window.koausIsAdmin) ? `<button class="mini-btn mini-report" data-id="${p.id}" data-uid="${p.uid || p.authorUid || ''}" type="button">신고</button>` : ''}
-                ${(isMine(p) && !window.koausIsAdmin) ? `<button class="mini-btn mini-edit" data-id="${p.id}" type="button">수정</button>` : ''}
-                ${(isMine(p) || window.koausIsAdmin) ? `<button class="mini-btn mini-hide" data-id="${p.id}" type="button">숨김</button><button class="mini-btn mini-del" data-id="${p.id}" type="button">삭제</button>` : ''}
+        <div class="accom-card${isMine(p) ? ' my-post-highlight' : ''}" data-id="${p.id}">
+          <div class="accom-card-thumb">
+            ${(Array.isArray(p.imageUrls) && p.imageUrls.length)
+              ? `<img src="${escHtml(p.imageUrls[0])}" alt="${escHtml(p.title || '')}" loading="lazy" />`
+              : '<span style="font-size:26px;line-height:1;">💼</span>'}
+          </div>
+          <div class="accom-card-info">
+            <div class="accom-card-row1">
+              <div class="accom-card-title2">${escHtml(p.title)}</div>
+              <div class="accom-card-actions">
+                <button class="bookmark-btn${saved ? ' is-saved' : ''}" data-id="${p.id}" title="저장한 글" aria-label="저장">${saved ? '★' : '☆'}</button>
+                <div class="post-mini-actions">
+                  <button class="mini-btn mini-share" data-id="${p.id}" type="button">공유</button>
+                  ${(!isMine(p) && !window.koausIsAdmin) ? `<button class="mini-btn mini-report" data-id="${p.id}" data-uid="${p.uid || p.authorUid || ''}" type="button">신고</button>` : ''}
+                  ${(isMine(p) && !window.koausIsAdmin) ? `<button class="mini-btn mini-edit" data-id="${p.id}" type="button">수정</button>` : ''}
+                  ${(isMine(p) || window.koausIsAdmin) ? `<button class="mini-btn mini-hide" data-id="${p.id}" type="button">숨김</button><button class="mini-btn mini-del" data-id="${p.id}" type="button">삭제</button>` : ''}
+                </div>
               </div>
             </div>
+            <div class="accom-card-row2">
+              <div class="accom-card-price-wrap">${payText}</div>
+              ${addr ? `<div class="accom-card-sub">📍 ${escHtml(addr)}</div>` : ''}
+            </div>
           </div>
-          <button class="bookmark-btn${saved ? ' is-saved' : ''}" data-id="${p.id}" title="저장한 글" aria-label="저장"
-            style="position:absolute;top:10px;right:10px;z-index:2;background:rgba(255,255,255,0.9);border:1px solid var(--border);border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:16px;line-height:1;">${saved ? '★' : '☆'}</button>
-        </a>`;
+        </div>`;
       }).join('');
 
       list.querySelectorAll('.accom-card[data-id]').forEach(row => row.addEventListener('click', e => {

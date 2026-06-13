@@ -521,7 +521,7 @@
     </div>
     <!-- List View — accom-grid 패턴 (Map View 폐기) -->
     <section class="partner-board partner-board--list-only" id="partnerBoard">
-      <div class="partner-list" id="partnerList">
+      <div class="partner-list accom-grid accom-grid--compact" id="partnerList">
         <div class="post-empty">아직 등록된 파트너가 없습니다.</div>
       </div>
       <div class="pagination" id="pagination"></div>
@@ -606,6 +606,16 @@
           <div class="write-field write-field--full">
             <label class="write-label" for="vwContact">기타 통합 입력 (선택 · 위 분리 필드 우선)</label>
             <input class="write-input" id="vwContact" type="text" maxlength="100" placeholder="기타 연락 수단·시간대·메모 등 자유 입력" />
+          </div>
+          <!-- 사진 첨부 (선택 · 최대 6장) — 카드 썸네일·상세 갤러리 노출 -->
+          <div class="write-field write-field--full">
+            <label class="write-label">사진 첨부 Photos <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택 · 최대 6장)</em></label>
+            <button type="button" class="photo-upload-btn" id="vwPhotoBtn" style="display:flex;align-items:center;gap:8px;padding:11px 16px;border:1.5px dashed var(--border);border-radius:10px;background:var(--bg-input);color:var(--text-muted);font-size:14px;font-weight:600;cursor:pointer;width:100%;justify-content:center;">
+              <span aria-hidden="true">📷</span>
+              <span id="vwPhotoBtnLabel">사진 첨부 (0/6)</span>
+            </button>
+            <input type="file" id="vwPhotoInput" accept="image/*" multiple style="display:none;" />
+            <div class="photo-thumbs" id="vwPhotoThumbs" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;"></div>
           </div>
         </div>
           <!-- [필수] 게시 규정 동의 — agent.md §2-C Mandatory Consent (글쓰기 표준 철칙) -->
@@ -1097,28 +1107,36 @@
         const mine = _isAuthor(p);
         const fsId = p._fsDocId || '';
         const status = p.status || '';
-        // accom-card 클래스 추가 → admin-mark.js 의 .accom-card[data-id] 셀렉터 자동 인식
-        // data-fsid 부착 → 운영자 ✅⏸👁🗑 액션바 자동 주입 (admin 일 때만)
-        // data-status 부착 → completed/closed/hidden 시각 차이 (agent.md §2-E B항)
+        // 카드는 accom 기준 2줄(파트너명·액션 / 한줄 소개·지역) 통일.
+        //   · MARN·연락처·본문은 상세 모달로 이관 (카드 높이 통일).
+        //   · 추천(isPremium)은 제목 옆 ⭐ 1자로 축약.
+        //   · summary 1줄 ellipsis는 .accom-card-sub CSS 활용.
+        const titleHtml = `${p.isPremium ? '<span class="partner-card-badge">⭐</span> ' : ''}${escHtml(p.title || '파트너')}`;
         return `
         <div class="accom-card partner-card${p.isPremium ? ' is-premium' : ''}${mine ? ' my-post-highlight' : ''}"
              data-id="${escHtml(p.id || fsId)}" data-fsid="${escHtml(fsId)}" data-status="${escHtml(status)}">
-          <div class="partner-card-head">
-            <span class="partner-card-name">${escHtml(p.title || '파트너')}</span>
-            ${p.isPremium ? '<span class="partner-card-badge">추천</span>' : ''}
+          <div class="accom-card-thumb">
+            ${(Array.isArray(p.imageUrls) && p.imageUrls.length)
+              ? `<img src="${escHtml(p.imageUrls[0])}" alt="${escHtml(p.title || '')}" loading="lazy" />`
+              : '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>'}
           </div>
-          ${p.summary ? `<div class="partner-card-sub">${escHtml(p.summary)}</div>` : ''}
-          ${p.marn    ? `<div class="partner-card-meta">🪪 MARN ${escHtml(p.marn)}</div>` : ''}
-          ${p.region  ? `<div class="partner-card-meta">📍 ${escHtml(p.region)}</div>` : ''}
-          ${p.contact ? `<div class="partner-card-meta">📞 ${escHtml(p.contact)}</div>` : ''}
-          ${p.body    ? `<div class="partner-card-body">${escHtml(p.body)}</div>` : ''}
-          ${mine ? `
-          <!-- RBAC 작성자 미니 액션 (agent.md §2-E A — 작성자 본인 전용) -->
-          <div class="post-mini-actions" data-rbac="author">
-            <button class="mini-btn mini-edit"     data-rbac-act="edit"     data-fsid="${escHtml(fsId)}" type="button" title="수정">수정</button>
-            <button class="mini-btn mini-complete" data-rbac-act="complete" data-fsid="${escHtml(fsId)}" type="button" title="마감 처리">마감</button>
-            <button class="mini-btn mini-del"      data-rbac-act="delete"   data-fsid="${escHtml(fsId)}" type="button" title="삭제">삭제</button>
-          </div>` : ''}
+          <div class="accom-card-info">
+            <div class="accom-card-row1">
+              <div class="accom-card-title2">${titleHtml}</div>
+              ${mine ? `
+              <div class="accom-card-actions">
+                <div class="post-mini-actions" data-rbac="author">
+                  <button class="mini-btn mini-edit"     data-rbac-act="edit"     data-fsid="${escHtml(fsId)}" type="button" title="수정">수정</button>
+                  <button class="mini-btn mini-complete" data-rbac-act="complete" data-fsid="${escHtml(fsId)}" type="button" title="마감 처리">마감</button>
+                  <button class="mini-btn mini-del"      data-rbac-act="delete"   data-fsid="${escHtml(fsId)}" type="button" title="삭제">삭제</button>
+                </div>
+              </div>` : ''}
+            </div>
+            <div class="accom-card-row2">
+              ${p.summary ? `<div class="accom-card-price-wrap"><span class="accom-card-find">${escHtml(p.summary)}</span></div>` : ''}
+              ${p.region  ? `<div class="accom-card-sub">📍 ${escHtml(p.region)}</div>` : ''}
+            </div>
+          </div>
         </div>`;
       }).join('');
 
@@ -1236,7 +1254,7 @@
         try { ensureVisaMap(); } catch (_) {}
         try { wireVisaAddressAutocomplete(); } catch (_) {}
       }
-      function closeWrite() { overlay.classList.remove('open'); ['vwTitle','vwBody','vwAddress','vwContact','vwPhone','vwKakao'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; }); document.getElementById('vwError').textContent = ''; const sg = document.getElementById('vwAddressSuggest'); if (sg) { sg.classList.remove('show'); sg.innerHTML = ''; } }
+      function closeWrite() { overlay.classList.remove('open'); ['vwTitle','vwBody','vwAddress','vwContact','vwPhone','vwKakao'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; }); document.getElementById('vwError').textContent = ''; const sg = document.getElementById('vwAddressSuggest'); if (sg) { sg.classList.remove('show'); sg.innerHTML = ''; } try { window.dispatchEvent(new Event('koaus-visa-form-reset')); } catch (_) {} }
 
       // ── 주소 자동완성 (Google Places AutocompleteService) ──
       // · Maps API 비동기 로드 후 wire — google.maps.places 가 준비되면 즉시 연결
@@ -1583,6 +1601,7 @@
           body: body || ' ',          // optStr('body', 5000) — 빈 본문도 통과
           address, contact: contactSafe, visaType,
           phone, kakaoLink,           // 분리 연락처 — koaus-contact-actions.js 자동 버튼 렌더
+          imageUrls: Array.isArray(window.__visaPhotoUrls) ? window.__visaPhotoUrls.slice(0, 6) : [],  // 사진 (services.create optUrlList 허용 — rules 무변경)
           ...(category === 'legal' ? { marn } : {}),
           ...(providedBy ? { providedBy } : {}),
           ...(lastReviewedAt ? { lastReviewedAt } : {}),
@@ -1933,6 +1952,106 @@
         } else { box.hidden = true; box.innerHTML = ''; }
       }, err => console.warn('[points] pinned-notice 구독 실패', err));
     } catch (e) { console.warn('[points] pinned-notice 초기화 실패', e); }
+  </script>
+
+  <!-- ── 사진 첨부 (선택 6장) + 미리보기 + Storage 업로드 (auto used 패턴 이식) ── -->
+  <script type="module">
+    import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
+    import { getAuth } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
+    import { getStorage, ref, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-storage.js';
+    const cfg = {
+      apiKey:'AIzaSyCamqnt0bNUD9uz1N5BbCuQjSkWLSpPqlU', authDomain:'koaus-f564c.firebaseapp.com',
+      projectId:'koaus-f564c', storageBucket:'koaus-f564c.firebasestorage.app',
+      messagingSenderId:'663988594088', appId:'1:663988594088:web:ef30c2fd557407b00b299d',
+    };
+    const app  = getApps().length ? getApp() : initializeApp(cfg);
+    const auth = getAuth(app);
+    const storage = getStorage(app);
+
+    const MAX_PHOTOS = 6;
+    window.__visaPhotoUrls  = [];   // 등록 payload 가 읽어가는 업로드 URL 목록
+    window.__visaPhotoFiles = [];   // 로컬 blob + previewUrl
+
+    const $$ = id => document.getElementById(id);
+    function updateLabel() {
+      const lb = $$('vwPhotoBtnLabel');
+      if (lb) lb.textContent = `사진 첨부 (${(window.__visaPhotoFiles || []).length}/${MAX_PHOTOS})`;
+    }
+    function renderThumbs() {
+      const wrap = $$('vwPhotoThumbs');
+      if (!wrap) return;
+      wrap.innerHTML = (window.__visaPhotoFiles || []).map((p, i) => `
+        <div style="position:relative;width:72px;height:72px;border-radius:8px;overflow:hidden;border:1px solid var(--border);background:var(--bg-elevated);">
+          <img src="${p.previewUrl}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;" />
+          <button type="button" data-idx="${i}" class="visa-photo-del" aria-label="삭제"
+            style="position:absolute;top:2px;right:2px;width:20px;height:20px;border-radius:50%;border:none;background:rgba(0,0,0,.65);color:#fff;font-size:11px;line-height:1;cursor:pointer;">×</button>
+          <span style="position:absolute;bottom:2px;left:4px;font-size:10px;color:#fff;background:rgba(0,0,0,.55);padding:1px 5px;border-radius:6px;">${i + 1}</span>
+        </div>`).join('');
+      wrap.querySelectorAll('.visa-photo-del').forEach(b => {
+        b.addEventListener('click', e => {
+          e.preventDefault();
+          const idx = Number(b.dataset.idx);
+          const item = window.__visaPhotoFiles[idx];
+          if (item && item.previewUrl) URL.revokeObjectURL(item.previewUrl);
+          window.__visaPhotoFiles.splice(idx, 1);
+          window.__visaPhotoUrls.splice(idx, 1);
+          renderThumbs(); updateLabel();
+        });
+      });
+    }
+    // Canvas 압축 (module 격리 — 자체 구현, auto used 동일)
+    async function compressImage(file, maxW = 1280, quality = 0.82) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+        img.onload = () => {
+          const scale = Math.min(1, maxW / img.width);
+          const w = Math.round(img.width * scale), h = Math.round(img.height * scale);
+          const cvs = document.createElement('canvas');
+          cvs.width = w; cvs.height = h;
+          cvs.getContext('2d').drawImage(img, 0, 0, w, h);
+          cvs.toBlob(b => { URL.revokeObjectURL(url); b ? resolve(b) : reject(new Error('compress failed')); }, 'image/jpeg', quality);
+        };
+        img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('image load failed')); };
+        img.src = url;
+      });
+    }
+    function bindVisaPhoto() {
+      const btn = $$('vwPhotoBtn'), inp = $$('vwPhotoInput');
+      if (!btn || !inp) return;
+      btn.addEventListener('click', () => inp.click());
+      inp.addEventListener('change', async e => {
+        const files = Array.from(e.target.files || []);
+        e.target.value = '';
+        const remain = MAX_PHOTOS - (window.__visaPhotoFiles || []).length;
+        if (remain <= 0) { alert('최대 6장까지 첨부할 수 있습니다.'); return; }
+        const u = auth.currentUser;
+        if (!u) { alert('사진 업로드는 로그인 후 이용 가능합니다.'); return; }
+        for (const f of files.slice(0, remain)) {
+          try {
+            const blob = await compressImage(f);
+            const previewUrl = URL.createObjectURL(blob);
+            window.__visaPhotoFiles.push({ blob, previewUrl, name: f.name });
+            renderThumbs(); updateLabel();
+            const idx  = window.__visaPhotoFiles.length - 1;
+            const path = `post_images/points/${u.uid}/${Date.now()}-${idx}.jpg`;
+            try {
+              const sref = ref(storage, path);
+              await uploadBytes(sref, blob, { contentType: 'image/jpeg' });
+              window.__visaPhotoUrls[idx] = await getDownloadURL(sref);
+            } catch (upErr) { console.warn('[points] 사진 업로드 실패', upErr); }
+          } catch (cErr) { console.warn('[points] 사진 압축 실패', cErr); }
+        }
+      });
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bindVisaPhoto, { once: true });
+    else bindVisaPhoto();
+    // 글쓰기 모달 닫힘/초기화 시 사진 상태 리셋 (closeWrite 가 디스패치)
+    window.addEventListener('koaus-visa-form-reset', () => {
+      (window.__visaPhotoFiles || []).forEach(p => p.previewUrl && URL.revokeObjectURL(p.previewUrl));
+      window.__visaPhotoFiles = []; window.__visaPhotoUrls = [];
+      renderThumbs(); updateLabel();
+    });
   </script>
 </body>
 </html>

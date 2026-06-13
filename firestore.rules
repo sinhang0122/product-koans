@@ -188,6 +188,7 @@ service cloud.firestore {
         && pOptStr(d, 'mileage', 20)
         && pOptStr(d, 'rwc', 20)
         && pOptStr(d, 'regoExpiry', 20)
+        && pOptStr(d, 'hours', 60)
         && pOptStr(d, 'timeSlot', 60)
         && pOptInt(d, 'price', 0, 9999999)
         && pOptInt(d, 'inspectionPrice', 0, 9999999)
@@ -203,7 +204,7 @@ service cloud.firestore {
              'title', 'body', 'mode', 'contact', 'phone', 'kakaoLink',
              'address', 'lat', 'lng', 'locationPrivate', 'imageUrls',
              'category', 'region', 'brand', 'model', 'year', 'mileage',
-             'rwc', 'regoExpiry', 'isPremium', 'timeSlot',
+             'rwc', 'regoExpiry', 'hours', 'isPremium', 'timeSlot',
              'inspectionAvailable', 'inspectionPrice',
              'emergencyAvailable', 'emergencyPrice', 'price'
            ]);
