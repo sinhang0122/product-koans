@@ -535,10 +535,15 @@
         <!-- 폼 본문 — 4개 입력 필드 + 등록 버튼 -->
         <form id="dashTopNoticeForm" class="space-y-5" autocomplete="off">
 
-          <!-- 운영자 공지 — 한 줄 알림 전용 (광고주/게시자명 입력 폐기 2026-06) -->
-          <div class="p-3 bg-gray-50 border border-gray-200 rounded-lg">
-            <p class="text-sm text-gray-700 font-semibold mb-1">📢 운영자 공지 — 한 줄 알림용</p>
-            <p class="text-xs text-gray-500">마퀴는 운영자 알림 채널입니다. 좌측 배지는 <code class="px-1 py-0.5 bg-gray-100 rounded text-gray-700">📢 KoAus</code> 로 고정됩니다. 광고주 강조는 <b>히어로 배너 + 타겟 광고</b>를 이용하세요.</p>
+          <!-- A) 광고주 -->
+          <div>
+            <label for="dashNoticeSponsor" class="block text-sm text-gray-700 font-semibold mb-2">
+              광고주 / 게시자 <span class="text-red-500">*</span>
+            </label>
+            <input id="dashNoticeSponsor" name="sponsor" type="text" maxlength="60"
+                   placeholder="예: KoAus · 데이브 정비소 · 시드니 한인협회"
+                   class="w-full p-3 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent" />
+            <p class="mt-1.5 text-xs text-gray-500">마퀴 좌측 고정 라벨에 표시됩니다 (예: <code class="px-1 py-0.5 bg-gray-100 rounded text-gray-700">📢 KoAus</code>).</p>
           </div>
 
           <!-- B) 우선순위 -->
@@ -1213,19 +1218,19 @@
       const btn  = document.getElementById('dashNoticeSubmit');
       try {
         if (!auth.currentUser) { flashNote(note, '로그인이 필요합니다.', false); return; }
+        const sponsor  = (document.getElementById('dashNoticeSponsor').value || '').trim();
         const priority = Number(document.getElementById('dashNoticePriority').value) || 100;
         const action   = (document.getElementById('dashNoticeAction').value || 'link');
         const url      = (document.getElementById('dashNoticeUrl').value || '').trim();
         const text     = (document.getElementById('dashNoticeText').value || '').trim();
-        if (!text) { flashNote(note, '공지 본문은 필수입니다.', false); return; }
+        if (!sponsor || !text) { flashNote(note, '스폰서명과 본문은 필수입니다.', false); return; }
         if (btn) { btn.disabled = true; btn.textContent = '저장 중…'; }
-        // 마퀴 = 운영자 한 줄 알림 전용 — sponsor(광고주명) 저장 폐기(2026-06). text 만 노출.
-        //   · notices 스키마의 sponsor 필드는 옛 데이터 호환 위해 유지하되 신규 저장 안 함.
+        // payload 통일: text(필수, marquee.js data.text) + link(marquee.js data.link 호환, url 와 동일값)
         const payload = {
           text,                          // 마퀴 본문 (marquee.js 읽음)
           link: url || '',               // marquee.js data.link — 클릭 이동 URL
           url,                           // admin UI 옵션 (link 와 같은 값, 향후 분리 대비)
-          priority, action, active: true,
+          sponsor, priority, action, active: true,
         };
         if (_noticeEditId) {
           await updateDoc(doc(db, 'notices', _noticeEditId), Object.assign({}, payload, { updatedAt: serverTimestamp() }));
@@ -1286,12 +1291,12 @@
         });
         li.appendChild(orderBox);
 
-        // 본문 — 운영자 배지(고정) + text + 등록일 (textContent 만 사용: XSS 안전)
+        // 본문 — sponsor + text + 등록일 (textContent 만 사용: XSS 안전)
         const body = document.createElement('div');
         body.className = 'flex-1 min-w-0';
         const top = document.createElement('p');
         top.className = 'text-sm font-semibold text-gray-900 truncate';
-        top.textContent = '📢 KoAus';
+        top.textContent = (d.sponsor || '').trim() || '📢 공지';
         const mid = document.createElement('p');
         mid.className = 'text-sm text-gray-700 truncate';
         mid.textContent = d.text || '';
@@ -1326,6 +1331,7 @@
     function startNoticeEdit(row) {
       const d = row.data;
       _noticeEditId = row.id;
+      document.getElementById('dashNoticeSponsor').value  = d.sponsor || '';
       document.getElementById('dashNoticePriority').value = _nPri(d);
       document.getElementById('dashNoticeAction').value   = d.action || 'external';
       document.getElementById('dashNoticeUrl').value      = d.url || d.link || '';
@@ -1338,7 +1344,7 @@
     }
 
     async function deleteNotice(row) {
-      const label = '📢 ' + (row.data.text || '').slice(0, 40);
+      const label = ((row.data.sponsor || '').trim() || '📢 공지') + ' — ' + (row.data.text || '').slice(0, 30);
       if (!confirm('이 공지를 삭제할까요?\n\n' + label)) return;
       try {
         await deleteDoc(doc(db, 'notices', row.id));
