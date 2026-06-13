@@ -1440,7 +1440,7 @@
           if (wsb) { wsb.disabled = true; wsb.textContent = `사진 업로드 중… 0/${window.pendingPhotoFiles.length}`; }
           const urls = await window.koausPhotos.uploadPostImages(
             window.koausPhotos.app,
-            `post_images/accom/${target.id}`,
+            `post_images/gp/${user.uid}`,
             window.pendingPhotoFiles.map(p => p.file),
             { maxDim: 1200, quality: 0.7, onProgress: (i, total) => {
               if (wsb) wsb.textContent = `사진 업로드 중… ${i}/${total}`;
