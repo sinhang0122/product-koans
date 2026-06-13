@@ -210,6 +210,51 @@ service cloud.firestore {
            ]);
     }
 
+    // services 일반 유저 create 검증기 (validAutoCreate 패턴 — let d + pOpt*(d), data() 재호출 0).
+    //   · services 는 6개 보드(points/auto/gp/salon/restaurants/trades)가 제각각 스키마로 쓰는
+    //     통합 컬렉션 → 풀 hasOnly 는 백로그(trades 업체폼 표준화 후). 현재는 미검증 문자열 길이캡(B-2a).
+    //   · ⚠️ hoursJson(map)·lat/lng(float)·types/roomTypes(string[]) 는 캡 제외 — pOptStr 적용 시
+    //     타입 불일치로 create 거부됨. 필드 추가 시 여기 캡만 갱신.
+    function validServicesUserCreate() {
+      let d = request.resource.data;
+      return isSignedIn()
+        && notSuspended()
+        && (d.status == 'pending' || d.status == 'approved')
+        && d.uid == request.auth.uid
+        && pReqStr(d, 'category', 1, 50)
+        && pReqStr(d, 'title', 1, 200)
+        && pReqStr(d, 'contact', 1, 200)
+        && pOptStr(d, 'region', 500)
+        && pOptStr(d, 'address', 500)
+        && pOptStr(d, 'summary', 500)
+        && pOptStr(d, 'body', 5000)
+        && pOptStr(d, 'state', 10)
+        && pOptList(d, 'imageUrls', 8)
+        // [B4] legal(법무법인/비자·이민) 글은 MARN 7자리 필수 — OMARA 등록 대리인만 (소비자 보호)
+        && (d.category != 'legal'
+            || ('marn' in d && d.marn is string && d.marn.matches('^[0-9]{7}$')))
+        && pOptStr(d, 'marn', 7)
+        && pOptStr(d, 'providedBy', 100)
+        && pOptStr(d, 'lastReviewedAt', 30)
+        // ── 미검증 문자열 필드 길이캡 (doc bloat 방어, B-2a) ──
+        && pOptStr(d, 'phone', 30)
+        && pOptStr(d, 'kakaoLink', 500)
+        && pOptStr(d, 'tagline', 500)
+        && pOptStr(d, 'visaType', 30)
+        && pOptStr(d, 'hours', 200)
+        && pOptStr(d, 'author', 100)
+        && pOptStr(d, 'authorId', 64)
+        && pOptStr(d, 'authorUid', 64)
+        && pOptStr(d, 'authorEmail', 200)
+        && pOptStr(d, 'email', 200)
+        && pOptStr(d, 'mode', 20)
+        && pOptStr(d, 'gender', 20)
+        && pOptStr(d, 'availableDate', 40)
+        && pOptInt(d, 'price', 0, 9999999)
+        && pOptBool(d, 'adminPost')
+        && pOptBool(d, 'isUserPost');
+    }
+
     // ── 작성자 update 가드 (운영자 모더레이션 필드 변조 차단) ──
     //   · 일반 작성자가 자기 글을 수정할 때, 운영자 전용 필드(블라인드·신고누적·역할·모더레이션 타임스탬프)를
     //     새로 부여하거나 기존 값을 바꾸지 못하도록 잠근다.
@@ -680,33 +725,9 @@ service cloud.firestore {
           && optStr('status',   30)
           && optUrlList('imageUrls', 8)
         )
-        // ② 일반 로그인 유저 등록 — 자율 등록형 게시판 (UGC):
-        //    status 는 'pending' 또는 'approved' 둘 다 허용 (비자/유학 등 즉시 노출 컨셉)
-        //    · authorId / uid 본인 일치 강제 (오너십 보안)
-        || ( isSignedIn()
-             && notSuspended()
-             && (request.resource.data.status == 'pending'
-                 || request.resource.data.status == 'approved')
-             && request.resource.data.uid == request.auth.uid
-             && reqStr('category', 1, 50)
-             && reqStr('title', 1, 200)
-             && reqStr('contact', 1, 200)
-             && optStr('region',  500)
-             && optStr('address', 500)
-             && optStr('summary', 500)
-             && optStr('body',   5000)
-             && optStr('state',    10)
-             && optUrlList('imageUrls', 8)
-             // [B4] legal(법무법인/비자·이민) 글은 MARN 7자리 필수 — OMARA 등록 대리인만
-             //      유료 이민 자문 가능 (소비자 보호). 다른 카테고리는 marn 없어도 통과.
-             && (request.resource.data.category != 'legal'
-                 || ('marn' in request.resource.data
-                     && request.resource.data.marn is string
-                     && request.resource.data.marn.matches('^[0-9]{7}$')))
-             && optStr('marn', 7)
-             && optStr('providedBy', 100)
-             && optStr('lastReviewedAt', 30)
-           );
+        // ② 일반 로그인 유저 등록 — 자율 등록형 게시판 (UGC). 검증기 분리(validAutoCreate 패턴):
+        //    let d + pOpt*(d) 로 data() 재호출 0 → 1,000 표현식 한도 안전(B-2a 길이캡 16종 포함).
+        || validServicesUserCreate();
 
       // 본인 글 수정/삭제 허용 (RBAC 작성자 액션) + admin 강제 권한
       //   · 작성자: uid 매칭 + uid 잠금 + 운영자 모더레이션 필드 변조 차단 + status 화이트리스트
