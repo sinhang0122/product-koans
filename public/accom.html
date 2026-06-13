@@ -2945,6 +2945,23 @@
           </div>`;
       }
 
+      // ── #5 Map Drawer (2026-06): 마커 클릭 → 지도 하단 가로 카드 drawer (InfoWindow 폐기) ──
+      //   단일 = 클릭 글 + 최근거리 9장(주변 비교) / 클러스터(같은 4자리 좌표 N건) = 그 N건.
+      //   카드 콘텐츠는 buildAccomPreview 재사용(정보 손실 0), .iw-card[data-pid] 위임 click 이 상세 처리.
+      //   ⚠️ 롤백 1방용: 옛 InfoWindow 마커 루프는 아래 commented-out 으로 1커밋 보존([[feedback_ui_swap_rollback]]).
+      if (window.koausMapDrawer) {
+        if (window._accomDrawer) { try { window._accomDrawer.destroy(); } catch (_) {} }
+        window._accomDrawer = window.koausMapDrawer.attach({
+          container: document.getElementById('mapView'),
+          map, markers, bounds, posts: dedupedByUidLoc,
+          markerIcon: p => markerIcon(p),
+          buildCard: buildAccomPreview,
+          neighborhoodLimit: 10,
+          onMarkerOpen: p => markVisited(p.id),
+        });
+        if (markers.length) hasCoord = true;
+      }
+      /* ── [ROLLBACK 보존] 옛 InfoWindow 마커 루프 (drawer 전환 전) — 안정화 후 후속 커밋서 제거 ──
       groups.forEach((postsAtSameSpot) => {
         const p = postsAtSameSpot[0];
         const isCluster = postsAtSameSpot.length > 1;
@@ -2957,11 +2974,6 @@
             : markerIcon(p),
         });
         marker.addListener('click', () => {
-          // 히스토리: B-2 (배치) 에서 미리보기 카드 제거 → openDetail 직행이었으나,
-          //   D 지시로 미리보기 복원 — 단일 마커도 미리보기 카드(buildAccomPreview) 먼저, 카드 클릭 시 상세.
-          //   · 단일 마커: 미리보기 InfoWindow 오픈 + 읽음 처리 + 핀 색 갱신 (restaurants 패턴)
-          //     → 카드 클릭은 페이지 위임(iw-card[data-pid])이 openDetail 처리
-          //   · 클러스터(같은 좌표 다중): 기존 InfoWindow 유지 — 어떤 글 열지 사용자 선택 필요
           if (isCluster && window.koausMapCluster) {
             infoWindow.setContent(window.koausMapCluster.groupIwHtml(postsAtSameSpot, buildAccomCard));
             infoWindow.open(map, marker);
@@ -2976,6 +2988,7 @@
         bounds.extend({ lat: p.lat, lng: p.lng });
         hasCoord = true;
       });
+      */
       // ─── 지시 4/5 ─ MarkerClusterer 거리 기반 클러스터링 ────────────────
       //   · 동일 좌표 매물은 이미 위 forEach 에서 한 마커로 그룹화 (자체 4자리 dedup)
       //   · 더 넓은 거리(픽셀 기반)에 몰린 가격 핀들은 @googlemaps/markerclusterer 가

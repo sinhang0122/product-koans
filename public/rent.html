@@ -2505,10 +2505,23 @@
             </div>
           </div>`;
       }
-      // 좌표 클러스터링 + 마커 부착 — koaus-map-cluster 헬퍼 1호출
-      //   히스토리: B-2 (배치) 에서 skipInfoWindowOnSingle 로 미리보기 제거 → openDetail 직행이었으나,
-      //   D 지시로 미리보기 복원 — 단일 마커는 buildRentPreview InfoWindow 먼저, 카드 클릭 시 상세.
-      //   onSingleClick 은 읽음 처리만 (openDetail 은 iw-card 위임 click 이 담당).
+      // ── #5 Map Drawer (2026-06): 마커 클릭 → 지도 하단 가로 카드 drawer (InfoWindow 폐기) ──
+      //   단일 = 클릭 글 + 최근거리 9장(주변 비교) / 클러스터 = 같은 4자리 좌표 N건.
+      //   카드 콘텐츠 buildRentPreview 재사용(정보 손실 0), .iw-card[data-pid] 위임 click 이 상세 처리.
+      //   ⚠️ 롤백 1방용: 옛 attachMarkers(InfoWindow) 호출은 아래 commented-out 1커밋 보존.
+      if (window.koausMapDrawer) {
+        if (window._rentDrawer) { try { window._rentDrawer.destroy(); } catch (_) {} }
+        window._rentDrawer = window.koausMapDrawer.attach({
+          container: document.getElementById('mapView'),
+          map, markers, bounds, posts: filteredPosts,
+          markerIcon: p => markerIcon(p),
+          buildCard: buildRentPreview,
+          neighborhoodLimit: 10,
+          onMarkerOpen: p => markVisited(p.id),
+        });
+        if (markers.length) hasCoord = true;
+      }
+      /* ── [ROLLBACK 보존] 옛 attachMarkers InfoWindow 호출 (drawer 전환 전) — 안정화 후 제거 ──
       if (window.koausMapCluster) {
         const n = window.koausMapCluster.attachMarkers({
           map, infoWindow, posts: filteredPosts, markers, bounds,
@@ -2519,6 +2532,7 @@
         });
         if (n > 0) hasCoord = true;
       }
+      */
       // ─── 지시 4/5 ─ MarkerClusterer 거리 기반 클러스터링 ────────────────
       try {
         if (window.markerClusterer && window.markerClusterer.MarkerClusterer) {
