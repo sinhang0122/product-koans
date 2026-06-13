@@ -3248,7 +3248,7 @@
       });
     }
     // Canvas 압축 (compress.js 의 인라인 버전 — module 격리 위해 자체 구현)
-    async function compressImage(file, maxW = 1280, quality = 0.82) {
+    async function compressImage(file, maxW = 1200, quality = 0.7) {
       return new Promise((resolve, reject) => {
         const img = new Image();
         const url = URL.createObjectURL(file);
@@ -3262,7 +3262,7 @@
           ctx.drawImage(img, 0, 0, w, h);
           cvs.toBlob(b => { URL.revokeObjectURL(url); b ? resolve(b) : reject(new Error('compress failed')); }, 'image/jpeg', quality);
         };
-        img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('image load failed')); };
+        img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('이미지를 불러오지 못했습니다. iPhone HEIC 사진이면 카메라 설정에서 JPEG(높은 호환성)로 찍거나 JPEG로 저장 후 업로드해 주세요.')); };
         img.src = url;
       });
     }
@@ -3279,27 +3279,30 @@
         if (remain <= 0) { alert('최대 6장까지 첨부할 수 있습니다.'); return; }
         const u = auth.currentUser;
         if (!u) { alert('사진 업로드는 로그인 후 이용 가능합니다.'); return; }
-        for (const f of files.slice(0, remain)) {
-          try {
-            const blob = await compressImage(f);
-            const previewUrl = URL.createObjectURL(blob);
-            window.__usedPhotoFiles.push({ blob, previewUrl, name: f.name });
-            renderThumbs(); updateLabel();
-            // Storage 업로드 (post_images/used/{uid}/{ts}-{idx}.jpg)
-            const idx  = window.__usedPhotoFiles.length - 1;
-            const path = `post_images/used/${u.uid}/${Date.now()}-${idx}.jpg`;
+        // 동시성 3 병렬 (직렬→3병렬, 체감 ~3× 단축) + 단계 표시
+        const batch = files.slice(0, remain);
+        const _lb = $$('usedPhotoBtnLabel');
+        const setBusy = b => { if (_lb) _lb.textContent = b ? '⏳ 압축·업로드 중…' : `사진 첨부 (${(window.__usedPhotoFiles||[]).length}/${MAX_PHOTOS})`; };
+        setBusy(true);
+        let _next = 0;
+        const _worker = async () => {
+          while (_next < batch.length) {
+            const f = batch[_next++];
             try {
+              const blob = await compressImage(f);
+              const previewUrl = URL.createObjectURL(blob);
+              window.__usedPhotoFiles.push({ blob, previewUrl, name: f.name });
+              const idx = window.__usedPhotoFiles.length - 1;   // push 직후 동기 — 워커 간 충돌 없음
+              renderThumbs();
+              const path = `post_images/used/${u.uid}/${Date.now()}-${idx}.jpg`;
               const sref = ref(storage, path);
               await uploadBytes(sref, blob, { contentType: 'image/jpeg' });
-              const url = await getDownloadURL(sref);
-              window.__usedPhotoUrls[idx] = url;
-            } catch (upErr) {
-              console.warn('[used] 사진 업로드 실패', upErr);
-            }
-          } catch (cErr) {
-            console.warn('[used] 사진 압축 실패', cErr);
+              window.__usedPhotoUrls[idx] = await getDownloadURL(sref);
+            } catch (err) { console.warn('[used] 사진 처리 실패', err); }
           }
-        }
+        };
+        await Promise.all(Array.from({ length: Math.min(3, batch.length) }, _worker));
+        setBusy(false);
       });
     }
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bindUsedPhoto, { once: true });
@@ -3358,7 +3361,7 @@
         });
       });
     }
-    async function compressImage(file, maxW = 1280, quality = 0.82) {
+    async function compressImage(file, maxW = 1200, quality = 0.7) {
       return new Promise((resolve, reject) => {
         const img = new Image();
         const url = URL.createObjectURL(file);
@@ -3370,7 +3373,7 @@
           cvs.getContext('2d').drawImage(img, 0, 0, w, h);
           cvs.toBlob(b => { URL.revokeObjectURL(url); b ? resolve(b) : reject(new Error('compress failed')); }, 'image/jpeg', quality);
         };
-        img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('image load failed')); };
+        img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('이미지를 불러오지 못했습니다. iPhone HEIC 사진이면 카메라 설정에서 JPEG(높은 호환성)로 찍거나 JPEG로 저장 후 업로드해 주세요.')); };
         img.src = url;
       });
     }
@@ -3385,21 +3388,29 @@
         if (remain <= 0) { alert('최대 6장까지 첨부할 수 있습니다.'); return; }
         const u = auth.currentUser;
         if (!u) { alert('사진 업로드는 로그인 후 이용 가능합니다.'); return; }
-        for (const f of files.slice(0, remain)) {
-          try {
-            const blob = await compressImage(f);
-            const previewUrl = URL.createObjectURL(blob);
-            window.__maintPhotoFiles.push({ blob, previewUrl, name: f.name });
-            renderThumbs(); updateLabel();
-            const idx  = window.__maintPhotoFiles.length - 1;
-            const path = `post_images/maintenance/${u.uid}/${Date.now()}-${idx}.jpg`;
+        const batch = files.slice(0, remain);
+        const _lb = $$('maintPhotoBtnLabel');
+        const setBusy = b => { if (_lb) _lb.textContent = b ? '⏳ 압축·업로드 중…' : `사진 첨부 (${(window.__maintPhotoFiles||[]).length}/${MAX_PHOTOS})`; };
+        setBusy(true);
+        let _next = 0;
+        const _worker = async () => {
+          while (_next < batch.length) {
+            const f = batch[_next++];
             try {
+              const blob = await compressImage(f);
+              const previewUrl = URL.createObjectURL(blob);
+              window.__maintPhotoFiles.push({ blob, previewUrl, name: f.name });
+              const idx = window.__maintPhotoFiles.length - 1;
+              renderThumbs();
+              const path = `post_images/maintenance/${u.uid}/${Date.now()}-${idx}.jpg`;
               const sref = ref(storage, path);
               await uploadBytes(sref, blob, { contentType: 'image/jpeg' });
               window.__maintPhotoUrls[idx] = await getDownloadURL(sref);
-            } catch (upErr) { console.warn('[maintenance] 사진 업로드 실패', upErr); }
-          } catch (cErr) { console.warn('[maintenance] 사진 압축 실패', cErr); }
-        }
+            } catch (err) { console.warn('[maintenance] 사진 처리 실패', err); }
+          }
+        };
+        await Promise.all(Array.from({ length: Math.min(3, batch.length) }, _worker));
+        setBusy(false);
       });
     }
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bindMaintPhoto, { once: true });

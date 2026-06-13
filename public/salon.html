@@ -2972,7 +2972,7 @@
         thumbs(); lab();
       }));
     }
-    async function compress(file, maxW=1280, q=0.82) {
+    async function compress(file, maxW=1200, q=0.7) {
       return new Promise((resolve, reject) => {
         const img = new Image(); const url = URL.createObjectURL(file);
         img.onload = () => {
@@ -2982,7 +2982,7 @@
           c.getContext('2d').drawImage(img, 0, 0, w, h);
           c.toBlob(b => { URL.revokeObjectURL(url); b ? resolve(b) : reject(new Error('compress')); }, 'image/jpeg', q);
         };
-        img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('image')); };
+        img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('이미지를 불러오지 못했습니다. iPhone HEIC 사진이면 카메라 설정에서 JPEG(높은 호환성)로 찍거나 JPEG로 저장 후 업로드해 주세요.')); };
         img.src = url;
       });
     }
@@ -2995,20 +2995,28 @@
         const rem = MAX - (window.__rqPhotoFiles || []).length;
         if (rem <= 0) { alert('최대 6장까지 첨부할 수 있습니다.'); return; }
         const u = auth.currentUser; if (!u) { alert('로그인 후 사진 업로드 가능합니다.'); return; }
-        for (const f of files.slice(0, rem)) {
-          try {
-            const blob = await compress(f);
-            const preview = URL.createObjectURL(blob);
-            window.__rqPhotoFiles.push({ blob, previewUrl: preview, name: f.name });
-            thumbs(); lab();
-            const idx = window.__rqPhotoFiles.length - 1;
+        const batch = files.slice(0, rem);
+        const _lb = $$('rqPhotoBtnLabel');
+        const setBusy = b => { if (_lb) _lb.textContent = b ? '⏳ 압축·업로드 중…' : `사진 첨부 (${(window.__rqPhotoFiles||[]).length}/${MAX})`; };
+        setBusy(true);
+        let _next = 0;
+        const _worker = async () => {
+          while (_next < batch.length) {
+            const f = batch[_next++];
             try {
+              const blob = await compress(f);
+              const preview = URL.createObjectURL(blob);
+              window.__rqPhotoFiles.push({ blob, previewUrl: preview, name: f.name });
+              const idx = window.__rqPhotoFiles.length - 1;
+              thumbs();
               const sref = ref(storage, `post_images/salon/${u.uid}/${Date.now()}-${idx}.jpg`);
               await uploadBytes(sref, blob, { contentType: 'image/jpeg' });
               window.__rqPhotoUrls[idx] = await getDownloadURL(sref);
-            } catch (upErr) { console.warn('[salon] 사진 업로드 실패', upErr); }
-          } catch (cErr) { console.warn('[salon] 사진 압축 실패', cErr); }
-        }
+            } catch (err) { console.warn('[salon] 사진 처리 실패', err); }
+          }
+        };
+        await Promise.all(Array.from({ length: Math.min(3, batch.length) }, _worker));
+        setBusy(false);
       });
     }
     // 운영시간 위젯: admin-mark.js 전역 빌더 호출 (요일 7행 × 오픈/마감)

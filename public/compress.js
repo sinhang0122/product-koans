@@ -56,7 +56,11 @@ export function compressImage(file, opts = {}) {
         }, mimeType, quality);
       } catch (e) { URL.revokeObjectURL(url); reject(e); }
     };
-    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('image_load_fail')); };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      // iOS(WebKit)는 HEIC 디코드 가능하나 데스크톱 비-Safari 는 실패 — 안내 메시지로 전달.
+      reject(new Error('이미지를 불러오지 못했습니다. iPhone HEIC 사진이면 카메라 설정 → 포맷 → "높은 호환성(JPEG)"으로 찍거나, JPEG로 저장 후 업로드해 주세요.'));
+    };
     img.src = url;
   });
 }
@@ -116,16 +120,23 @@ function randomFilename() {
  * @returns {Promise<string[]>} 다운로드 URL 배열
  */
 export async function uploadPostImages(app, basePath, files, opts = {}) {
-  const { maxDim = 1200, quality = 0.7, onProgress } = opts;
+  const { maxDim = 1200, quality = 0.7, onProgress, concurrency = 3 } = opts;
   const list = Array.from(files);
   // 사전 일괄 검증 — 한 장이라도 5MB 초과 / image/* 아니면 업로드 시작 전 차단
   list.forEach(validateImageFile);
-  const urls = [];
-  for (let i = 0; i < list.length; i++) {
-    const name = randomFilename();
-    const url = await uploadCompressed(app, `${basePath}/${name}`, list[i], { maxDim, quality });
-    urls.push(url);
-    if (typeof onProgress === 'function') onProgress(i + 1, list.length);
+  // ── 동시성 3 병렬 업로드 (직렬 → 3병렬, 모바일 체감 ~3× 단축) ──
+  //   · 순서 보존(urls[i]) + onProgress(완료수, 전체) 카운트 유지.
+  const urls = new Array(list.length);
+  let nextIdx = 0, done = 0;
+  async function worker() {
+    while (nextIdx < list.length) {
+      const i = nextIdx++;
+      const name = randomFilename();
+      urls[i] = await uploadCompressed(app, `${basePath}/${name}`, list[i], { maxDim, quality });
+      done += 1;
+      if (typeof onProgress === 'function') onProgress(done, list.length);
+    }
   }
+  await Promise.all(Array.from({ length: Math.min(concurrency, list.length) }, worker));
   return urls;
 }
