@@ -493,7 +493,9 @@
       <span class="board-count" id="boardCount">총 0건</span>
       <div class="accom-ctrl-actions">
         <button class="board-write-btn board-write-btn--ghost" id="filterModalBtn">상세 필터</button>
-        <button class="board-write-btn" id="writeBtnOpen" type="button">+ 글쓰기</button>
+        <!-- 일반 사용자 글쓰기 폐기 (2026-06, gp/salon/trades 패턴) — localStorage 글이 services
+             onSnapshot 에 덮여 사라지던 회귀 정정. "일상" 섹션 통합 시 부활 검토. 등록은 services 경유.
+             (writeBtnOpen 핸들러는 버튼 부재 시 no-op fallback 으로 안전) -->
       </div>
     </div>
 
@@ -2943,7 +2945,10 @@
       function apply() {
         const f = collect();
         const empty = !f.cuisines.length && !f.status && !f.parking && !f.delivery && !f.takeaway;
-        const data = readData();
+        // (나) 카운트 주-스코프 정정 — 메인 렌더(applyFilters)와 동일하게 현재 주만 집계.
+        //   services onSnapshot 은 전 주 데이터를 STORE 에 담으므로, 주 필터 없이 세면 8주 합산("총 8건") 회귀.
+        const _cs = (new URLSearchParams(location.search).get('state') || '').toLowerCase();
+        const data = readData().filter(p => !(_cs && p.state && p.state !== _cs));
         const filtered = empty ? data : data.filter(p => matches(p, f));
         const ids = new Set(filtered.map(p => String(p.id)));
         // 카드 hide/show
