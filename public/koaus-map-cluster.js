@@ -140,33 +140,26 @@
 // ════════════════════════════════════════════════════════════════════
 //  KoAus · 지도 하단 슬라이드업 가로 카드 Drawer (#5 Map 동선 — 2026-06 규격 락)
 //  · 마커 클릭 → 지도 하단 가로 카드 drawer (InfoWindow 폐기). Airbnb/네이버 부동산 패턴.
-//  · 단일 마커 = 클릭 글 + 주변(haversine 최근거리) 9장 = 최대 10장 펼침 (비교 UX).
-//  · 클러스터(같은 4자리 좌표 N건) = 그 N건을 drawer 로 (옛 groupIwHtml 폐기).
+//  · 단일 마커 = 클릭한 그 1장만 (시안 a① — 주변 자동 펼침 폐기, 스와이프 무효).
+//  · 클러스터(같은 4자리 좌표 N건) = 그 N건을 가로 스와이프 drawer 로 ("이 주소 매물들").
 //  · 닫기 = drawer ✕ + 지도 빈 곳 탭 둘 다.
-//  · 데스크탑 = 모바일과 동일 동선, 카드 폭만 320px 고정 (코드 단일).
-//  · 카드 콘텐츠는 페이지 buildCard(p) 재사용 (.iw-card[data-pid] 유지 → 기존 document
-//    위임 click 이 markVisited+openDetail 처리). drawer 는 컨테이너 역할만 — 정보 손실 0.
+//  · 데스크탑 = 모바일과 동일 동선.
+//  · 위치 = 지도 영역 바깥 — 지도 100% 유지하고 그 아래 normal-flow 별도 섹션(absolute 아님).
+//  · 카드 콘텐츠 = 페이지의 통일 list view 카드 빌더(buildCard) 재사용. 카드 액션(공유·수정·
+//    삭제·찜·상세)은 grid 와 동일 공용 와이어러를 onRender(track) 로 재바인딩 — drawer·grid 일관.
 //  · 사용:
 //      const drawer = koausMapDrawer.attach({
-//        container: document.getElementById('mapView'),  // position:relative 조상
+//        container: document.getElementById('mapView'),
 //        map, markers, bounds, posts: filteredPosts,
 //        markerIcon: p => markerIcon(p),
-//        buildCard: buildAccomPreview,            // (p)=>'<div class="iw-card" data-pid>…'
-//        neighborhoodLimit: 10,
+//        buildCard: buildAccomListCard,           // (p)=>'<div class="accom-card" data-id>…'
+//        onRender: track => wireCardActions(track),   // grid 와 동일 액션 와이어러
 //        onMarkerOpen: p => markVisited(p.id),    // 부수효과(읽음 처리). 핀 재색칠은 drawer 자동.
 //      });
 //      // drawer.openAt(id) / drawer.close() / drawer.destroy()
 // ════════════════════════════════════════════════════════════════════
 (function () {
   if (typeof window === 'undefined' || window.koausMapDrawer) return;
-
-  function haversine(a, b) {
-    const R = 6371, toRad = d => d * Math.PI / 180;
-    const dLat = toRad(b.lat - a.lat), dLng = toRad(b.lng - a.lng);
-    const s = Math.sin(dLat / 2) ** 2 +
-      Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng / 2) ** 2;
-    return 2 * R * Math.asin(Math.sqrt(s));
-  }
 
   function attach(opts) {
     const map = opts.map;
@@ -198,38 +191,33 @@
       drawer.classList.remove('open');
       track.innerHTML = '';
     }
-    function openCards(cards, activeId) {
+    function openCards(cards) {
+      // 카드 = 통일 list view 카드(buildCard). 각 카드를 .accom-grid--compact 래퍼로 감싸
+      //   내부 .accom-card 가 가로 row 레이아웃을 그대로 받게 함(목록과 동일 규격).
       track.innerHTML = cards.map(p =>
-        '<div class="drawer-card" data-pid="' + String(p.id) + '">' + opts.buildCard(p) + '</div>'
+        '<div class="drawer-card accom-grid accom-grid--compact">' + opts.buildCard(p) + '</div>'
       ).join('');
+      // 단일(1장) = 풀폭·스와이프 없음 / 클러스터(N장) = 가로 스와이프
+      track.classList.toggle('single', cards.length <= 1);
+      track.scrollLeft = 0;
       drawer.removeAttribute('hidden');
-      // reflow 후 open 클래스 → 슬라이드업 transition
       requestAnimationFrame(() => drawer.classList.add('open'));
-      // 활성 카드로 스크롤 (단일 클릭 시 클릭 글이 0번이라 좌측 정렬)
-      const idx = Math.max(0, cards.findIndex(p => String(p.id) === String(activeId)));
-      const el = track.children[idx];
-      if (el) track.scrollLeft = el.offsetLeft - track.offsetLeft;
+      // 카드 내 액션(공유·수정·삭제·찜·상세) 재바인딩 — grid 와 동일 공용 와이어러
+      if (typeof opts.onRender === 'function') opts.onRender(track);
     }
 
     function openAt(postId) {
-      const p0 = withCoord.find(p => String(p.id) === String(postId));
-      if (!p0) return;
-      // 같은 좌표 그룹이면 그 그룹 전체, 단일이면 최근거리 이웃 채움
       const grp = groups.find(arr => String(arr[0].id) === String(postId));
       let cards;
       if (grp && grp.length > 1) {
-        cards = grp.slice(0, limit);
+        cards = grp.slice(0, limit);        // 클러스터(같은 4자리 좌표) = 그 N건 가로 스와이프
       } else {
-        const neighbors = withCoord
-          .filter(p => String(p.id) !== String(p0.id))
-          .map(p => ({ p, d: haversine(p0, p) }))
-          .sort((x, y) => x.d - y.d)
-          .slice(0, limit - 1)
-          .map(x => x.p);
-        cards = [p0, ...neighbors];
+        const p0 = (grp && grp[0]) || withCoord.find(p => String(p.id) === String(postId));
+        if (!p0) return;
+        cards = [p0];                        // 단일 마커 = 클릭한 1장만 (주변 자동 펼침 폐기 — 시안 a① )
       }
-      if (typeof opts.onMarkerOpen === 'function') opts.onMarkerOpen(p0);
-      openCards(cards, p0.id);
+      if (typeof opts.onMarkerOpen === 'function') opts.onMarkerOpen(cards[0]);
+      openCards(cards);
     }
 
     // 마커 생성 (attachMarkers 와 동일 — InfoWindow 대신 drawer 오픈)
@@ -262,7 +250,9 @@
       drawer._koausBound = true;
       closeBtn.addEventListener('click', e => { e.stopPropagation(); close(); });
       track.addEventListener('click', e => {
-        if (e.target.closest('.iw-card[data-pid]')) close();
+        // 카드 본문 탭 → 상세(페이지 wireCardActions 가 처리) + drawer 닫기.
+        //   미니 액션 버튼(공유·수정·삭제·신고·숨김·찜)은 stopPropagation 이라 여기 안 옴 → drawer 유지.
+        if (e.target.closest('.accom-card') && !e.target.closest('.mini-btn, .bookmark-btn')) close();
       });
     }
     // 닫기 ③ 지도 빈 곳 탭 — attach 마다 새로 등록되므로 destroy() 에서 반드시 해제(누수 방지)

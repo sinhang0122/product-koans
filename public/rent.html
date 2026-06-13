@@ -1774,25 +1774,15 @@
       if (currentView === 'map' && mapReady) updateMapMarkers(filtered);
     }
 
-    function renderListView(sorted, totalPages) {
-      const grid  = document.getElementById('postGrid');
-      const pager = document.getElementById('pagination');
-      if (!sorted.length) {
-        grid.innerHTML = '<div class="post-empty">아직 등록된 글이 없습니다. 첫 글을 올려보세요!</div>';
-        pager.innerHTML = '';
-        return;
-      }
-      const start = (currentPage - 1) * PER_PAGE;
-      const pageItems = sorted.slice(start, start + PER_PAGE);
-      // 쉐어(accom) 와이드 카드 형식 — 썸네일 좌측 + 정보 우측
-      grid.innerHTML = pageItems.map(p => {
-        const saved  = isSaved(p.id);
-        const isFind = (p.mode || 'offer') === 'find';
-        const priceHtml = isFind
-          ? '<span class="accom-card-find">매물 구하기</span>'
-          : (p.price ? `<span class="accom-price">$${p.price}<small>/wk</small></span>` : '<span class="accom-card-find">가격 협의</span>');
-        const sub = isFind ? (p.body || '') : (p.address || '');
-        return `
+    // ── 통일 list view 카드 빌더 (목록 grid + 지도 drawer 공용) — accom 동일 패턴 ──
+    function buildRentListCard(p) {
+      const saved  = isSaved(p.id);
+      const isFind = (p.mode || 'offer') === 'find';
+      const priceHtml = isFind
+        ? '<span class="accom-card-find">매물 구하기</span>'
+        : (p.price ? `<span class="accom-price">$${p.price}<small>/wk</small></span>` : '<span class="accom-card-find">가격 협의</span>');
+      const sub = isFind ? (p.body || '') : (p.address || '');
+      return `
         <div class="accom-card${isMine(p) ? ' my-post-highlight' : ''}" data-id="${p.id}">
           <div class="accom-card-thumb">
             ${(Array.isArray(p.imageUrls) && p.imageUrls.length)
@@ -1800,7 +1790,6 @@
               : '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>'}
           </div>
           <div class="accom-card-info">
-            <!-- 지시 4/10 — Row 1: 제목(좌) + 액션 그룹(우) -->
             <div class="accom-card-row1">
               <div class="accom-card-title2">${escHtml(p.title)}</div>
               <div class="accom-card-actions">
@@ -1813,28 +1802,37 @@
                 </div>
               </div>
             </div>
-            <!-- Row 2: 가격(좌) + 위치(우) -->
             <div class="accom-card-row2">
               ${priceHtml ? `<div class="accom-card-price-wrap">${priceHtml}</div>` : ''}
               ${sub ? `<div class="accom-card-sub">${isFind ? '' : '📍 '}${escHtml(sub)}</div>` : ''}
             </div>
           </div>
         </div>`;
-      }).join('');
-
-      grid.querySelectorAll('.accom-card').forEach(card => {
+    }
+    // ── 카드 액션 와이어링 (목록 grid + 지도 drawer 공용) ──
+    //   신고(.mini-report)·숨김(.mini-hide)은 koaus-report.js·koaus-rbac.js document 위임이 처리.
+    function wireCardActions(root) {
+      if (!root) return;
+      root.querySelectorAll('.accom-card').forEach(card => {
         card.addEventListener('click', () => openDetail(card.dataset.id));
       });
-      grid.querySelectorAll('.mini-edit').forEach(btn => btn.addEventListener('click', e => {
+      root.querySelectorAll('.bookmark-btn').forEach(btn => btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const p = loadPosts().find(x => String(x.id) === String(btn.dataset.id));
+        if (!p) return;
+        toggleSaved(p);
+        renderAll();
+      }));
+      root.querySelectorAll('.mini-edit').forEach(btn => btn.addEventListener('click', e => {
         e.stopPropagation();
         const p = loadPosts().find(x => String(x.id) === String(btn.dataset.id));
         if (p) openWriteModalForEdit(p);
       }));
-      grid.querySelectorAll('.mini-del').forEach(btn => btn.addEventListener('click', e => {
+      root.querySelectorAll('.mini-del').forEach(btn => btn.addEventListener('click', e => {
         e.stopPropagation();
         deletePost(btn.dataset.id);
       }));
-      grid.querySelectorAll('.mini-share').forEach(btn => btn.addEventListener('click', async e => {
+      root.querySelectorAll('.mini-share').forEach(btn => btn.addEventListener('click', async e => {
         e.stopPropagation();
         const url = `${location.origin}${location.pathname}?id=${encodeURIComponent(btn.dataset.id)}`;
         try { await navigator.clipboard.writeText(url); }
@@ -1844,15 +1842,20 @@
         }
         alert('링크가 복사되었습니다.');
       }));
-      grid.querySelectorAll('.bookmark-btn').forEach(btn => {
-        btn.addEventListener('click', e => {
-          e.stopPropagation();
-          const p = loadPosts().find(x => String(x.id) === String(btn.dataset.id));
-          if (!p) return;
-          toggleSaved(p);
-          renderAll();
-        });
-      });
+    }
+
+    function renderListView(sorted, totalPages) {
+      const grid  = document.getElementById('postGrid');
+      const pager = document.getElementById('pagination');
+      if (!sorted.length) {
+        grid.innerHTML = '<div class="post-empty">아직 등록된 글이 없습니다. 첫 글을 올려보세요!</div>';
+        pager.innerHTML = '';
+        return;
+      }
+      const start = (currentPage - 1) * PER_PAGE;
+      const pageItems = sorted.slice(start, start + PER_PAGE);
+      grid.innerHTML = pageItems.map(buildRentListCard).join('');
+      wireCardActions(grid);
 
       pager.innerHTML = '';
       // 하이브리드: 마지막 페이지 + Firestore에 더 옛 글 가능성 → › 를 '더 불러오기'로 활성 유지
@@ -2515,8 +2518,8 @@
           container: document.getElementById('mapView'),
           map, markers, bounds, posts: filteredPosts,
           markerIcon: p => markerIcon(p),
-          buildCard: buildRentPreview,
-          neighborhoodLimit: 10,
+          buildCard: buildRentListCard,             // 통일 list view 카드 그대로
+          onRender: track => wireCardActions(track), // grid 와 동일 액션
           onMarkerOpen: p => markVisited(p.id),
         });
         if (markers.length) hasCoord = true;

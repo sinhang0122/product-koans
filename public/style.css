@@ -3742,23 +3742,20 @@ body.is-admin .admin-only.admin-only--block { display: block !important; }
   border: 1px solid var(--border); background: var(--bg-card);
 }
 
-/* ── #5 Map 하단 슬라이드업 가로 카드 Drawer (koaus-map-cluster.js → koausMapDrawer) ──
-   · #mapView(position:relative) 하단에 absolute 앵커 → iOS 주소창 변화(100dvh 점프) 무영향
-     (뷰포트 고정이 아니라 지도 컨테이너 바닥 기준이라 안전).
-   · 컨테이너는 pointer-events:none(지도 패닝 통과) — 트랙·카드·✕ 만 이벤트 수신.
-   · 모바일 카드 flex 0 0 88% + 우측 12% peek + scroll-snap. 데스크탑 320px 고정(동선 동일). */
+/* ── #5 Map 마커 카드 Drawer (koaus-map-cluster.js → koausMapDrawer) — 검증 정정본 ──
+   · 위치: 지도 영역 바깥. 지도(#accomMap) 100% 유지하고 그 아래 normal-flow 별도 섹션
+     (absolute/fixed 아님 → iOS Safari 주소창 변화·100dvh 점프 영향 원천 차단).
+   · 카드 = 통일 list view 카드(.accom-card) 그대로. 단일 마커=1장 풀폭(스와이프 무효),
+     클러스터=N장 가로 스와이프(scroll-snap). */
 #mapCardDrawer {
-  position: absolute; left: 0; right: 0; bottom: 0; z-index: 6;
-  padding: 0 0 calc(10px + env(safe-area-inset-bottom, 0px));
-  pointer-events: none;
-  transform: translateY(110%);
-  transition: transform .26s cubic-bezier(.4, 0, .2, 1);
+  margin: 10px 0 calc(2px + env(safe-area-inset-bottom, 0px));
+  position: relative;
 }
-#mapCardDrawer[hidden] { display: block; }   /* transform 으로 숨김 — display:none 시 transition 끊김 */
-#mapCardDrawer.open { transform: translateY(0); }
+#mapCardDrawer[hidden] { display: none; }
+#mapCardDrawer { opacity: 0; transform: translateY(8px); transition: opacity .2s ease, transform .2s ease; }
+#mapCardDrawer.open { opacity: 1; transform: translateY(0); }
 #mapCardDrawer .drawer-close {
-  pointer-events: auto;
-  position: absolute; top: -14px; right: 12px; z-index: 2;
+  position: absolute; top: -10px; right: 6px; z-index: 2;
   width: 30px; height: 30px; border-radius: 50%;
   border: 1px solid #000; background: #fff; color: #000;
   font-size: 14px; line-height: 1; cursor: pointer;
@@ -3767,27 +3764,23 @@ body.is-admin .admin-only.admin-only--block { display: block !important; }
 }
 #mapCardDrawer .drawer-close:hover { background: #000; color: #fff; }
 .drawer-track {
-  pointer-events: auto;
   display: flex; gap: 10px;
   overflow-x: auto; overflow-y: hidden;
   scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;
-  padding: 10px 12px 12px;
+  padding: 6px 2px 4px;
   scrollbar-width: none;
 }
 .drawer-track::-webkit-scrollbar { display: none; }
+/* 각 카드 래퍼 = .accom-grid--compact (내부 .accom-card 가 목록과 동일 가로 row 규격을 받음) */
 .drawer-card {
-  pointer-events: auto;
-  flex: 0 0 88%; scroll-snap-align: start;
-  background: #fff; border: 1px solid #000; border-radius: 12px;
-  box-shadow: 0 6px 20px rgba(0,0,0,.18);
-  padding: 10px 12px; box-sizing: border-box;
-  cursor: pointer;
+  flex: 0 0 88%; scroll-snap-align: start; min-width: 0;
 }
-/* 카드 내부 buildCard 의 per-card ✕(InfoWindow 잔재)·max-width 무력화 — drawer 는 단일 ✕ 사용 */
-.drawer-card .iw-card { max-width: none !important; padding: 0 !important; }
-.drawer-card .iw-close { display: none !important; }
+.drawer-card .accom-card { margin: 0; }
+/* 단일(1장) = 풀폭, 스와이프 없음 */
+.drawer-track.single { overflow-x: hidden; }
+.drawer-track.single .drawer-card { flex-basis: 100%; }
 @media (min-width: 900px) {
-  .drawer-card { flex: 0 0 320px; }
+  .drawer-card { flex-basis: 360px; }
 }
 
 /* ── Filter Modal ── */
