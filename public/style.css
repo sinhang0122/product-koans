@@ -3776,6 +3776,8 @@ body.is-admin .admin-only.admin-only--block { display: block !important; }
   flex: 0 0 88%; scroll-snap-align: start; min-width: 0;
 }
 .drawer-card .accom-card { margin: 0; }
+/* drawer 카드에서는 ★(찜) 제거 — ✕(닫기)와 인접해 동시 탭 충돌. 찜은 상세 모달에서만. */
+.drawer-card .bookmark-btn { display: none !important; }
 /* 단일(1장) = 풀폭, 스와이프 없음 */
 .drawer-track.single { overflow-x: hidden; }
 .drawer-track.single .drawer-card { flex-basis: 100%; }
