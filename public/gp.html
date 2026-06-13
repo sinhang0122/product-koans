@@ -2726,7 +2726,7 @@
       onSnapshot(doc(db, 'board_pinned_notices', 'gp'), snap => {
         const data = snap.exists() ? snap.data() : null;
         if (data && data.text && String(data.text).trim()) {
-          box.innerHTML = '<span class="pn-icon" aria-hidden="true">📢</span><div class="pn-body"><strong>공지</strong> · ' + esc(data.text) + '</div>';
+          box.innerHTML = '<div class="pn-body">' + ((data.title || '').trim() ? '<strong>' + esc((data.title || '').trim()) + '</strong> · ' : '') + esc(data.text) + '</div>';
           box.hidden = false;
         } else { box.hidden = true; box.innerHTML = ''; }
       }, err => console.warn('[gp] pinned-notice 구독 실패', err));
