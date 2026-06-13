@@ -748,8 +748,10 @@
             <ul class="addr-suggest" id="mRegionSuggest"></ul>
           </div>
           <div class="write-field">
-            <label class="write-label" for="mHours">영업시간 Hours <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택)</em></label>
-            <input class="write-input" id="mHours" type="text" placeholder="예: 평일 9:00–18:00 · 토 9:00–13:00 · 견인 24시" maxlength="60" />
+            <label class="write-label">영업시간 Hours <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택 · 요일별 오픈/마감)</em></label>
+            <div class="biz-hours-grid" data-biz-hours="m"></div>
+            <input type="hidden" id="mHours" value="" />
+            <input type="hidden" id="mHoursJson" value="" />
           </div>
         </div>
         <div class="write-col">
@@ -1515,6 +1517,7 @@
        'mTitle','mRegion','mHours','mPhone','mKakao','mContact','mBody'].forEach(id => {
         const el = document.getElementById(id); if (el) el.value = '';
       });
+      if (window.__koausResetBizHours) window.__koausResetBizHours('m');  // 요일별 그리드 초기화
       try { window.dispatchEvent(new Event('koaus-maint-form-reset')); } catch (_) {}
     }
     // 로그인 사용자 닉네임 (작성자 고정값)
@@ -1547,6 +1550,7 @@
         _set('rContact', p.contact); _set('rPhone', p.phone); _set('rKakao', p.kakaoLink); _set('rBody', p.body);
       } else if (cat === 'maintenance') {
         _set('mTitle', p.title); _set('mRegion', p.region || p.address); _set('mHours', p.hours);
+        if (window.__koausSetBizHours) window.__koausSetBizHours('m', p.hoursJson);  // 요일별 그리드 복원
         _set('mPhone', p.phone); _set('mKakao', p.kakaoLink); _set('mContact', p.contact); _set('mBody', p.body);
       }
       document.getElementById('wAuthorName').textContent = p.author || currentNickname() || '-';
@@ -1733,11 +1737,14 @@
         if (!region) { alert('위치(주소)를 입력해 주세요.'); return; }
         const phone = _fv('mPhone'), contact = _fv('mContact');
         if (!phone && !contact) { alert('연락처(전화번호 또는 기타 연락 수단)를 입력해 주세요.'); return; }
+        let _mHoursJson = null;  // 요일별 그리드(admin-mark) 동기화 hidden — detail 7일 표 렌더용
+        try { const _hj = _fv('mHoursJson'); if (_hj) _mHoursJson = JSON.parse(_hj); } catch (_) {}
         fields = {
           title, body,
           region,
           address:   region,                 // 지도/상세 위치 표시는 address 사용
           hours:     _fv('mHours'),
+          ...(_mHoursJson ? { hoursJson: _mHoursJson } : {}),
           phone,
           kakaoLink: _fv('mKakao'),
           contact,

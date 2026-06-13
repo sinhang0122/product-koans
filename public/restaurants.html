@@ -899,8 +899,10 @@
 
         <div class="write-col">
           <div class="write-field">
-            <label class="write-label" for="wHours">영업시간 Hours <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택 · 자유 입력)</em></label>
-            <input class="write-input" id="wHours" type="text" placeholder="예: 매일 11:00–21:00 · 월요일 휴무" maxlength="100" />
+            <label class="write-label">영업시간 Hours <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택 · 요일별 오픈/마감)</em></label>
+            <div class="biz-hours-grid" data-biz-hours="w"></div>
+            <input type="hidden" id="wHours" value="" />
+            <input type="hidden" id="wHoursJson" value="" />
           </div>
           <div class="write-field">
             <span class="write-label">편의시설 Amenities</span>
@@ -1258,6 +1260,7 @@
     }
     function resetWriteForm() {
       ['wTitle','wAddress','wBody','wHours','wContact','wPhone','wKakao'].forEach(id => { const _el = document.getElementById(id); if (_el) _el.value = ''; });
+      if (window.__koausResetBizHours) window.__koausResetBizHours('w');  // 요일별 그리드 초기화
       ['wParking','wDelivery','wTakeaway'].forEach(id => { const _el = document.getElementById(id); if (_el) _el.checked = false; });
       document.querySelectorAll('#wCuisines input').forEach(c => { c.checked = false; });
     }
@@ -1313,6 +1316,7 @@
       set('wAddress', d.address);
       set('wBody',  d.body);
       set('wHours', d.hours);
+      if (window.__koausSetBizHours) window.__koausSetBizHours('w', d.hoursJson);  // 요일별 그리드 복원
       set('wContact', d.contact);
       set('wPhone',   d.phone);
       set('wKakao',   d.kakaoLink);
@@ -1328,6 +1332,7 @@
       document.getElementById('wTitle').value    = p.title || '';
       document.getElementById('wAddress').value  = p.address || '';
       const _hr = document.getElementById('wHours'); if (_hr) _hr.value = p.hours || '';
+      if (window.__koausSetBizHours) window.__koausSetBizHours('w', p.hoursJson);  // 요일별 그리드 복원
       document.getElementById('wContact').value = p.contact || '';
       const _ph = document.getElementById('wPhone'); if (_ph) _ph.value = p.phone || '';
       const _kk = document.getElementById('wKakao'); if (_kk) _kk.value = p.kakaoLink || '';
@@ -1507,6 +1512,8 @@
       if (true /* K-Food 통합 — find/offer 분기 폐기 */) {
         const cuisines  = [...document.querySelectorAll('#wCuisines input:checked')].map(c => c.dataset.cuisine);
         const hours     = (document.getElementById('wHours')?.value || '').trim();
+        let   hoursJson = null;  // 요일별 그리드(admin-mark) 동기화 hidden — 있으면 detail 7일 표 렌더
+        try { const _hj = (document.getElementById('wHoursJson')?.value || ''); if (_hj) hoursJson = JSON.parse(_hj); } catch (_) {}
         const contact   = (document.getElementById('wContact')?.value || '').trim();
         const phone     = (document.getElementById('wPhone')?.value || '').trim();
         const kakaoLink = (document.getElementById('wKakao')?.value || '').trim();
@@ -1518,6 +1525,7 @@
         }
         fields = {
           mode: 'offer', title, body, address, cuisines, hours, contact, phone, kakaoLink,
+          ...(hoursJson ? { hoursJson } : {}),
           parking:  document.getElementById('wParking')?.checked || false,
           delivery: document.getElementById('wDelivery')?.checked || false,
           takeaway: document.getElementById('wTakeaway')?.checked || false,

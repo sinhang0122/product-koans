@@ -356,8 +356,31 @@ window.addEventListener('koaus-services-updated', () => setTimeout(injectCardAct
     const hidden = document.getElementById(prefix + 'Hours');     if (hidden) hidden.value = '';
     const json   = document.getElementById(prefix + 'HoursJson'); if (json)   json.value   = '';
   }
+  // 편집 prefill — 기존 hoursJson({mon:'09:00~18:00'|'closed', …}) 으로 그리드 select 복원 + sync.
+  //   · 그리드가 아직 빌드 안 됐으면 먼저 빌드. 객체/JSON 문자열 둘 다 허용.
+  function setGrid(prefix, hoursJson) {
+    buildGrid(prefix);
+    const grid = document.querySelector('.biz-hours-grid[data-biz-hours="' + prefix + '"]');
+    if (!grid) return;
+    let obj = hoursJson;
+    if (typeof obj === 'string') { try { obj = JSON.parse(obj); } catch (_) { obj = null; } }
+    if (!obj || typeof obj !== 'object') return;
+    DAYS.forEach(([k]) => {
+      const v = obj[k];
+      const openSel  = grid.querySelector('select[data-day="' + k + '"][data-role="open"]');
+      const closeSel = grid.querySelector('select[data-day="' + k + '"][data-role="close"]');
+      if (!openSel || !closeSel) return;
+      if (v === 'closed') { openSel.value = 'closed'; closeSel.value = ''; }
+      else if (typeof v === 'string' && v.indexOf('~') > -1) {
+        const [op, cl] = v.split('~');
+        openSel.value = op || ''; closeSel.value = cl || '';
+      } else { openSel.value = ''; closeSel.value = ''; }
+    });
+    syncGrid(prefix);
+  }
   window.__koausBuildBizHours = buildGrid;
   window.__koausResetBizHours = resetGrid;
+  window.__koausSetBizHours   = setGrid;
   // 페이지 진입 시 [data-biz-hours] 자동 빌드 (페이지 본체에서 prefix 명시 안 해도 작동)
   function autoBuildAll() {
     document.querySelectorAll('.biz-hours-grid[data-biz-hours]').forEach(g => {
