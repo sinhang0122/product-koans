@@ -51,6 +51,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@googlemaps/markerclusterer@2.5.3/dist/index.min.js" defer></script>
   <script src="koaus-url-guard.js" defer></script>
   <script src="koaus-report.js" defer></script>
+  <script src="koaus-map-expand.js" defer></script>
   <script src="koaus-save-guard.js" defer></script>
   <script type="module" src="admin-mark.js"></script>
   <script type="module" src="koaus-rbac.js"></script>
@@ -1914,6 +1915,7 @@
       const posts = loadPosts();
       const p = posts.find(x => String(x.id) === String(id));
       if (!p) return;
+      window.currentDetailPost = p;  // koaus-map-expand.js(확대→외부맵) 가 참조
 
       // 네비 헤더 + 가격 + 주소 + 요약 칩
       document.getElementById('detailNavTitle').textContent = p.title || '';
