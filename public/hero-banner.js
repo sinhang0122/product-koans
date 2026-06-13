@@ -311,7 +311,9 @@
     const alt  = escHtml(banner.alt || '히어로 배너');
     const img  = escHtml(safeImg);
     const docId = escHtml(banner.id || '');
-    const imgEl = `<img src="${img}" alt="${alt}" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;">`;
+    // 첫 슬라이드(idx 0)는 above-the-fold LCP — eager + 높은 우선순위로 즉시 로드. 나머지 lazy.
+    const _ld = idx === 0 ? 'loading="eager" fetchpriority="high"' : 'loading="lazy"';
+    const imgEl = `<img src="${img}" alt="${alt}" ${_ld} style="width:100%;height:100%;object-fit:cover;display:block;">`;
     // position:relative;z-index:1 — 슬라이드 ::before 오버레이보다 위 (클릭 가로채기 방지 안전망)
     const wrap = link
       ? `<a href="${escHtml(link)}" target="_blank" rel="noopener noreferrer" aria-label="${alt}" style="display:block;width:100%;height:100%;position:relative;z-index:1;">${imgEl}</a>`
@@ -515,6 +517,7 @@
       // 초기 1회 저장 (재진입 시 마지막 shift 시점 갱신)
       persistHeroState(savedIdx);
       swEl.__koausSwiperInited = true;
+      swEl.__koausSwiper = sw;   // admin 배너 도착 시 재렌더 전 destroy 용
     } catch (e) { console.warn('[hero-banner] Swiper init 실패', e); }
   }
 
@@ -527,25 +530,36 @@
     const containers = Array.from(document.querySelectorAll('[data-koaus-hero-cat]'))
       .filter(c => !c.closest('.notice-section'));
     if (!containers.length) return;
-    // 1) admin 배너 fetch (단일 fetch 캐시, 모든 컨테이너 공통)
-    //    fetch 결과 없으면 SLOTS fallback 으로 즉시 진입
+
+    function paint(banners) {
+      containers.forEach(c => render(c, banners));
+      ensureSwiperLoaded(() => {
+        containers.forEach(initSwipers);
+        containers.forEach(c => {
+          try {
+            c.dispatchEvent(new CustomEvent('koaus:hero-ready', {
+              bubbles: true,
+              detail: { cat: c.getAttribute('data-koaus-hero-cat') },
+            }));
+          } catch (_) {}
+        });
+      });
+    }
+
+    // 1) ── LCP 단축 ── SLOTS 폴백을 App Check/Firestore 대기 없이 즉시 렌더 (첫 화면 즉시 표시).
+    paint([]);
+    // 2) admin 배너 도착 시에만 해당 슬롯 교체 재렌더 (도착 전 빈 placeholder 없음).
     let banners = [];
     try { banners = await fetchAdminBanners(); } catch (_) {}
-    // 2) 컨테이너별 렌더 — 슬롯 N 배너가 기본 슬라이드 N번 자리만 교체
-    containers.forEach(c => render(c, banners));
-    // 3) Swiper init (admin·SLOTS 공통) → koaus:hero-ready 발행
-    //    — 광고 모듈(koaus-ads) 등이 swiper 준비 후 슬라이드 append 가능 (확장 포인트)
-    ensureSwiperLoaded(() => {
-      containers.forEach(initSwipers);
+    if (banners.length) {
+      // 기존 swiper 정리 후 재렌더 (render 의 __koausHeroRendered 가드 해제)
       containers.forEach(c => {
-        try {
-          c.dispatchEvent(new CustomEvent('koaus:hero-ready', {
-            bubbles: true,
-            detail: { cat: c.getAttribute('data-koaus-hero-cat') },
-          }));
-        } catch (_) {}
+        const sw = c.querySelector('.koaus-hero-pc .swiper');
+        if (sw && sw.__koausSwiper) { try { sw.__koausSwiper.destroy(true, true); } catch (_) {} }
+        c.__koausHeroRendered = false;
       });
-    });
+      paint(banners);
+    }
   }
 
   if (document.readyState === 'loading') {

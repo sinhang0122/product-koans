@@ -30,6 +30,14 @@
             "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://www.googletagmanager.com https://cdn.jsdelivr.net https://cdn.tailwindcss.com https://maps.googleapis.com https://www.google.com https://www.googleapis.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https://firebasestorage.googleapis.com https://*.googleapis.com https://www.gstatic.com https://maps.gstatic.com https://www.google-analytics.com https://*.googleusercontent.com; connect-src 'self' https://*.googleapis.com wss://*.firebaseio.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com https://firebasestorage.googleapis.com https://www.google-analytics.com https://*.analytics.google.com https://stats.g.doubleclick.net https://open.er-api.com https://formspree.io https://accounts.google.com https://apis.google.com https://australia-southeast1-koaus-f564c.cloudfunctions.net; frame-src 'self' https://www.google.com https://recaptcha.google.com https://koaus-f564c.firebaseapp.com https://accounts.google.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self' https://formspree.io; upgrade-insecure-requests"
           }
         ]
+      },
+      {
+        "source": "**/*.@(jpg|jpeg|png|gif|webp|svg|ico|woff|woff2)",
+        "headers": [ { "key": "Cache-Control", "value": "public, max-age=2592000" } ]
+      },
+      {
+        "source": "**/*.@(js|css)",
+        "headers": [ { "key": "Cache-Control", "value": "public, max-age=3600, must-revalidate" } ]
       }
     ]
   }
