@@ -1528,6 +1528,7 @@
     }
     function openWriteModal() {
       editingId = null;
+      if (window.__usedPhotoPrefill) window.__usedPhotoPrefill([]);  // 신규 글 — 직전 수정의 prefill 사진 잔류 방지
       setWriteMode('create');
       showCatForm();
       document.getElementById('wAuthorName').textContent = currentNickname() || '-';  // 헤더 작성자 배지
@@ -1549,6 +1550,8 @@
         _set('rYear', p.year); _set('rMileage', p.mileage); _set('rRwc', p.rwc);
         _set('rRego', p.regoExpiry); _set('rPrice', p.price); _set('rRegion', p.region);
         _set('rContact', p.contact); _set('rPhone', p.phone); _set('rKakao', p.kakaoLink); _set('rBody', p.body);
+        // ★ 기존 사진 prefill — 텍스트만 수정해도 imageUrls 안 비도록 + 썸네일 복원
+        if (window.__usedPhotoPrefill) window.__usedPhotoPrefill(Array.isArray(p.imageUrls) ? p.imageUrls : []);
       } else if (cat === 'maintenance') {
         _set('mTitle', p.title); _set('mRegion', p.region || p.address); _set('mHours', p.hours);
         if (window.__koausSetBizHours) window.__koausSetBizHours('m', p.hoursJson);  // 요일별 그리드 복원
@@ -1775,12 +1778,47 @@
 
       const posts = loadPosts();
       if (editingId != null) {
-        const idx = posts.findIndex(x => String(x.id) === String(editingId));
-        if (idx < 0) { editingId = null; return; }
-        Object.assign(posts[idx], fields);
-        savePosts(posts);
-        recordMyPost(posts[idx]);
-        editingId = null;
+        const _isFsId = typeof editingId === 'string' && /^[A-Za-z0-9_-]{16,}$/.test(editingId);
+        if (_isFsId) {
+          // ── used/rental 글 수정 → Firestore auto_posts updateDoc (accom 패턴 미러) ──
+          //   · patch = stripPrivateFields(fields + updatedAt). fields.imageUrls 는 수정 모달 prefill 로 기존 사진 보존
+          //     (텍스트만 수정해도 비지 않음) — 사진 추가/삭제는 __usedPhotoUrls 에 반영됨.
+          //   · uid/status/isHidden 미포함 → update 룰(uidLocked·noModeratorFieldChange·statusAllowedForOwner·adminBlindLock) 통과.
+          if (!window.koausDb || !window.koausFs || !window.koausFs.updateDoc) { alert('Firestore 미초기화 — 잠시 후 다시 시도해 주세요.'); return; }
+          const { updateDoc: _upd, doc: _doc, serverTimestamp: _ts2 } = window.koausFs;
+          const _base = Object.assign({}, fields, { updatedAt: _ts2() });
+          if (!String(_base.body || '').trim()) _base.body = ' ';
+          const patch = window.koausListingPrivacy
+            ? window.koausListingPrivacy.stripPrivateFields(_base)
+            : _base;
+          try {
+            await _upd(_doc(window.koausDb, 'auto_posts', String(editingId)), patch);
+          } catch (e) {
+            console.error('[auto] 수정 실패', e);
+            alert('수정 실패: ' + (e?.code === 'permission-denied' ? '권한 거부 — 본인 글만 수정 가능' : (e?.code || e?.message || e)));
+            return;
+          }
+          // private_data 갱신 — 비공개 글 정확 위치
+          if (fields.locationPrivate && fields.exactAddress && window.koausListingPrivacy && window.koausListingPrivacy.savePrivateLocation) {
+            try {
+              await window.koausListingPrivacy.savePrivateLocation(
+                window.koausDb, window.koausFs, 'auto_posts', String(editingId),
+                { exactAddress: fields.exactAddress, exactLat: fields.exactLat, exactLng: fields.exactLng },
+                user.uid);
+            } catch (e) { console.warn('[auto] private_data 수정 실패', e); }
+          }
+          recordMyPost(Object.assign({ id: editingId, _fsDocId: editingId }, fields));
+          editingId = null;
+          console.log('[KoAus] auto used 글 수정 — fsDocId:', editingId);
+        } else {
+          // 옛 maintenance LS 글 (timestamp id) — 기존 localStorage 수정 유지 (스코프 밖)
+          const idx = posts.findIndex(x => String(x.id) === String(editingId));
+          if (idx < 0) { editingId = null; return; }
+          Object.assign(posts[idx], fields);
+          savePosts(posts);
+          recordMyPost(posts[idx]);
+          editingId = null;
+        }
       } else if (activeCategory === 'used' || activeCategory === 'rental') {
         // ── 새 중고차 글 → Firestore auto_posts (크로스기기 공유) — accom 패턴 미러 ──
         //   · 사진은 fields.imageUrls(__usedPhotoUrls — change 시점에 이미 Storage 업로드됨) 그대로 사용(방식 B).
@@ -2269,11 +2307,8 @@
       const _isMineFlag    = (_rbac && _rbac.isAuthor) ? _rbac.isAuthor(p) : isMine(p);
       const _isAdminFlag   = (_rbac && _rbac.isAdmin)  ? _rbac.isAdmin()   : false;
       if (_isMineFlag) {
-        // used/rental 은 Firestore 저장(마이그레이션) — edit(selfUpdate) 미배선 상태라 수정 시 onSnapshot 에 덮여
-        //   "가짜 수정" 됨 → 수정 버튼 숨김(풀 edit 는 후속 작업). maintenance(LS)는 Object.assign 수정 정상이라 유지.
-        if (p.category !== 'used' && p.category !== 'rental') {
-          _btns.push('<button class="detail-action-btn detail-edit-btn" id="detailEditBtn">✏️ 수정</button>');
-        }
+        // used/rental 은 Firestore(auto_posts) updateDoc 로 수정 배선됨 — 사진은 수정 모달 진입 시 기존 imageUrls 로 prefill 되어 보존.
+        _btns.push('<button class="detail-action-btn detail-edit-btn" id="detailEditBtn">✏️ 수정</button>');
         _btns.push('<button class="detail-action-btn detail-delete-btn" id="detailDeleteBtn">🗑 삭제</button>');
         _btns.push('<button class="detail-action-btn detail-complete-btn" id="detailCompleteBtn">✅ 거래 완료</button>');
         _btns.push('<button class="detail-action-btn detail-hide-btn" id="detailHideBtn">' + (p.isHidden ? '▶️ 다시 노출' : '⏸️ 일시 숨김') + '</button>');
@@ -2937,7 +2972,7 @@
       createUserWithEmailAndPassword, signInWithEmailAndPassword,
     } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
     import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app-check.js';
-    import { getFirestore, doc, getDoc, setDoc, addDoc, collection, serverTimestamp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
+    import { getFirestore, doc, getDoc, setDoc, addDoc, updateDoc, collection, serverTimestamp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
 
     const firebaseConfig = {
       apiKey:            'AIzaSyCamqnt0bNUD9uz1N5BbCuQjSkWLSpPqlU',
@@ -2964,7 +2999,7 @@
 
     const auth = getAuth(app);
     // 최근 검색 기록 동기화용 Firestore (콘솔에서 Firestore 활성화 + users 규칙 배포 시 동작)
-    try { window.koausDb = getFirestore(app); window.koausFs = { doc, getDoc, setDoc, addDoc, collection, serverTimestamp }; } catch (e) { /* Firestore 미설정 무시 */ }
+    try { window.koausDb = getFirestore(app); window.koausFs = { doc, getDoc, setDoc, addDoc, updateDoc, collection, serverTimestamp }; } catch (e) { /* Firestore 미설정 무시 */ }
 
     // ── Auth Modal ──
     const authOverlay = document.getElementById('authOverlay');
@@ -3433,6 +3468,16 @@
       window.__usedPhotoUrls  = [];
       renderThumbs(); updateLabel();
     });
+    // 수정 모달 진입 시 기존 사진 prefill — __usedPhotoUrls/__usedPhotoFiles 를 기존 imageUrls 로 복원(썸네일 포함).
+    //   · 텍스트만 수정해도 fields.imageUrls 가 비지 않아 기존 사진 유지. 새 글은 [] 로 호출해 빈 상태 보장.
+    //   · 기존 항목은 {previewUrl:url, existing:true} — change 핸들러가 새 사진을 length 인덱스로 append(정렬 유지),
+    //     delete 핸들러가 두 배열 동시 splice(이미 구현). revokeObjectURL(https URL)은 no-op.
+    window.__usedPhotoPrefill = (urls) => {
+      const arr = Array.isArray(urls) ? urls.slice(0, MAX_PHOTOS) : [];
+      window.__usedPhotoUrls  = arr.slice();
+      window.__usedPhotoFiles = arr.map(u => ({ previewUrl: u, name: '', existing: true }));
+      renderThumbs(); updateLabel();
+    };
   </script>
 
   <!-- ── 정비소/견인 사진 6장 첨부 + 미리보기 + Storage 업로드 (used 모듈과 동일 패턴, 격리) ── -->
