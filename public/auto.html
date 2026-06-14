@@ -1781,24 +1781,50 @@
         savePosts(posts);
         recordMyPost(posts[idx]);
         editingId = null;
+      } else if (activeCategory === 'used' || activeCategory === 'rental') {
+        // ── 새 중고차 글 → Firestore auto_posts (크로스기기 공유) — accom 패턴 미러 ──
+        //   · 사진은 fields.imageUrls(__usedPhotoUrls — change 시점에 이미 Storage 업로드됨) 그대로 사용(방식 B).
+        //   · stripPrivateFields 로 exact* 누수 차단, locationPrivate 시 private_data 별도 저장.
+        //   · status:'approved' 즉시 노출. onSnapshot(auto_posts) 이 STORE 캐싱(직접 savePosts 제거).
+        if (!window.koausDb || !window.koausFs) { alert('Firestore 미초기화 — 잠시 후 다시 시도해 주세요.'); return; }
+        const { addDoc: _add, collection: _col, serverTimestamp: _ts } = window.koausFs;
+        const target = {
+          state: currentState, category: activeCategory, isPremium: false,
+          author: nick, uid: user.uid || '', authorUid: user.uid || '',
+          date, time, status: 'approved', ...fields,
+        };
+        if (!String(target.body || '').trim()) target.body = ' ';   // rules reqStr body 1자↑ 정합
+        const safePayload = window.koausListingPrivacy
+          ? window.koausListingPrivacy.stripPrivateFields(Object.assign({}, target, { createdAt: _ts() }))
+          : Object.assign({}, target, { createdAt: _ts() });
+        let docRef;
+        try {
+          docRef = await _add(_col(window.koausDb, 'auto_posts'), safePayload);
+        } catch (e) {
+          console.error('[auto] Firestore 등록 실패', e);
+          alert('등록 실패: ' + (e?.code === 'permission-denied' ? '권한 거부 — 로그인 상태 및 필수 필드 확인' : (e?.code || e?.message || e)));
+          return;
+        }
+        // private_data 서브컬렉션 — used + 비공개 시 정확 위치만 별도 저장
+        if (target.locationPrivate && target.exactAddress && window.koausListingPrivacy && window.koausListingPrivacy.savePrivateLocation) {
+          try {
+            await window.koausListingPrivacy.savePrivateLocation(
+              window.koausDb, window.koausFs, 'auto_posts', docRef.id,
+              { exactAddress: target.exactAddress, exactLat: target.exactLat, exactLng: target.exactLng },
+              user.uid);
+          } catch (e) { console.warn('[auto] private_data 저장 실패 — 글은 등록됨', e); }
+        }
+        target.id = docRef.id; target._fsDocId = docRef.id;
+        recordMyPost(target);
+        console.log('[KoAus] auto used 글 Firestore 저장 — fsDocId:', docRef.id, '| locationPrivate:', !!target.locationPrivate);
       } else {
+        // maintenance 등 — 기존 localStorage 유지 (스코프 밖, 무변경)
         const target = {
           id: Date.now(), state: currentState, category: activeCategory, isPremium: false,
           author: nick, uid: user.uid || '',
           authorUid: user.uid || '',
           date, time, ...fields,
         };
-        // ── [마이그레이션 가이드] 향후 Firestore(auto_posts) 연동 시 ──────────
-        //   used 카테고리만 위치 비공개 대상. 다른 카테고리(rental/...)는 무관.
-        //     ① const safe = window.koausListingPrivacy.stripPrivateFields(target);
-        //        const ref = await addDoc(collection(db, 'auto_posts'), safe);
-        //     ② if (activeCategory === 'used' && target.locationPrivate) {
-        //          await window.koausListingPrivacy.savePrivateLocation(
-        //            db, fs, 'auto_posts', ref.id,
-        //            { exactAddress: target.exactAddress, exactLat: target.exactLat, exactLng: target.exactLng },
-        //            user.uid);
-        //        }
-        // ──────────────────────────────────────────────────────────────
         posts.push(target);
         savePosts(posts);
         recordMyPost(target);
@@ -2243,7 +2269,11 @@
       const _isMineFlag    = (_rbac && _rbac.isAuthor) ? _rbac.isAuthor(p) : isMine(p);
       const _isAdminFlag   = (_rbac && _rbac.isAdmin)  ? _rbac.isAdmin()   : false;
       if (_isMineFlag) {
-        _btns.push('<button class="detail-action-btn detail-edit-btn" id="detailEditBtn">✏️ 수정</button>');
+        // used/rental 은 Firestore 저장(마이그레이션) — edit(selfUpdate) 미배선 상태라 수정 시 onSnapshot 에 덮여
+        //   "가짜 수정" 됨 → 수정 버튼 숨김(풀 edit 는 후속 작업). maintenance(LS)는 Object.assign 수정 정상이라 유지.
+        if (p.category !== 'used' && p.category !== 'rental') {
+          _btns.push('<button class="detail-action-btn detail-edit-btn" id="detailEditBtn">✏️ 수정</button>');
+        }
         _btns.push('<button class="detail-action-btn detail-delete-btn" id="detailDeleteBtn">🗑 삭제</button>');
         _btns.push('<button class="detail-action-btn detail-complete-btn" id="detailCompleteBtn">✅ 거래 완료</button>');
         _btns.push('<button class="detail-action-btn detail-hide-btn" id="detailHideBtn">' + (p.isHidden ? '▶️ 다시 노출' : '⏸️ 일시 숨김') + '</button>');
@@ -3123,6 +3153,24 @@
     if (db) {
       const AUTO_CATS = ['maintenance','rental','towing'];
       const STORE = 'koaus-auto-posts';
+      // ── 분리 캐시 + 통합 라이터 — services(maint/towing) 와 auto_posts(used) 가 같은 STORE 를 클로버하지 않게 ──
+      //   · localOnly: maintenance 사용자 LS 글(_fsDocId 없음)은 보존. 옛 used/rental LS 글은 제거(FS 마이그레이션 — 사용자 결정).
+      let _svcCache = [], _usedCache = [];
+      function _writeAutoStore() {
+        let localOnly = [];
+        try {
+          localOnly = (JSON.parse(localStorage.getItem(STORE) || '[]'))
+            .filter(p => p && !p._fsDocId && p.category !== 'used' && p.category !== 'rental');
+        } catch (_) {}
+        const seen = new Set();
+        const fs = [..._svcCache, ..._usedCache].filter(p => {
+          if (!p || !p._fsDocId || seen.has(p._fsDocId)) return false;
+          seen.add(p._fsDocId); return true;
+        });
+        try { localStorage.setItem(STORE, JSON.stringify([...localOnly, ...fs])); } catch (_) {}
+        try { window.dispatchEvent(new Event('koaus-services-updated')); } catch (_) {}
+      }
+      // services 구독 (정비/렌터카/견인 — admin 글) — 기존 파생 로직 유지, 캐싱만 통합 라이터로
       try {
         onSnapshot(query(collection(db, 'services'), where('status', '==', 'approved'), orderBy('createdAt', 'desc'), limit(20)), snap => {
           const fsItems = snap.docs
@@ -3139,14 +3187,28 @@
             s.address   = s.address || s.region;
             s.tagline   = s.tagline || s.summary;
           });
-          const cur = (() => { try { return JSON.parse(localStorage.getItem(STORE) || '[]'); } catch { return []; } })();
-          const localOnly = cur.filter(p => !p._fsDocId);
-          const fsIds = new Set(fsItems.map(x => String(x.id)));
-          const merged = localOnly.filter(p => !fsIds.has(String(p.id))).concat(fsItems);
-          localStorage.setItem(STORE, JSON.stringify(merged));
-          window.dispatchEvent(new Event('koaus-services-updated'));
+          _svcCache = fsItems;
+          _writeAutoStore();
         }, err => console.warn('[auto] services 구독 실패', err));
       } catch (e) { console.warn('[auto] Firestore services subscribe 실패', e); }
+      // auto_posts 구독 (사용자 중고차 글 — 마이그레이션) — accom _accomMapDoc 패턴
+      try {
+        onSnapshot(query(collection(db, 'auto_posts'), where('status', '==', 'approved'), orderBy('createdAt', 'desc'), limit(20)), snap => {
+          _usedCache = snap.docs.map(d => {
+            const data = d.data() || {};
+            const o = { ...data, _fsDocId: d.id, id: d.id };
+            o._ts = (data.createdAt && data.createdAt.toMillis) ? data.createdAt.toMillis() : 0;
+            if (data.createdAt && data.createdAt.toMillis) {
+              const dt = data.createdAt.toDate(); const p = n => String(n).padStart(2,'0');
+              o.date = data.date || `${p(dt.getMonth()+1)}/${p(dt.getDate())}`;
+              o.time = data.time || `${p(dt.getHours())}:${p(dt.getMinutes())}`;
+            }
+            if (!Array.isArray(o.imageUrls)) o.imageUrls = [];
+            return o;
+          }).filter(p => !p.isHidden && p.status !== 'hidden');
+          _writeAutoStore();
+        }, err => console.warn('[auto] auto_posts 구독 실패', err));
+      } catch (e) { console.warn('[auto] Firestore auto_posts subscribe 실패', e); }
     }
   </script>
 
