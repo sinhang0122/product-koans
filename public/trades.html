@@ -1970,14 +1970,32 @@
       const rc = document.querySelector('.rea-content'); if (rc) rc.scrollTop = 0;
     }
 
-    function deletePost(id) {
+    async function deletePost(id) {
+      if (window.__tradesDeleting) return;   // 처리 중 중복 클릭 방지
       if (!confirm('정말 이 게시글을 삭제하시겠습니까?')) return;
-      savePosts(loadPosts().filter(x => String(x.id) !== String(id)));
-      removeRecord(MYPOSTS_KEY, id);
-      removeRecord(SAVED_KEY, id);
-      removeRecord(RECENT_KEY, id);
-      document.getElementById('detailOverlay').classList.remove('open');
-      renderAll();
+      window.__tradesDeleting = true;
+      try {
+        // trades user 글은 Firestore 'services' 에 저장(_fsDocId) — 작성자 본인 FS 문서까지 삭제해야 좀비 방지.
+        //   · services 룰이 작성자 본인 delete 허용(resource.data.uid == auth.uid). FS 삭제 실패 시 LS 도 안 지우고 중단(좀비 재발 방지).
+        const rec  = loadPosts().find(x => String(x.id) === String(id));
+        const fsId = rec && rec._fsDocId;
+        if (fsId && window.koausRbac && window.koausRbac.selfDelete) {
+          try {
+            await window.koausRbac.selfDelete('services', String(fsId));
+          } catch (e) {
+            alert('삭제 실패: ' + (e.code || e.message || e));
+            return;
+          }
+        }
+        savePosts(loadPosts().filter(x => String(x.id) !== String(id)));
+        removeRecord(MYPOSTS_KEY, id);
+        removeRecord(SAVED_KEY, id);
+        removeRecord(RECENT_KEY, id);
+        document.getElementById('detailOverlay').classList.remove('open');
+        renderAll();
+      } finally {
+        window.__tradesDeleting = false;
+      }
     }
 
     const closeDetail = () => document.getElementById('detailOverlay').classList.remove('open');
