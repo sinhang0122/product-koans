@@ -471,13 +471,15 @@ window.addEventListener('koaus-services-updated', () => setTimeout(injectCardAct
 window.__koausRenderBizHoursTable = function (hoursJson) {
   const DAY_LABEL = { mon:'월', tue:'화', wed:'수', thu:'목', fri:'금', sat:'토', sun:'일' };
   if (!hoursJson || typeof hoursJson !== 'object') return '';
+  // 저장형 XSS 차단 — hoursJson 값은 사용자 제어(rules 가 map 이라 검증 면제). innerHTML 삽입 전 escape.
+  const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   const rows = ['mon','tue','wed','thu','fri','sat','sun'].map(k => {
     const v = hoursJson[k];
     const isWeekend = (k === 'sat' || k === 'sun');
     const dayCls = isWeekend ? ' biz-hours-table-day--weekend' : '';
     if (!v) return '<tr><td class="biz-hours-table-day' + dayCls + '">' + DAY_LABEL[k] + '</td><td class="biz-hours-table-val biz-hours-table-val--empty">—</td></tr>';
     if (v === 'closed') return '<tr><td class="biz-hours-table-day' + dayCls + '">' + DAY_LABEL[k] + '</td><td class="biz-hours-table-val biz-hours-table-val--closed">휴무</td></tr>';
-    return '<tr><td class="biz-hours-table-day' + dayCls + '">' + DAY_LABEL[k] + '</td><td class="biz-hours-table-val">' + String(v) + '</td></tr>';
+    return '<tr><td class="biz-hours-table-day' + dayCls + '">' + DAY_LABEL[k] + '</td><td class="biz-hours-table-val">' + esc(v) + '</td></tr>';
   }).join('');
   return '<table class="biz-hours-table">' + rows + '</table>';
 };
