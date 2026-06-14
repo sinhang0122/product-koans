@@ -50,6 +50,8 @@
   <script src="koaus-map-cluster.js" defer></script>
   <script src="koaus-url-guard.js" defer></script>
   <script src="koaus-report.js" defer></script>
+  <script src="koaus-toast.js" defer></script>
+  <script src="koaus-share.js" defer></script>
   <script src="koaus-map-expand.js" defer></script>
   <script src="koaus-save-guard.js" defer></script>
   <script type="module" src="admin-mark.js"></script>
@@ -1983,6 +1985,20 @@
 
     // 초기 진입 시 Places 미리 로드 (자동완성 응답성)
     loadMapScript();
+
+    // 공유 딥링크 — 로드 시 ?id 있으면 데이터 준비될 때까지 폴링 후 상세 자동 오픈 (pushState 없는 읽기전용)
+    (function _jobsShareDeepLink() {
+      const id = new URLSearchParams(location.search).get('id');
+      if (!id) return;
+      let tries = 0;
+      const t = setInterval(() => {
+        if (++tries > 40) { clearInterval(t); return; }   // ~6s 후 포기
+        if (typeof openDetail !== 'function' || typeof loadPosts !== 'function') return;
+        const posts = loadPosts() || [];
+        const found = posts.find(x => String(x._fsDocId || '') === String(id) || String(x.id) === String(id));
+        if (found) { clearInterval(t); try { openDetail(found.id); } catch (_) {} }
+      }, 150);
+    })();
   </script>
 
   <!-- ── Auth Modal ── -->

@@ -55,6 +55,8 @@
   <script src="https://cdn.jsdelivr.net/npm/@googlemaps/markerclusterer@2.5.3/dist/index.min.js" defer></script>
   <script src="koaus-url-guard.js" defer></script>
   <script src="koaus-report.js" defer></script>
+  <script src="koaus-toast.js" defer></script>
+  <script src="koaus-share.js" defer></script>
   <script src="koaus-map-expand.js" defer></script>
   <script src="koaus-save-guard.js" defer></script>
   <script type="module" src="admin-mark.js"></script>
@@ -829,6 +831,10 @@
       <div class="rea-hero" id="detailHero">
         <div class="rea-hero-ph" id="detailHeroPh">
           <svg width="54" height="54" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        </div>
+        <!-- 공유 버튼 — 전역 koaus-share.js 가 capture-phase 로 ?id= 딥링크 복사 처리 (rent 는 딥링크 자동오픈 인프라 보유) -->
+        <div class="rea-hero-top">
+          <button class="rea-ovl-btn" id="detailShareBtn" type="button" aria-label="공유하기">🔗</button>
         </div>
         <div class="rea-hero-counter" id="detailHeroCounter">1 / 1</div>
       </div>
