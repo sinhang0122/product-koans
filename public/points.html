@@ -1232,7 +1232,7 @@
     });
 
     // Firestore 모듈이 데이터 도착 시 호출할 전역 콜백
-    window.__renderPartners = (arr) => { partners = arr || []; renderList(); };
+    window.__renderPartners = (arr) => { if (arr !== undefined) partners = arr || []; renderList(); };
 
     applyActiveCat();
     renderList();  // 초기: 빈 상태 안내
@@ -1976,6 +1976,9 @@
 
     onAuthStateChanged(auth, user => {
       window.koausAuth.user = user;
+      // 인증 해소(비동기) 후 리스트 재렌더 — 본인 글 카드 액션(수정/마감/삭제) 반영 (accom renderAll 패턴)
+      //   · 미수정 시: 인증 전 렌더된 카드가 전부 mine=false 라 본인 액션이 영영 안 뜸.
+      if (typeof window.__renderPartners === 'function') window.__renderPartners();
       // 상단 로그인 버튼 라벨 동기화
       if (topbarLoginBtn) {
         if (user) {
