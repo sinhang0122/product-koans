@@ -631,27 +631,63 @@
       </div>
     </div>
 
-    <!-- ── 비자/유학 상세 모달 (accom rea-detail 패턴 시각 매칭) ── -->
-    <div class="report-overlay" id="visaDetailOverlay">
-      <div class="report-card" style="max-width: 640px;">
-        <div class="report-header">
-          <span class="report-title" id="visaDetailTitle">제목</span>
-          <button type="button" class="report-close" id="visaDetailClose" aria-label="닫기">✕</button>
-        </div>
-        <div class="report-body" id="visaDetailBody"><!-- 동적 렌더 --></div>
-        <!-- 위치 (Location) — 주소가 있으면 자동 노출 + geocode 폴백 -->
-        <div class="rea-section" id="visaDetailLocation" style="display:none;margin-top:14px;">
-          <h3 class="rea-subtitle" style="font-size:14px;font-weight:800;margin:0 0 8px;">Location</h3>
-          <div class="rea-map-wrap" style="position:relative;">
-            <div class="detail-mini-map" id="visaDetailMiniMap" style="width:100%;border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;background:var(--bg-card);"></div>
+    <!-- ── 비자/유학 상세 모달 (accom .rea-detail 표준 이식 — 저장/공유/신고 버튼 제외) ── -->
+    <div class="post-detail-overlay" id="visaDetailOverlay">
+      <div class="post-detail-card rea-detail">
+       <div class="rea-scroll">
+        <!-- Hero 사진 영역 (첨부 사진 있으면 갤러리, 없으면 placeholder) -->
+        <div class="rea-hero" id="visaDetailHero">
+          <div class="rea-hero-ph" id="visaDetailHeroPh">
+            <svg width="54" height="54" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
           </div>
-          <div class="rea-loc-btns" style="display:flex;gap:8px;margin-top:8px;">
-            <a class="rea-loc-btn" id="visaDetailDirBtn" target="_blank" rel="noopener noreferrer" style="flex:1;text-align:center;">📍 길찾기</a>
-            <a class="rea-loc-btn" id="visaDetailSvBtn" target="_blank" rel="noopener noreferrer" style="flex:1;text-align:center;">🛣️ 스트릿뷰</a>
-          </div>
+          <div class="rea-hero-counter" id="visaDetailHeroCounter" style="display:none;">1 / 1</div>
         </div>
-        <!-- 동적 연락 버튼 컨테이너 — 다음 지시에서 JS 가 작성자 연락처에 맞춰 1~4개 버튼 inject -->
-        <div id="contact-action-container" class="contact-action-container" aria-label="연락 수단"></div>
+
+        <!-- Sticky 네비 헤더 -->
+        <div class="rea-navbar">
+          <button class="rea-back" id="visaDetailClose" type="button" aria-label="뒤로가기">‹</button>
+          <span class="rea-nav-title" id="visaDetailTitle"></span>
+          <button class="rea-nav-close" id="visaDetailCloseX" type="button" aria-label="닫기">✕</button>
+        </div>
+
+        <div class="rea-content">
+          <div class="rea-status" id="visaDetailStatus"></div>
+          <div class="rea-addr-row" id="visaDetailAddrRow" style="display:none;">
+            <span class="rea-addr" id="visaDetailAddrText"></span>
+            <button class="detail-addr-copy" id="visaDetailAddrCopy" type="button" title="주소 복사" aria-label="주소 복사">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            </button>
+          </div>
+          <div class="rea-summary" id="visaDetailSummary"></div>
+
+          <!-- 위치 (Location) — 주소/좌표 있으면 자동 노출 + geocode 폴백 -->
+          <div class="rea-section" id="visaDetailLocation" style="display:none;">
+            <h3 class="rea-subtitle">Location</h3>
+            <div class="rea-map-wrap">
+              <div class="detail-mini-map" id="visaDetailMiniMap"></div>
+            </div>
+            <div class="rea-loc-btns">
+              <a class="rea-loc-btn" id="visaDetailDirBtn" target="_blank" rel="noopener noreferrer"><span>📍 길찾기 <em>See travel times</em></span><span class="rea-loc-arrow">›</span></a>
+              <a class="rea-loc-btn" id="visaDetailSvBtn" target="_blank" rel="noopener noreferrer"><span>🛣️ 스트릿뷰 <em>Street View</em></span><span class="rea-loc-arrow">›</span></a>
+            </div>
+          </div>
+
+          <!-- Description -->
+          <div class="rea-section">
+            <h3 class="rea-subtitle">Description</h3>
+            <div class="rea-desc" id="visaDetailDesc"></div>
+          </div>
+
+          <!-- 출처/확인일 -->
+          <div class="rea-section" id="visaDetailProvenance" style="display:none;"></div>
+        </div>
+       </div><!-- /rea-scroll -->
+
+        <!-- Sticky 하단 액션바 (연락처) -->
+        <div class="rea-actionbar">
+          <button class="rea-contact-btn" id="visaDetailContactBtn" type="button" style="display:none;">연락처 보기</button>
+          <div id="contact-action-container" class="contact-action-container" aria-label="연락 수단"></div>
+        </div>
       </div>
     </div>
 
@@ -1396,39 +1432,82 @@
         try { if (merged.length) visaMap.fitBounds(bounds); if (merged.length === 1) visaMap.setZoom(13); } catch (_) {}
       }
 
-      // 상세 모달
+      // 상세 모달 (accom .rea-detail 표준 슬롯 채우기)
       function openVisaDetail(p) {
         if (!detailOv) return;
         const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-        document.getElementById('visaDetailTitle').textContent = p.title || p.name || '';
+        const $ = id => document.getElementById(id);
+        // 제목 (navbar)
+        $('visaDetailTitle').textContent = p.title || p.name || '';
+        // Hero 사진 갤러리 + 카운터 동기화 + 클릭 라이트박스 (accom 표준)
+        const hero = $('visaDetailHero'), heroPh = $('visaDetailHeroPh'), counter = $('visaDetailHeroCounter');
         const imgs = Array.isArray(p.imageUrls) ? p.imageUrls : [];
-        const galleryHtml = imgs.length
-          ? '<div style="display:flex;gap:6px;overflow-x:auto;scroll-snap-type:x mandatory;margin:0 0 12px;-webkit-overflow-scrolling:touch;">'
-            + imgs.map(u => '<img src="'+esc(u)+'" data-koaus-gallery="visa-detail-'+esc(p.id)+'" data-src="'+esc(u)+'" loading="lazy" style="flex:0 0 auto;width:78%;max-height:220px;height:auto;border-radius:10px;object-fit:cover;border:1px solid var(--border);cursor:zoom-in;scroll-snap-align:start;" />').join('')
-            + '</div>'
-          : '';
-        const meta = [
-          p.visaType ? '<span style="font-weight:800;">🛂 ' + esc(p.visaType) + '</span>' : '',
-          p.category === 'legal' ? '⚖ 법무법인' : (p.category === 'education' ? '🎓 유학원' : ''),
-          p.marn ? '🪪 MARN ' + esc(p.marn) : '',
-          p.address ? '📍 ' + esc(p.address) : '',
-        ].filter(Boolean).join(' · ');
-        const body = (p.body || p.summary || p.description || '').replace(/\n/g, '<br>');
-        const contact = p.contact ? '<div style="margin-top:10px;padding:10px 12px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;font-size:13.5px;"><strong>📞 연락처:</strong> ' + esc(p.contact) + '</div>' : '';
-        const provenance = (p.providedBy || p.lastReviewedAt)
-          ? '<div style="margin-top:8px;font-size:12px;color:var(--text-muted);">'
-            + [p.providedBy ? '정보 제공: ' + esc(p.providedBy) : '', p.lastReviewedAt ? '최종 확인일: ' + esc(p.lastReviewedAt) : ''].filter(Boolean).join(' · ')
-            + '</div>'
-          : '';
-        document.getElementById('visaDetailBody').innerHTML =
-          galleryHtml +
-          (meta ? '<div style="font-size:12.5px;color:var(--text-secondary);margin-bottom:10px;">' + meta + '</div>' : '') +
-          '<div style="font-size:14px;line-height:1.6;color:var(--text-primary);">' + body + '</div>' +
-          contact + provenance;
+        if (hero) {
+          const oldGal = hero.querySelector('.detail-hero-gallery'); if (oldGal) oldGal.remove();
+          if (imgs.length) {
+            const N = imgs.length;
+            if (heroPh) heroPh.style.display = 'none';
+            if (counter) { counter.textContent = `1 / ${N}`; counter.style.display = ''; }
+            const wrap = document.createElement('div');
+            wrap.className = 'detail-hero-gallery';
+            wrap.innerHTML = imgs.map(u => `<img src="${esc(u)}" alt="" loading="lazy" data-src="${esc(u)}" />`).join('');
+            hero.appendChild(wrap);
+            wrap.addEventListener('scroll', () => {
+              const w = wrap.clientWidth || 1;
+              const idx = Math.min(N, Math.max(1, Math.round(wrap.scrollLeft / w) + 1));
+              if (counter) counter.textContent = `${idx} / ${N}`;
+            }, { passive: true });
+            wrap.addEventListener('click', e => {
+              const t = e.target.closest('img'); if (!t) return;
+              const list = [...wrap.querySelectorAll('img')];
+              const idx = Math.max(0, list.indexOf(t));
+              if (window.koausGallery && window.koausGallery.open) window.koausGallery.open(imgs, idx);
+            });
+          } else {
+            if (heroPh) heroPh.style.display = '';
+            if (counter) counter.style.display = 'none';
+          }
+        }
+        // 상태 칩 (카테고리)
+        const st = $('visaDetailStatus');
+        if (st) st.textContent = p.category === 'legal' ? '⚖ 법무법인 / 비자 · 이민'
+                               : (p.category === 'education' ? '🎓 유학원 · 어학원' : '비자 · 유학 정보');
+        // 주소 + 복사
+        const addrRow = $('visaDetailAddrRow'), addrText = $('visaDetailAddrText'), addrCopy = $('visaDetailAddrCopy');
+        if (p.address) {
+          if (addrRow) addrRow.style.display = '';
+          if (addrText) addrText.textContent = '📍 ' + p.address;
+          if (addrCopy) addrCopy.onclick = () => { try { navigator.clipboard.writeText(p.address); } catch (_) {} };
+        } else if (addrRow) addrRow.style.display = 'none';
+        // 요약 칩 (visaType / MARN)
+        const sum = [];
+        if (p.visaType) sum.push('🛂 ' + p.visaType);
+        if (p.marn)     sum.push('🪪 MARN ' + p.marn);
+        const sm = $('visaDetailSummary');
+        if (sm) sm.innerHTML = sum.map(s => `<span class="rea-chip">${esc(s)}</span>`).join('');
+        // 본문 (.rea-desc 는 white-space:pre-wrap → textContent 로 줄바꿈 보존 + XSS 안전)
+        const desc = $('visaDetailDesc');
+        if (desc) desc.textContent = p.body || p.summary || p.description || '';
+        // 출처/확인일
+        const prov = [];
+        if (p.providedBy)     prov.push('정보 제공: ' + p.providedBy);
+        if (p.lastReviewedAt) prov.push('최종 확인일: ' + p.lastReviewedAt);
+        const pv = $('visaDetailProvenance');
+        if (pv) { if (prov.length) { pv.style.display = ''; pv.innerHTML = `<div style="font-size:12px;color:var(--text-muted);">${esc(prov.join(' · '))}</div>`; } else pv.style.display = 'none'; }
+        // 레거시 연락처 버튼 (자유 문자열 p.contact — phone/kakao/email 은 koausContactActions 가 처리)
+        const cbtn = $('visaDetailContactBtn');
+        if (cbtn) {
+          if (p.contact) {
+            cbtn.style.display = '';
+            const isLink = /^https?:\/\//i.test(p.contact);
+            cbtn.textContent = isLink ? '💬 연락하기' : '📞 연락처 보기';
+            cbtn.onclick = () => { if (isLink) window.open(p.contact, '_blank', 'noopener'); else { try { navigator.clipboard.writeText(p.contact); } catch (_) {} alert('연락처: ' + p.contact); } };
+          } else { cbtn.style.display = 'none'; cbtn.onclick = null; }
+        }
         detailOv.classList.add('open');
-        // 동적 연락 버튼 컨테이너 — phone/kakaoLink/email 분리 필드 기반 자동 렌더 (koaus-contact-actions.js)
+        const sc = detailOv.querySelector('.rea-scroll'); if (sc) sc.scrollTop = 0;
+        // 동적 연락 버튼(phone/kakaoLink/email) + 위치 지도(lat/lng 우선, 없으면 address geocode)
         if (window.koausContactActions) window.koausContactActions.render(p);
-        // 지도 (lat/lng 우선, 없으면 address 로 geocode 폴백)
         setupVisaDetailLocation(p);
       }
 
@@ -1499,6 +1578,8 @@
         tryInit();
       }
       if (detailClose) detailClose.addEventListener('click', () => detailOv.classList.remove('open'));
+      const detailCloseX = document.getElementById('visaDetailCloseX');
+      if (detailCloseX) detailCloseX.addEventListener('click', () => detailOv.classList.remove('open'));
       if (detailOv) detailOv.addEventListener('click', e => { if (e.target === detailOv) detailOv.classList.remove('open'); });
       // partnerList 항목 클릭 → 상세 (이벤트 위임)
       //   · 카드 통일(라운드2)에서 카드 속성이 data-partner-id → data-id 로 바뀌며 위임 셀렉터만 옛것으로 남아 상세가 안 열리던 회귀 복구.
