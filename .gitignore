@@ -10,6 +10,8 @@ package-lock.json
 
 # Firebase CLI deploy cache (매 deploy마다 변경 — 추적 불필요)
 .firebase/
+firebase-debug.log
+firebase-debug.*.log
 
 # 🔐 Firebase 서비스 계정 키 (절대 커밋 금지)
 service-account-key.json
