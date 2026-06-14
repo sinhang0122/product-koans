@@ -1674,6 +1674,12 @@
       const wErr = document.getElementById('wError');
       wErr.textContent = '';
 
+      // 사진 업로드(change 핸들러 비동기) 진행 중 등록 차단 — 빈 imageUrls 저장(사진 유실) 방지
+      if (((window.__usedPhotoBusy||0) + (window.__maintPhotoBusy||0)) > 0) {
+        alert('사진을 처리 중입니다. 잠시 후 다시 등록해 주세요.');
+        return;
+      }
+
       let fields;
       if (activeCategory === 'used' || activeCategory === 'rental') {
         // 중고차 판매(used): 사용자 글쓰기 — 사진 6 장 첨부 가능.
@@ -3279,7 +3285,7 @@
         // 동시성 3 병렬 (직렬→3병렬, 체감 ~3× 단축) + 단계 표시
         const batch = files.slice(0, remain);
         const _lb = $$('usedPhotoBtnLabel');
-        const setBusy = b => { if (_lb) _lb.textContent = b ? '⏳ 압축·업로드 중…' : `사진 첨부 (${(window.__usedPhotoFiles||[]).length}/${MAX_PHOTOS})`; };
+        const setBusy = b => { if (_lb) _lb.textContent = b ? '⏳ 압축·업로드 중…' : `사진 첨부 (${(window.__usedPhotoFiles||[]).length}/${MAX_PHOTOS})`; window.__usedPhotoBusy = Math.max(0, (window.__usedPhotoBusy||0) + (b ? 1 : -1)); const _sb = document.getElementById('writeBtnSubmit'); if (_sb) _sb.disabled = ((window.__usedPhotoBusy||0) + (window.__maintPhotoBusy||0)) > 0; };
         setBusy(true);
         let _next = 0;
         const _worker = async () => {
@@ -3387,7 +3393,7 @@
         if (!u) { alert('사진 업로드는 로그인 후 이용 가능합니다.'); return; }
         const batch = files.slice(0, remain);
         const _lb = $$('maintPhotoBtnLabel');
-        const setBusy = b => { if (_lb) _lb.textContent = b ? '⏳ 압축·업로드 중…' : `사진 첨부 (${(window.__maintPhotoFiles||[]).length}/${MAX_PHOTOS})`; };
+        const setBusy = b => { if (_lb) _lb.textContent = b ? '⏳ 압축·업로드 중…' : `사진 첨부 (${(window.__maintPhotoFiles||[]).length}/${MAX_PHOTOS})`; window.__maintPhotoBusy = Math.max(0, (window.__maintPhotoBusy||0) + (b ? 1 : -1)); const _sb = document.getElementById('writeBtnSubmit'); if (_sb) _sb.disabled = ((window.__usedPhotoBusy||0) + (window.__maintPhotoBusy||0)) > 0; };
         setBusy(true);
         let _next = 0;
         const _worker = async () => {

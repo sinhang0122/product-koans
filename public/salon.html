@@ -1346,6 +1346,8 @@
     async function submitPost() {
       const user = window.koausAuth && window.koausAuth.user;
       if (!user) { window.koausAuth && window.koausAuth.openAuthModal(); return; }
+      // 사진 업로드(change 핸들러 비동기) 진행 중 등록 차단 — 빈 imageUrls 저장(사진 유실) 방지
+      if ((window.__rqPhotoBusy||0) > 0) { alert('사진을 처리 중입니다. 잠시 후 다시 등록해 주세요.'); return; }
 
       const isFind     = activeMode === 'find';
       const title      = document.getElementById('wTitle').value.trim();
@@ -2994,7 +2996,7 @@
         const u = auth.currentUser; if (!u) { alert('로그인 후 사진 업로드 가능합니다.'); return; }
         const batch = files.slice(0, rem);
         const _lb = $$('rqPhotoBtnLabel');
-        const setBusy = b => { if (_lb) _lb.textContent = b ? '⏳ 압축·업로드 중…' : `사진 첨부 (${(window.__rqPhotoFiles||[]).length}/${MAX})`; };
+        const setBusy = b => { if (_lb) _lb.textContent = b ? '⏳ 압축·업로드 중…' : `사진 첨부 (${(window.__rqPhotoFiles||[]).length}/${MAX})`; window.__rqPhotoBusy = Math.max(0, (window.__rqPhotoBusy||0) + (b ? 1 : -1)); const _sb = document.getElementById('writeBtnSubmit'); if (_sb) _sb.disabled = (window.__rqPhotoBusy||0) > 0; };
         setBusy(true);
         let _next = 0;
         const _worker = async () => {

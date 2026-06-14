@@ -1517,10 +1517,13 @@
       if (detailClose) detailClose.addEventListener('click', () => detailOv.classList.remove('open'));
       if (detailOv) detailOv.addEventListener('click', e => { if (e.target === detailOv) detailOv.classList.remove('open'); });
       // partnerList 항목 클릭 → 상세 (이벤트 위임)
+      //   · 카드 통일(라운드2)에서 카드 속성이 data-partner-id → data-id 로 바뀌며 위임 셀렉터만 옛것으로 남아 상세가 안 열리던 회귀 복구.
+      //   · 액션 버튼(수정/마감/삭제/신고/찜)은 각자 핸들러에 양보(중복 동작 방지).
       document.addEventListener('click', e => {
-        const card = e.target.closest('[data-partner-id]');
+        if (e.target.closest('[data-rbac-act], .mini-btn, .bookmark-btn, button, a')) return;
+        const card = e.target.closest('.partner-card[data-id]');
         if (!card) return;
-        const id = card.getAttribute('data-partner-id');
+        const id = card.getAttribute('data-id');
         const p = (window.partners || []).find(x => String(x.id) === String(id));
         if (p) openVisaDetail(p);
       });
@@ -1545,6 +1548,11 @@
         return;
       }
 
+        // 사진 업로드(change 핸들러 비동기) 진행 중 등록 차단 — 빈 imageUrls 저장(사진 유실) 방지
+        if ((window.__visaPhotoBusy||0) > 0) {
+          alert('사진을 처리 중입니다. 잠시 후 다시 등록해 주세요.');
+          return;
+        }
         const errEl = document.getElementById('vwError');
         errEl.textContent = '';
         const title    = document.getElementById('vwTitle').value.trim();
@@ -2026,7 +2034,7 @@
         if (!u) { alert('사진 업로드는 로그인 후 이용 가능합니다.'); return; }
         const batch = files.slice(0, remain);
         const _lb = $$('vwPhotoBtnLabel');
-        const setBusy = b => { if (_lb) _lb.textContent = b ? '⏳ 압축·업로드 중…' : `사진 첨부 (${(window.__visaPhotoFiles||[]).length}/${MAX_PHOTOS})`; };
+        const setBusy = b => { if (_lb) _lb.textContent = b ? '⏳ 압축·업로드 중…' : `사진 첨부 (${(window.__visaPhotoFiles||[]).length}/${MAX_PHOTOS})`; window.__visaPhotoBusy = Math.max(0, (window.__visaPhotoBusy||0) + (b ? 1 : -1)); const _sb = document.getElementById('vwSubmit'); if (_sb) _sb.disabled = (window.__visaPhotoBusy||0) > 0; };
         setBusy(true);
         let _next = 0;
         const _worker = async () => {
