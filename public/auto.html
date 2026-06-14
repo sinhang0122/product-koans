@@ -52,6 +52,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@googlemaps/markerclusterer@2.5.3/dist/index.min.js" defer></script>
   <script src="koaus-url-guard.js" defer></script>
   <script src="koaus-report.js" defer></script>
+  <script src="koaus-toast.js" defer></script>
   <script src="koaus-map-expand.js" defer></script>
   <script src="koaus-save-guard.js" defer></script>
   <script type="module" src="admin-mark.js"></script>
@@ -838,8 +839,8 @@
     <div class="post-detail-card rea-detail">
      <div class="rea-scroll">
       <!-- Hero 사진 영역 (Placeholder) -->
-      <div class="rea-hero">
-        <div class="rea-hero-ph">
+      <div class="rea-hero" id="detailHero">
+        <div class="rea-hero-ph" id="detailHeroPh">
           <svg width="54" height="54" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
         </div>
         <div class="rea-hero-top">
@@ -853,7 +854,7 @@
             </div>
           </div>
         </div>
-        <div class="rea-hero-counter">1 / 5</div>
+        <div class="rea-hero-counter" id="detailHeroCounter">1 / 1</div>
       </div>
 
       <!-- Sticky 네비 헤더 -->
@@ -2126,12 +2127,55 @@
     }
 
     let currentDetailPost = null;
+    // 라이트박스 — 전역 공통 갤러리(koaus-gallery.js) 풀스크린 + 스와이프 + 줌
+    function openLightbox(urls, initialIndex) {
+      const list = Array.isArray(urls) ? urls : (urls ? [urls] : []);
+      if (!list.length) return;
+      if (window.koausGallery && typeof window.koausGallery.open === 'function') {
+        window.koausGallery.open(list, Number(initialIndex) || 0);
+      }
+    }
+
     function openDetail(id) {
       const posts = loadPosts();
       const p = posts.find(x => String(x.id) === String(id));
       if (!p) return;
       currentDetailPost = p;
       window.currentDetailPost = p; // koaus-report.js 신고 스냅샷용 노출 (id 일치 시에만 소비)
+
+      // Hero 영역에 첨부 사진(있을 시) — 가로 스크롤 갤러리 + 카운터 동기화 + 클릭 시 라이트박스 (accom 표준 이식)
+      const hero = document.getElementById('detailHero');
+      const heroPh = document.getElementById('detailHeroPh');
+      const counter = document.getElementById('detailHeroCounter');
+      if (hero) {
+        const oldGal = hero.querySelector('.detail-hero-img, .detail-hero-gallery');
+        if (oldGal) oldGal.remove();
+        if (Array.isArray(p.imageUrls) && p.imageUrls.length) {
+          const N = p.imageUrls.length;
+          if (heroPh) heroPh.style.display = 'none';
+          if (counter) { counter.textContent = `1 / ${N}`; counter.style.display = ''; }
+          const wrap = document.createElement('div');
+          wrap.className = 'detail-hero-gallery';
+          wrap.innerHTML = p.imageUrls.map(u =>
+            `<img src="${escHtml(u)}" alt="" loading="lazy" data-src="${escHtml(u)}" />`
+          ).join('');
+          hero.appendChild(wrap);
+          wrap.addEventListener('scroll', () => {
+            const w = wrap.clientWidth || 1;
+            const idx = Math.min(N, Math.max(1, Math.round(wrap.scrollLeft / w) + 1));
+            if (counter) counter.textContent = `${idx} / ${N}`;
+          }, { passive: true });
+          wrap.addEventListener('click', e => {
+            const t = e.target.closest('img'); if (!t) return;
+            const imgs = [...wrap.querySelectorAll('img')];
+            const idx = Math.max(0, imgs.indexOf(t));
+            openLightbox(p.imageUrls, idx);
+          });
+        } else {
+          if (heroPh) heroPh.style.display = '';
+          if (counter) counter.style.display = 'none';
+        }
+      }
 
       document.getElementById('detailNavTitle').textContent = p.title;
       const cat = groupOf(p.category);
@@ -3285,7 +3329,7 @@
         // 동시성 3 병렬 (직렬→3병렬, 체감 ~3× 단축) + 단계 표시
         const batch = files.slice(0, remain);
         const _lb = $$('usedPhotoBtnLabel');
-        const setBusy = b => { if (_lb) _lb.textContent = b ? '⏳ 압축·업로드 중…' : `사진 첨부 (${(window.__usedPhotoFiles||[]).length}/${MAX_PHOTOS})`; window.__usedPhotoBusy = Math.max(0, (window.__usedPhotoBusy||0) + (b ? 1 : -1)); const _sb = document.getElementById('writeBtnSubmit'); if (_sb) _sb.disabled = ((window.__usedPhotoBusy||0) + (window.__maintPhotoBusy||0)) > 0; };
+        const setBusy = b => { if (_lb) _lb.textContent = b ? '⏳ 압축·업로드 중…' : `사진 첨부 (${(window.__usedPhotoFiles||[]).length}/${MAX_PHOTOS})`; window.__usedPhotoBusy = Math.max(0, (window.__usedPhotoBusy||0) + (b ? 1 : -1)); const _tot = (window.__usedPhotoBusy||0) + (window.__maintPhotoBusy||0); const _sb = document.getElementById('writeBtnSubmit'); if (_sb) _sb.disabled = _tot > 0; if (window.koausToast) { _tot > 0 ? window.koausToast.show('⏳ 사진 처리 중…') : window.koausToast.hide(); } };
         setBusy(true);
         let _next = 0;
         const _worker = async () => {
@@ -3393,7 +3437,7 @@
         if (!u) { alert('사진 업로드는 로그인 후 이용 가능합니다.'); return; }
         const batch = files.slice(0, remain);
         const _lb = $$('maintPhotoBtnLabel');
-        const setBusy = b => { if (_lb) _lb.textContent = b ? '⏳ 압축·업로드 중…' : `사진 첨부 (${(window.__maintPhotoFiles||[]).length}/${MAX_PHOTOS})`; window.__maintPhotoBusy = Math.max(0, (window.__maintPhotoBusy||0) + (b ? 1 : -1)); const _sb = document.getElementById('writeBtnSubmit'); if (_sb) _sb.disabled = ((window.__usedPhotoBusy||0) + (window.__maintPhotoBusy||0)) > 0; };
+        const setBusy = b => { if (_lb) _lb.textContent = b ? '⏳ 압축·업로드 중…' : `사진 첨부 (${(window.__maintPhotoFiles||[]).length}/${MAX_PHOTOS})`; window.__maintPhotoBusy = Math.max(0, (window.__maintPhotoBusy||0) + (b ? 1 : -1)); const _tot = (window.__usedPhotoBusy||0) + (window.__maintPhotoBusy||0); const _sb = document.getElementById('writeBtnSubmit'); if (_sb) _sb.disabled = _tot > 0; if (window.koausToast) { _tot > 0 ? window.koausToast.show('⏳ 사진 처리 중…') : window.koausToast.hide(); } };
         setBusy(true);
         let _next = 0;
         const _worker = async () => {

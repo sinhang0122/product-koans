@@ -49,6 +49,7 @@
   <script src="koaus-map-cluster.js" defer></script>
   <script src="koaus-url-guard.js" defer></script>
   <script src="koaus-report.js" defer></script>
+  <script src="koaus-toast.js" defer></script>
   <script src="koaus-map-expand.js" defer></script>
   <script src="koaus-save-guard.js" defer></script>
   <script type="module" src="admin-mark.js"></script>
@@ -3042,7 +3043,7 @@
         const u = auth.currentUser; if (!u) { alert('로그인 후 사진 업로드 가능합니다.'); return; }
         const batch = files.slice(0, rem);
         const _lb = $$('rqPhotoBtnLabel');
-        const setBusy = b => { if (_lb) _lb.textContent = b ? '⏳ 압축·업로드 중…' : `사진 첨부 (${(window.__rqPhotoFiles||[]).length}/${MAX})`; window.__rqPhotoBusy = Math.max(0, (window.__rqPhotoBusy||0) + (b ? 1 : -1)); const _sb = document.getElementById('writeBtnSubmit'); if (_sb) _sb.disabled = (window.__rqPhotoBusy||0) > 0; };
+        const setBusy = b => { if (_lb) _lb.textContent = b ? '⏳ 압축·업로드 중…' : `사진 첨부 (${(window.__rqPhotoFiles||[]).length}/${MAX})`; window.__rqPhotoBusy = Math.max(0, (window.__rqPhotoBusy||0) + (b ? 1 : -1)); const _sb = document.getElementById('writeBtnSubmit'); if (_sb) _sb.disabled = (window.__rqPhotoBusy||0) > 0; if (window.koausToast) { (window.__rqPhotoBusy||0) > 0 ? window.koausToast.show('⏳ 사진 처리 중…') : window.koausToast.hide(); } };
         setBusy(true);
         let _next = 0;
         const _worker = async () => {
