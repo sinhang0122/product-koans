@@ -2259,8 +2259,14 @@
       const _bCp = document.getElementById('detailCompleteBtn'); if (_bCp) _bCp.onclick = async () => {
         if (!confirm('거래 완료 처리하시겠습니까? (status=completed)')) return;
         try {
-          const fsId = p.fsDocId || p.id;
-          if (_rbac && _rbac.markCompleted) await _rbac.markCompleted('services', String(fsId));
+          // auto 본문은 localStorage 저장(타임스탬프 id) — Firestore 글(_fsDocId)일 때만 rbac, 아니면 localStorage 토글
+          //   · 옛 버그: services 를 p.id(타임스탬프)로 호출 → "No document to update". deletePost 의 _fsDocId 게이트와 동일 패턴으로 정합.
+          if (p._fsDocId && _rbac && _rbac.markCompleted) {
+            await _rbac.markCompleted('auto_posts', String(p._fsDocId));
+          } else {
+            const posts = loadPosts(); const t = posts.find(x => String(x.id) === String(p.id));
+            if (t) { t.status = 'completed'; savePosts(posts); }
+          }
           alert('✅ 거래 완료 처리'); document.getElementById('detailOverlay').classList.remove('open'); renderAll();
         } catch (e) { alert('완료 실패: ' + (e.message || e)); }
       };
@@ -2268,8 +2274,12 @@
         const willHide = !p.isHidden;
         if (!confirm(willHide ? '이 글을 일시 숨김 처리하시겠습니까?' : '다시 노출하시겠습니까?')) return;
         try {
-          const fsId = p.fsDocId || p.id;
-          if (_rbac && _rbac.toggleHidden) await _rbac.toggleHidden('services', String(fsId), !!p.isHidden);
+          if (p._fsDocId && _rbac && _rbac.toggleHidden) {
+            await _rbac.toggleHidden('auto_posts', String(p._fsDocId), !!p.isHidden);
+          } else {
+            const posts = loadPosts(); const t = posts.find(x => String(x.id) === String(p.id));
+            if (t) { t.isHidden = willHide; t.status = willHide ? 'hidden' : ''; savePosts(posts); }
+          }
           alert(willHide ? '⏸️ 일시 숨김 처리 완료' : '▶️ 다시 노출 처리 완료');
           document.getElementById('detailOverlay').classList.remove('open'); renderAll();
         } catch (e) { alert('상태 변경 실패: ' + (e.message || e)); }
@@ -2277,8 +2287,7 @@
       const _bAd = document.getElementById('detailAdminDelBtn'); if (_bAd) _bAd.onclick = async () => {
         if (!confirm('관리자 권한으로 이 글을 영구 삭제하시겠습니까? (사진·위치정보 포함 완전 삭제)')) return;
         try {
-          const fsId = p.fsDocId || p._fsDocId || p.id;
-          await _rbac.forceDelete('services', String(fsId));
+          if (p._fsDocId) await _rbac.forceDelete('auto_posts', String(p._fsDocId));
           savePosts(loadPosts().filter(x => String(x.id) !== String(p.id)));
           alert('🗑 강제 삭제 완료');
           document.getElementById('detailOverlay').classList.remove('open'); renderAll();

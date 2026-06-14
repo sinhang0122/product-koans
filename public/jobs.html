@@ -1220,7 +1220,7 @@
       const _bCp = document.getElementById('detailCompleteBtn'); if (_bCp) _bCp.onclick = async () => {
         if (!confirm('구인을 마감 처리하시겠습니까? (status=completed)')) return;
         try {
-          const fsId = p.fsDocId || p.id;
+          const fsId = p._fsDocId || p.fsDocId || p.id;   // 스냅샷이 _fsDocId 채움 — 옛 p.fsDocId 오타 → p.id 타임스탬프 폴백 회귀 교정
           if (_rbac && _rbac.markCompleted) await _rbac.markCompleted('jobs_posts', String(fsId));
           alert('✅ 구인 마감 처리 완료');
           document.getElementById('detailOverlay').classList.remove('open');
@@ -1231,7 +1231,7 @@
         const willHide = !p.isHidden;
         if (!confirm(willHide ? '이 글을 일시 숨김 처리하시겠습니까? (메인 리스트에서 제외)' : '다시 노출하시겠습니까?')) return;
         try {
-          const fsId = p.fsDocId || p.id;
+          const fsId = p._fsDocId || p.fsDocId || p.id;   // 스냅샷이 _fsDocId 채움 — 옛 p.fsDocId 오타 → p.id 타임스탬프 폴백 회귀 교정
           if (_rbac && _rbac.toggleHidden) await _rbac.toggleHidden('jobs_posts', String(fsId), !!p.isHidden);
           alert(willHide ? '⏸️ 일시 숨김 처리 완료' : '▶️ 다시 노출 처리 완료');
           document.getElementById('detailOverlay').classList.remove('open'); renderPosts();
