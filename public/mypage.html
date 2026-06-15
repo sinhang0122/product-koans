@@ -507,6 +507,15 @@
         <button class="mypage-photo-btn" id="mpPhotoBtn">사진 교체</button>
       </div>
 
+      <!-- 4) 휴대폰 번호 (Phone) — 본인확인 보조 인증(로그인은 이메일/구글). 변경 시 reauth 후 재인증 -->
+      <div class="mypage-account-row">
+        <div class="mypage-account-row-info">
+          <div class="mypage-account-row-label">휴대폰 번호 (Phone)</div>
+          <div class="mypage-account-row-desc" id="mpPhone">—</div>
+        </div>
+        <button class="mypage-edit-btn" id="mpPhoneBtn">휴대폰 인증</button>
+      </div>
+
       <!-- 5) Danger Zone — 계정 삭제 (탈퇴) · Privacy Policy §9 (6개월 암호화 보관 후 파기) -->
       <div class="mypage-account-row" id="mpDeleteRow" style="border-top:2px solid var(--red,#dc2626);margin-top:14px;padding-top:14px;">
         <div class="mypage-account-row-info">
@@ -728,6 +737,7 @@
     import {
       getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut,
       createUserWithEmailAndPassword, signInWithEmailAndPassword, deleteUser,
+      reauthenticateWithPopup, reauthenticateWithCredential, EmailAuthProvider,
     } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
     import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app-check.js';
     import { getFirestore, doc, getDoc, setDoc, deleteDoc, runTransaction, collection, getDocs, query, where, limit } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
@@ -1410,12 +1420,31 @@
         if (!setAvatarPhoto(cachedPhoto)) {
           av.textContent = (nick[0] || '?').toUpperCase();
         }
+        // 휴대폰 번호 행 (폰③) — 보조 인증 표시. 마스킹 + 상태별 버튼 라벨.
+        const _mpPhoneEl  = document.getElementById('mpPhone');
+        const _mpPhoneBtn = document.getElementById('mpPhoneBtn');
+        function _renderPhoneRow(released) {
+          const ph = user.phoneNumber || '';
+          if (ph) {
+            if (_mpPhoneEl) _mpPhoneEl.textContent = ph.slice(0, 3) + ' ··· ··· ' + ph.slice(-3);
+            if (_mpPhoneBtn) _mpPhoneBtn.textContent = '번호 변경';
+          } else if (released) {
+            if (_mpPhoneEl) _mpPhoneEl.textContent = '이전 번호가 재발급되어 연결이 해제됐어요. 새 번호로 다시 인증해 주세요.';
+            if (_mpPhoneBtn) _mpPhoneBtn.textContent = '휴대폰 인증';
+          } else {
+            if (_mpPhoneEl) _mpPhoneEl.textContent = '미인증';
+            if (_mpPhoneBtn) _mpPhoneBtn.textContent = '휴대폰 인증';
+          }
+        }
+        _renderPhoneRow(false);
         try {
           getDoc(doc(db, 'users', user.uid)).then(snap => {
             const data = snap && snap.exists() ? snap.data() : null;
             if (data && data.photoURL && setAvatarPhoto(data.photoURL)) {
               localStorage.setItem('koaus-photo-url', data.photoURL);
             }
+            // 폰④로 번호 해제된 상태(phoneReleased) + 현재 미연결 → 재인증 안내 (읽기 전용 — 재인증 시 phoneNumber 생겨 자연 소멸)
+            if (data && data.phoneReleased && !user.phoneNumber) _renderPhoneRow(true);
           });
         } catch (_) {}
         document.getElementById('mpEmail').textContent = user.email || '';
@@ -1429,6 +1458,31 @@
         loginReq.style.display = ''; prof.style.display = 'none'; tabs.style.display = 'none'; list.style.display = 'none';
         if (tlb) tlb.textContent = '로그인';
       }
+    });
+
+    // 휴대폰 번호 변경/재인증 (폰③) — 변경은 reauth(본인 재확인) 후 koausPhoneVerify(link/교체)
+    const _mpPhoneBtnEl = document.getElementById('mpPhoneBtn');
+    if (_mpPhoneBtnEl) _mpPhoneBtnEl.addEventListener('click', async () => {
+      const u = auth.currentUser;
+      if (!u) return;
+      if (!u.phoneNumber) {
+        // 최초 인증 / ④ 해제 후 재인증 — 바로 phone 모달(link 경로)
+        if (window.koausPhoneVerify) window.koausPhoneVerify({ onVerified: () => location.reload() });
+        return;
+      }
+      // 번호 변경 — 먼저 본인 재확인(reauth: 구글 팝업 / 이메일 비밀번호)
+      const pid = (u.providerData.find(p => p.providerId === 'google.com') || {}).providerId
+                || (u.providerData[0] || {}).providerId;
+      try {
+        if (pid === 'google.com') {
+          await reauthenticateWithPopup(u, new GoogleAuthProvider());
+        } else {
+          const pw = prompt('보안을 위해 비밀번호를 다시 입력해 주세요');
+          if (!pw) return;
+          await reauthenticateWithCredential(u, EmailAuthProvider.credential(u.email, pw));
+        }
+      } catch (e) { alert('본인 확인에 실패했어요. 다시 시도해 주세요.'); return; }
+      if (window.koausPhoneVerify) window.koausPhoneVerify({ mode: 'change', onVerified: () => location.reload() });
     });
   </script>
   <script src="hero-banner.js" defer></script>

@@ -14,7 +14,7 @@
 import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
 import {
   getAuth, RecaptchaVerifier, PhoneAuthProvider, onAuthStateChanged, signOut,
-  linkWithCredential,
+  linkWithCredential, updatePhoneNumber,
 } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
 import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-functions.js';
 
@@ -63,7 +63,7 @@ function mountPhoneModal() {
             <!-- 폰② 정책 안내 (차분한 톤 · 정적 텍스트) -->
             <div style="margin-top:14px;padding:10px 12px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-sm);font-size:11.5px;color:var(--text-muted);line-height:1.6;">
               <p style="margin:0 0 5px;"><b style="color:var(--text-secondary);">휴대폰 번호는 본인 확인용 보조 인증</b>입니다. 로그인은 항상 이메일·구글 계정으로 이루어집니다.</p>
-              <p style="margin:0 0 5px;">번호를 변경하시면 새 번호로 다시 인증이 필요합니다. (번호 재인증 기능은 준비 중이며, 그 전에는 카카오톡·문의하기로 도와드립니다.)</p>
+              <p style="margin:0 0 5px;">번호를 변경하시면 새 번호로 다시 인증이 필요합니다. <b style="color:var(--text-secondary);">마이페이지 &gt; 휴대폰 번호</b> 에서 직접 재인증하실 수 있습니다.</p>
               <p style="margin:0;">오래 사용하지 않거나 타인에게 재발급된 번호는 연결이 해제될 수 있습니다. 이 경우에도 <b style="color:var(--text-secondary);">계정은 안전</b>하며, 이메일·구글로 정상 로그인되니 걱정하지 않으셔도 됩니다.</p>
             </div>
           </div>
@@ -314,7 +314,9 @@ async function verifyCode() {
     const cred = PhoneAuthProvider.credential(pendingConfirmation.verificationId, code);
     const u = auth.currentUser;
     if (!u) { setCodeMsg('이메일/구글 로그인 후 다시 시도해 주세요.', 'err'); return; }
-    await linkWithCredential(u, cred);
+    // 폰③: 기존 번호가 있으면 교체(변경/재인증), 없으면 최초 연결. (④로 해제되면 phoneNumber=null → link 경로)
+    if (u.phoneNumber) { await updatePhoneNumber(u, cred); }
+    else { await linkWithCredential(u, cred); }
     setCodeMsg('✅ 인증 완료', 'ok');
     _verified = true;
     setTimeout(() => {
@@ -326,6 +328,7 @@ async function verifyCode() {
     if (err && err.code === 'auth/invalid-verification-code') setCodeMsg('인증코드가 일치하지 않습니다.', 'err');
     else if (err && err.code === 'auth/code-expired') setCodeMsg('인증코드가 만료됐습니다. 재전송 해주세요.', 'err');
     else if (err && err.code === 'auth/credential-already-in-use') handleRecycledPhone();   // 폰④ 재활용 번호 자동 해제+재연결
+    else if (err && err.code === 'auth/requires-recent-login') setCodeMsg('보안을 위해 다시 로그인한 뒤 변경해 주세요.', 'err');   // 폰③ 번호 변경 reauth 필요
     else setCodeMsg('인증 실패: ' + ((err && err.message) || err), 'err');
   }
 }
