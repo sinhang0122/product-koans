@@ -17,6 +17,15 @@ service cloud.firestore {
     function isSignedIn() {
       return request.auth != null;
     }
+    // 본인인증 게이트 (H2) — UGC 글 생성은 폰 SMS 인증 OR 이메일 인증 계정만.
+    //   · 클라(koausCanPost, koaus-phone-auth.js)와 동일 조건 "폰 OR 이메일인증"(둘 중 하나).
+    //     ⚠️ "폰만" 요구하면 기존 이메일인증·Google 계정 글쓰기가 막힘(회귀) → 반드시 OR.
+    //   · SDK 직접 호출로 미인증 계정이 글 생성하는 우회 차단(클라 게이트만으론 우회 가능).
+    function isVerifiedUser() {
+      return isSignedIn()
+        && (request.auth.token.phone_number != null
+            || request.auth.token.email_verified == true);
+    }
     // 관리자 — 3중 안전망:
     //   ① Firebase Admin SDK(setAdmin.js)로 부여한 custom claim {admin: true}  ← 가장 안전·저비용
     //   ② 화이트리스트 이메일(token.email) 일치               ← 백업 + admin.html 동기화 필요
@@ -112,7 +121,7 @@ service cloud.firestore {
     }
     // 전 게시판 공통 메타/연락처 검증 (소유자 위조 차단 포함)
     function validBaseCreate(d) {
-      return isSignedIn() && 'uid' in d && d.uid == request.auth.uid
+      return isVerifiedUser() && 'uid' in d && d.uid == request.auth.uid
         && notSuspended()
         && pReqStr(d, 'title', 1, 120)
         // 공백만으로 채운 제목 차단 (M5) — body 는 제외: 클라이언트가 빈 본문을 ' ' 로 보정하는 기존 설계 유지
@@ -217,7 +226,7 @@ service cloud.firestore {
     //     타입 불일치로 create 거부됨. 필드 추가 시 여기 캡만 갱신.
     function validServicesUserCreate() {
       let d = request.resource.data;
-      return isSignedIn()
+      return isVerifiedUser()
         && notSuspended()
         && (d.status == 'pending' || d.status == 'approved')
         && d.uid == request.auth.uid

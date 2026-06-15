@@ -81,12 +81,13 @@ const wsTitleData    = Object.assign({}, accomData, { title: '   ' });
 const padTitleData   = Object.assign({}, accomData, { title: '  정상 제목  ' });
 const spaceBodyData  = Object.assign({}, accomData, { body: ' ' });
 
-function mkCreate(data, expectation, coll, label) {
+function mkCreate(data, expectation, coll, label, token) {
   return {
     _label: label,
     expectation,
     request: {
-      auth: { uid: 'testuser123', token: { firebase: { sign_in_provider: 'password' } } },
+      // 기본 토큰 = 이메일 인증 계정(H2 isVerifiedUser 통과 — 정상 유저). 5번째 인자로 토큰 오버라이드(미인증/폰 케이스).
+      auth: { uid: 'testuser123', token: token || { firebase: { sign_in_provider: 'password' }, email_verified: true } },
       path: `/databases/(default)/documents/${coll}/newdoc1`,
       method: 'create',
       time: '2026-06-10T00:00:00Z',
@@ -123,7 +124,7 @@ function mkUnauth(expectation, coll, method, query, label, resourceData) {
 //     rules 의 에러 흡수(||) 로 false 처리 — 의도된 동작.
 function mk(opts) {
   const req = {
-    auth: opts.uid ? { uid: opts.uid, token: Object.assign({ firebase: { sign_in_provider: 'password' } }, opts.admin ? { admin: true } : {}) } : null,
+    auth: opts.uid ? { uid: opts.uid, token: Object.assign({ firebase: { sign_in_provider: 'password' }, email_verified: true }, opts.admin ? { admin: true } : {}) } : null,
     path: `/databases/(default)/documents/${opts.path}`,
     method: opts.method,
     time: '2026-06-10T00:00:00Z',
@@ -236,6 +237,16 @@ const cases = [
              lat: -33.8, lng: 151.2, authorEmail: 'e@e.com', email: 'e@e.com',
              authorId: 'testuser123', authorUid: 'testuser123', author: 'a' },
            'ALLOW', 'services', 'create: services trades 본폼(쉐어-클론 필드+lat/lng) → 허용 (B-2a 회귀)'),
+  // [H2] 본인인증 게이트 — UGC create 는 폰 SMS 인증 OR 이메일 인증 계정만 (미인증 SDK 우회 차단)
+  mkCreate(accomData, 'DENY',  'accom_posts', 'create: 미인증(폰X·이메일미인증) → 거부 (H2)',
+           { firebase: { sign_in_provider: 'password' } }),
+  mkCreate(accomData, 'ALLOW', 'accom_posts', 'create: 폰 SMS 인증 → 허용 (H2)',
+           { firebase: { sign_in_provider: 'phone' }, phone_number: '+61400000000' }),
+  mkCreate(accomData, 'ALLOW', 'accom_posts', 'create: 이메일 인증 → 허용 (H2)',
+           { firebase: { sign_in_provider: 'password' }, email_verified: true }),
+  mkCreate({ category: 'trades', title: '업체', contact: '0400000000', uid: 'testuser123', status: 'approved' },
+           'DENY', 'services', 'create: services 미인증 → 거부 (H2)',
+           { firebase: { sign_in_provider: 'password' } }),
   // ④ 제재 시스템 (2026-06-11) — notSuspended / reports 강화 / users.status 잠금 / hiddenBy
   mk({ label: '정지 계정 accom create → 거부 (notSuspended)', expectation: 'DENY',
        path: 'accom_posts/newdoc2', method: 'create', uid: 'testuser123',
