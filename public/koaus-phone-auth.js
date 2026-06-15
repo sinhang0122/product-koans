@@ -57,6 +57,12 @@ function mountPhoneModal() {
             <p class="koaus-extra-msg" id="koausPhoneMsg" style="font-size:12.5px;color:var(--text-muted);margin:8px 0 4px;min-height:18px;"></p>
             <div id="koausRecaptchaSlot" style="margin:8px 0;"></div>
             <button class="auth-submit" id="koausPhoneSendBtn" style="margin-top:4px;">인증번호 받기</button>
+            <!-- 폰② 정책 안내 (차분한 톤 · 정적 텍스트) -->
+            <div style="margin-top:14px;padding:10px 12px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-sm);font-size:11.5px;color:var(--text-muted);line-height:1.6;">
+              <p style="margin:0 0 5px;"><b style="color:var(--text-secondary);">휴대폰 번호는 본인 확인용 보조 인증</b>입니다. 로그인은 항상 이메일·구글 계정으로 이루어집니다.</p>
+              <p style="margin:0 0 5px;">번호를 변경하시면 새 번호로 다시 인증이 필요합니다. (번호 재인증 기능은 준비 중이며, 그 전에는 카카오톡·문의하기로 도와드립니다.)</p>
+              <p style="margin:0;">오래 사용하지 않거나 타인에게 재발급된 번호는 연결이 해제될 수 있습니다. 이 경우에도 <b style="color:var(--text-secondary);">계정은 안전</b>하며, 이메일·구글로 정상 로그인되니 걱정하지 않으셔도 됩니다.</p>
+            </div>
           </div>
           <!-- Step 2: 코드 입력 -->
           <div data-step="code" hidden>
