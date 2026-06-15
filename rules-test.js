@@ -40,9 +40,9 @@ async function getToken() {
 // ── ① create/update 스위트 ──────────────────────────────────────────
 const accomData = {
   address: 'Some St, Park Ridge QLD', airCon: false, author: '테스터',
-  authorEmail: 'sinhang0122@gmail.com', authorUid: 'testuser123', availableDate: '',
+  authorUid: 'testuser123', availableDate: '',
   body: '테스트 본문', contact: '0400000000', createdAt: '2026-06-10T00:00:00Z',
-  date: '06/10', email: 'sinhang0122@gmail.com', gender: '', imageUrls: [],
+  date: '06/10', gender: '', imageUrls: [],
   kakaoLink: '', kidsInHouse: false, lat: -27.9953912, lng: 152.6794626,
   locationPrivate: true, minStay: '', mode: 'offer', parking: false,
   petFriendly: false, phone: '', price: 222, roomTypes: [], state: 'qld',
@@ -59,19 +59,19 @@ const accomMax = Object.assign({}, accomData, {
 const jobsLikeData = {
   title: '구인', body: '본문', state: 'qld', postType: 'offer', empType: 'casual',
   payAmount: 30, payUnit: 'hour', visaEligible: true, contact: '0400', phone: '',
-  kakaoLink: '', author: 'a', email: 'e@e.com', uid: 'testuser123',
-  authorUid: 'testuser123', authorEmail: 'e@e.com', date: '06/10', time: '12:00',
+  kakaoLink: '', author: 'a', uid: 'testuser123',
+  authorUid: 'testuser123', date: '06/10', time: '12:00',
   status: 'approved', createdAt: '2026-06-10T00:00:00Z', id: 'x',
 };
 const autoData = {
   title: '2020 Corolla', body: '본문', state: 'qld', category: 'used',
   brand: 'Toyota', model: 'Corolla', year: '2020', mileage: '50,000km',
   rwc: 'yes', regoExpiry: '2026-12', price: 15000, region: 'Brisbane QLD',
-  contact: '0400', phone: '', kakaoLink: '', email: 'e@e.com',
+  contact: '0400', phone: '', kakaoLink: '',
   imageUrls: ['https://x.com/a.jpg'], locationPrivate: true,
   lat: -27.5, lng: 152.9, isPremium: false,
   author: 'a', uid: 'testuser123', authorUid: 'testuser123',
-  authorEmail: 'e@e.com', date: '06/10', time: '12:00', id: 'x',
+  date: '06/10', time: '12:00', id: 'x',
   createdAt: '2026-06-10T00:00:00Z',
 };
 const badPriceData   = Object.assign({}, accomData, { price: '222' });
@@ -194,7 +194,7 @@ const cases = [
   mkCreate({ category: 'trades', title: '테스트 업체', contact: '0400000000', body: ' ',
              address: '', state: 'qld', status: 'approved', isUserPost: true, author: 'a',
              uid: 'testuser123', authorId: 'testuser123', authorUid: 'testuser123',
-             authorEmail: 'e@e.com', email: 'e@e.com', lat: null, lng: null },
+             lat: null, lng: null },
            'ALLOW', 'services', 'create: services 일반유저 isOfficial 無 payload'),
   // [B4] services legal 글 MARN 7자리 필수 (2026-06-11) — points.html 클라 payload 형태
   mkCreate({ category: 'legal', title: '비자 법무법인', contact: '0400000000', body: ' ',
@@ -234,9 +234,17 @@ const cases = [
   mkCreate({ category: 'trades', title: '업체', contact: '0400000000', uid: 'testuser123',
              status: 'approved', adminPost: false, isUserPost: true, mode: 'offer', price: 120,
              gender: 'any', availableDate: '2026-07-01', types: ['short'], roomTypes: ['master'],
-             lat: -33.8, lng: 151.2, authorEmail: 'e@e.com', email: 'e@e.com',
+             lat: -33.8, lng: 151.2,
              authorId: 'testuser123', authorUid: 'testuser123', author: 'a' },
            'ALLOW', 'services', 'create: services trades 본폼(쉐어-클론 필드+lat/lng) → 허용 (B-2a 회귀)'),
+  // [H4] 공개 문서 작성자 PII 제거 — email/authorEmail 포함 create 는 거부 (보드 hasOnly + services 명시 차단)
+  mkCreate(Object.assign({}, accomData, { email: 'leak@e.com' }),
+           'DENY', 'accom_posts', 'create: accom email 포함 → 거부 (H4)'),
+  mkCreate(Object.assign({}, accomData, { authorEmail: 'leak@e.com' }),
+           'DENY', 'accom_posts', 'create: accom authorEmail 포함 → 거부 (H4)'),
+  mkCreate({ category: 'trades', title: '업체', contact: '0400000000', uid: 'testuser123',
+             status: 'approved', email: 'leak@e.com' },
+           'DENY', 'services', 'create: services email 포함 → 거부 (H4)'),
   // [H2] 본인인증 게이트 — UGC create 는 폰 SMS 인증 OR 이메일 인증 계정만 (미인증 SDK 우회 차단)
   mkCreate(accomData, 'DENY',  'accom_posts', 'create: 미인증(폰X·이메일미인증) → 거부 (H2)',
            { firebase: { sign_in_provider: 'password' } }),

@@ -134,7 +134,8 @@ service cloud.firestore {
         && pOptStr(d, 'phone', 30)
         && pOptStr(d, 'kakaoLink', 500)
         && pOptStr(d, 'author', 50)
-        && pOptStr(d, 'email', 200);
+        // H4: 공개 문서 작성자 PII 제거 — email 미허용(소유권은 uid/authorUid). author 라인이 마지막.
+        && !('email' in d) && !('authorEmail' in d);
     }
     // accom(쉐어) + rent(렌트) — 매물 필드 + 스키마 화이트리스트
     function validShareRentCreate() {
@@ -157,7 +158,7 @@ service cloud.firestore {
         && pOptList(d, 'types', 10)
         && pOptList(d, 'roomTypes', 10)
         && d.keys().hasOnly([
-             'uid', 'email', 'authorUid', 'authorEmail', 'author',
+             'uid', 'authorUid', 'author',
              'state', 'status', 'date', 'time', 'createdAt', 'updatedAt', 'id',
              'title', 'body', 'mode', 'contact', 'phone', 'kakaoLink',
              'address', 'lat', 'lng', 'locationPrivate', 'imageUrls',
@@ -178,7 +179,7 @@ service cloud.firestore {
         && pOptBool(d, 'visaEligible')
         && pOptList(d, 'imageUrls', 8)
         && d.keys().hasOnly([
-             'uid', 'email', 'authorUid', 'authorEmail', 'author',
+             'uid', 'authorUid', 'author',
              'state', 'status', 'date', 'time', 'createdAt', 'updatedAt', 'id',
              'title', 'body', 'mode', 'contact', 'phone', 'kakaoLink',
              'address', 'lat', 'lng', 'imageUrls',
@@ -208,7 +209,7 @@ service cloud.firestore {
         && pOptBool(d, 'locationPrivate')
         && pOptList(d, 'imageUrls', 8)
         && d.keys().hasOnly([
-             'uid', 'email', 'authorUid', 'authorEmail', 'author',
+             'uid', 'authorUid', 'author',
              'state', 'status', 'date', 'time', 'createdAt', 'updatedAt', 'id',
              'title', 'body', 'mode', 'contact', 'phone', 'kakaoLink',
              'address', 'lat', 'lng', 'locationPrivate', 'imageUrls',
@@ -254,8 +255,8 @@ service cloud.firestore {
         && pOptStr(d, 'author', 100)
         && pOptStr(d, 'authorId', 64)
         && pOptStr(d, 'authorUid', 64)
-        && pOptStr(d, 'authorEmail', 200)
-        && pOptStr(d, 'email', 200)
+        // H4: 공개 문서 작성자 PII 제거 — services 는 hasOnly 없음 → email/authorEmail 명시 차단(저장 금지).
+        && !('email' in d) && !('authorEmail' in d)
         && pOptStr(d, 'mode', 20)
         && pOptStr(d, 'gender', 20)
         && pOptStr(d, 'availableDate', 40)
