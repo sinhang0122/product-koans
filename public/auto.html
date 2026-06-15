@@ -719,6 +719,10 @@
             <label class="write-label" for="rContact">기타 통합 입력 Misc <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택 · 위 분리 필드 우선)</em></label>
             <input class="write-input" id="rContact" type="text" placeholder="기타 연락 수단·시간대·메모 등 자유 입력" maxlength="200" />
           </div>
+          <div class="write-field">
+            <label class="write-label" for="rContactEmail">✉️ 연락용 이메일 Email <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택 · 메일로 연락받기)</em></label>
+            <input class="write-input" id="rContactEmail" type="email" placeholder="you@example.com" maxlength="200" autocomplete="email" />
+          </div>
         </div>
         <div class="write-field write-field--grow" style="grid-column:1/-1;">
           <label class="write-label" for="rBody">코멘트 Comments</label>
@@ -767,6 +771,10 @@
           <div class="write-field">
             <label class="write-label" for="mContact">기타 통합 입력 Misc <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택 · 위 분리 필드 우선)</em></label>
             <input class="write-input" id="mContact" type="text" placeholder="기타 연락 수단·예약 방법·메모 등 자유 입력" maxlength="200" />
+          </div>
+          <div class="write-field">
+            <label class="write-label" for="mContactEmail">✉️ 연락용 이메일 Email <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택 · 메일로 연락받기)</em></label>
+            <input class="write-input" id="mContactEmail" type="email" placeholder="contact@business.com" maxlength="200" autocomplete="email" />
           </div>
         </div>
         <div class="write-field write-field--grow" style="grid-column:1/-1;">
@@ -1514,8 +1522,8 @@
     }
 
     function resetWriteForm() {
-      ['rTitle','rBrand','rModel','rYear','rMileage','rRwc','rRego','rPrice','rRegion','rContact','rPhone','rKakao','rBody',
-       'mTitle','mRegion','mHours','mPhone','mKakao','mContact','mBody'].forEach(id => {
+      ['rTitle','rBrand','rModel','rYear','rMileage','rRwc','rRego','rPrice','rRegion','rContact','rPhone','rKakao','rContactEmail','rBody',
+       'mTitle','mRegion','mHours','mPhone','mKakao','mContact','mContactEmail','mBody'].forEach(id => {
         const el = document.getElementById(id); if (el) el.value = '';
       });
       if (window.__koausResetBizHours) window.__koausResetBizHours('m');  // 요일별 그리드 초기화
@@ -1549,13 +1557,13 @@
         _set('rTitle', p.title); _set('rBrand', p.brand); _set('rModel', p.model);
         _set('rYear', p.year); _set('rMileage', p.mileage); _set('rRwc', p.rwc);
         _set('rRego', p.regoExpiry); _set('rPrice', p.price); _set('rRegion', p.region);
-        _set('rContact', p.contact); _set('rPhone', p.phone); _set('rKakao', p.kakaoLink); _set('rBody', p.body);
+        _set('rContact', p.contact); _set('rPhone', p.phone); _set('rKakao', p.kakaoLink); _set('rContactEmail', p.contactEmail); _set('rBody', p.body);
         // ★ 기존 사진 prefill — 텍스트만 수정해도 imageUrls 안 비도록 + 썸네일 복원
         if (window.__usedPhotoPrefill) window.__usedPhotoPrefill(Array.isArray(p.imageUrls) ? p.imageUrls : []);
       } else if (cat === 'maintenance') {
         _set('mTitle', p.title); _set('mRegion', p.region || p.address); _set('mHours', p.hours);
         if (window.__koausSetBizHours) window.__koausSetBizHours('m', p.hoursJson);  // 요일별 그리드 복원
-        _set('mPhone', p.phone); _set('mKakao', p.kakaoLink); _set('mContact', p.contact); _set('mBody', p.body);
+        _set('mPhone', p.phone); _set('mKakao', p.kakaoLink); _set('mContact', p.contact); _set('mContactEmail', p.contactEmail); _set('mBody', p.body);
       }
       document.getElementById('wAuthorName').textContent = p.author || currentNickname() || '-';
       setWriteMode('edit');
@@ -1706,6 +1714,7 @@
           contact:    _fv('rContact'),
           phone:      _fv('rPhone'),
           kakaoLink:  _fv('rKakao'),
+          contactEmail: _fv('rContactEmail'),
           // 첨부 사진 (Storage 업로드 후 imageUrls 로 매핑됨)
           imageUrls:  Array.isArray(window.__usedPhotoUrls) ? window.__usedPhotoUrls.slice(0, 6) : [],
         };
@@ -1758,6 +1767,7 @@
           phone,
           kakaoLink: _fv('mKakao'),
           contact,
+          contactEmail: _fv('mContactEmail'),
           imageUrls: Array.isArray(window.__maintPhotoUrls) ? window.__maintPhotoUrls.slice(0, 6) : [],
         };
         // 좌표(자동완성 dataset) — 업체는 위치 공개 (locationPrivate 미적용)

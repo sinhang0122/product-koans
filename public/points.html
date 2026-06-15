@@ -602,6 +602,10 @@
             <label class="write-label" for="vwContact">기타 통합 입력 (선택 · 위 분리 필드 우선)</label>
             <input class="write-input" id="vwContact" type="text" maxlength="100" placeholder="기타 연락 수단·시간대·메모 등 자유 입력" />
           </div>
+          <div class="write-field write-field--full">
+            <label class="write-label" for="vwContactEmail">✉️ 연락용 이메일 (선택 · 메일로 연락받기)</label>
+            <input class="write-input" id="vwContactEmail" type="email" maxlength="200" placeholder="contact@business.com" autocomplete="email" />
+          </div>
           <!-- 사진 첨부 (선택 · 최대 6장) — 카드 썸네일·상세 갤러리 노출 -->
           <div class="write-field write-field--full">
             <label class="write-label">사진 첨부 Photos <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택 · 최대 6장)</em></label>
@@ -1271,7 +1275,7 @@
         try { ensureVisaMap(); } catch (_) {}
         try { wireVisaAddressAutocomplete(); } catch (_) {}
       }
-      function closeWrite() { overlay.classList.remove('open'); ['vwTitle','vwBody','vwAddress','vwContact','vwPhone','vwKakao'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; }); document.getElementById('vwError').textContent = ''; const sg = document.getElementById('vwAddressSuggest'); if (sg) { sg.classList.remove('show'); sg.innerHTML = ''; } try { window.dispatchEvent(new Event('koaus-visa-form-reset')); } catch (_) {} }
+      function closeWrite() { overlay.classList.remove('open'); ['vwTitle','vwBody','vwAddress','vwContact','vwPhone','vwKakao','vwContactEmail'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; }); document.getElementById('vwError').textContent = ''; const sg = document.getElementById('vwAddressSuggest'); if (sg) { sg.classList.remove('show'); sg.innerHTML = ''; } try { window.dispatchEvent(new Event('koaus-visa-form-reset')); } catch (_) {} }
 
       // ── 주소 자동완성 (Google Places AutocompleteService) ──
       // · Maps API 비동기 로드 후 wire — google.maps.places 가 준비되면 즉시 연결
@@ -1630,6 +1634,8 @@
         const _kkEl = document.getElementById('vwKakao');
         const phone     = _phEl ? _phEl.value.trim() : '';
         const kakaoLink = _kkEl ? _kkEl.value.trim() : '';
+        const _ceEl = document.getElementById('vwContactEmail');
+        const contactEmail = _ceEl ? _ceEl.value.trim() : '';
         const _marnEl = document.getElementById('vwMarn');
         const _pbEl   = document.getElementById('vwProvidedBy');
         const _lrEl   = document.getElementById('vwLastReviewed');
@@ -1670,7 +1676,7 @@
           category, title,
           body: body || ' ',          // optStr('body', 5000) — 빈 본문도 통과
           address, contact: contactSafe, visaType,
-          phone, kakaoLink,           // 분리 연락처 — koaus-contact-actions.js 자동 버튼 렌더
+          phone, kakaoLink, contactEmail,   // 분리 연락처 — koaus-contact-actions.js 자동 버튼 렌더(메일 포함)
           imageUrls: Array.isArray(window.__visaPhotoUrls) ? window.__visaPhotoUrls.slice(0, 6) : [],  // 사진 (services.create optUrlList 허용 — rules 무변경)
           ...(category === 'legal' ? { marn } : {}),
           ...(providedBy ? { providedBy } : {}),

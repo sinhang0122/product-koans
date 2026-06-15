@@ -794,6 +794,10 @@
         <label class="write-label" for="wContact">기타 통합 입력 Misc <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택 · 위 분리 필드 우선)</em></label>
         <input class="write-input" id="wContact" type="text" placeholder="기타 연락 수단·시간대·메모 등 자유 입력" maxlength="100" />
       </div>
+      <div class="write-field">
+        <label class="write-label" for="wContactEmail">✉️ 연락용 이메일 Email <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택 · 메일로 연락받기)</em></label>
+        <input class="write-input" id="wContactEmail" type="email" placeholder="you@example.com" maxlength="200" autocomplete="email" />
+      </div>
 
       <div class="caution-box" aria-label="주의사항 및 공지사항">
         <div class="caution-title">⚠ 주의사항 및 공지사항</div>
@@ -1220,7 +1224,7 @@
       document.getElementById('writeBtnSubmit').textContent = isEdit ? '수정 완료' : '등록하기';
     }
     function resetWriteForm() {
-      ['wTitle','wAddress','wPrice','wBody','wAuthor','wContact','wPhone','wKakao'].forEach(id => { const _el = document.getElementById(id); if (_el) _el.value = ''; });
+      ['wTitle','wAddress','wPrice','wBody','wAuthor','wContact','wPhone','wKakao','wContactEmail'].forEach(id => { const _el = document.getElementById(id); if (_el) _el.value = ''; });
       document.getElementById('wPropType').value = '';
       document.getElementById('wMinStay').value = '';
       ['wParking','wPet','wKids','wAirCon'].forEach(id => { document.getElementById(id).checked = false; });
@@ -1284,6 +1288,7 @@
       set('wPrice', d.price);
       set('wBody',  d.body);
       set('wContact', d.contact);
+      set('wContactEmail', d.contactEmail);
       set('wPhone',   d.phone);
       set('wKakao',   d.kakaoLink);
       setTypeChecks(Array.isArray(d.types) ? d.types : []);
@@ -1320,6 +1325,7 @@
       document.getElementById('wBody').value     = p.body || '';
       document.getElementById('wAuthor').value   = p.author || '';
       document.getElementById('wContact').value  = p.contact || '';
+      { const _ce = document.getElementById('wContactEmail'); if (_ce) _ce.value = p.contactEmail || ''; }
       const _ph = document.getElementById('wPhone'); if (_ph) _ph.value = p.phone || '';
       const _kk = document.getElementById('wKakao'); if (_kk) _kk.value = p.kakaoLink || '';
       // 기존 사진 미리보기 (편집 모드 — Storage URL을 그대로 preview 로 사용)
@@ -1388,6 +1394,8 @@
       const _kkEl = document.getElementById('wKakao');
       const phoneSep    = _phEl ? _phEl.value.trim() : '';
       const kakaoLink   = _kkEl ? _kkEl.value.trim() : '';
+      const _ceEl = document.getElementById('wContactEmail');
+      const contactEmail = _ceEl ? _ceEl.value.trim() : '';
 
       let fields, coords = null;
 
@@ -1406,7 +1414,7 @@
             return;
           }
         }
-        fields = { mode: 'find', title, body, contact: phone, phone: phoneSep, kakaoLink };
+        fields = { mode: 'find', title, body, contact: phone, phone: phoneSep, kakaoLink, contactEmail };
       } else {
         // ── 방 올리기: 필수 = 제목 / 주소 / 주당 렌트비. 나머지는 선택 사항 ──
         const types    = [...document.querySelectorAll('#wTypes input:checked')].map(c => c.dataset.type);
@@ -1439,7 +1447,7 @@
           petFriendly: document.getElementById('wPet').checked,
           kidsInHouse: document.getElementById('wKids').checked,
           airCon:      document.getElementById('wAirCon').checked,
-          contact: phone, phone: phoneSep, kakaoLink,
+          contact: phone, phone: phoneSep, kakaoLink, contactEmail,
         };
         if (address) {
           loadMapScript();

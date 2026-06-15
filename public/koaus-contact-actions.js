@@ -93,6 +93,18 @@
         '</a>';
     }
 
+    // ── D) post.contactEmail → 메일 (mailto) ── 글쓴이 연락용 이메일(선택). 형식 검증 통과 시에만 노출.
+    const cmail = (post && post.contactEmail ? String(post.contactEmail).trim() : '');
+    if (cmail && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cmail)) {
+      contactHTML +=
+        '<a class="contact-action-btn contact-action-btn--mail"' +
+        ' href="mailto:' + esc(cmail) + '"' +
+        ' aria-label="이메일로 연락">' +
+          '<span class="ca-ico" aria-hidden="true">✉️</span>' +
+          '<span class="ca-label">메일</span>' +
+        '</a>';
+    }
+
     // ── E) 아무 연락처도 없으면 컨테이너 자체 hide ──
     if (!contactHTML) {
       container.innerHTML = '';

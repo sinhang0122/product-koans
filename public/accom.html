@@ -673,6 +673,10 @@
             <label class="write-label" for="wContact">기타 통합 입력 Misc <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택 · 위 분리 필드 우선)</em></label>
             <input class="write-input" id="wContact" type="text" placeholder="기타 연락 수단·시간대·메모 등 자유 입력" maxlength="200" />
           </div>
+          <div class="write-field offer-only">
+            <label class="write-label" for="wContactEmail">✉️ 연락용 이메일 Email <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택 · 메일로 연락받기)</em></label>
+            <input class="write-input" id="wContactEmail" type="email" placeholder="you@example.com" maxlength="200" autocomplete="email" />
+          </div>
         </div>
 
         <div class="write-col">
@@ -1303,7 +1307,7 @@
       document.getElementById('writeBtnSubmit').textContent = isEdit ? '수정 완료' : '등록하기';
     }
     function resetWriteForm() {
-      ['wTitle','wAddress','wPrice','wBody','wAvailDate','wContact','wPhone','wKakao'].forEach(id => { const _el = document.getElementById(id); if (_el) _el.value = ''; });
+      ['wTitle','wAddress','wPrice','wBody','wAvailDate','wContact','wPhone','wKakao','wContactEmail'].forEach(id => { const _el = document.getElementById(id); if (_el) _el.value = ''; });
       ['wParking','wPet','wKids','wAirCon'].forEach(id => { document.getElementById(id).checked = false; });
       document.querySelectorAll('#wTypes input, #wRoomTypes input').forEach(c => { c.checked = false; });
       document.getElementById('wGender').value = '';
@@ -1364,6 +1368,7 @@
       set('wContact', d.contact);
       set('wPhone',   d.phone);
       set('wKakao',   d.kakaoLink);
+      set('wContactEmail', d.contactEmail);
       set('wAvailDate', d.availableDate);
       set('wMinStay', d.minStay);
       set('wGender', d.gender);
@@ -1391,6 +1396,7 @@
       document.getElementById('wContact').value = p.contact || '';
       const _ph = document.getElementById('wPhone'); if (_ph) _ph.value = p.phone || '';
       const _kk = document.getElementById('wKakao'); if (_kk) _kk.value = p.kakaoLink || '';
+      const _ce = document.getElementById('wContactEmail'); if (_ce) _ce.value = p.contactEmail || '';
       document.getElementById('wParking').checked = !!p.parking;
       document.getElementById('wPet').checked     = !!p.petFriendly;
       document.getElementById('wKids').checked    = !!p.kidsInHouse;
@@ -1576,6 +1582,8 @@
         const _kkEl = document.getElementById('wKakao');
         const phone     = _phEl ? _phEl.value.trim() : '';
         const kakaoLink = _kkEl ? _kkEl.value.trim() : '';
+        const _ceEl = document.getElementById('wContactEmail');
+        const contactEmail = _ceEl ? _ceEl.value.trim() : '';
         const address  = document.getElementById('wAddress').value.trim();
         const priceVal = document.getElementById('wPrice').value.trim();
 
@@ -1586,7 +1594,7 @@
         const price = parseInt(priceVal, 10);
         if (!(price > 0)) { alert('주당 쉐어비를 숫자로 올바르게 입력해 주세요.'); return; }
         fields = {
-          mode: 'offer', types, title, body, address, price, roomTypes, gender, availableDate, minStay, contact, phone, kakaoLink,
+          mode: 'offer', types, title, body, address, price, roomTypes, gender, availableDate, minStay, contact, phone, kakaoLink, contactEmail,
           parking:     document.getElementById('wParking').checked,
           petFriendly: document.getElementById('wPet').checked,
           kidsInHouse: document.getElementById('wKids').checked,
