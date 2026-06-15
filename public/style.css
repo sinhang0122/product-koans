@@ -2680,7 +2680,7 @@ select.filter-mini-input {
   /* 모바일 메인 맵 뷰 — 시인성 강화를 위해 세로 2배 (사용자 요청 2026-06-04) */
   #accomMap, #jobsMap, #visaMap { height: 720px !important; min-height: 560px !important; }
   .partner-map-wrap, .partner-map { min-height: 440px !important; }
-  .detail-mini-map { height: 420px !important; }   /* 모바일 상세 모달용 캡 (Map View 720은 모달서 과함) */
+  .detail-mini-map { height: 280px !important; }   /* 모바일 상세 모달용 캡 — 420→280(2/3) 축소 (2026-06). 데스크탑 560 무변경 */
 
   /* 모바일 카드 콤팩트 — 세로 길이 2/3 축소 (썸네일 비율 보호) */
   .accom-card { padding: 10px 12px; gap: 10px; }
