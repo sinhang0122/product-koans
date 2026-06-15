@@ -245,6 +245,12 @@ const cases = [
   mkCreate({ category: 'trades', title: '업체', contact: '0400000000', uid: 'testuser123',
              status: 'approved', email: 'leak@e.com' },
            'DENY', 'services', 'create: services email 포함 → 거부 (H4)'),
+  // [contactEmail 기능] 글쓴이 연락용 이메일(별개 키) — 포함해도 허용 (H4 의 email/authorEmail 차단과 무관)
+  mkCreate(Object.assign({}, accomData, { contactEmail: 'seller@example.com' }),
+           'ALLOW', 'accom_posts', 'create: accom contactEmail 포함 → 허용 (contactEmail 기능)'),
+  mkCreate({ category: 'trades', title: '업체', contact: '0400000000', uid: 'testuser123',
+             status: 'approved', contactEmail: 'biz@example.com' },
+           'ALLOW', 'services', 'create: services contactEmail 포함 → 허용 (contactEmail 기능)'),
   // [H2] 본인인증 게이트 — UGC create 는 폰 SMS 인증 OR 이메일 인증 계정만 (미인증 SDK 우회 차단)
   mkCreate(accomData, 'DENY',  'accom_posts', 'create: 미인증(폰X·이메일미인증) → 거부 (H2)',
            { firebase: { sign_in_provider: 'password' } }),

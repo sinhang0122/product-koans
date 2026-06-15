@@ -134,7 +134,8 @@ service cloud.firestore {
         && pOptStr(d, 'phone', 30)
         && pOptStr(d, 'kakaoLink', 500)
         && pOptStr(d, 'author', 50)
-        // H4: 공개 문서 작성자 PII 제거 — email 미허용(소유권은 uid/authorUid). author 라인이 마지막.
+        && pOptStr(d, 'contactEmail', 200)   // 글쓴이 연락용 이메일(선택) — 계정 PII email/authorEmail 과 별개 키
+        // H4: 공개 문서 작성자 PII 제거 — email 미허용(소유권은 uid/authorUid).
         && !('email' in d) && !('authorEmail' in d);
     }
     // accom(쉐어) + rent(렌트) — 매물 필드 + 스키마 화이트리스트
@@ -160,7 +161,7 @@ service cloud.firestore {
         && d.keys().hasOnly([
              'uid', 'authorUid', 'author',
              'state', 'status', 'date', 'time', 'createdAt', 'updatedAt', 'id',
-             'title', 'body', 'mode', 'contact', 'phone', 'kakaoLink',
+             'title', 'body', 'mode', 'contact', 'phone', 'kakaoLink', 'contactEmail',
              'address', 'lat', 'lng', 'locationPrivate', 'imageUrls',
              'propType', 'types', 'roomTypes', 'gender', 'availableDate', 'minStay',
              'bedrooms', 'bathrooms', 'carSpaces',
@@ -181,7 +182,7 @@ service cloud.firestore {
         && d.keys().hasOnly([
              'uid', 'authorUid', 'author',
              'state', 'status', 'date', 'time', 'createdAt', 'updatedAt', 'id',
-             'title', 'body', 'mode', 'contact', 'phone', 'kakaoLink',
+             'title', 'body', 'mode', 'contact', 'phone', 'kakaoLink', 'contactEmail',
              'address', 'lat', 'lng', 'imageUrls',
              'postType', 'category', 'empType', 'payUnit', 'payAmount', 'visaEligible'
            ]);
@@ -211,7 +212,7 @@ service cloud.firestore {
         && d.keys().hasOnly([
              'uid', 'authorUid', 'author',
              'state', 'status', 'date', 'time', 'createdAt', 'updatedAt', 'id',
-             'title', 'body', 'mode', 'contact', 'phone', 'kakaoLink',
+             'title', 'body', 'mode', 'contact', 'phone', 'kakaoLink', 'contactEmail',
              'address', 'lat', 'lng', 'locationPrivate', 'imageUrls',
              'category', 'region', 'brand', 'model', 'year', 'mileage',
              'rwc', 'regoExpiry', 'hours', 'isPremium', 'timeSlot',
@@ -249,6 +250,7 @@ service cloud.firestore {
         // ── 미검증 문자열 필드 길이캡 (doc bloat 방어, B-2a) ──
         && pOptStr(d, 'phone', 30)
         && pOptStr(d, 'kakaoLink', 500)
+        && pOptStr(d, 'contactEmail', 200)
         && pOptStr(d, 'tagline', 500)
         && pOptStr(d, 'visaType', 30)
         && pOptStr(d, 'hours', 200)
