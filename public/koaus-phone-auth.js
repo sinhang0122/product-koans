@@ -16,6 +16,7 @@ import {
   getAuth, RecaptchaVerifier, PhoneAuthProvider, onAuthStateChanged, signOut,
   linkWithCredential,
 } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
+import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-functions.js';
 
 // Firebase 앱은 페이지별 모듈에서 이미 초기화됐을 가능성 — getApps() 재사용
 const firebaseConfig = {
@@ -25,6 +26,8 @@ const firebaseConfig = {
 };
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const auth = getAuth(app);
+// 재활용 번호 해제 callable (폰④) — 리전 고정(시드니), CSP connect-src cloudfunctions.net 와 한 세트
+const functions = getFunctions(app, 'australia-southeast1');
 
 // ── canPost: 글쓰기 자격 검증 ──
 // 이메일 인증 OR 휴대폰 인증 둘 중 하나만 통과해도 OK (Option B 정책)
@@ -322,8 +325,35 @@ async function verifyCode() {
     console.warn('[phone-auth] verifyCode 실패', err);
     if (err && err.code === 'auth/invalid-verification-code') setCodeMsg('인증코드가 일치하지 않습니다.', 'err');
     else if (err && err.code === 'auth/code-expired') setCodeMsg('인증코드가 만료됐습니다. 재전송 해주세요.', 'err');
-    else if (err && err.code === 'auth/credential-already-in-use') setCodeMsg('이미 다른 계정과 연결된 번호입니다.', 'err');
+    else if (err && err.code === 'auth/credential-already-in-use') handleRecycledPhone();   // 폰④ 재활용 번호 자동 해제+재연결
     else setCodeMsg('인증 실패: ' + ((err && err.message) || err), 'err');
+  }
+}
+
+// ── 폰④ 재활용(재발급) 번호 처리 ──
+//   credential-already-in-use = SMS 코드가 일치(번호 통제 증명)했으나 그 번호가 다른 계정(A)에 연결됨.
+//   releaseRecycledPhone 콜러블로 A 에서 해제 → 재전송(새 코드) → B 가 새 코드 입력 시 link 성공.
+//   ① 제약 유지: signInWithPhoneNumber/confirm 경로 부활 없음 — link 전용 흐름 그대로.
+async function handleRecycledPhone() {
+  const e164 = document.getElementById('koausPhoneEcho')?.textContent || '';
+  if (!/^\+61[0-9]{8,10}$/.test(e164)) {
+    setCodeMsg('이미 다른 계정과 연결된 번호입니다. 구글 로그인 또는 카카오톡 문의로 진행해 주세요.', 'err');
+    return;
+  }
+  setCodeMsg('이전 연결을 정리하는 중…', 'info');
+  try {
+    const release = httpsCallable(functions, 'releaseRecycledPhone');
+    const res = await release({ phoneNumber: e164 });
+    if (res && res.data && res.data.ok) {
+      setCodeMsg('✅ 이전 연결을 정리했습니다. 인증번호를 다시 보내드립니다…', 'ok');
+      resendStartedAt = 0;     // 쿨다운 우회 — 즉시 재전송 허용(새 verificationId 발급, 이전 코드는 1회용)
+      await resendCode();
+    } else {
+      setCodeMsg('처리에 실패했습니다. 구글 로그인 또는 카카오톡 문의로 진행해 주세요.', 'err');
+    }
+  } catch (e) {
+    console.warn('[phone-auth] releaseRecycledPhone 실패', e);
+    setCodeMsg('처리에 실패했습니다. 구글 로그인 또는 카카오톡 문의로 진행해 주세요.', 'err');
   }
 }
 
