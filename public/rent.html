@@ -2519,8 +2519,9 @@
       const params = new URLSearchParams(location.search);
       const editId = params.get('edit');
       if (editId) {
-        const p = loadPosts().find(x => String(x.id) === String(editId));
-        if (p && isMine(p)) openWriteModalForEdit(p);
+        // FS 캐시 도착 전이면 loadPosts().find 실패(레이스) → 폴링 재시도(최대 ~6s)
+        const _tryEdit = () => { const p = loadPosts().find(x => String(x.id) === String(editId)); if (p && isMine(p)) { openWriteModalForEdit(p); return true; } return false; };
+        if (!_tryEdit()) { let _t = 0; const _iv = setInterval(() => { if (_tryEdit() || ++_t > 40) clearInterval(_iv); }, 150); }
       } else if (params.get('duplicate') === '1' && localStorage.getItem('koaus-duplicate-rent')) {
         openWriteModal();
       }

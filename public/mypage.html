@@ -948,9 +948,26 @@
       return readJSON('koaus-saved-posts');
     }
     const boardStoreKey = b => b === 'accom' ? 'koaus-accom-posts' : b === 'rent' ? 'koaus-rent-posts' : b === 'jobs' ? 'koaus-jobs-posts' : null;
-    function deleteMyPost(board, id) {
+    async function deleteMyPost(board, id) {
       if (!confirm('정말 이 게시글을 삭제하시겠습니까?')) return;
       const sk = boardStoreKey(board);
+      // ── Firestore 문서까지 삭제 — LS 만 지우면 onSnapshot 재캐싱으로 좀비(다시 뜸). ──
+      //   board→컬렉션: accom/rent/jobs/auto 는 전용, 그 외(points/trades/gp/salon/restaurants)는 services.
+      //   fsDocId 는 LS 캐시 또는 _fsMine(캐시 증발 글)에서 확보. FS 삭제 실패 시 LS 도 유지(좀비 재발 방지).
+      const _col = board === 'accom' ? 'accom_posts' : board === 'rent' ? 'rent_posts'
+                 : board === 'jobs' ? 'jobs_posts' : board === 'auto' ? 'auto_posts'
+                 : 'services';
+      const _hit   = (sk ? readJSON(sk) : []).find(x => String(x.id) === String(id));
+      const _fsHit = (typeof _fsMine !== 'undefined' && _fsMine) ? _fsMine.find(x => x.board === board && String(x.id) === String(id)) : null;
+      const fsDocId = (_hit && (_hit.fsDocId || _hit._fsDocId)) || (_fsHit && _fsHit.fsDocId) || null;
+      if (fsDocId && window.koausRbac && window.koausRbac.selfDelete) {
+        try {
+          await window.koausRbac.selfDelete(_col, String(fsDocId));
+        } catch (e) {
+          alert('삭제 실패: ' + (e && e.code === 'permission-denied' ? '본인 글만 삭제할 수 있습니다.' : (e && (e.code || e.message) || e)));
+          return;
+        }
+      }
       if (sk) localStorage.setItem(sk, JSON.stringify(readJSON(sk).filter(x => String(x.id) !== String(id))));
       ['koaus-my-posts','koaus-saved-posts','koaus-recent-posts'].forEach(k => {
         localStorage.setItem(k, JSON.stringify(readJSON(k).filter(r => !(r.board === board && String(r.id) === String(id)))));
