@@ -14,7 +14,7 @@
 import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
 import {
   getAuth, RecaptchaVerifier, PhoneAuthProvider, onAuthStateChanged, signOut,
-  signInWithPhoneNumber, linkWithCredential,
+  linkWithCredential,
 } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
 
 // Firebase 앱은 페이지별 모듈에서 이미 초기화됐을 가능성 — getApps() 재사용
@@ -160,7 +160,7 @@ function clearResendCooldown() {
   if (cd) cd.textContent = '';
 }
 
-// ── 재전송 — Firebase signInWithPhoneNumber 재호출 + 타이머 리셋 ──
+// ── 재전송 — link 전용(PhoneAuthProvider.verifyPhoneNumber 재호출) + 타이머 리셋 ──
 async function resendCode() {
   // 쿨다운 확인 (UI에서 disable 처리되지만 안전망)
   if (Date.now() - resendStartedAt < RESEND_COOLDOWN_MS) return;
@@ -176,14 +176,12 @@ async function resendCode() {
     recaptchaVerifier = new RecaptchaVerifier(auth, 'koausRecaptchaSlot', { size: 'invisible' });
     await recaptchaVerifier.render();
     const u = auth.currentUser;
-    pendingMode = u ? 'link' : 'signin';
-    if (pendingMode === 'link') {
-      const provider = new PhoneAuthProvider(auth);
-      const verificationId = await provider.verifyPhoneNumber(e164, recaptchaVerifier);
-      pendingConfirmation = { verificationId };
-    } else {
-      pendingConfirmation = await signInWithPhoneNumber(auth, e164, recaptchaVerifier);
-    }
+    // 폰① 보안: 재전송도 link 전용 — 비로그인 차단(번호 단독 로그인 금지).
+    if (!u) { setCodeMsg('이메일/구글 로그인 후 가능합니다.', 'err'); return; }
+    pendingMode = 'link';
+    const provider = new PhoneAuthProvider(auth);
+    const verificationId = await provider.verifyPhoneNumber(e164, recaptchaVerifier);
+    pendingConfirmation = { verificationId };
     lastSentAt = Date.now();
     // 입력 + 확인 버튼 재활성화 (세션 새로 시작)
     const inp = document.getElementById('koausPhoneCode');
@@ -207,7 +205,7 @@ async function resendCode() {
 }
 
 let recaptchaVerifier = null;
-let pendingConfirmation = null;  // signInWithPhoneNumber 결과 (회원가입 흐름)
+let pendingConfirmation = null;  // PhoneAuthProvider.verifyPhoneNumber 결과 { verificationId } (link 흐름 전용)
 let pendingPhoneCred = null;     // linkWithCredential 용 PhoneAuthProvider credential
 let pendingMode = 'link';        // 'link' (로그인 유저 phone 연결) | 'signin' (Phone 단독 가입/로그인)
 let lastSentAt = 0;
@@ -263,16 +261,18 @@ async function sendCode() {
       await recaptchaVerifier.render();
     }
     const u = auth.currentUser;
-    pendingMode = u ? 'link' : 'signin';
-    if (pendingMode === 'link') {
-      // 이미 로그인된 유저에게 phone 연결 — PhoneAuthProvider 로 진행
-      const provider = new PhoneAuthProvider(auth);
-      const verificationId = await provider.verifyPhoneNumber(e164, recaptchaVerifier);
-      pendingConfirmation = { verificationId };
-    } else {
-      // 비로그인 — signInWithPhoneNumber (Phone 단독)
-      pendingConfirmation = await signInWithPhoneNumber(auth, e164, recaptchaVerifier);
+    // 폰① 보안: 번호 단독 로그인/가입 금지 — 휴대폰은 이메일/구글 계정에 link 만. 비로그인은 로그인 먼저.
+    if (!u) {
+      setMsg('휴대폰 인증은 이메일/구글 로그인 후 가능합니다.', 'err');
+      closePhoneModal();
+      try { window.koausAuth && window.koausAuth.openAuthModal && window.koausAuth.openAuthModal(); } catch (_) {}
+      return;
     }
+    pendingMode = 'link';
+    // 로그인된 유저에게 phone 연결 — PhoneAuthProvider (link 전용)
+    const provider = new PhoneAuthProvider(auth);
+    const verificationId = await provider.verifyPhoneNumber(e164, recaptchaVerifier);
+    pendingConfirmation = { verificationId };
     lastSentAt = Date.now();
     document.getElementById('koausPhoneEcho').textContent = e164;
     showStep('code');
@@ -301,16 +301,11 @@ async function verifyCode() {
   if (!pendingConfirmation) { setCodeMsg('인증 세션 만료. 다시 시도해 주세요.', 'err'); showStep('phone'); return; }
   setCodeMsg('인증 중…', 'info');
   try {
-    if (pendingMode === 'link') {
-      // 기존 로그인 유저에게 phone credential 연결
-      const cred = PhoneAuthProvider.credential(pendingConfirmation.verificationId, code);
-      const u = auth.currentUser;
-      if (!u) throw new Error('no_current_user');
-      await linkWithCredential(u, cred);
-    } else {
-      // Phone 단독 가입/로그인 (비로그인 → 신규 계정 생성)
-      await pendingConfirmation.confirm(code);
-    }
+    // 폰① 보안: link 전용 — 번호 단독 로그인/가입(confirm) 경로 제거. 항상 로그인 유저에 phone credential 연결.
+    const cred = PhoneAuthProvider.credential(pendingConfirmation.verificationId, code);
+    const u = auth.currentUser;
+    if (!u) { setCodeMsg('이메일/구글 로그인 후 다시 시도해 주세요.', 'err'); return; }
+    await linkWithCredential(u, cred);
     setCodeMsg('✅ 인증 완료', 'ok');
     _verified = true;
     setTimeout(() => {
@@ -327,6 +322,11 @@ async function verifyCode() {
 }
 
 function openPhoneModal(opts) {
+  // 폰① 보안 방어: 비로그인 상태에서 폰 모달 진입 차단 — 로그인(이메일/구글) 먼저.
+  if (!auth.currentUser) {
+    try { window.koausAuth && window.koausAuth.openAuthModal && window.koausAuth.openAuthModal(); } catch (_) {}
+    return;
+  }
   mountPhoneModal();
   afterVerifiedCb = (opts && typeof opts.onVerified === 'function') ? opts.onVerified : null;
   afterCancelCb   = (opts && typeof opts.onCancel   === 'function') ? opts.onCancel   : null;
