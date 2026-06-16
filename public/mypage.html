@@ -972,7 +972,9 @@
       const fsDocId = (_hit && (_hit.fsDocId || _hit._fsDocId)) || (_fsHit && _fsHit.fsDocId) || null;
       if (fsDocId && window.koausRbac && window.koausRbac.selfDelete) {
         try {
-          await window.koausRbac.selfDelete(_col, String(fsDocId));
+          // 운영자는 타인 글도 삭제 가능 → forceDelete, 작성자 본인 글은 selfDelete
+          const _isAdmin = window.koausRbac.isAdmin && window.koausRbac.isAdmin();
+          await (_isAdmin ? window.koausRbac.forceDelete : window.koausRbac.selfDelete)(_col, String(fsDocId));
         } catch (e) {
           alert('삭제 실패: ' + (e && e.code === 'permission-denied' ? '본인 글만 삭제할 수 있습니다.' : (e && (e.code || e.message) || e)));
           return;

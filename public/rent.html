@@ -2001,6 +2001,7 @@
         </div>`;
       }
       actEl.innerHTML = html;
+      actEl.style.display = html ? 'flex' : 'none';   // accom 동일 패턴 — 작성자/운영자 버튼 표시
       if (isMine(p)) {
         const ed = document.getElementById('detailEditBtn'); if (ed) ed.onclick = () => openWriteModalForEdit(p);
         const dl = document.getElementById('detailDeleteBtn'); if (dl) dl.onclick = () => deletePost(p.id);
