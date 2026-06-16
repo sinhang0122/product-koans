@@ -1557,6 +1557,9 @@
         const kakaoLink = (elKakao && elKakao.value.trim())  || '';
         const _ceEl     = document.getElementById('wContactEmail');
         const contactEmail = (_ceEl && _ceEl.value.trim())   || '';
+        // 연락처 형식 검증 (선택 필드 — 값 있을 때만). JS submit 네이티브 검증 우회 차단.
+        if (contactEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(contactEmail)) { alert('이메일 형식이 올바르지 않습니다. 예: name@example.com'); if (_ceEl) _ceEl.focus(); return; }
+        if (phone && (!/^[0-9+\-\s()]+$/.test(phone) || phone.replace(/\D/g,'').length < 8)) { alert('전화번호는 숫자로 입력해 주세요. 예: 0412345678'); if (elPhone) elPhone.focus(); return; }
         // 세컨/써드 비자 카운트 가능 여부 — checkbox
         const _veEl     = document.getElementById('wVisaEligible');
         const visaEligible = !!(_veEl && _veEl.checked);

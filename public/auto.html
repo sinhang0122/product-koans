@@ -1784,6 +1784,12 @@
         return;  // 그 외 카테고리(rental 조회 전용 등)는 직접 글쓰기 불가
       }
 
+      // 연락처 형식 검증 (선택 필드 — 값 있을 때만). used(r*)/maintenance(m*) 공통 — fields 빌드 후, create/edit 전.
+      const _ae = (fields.contactEmail || '').trim();
+      if (_ae && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(_ae)) { if (wErr) { wErr.textContent = '이메일 형식이 올바르지 않습니다. 예: name@example.com'; } else { alert('이메일 형식이 올바르지 않습니다. 예: name@example.com'); } return; }
+      const _ap = (fields.phone || '').trim();
+      if (_ap && (!/^[0-9+\-\s()]+$/.test(_ap) || _ap.replace(/\D/g,'').length < 8)) { if (wErr) { wErr.textContent = '전화번호는 숫자로 입력해 주세요. 예: 0412345678'; } else { alert('전화번호는 숫자로 입력해 주세요. 예: 0412345678'); } return; }
+
       const nick = currentNickname() || user.displayName?.split(' ')[0] || user.email?.split('@')[0] || '사용자';
       const now = new Date();
       const pad = n => String(n).padStart(2, '0');

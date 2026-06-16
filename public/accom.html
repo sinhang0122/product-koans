@@ -1584,6 +1584,15 @@
         const kakaoLink = _kkEl ? _kkEl.value.trim() : '';
         const _ceEl = document.getElementById('wContactEmail');
         const contactEmail = _ceEl ? _ceEl.value.trim() : '';
+        // 연락처 형식 검증 (선택 필드 — 값 있을 때만). JS submit 은 네이티브 검증 우회 → 여기서 차단.
+        if (contactEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(contactEmail)) {
+          if (wErr) { wErr.textContent = '이메일 형식이 올바르지 않습니다. 예: name@example.com'; } else { alert('이메일 형식이 올바르지 않습니다. 예: name@example.com'); }
+          if (_ceEl) _ceEl.focus(); return;
+        }
+        if (phone && (!/^[0-9+\-\s()]+$/.test(phone) || phone.replace(/\D/g,'').length < 8)) {
+          if (wErr) { wErr.textContent = '전화번호는 숫자로 입력해 주세요. 예: 0412345678'; } else { alert('전화번호는 숫자로 입력해 주세요. 예: 0412345678'); }
+          if (_phEl) _phEl.focus(); return;
+        }
         const address  = document.getElementById('wAddress').value.trim();
         const priceVal = document.getElementById('wPrice').value.trim();
 
