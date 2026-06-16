@@ -180,10 +180,8 @@ async function resendCode() {
   }
   setCodeMsg('재전송 중…', 'info');
   try {
-    // reCAPTCHA 재사용 시 stale token 위험 → 새로 만들기
-    try { if (recaptchaVerifier) await recaptchaVerifier.clear(); } catch (_) {}
-    recaptchaVerifier = new RecaptchaVerifier(auth, 'koausRecaptchaSlot', { size: 'invisible' });
-    await recaptchaVerifier.render();
+    // reCAPTCHA 재사용 시 stale token 위험 + already rendered 예외 → 매번 새로(슬롯 DOM 비움 포함)
+    await _freshRecaptcha();
     const u = auth.currentUser;
     // 폰① 보안: 재전송도 link 전용 — 비로그인 차단(번호 단독 로그인 금지).
     if (!u) { setCodeMsg('이메일/구글 로그인 후 가능합니다.', 'err'); return; }
@@ -214,6 +212,17 @@ async function resendCode() {
 }
 
 let recaptchaVerifier = null;
+// reCAPTCHA 새로 생성 — 기존 위젯 clear + 슬롯 DOM 비우기로 "already rendered in this element" 예외 방지.
+//   (이게 없으면 재시도 시 예외 → verifyPhoneNumber/showStep('code') 미도달 → 코드 입력칸이 안 뜸)
+async function _freshRecaptcha() {
+  try { if (recaptchaVerifier) await recaptchaVerifier.clear(); } catch (_) {}
+  recaptchaVerifier = null;
+  const slot = document.getElementById('koausRecaptchaSlot');
+  if (slot) slot.innerHTML = '';   // 잔존 위젯 제거 — already rendered 방지
+  recaptchaVerifier = new RecaptchaVerifier(auth, 'koausRecaptchaSlot', { size: 'invisible' });
+  await recaptchaVerifier.render();
+  return recaptchaVerifier;
+}
 let pendingConfirmation = null;  // PhoneAuthProvider.verifyPhoneNumber 결과 { verificationId } (link 흐름 전용)
 let pendingPhoneCred = null;     // linkWithCredential 용 PhoneAuthProvider credential
 let pendingMode = 'link';        // 'link' (로그인 유저 phone 연결) | 'signin' (Phone 단독 가입/로그인)
@@ -264,11 +273,7 @@ async function sendCode() {
   }
   setMsg('인증번호 전송 중…', 'info');
   try {
-    if (!recaptchaVerifier) {
-      // invisible reCAPTCHA — 사용자 마찰 최소화
-      recaptchaVerifier = new RecaptchaVerifier(auth, 'koausRecaptchaSlot', { size: 'invisible' });
-      await recaptchaVerifier.render();
-    }
+    await _freshRecaptcha();   // invisible reCAPTCHA — 매번 새로(already rendered 예외 방지)
     const u = auth.currentUser;
     // 폰① 보안: 번호 단독 로그인/가입 금지 — 휴대폰은 이메일/구글 계정에 link 만. 비로그인은 로그인 먼저.
     if (!u) {
