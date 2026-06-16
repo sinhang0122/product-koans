@@ -1443,7 +1443,8 @@
     // ── Write Modal ──
     const writeOverlay = document.getElementById('writeOverlay');
 
-    let editingId = null;  // 수정 중인 글 id (null이면 새 글)
+    let editingId = null;  // 수정 중인 글 id (null이면 새 글) — FS 글은 _fsDocId
+    let editingCol = 'auto_posts';  // 수정 대상 컬렉션 (used/rental=auto_posts, maintenance/towing=services)
 
     // 글쓰기 버튼 클릭 시에만 이메일 인증 검사 (소프트 게이트)
     document.getElementById('writeBtnOpen').addEventListener('click',   () => {
@@ -1551,7 +1552,8 @@
       document.body.style.overflow = 'hidden';
     }
     function openWriteModalForEdit(p) {
-      editingId = p.id;
+      editingId = p._fsDocId || p.id;   // FS 글은 docId 로 수정(레이스/타임스탬프 id 회피)
+      editingCol = (p.category === 'used' || p.category === 'rental') ? 'auto_posts' : 'services';
       const cat = groupOf(p.category);
       if (cat === 'used' || cat === 'rental') {
         _set('rTitle', p.title); _set('rBrand', p.brand); _set('rModel', p.model);
@@ -1802,7 +1804,7 @@
             ? window.koausListingPrivacy.stripPrivateFields(_base)
             : _base;
           try {
-            await _upd(_doc(window.koausDb, 'auto_posts', String(editingId)), patch);
+            await _upd(_doc(window.koausDb, editingCol, String(editingId)), patch);
           } catch (e) {
             console.error('[auto] 수정 실패', e);
             alert('수정 실패: ' + (e?.code === 'permission-denied' ? '권한 거부 — 본인 글만 수정 가능' : (e?.code || e?.message || e)));
@@ -1812,7 +1814,7 @@
           if (fields.locationPrivate && fields.exactAddress && window.koausListingPrivacy && window.koausListingPrivacy.savePrivateLocation) {
             try {
               await window.koausListingPrivacy.savePrivateLocation(
-                window.koausDb, window.koausFs, 'auto_posts', String(editingId),
+                window.koausDb, window.koausFs, editingCol, String(editingId),
                 { exactAddress: fields.exactAddress, exactLat: fields.exactLat, exactLng: fields.exactLng },
                 user.uid);
             } catch (e) { console.warn('[auto] private_data 수정 실패', e); }
@@ -1866,16 +1868,28 @@
         recordMyPost(target);
         console.log('[KoAus] auto used 글 Firestore 저장 — fsDocId:', docRef.id, '| locationPrivate:', !!target.locationPrivate);
       } else {
-        // maintenance 등 — 기존 localStorage 유지 (스코프 밖, 무변경)
+        // ── 새 정비/견인 글 → Firestore services (status:'approved') — used 분기 미러, 컬렉션만 services ──
+        //   services onSnapshot(AUTO_CATS) 이 모두에게 렌더. ⚠️ payload 에 email/authorEmail 금지(H4). contact 필수(rules).
+        if (!window.koausDb || !window.koausFs) { alert('Firestore 미초기화 — 잠시 후 다시 시도해 주세요.'); return; }
+        const { addDoc: _add, collection: _col, serverTimestamp: _ts } = window.koausFs;
+        if (!fields.contact) fields.contact = fields.phone || '연락처 문의';   // rules pReqStr contact≥1 — 빈 채 가면 permission-denied
         const target = {
-          id: Date.now(), state: currentState, category: activeCategory, isPremium: false,
-          author: nick, uid: user.uid || '',
-          authorUid: user.uid || '',
+          state: currentState, category: activeCategory, status: 'approved', isUserPost: true,
+          author: nick, uid: user.uid || '', authorUid: user.uid || '',
           date, time, ...fields,
         };
-        posts.push(target);
-        savePosts(posts);
+        if (!String(target.body || '').trim()) target.body = ' ';   // rules reqStr body 1자↑ 정합
+        let docRef;
+        try {
+          docRef = await _add(_col(window.koausDb, 'services'), Object.assign({}, target, { createdAt: _ts() }));
+        } catch (e) {
+          console.error('[auto] services 등록 실패', e);
+          alert('등록 실패: ' + (e?.code === 'permission-denied' ? '권한 거부 — 로그인 상태 및 필수 필드 확인' : (e?.code || e?.message || e)));
+          return;
+        }
+        target.id = docRef.id; target._fsDocId = docRef.id;
         recordMyPost(target);
+        console.log('[KoAus] auto maintenance 글 services 저장 — fsDocId:', docRef.id);
       }
 
       currentPage = 1;
@@ -2217,6 +2231,7 @@
       if (!p) return;
       currentDetailPost = p;
       window.currentDetailPost = p; // koaus-report.js 신고 스냅샷용 노출 (id 일치 시에만 소비)
+      const _detailCol = (p.category === 'used' || p.category === 'rental') ? 'auto_posts' : 'services';   // RBAC 액션 컬렉션 분기
 
       // Hero 영역에 첨부 사진(있을 시) — 가로 스크롤 갤러리 + 카운터 동기화 + 클릭 시 라이트박스 (accom 표준 이식)
       const hero = document.getElementById('detailHero');
@@ -2338,7 +2353,7 @@
           // auto 본문은 localStorage 저장(타임스탬프 id) — Firestore 글(_fsDocId)일 때만 rbac, 아니면 localStorage 토글
           //   · 옛 버그: services 를 p.id(타임스탬프)로 호출 → "No document to update". deletePost 의 _fsDocId 게이트와 동일 패턴으로 정합.
           if (p._fsDocId && _rbac && _rbac.markCompleted) {
-            await _rbac.markCompleted('auto_posts', String(p._fsDocId));
+            await _rbac.markCompleted(_detailCol, String(p._fsDocId));
           } else {
             const posts = loadPosts(); const t = posts.find(x => String(x.id) === String(p.id));
             if (t) { t.status = 'completed'; savePosts(posts); }
@@ -2351,7 +2366,7 @@
         if (!confirm(willHide ? '이 글을 일시 숨김 처리하시겠습니까?' : '다시 노출하시겠습니까?')) return;
         try {
           if (p._fsDocId && _rbac && _rbac.toggleHidden) {
-            await _rbac.toggleHidden('auto_posts', String(p._fsDocId), !!p.isHidden);
+            await _rbac.toggleHidden(_detailCol, String(p._fsDocId), !!p.isHidden);
           } else {
             const posts = loadPosts(); const t = posts.find(x => String(x.id) === String(p.id));
             if (t) { t.isHidden = willHide; t.status = willHide ? 'hidden' : ''; savePosts(posts); }
@@ -2363,7 +2378,7 @@
       const _bAd = document.getElementById('detailAdminDelBtn'); if (_bAd) _bAd.onclick = async () => {
         if (!confirm('관리자 권한으로 이 글을 영구 삭제하시겠습니까? (사진·위치정보 포함 완전 삭제)')) return;
         try {
-          if (p._fsDocId) await _rbac.forceDelete('auto_posts', String(p._fsDocId));
+          if (p._fsDocId) await _rbac.forceDelete(_detailCol, String(p._fsDocId));
           savePosts(loadPosts().filter(x => String(x.id) !== String(p.id)));
           alert('🗑 강제 삭제 완료');
           document.getElementById('detailOverlay').classList.remove('open'); renderAll();
@@ -2399,9 +2414,10 @@
       if (!confirm('정말 이 게시글을 삭제하시겠습니까?')) return;
       const post = loadPosts().find(x => String(x.id) === String(id));
       const fsDocId = post && post._fsDocId;
+      const _col = (post && (post.category === 'used' || post.category === 'rental')) ? 'auto_posts' : 'services';
       if (fsDocId && window.koausRbac && window.koausRbac.selfDelete) {
         try {
-          await window.koausRbac.selfDelete('auto_posts', String(fsDocId));
+          await window.koausRbac.selfDelete(_col, String(fsDocId));
         } catch (e) {
           console.error('[auto] Firestore 삭제 실패', e);
           alert('삭제 실패: ' + (e?.code || e?.message || e));
@@ -2953,7 +2969,7 @@
       const editId = new URLSearchParams(location.search).get('edit');
       if (!editId) return;
       // FS 캐시 도착 전이면 loadPosts().find 실패(레이스) → 폴링 재시도(최대 ~6s)
-      const _tryEdit = () => { const p = loadPosts().find(x => String(x.id) === String(editId)); if (p && isMine(p)) { openWriteModalForEdit(p); return true; } return false; };
+      const _tryEdit = () => { const p = loadPosts().find(x => String(x.id) === String(editId) || String(x._fsDocId || '') === String(editId)); if (p && isMine(p)) { openWriteModalForEdit(p); return true; } return false; };
       if (!_tryEdit()) { let _t = 0; const _iv = setInterval(() => { if (_tryEdit() || ++_t > 40) clearInterval(_iv); }, 150); }
     }, { once: true });
 
