@@ -23,6 +23,45 @@ const firebaseConfig = {
 // 옛 24h 숨기기(X 버튼) localStorage 잔재 정리 — 닫기 기능 자체가 폐지됨 (2026-06)
 try { localStorage.removeItem('koaus-dismissed-ads'); } catch (_) {}
 
+// ── 주(state) 타겟팅 — hero-banner.js 와 동일 로직 (성향 주 → ?state= → 없으면 전역) ──
+//   · koaus_state_scores(21일 반감기·min 1.5) 읽기 전용, koaus_state_override 강제, ?state= 폴백.
+function currentState() {
+  try { return (new URLSearchParams(location.search).get('state') || '').toLowerCase(); }
+  catch (_) { return ''; }
+}
+const TARGET_STATES = ['nsw', 'vic', 'qld', 'wa', 'sa', 'tas', 'act', 'nt'];
+const SCORE_HALF_LIFE_MS = 21 * 86400000;
+const SCORE_MIN = 1.5;
+function dominantState() {
+  try {
+    const ov = JSON.parse(localStorage.getItem('koaus_state_override') || 'null');
+    if (TARGET_STATES.indexOf(ov) !== -1) return ov;
+  } catch (_) {}
+  try {
+    const raw = JSON.parse(localStorage.getItem('koaus_state_scores') || '{}') || {};
+    const now = Date.now();
+    let best = null, bestVal = 0;
+    TARGET_STATES.forEach(s => {
+      const e = raw[s];
+      if (!e) return;
+      const v = e.last
+        ? (e.score || 0) * Math.pow(0.5, Math.max(0, now - e.last) / SCORE_HALF_LIFE_MS)
+        : (e.score || 0);
+      if (v > bestVal) { bestVal = v; best = s; }
+    });
+    if (best && bestVal >= SCORE_MIN) return best;
+  } catch (_) {}
+  return null;
+}
+let _targetState;
+function targetState() {
+  if (_targetState === undefined) {
+    const cs = currentState();
+    _targetState = dominantState() || (TARGET_STATES.indexOf(cs) !== -1 ? cs : '') || '';
+  }
+  return _targetState;
+}
+
 function start() {
   const $row     = document.getElementById('tickerRow');
   const $track   = document.getElementById('tickerTrack');
@@ -115,9 +154,14 @@ function start() {
         //   · priority 없는 옛 공지는 100(폼 기본값)으로 간주 — 마이그레이션 불필요
         const _pri = d => (typeof d.priority === 'number' ? d.priority : 100);
         const _ts  = d => (d.createdAt && typeof d.createdAt.toMillis === 'function') ? d.createdAt.toMillis() : 0;
+        const ts = targetState();   // 현재 유저의 타겟 주 (성향→?state→전역)
         const next = snap.docs
           .map(d => ({ id: d.id, data: d.data() }))
-          .filter(({ data }) => data && (data.text || '').trim())
+          .filter(({ data }) => {
+            if (!data || !(data.text || '').trim()) return false;
+            const ns = (data.state || '').toLowerCase();
+            return !ns || ns === 'all' || ns === ts;   // state 없음/all=전역(하위호환), 특정 주는 일치 시만
+          })
           .sort((a, b) => (_pri(a.data) - _pri(b.data)) || (_ts(b.data) - _ts(a.data)))
           .map(({ id, data }) => ({
             id,

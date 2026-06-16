@@ -553,6 +553,26 @@
             <p class="mt-1.5 text-xs text-gray-500">낮을수록 먼저 노출 (1=최상위, 999=최하위). 동순위는 등록 시각순.</p>
           </div>
 
+          <!-- B-2) 노출 주(state) 타겟팅 — 단일 주(여러 주는 주별 복붙 등록) -->
+          <div>
+            <label for="dashNoticeState" class="block text-sm text-gray-700 font-semibold mb-2">
+              노출 지역 (State)
+            </label>
+            <select id="dashNoticeState" name="state"
+                    class="w-full p-3 border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent">
+              <option value="">🌏 전체 (All)</option>
+              <option value="nsw">NSW</option>
+              <option value="vic">VIC</option>
+              <option value="qld">QLD</option>
+              <option value="wa">WA</option>
+              <option value="sa">SA</option>
+              <option value="act">ACT</option>
+              <option value="tas">TAS</option>
+              <option value="nt">NT</option>
+            </select>
+            <p class="mt-1.5 text-xs text-gray-500">특정 주 선택 시 그 주 성향 유저에게만 노출. 전체=모든 유저(하위호환).</p>
+          </div>
+
           <!-- C) 클릭 액션 + 리다이렉트 URL — Grid 2-cols 한 줄 배치 -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -1225,6 +1245,7 @@
         const action   = (document.getElementById('dashNoticeAction').value || 'link');
         const url      = (document.getElementById('dashNoticeUrl').value || '').trim();
         const text     = (document.getElementById('dashNoticeText').value || '').trim();
+        const state    = (document.getElementById('dashNoticeState').value || '').trim();   // 노출 주 ('' = 전체)
         if (!sponsor || !text) { flashNote(note, '스폰서명과 본문은 필수입니다.', false); return; }
         if (btn) { btn.disabled = true; btn.textContent = '저장 중…'; }
         // payload 통일: text(필수, marquee.js data.text) + link(marquee.js data.link 호환, url 와 동일값)
@@ -1232,7 +1253,7 @@
           text,                          // 마퀴 본문 (marquee.js 읽음)
           link: url || '',               // marquee.js data.link — 클릭 이동 URL
           url,                           // admin UI 옵션 (link 와 같은 값, 향후 분리 대비)
-          sponsor, priority, action, active: true,
+          sponsor, priority, action, state, active: true,   // state: marquee.js 주 타겟팅 필터
         };
         if (_noticeEditId) {
           await updateDoc(doc(db, 'notices', _noticeEditId), Object.assign({}, payload, { updatedAt: serverTimestamp() }));
@@ -1305,7 +1326,10 @@
         const bot = document.createElement('p');
         bot.className = 'text-xs text-gray-400 mt-0.5';
         const ts = _nTs(d);
-        bot.textContent = (ts ? new Date(ts).toLocaleString('ko-KR', { dateStyle: 'medium', timeStyle: 'short' }) : '등록일 없음')
+        const STATE_LABEL = { nsw:'NSW', vic:'VIC', qld:'QLD', wa:'WA', sa:'SA', act:'ACT', tas:'TAS', nt:'NT' };
+        const _stTag = '[' + (STATE_LABEL[(d.state || '').toLowerCase()] || '전체') + '] ';
+        bot.textContent = _stTag
+          + (ts ? new Date(ts).toLocaleString('ko-KR', { dateStyle: 'medium', timeStyle: 'short' }) : '등록일 없음')
           + ' · 우선순위 ' + _nPri(d);
         body.appendChild(top); body.appendChild(mid); body.appendChild(bot);
         li.appendChild(body);
@@ -1338,6 +1362,7 @@
       document.getElementById('dashNoticeAction').value   = d.action || 'external';
       document.getElementById('dashNoticeUrl').value      = d.url || d.link || '';
       document.getElementById('dashNoticeText').value     = d.text || '';
+      document.getElementById('dashNoticeState').value    = d.state || '';
       const btn = document.getElementById('dashNoticeSubmit');
       if (btn) btn.textContent = '공지 수정 저장';
       if (_nCancelBtn) _nCancelBtn.hidden = false;

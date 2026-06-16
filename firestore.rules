@@ -620,6 +620,7 @@ service cloud.firestore {
                                && optStr('url', 500)
                                && optStr('sponsor', 100)
                                && optStr('action', 30)
+                               && optStr('state', 10)
                                && optInt('priority', 0, 9999)
                                && optBool('active');
       allow delete: if isAdmin();
