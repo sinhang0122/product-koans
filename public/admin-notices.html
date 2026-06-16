@@ -3,7 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>관리자 페이지 — KoAus(코오스)</title>
+  <title>상단 공지·노출 글 관리 — KoAus(코오스)</title>
+  <!-- ⚠️ ADMIN_EMAILS 화이트리스트 4번째 사본 — firestore.rules / admin.html / admin-mark.js 와 동기화 유지 -->
+  <!-- admin.html 디클러터(1단계): 마퀴 공지 + 상단 노출 글 관리를 이 페이지로 분리(순수 이동). 인증 셸·App Check 동일 복제. -->
   <meta name="robots" content="noindex" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -465,13 +467,13 @@
 
     <div class="page-header">
       <div>
-        <h1 class="page-title">관리자 페이지</h1>
-        <p class="page-subtitle">KoAus(코오스) Admin · 공지·히어로 배너·서비스 게시글 등록 및 관리</p>
+        <h1 class="page-title">상단 공지·노출 글 관리</h1>
+        <p class="page-subtitle">마퀴 공지 + 상단 노출 글(핀공지) 전용 관리 — KoAus(코오스) Admin</p>
       </div>
       <div class="admin-header-actions">
         <span class="admin-who" id="adminWho"></span>
         <button type="button" class="admin-logout" id="adminLogout">로그아웃</button>
-        <a href="index.html" class="page-back">← 홈으로</a>
+        <a href="admin.html" class="page-back">← 관리자 홈</a>
       </div>
     </div>
 
@@ -484,185 +486,268 @@
          ════════════════════════════════════════════════════════════════════ -->
     <div class="max-w-7xl mx-auto p-6 bg-gray-50 grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 items-start">
 
-      <!-- ══════════════════════════════════════════════════
-           카드 1 · 배너 관리 — admin-ads.html 로 통합 이전
-           (옛 인라인 폼/목록은 주별 슬롯 재설계와 함께 제거 — 이중 진입점 방지)
-           ══════════════════════════════════════════════════ -->
-      <section class="admin-card bg-white rounded-xl shadow-sm border border-gray-200 p-7">
-        <header class="flex items-center gap-3 pb-4 mb-6 border-b border-gray-200">
-          <div class="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-lg flex-shrink-0">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M4 4h16v12H5.17L4 17.17V4z"/>
-              <path d="M8 8h8"/>
-              <path d="M8 12h5"/>
-            </svg>
-          </div>
-          <div>
-            <h2 class="text-xl font-bold text-gray-900 leading-tight">배너 관리 <span class="text-sm font-semibold text-gray-500">(통합 배너 · 유저 성향 타겟)</span></h2>
-            <p class="text-xs text-gray-500 mt-0.5">전용 화면으로 통합되었습니다 — 성향 주 탭 + 4슬롯 현황 + 기간·하우스 광고.</p>
-          </div>
-        </header>
-        <div class="space-y-3">
-          <a href="admin-ads.html"
-             class="block w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold py-3 px-6 rounded-lg shadow-sm transition-colors text-center">
-            🖼 배너 관리 열기 <span class="font-normal text-blue-100 text-sm">(전 페이지 · 유저 성향 주 기준 슬롯 교체)</span>
-          </a>
-        </div>
-      </section>
 
       <!-- ══════════════════════════════════════════════════
-           카드 1-b · 상단 공지 · 노출 글 — admin-notices.html 로 분리(1단계 이동)
+           카드 2 · 상단 공지 알림 (Top Notice)
            ══════════════════════════════════════════════════ -->
-      <section class="admin-card bg-white rounded-xl shadow-sm border border-gray-200 p-7">
+      <section id="marquee" class="admin-card bg-white rounded-xl shadow-sm border border-gray-200 p-7">
+        <!-- 카드 헤더 — 주황 아이콘 + 타이틀 -->
         <header class="flex items-center gap-3 pb-4 mb-6 border-b border-gray-200">
           <div class="flex items-center justify-center w-10 h-10 bg-orange-500 rounded-lg flex-shrink-0">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
-          </div>
-          <div>
-            <h2 class="text-xl font-bold text-gray-900 leading-tight">상단 공지 · 노출 글 관리</h2>
-            <p class="text-xs text-gray-500 mt-0.5">마퀴 공지 + 상단 노출 글(핀공지) — 전용 화면으로 분리.</p>
-          </div>
-        </header>
-        <div class="space-y-3">
-          <a href="admin-notices.html#marquee"
-             class="block w-full bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-bold py-3 px-6 rounded-lg shadow-sm transition-colors text-center">
-            📢 상단 공지(마퀴) 관리 열기
-          </a>
-          <a href="admin-notices.html#pinned"
-             class="block w-full bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-bold py-3 px-6 rounded-lg shadow-sm transition-colors text-center">
-            📌 상단 노출 글(핀공지) 관리 열기
-          </a>
-        </div>
-      </section>
-
-
-      <!-- ══════════════════════════════════════════════════
-           카드 5 · 애니메이션 시간 조절 (지시 7/7)
-           hero-banner 슬라이드 전환 + marquee 흐름 속도 설정
-           Firestore: app_settings/timings
-           ══════════════════════════════════════════════════ -->
-      <section class="admin-card bg-white rounded-xl shadow-sm border border-gray-200 p-7">
-        <header class="flex items-center gap-3 pb-4 mb-6 border-b border-gray-200">
-          <div class="flex items-center justify-center w-10 h-10 bg-purple-600 rounded-lg flex-shrink-0">
+            <!-- FontAwesome 미사용 → inline SVG (종 / bell 아이콘) -->
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
             </svg>
           </div>
           <div>
-            <h2 class="text-xl font-bold text-gray-900 leading-tight">애니메이션 시간 조절</h2>
-            <p class="text-xs text-gray-500 mt-0.5">히어로 배너 전환 / 마퀴 흐름 속도 (전 사이트 동적 적용)</p>
+            <h2 class="text-xl font-bold text-gray-900 leading-tight">상단 공지 알림</h2>
+            <p class="text-xs text-gray-500 mt-0.5">전 페이지 상단 마퀴(전광판) 에 흐를 공지 등록</p>
           </div>
         </header>
-        <form id="dashTimingsForm" class="space-y-5" autocomplete="off">
+
+        <!-- 폼 본문 — 4개 입력 필드 + 등록 버튼 -->
+        <form id="dashTopNoticeForm" class="space-y-5" autocomplete="off">
+
+          <!-- A) 광고주 -->
           <div>
-            <label for="dashHeroDelaySec" class="block text-sm font-semibold text-gray-700 mb-2">
-              히어로 배너 전환 시간 (초) <span class="text-red-500">*</span>
+            <label for="dashNoticeSponsor" class="block text-sm text-gray-700 font-semibold mb-2">
+              광고주 / 게시자 <span class="text-red-500">*</span>
             </label>
-            <input id="dashHeroDelaySec" name="heroDelaySec" type="number" min="1" max="30" step="1" value="3"
-                   class="w-full p-3 border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent" />
-            <p class="mt-1.5 text-xs text-gray-500">1초 ~ 30초. 기본 3초. 슬라이드 한 장이 표시되는 시간.</p>
+            <input id="dashNoticeSponsor" name="sponsor" type="text" maxlength="60"
+                   placeholder="예: KoAus · 데이브 정비소 · 시드니 한인협회"
+                   class="w-full p-3 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent" />
+            <p class="mt-1.5 text-xs text-gray-500">마퀴 좌측 고정 라벨에 표시됩니다 (예: <code class="px-1 py-0.5 bg-gray-100 rounded text-gray-700">📢 KoAus</code>).</p>
           </div>
+
+          <!-- B) 우선순위 -->
           <div>
-            <label for="dashMarqueeDurationSec" class="block text-sm font-semibold text-gray-700 mb-2">
-              마퀴 흐름 시간 (초) <span class="text-red-500">*</span>
+            <label for="dashNoticePriority" class="block text-sm text-gray-700 font-semibold mb-2">
+              우선순위
             </label>
-            <input id="dashMarqueeDurationSec" name="marqueeDurationSec" type="number" min="5" max="300" step="1" value="10"
-                   class="w-full p-3 border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent" />
-            <p class="mt-1.5 text-xs text-gray-500">5초 ~ 300초. 기본 10초. 한 사이클(우→좌) 완주 시간. 길수록 천천히 흐름.</p>
+            <input id="dashNoticePriority" name="priority" type="number" min="1" max="999" step="1" value="100"
+                   class="w-full p-3 border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent" />
+            <p class="mt-1.5 text-xs text-gray-500">낮을수록 먼저 노출 (1=최상위, 999=최하위). 동순위는 등록 시각순.</p>
           </div>
+
+          <!-- B-2) 노출 주(state) 타겟팅 — 단일 주(여러 주는 주별 복붙 등록) -->
+          <div>
+            <label for="dashNoticeState" class="block text-sm text-gray-700 font-semibold mb-2">
+              노출 지역 (State)
+            </label>
+            <select id="dashNoticeState" name="state"
+                    class="w-full p-3 border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent">
+              <option value="">🌏 전체 (All)</option>
+              <option value="nsw">NSW</option>
+              <option value="vic">VIC</option>
+              <option value="qld">QLD</option>
+              <option value="wa">WA</option>
+              <option value="sa">SA</option>
+              <option value="act">ACT</option>
+              <option value="tas">TAS</option>
+              <option value="nt">NT</option>
+            </select>
+            <p class="mt-1.5 text-xs text-gray-500">특정 주 선택 시 그 주 성향 유저에게만 노출. 전체=모든 유저(하위호환).</p>
+          </div>
+
+          <!-- C) 클릭 액션 + 리다이렉트 URL — Grid 2-cols 한 줄 배치 -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label for="dashNoticeAction" class="block text-sm text-gray-700 font-semibold mb-2">
+                클릭 액션
+              </label>
+              <select id="dashNoticeAction" name="action"
+                      class="w-full p-3 border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent">
+                <option value="external">🔗 외부 링크 (새 탭)</option>
+                <option value="kakao">💬 카카오톡 오픈채팅</option>
+                <option value="internal">↗ 내부 페이지 이동</option>
+                <option value="none">❌ 클릭 비활성</option>
+              </select>
+            </div>
+            <div>
+              <label for="dashNoticeUrl" class="block text-sm text-gray-700 font-semibold mb-2">
+                리다이렉트 URL
+              </label>
+              <input id="dashNoticeUrl" name="url" type="url" maxlength="500"
+                     placeholder="https://example.com"
+                     class="w-full p-3 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent" />
+            </div>
+          </div>
+
+          <!-- D) 공지 내용 (Textarea, rows=4) -->
+          <div>
+            <label for="dashNoticeText" class="block text-sm text-gray-700 font-semibold mb-2">
+              공지 내용 <span class="text-red-500">*</span>
+            </label>
+            <textarea id="dashNoticeText" name="text" rows="4" maxlength="500"
+                      placeholder="예: 시드니 워홀러 대상 무료 비자 상담 캠페인 진행 중 · 자세히 보기 →"
+                      class="w-full p-3 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-400 leading-relaxed resize-y focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"></textarea>
+            <p class="mt-1.5 text-xs text-gray-500">최대 500자 · 마퀴(전광판) 영역에서 우→좌로 흐릅니다.</p>
+          </div>
+
+          <!-- 등록 버튼 -->
           <div class="pt-2">
-            <button type="submit" id="dashTimingsSubmit"
-                    class="w-full bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white font-bold py-3 px-6 rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 disabled:opacity-60">
-              💾 시간 저장
+            <button type="submit" id="dashNoticeSubmit"
+                    class="w-full bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-bold py-3 px-6 rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed">
+              <span class="inline-flex items-center justify-center gap-2">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+                </svg>
+                공지 등록
+              </span>
             </button>
-            <p id="dashTimingsNote" class="mt-3 text-sm text-center" role="status" aria-live="polite"></p>
+            <p id="dashNoticeNote" class="mt-3 text-sm text-center" role="status" aria-live="polite"></p>
+            <button type="button" id="dashNoticeCancelEdit" hidden
+                    class="w-full mt-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2.5 px-6 rounded-lg text-sm transition-colors">
+              수정 취소
+            </button>
           </div>
         </form>
-      </section>
 
-      <!-- ══════════════════════════════════════════════════
-           카드 4 · 신고 관리 (지시 6/7)
-           reports 컬렉션 실시간 구독 — 카테고리/사유/처리 상태 표시
-           ══════════════════════════════════════════════════ -->
-      <section class="admin-card bg-white rounded-xl shadow-sm border border-gray-200 p-7">
-        <header class="flex items-center gap-3 pb-4 mb-6 border-b border-gray-200">
-          <div class="flex items-center justify-center w-10 h-10 bg-red-600 rounded-lg flex-shrink-0">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-              <line x1="12" y1="9" x2="12" y2="13"/>
-              <line x1="12" y1="17" x2="12.01" y2="17"/>
-            </svg>
+        <!-- 공지 관리 — 등록된 공지 목록 (조회 / 수정 / 삭제 / ▲▼ 순서 변경) -->
+        <div id="dashNoticeManage" class="mt-8 pt-6 border-t border-gray-200">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-bold text-gray-900">등록된 공지 <span id="dashNoticeCount" class="text-orange-500"></span></h3>
+            <p class="text-xs text-gray-500">▲/▼ 순서 변경 · 목록 위쪽이 먼저 노출</p>
           </div>
-          <div>
-            <h2 class="text-xl font-bold text-gray-900 leading-tight">신고 관리</h2>
-            <p class="text-xs text-gray-500 mt-0.5">사용자 신고 큐 · 카테고리별 검토 후 조치 (글 삭제 / 무시 / 해결)</p>
-          </div>
-          <span class="ml-auto inline-flex items-center px-3 py-1 rounded-full bg-red-50 text-red-700 text-xs font-bold" id="dashReportsCount">0건</span>
-        </header>
-        <div id="dashReportsList" class="space-y-2"
-             style="max-height:440px;overflow-y:auto;font-size:13px;">
-          <div class="text-sm text-gray-500 text-center py-8">로딩 중…</div>
+          <ul id="dashNoticeList" class="space-y-2">
+            <li class="text-sm text-gray-400">불러오는 중…</li>
+          </ul>
         </div>
       </section>
 
       <!-- ══════════════════════════════════════════════════
-           카드 5 · 블라인드 글 관리
-           4컬렉션 status=='hidden' 조회 — 해제 / 강제 삭제 (해제 동선 보장)
+           카드 3 · 상단 노출 글 등록 (Pinned Post)
            ══════════════════════════════════════════════════ -->
-      <section class="admin-card bg-white rounded-xl shadow-sm border border-gray-200 p-7">
+      <section id="pinned" class="admin-card bg-white rounded-xl shadow-sm border border-gray-200 p-7">
+        <!-- 카드 헤더 — 녹색 핀 아이콘 + 타이틀 -->
         <header class="flex items-center gap-3 pb-4 mb-6 border-b border-gray-200">
-          <div class="flex items-center justify-center w-10 h-10 bg-gray-700 rounded-lg flex-shrink-0">
+          <div class="flex items-center justify-center w-10 h-10 bg-green-600 rounded-lg flex-shrink-0">
+            <!-- FontAwesome 미사용 → inline SVG (핀/map-pin 아이콘) -->
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
-              <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
-              <line x1="1" y1="1" x2="23" y2="23"/>
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+              <circle cx="12" cy="10" r="3"/>
             </svg>
           </div>
           <div>
-            <h2 class="text-xl font-bold text-gray-900 leading-tight">블라인드 글 관리</h2>
-            <p class="text-xs text-gray-500 mt-0.5">숨김 상태(status=hidden) 글 조회 · 운영자 블라인드/작성자 일시 숨김 구분 · 해제 / 강제 삭제</p>
+            <h2 class="text-xl font-bold text-gray-900 leading-tight">상단 노출 글 등록</h2>
+            <p class="text-xs text-gray-500 mt-0.5">특정 섹션의 게시판 최상단에 고정될 핀공지 게시글</p>
           </div>
-          <span class="ml-auto inline-flex items-center px-3 py-1 rounded-full bg-gray-100 text-gray-700 text-xs font-bold" id="dashHiddenCount">0건</span>
-          <button type="button" id="dashHiddenRefresh"
-                  style="padding:6px 14px;font-size:12px;font-weight:700;background:#1f2937;color:#fff;border:none;border-radius:6px;cursor:pointer;">↻ 새로고침</button>
         </header>
-        <div id="dashHiddenList" class="space-y-2"
-             style="max-height:440px;overflow-y:auto;font-size:13px;">
-          <div class="text-sm text-gray-500 text-center py-8">로딩 중…</div>
+
+        <!-- 폼 본문 — 4그룹 + 등록 버튼 -->
+        <form id="dashPinnedPostForm" class="space-y-5" autocomplete="off">
+
+          <!-- A) Grid 3-cols : 앵커 우선순위 / 지역 필터 / 섹션 앵커 -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label for="dashPinPriority" class="block text-sm text-gray-700 font-semibold mb-2">
+                앵커 우선순위
+              </label>
+              <input id="dashPinPriority" name="priority" type="number" min="1" max="999" step="1" value="100"
+                     class="w-full p-3 border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent" />
+            </div>
+            <div>
+              <label for="dashPinState" class="block text-sm text-gray-700 font-semibold mb-2">
+                지역 필터
+              </label>
+              <select id="dashPinState" name="state" multiple size="6"
+                      class="w-full p-3 border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                <option value="all">🌏 전 지역 (All)</option>
+                <option value="nsw">NSW</option>
+                <option value="vic">VIC</option>
+                <option value="qld">QLD</option>
+                <option value="wa">WA</option>
+                <option value="sa">SA</option>
+                <option value="tas">TAS</option>
+                <option value="act">ACT</option>
+                <option value="nt">NT</option>
+              </select>
+              <p class="mt-1 text-xs text-gray-500">⌘/Ctrl + 클릭 다중 선택. 전 지역 선택 시 다른 항목 자동 무시.</p>
+            </div>
+            <div>
+              <label for="dashPinSection" class="block text-sm text-gray-700 font-semibold mb-2">
+                섹션 앵커 <span class="text-red-500">*</span>
+              </label>
+              <select id="dashPinSection" name="section"
+                      class="w-full p-3 border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                <option value="accom">🏠 Share (쉐어)</option>
+                <option value="rent">🏘 Rent (렌트)</option>
+                <option value="jobs">💼 Work (구인구직)</option>
+                <option value="auto">🚗 Auto (차량)</option>
+                <option value="restaurants">🍱 K-Food (식당)</option>
+                <option value="trades">🌿 일상 (Others)</option>
+                <option value="gp">🏥 GP (의료)</option>
+                <option value="salon">💇 미용실</option>
+                <option value="points">🛂 Visa (비자/유학)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- B) Grid 2-cols : 게시글 제목 / 연락처 -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label for="dashPinTitle" class="block text-sm text-gray-700 font-semibold mb-2">
+                게시글 제목 <span class="text-red-500">*</span>
+              </label>
+              <input id="dashPinTitle" name="title" type="text" maxlength="120"
+                     placeholder="예: [공식] 시드니 한인 워홀러 무료 비자 상담회"
+                     class="w-full p-3 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent" />
+            </div>
+            <div>
+              <label for="dashPinContact" class="block text-sm text-gray-700 font-semibold mb-2">
+                연락처 정보
+              </label>
+              <input id="dashPinContact" name="contact" type="text" maxlength="200"
+                     placeholder="카카오 ID · 전화번호 · 이메일 등"
+                     class="w-full p-3 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent" />
+            </div>
+          </div>
+
+          <!-- C) 게시글 내용 (Textarea rows=5) -->
+          <div>
+            <label for="dashPinBody" class="block text-sm text-gray-700 font-semibold mb-2">
+              게시글 내용 <span class="text-red-500">*</span>
+            </label>
+            <textarea id="dashPinBody" name="body" rows="5" maxlength="3000"
+                      placeholder="핀공지로 노출될 본문 내용. 줄바꿈 보존."
+                      class="w-full p-3 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-400 leading-relaxed resize-y focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"></textarea>
+            <p class="mt-1.5 text-xs text-gray-500">최대 3,000자 · 마크다운 미지원 · 줄바꿈 그대로 반영.</p>
+          </div>
+
+          <!-- D) 이미지 첨부 -->
+          <div>
+            <label for="dashPinImage" class="block text-sm text-gray-700 font-semibold mb-2">
+              이미지 첨부 (선택)
+            </label>
+            <input id="dashPinImage" name="image" type="file" accept="image/*" multiple
+                   class="w-full p-3 border border-gray-300 rounded-lg text-sm text-gray-900 file:mr-4 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:bg-green-50 file:text-green-700 file:font-semibold file:cursor-pointer hover:file:bg-green-100 cursor-pointer focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent" />
+            <p class="mt-1.5 text-xs text-gray-500">JPG / PNG / WebP — 장당 최대 <strong class="text-gray-700">5 MB</strong> · 최대 4장 · 자동 압축.</p>
+          </div>
+
+          <!-- 등록 버튼 -->
+          <div class="pt-2">
+            <button type="submit" id="dashPinSubmit"
+                    class="w-full bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-bold py-3 px-6 rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed">
+              <span class="inline-flex items-center justify-center gap-2">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M12 17V3"/>
+                  <path d="M6 9l6-6 6 6"/>
+                  <path d="M5 21h14"/>
+                </svg>
+                노출 등록
+              </span>
+            </button>
+            <p id="dashPinNote" class="mt-3 text-sm text-center" role="status" aria-live="polite"></p>
+          </div>
+        </form>
+        <!-- 등록된 상단 노출 글 목록 (수정/삭제) — 보드당 1문서(doc id=보드명) -->
+        <div class="mt-6 pt-5 border-t border-gray-200">
+          <h3 class="text-sm font-bold text-gray-900 mb-3">등록된 상단 노출 글 <span id="dashPinCount" class="text-gray-400 font-normal"></span></h3>
+          <ul id="dashPinList" class="space-y-2"></ul>
         </div>
       </section>
 
-      <!-- ══════════════════════════════════════════════════
-           카드 6 · 제재 관리
-           정지 계정 목록(users status=='suspended') + moderation_logs 이력
-           ══════════════════════════════════════════════════ -->
-      <section class="admin-card bg-white rounded-xl shadow-sm border border-gray-200 p-7">
-        <header class="flex items-center gap-3 pb-4 mb-6 border-b border-gray-200">
-          <div class="flex items-center justify-center w-10 h-10 bg-amber-600 rounded-lg flex-shrink-0">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
-            </svg>
-          </div>
-          <div>
-            <h2 class="text-xl font-bold text-gray-900 leading-tight">제재 관리</h2>
-            <p class="text-xs text-gray-500 mt-0.5">현재 정지 중 계정 + 제재 이력(moderation_logs 최근 100건)</p>
-          </div>
-          <span class="ml-auto inline-flex items-center px-3 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-bold" id="dashSuspendedCount">0명</span>
-          <button type="button" id="dashSanctionRefresh"
-                  style="padding:6px 14px;font-size:12px;font-weight:700;background:#92400e;color:#fff;border:none;border-radius:6px;cursor:pointer;">↻ 새로고침</button>
-        </header>
-        <h3 class="text-sm font-bold text-gray-900 mb-2">🚫 정지 중 계정</h3>
-        <div id="dashSuspendedList" class="space-y-2 mb-6"
-             style="max-height:300px;overflow-y:auto;font-size:13px;">
-          <div class="text-sm text-gray-500 text-center py-8">로딩 중…</div>
-        </div>
-        <h3 class="text-sm font-bold text-gray-900 mb-2">📜 제재 이력 (최근 100건)</h3>
-        <div id="dashModLogList" class="space-y-1"
-             style="max-height:300px;overflow-y:auto;font-size:12.5px;">
-          <div class="text-sm text-gray-500 text-center py-8">로딩 중…</div>
-        </div>
-      </section>
 
     </div><!-- /.admin-dashboard -->
 
@@ -967,313 +1052,341 @@
     });
 
     // ════════════════════════════════════════════════════════════════════════
-    // 시간 조절 카드(app_settings/timings) submit 헬퍼. (pickStates 는 핀공지와 함께 admin-notices.html 로 이동)
+    // 폼 submit 핸들러 — 4 카드 (hero_banners / top_notices / board_pinned_notices / app_settings)
+    // 지시 7/7: 지역 multiple select 처리 + 시간 조절 카드 신설
     // ════════════════════════════════════════════════════════════════════════
+    function pickStates(selectEl) {
+      if (!selectEl) return ['all'];
+      const sel = Array.from(selectEl.selectedOptions || []).map(o => o.value).filter(Boolean);
+      if (!sel.length) return ['all'];
+      // 'all' 선택 시 다른 항목 무시 → ['all'] 단일
+      if (sel.indexOf('all') >= 0) return ['all'];
+      return sel.slice(0, 9);  // firestore.rules: regions.size() <= 9
+    }
     function flashNote(el, msg, ok) {
       if (!el) return;
       el.textContent = msg;
       el.style.color = ok ? '#16a34a' : '#dc2626';
     }
-    // ── 카드 5 · 애니메이션 시간 (app_settings/timings) ──
-    const _tmForm = document.getElementById('dashTimingsForm');
-    if (_tmForm) {
-      // 초기 로드 — 기존 값 입력 필드에 채움
-      (async () => {
-        try {
-          const snap = await getDoc(doc(db, 'app_settings', 'timings'));
-          if (snap.exists()) {
-            const d = snap.data();
-            if (d.heroDelaySec)       document.getElementById('dashHeroDelaySec').value = d.heroDelaySec;
-            if (d.marqueeDurationSec) document.getElementById('dashMarqueeDurationSec').value = d.marqueeDurationSec;
-          }
-        } catch (e) { /* doc 미존재 — 기본값 유지 */ }
-      })();
-      _tmForm.addEventListener('submit', async e => {
-        e.preventDefault();
-        const note = document.getElementById('dashTimingsNote');
-        const btn  = document.getElementById('dashTimingsSubmit');
-        try {
-          if (!auth.currentUser) { flashNote(note, '로그인이 필요합니다.', false); return; }
-          const heroDelaySec       = Number(document.getElementById('dashHeroDelaySec').value) || 3;
-          const marqueeDurationSec = Number(document.getElementById('dashMarqueeDurationSec').value) || 10;
-          if (heroDelaySec < 1 || heroDelaySec > 30) { flashNote(note, '히어로 시간은 1~30초 범위.', false); return; }
-          if (marqueeDurationSec < 5 || marqueeDurationSec > 300) { flashNote(note, '마퀴 시간은 5~300초 범위.', false); return; }
-          if (btn) { btn.disabled = true; btn.textContent = '저장 중…'; }
-          await setDoc(doc(db, 'app_settings', 'timings'), {
-            heroDelaySec, marqueeDurationSec,
-            updatedAt: serverTimestamp(), uid: auth.currentUser.uid,
-          }, { merge: true });
-          flashNote(note, '✅ 시간 저장 완료 — 다음 페이지 로드부터 전 사이트 자동 적용', true);
-        } catch (err) {
-          console.error('[admin] timings 저장 실패', err);
-          flashNote(note, '❌ 저장 실패: ' + (err.message || err), false);
-        } finally {
-          if (btn) { btn.disabled = false; btn.textContent = '💾 시간 저장'; }
+    // ── 카드 2 · 상단 노출 공지 (notices — marquee.js 와 동일 컬렉션) ──
+    //   회귀 수정: 옛 top_notices 에 저장 → marquee.js 가 notices 구독해서 노출 X.
+    //   해결: 동일 'notices' 컬렉션 사용. payload 는 marquee.js 가 기대하는
+    //         text + link 필수 + admin UI 추가 필드 (sponsor/priority/url/action/active) 동시 저장.
+    //         firestore.rules /notices/{id} 룰에 옵션 필드 모두 통과 가능 (보안 약화 0).
+    const _tnForm = document.getElementById('dashTopNoticeForm');
+    let _noticeEditId = null;   // 수정 모드 — 대상 docId (null = 신규 등록)
+    const _nCancelBtn = document.getElementById('dashNoticeCancelEdit');
+    function exitNoticeEditMode() {
+      _noticeEditId = null;
+      if (_tnForm) _tnForm.reset();
+      const btn = document.getElementById('dashNoticeSubmit');
+      if (btn) btn.textContent = '공지 등록';
+      if (_nCancelBtn) _nCancelBtn.hidden = true;
+    }
+    if (_nCancelBtn) _nCancelBtn.addEventListener('click', exitNoticeEditMode);
+    if (_tnForm) _tnForm.addEventListener('submit', async e => {
+      e.preventDefault();
+      const note = document.getElementById('dashNoticeNote');
+      const btn  = document.getElementById('dashNoticeSubmit');
+      try {
+        if (!auth.currentUser) { flashNote(note, '로그인이 필요합니다.', false); return; }
+        const sponsor  = (document.getElementById('dashNoticeSponsor').value || '').trim();
+        const priority = Number(document.getElementById('dashNoticePriority').value) || 100;
+        const action   = (document.getElementById('dashNoticeAction').value || 'link');
+        const url      = (document.getElementById('dashNoticeUrl').value || '').trim();
+        const text     = (document.getElementById('dashNoticeText').value || '').trim();
+        const state    = (document.getElementById('dashNoticeState').value || '').trim();   // 노출 주 ('' = 전체)
+        if (!sponsor || !text) { flashNote(note, '스폰서명과 본문은 필수입니다.', false); return; }
+        if (btn) { btn.disabled = true; btn.textContent = '저장 중…'; }
+        // payload 통일: text(필수, marquee.js data.text) + link(marquee.js data.link 호환, url 와 동일값)
+        const payload = {
+          text,                          // 마퀴 본문 (marquee.js 읽음)
+          link: url || '',               // marquee.js data.link — 클릭 이동 URL
+          url,                           // admin UI 옵션 (link 와 같은 값, 향후 분리 대비)
+          sponsor, priority, action, state, active: true,   // state: marquee.js 주 타겟팅 필터
+        };
+        if (_noticeEditId) {
+          await updateDoc(doc(db, 'notices', _noticeEditId), Object.assign({}, payload, { updatedAt: serverTimestamp() }));
+          flashNote(note, '✅ 공지 수정 완료', true);
+          exitNoticeEditMode();
+        } else {
+          await addDoc(collection(db, 'notices'), Object.assign({}, payload, {
+            createdAt: serverTimestamp(), uid: auth.currentUser.uid,
+          }));
+          flashNote(note, '✅ 상단 공지 등록 완료', true);
+          _tnForm.reset();
         }
+      } catch (err) {
+        console.error('[admin] notices 저장 실패', err);
+        flashNote(note, '❌ 저장 실패: ' + (err.message || err), false);
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = _noticeEditId ? '공지 수정 저장' : '공지 등록'; }
+      }
+    });
+
+    // ── 카드 2-b · 공지 관리 — 목록 조회 / 수정 / 삭제 / ▲▼ 순서 변경 ──
+    //   · 정렬: priority asc(낮을수록 앞) → 동률 시 createdAt desc — marquee.js 와 동일 규칙
+    //   · priority 없는 옛 공지는 100(폼 기본값)으로 간주 (데이터 마이그레이션 불필요)
+    //   · ▲/▼ 시 화면 순서대로 priority 를 10,20,30…으로 정규화 후 달라진 doc 만 updateDoc
+    const _nlList  = document.getElementById('dashNoticeList');
+    const _nlCount = document.getElementById('dashNoticeCount');
+    let _noticeRows = [];
+    const _nPri = d => (typeof d.priority === 'number' ? d.priority : 100);
+    const _nTs  = d => (d.createdAt && typeof d.createdAt.toMillis === 'function') ? d.createdAt.toMillis() : 0;
+
+    function renderNoticeList() {
+      if (!_nlList) return;
+      _nlList.textContent = '';
+      if (_nlCount) _nlCount.textContent = `(${_noticeRows.length}개)`;
+      if (!_noticeRows.length) {
+        const li = document.createElement('li');
+        li.className = 'text-sm text-gray-400';
+        li.textContent = '등록된 공지가 없습니다.';
+        _nlList.appendChild(li);
+        return;
+      }
+      _noticeRows.forEach((row, i) => {
+        const d = row.data;
+        const li = document.createElement('li');
+        li.className = 'flex items-center gap-2 p-3 bg-gray-50 border border-gray-200 rounded-lg';
+
+        // ▲▼ 순서 버튼
+        const orderBox = document.createElement('div');
+        orderBox.className = 'flex flex-col gap-0.5 flex-shrink-0';
+        [['▲', -1], ['▼', +1]].forEach(([sym, delta]) => {
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.textContent = sym;
+          b.className = 'w-7 h-6 text-xs leading-none bg-white border border-gray-300 rounded hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed';
+          b.disabled = (delta === -1 && i === 0) || (delta === 1 && i === _noticeRows.length - 1);
+          b.addEventListener('click', () => moveNotice(i, delta));
+          orderBox.appendChild(b);
+        });
+        li.appendChild(orderBox);
+
+        // 본문 — sponsor + text + 등록일 (textContent 만 사용: XSS 안전)
+        const body = document.createElement('div');
+        body.className = 'flex-1 min-w-0';
+        const top = document.createElement('p');
+        top.className = 'text-sm font-semibold text-gray-900 truncate';
+        top.textContent = (d.sponsor || '').trim() || '📢 공지';
+        const mid = document.createElement('p');
+        mid.className = 'text-sm text-gray-700 truncate';
+        mid.textContent = d.text || '';
+        const bot = document.createElement('p');
+        bot.className = 'text-xs text-gray-400 mt-0.5';
+        const ts = _nTs(d);
+        const STATE_LABEL = { nsw:'NSW', vic:'VIC', qld:'QLD', wa:'WA', sa:'SA', act:'ACT', tas:'TAS', nt:'NT' };
+        const _stTag = '[' + (STATE_LABEL[(d.state || '').toLowerCase()] || '전체') + '] ';
+        bot.textContent = _stTag
+          + (ts ? new Date(ts).toLocaleString('ko-KR', { dateStyle: 'medium', timeStyle: 'short' }) : '등록일 없음')
+          + ' · 우선순위 ' + _nPri(d);
+        body.appendChild(top); body.appendChild(mid); body.appendChild(bot);
+        li.appendChild(body);
+
+        // 수정 / 삭제 버튼
+        const actBox = document.createElement('div');
+        actBox.className = 'flex flex-col gap-1 flex-shrink-0';
+        const editBtn = document.createElement('button');
+        editBtn.type = 'button';
+        editBtn.textContent = '수정';
+        editBtn.className = 'px-2.5 py-1 text-xs font-semibold text-blue-600 bg-blue-50 border border-blue-200 rounded hover:bg-blue-100';
+        editBtn.addEventListener('click', () => startNoticeEdit(row));
+        const delBtn = document.createElement('button');
+        delBtn.type = 'button';
+        delBtn.textContent = '삭제';
+        delBtn.className = 'px-2.5 py-1 text-xs font-semibold text-red-600 bg-red-50 border border-red-200 rounded hover:bg-red-100';
+        delBtn.addEventListener('click', () => deleteNotice(row));
+        actBox.appendChild(editBtn); actBox.appendChild(delBtn);
+        li.appendChild(actBox);
+
+        _nlList.appendChild(li);
       });
     }
 
-    // ════════════════════════════════════════════════════════════════════════
-    // 카드 4 · 신고 관리 (지시 6/7 + 제재 시스템 확장)
-    //   · reports 컬렉션 onSnapshot 실시간 구독 (orderBy createdAt desc, limit 100)
-    //     ⚠️ rules 의 limitedList 는 ≤100 — 100 초과 쿼리는 전체 거부됨 (F-G 회귀 주의)
-    //   · 카테고리/신고자/대상글/스냅샷/사유/처리 액션 (삭제 / 해결 / 무시)
-    //   · 글 보기 링크 + 작성자 정지/해제 (callable suspendUser/unsuspendUser)
-    //   · firestore.rules: list isAdmin only ≤ 100, update/delete isAdmin
-    // ════════════════════════════════════════════════════════════════════════
-    function escHtmlAdmin(s) {
-      return String(s == null ? '' : s)
-        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-        .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    function startNoticeEdit(row) {
+      const d = row.data;
+      _noticeEditId = row.id;
+      document.getElementById('dashNoticeSponsor').value  = d.sponsor || '';
+      document.getElementById('dashNoticePriority').value = _nPri(d);
+      document.getElementById('dashNoticeAction').value   = d.action || 'external';
+      document.getElementById('dashNoticeUrl').value      = d.url || d.link || '';
+      document.getElementById('dashNoticeText').value     = d.text || '';
+      document.getElementById('dashNoticeState').value    = d.state || '';
+      const btn = document.getElementById('dashNoticeSubmit');
+      if (btn) btn.textContent = '공지 수정 저장';
+      if (_nCancelBtn) _nCancelBtn.hidden = false;
+      const form = document.getElementById('dashTopNoticeForm');
+      if (form) form.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
-    const CAT_LABEL = {
-      spam:          '🚫 스팸/홍보',
-      fraud:         '⚠️ 사기 의심',
-      inappropriate: '🚨 부적절',
-      other:         '✏️ 기타',
-    };
-    function reportRowHtml(r) {
-      const cat = CAT_LABEL[r.category] || r.category || '(미분류)';
-      const created = r.createdAt && r.createdAt.toDate ? r.createdAt.toDate().toLocaleString('ko-KR') : '';
-      const reporter = r.reporterEmail ? r.reporterEmail.split('@')[0] + '@…' : (r.reporterUid ? r.reporterUid.slice(0,6) + '…' : '익명');
-      const status = r.status === 'resolved' ? '<span style="color:#16a34a;font-weight:700;">✅ 해결</span>'
-                    : r.status === 'ignored' ? '<span style="color:#777;font-weight:700;">— 무시</span>'
-                    : '<span style="color:#dc2626;font-weight:800;">🔴 대기</span>';
-      return '<div class="admin-report-row" style="display:flex;flex-direction:column;gap:6px;padding:10px 12px;border:1px solid #e5e7eb;border-radius:8px;background:#fafafa;">'
-        + '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">'
-        +   '<span style="font-weight:800;color:#dc2626;">' + escHtmlAdmin(cat) + '</span>'
-        +   '<span style="font-size:11.5px;color:#6b7280;">' + escHtmlAdmin(created) + '</span>'
-        + '</div>'
-        + '<div style="font-size:12.5px;color:#374151;">'
-        +   '<b>대상:</b> [' + escHtmlAdmin(r.board || '?') + '] ' + escHtmlAdmin(r.postTitle || r.postId || '(제목 없음)')
-        + '</div>'
-        + '<div style="font-size:12px;color:#6b7280;"><b>신고자:</b> ' + escHtmlAdmin(reporter) + ' · postId=' + escHtmlAdmin(r.postId || '') + '</div>'
-        + (r.postAuthorUid ? '<div style="font-size:12px;color:#6b7280;"><b>작성자 uid:</b> ' + escHtmlAdmin(r.postAuthorUid) + '</div>' : '')
-        + (r.postBodyExcerpt ? '<div style="font-size:12px;color:#4b5563;background:#fff;padding:6px 8px;border-radius:6px;border:1px solid #e5e7eb;"><b>본문 요약:</b> ' + escHtmlAdmin(r.postBodyExcerpt) + '</div>' : '')
-        + (r.detail ? '<div style="font-size:12px;color:#4b5563;background:#fff;padding:6px 8px;border-radius:6px;border:1px solid #e5e7eb;"><b>상세:</b> ' + escHtmlAdmin(r.detail) + '</div>' : '')
-        + '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:2px;flex-wrap:wrap;">'
-        +   '<span>' + status + '</span>'
-        +   '<span style="display:flex;gap:6px;flex-wrap:wrap;">'
-        +     (r.board && r.board !== 'unknown' ? '<a href="' + escHtmlAdmin(r.board) + '.html" target="_blank" rel="noopener" style="padding:4px 10px;font-size:11.5px;font-weight:700;background:#eff6ff;color:#1d4ed8;border:1px solid #93c5fd;border-radius:5px;text-decoration:none;">📄 글 보기</a>' : '')
-        +     (r.postAuthorUid
-                ? '<button class="admin-report-act" data-act="suspend" data-id="' + escHtmlAdmin(r._id) + '" data-uid="' + escHtmlAdmin(r.postAuthorUid) + '" style="padding:4px 10px;font-size:11.5px;font-weight:700;background:#fef3c7;color:#92400e;border:1px solid #fcd34d;border-radius:5px;cursor:pointer;">🚫 작성자 정지</button>'
-                  + '<button class="admin-report-act" data-act="unsuspend" data-id="' + escHtmlAdmin(r._id) + '" data-uid="' + escHtmlAdmin(r.postAuthorUid) + '" style="padding:4px 10px;font-size:11.5px;font-weight:700;background:#ecfdf5;color:#065f46;border:1px solid #6ee7b7;border-radius:5px;cursor:pointer;">♻️ 정지 해제</button>'
-                : '<span style="padding:4px 10px;font-size:11.5px;color:#9ca3af;border:1px dashed #d1d5db;border-radius:5px;" title="옛 신고 — 작성자 uid 스냅샷 없음">정지 불가(uid 없음)</span>')
-        +     '<button class="admin-report-act" data-act="resolve" data-id="' + escHtmlAdmin(r._id) + '" style="padding:4px 10px;font-size:11.5px;font-weight:700;background:#dcfce7;color:#166534;border:1px solid #86efac;border-radius:5px;cursor:pointer;">✅ 해결</button>'
-        +     '<button class="admin-report-act" data-act="ignore"  data-id="' + escHtmlAdmin(r._id) + '" style="padding:4px 10px;font-size:11.5px;font-weight:700;background:#f3f4f6;color:#374151;border:1px solid #d1d5db;border-radius:5px;cursor:pointer;">— 무시</button>'
-        +     '<button class="admin-report-act" data-act="delete"  data-id="' + escHtmlAdmin(r._id) + '" style="padding:4px 10px;font-size:11.5px;font-weight:700;background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;border-radius:5px;cursor:pointer;">🗑 영구 삭제</button>'
-        +   '</span>'
-        + '</div>'
-      + '</div>';
-    }
-    function startReportsSubscription() {
-      const listEl  = document.getElementById('dashReportsList');
-      const countEl = document.getElementById('dashReportsCount');
-      if (!listEl) return;
+
+    async function deleteNotice(row) {
+      const label = ((row.data.sponsor || '').trim() || '📢 공지') + ' — ' + (row.data.text || '').slice(0, 30);
+      if (!confirm('이 공지를 삭제할까요?\n\n' + label)) return;
       try {
-        const q = query(collection(db, 'reports'), orderBy('createdAt', 'desc'), limit(100));
-        onSnapshot(q, snap => {
-          const arr = snap.docs.map(d => Object.assign({ _id: d.id }, d.data()));
-          if (countEl) countEl.textContent = arr.length + '건';
-          if (!arr.length) {
-            listEl.innerHTML = '<div class="text-sm text-gray-500 text-center py-8">접수된 신고가 없습니다.</div>';
-            return;
+        await deleteDoc(doc(db, 'notices', row.id));
+        if (_noticeEditId === row.id) exitNoticeEditMode();
+      } catch (err) {
+        console.error('[admin] notices 삭제 실패', err);
+        alert('삭제 실패: ' + (err.code || err.message || err));
+      }
+    }
+
+    async function moveNotice(i, delta) {
+      const j = i + delta;
+      if (j < 0 || j >= _noticeRows.length) return;
+      const reordered = _noticeRows.slice();
+      const [moved] = reordered.splice(i, 1);
+      reordered.splice(j, 0, moved);
+      try {
+        // 화면 순서 기준 10,20,30… 정규화 — 값이 달라진 doc 만 updateDoc (옛 공지 priority 자동 부여)
+        const jobs = [];
+        reordered.forEach((row, idx) => {
+          const want = (idx + 1) * 10;
+          if (_nPri(row.data) !== want) {
+            jobs.push(updateDoc(doc(db, 'notices', row.id), { priority: want }));
           }
-          listEl.innerHTML = arr.map(reportRowHtml).join('');
-          // 처리 액션 — 위임 click (한 번만 바인딩)
-        }, err => {
-          console.error('[admin] reports 구독 실패', err);
-          listEl.innerHTML = '<div class="text-sm text-red-600 text-center py-8">구독 실패: ' + escHtmlAdmin(err.message || err) + '</div>';
         });
-      } catch (e) {
-        console.error('[admin] reports 초기화 실패', e);
-        listEl.innerHTML = '<div class="text-sm text-red-600 text-center py-8">초기화 실패</div>';
+        await Promise.all(jobs);
+      } catch (err) {
+        console.error('[admin] notices 순서 변경 실패', err);
+        alert('순서 변경 실패: ' + (err.code || err.message || err));
       }
     }
-    // 처리 액션 위임 click (해결/무시/삭제)
-    document.addEventListener('click', async e => {
-      const btn = e.target.closest('.admin-report-act[data-act][data-id]');
-      if (!btn) return;
-      const act = btn.dataset.act, id = btn.dataset.id;
-      if (!act || !id) return;
-      btn.disabled = true;
+
+    if (_nlList) onSnapshot(
+      query(collection(db, 'notices'), orderBy('createdAt', 'desc'), limit(20)),
+      snap => {
+        _noticeRows = snap.docs
+          .map(d => ({ id: d.id, data: d.data() }))
+          .sort((a, b) => (_nPri(a.data) - _nPri(b.data)) || (_nTs(b.data) - _nTs(a.data)));
+        renderNoticeList();
+      },
+      err => {
+        console.error('[admin] notices 목록 구독 실패', err);
+        _nlList.textContent = '';
+        const li = document.createElement('li');
+        li.className = 'text-sm text-red-500';
+        li.textContent = '목록 조회 실패: ' + (err.code || err.message || '');
+        _nlList.appendChild(li);
+      }
+    );
+
+    // ── 카드 3 · 게시판 핀공지 (board_pinned_notices/{board}) ──
+    const _pinForm = document.getElementById('dashPinnedPostForm');
+    if (_pinForm) _pinForm.addEventListener('submit', async e => {
+      e.preventDefault();
+      const note = document.getElementById('dashPinNote');
+      const btn  = document.getElementById('dashPinSubmit');
       try {
-        if (act === 'suspend' || act === 'unsuspend') {
-          const uid = btn.dataset.uid;
-          if (!uid) { alert('작성자 uid 정보가 없는 신고입니다.'); btn.disabled = false; return; }
-          const label = act === 'suspend' ? '정지' : '정지 해제';
-          if (!confirm('작성자(uid: ' + uid + ') 계정을 ' + label + '하시겠습니까?')) { btn.disabled = false; return; }
-          const reason = prompt(label + ' 사유를 입력하세요 (moderation_logs 에 기록):', '');
-          if (reason === null) { btn.disabled = false; return; }
-          const call = act === 'suspend' ? callSuspendUser : callUnsuspendUser;
-          const res = await call({ uid, reason });
-          alert('✅ ' + label + ' 완료 — uid: ' + (res.data && res.data.uid || uid) + ' / status: ' + (res.data && res.data.status || ''));
-          btn.disabled = false;
-          if (btn.dataset.id === 'sanction') loadSanctions();  // 제재 관리 카드 경유 시 목록 갱신
-        } else if (act === 'delete') {
-          if (!confirm('이 신고 기록을 영구 삭제하시겠습니까?')) { btn.disabled = false; return; }
-          await deleteDoc(doc(db, 'reports', id));
-        } else {
-          await updateDoc(doc(db, 'reports', id), { status: act === 'resolve' ? 'resolved' : 'ignored', processedAt: serverTimestamp() });
-        }
+        if (!auth.currentUser) { flashNote(note, '로그인이 필요합니다.', false); return; }
+        const board    = document.getElementById('dashPinSection').value;
+        const regions  = pickStates(document.getElementById('dashPinState'));
+        const priority = Number(document.getElementById('dashPinPriority').value) || 100;
+        const title    = (document.getElementById('dashPinTitle').value || '').trim();
+        const contact  = (document.getElementById('dashPinContact').value || '').trim();
+        const text     = (document.getElementById('dashPinBody').value || '').trim();
+        if (!board || !text) { flashNote(note, '섹션과 본문은 필수입니다.', false); return; }
+        if (btn) { btn.disabled = true; btn.textContent = '저장 중…'; }
+        await setDoc(doc(db, 'board_pinned_notices', board), {
+          board, regions, priority, title, contact, text, active: true,
+          updatedAt: serverTimestamp(), uid: auth.currentUser.uid,
+        }, { merge: true });
+        flashNote(note, '✅ 핀공지 등록 완료', true);
+        _pinForm.reset();
       } catch (err) {
-        console.error('[admin] 신고 처리 실패', err);
-        alert('처리 실패: ' + (err.message || err));
-        btn.disabled = false;
+        console.error('[admin] board_pinned_notices 저장 실패', err);
+        flashNote(note, '❌ 등록 실패: ' + (err.message || err), false);
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = '노출 등록'; }
       }
     });
-    // ════════════════════════════════════════════════════════════
-    // 카드 5 · 블라인드 글 관리 — 4컬렉션 status=='hidden' 조회 (새로고침 버튼식)
-    //   해제/강제 삭제는 window.koausRbac (toggleHidden/forceDelete) 경유 —
-    //   forceDelete 는 Storage 이미지 + private_data 고아 정리 포함.
-    // ════════════════════════════════════════════════════════════
-    const HIDDEN_COLS = [
-      ['accom_posts', '쉐어'],
-      ['rent_posts',  '렌트'],
-      ['jobs_posts',  'Work'],
-      ['services',    '서비스'],
-    ];
-    function _tsToStr(ts) {
-      try { return (ts && ts.toDate) ? ts.toDate().toLocaleString('ko-KR') : ''; } catch (_) { return ''; }
-    }
-    function hiddenRowHtml(col, label, id, p) {
-      const byAdmin = p.hiddenBy === 'admin';
-      const badge = byAdmin
-        ? '<span style="padding:2px 8px;font-size:11px;font-weight:800;background:#fee2e2;color:#991b1b;border-radius:999px;">운영자 블라인드</span>'
-        : '<span style="padding:2px 8px;font-size:11px;font-weight:800;background:#f3f4f6;color:#374151;border-radius:999px;">작성자 일시 숨김</span>';
-      return '<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:5px;">'
-        + '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">'
-        +   '<b style="color:#1f2937;">[' + escHtmlAdmin(label) + ']</b> '
-        +   '<span>' + escHtmlAdmin(p.title || '(제목 없음)') + '</span>' + badge
-        + '</div>'
-        + '<div style="font-size:12px;color:#6b7280;">작성자 uid: ' + escHtmlAdmin(p.uid || p.authorUid || '?')
-        +   (p.hiddenAt ? ' · 숨김: ' + escHtmlAdmin(_tsToStr(p.hiddenAt)) : '') + ' · docId=' + escHtmlAdmin(id) + '</div>'
-        + '<div style="display:flex;gap:6px;flex-wrap:wrap;">'
-        +   '<button class="admin-hidden-act" data-act="unhide" data-col="' + escHtmlAdmin(col) + '" data-id="' + escHtmlAdmin(id) + '" style="padding:4px 10px;font-size:11.5px;font-weight:700;background:#ecfdf5;color:#065f46;border:1px solid #6ee7b7;border-radius:5px;cursor:pointer;">▶️ 블라인드 해제</button>'
-        +   '<button class="admin-hidden-act" data-act="fdelete" data-col="' + escHtmlAdmin(col) + '" data-id="' + escHtmlAdmin(id) + '" style="padding:4px 10px;font-size:11.5px;font-weight:700;background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;border-radius:5px;cursor:pointer;">🗑 강제 삭제</button>'
-        + '</div>'
-        + '</div>';
-    }
-    async function loadHiddenPosts() {
-      const listEl  = document.getElementById('dashHiddenList');
-      const countEl = document.getElementById('dashHiddenCount');
-      if (!listEl) return;
-      listEl.innerHTML = '<div class="text-sm text-gray-500 text-center py-8">로딩 중…</div>';
-      const rows = []; let total = 0;
-      for (const [col, label] of HIDDEN_COLS) {
-        try {
-          const snap = await getDocs(query(collection(db, col), where('status', '==', 'hidden'), limit(20)));
-          snap.docs.forEach(d => { total++; rows.push(hiddenRowHtml(col, label, d.id, d.data() || {})); });
-        } catch (e) {
-          console.error('[admin] hidden 조회 실패 (' + col + ')', e);
-          rows.push('<div class="text-sm text-red-600">' + escHtmlAdmin(label) + ' 조회 실패: ' + escHtmlAdmin(e.message || e) + '</div>');
-        }
+
+    // ── 카드 3 · 등록된 상단 노출 글 목록 (board_pinned_notices) — 수정/삭제 ──
+    //   · 보드당 1문서(doc id = 보드명). 카드2 renderNoticeList 패턴(textContent XSS 안전).
+    //   · 수정 = dashPinnedPostForm 에 prefill 후 재제출(setDoc merge 가 doc id=보드 덮어씀 — 기존 로직 재사용).
+    //   · 삭제 = deleteDoc(doc(db,'board_pinned_notices', board)). onSnapshot 으로 목록 자동 갱신.
+    const _plList  = document.getElementById('dashPinList');
+    const _plCount = document.getElementById('dashPinCount');
+    const _PIN_BOARD_LABEL = { accom:'🏠 Share', rent:'🏘 Rent', jobs:'💼 Work', auto:'🚗 Auto', restaurants:'🍱 K-Food', trades:'🌿 일상', gp:'🏥 GP', salon:'💇 미용실', points:'🛂 Visa' };
+    let _pinRows = [];
+    function renderPinList() {
+      if (!_plList) return;
+      _plList.textContent = '';
+      if (_plCount) _plCount.textContent = `(${_pinRows.length}개)`;
+      if (!_pinRows.length) {
+        const li = document.createElement('li');
+        li.className = 'text-sm text-gray-400';
+        li.textContent = '등록된 상단 노출 글이 없습니다.';
+        _plList.appendChild(li);
+        return;
       }
-      if (countEl) countEl.textContent = total + '건';
-      listEl.innerHTML = rows.length ? rows.join('')
-        : '<div class="text-sm text-gray-500 text-center py-8">블라인드/숨김 상태의 글이 없습니다.</div>';
+      _pinRows.forEach(row => {
+        const d = row.data;
+        const li = document.createElement('li');
+        li.className = 'flex items-center gap-2 p-3 bg-gray-50 border border-gray-200 rounded-lg';
+        const body = document.createElement('div');
+        body.className = 'flex-1 min-w-0';
+        const top = document.createElement('p');
+        top.className = 'text-sm font-semibold text-gray-900 truncate';
+        top.textContent = (_PIN_BOARD_LABEL[row.id] || row.id) + ' · ' + ((d.title || '').trim() || '(제목 없음)');
+        const mid = document.createElement('p');
+        mid.className = 'text-sm text-gray-700 truncate';
+        mid.textContent = d.text || '';
+        const bot = document.createElement('p');
+        bot.className = 'text-xs text-gray-400 mt-0.5';
+        const ts = (d.updatedAt && d.updatedAt.toMillis) ? d.updatedAt.toMillis() : 0;
+        bot.textContent = (ts ? new Date(ts).toLocaleString('ko-KR', { dateStyle: 'medium', timeStyle: 'short' }) : '등록일 없음') + (d.active === false ? ' · 비활성' : '');
+        body.appendChild(top); body.appendChild(mid); body.appendChild(bot);
+        li.appendChild(body);
+        const actBox = document.createElement('div');
+        actBox.className = 'flex flex-col gap-1 flex-shrink-0';
+        const editBtn = document.createElement('button');
+        editBtn.type = 'button'; editBtn.textContent = '수정';
+        editBtn.className = 'px-2.5 py-1 text-xs font-semibold text-blue-600 bg-blue-50 border border-blue-200 rounded hover:bg-blue-100';
+        editBtn.addEventListener('click', () => startPinEdit(row));
+        const delBtn = document.createElement('button');
+        delBtn.type = 'button'; delBtn.textContent = '삭제';
+        delBtn.className = 'px-2.5 py-1 text-xs font-semibold text-red-600 bg-red-50 border border-red-200 rounded hover:bg-red-100';
+        delBtn.addEventListener('click', () => deletePin(row));
+        actBox.appendChild(editBtn); actBox.appendChild(delBtn);
+        li.appendChild(actBox);
+        _plList.appendChild(li);
+      });
     }
-    document.addEventListener('click', async e => {
-      const btn = e.target.closest('.admin-hidden-act[data-act][data-col][data-id]');
-      if (!btn) return;
-      const { act, col, id } = btn.dataset;
-      const rbac = window.koausRbac;
-      if (!rbac) { alert('권한 모듈(koaus-rbac.js) 미로드'); return; }
-      btn.disabled = true;
+    function startPinEdit(row) {
+      const d = row.data;
+      const _set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+      _set('dashPinSection', row.id);                 // doc id = board
+      _set('dashPinPriority', d.priority || 100);
+      _set('dashPinTitle', d.title || '');
+      _set('dashPinContact', d.contact || '');
+      _set('dashPinBody', d.text || '');
+      const stSel = document.getElementById('dashPinState');
+      if (stSel) { const regions = Array.isArray(d.regions) ? d.regions.map(String) : []; [...stSel.options].forEach(o => { o.selected = regions.includes(o.value); }); }
+      if (_pinForm) _pinForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    async function deletePin(row) {
+      if (!confirm('이 상단 노출 글을 삭제할까요?\n\n[' + (_PIN_BOARD_LABEL[row.id] || row.id) + '] ' + ((row.data.title || '').trim() || (row.data.text || '').slice(0, 30)))) return;
       try {
-        if (act === 'unhide') {
-          if (!confirm('이 글의 블라인드/숨김을 해제하시겠습니까? (퍼블릭 재노출)')) { btn.disabled = false; return; }
-          await rbac.toggleHidden(col, id, true);   // currentHidden=true → 해제
-          alert('▶️ 해제 완료 — 퍼블릭 재노출');
-        } else if (act === 'fdelete') {
-          if (!confirm('관리자 권한으로 이 글을 영구 삭제하시겠습니까? (사진·위치정보 포함 완전 삭제)')) { btn.disabled = false; return; }
-          await rbac.forceDelete(col, id);
-          alert('🗑 강제 삭제 완료');
-        }
-        loadHiddenPosts();
+        await deleteDoc(doc(db, 'board_pinned_notices', row.id));
       } catch (err) {
-        console.error('[admin] 블라인드 처리 실패', err);
-        alert('처리 실패: ' + (err.message || err));
-        btn.disabled = false;
-      }
-    });
-    const _hidRefresh = document.getElementById('dashHiddenRefresh');
-    if (_hidRefresh) _hidRefresh.addEventListener('click', loadHiddenPosts);
-
-    // ════════════════════════════════════════════════════════════
-    // 카드 6 · 제재 관리 — 정지 계정 목록 + moderation_logs 이력
-    //   users list 는 rules 에서 admin 한정 limit ≤100 허용 (enumeration 차단 유지)
-    //   사유는 moderation_logs 의 해당 uid 최신 suspend 건에서 매칭.
-    // ════════════════════════════════════════════════════════════
-    async function loadSanctions() {
-      const susEl   = document.getElementById('dashSuspendedList');
-      const logEl   = document.getElementById('dashModLogList');
-      const countEl = document.getElementById('dashSuspendedCount');
-      if (!susEl || !logEl) return;
-      susEl.innerHTML = logEl.innerHTML = '<div class="text-sm text-gray-500 text-center py-8">로딩 중…</div>';
-      let logs = [];
-      try {
-        const logSnap = await getDocs(query(collection(db, 'moderation_logs'), orderBy('createdAt', 'desc'), limit(100)));
-        logs = logSnap.docs.map(d => d.data() || {});
-      } catch (e) {
-        console.error('[admin] moderation_logs 조회 실패', e);
-        logEl.innerHTML = '<div class="text-sm text-red-600 text-center py-4">이력 조회 실패: ' + escHtmlAdmin(e.message || e) + '</div>';
-      }
-      // ── 정지 계정 ──
-      try {
-        const snap = await getDocs(query(collection(db, 'users'), where('status', '==', 'suspended'), limit(100)));
-        if (countEl) countEl.textContent = snap.size + '명';
-        if (!snap.size) {
-          susEl.innerHTML = '<div class="text-sm text-gray-500 text-center py-8">정지 중인 계정이 없습니다.</div>';
-        } else {
-          susEl.innerHTML = snap.docs.map(d => {
-            const u = d.data() || {};
-            const latest = logs.find(l => l.action === 'suspend' && l.targetUid === d.id);
-            return '<div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:4px;">'
-              + '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">'
-              +   '<b style="color:#92400e;">' + escHtmlAdmin(u.email || (latest && latest.targetEmail) || '(이메일 미상)') + '</b>'
-              +   '<span style="font-size:11.5px;color:#6b7280;">uid: ' + escHtmlAdmin(d.id) + '</span>'
-              + '</div>'
-              + '<div style="font-size:12px;color:#6b7280;">정지 일시: ' + escHtmlAdmin(_tsToStr(u.suspendedAt) || '?')
-              +   (latest && latest.reason ? ' · 사유: ' + escHtmlAdmin(latest.reason) : ' · 사유: (기록 없음)') + '</div>'
-              + '<div><button class="admin-report-act" data-act="unsuspend" data-id="sanction" data-uid="' + escHtmlAdmin(d.id) + '" style="padding:4px 10px;font-size:11.5px;font-weight:700;background:#ecfdf5;color:#065f46;border:1px solid #6ee7b7;border-radius:5px;cursor:pointer;">♻️ 정지 해제</button></div>'
-              + '</div>';
-          }).join('');
-        }
-      } catch (e) {
-        console.error('[admin] suspended users 조회 실패', e);
-        if (countEl) countEl.textContent = '?';
-        susEl.innerHTML = '<div class="text-sm text-red-600 text-center py-4">정지 계정 조회 실패: ' + escHtmlAdmin(e.message || e) + '</div>';
-      }
-      // ── 이력 뷰 ──
-      if (logs.length) {
-        logEl.innerHTML = logs.map(l => {
-          const isSus = l.action === 'suspend';
-          return '<div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;padding:6px 10px;border-bottom:1px solid #f3f4f6;">'
-            + '<span style="font-weight:800;color:' + (isSus ? '#b91c1c' : '#065f46') + ';">' + (isSus ? '🚫 정지' : '♻️ 해제') + '</span>'
-            + '<span style="color:#374151;">' + escHtmlAdmin(l.targetEmail || l.targetUid || '?') + '</span>'
-            + (l.reason ? '<span style="color:#6b7280;">— ' + escHtmlAdmin(l.reason) + '</span>' : '')
-            + '<span style="margin-left:auto;font-size:11px;color:#9ca3af;">' + escHtmlAdmin(_tsToStr(l.createdAt)) + ' · by ' + escHtmlAdmin(l.actorEmail || l.actorUid || '?') + '</span>'
-            + '</div>';
-        }).join('');
-      } else if (!logEl.querySelector('.text-red-600')) {
-        logEl.innerHTML = '<div class="text-sm text-gray-500 text-center py-8">제재 이력이 없습니다.</div>';
+        console.error('[admin] board_pinned_notices 삭제 실패', err);
+        alert('삭제 실패: ' + (err.code || err.message || err));
       }
     }
-    const _sanRefresh = document.getElementById('dashSanctionRefresh');
-    if (_sanRefresh) _sanRefresh.addEventListener('click', loadSanctions);
-
-    // 인증 후 구독 시작 — showAdmin 호출 직후 한 번만
-    const _origShowAdmin = showAdmin;
-    showAdmin = function (user) {
-      _origShowAdmin(user);
-      if (!showAdmin._reportsStarted) {
-        showAdmin._reportsStarted = true;
-        startReportsSubscription();
-        loadHiddenPosts();
-        loadSanctions();
+    if (_plList) onSnapshot(
+      query(collection(db, 'board_pinned_notices'), limit(20)),
+      snap => { _pinRows = snap.docs.map(d => ({ id: d.id, data: d.data() })).sort((a, b) => a.id.localeCompare(b.id)); renderPinList(); },
+      err => {
+        console.error('[admin] board_pinned_notices 목록 구독 실패', err);
+        _plList.textContent = '';
+        const li = document.createElement('li'); li.className = 'text-sm text-red-500';
+        li.textContent = '목록 조회 실패: ' + (err.code || err.message || '');
+        _plList.appendChild(li);
       }
-    };
+    );
+
   </script>
 
   <!-- 관리자 대시보드 플로팅 버튼 — admin.html 진입 시 우하단 고정 -->
