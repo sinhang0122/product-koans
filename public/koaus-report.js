@@ -164,6 +164,7 @@
         reporterEmail:   user.email || '',
         postAuthorUid:   String((_ctx && _ctx.postAuthorUid) || '').slice(0, 128),
         postBodyExcerpt: String((_ctx && _ctx.postBodyExcerpt) || '').slice(0, 300),
+        postAuthorContact: String((_ctx && _ctx.postAuthorContact) || '').slice(0, 300),
         status:          'pending',
         createdAt:       serverTimestamp(),
       });
@@ -231,9 +232,20 @@
       var bodyEl = document.querySelector('.post-detail-overlay.open #detailBody');
       if (bodyEl) postBodyExcerpt = (bodyEl.textContent || '').trim();
     }
+    // 작성자 연락처 스냅샷 (사기 추적) — 원글 삭제/보관 후에도 admin 큐에서 확인. 있는 값만 합쳐 ≤300자.
+    var postAuthorContact = '';
+    if (post) {
+      postAuthorContact = [
+        post.phone ? '📞 ' + post.phone : '',
+        post.contactEmail ? '✉️ ' + post.contactEmail : '',
+        post.kakaoLink ? '💬 ' + post.kakaoLink : '',
+        post.contact ? '기타: ' + post.contact : '',
+      ].filter(Boolean).join(' · ').slice(0, 300);
+    }
     return {
       postId: String(postId), board: board, postTitle: postTitle,
       postAuthorUid: postAuthorUid, postBodyExcerpt: postBodyExcerpt.slice(0, 300),
+      postAuthorContact: postAuthorContact,
     };
   }
   document.addEventListener('click', function (e) {

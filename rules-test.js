@@ -297,6 +297,14 @@ const cases = [
        path: 'accom_posts/pausedoc1', method: 'update', uid: 'testuser123',
        data:         Object.assign({}, accomData, { status: 'approved', isHidden: false }),
        resourceData: Object.assign({}, accomData, { status: 'hidden',   isHidden: true }) }),
+  // [사기 추적] 소프트삭제 — 작성자 본인 글 status='deleted' 허용(보관). reports postAuthorContact 스냅샷 허용.
+  mk({ label: '작성자 소프트삭제(status=deleted+deletedAt) → 허용 (사기 추적 보관)', expectation: 'ALLOW',
+       path: 'accom_posts/softdel1', method: 'update', uid: 'testuser123',
+       data:         Object.assign({}, accomData, { status: 'deleted', deletedAt: '2026-06-17T00:00:00Z' }),
+       resourceData: Object.assign({}, accomData) }),
+  mk({ label: 'reports create postAuthorContact 포함 → 허용 (연락처 스냅샷)', expectation: 'ALLOW',
+       path: 'reports/post123_testuser123', method: 'create', uid: 'testuser123',
+       data: Object.assign({}, reportData, { postAuthorContact: '📞 0412345678 · ✉️ x@example.com' }) }),
   // ⑤ 제재 관리 카드 (2026-06-11) — users list admin 한정 ≤100
   mk({ label: 'users list admin limit 100 → 허용 (제재 관리 카드)', expectation: 'ALLOW',
        path: 'users/someuid', method: 'list', uid: 'adminuid1', admin: true, query: { limit: 100 } }),

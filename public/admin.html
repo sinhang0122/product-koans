@@ -664,6 +664,34 @@
         </div>
       </section>
 
+      <!-- ══════════════════════════════════════════════════
+           카드 7 · 🔎 사기 추적 · 글 조회 — 링크/ID 로 보관(소프트삭제) 글 끌어와 작성자·연락처 + 정지
+           ══════════════════════════════════════════════════ -->
+      <section class="admin-card bg-white rounded-xl shadow-sm border border-gray-200 p-7">
+        <header class="flex items-center gap-3 pb-4 mb-6 border-b border-gray-200">
+          <div class="flex items-center justify-center w-10 h-10 bg-red-600 rounded-lg flex-shrink-0 text-white text-lg">🔎</div>
+          <div>
+            <h2 class="text-xl font-bold text-gray-900 leading-tight">사기 추적 · 글 조회</h2>
+            <p class="text-xs text-gray-500 mt-0.5">신고/피해자 링크로 보관(삭제) 글까지 끌어와 작성자·연락처 확인 + 계정 정지.</p>
+          </div>
+        </header>
+        <div class="space-y-3">
+          <div class="flex gap-2">
+            <select id="ftBoard" class="p-2.5 border border-gray-300 rounded-lg text-sm text-gray-900" title="순수 ID 입력 시 컬렉션 지정 (링크는 자동)">
+              <option value="auto">Auto(차량)</option>
+              <option value="accom">Share(쉐어)</option>
+              <option value="rent">Rent(렌트)</option>
+              <option value="jobs">Work(구인)</option>
+              <option value="services">Services(정비/병원/미용/유학…)</option>
+            </select>
+            <input id="ftInput" type="text" placeholder="글 링크(?id=…) 또는 글 ID" class="flex-1 p-2.5 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-400" />
+            <button type="button" id="ftLookup" class="bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-bold px-5 rounded-lg text-sm">조회</button>
+          </div>
+          <p id="ftNote" class="text-sm text-center text-gray-500" role="status" aria-live="polite"></p>
+          <div id="ftResult" class="hidden text-sm bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-1 break-words"></div>
+        </div>
+      </section>
+
     </div><!-- /.admin-dashboard -->
 
   </main>
@@ -1260,6 +1288,78 @@
         logEl.innerHTML = '<div class="text-sm text-gray-500 text-center py-8">제재 이력이 없습니다.</div>';
       }
     }
+    // ── 카드 7 · 사기 추적 · 글 조회 — 링크/ID → getDoc(allow get:true 라 보관 글도 조회) → 작성자·연락처 + 정지 ──
+    function _ftCol(board) {
+      return board === 'accom' ? 'accom_posts' : board === 'rent' ? 'rent_posts'
+           : board === 'jobs' ? 'jobs_posts' : board === 'auto' ? 'auto_posts' : 'services';
+    }
+    async function _ftLookup() {
+      const note = document.getElementById('ftNote');
+      const result = document.getElementById('ftResult');
+      const raw = (document.getElementById('ftInput').value || '').trim();
+      if (!raw) { note.textContent = '링크 또는 글 ID 를 입력하세요.'; return; }
+      let docId = '', cols = [];
+      const m = raw.match(/[?&]id=([^&\s]+)/);
+      if (m) {
+        docId = decodeURIComponent(m[1]);
+        const fn = (raw.split('?')[0].split('/').pop() || '').toLowerCase().replace(/\.html$/, '');
+        const map = { accom: ['accom_posts'], rent: ['rent_posts'], jobs: ['jobs_posts'], auto: ['auto_posts', 'services'] };
+        cols = map[fn] || ['services', 'accom_posts', 'rent_posts', 'jobs_posts', 'auto_posts'];
+      } else {
+        docId = raw;
+        cols = [_ftCol(document.getElementById('ftBoard').value)];
+      }
+      note.textContent = '조회 중…'; result.classList.add('hidden');
+      let data = null, foundCol = '';
+      for (const col of cols) {
+        try { const snap = await getDoc(doc(db, col, docId)); if (snap.exists()) { data = snap.data(); foundCol = col; break; } } catch (_) {}
+      }
+      if (!data) { note.textContent = '해당 글을 찾지 못했습니다. (컬렉션/ID 확인)'; return; }
+      note.textContent = '';
+      _ftRender(data, foundCol, docId);
+    }
+    function _ftRender(d, col, docId) {
+      const result = document.getElementById('ftResult');
+      result.textContent = '';
+      const rows = [
+        ['상태', d.status === 'deleted' ? '🗑 삭제됨(보관)' : (d.status || '노출중')],
+        ['컬렉션 / ID', col + ' / ' + docId],
+        ['작성자', d.author || ''],
+        ['authorUid', d.uid || d.authorUid || ''],
+        ['전화', d.phone || ''],
+        ['이메일', d.contactEmail || ''],
+        ['카톡', d.kakaoLink || ''],
+        ['기타 연락', d.contact || ''],
+        ['제목', d.title || ''],
+        ['본문', String(d.body || '').slice(0, 1000)],
+        ['등록일', _tsToStr(d.createdAt)],
+      ];
+      rows.forEach(([k, v]) => {
+        const p = document.createElement('p');
+        const b = document.createElement('span'); b.className = 'font-semibold text-gray-700'; b.textContent = k + ': ';
+        p.appendChild(b); p.appendChild(document.createTextNode(String(v || '-')));   // textContent — XSS 안전
+        result.appendChild(p);
+      });
+      const uid = d.uid || d.authorUid || '';
+      if (uid) {
+        const sb = document.createElement('button');
+        sb.type = 'button'; sb.textContent = '🚫 이 작성자 계정 정지';
+        sb.className = 'mt-3 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg text-sm';
+        sb.addEventListener('click', async () => {
+          if (!confirm('작성자(uid: ' + uid + ') 계정을 정지하시겠습니까? (사기 신고 추적)')) return;
+          sb.disabled = true;
+          try { const res = await callSuspendUser({ uid, reason: '사기 신고 추적' }); alert('✅ 정지 완료 — uid: ' + (res.data && res.data.uid || uid) + ' / ' + (res.data && res.data.status || '')); }
+          catch (e) { alert('정지 실패: ' + (e.message || e)); sb.disabled = false; }
+        });
+        result.appendChild(sb);
+      }
+      result.classList.remove('hidden');
+    }
+    const _ftBtn = document.getElementById('ftLookup');
+    if (_ftBtn) _ftBtn.addEventListener('click', _ftLookup);
+    const _ftIn = document.getElementById('ftInput');
+    if (_ftIn) _ftIn.addEventListener('keydown', e => { if (e.key === 'Enter') _ftLookup(); });
+
     const _sanRefresh = document.getElementById('dashSanctionRefresh');
     if (_sanRefresh) _sanRefresh.addEventListener('click', loadSanctions);
 

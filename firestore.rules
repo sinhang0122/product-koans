@@ -305,7 +305,8 @@ service cloud.firestore {
         || request.resource.data.status == 'completed'
         || request.resource.data.status == 'closed'
         || request.resource.data.status == 'hidden'
-        || request.resource.data.status == 'approved';
+        || request.resource.data.status == 'approved'
+        || request.resource.data.status == 'deleted';   // 소프트삭제(작성자 본인 글 — 사기 추적 보관). adminBlindLock/uidLocked 는 유지
     }
 
     // ── 게시판 컬렉션 (현재 localStorage 스토어 → 향후 Firestore 전환 대비) ──
@@ -558,11 +559,12 @@ service cloud.firestore {
                        && optStr('reporterEmail', 200)
                        && optStr('postAuthorUid', 128)
                        && optStr('postBodyExcerpt', 300)
+                       && optStr('postAuthorContact', 300)
                        && optStr('status', 30)
                        && data().keys().hasOnly([
                             'postId', 'board', 'postTitle', 'category', 'reason', 'detail',
                             'reporterUid', 'reporterEmail', 'postAuthorUid', 'postBodyExcerpt',
-                            'status', 'createdAt'
+                            'postAuthorContact', 'status', 'createdAt'
                           ]);
       allow get:    if isAdmin();
       allow list:   if isAdmin() && request.query.limit <= 100;

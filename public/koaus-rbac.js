@@ -237,35 +237,29 @@ async function markCompleted(collection, docId) {
 
 // 작성자 본인 삭제 (Rules에서 본인 uid 검증) — 연결된 Storage 이미지도 함께 정리
 async function selfDelete(collectionName, docId) {
-  // 지시 (좀비 데이터 방어) — 삭제 순서 재배치 (사용자 명시 4번 정책):
-  //   ① private_data/location (정확 주소 — 가장 민감) — 실패 시 멈춤 + 로그
-  //   ② Storage 이미지 (imageUrls 배열의 특정 파일들만, 폴더 전체 X)
-  //   ③ 부모 doc (accom_posts/{id} 등) — 위 2 단계 완료 후
+  // ── 소프트삭제 (사기 추적) — 작성자 본인 삭제는 보관, forceDelete[admin]만 하드 삭제 ──
+  //   ① private_data/location (정확 주소 — 가장 민감) 은 즉시 하드 삭제 — 실패 시 멈춤 + 로그
+  //   ② 부모 doc 은 status='deleted' 로 보관(증거: 이미지·본문·연락처·authorUid 유지, Storage 미삭제)
+  //   · 공개 보드는 status=='approved' 만 구독 → 소프트삭제 글은 자동 비노출(추가 인덱스 불필요)
   const result = _newDeleteResult();
   const user = (window.koausAuth && window.koausAuth.user) || null;
-  // 부모 doc 스냅샷 — imageUrls 추출 (Storage 삭제 입력)
-  const pre = await _readDocBeforeDelete(collectionName, docId);
-  // ① private_data 최우선 (실패 시 throw → 부모 삭제 중단)
+  // ① private_data 최우선 (실패 시 throw → 소프트삭제 중단)
   try {
     await _purgePrivateDataFirst(collectionName, docId, result);
   } catch (e) {
     await _logDeletionError(collectionName, docId, result, user);
-    throw Object.assign(new Error('private_data 삭제 실패 — 부모 doc 삭제 중단'), {
+    throw Object.assign(new Error('private_data 삭제 실패 — 소프트삭제 중단'), {
       code: e?.code || 'private-data-fail', cause: e
     });
   }
-  // ② Storage 이미지 (개별 파일 단위 — 다른 글 사진 영향 0)
-  if (pre.urls && pre.urls.length) {
-    await _deleteStorageImages(pre.urls, result);
-  }
-  // ③ 부모 doc — 위 단계 일부 실패해도 부모 doc 은 삭제 (요청 정책: 부모는 무조건 완료)
+  // ② 부모 doc 소프트삭제 — status='deleted' (이미지·본문·연락처·authorUid 증거 보존, Storage 미삭제)
   try {
-    await deleteDoc(_ref(collectionName, docId));
+    await updateDoc(_ref(collectionName, docId), { status: 'deleted', deletedAt: serverTimestamp() });
   } catch (e) {
     if (!_isNotFound(e)) {
       result.ok = false;
       result.failed.push('parent');
-      result.err = (result.err ? result.err + ' / ' : '') + (e?.message || 'parent delete failed');
+      result.err = (result.err ? result.err + ' / ' : '') + (e?.message || 'soft-delete failed');
     }
   }
   // 부분 실패 로그 (admin 검토용)
