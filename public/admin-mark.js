@@ -469,17 +469,27 @@ window.addEventListener('koaus-services-updated', () => setTimeout(injectCardAct
 //  · window.__koausRenderBizHoursTable(hoursJson) — Firestore 의 hoursJson 객체 입력
 //  · 반환: HTML 문자열 (<table class="biz-hours-table">...</table>)
 window.__koausRenderBizHoursTable = function (hoursJson) {
+  const DAYS = ['mon','tue','wed','thu','fri','sat','sun'];
   const DAY_LABEL = { mon:'월', tue:'화', wed:'수', thu:'목', fri:'금', sat:'토', sun:'일' };
   if (!hoursJson || typeof hoursJson !== 'object') return '';
   // 저장형 XSS 차단 — hoursJson 값은 사용자 제어(rules 가 map 이라 검증 면제). innerHTML 삽입 전 escape.
   const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  const rows = ['mon','tue','wed','thu','fri','sat','sun'].map(k => {
-    const v = hoursJson[k];
-    const isWeekend = (k === 'sat' || k === 'sun');
-    const dayCls = isWeekend ? ' biz-hours-table-day--weekend' : '';
-    if (!v) return '<tr><td class="biz-hours-table-day' + dayCls + '">' + DAY_LABEL[k] + '</td><td class="biz-hours-table-val biz-hours-table-val--empty">—</td></tr>';
-    if (v === 'closed') return '<tr><td class="biz-hours-table-day' + dayCls + '">' + DAY_LABEL[k] + '</td><td class="biz-hours-table-val biz-hours-table-val--closed">휴무</td></tr>';
-    return '<tr><td class="biz-hours-table-day' + dayCls + '">' + DAY_LABEL[k] + '</td><td class="biz-hours-table-val">' + esc(v) + '</td></tr>';
+  // 연속 동일 값 요일 묶기 (예: 월–금 09:00–18:00 / 토 10:00–14:00 / 일 휴무). 미설정 요일은 생략.
+  const norm = v => (!v ? '' : (v === 'closed' ? 'closed' : String(v)));
+  const groups = [];
+  for (let i = 0; i < DAYS.length; i++) {
+    const val = norm(hoursJson[DAYS[i]]);
+    if (!val) continue;   // 미설정 요일 생략
+    const last = groups[groups.length - 1];
+    if (last && last.val === val && last.endIdx === i - 1) { last.end = DAYS[i]; last.endIdx = i; }
+    else groups.push({ start: DAYS[i], end: DAYS[i], endIdx: i, val });
+  }
+  if (!groups.length) return '';
+  const rows = groups.map(g => {
+    const dayLabel = (g.start === g.end) ? DAY_LABEL[g.start] : (DAY_LABEL[g.start] + '–' + DAY_LABEL[g.end]);
+    const valCls = (g.val === 'closed') ? ' biz-hours-table-val--closed' : '';
+    const valLabel = (g.val === 'closed') ? '휴무' : esc(g.val);
+    return '<tr><td class="biz-hours-table-day">' + dayLabel + '</td><td class="biz-hours-table-val' + valCls + '">' + valLabel + '</td></tr>';
   }).join('');
   return '<table class="biz-hours-table">' + rows + '</table>';
 };

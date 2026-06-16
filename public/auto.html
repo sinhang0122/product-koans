@@ -883,6 +883,8 @@
           </button>
         </div>
         <div class="rea-summary" id="detailSummary"></div>
+        <!-- 정비/견인 업체 영업시간 표 (maintenance + hoursJson 시에만 노출) -->
+        <div class="rea-section" id="detailBizHours" style="display:none;"></div>
 
         <div class="rea-section" id="detailLocation" style="display:none;">
           <h3 class="rea-subtitle">Location</h3>
@@ -2301,6 +2303,14 @@
         if (p.contact) sum.push('📞 ' + p.contact);
       }
       document.getElementById('detailSummary').innerHTML = sum.map(s => `<span class="rea-chip">${escHtml(s)}</span>`).join('');
+      // 영업시간 표 — 정비/견인 업체(maintenance) + hoursJson 있을 때만 (admin-mark.js, esc 내장)
+      const _bizEl = document.getElementById('detailBizHours');
+      if (_bizEl) {
+        if (cat === 'maintenance' && p.hoursJson && window.__koausRenderBizHoursTable) {
+          _bizEl.innerHTML = '<h3 class="rea-subtitle">영업시간</h3>' + window.__koausRenderBizHoursTable(p.hoursJson);
+          _bizEl.style.display = '';
+        } else { _bizEl.innerHTML = ''; _bizEl.style.display = 'none'; }
+      }
 
       // Description (+ 더보기)
       const bodyEl = document.getElementById('detailBody');
@@ -2482,7 +2492,6 @@
 
     // ─── 지시 2/3 ─ 페이지 로드 ?id 자동 인식 + Firestore Direct Fetch + 폴백 (accom 동일) ──
     (function _initDetailDeepLink() {
-      const COLLECTION = 'auto_posts';
       const initialId = new URLSearchParams(location.search).get('id');
       if (!initialId) return;
       function _toast(msg) {
@@ -2519,7 +2528,10 @@
         } catch (_) {}
         if (window.koausDb && window.koausFs && window.koausFs.getDoc && window.koausFs.doc) {
           try {
-            const snap = await window.koausFs.getDoc(window.koausFs.doc(window.koausDb, COLLECTION, String(initialId)));
+            // 정비/견인(services) 글 cold-open 대응 — auto_posts 우선, 없으면 services
+            const _gd = window.koausFs.getDoc, _dc = window.koausFs.doc;
+            let snap = await _gd(_dc(window.koausDb, 'auto_posts', String(initialId)));
+            if (!snap.exists()) snap = await _gd(_dc(window.koausDb, 'services', String(initialId)));
             if (snap.exists()) {
               const data = snap.data();
               const myUid = window.koausAuth && window.koausAuth.user && window.koausAuth.user.uid;
