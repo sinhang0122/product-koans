@@ -689,6 +689,17 @@
           </div>
           <p id="ftNote" class="text-sm text-center text-gray-500" role="status" aria-live="polite"></p>
           <div id="ftResult" class="hidden text-sm bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-1 break-words"></div>
+
+          <!-- 연락처로 검색 — 링크/ID 없이 스캠머 전화/카톡/이메일로 보관(소프트삭제 포함) 글 일괄 검색 -->
+          <div class="pt-3 mt-1 border-t border-gray-200">
+            <p class="text-xs text-gray-500 mb-2">연락처로 검색 — 글 링크가 없어도 스캠머 <b>전화·카톡·이메일</b>로 보관(삭제 포함) 글을 찾아 작성자 정지.</p>
+            <div class="flex gap-2">
+              <input id="fcInput" type="text" placeholder="전화 / 카카오ID / 이메일" class="flex-1 p-2.5 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-400" />
+              <button type="button" id="fcSearch" class="bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-bold px-5 rounded-lg text-sm whitespace-nowrap">연락처 검색</button>
+            </div>
+            <p id="fcNote" class="text-sm text-center text-gray-500 mt-2" role="status" aria-live="polite"></p>
+            <div id="fcResult" class="hidden mt-2 space-y-2"></div>
+          </div>
         </div>
       </section>
 
@@ -1359,6 +1370,88 @@
     if (_ftBtn) _ftBtn.addEventListener('click', _ftLookup);
     const _ftIn = document.getElementById('ftInput');
     if (_ftIn) _ftIn.addEventListener('keydown', e => { if (e.key === 'Enter') _ftLookup(); });
+
+    // ── 카드 7 · 연락처로 검색 — 전화/카톡/이메일 → 5개 컬렉션 getDocs(where ==, limit 20) → docId dedupe → 작성자 정지 ──
+    //   · 룰 list 는 limitedList(≤20)/services(≤50) 허용, status 필터 없음 → 소프트삭제(status='deleted') 글도 검색됨.
+    //   · 새 필드/룰/인덱스 변경 없음 (where == 단일 필드는 인덱스 불필요).
+    const _FC_COLS = ['accom_posts', 'rent_posts', 'jobs_posts', 'auto_posts', 'services'];
+    function _fcQueries(raw) {
+      // 입력값 종류 판별 → 검색할 [field, value] 쌍 목록 반환
+      if (raw.includes('@')) return [['contactEmail', raw]];            // 이메일
+      if (/^[0-9+\-\s()]+$/.test(raw) && raw.replace(/\D/g, '').length >= 6) {  // 전화
+        const d = raw.replace(/\D/g, '');
+        const set = new Set([raw, d]);                                  // 원본 + 숫자만
+        if (d.startsWith('0'))  set.add('+61' + d.slice(1));            // 0412… → +61412…
+        if (d.startsWith('61')) { set.add('0' + d.slice(2)); set.add('+' + d); }  // 61412… → 0412… / +61412…
+        return [...set].map(v => ['phone', v]);
+      }
+      return [['kakaoLink', raw], ['contact', raw]];                    // 카카오ID (kakaoLink + contact 둘 다)
+    }
+    async function _fcSearch() {
+      const note = document.getElementById('fcNote');
+      const result = document.getElementById('fcResult');
+      const raw = (document.getElementById('fcInput').value || '').trim();
+      if (!raw) { note.textContent = '전화·카카오·이메일 중 하나를 입력하세요.'; return; }
+      note.textContent = '검색 중…'; result.classList.add('hidden'); result.textContent = '';
+      const pairs = _fcQueries(raw);
+      const found = new Map();   // 'col/id' → { col, id, data }  (docId dedupe)
+      for (const col of _FC_COLS) {
+        for (const [field, value] of pairs) {
+          try {
+            const snap = await getDocs(query(collection(db, col), where(field, '==', value), limit(20)));
+            snap.forEach(s => { const k = col + '/' + s.id; if (!found.has(k)) found.set(k, { col, id: s.id, data: s.data() }); });
+          } catch (_) { /* 컬렉션에 해당 필드 없음 등 — 무시 */ }
+        }
+      }
+      if (!found.size) { note.textContent = '일치하는 보관 글 없음'; return; }
+      note.textContent = found.size + '건 발견 (보관·삭제 글 포함)';
+      _fcRender([...found.values()]);
+    }
+    function _fcRender(items) {
+      const result = document.getElementById('fcResult');
+      result.textContent = '';
+      items.forEach(({ col, id, data: d }) => {
+        const card = document.createElement('div');
+        card.className = 'text-sm bg-gray-50 border border-gray-200 rounded-lg p-3 space-y-0.5 break-words';
+        const rows = [
+          ['상태', d.status === 'deleted' ? '🗑 삭제됨(보관)' : '노출중'],
+          ['작성자', d.author || ''],
+          ['authorUid', d.uid || d.authorUid || ''],
+          ['전화', d.phone || ''],
+          ['이메일', d.contactEmail || ''],
+          ['카톡', d.kakaoLink || ''],
+          ['기타 연락', d.contact || ''],
+          ['제목', d.title || ''],
+          ['등록일', _tsToStr(d.createdAt)],
+          ['컬렉션 / ID', col + ' / ' + id],
+        ];
+        rows.forEach(([k, v]) => {
+          const p = document.createElement('p');
+          const b = document.createElement('span'); b.className = 'font-semibold text-gray-700'; b.textContent = k + ': ';
+          p.appendChild(b); p.appendChild(document.createTextNode(String(v || '-')));   // textContent — XSS 안전
+          card.appendChild(p);
+        });
+        const uid = d.uid || d.authorUid || '';
+        if (uid) {
+          const sb = document.createElement('button');
+          sb.type = 'button'; sb.textContent = '🚫 이 작성자 정지';
+          sb.className = 'mt-2 bg-red-600 hover:bg-red-700 text-white font-bold py-1.5 px-3 rounded-lg text-xs';
+          sb.addEventListener('click', async () => {
+            if (!confirm('작성자(uid: ' + uid + ') 계정을 정지하시겠습니까? (사기 신고 추적)')) return;
+            sb.disabled = true;
+            try { const res = await callSuspendUser({ uid, reason: '사기 신고 추적' }); alert('✅ 정지 완료 — uid: ' + (res.data && res.data.uid || uid) + ' / ' + (res.data && res.data.status || '')); }
+            catch (e) { alert('정지 실패: ' + (e.message || e)); sb.disabled = false; }
+          });
+          card.appendChild(sb);
+        }
+        result.appendChild(card);
+      });
+      result.classList.remove('hidden');
+    }
+    const _fcBtn = document.getElementById('fcSearch');
+    if (_fcBtn) _fcBtn.addEventListener('click', _fcSearch);
+    const _fcIn = document.getElementById('fcInput');
+    if (_fcIn) _fcIn.addEventListener('keydown', e => { if (e.key === 'Enter') _fcSearch(); });
 
     const _sanRefresh = document.getElementById('dashSanctionRefresh');
     if (_sanRefresh) _sanRefresh.addEventListener('click', loadSanctions);
