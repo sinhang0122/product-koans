@@ -29,11 +29,11 @@ const auth = getAuth(app);
 const functions = getFunctions(app, 'australia-southeast1');
 
 // ── canPost: 글쓰기 자격 검증 ──
-// 전원 휴대폰 인증 강제 — 구글/이메일 로그인 여부와 무관하게 phoneNumber 연결만 통과.
-//  (emailVerified 단독 통과 제거 → 구글 유저도 폰 게이트 강제)
+// 폰 인증 강제 토글 — 폰 인프라(①~④·국가선택·KR지원·재인증)는 그대로 두고 "강제"만 on/off.
+const PHONE_GATE_ENABLED = false;   // 소프트런칭: 폰 인증 비강제. 트래픽 차면 true 로 (1줄 변경+재배포).
 window.koausCanPost = function (user) {
   if (!user) return false;
-  return !!user.phoneNumber;
+  return PHONE_GATE_ENABLED ? !!user.phoneNumber : true;   // false = 로그인만 하면 글쓰기 OK(폰 모달 안 뜸)
 };
 
 // ── Phone Auth 모달 (body 끝 1회 inject) ──
