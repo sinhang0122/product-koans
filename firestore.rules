@@ -315,7 +315,7 @@ service cloud.firestore {
     // 작성자 본인(uid 매칭) 또는 관리자(isAdmin)는 강제 update/delete 가능 (블라인드·강제 수정·강제 삭제)
     match /accom_posts/{postId} {
       allow get:    if true;
-      allow list:   if limitedList();
+      allow list:   if isAdmin() || limitedList();   // isAdmin: count() 집계(limit 없음) 허용
       allow create: if validShareRentCreate();
       allow update: if isAdmin()
                        || ( ownerOnExisting()
@@ -327,7 +327,7 @@ service cloud.firestore {
     }
     match /rent_posts/{postId} {
       allow get:    if true;
-      allow list:   if limitedList();
+      allow list:   if isAdmin() || limitedList();   // isAdmin: count() 집계(limit 없음) 허용
       allow create: if validShareRentCreate();
       allow update: if isAdmin()
                        || ( ownerOnExisting()
@@ -339,7 +339,7 @@ service cloud.firestore {
     }
     match /jobs_posts/{postId} {
       allow get:    if true;
-      allow list:   if limitedList();
+      allow list:   if isAdmin() || limitedList();   // isAdmin: count() 집계(limit 없음) 허용
       allow create: if validJobsCreate();
       allow update: if isAdmin()
                        || ( ownerOnExisting()
@@ -351,7 +351,7 @@ service cloud.firestore {
     }
     match /auto_posts/{postId} {
       allow get:    if true;
-      allow list:   if limitedList();
+      allow list:   if isAdmin() || limitedList();   // isAdmin: count() 집계(limit 없음) 허용
       allow create: if validAutoCreate();
       allow update: if isAdmin()
                        || ( ownerOnExisting()
@@ -723,7 +723,8 @@ service cloud.firestore {
 
       // list 평가: doc 별 read 룰이 모두 통과해야 전체 쿼리 통과
       // → 비admin 은 클라이언트에서 where('status','==','approved') 필수
-      allow list: if (isAdmin() && request.query.limit <= 200)
+      // → isAdmin 은 limit 무관 통과 (count() 집계 쿼리는 limit 이 없음 — 통계 페이지)
+      allow list: if isAdmin()
                      || request.query.limit <= 50;
 
       allow create: if

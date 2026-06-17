@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>글 통계 — KoAus(코오스)</title>
+  <!-- ⚠️ ADMIN_EMAILS 화이트리스트 5번째 사본 — firestore.rules / admin.html / admin-mark.js / admin-marquee.html 와 동기화 유지 -->
+  <!-- admin-marquee.html 의 인증·App Check 셸 그대로 복제(모듈러). 본문은 state×보드별 글 수 count() 집계 표. -->
+  <meta name="robots" content="noindex" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;800;900&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <!-- 관리자 접근은 Firebase Auth 로그인(이메일/비밀번호) + 화이트리스트로 제어 (아래 module 스크립트 참조) -->
+  <script>
+    (function () {
+      const saved = localStorage.getItem('koaus-theme');
+      const sys = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      if ((saved ?? sys) === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+    })();
+  </script>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-9PHEG679SB"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-9PHEG679SB');
+  </script>
+
+  <script src="pw-toggle.js" defer></script>
+  <script src="offline.js" defer></script>
+  <!-- session-timeout.js 는 admin 페이지에서 미로드 — admin 은 자체 custom-claim 가드 사용 (admin.html 동일). -->
+  <script src="local-analytics.js" defer></script>
+  <script type="module" src="admin-mark.js"></script>
+
+  <!-- ── 관리자 대시보드 신규 UI — Tailwind CDN (admin 페이지 전용) ── -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Tailwind 와 KoAus 다크 토큰 호환 — admin 페이지는 라이트 모드 고정 (가독성 우선) */
+    body { background: #f9fafb; }
+    [data-theme="dark"] body { background: #f9fafb; }
+    /* 통계 표 */
+    .stats-table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+    .stats-table th, .stats-table td { border: 1px solid #e5e7eb; padding: 8px 10px; text-align: center; font-size: 14px; }
+    .stats-table thead th { background: #f3f4f6; color: #374151; font-weight: 700; }
+    .stats-table tbody th { background: #fafafa; color: #111827; font-weight: 700; text-align: left; white-space: nowrap; }
+    .stats-table td.col-total, .stats-table th.col-total { background: #eef2ff; font-weight: 700; color: #3730a3; }
+    .stats-table tfoot th, .stats-table tfoot td { background: #f3f4f6; font-weight: 800; color: #111827; }
+    .stats-table tfoot td.grand { background: #e0e7ff; color: #312e81; }
+    .stats-cell-loading { color: #9ca3af; }
+  </style>
+</head>
+<body>
+
+  <div class="topbar" id="topbar">
+    <a class="topbar-brand" href="index.html">
+      <span class="topbar-logo-icon"><span class="logo-ks">K/A</span></span>
+      <span class="topbar-logo-text">KoAus</span>
+      <span class="topbar-tagline"><b>Korea&nbsp;-&nbsp;Australia</b><span class="topbar-tagline-div">|</span>호주 한인 커뮤니티의 새로운 기준</span>
+    </a>
+    <div class="topbar-actions">
+      <button class="topbar-theme-btn" id="themeToggleBtn" type="button" aria-label="테마 변경" title="테마 변경 (Light / Dark)">
+        <svg class="ico-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <svg class="ico-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── 관리자 로그인 게이트 (Firebase Auth) ── admin-marquee.html 동일 복제 -->
+  <div class="admin-gate" id="adminGate" style="display:flex;">
+    <div class="admin-gate-card">
+      <h2 class="admin-gate-title">관리자 로그인</h2>
+      <p class="admin-gate-sub">KoAus(코오스) 운영자 계정으로만 접근할 수 있습니다.</p>
+      <div class="admin-gate-field">
+        <label class="admin-gate-label" for="adminGateEmail">이메일</label>
+        <input class="admin-gate-input" id="adminGateEmail" type="email" autocomplete="email" placeholder="admin@example.com" />
+      </div>
+      <div class="admin-gate-field">
+        <label class="admin-gate-label" for="adminGatePw">비밀번호</label>
+        <input class="admin-gate-input" id="adminGatePw" type="password" autocomplete="current-password" />
+      </div>
+      <p class="admin-gate-err" id="adminGateErr"></p>
+      <button class="admin-gate-submit" id="adminGateLogin" type="button">로그인</button>
+      <a class="admin-gate-cancel" href="index.html">← 홈으로 돌아가기</a>
+    </div>
+  </div>
+
+  <main class="page-container admin-shell" id="adminMain" style="display:none;">
+
+    <!-- 슬림 헤더 -->
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">📊 글 통계</h1>
+        <p class="page-subtitle">주(州) × 보드별 글 수 — Firestore count() 집계 (글 본문은 읽지 않음, 비용 최소)</p>
+      </div>
+      <div class="admin-header-actions">
+        <span class="admin-who" id="adminWho"></span>
+        <button type="button" class="admin-logout" id="adminLogout">로그아웃</button>
+        <a href="admin.html" class="page-back">← 관리자 홈</a>
+      </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto p-6 bg-gray-50">
+      <section class="admin-card bg-white rounded-xl shadow-sm border border-gray-200 p-7">
+        <header class="flex items-center gap-3 pb-4 mb-6 border-b border-gray-200">
+          <div class="flex items-center justify-center w-10 h-10 bg-indigo-600 rounded-lg flex-shrink-0 text-white text-lg">📊</div>
+          <div>
+            <h2 class="text-xl font-bold text-gray-900 leading-tight">주 × 보드별 글 수</h2>
+            <p class="text-xs text-gray-500 mt-0.5">합계 열 = 컬렉션 전체(주 없는 글 포함). 글 수는 <b>전체 상태(승인·대기·삭제 포함)</b> 기준 — 승인글만 집계하려면 status 복합인덱스 필요.</p>
+          </div>
+        </header>
+        <p id="statsNote" class="text-sm text-gray-500 mb-3" role="status" aria-live="polite">로딩 중…</p>
+        <div class="overflow-x-auto">
+          <table class="stats-table" id="statsTable"><!-- JS 가 채움 --></table>
+        </div>
+      </section>
+    </div>
+
+  </main>
+
+  <footer class="site-footer-v2">
+    <div class="footer-links">
+      <a href="about.html">KoAus 소개 / About</a>
+      <a href="faq.html">자주 묻는 질문 / FAQ</a>
+      <a href="guide.html">이용 가이드 / Guide</a>
+      <a href="privacy.html">Privacy Policy / 개인정보처리방침</a>
+      <a href="terms.html">Terms of Service / 서비스 이용약관</a>
+      <a href="contact.html">Contact / 문의하기</a>
+    </div>
+    <p class="footer-copy">© 2026 Koaus Community. All rights reserved.</p>
+  </footer>
+
+  <script>
+    // ── 테마 토글 (사이드바 없는 슬림 페이지 — applyTheme + 버튼만) ──
+    function applyTheme(t) {
+      if (t === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+      else document.documentElement.removeAttribute('data-theme');
+      localStorage.setItem('koaus-theme', t);
+    }
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    if (themeToggleBtn) themeToggleBtn.addEventListener('click', () => applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'));
+    applyTheme(localStorage.getItem('koaus-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+  </script>
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       인증·App Check 셸 — admin-marquee.html 모듈 스크립트 그대로 복제
+       + getCountFromServer 추가 + 통계 집계 로직
+       ════════════════════════════════════════════════════════════════════ -->
+  <script type="module">
+    // ── Firebase 중복 초기화 방어 ──
+    //  admin-mark.js / 기타 module 이 이미 default app 을 생성한 경우 getApps().length 체크 후 재사용.
+    import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
+    import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, setPersistence, indexedDBLocalPersistence, browserLocalPersistence, inMemoryPersistence } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
+    import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app-check.js';
+    import { getFirestore, collection, query, where, getCountFromServer } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
+
+    const firebaseConfig = {
+      apiKey:            'AIzaSyCamqnt0bNUD9uz1N5BbCuQjSkWLSpPqlU',
+      authDomain:        'koaus-f564c.firebaseapp.com',
+      projectId:         'koaus-f564c',
+      storageBucket:     'koaus-f564c.firebasestorage.app',
+      messagingSenderId: '663988594088',
+      appId:             '1:663988594088:web:ef30c2fd557407b00b299d',
+      measurementId:     'G-DERZ9MTKPL',
+    };
+    // 멱등 초기화 — 같은 페이지에서 다른 module 이 default app 을 만들었어도 안전.
+    const app  = getApps().length ? getApp() : initializeApp(firebaseConfig);
+
+    // ── App Check (reCAPTCHA v3) — Firestore ENFORCED 환경에서 admin 페이지 호출 허용 ──
+    const APP_CHECK_SITE_KEY = '6Ld1mAwtAAAAADURkCq0J6GOr3wFg9DQVOsxVG5v';
+    if (APP_CHECK_SITE_KEY && !APP_CHECK_SITE_KEY.startsWith('TODO')) {
+      try {
+        initializeAppCheck(app, {
+          provider: new ReCaptchaV3Provider(APP_CHECK_SITE_KEY),
+          isTokenAutoRefreshEnabled: true,
+        });
+      } catch (_) { /* 다른 module 이 이미 init 한 경우(appCheck/already-initialized) — 재사용 */ }
+    }
+
+    const auth = getAuth(app);
+    const db   = getFirestore(app);
+    // 지시 6/10 — 세션 지속성 폴백 체인 (모바일 Safari ITP / Private mode 방어).
+    try { await setPersistence(auth, indexedDBLocalPersistence); }
+    catch (_) {
+      try { await setPersistence(auth, browserLocalPersistence); }
+      catch (_) {
+        try { await setPersistence(auth, inMemoryPersistence); }
+        catch (e) { console.warn('[admin] persistence 전체 실패', e); }
+      }
+    }
+
+    // 관리자 화이트리스트 — admin-mark.js / firestore.rules 의 isAdmin() 과 동기화.
+    const ADMIN_EMAILS = [
+      'sinhang0122@gmail.com',  // 운영자 본인 (사용자 명시 단독 운영자)
+    ];
+
+    const $ = id => document.getElementById(id);
+    const gateEl      = $('adminGate');
+    const mainEl      = $('adminMain');
+    const gateEmailEl = $('adminGateEmail');
+    const gatePwEl    = $('adminGatePw');
+    const gateErrEl   = $('adminGateErr');
+    const gateLoginEl = $('adminGateLogin');
+    const whoEl       = $('adminWho');
+    const logoutEl    = $('adminLogout');
+
+    function showLocked(msg) {
+      gateEl.style.display = 'flex';
+      mainEl.style.display = 'none';
+      if (msg) gateErrEl.textContent = msg;
+    }
+    function showAdmin(user) {
+      gateEl.style.display = 'none';
+      mainEl.style.display = '';
+      gateErrEl.textContent = '';
+      gatePwEl.value = '';
+      if (whoEl) whoEl.textContent = user.email;
+      loadStats();   // 인증 확정 후 1회 집계 (count 쿼리는 admin 토큰 필요)
+    }
+    // ── Fast-path: sessionStorage 캐시 살아있으면 mainEl 즉시 노출 (gate 깜빡임 차단) ──
+    (function adminFastPath() {
+      try {
+        const flag  = sessionStorage.getItem('isAdmin') === 'true'
+                   || sessionStorage.getItem('isAdminLoggedIn') === 'true';
+        const email = (sessionStorage.getItem('koaus-admin') || '').toLowerCase();
+        if (flag || (email && ADMIN_EMAILS.includes(email))) {
+          gateEl.style.display = 'none';
+          mainEl.style.display = '';
+          if (whoEl && email) whoEl.textContent = email;
+        }
+      } catch (_) {}
+    })();
+
+    gateLoginEl.addEventListener('click', async () => {
+      const email = gateEmailEl.value.trim();
+      const pw    = gatePwEl.value;
+      gateErrEl.textContent = '';
+      if (!email || !pw) { gateErrEl.textContent = '이메일과 비밀번호를 입력해 주세요.'; return; }
+      gateLoginEl.disabled = true;
+      try {
+        await signInWithEmailAndPassword(auth, email, pw);
+        try {
+          sessionStorage.setItem('isAdmin', 'true');
+          sessionStorage.setItem('isAdminLoggedIn', 'true');
+          sessionStorage.setItem('koaus-admin', email.toLowerCase());
+        } catch (_) {}
+      } catch (e) {
+        const msg = {
+          'auth/invalid-email':        '이메일 형식이 올바르지 않습니다.',
+          'auth/user-not-found':       '등록되지 않은 계정입니다.',
+          'auth/wrong-password':       '비밀번호가 일치하지 않습니다.',
+          'auth/invalid-credential':   '이메일 또는 비밀번호가 올바르지 않습니다.',
+          'auth/too-many-requests':    '잠시 후 다시 시도해 주세요.',
+          'auth/network-request-failed':'네트워크 오류입니다.',
+        }[e.code] || ('로그인 실패: ' + (e.code || e.message));
+        gateErrEl.textContent = msg;
+      } finally {
+        gateLoginEl.disabled = false;
+      }
+    });
+    gateEmailEl.addEventListener('keydown', e => { if (e.key === 'Enter') gateLoginEl.click(); });
+    gatePwEl.addEventListener('keydown',    e => { if (e.key === 'Enter') gateLoginEl.click(); });
+    logoutEl.addEventListener('click', async () => {
+      try {
+        sessionStorage.removeItem('koaus-admin');
+        sessionStorage.removeItem('isAdminLoggedIn');
+        sessionStorage.removeItem('isAdmin');
+      } catch (_) {}
+      try { await signOut(auth); } catch (e) {}
+      alert('로그아웃 되었습니다.');
+      location.replace('index.html');
+    });
+
+    // ── 인증 상태 가드 (이메일 화이트리스트 + Custom Claims 이중 검증) ──
+    let _redirecting = false;
+    async function denyAndRedirect(reason) {
+      if (_redirecting) return;
+      _redirecting = true;
+      console.warn('[admin] denyAndRedirect:', reason);
+      try {
+        sessionStorage.removeItem('koaus-admin');
+        sessionStorage.removeItem('isAdminLoggedIn');
+        sessionStorage.removeItem('isAdmin');
+      } catch (_) {}
+      try { await signOut(auth); } catch (e) {}
+      alert('관리자 권한이 없습니다.');
+      location.replace('index.html');
+    }
+    function readAdminSessionFlag() {
+      try {
+        const flag  = sessionStorage.getItem('isAdmin') === 'true'
+                   || sessionStorage.getItem('isAdminLoggedIn') === 'true';
+        const email = (sessionStorage.getItem('koaus-admin') || '').toLowerCase();
+        return flag || (email && ADMIN_EMAILS.includes(email));
+      } catch (_) { return false; }
+    }
+    // ── 인증 가드 (튕김 방지: 첫 user=null 발화는 sessionStorage 캐시 grace) ──
+    let _adminAuthFiredOnce = false;
+    let _adminGraceTimer    = null;
+    onAuthStateChanged(auth, async user => {
+      const isFirstFire = !_adminAuthFiredOnce;
+      _adminAuthFiredOnce = true;
+      try {
+        if (!user) {
+          if (isFirstFire && readAdminSessionFlag()) {
+            console.info('[admin] 첫 onAuthState user=null — sessionStorage 캐시 살아있어 grace 대기');
+            if (_adminGraceTimer) clearTimeout(_adminGraceTimer);
+            _adminGraceTimer = setTimeout(() => {
+              if (!auth.currentUser) {
+                console.warn('[admin] 8s grace 만료 — Firebase 복원 실패, 로그인 폼 표시');
+                try {
+                  sessionStorage.removeItem('koaus-admin');
+                  sessionStorage.removeItem('isAdminLoggedIn');
+                  sessionStorage.removeItem('isAdmin');
+                } catch (_) {}
+                showLocked('세션이 만료되었습니다. 다시 로그인해 주세요.');
+              }
+            }, 8000);
+            return;
+          }
+          try {
+            sessionStorage.removeItem('koaus-admin');
+            sessionStorage.removeItem('isAdminLoggedIn');
+            sessionStorage.removeItem('isAdmin');
+          } catch (_) {}
+          showLocked('');
+          return;
+        }
+        if (_adminGraceTimer) { clearTimeout(_adminGraceTimer); _adminGraceTimer = null; }
+        const email = (user.email || '').toLowerCase();
+        const isAdminEmail = ADMIN_EMAILS.includes(email);
+        let isAdminClaim = false;
+        try {
+          const tokenResult = await user.getIdTokenResult(true);
+          isAdminClaim = !!(tokenResult.claims && tokenResult.claims.admin === true);
+        } catch (tokErr) {
+          console.warn('[admin] 토큰 갱신 실패 — 화이트리스트로 fallback', tokErr);
+        }
+        if (isAdminEmail || isAdminClaim) {
+          try {
+            sessionStorage.setItem('koaus-admin', email);
+            sessionStorage.setItem('isAdminLoggedIn', 'true');
+            sessionStorage.setItem('isAdmin', 'true');
+          } catch (_) {}
+          showAdmin(user);
+        } else {
+          try {
+            sessionStorage.removeItem('koaus-admin');
+            sessionStorage.removeItem('isAdminLoggedIn');
+            sessionStorage.removeItem('isAdmin');
+          } catch (_) {}
+          denyAndRedirect(`권한 없음 — email='${email}' (whitelist:${isAdminEmail}, claim:${isAdminClaim})`);
+        }
+      } catch (e) {
+        console.error('[admin] 인증 콜백 실패 — 안전망으로 로그인 폼 표시', e);
+        try { showLocked('로그인이 만료되었습니다. 다시 로그인해 주세요.'); } catch (_) {}
+      }
+    });
+
+    // ════════════════════════════════════════════════════════════════════════
+    // 통계 집계 — state(열) × 보드(행) 글 수. Firestore count() 집계 (글 본문 미열람).
+    //   · 셀  = getCountFromServer(query(col, where('state','==', code))).data().count
+    //   · 합계열 = getCountFromServer(col 전체) — state 없는 글 포함
+    //   · state 단일필드 == 라 인덱스 자동(복합 불필요). 전체 상태(승인/대기/삭제) 기준.
+    // ════════════════════════════════════════════════════════════════════════
+    const BOARDS = [
+      { label: '쉐어 (Share)',  col: 'accom_posts' },
+      { label: '렌트 (Rent)',   col: 'rent_posts' },
+      { label: '구인 (Work)',   col: 'jobs_posts' },
+      { label: '중고차 (Auto)', col: 'auto_posts' },
+      { label: '서비스 (Services)', col: 'services' },
+    ];
+    // 주 코드 — DB 저장값은 소문자(?state=<code>.toLowerCase()). 열 라벨은 대문자.
+    const STATES = [
+      ['nsw','NSW'], ['vic','VIC'], ['qld','QLD'], ['wa','WA'],
+      ['sa','SA'],   ['act','ACT'], ['tas','TAS'], ['nt','NT'],
+    ];
+
+    // 단일 셀 count — stateCode null 이면 컬렉션 전체
+    async function countCell(col, stateCode) {
+      const ref = stateCode
+        ? query(collection(db, col), where('state', '==', stateCode))
+        : collection(db, col);
+      const snap = await getCountFromServer(ref);
+      return snap.data().count;
+    }
+
+    function buildSkeleton() {
+      const t = document.getElementById('statsTable');
+      // 헤더
+      let head = '<thead><tr><th>보드 \\ 주</th>';
+      STATES.forEach(([, lbl]) => { head += `<th>${lbl}</th>`; });
+      head += '<th class="col-total">합계</th></tr></thead>';
+      // 본문 (셀은 '…' 로딩 표시)
+      let body = '<tbody>';
+      BOARDS.forEach((b, ri) => {
+        body += `<tr><th></th>`;   // 라벨은 textContent 로 안전 주입
+        STATES.forEach((_, ci) => { body += `<td class="stats-cell-loading" id="c-${ri}-${ci}">…</td>`; });
+        body += `<td class="col-total stats-cell-loading" id="rt-${ri}">…</td></tr>`;
+      });
+      body += '</tbody>';
+      // 푸터 (열 합계 + 총합)
+      let foot = '<tfoot><tr><th>합계</th>';
+      STATES.forEach((_, ci) => { foot += `<td id="ft-${ci}">–</td>`; });
+      foot += '<td class="grand" id="grand">–</td></tr></tfoot>';
+      t.innerHTML = head + body + foot;
+      // 보드 라벨은 textContent (XSS 안전)
+      const labelCells = t.querySelectorAll('tbody tr > th');
+      BOARDS.forEach((b, ri) => { if (labelCells[ri]) labelCells[ri].textContent = b.label; });
+    }
+
+    function setCell(id, value) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.textContent = String(value);   // 숫자만 — textContent
+      el.classList.remove('stats-cell-loading');
+    }
+
+    let _statsDone = false;
+    async function loadStats() {
+      if (_statsDone) return;
+      _statsDone = true;
+      buildSkeleton();
+      const note = document.getElementById('statsNote');
+      const colTotals = STATES.map(() => 0);   // 열 합계 (주별)
+      let grand = 0;                            // 총합 (= 보드 전체 합계의 합)
+      let anyFail = false;
+
+      const tasks = [];
+      BOARDS.forEach((b, ri) => {
+        // 주별 셀
+        STATES.forEach(([code], ci) => {
+          tasks.push(
+            countCell(b.col, code)
+              .then(n => { setCell(`c-${ri}-${ci}`, n); colTotals[ci] += n; })
+              .catch(err => { console.warn('[stats] 셀 실패', b.col, code, err); setCell(`c-${ri}-${ci}`, '-'); anyFail = true; })
+          );
+        });
+        // 행 합계 (컬렉션 전체)
+        tasks.push(
+          countCell(b.col, null)
+            .then(n => { setCell(`rt-${ri}`, n); grand += n; })
+            .catch(err => { console.warn('[stats] 합계 실패', b.col, err); setCell(`rt-${ri}`, '-'); anyFail = true; })
+        );
+      });
+
+      await Promise.all(tasks);
+
+      // 열 합계 + 총합 (성공 셀 기준 best-effort)
+      STATES.forEach((_, ci) => setCell(`ft-${ci}`, colTotals[ci]));
+      setCell('grand', grand);
+
+      if (note) {
+        note.textContent = anyFail
+          ? '일부 셀 집계에 실패했습니다(권한/네트워크). 새로고침 후 다시 시도해 주세요.'
+          : '집계 완료 — 전체 상태(승인·대기·삭제 포함) 기준 글 수입니다.';
+        note.style.color = anyFail ? '#b45309' : '#16a34a';
+      }
+    }
+  </script>
+
+</body>
+</html>
