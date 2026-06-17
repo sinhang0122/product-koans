@@ -1,10 +1,9 @@
 // ── KoAus Phone Auth — Firebase Phone Authentication 공통 모듈 ──
 //
 // 흐름:
-//   1) 로그인 유저(이메일+비번)가 글쓰기 등 권한 행동 시도 → koausCanPost(u) 검사
-//      · u.emailVerified === true → 통과 (기존 이메일 인증 호환)
-//      · !!u.phoneNumber === true → 통과
-//      · 둘 다 false → koausPhoneVerify() 호출 → SMS 인증 후 linkWithCredential
+//   1) 로그인 유저(이메일/구글)가 글쓰기 등 권한 행동 시도 → koausCanPost(u) 검사
+//      · !!u.phoneNumber === true → 통과 (전원 휴대폰 인증 강제)
+//      · phoneNumber 없음 → koausPhoneVerify() 호출 → SMS 인증 후 linkWithCredential
 //   2) 비로그인 유저는 우선 로그인 모달 (페이지별 openAuthModal)
 //
 // 의존: Firebase Auth (이미 각 페이지 모듈에서 초기화됨, window.koausAuthApp 또는 getApps()[0])
@@ -30,10 +29,11 @@ const auth = getAuth(app);
 const functions = getFunctions(app, 'australia-southeast1');
 
 // ── canPost: 글쓰기 자격 검증 ──
-// 이메일 인증 OR 휴대폰 인증 둘 중 하나만 통과해도 OK (Option B 정책)
+// 전원 휴대폰 인증 강제 — 구글/이메일 로그인 여부와 무관하게 phoneNumber 연결만 통과.
+//  (emailVerified 단독 통과 제거 → 구글 유저도 폰 게이트 강제)
 window.koausCanPost = function (user) {
   if (!user) return false;
-  return !!user.emailVerified || !!user.phoneNumber;
+  return !!user.phoneNumber;
 };
 
 // ── Phone Auth 모달 (body 끝 1회 inject) ──
@@ -50,12 +50,18 @@ function mountPhoneModal() {
           <!-- Step 1: 번호 입력 -->
           <div data-step="phone">
             <p style="font-size:12.5px;color:var(--text-muted);margin:6px 0 12px;line-height:1.55;">
-              호주 휴대폰 번호로 SMS 인증코드를 보내드립니다.<br>
-              <span style="color:var(--text-secondary);">예: 0412 345 678 또는 +61 412 345 678</span>
+              휴대폰 번호로 SMS 인증코드를 보내드립니다. 국가를 선택해 주세요.<br>
+              <span style="color:var(--text-secondary);">예: 호주 0412 345 678 / 한국 010 1234 5678</span>
             </p>
             <div class="auth-field">
-              <label class="auth-label" for="koausPhoneInput">휴대폰 번호 (AU)</label>
-              <input class="auth-input" id="koausPhoneInput" type="tel" autocomplete="tel" inputmode="tel" placeholder="04XX XXX XXX 또는 +61..." maxlength="20" />
+              <label class="auth-label" for="koausPhoneInput">휴대폰 번호</label>
+              <div style="display:flex;gap:8px;">
+                <select class="auth-input" id="koausPhoneCountry" style="flex:0 0 auto;width:auto;">
+                  <option value="au">🇦🇺 호주 (+61)</option>
+                  <option value="kr">🇰🇷 한국 (+82)</option>
+                </select>
+                <input class="auth-input" id="koausPhoneInput" type="tel" autocomplete="tel" inputmode="tel" placeholder="호주 0412… / 한국 010…" maxlength="20" style="flex:1;" />
+              </div>
             </div>
             <p class="koaus-extra-msg" id="koausPhoneMsg" style="font-size:12.5px;color:var(--text-muted);margin:8px 0 4px;min-height:18px;"></p>
             <div id="koausRecaptchaSlot" style="margin:8px 0;"></div>
@@ -174,7 +180,7 @@ async function resendCode() {
   // 쿨다운 확인 (UI에서 disable 처리되지만 안전망)
   if (Date.now() - resendStartedAt < RESEND_COOLDOWN_MS) return;
   const e164 = document.getElementById('koausPhoneEcho')?.textContent || '';
-  if (!/^\+61[0-9]{8,10}$/.test(e164)) {
+  if (!/^\+(61|82)[0-9]{8,11}$/.test(e164)) {     // 호주(+61)/한국(+82) E.164 — echo 그대로 재전송
     setCodeMsg('번호 정보가 사라졌습니다. 처음부터 다시 시도해 주세요.', 'err');
     showStep('phone'); return;
   }
@@ -249,21 +255,35 @@ function showStep(step) {
   });
 }
 
-// AU 휴대폰 번호 정규화 — 0XXX → +61 XXX, 공백 제거
-function normalizeAU(raw) {
+// 휴대폰 번호 정규화 (선택 국가 기준) — 공백/기호 제거 후 E.164(+61/+82)
+//   · 0 접두 모호성은 사용자의 국가 선택으로 제거 (au=호주, kr=한국)
+function normalizePhone(raw, country) {
   const v = String(raw || '').replace(/[\s\-()]/g, '');
   if (!v) return null;
+  if (country === 'kr') {                                   // 한국 (+82)
+    if (v.startsWith('+82')) return v;
+    if (v.startsWith('82'))  return '+' + v;
+    if (v.startsWith('0'))   return '+82' + v.slice(1);     // 010… → +8210…
+    if (/^[0-9]+$/.test(v))  return '+82' + v;              // bare digits
+    return null;
+  }
+  // 기본: 호주 (+61)
   if (v.startsWith('+61')) return v;
-  if (v.startsWith('0')) return '+61' + v.slice(1);
-  if (v.startsWith('61')) return '+' + v;
+  if (v.startsWith('61'))  return '+' + v;
+  if (v.startsWith('0'))   return '+61' + v.slice(1);       // 0412… → +61412…
+  if (/^[0-9]+$/.test(v))  return '+61' + v;                // bare digits
   return null;
 }
 
 async function sendCode() {
   const raw = document.getElementById('koausPhoneInput').value;
-  const e164 = normalizeAU(raw);
-  if (!e164 || !/^\+61[0-9]{8,10}$/.test(e164)) {
-    setMsg('AU 휴대폰 번호 형식이 올바르지 않습니다. (예: 0412345678)', 'err');
+  const country = document.getElementById('koausPhoneCountry')?.value || 'au';
+  const e164 = normalizePhone(raw, country);
+  const re = country === 'kr' ? /^\+82[0-9]{8,11}$/ : /^\+61[0-9]{8,10}$/;
+  if (!e164 || !re.test(e164)) {
+    setMsg(country === 'kr'
+      ? '한국 휴대폰 번호 형식이 올바르지 않습니다. (예: 01012345678)'
+      : '호주 휴대폰 번호 형식이 올바르지 않습니다. (예: 0412345678)', 'err');
     return;
   }
   if (Date.now() - lastSentAt < 60_000) {
@@ -344,7 +364,7 @@ async function verifyCode() {
 //   ① 제약 유지: signInWithPhoneNumber/confirm 경로 부활 없음 — link 전용 흐름 그대로.
 async function handleRecycledPhone() {
   const e164 = document.getElementById('koausPhoneEcho')?.textContent || '';
-  if (!/^\+61[0-9]{8,10}$/.test(e164)) {
+  if (!/^\+(61|82)[0-9]{8,11}$/.test(e164)) {     // 호주(+61)/한국(+82) E.164
     setCodeMsg('이미 다른 계정과 연결된 번호입니다. 구글 로그인 또는 카카오톡 문의로 진행해 주세요.', 'err');
     return;
   }

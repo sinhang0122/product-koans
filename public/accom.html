@@ -1890,7 +1890,7 @@
       return false;
     }
     function authorLabel(p) {
-      return escHtml(p.author);
+      return escHtml(p.author || '익명');   // 별명만(이메일 X) · 비면 '익명' · 반환값은 이미 escHtml
     }
 
     // ── Filter ──
@@ -2182,7 +2182,8 @@
       document.getElementById('detailNavTitle').textContent = p.title;
       // 상태 + 입주 가능일
       document.getElementById('detailStatus').innerHTML =
-        `⚪ 쉐어 <span class="rea-dot">•</span> 입주 가능일: <strong>${escHtml(p.availableDate || '협의')}</strong>`;
+        `⚪ 쉐어 <span class="rea-dot">•</span> 입주 가능일: <strong>${escHtml(p.availableDate || '협의')}</strong>` +
+        ` <span class="rea-dot">•</span> 작성자: <strong>${authorLabel(p)}</strong>`;   // authorLabel 이미 escHtml — 이중 이스케이프 금지
       // 가격 (Huge Bold) — XSS 방어: p.price escape (firestore.rules optInt 와 이중 방어)
       document.getElementById('detailPrice').innerHTML = p.price
         ? `$${escHtml(String(p.price))} <span class="rea-price-unit">per week</span>`

@@ -2000,7 +2000,7 @@
       return false;
     }
     function authorLabel(p) {
-      return escHtml(p.author);
+      return escHtml(p.author || '익명');   // 별명만(이메일 X) · 비면 '익명' · 반환값은 이미 escHtml
     }
 
     // ── Filter ──
@@ -2279,7 +2279,8 @@
       const cat = groupOf(p.category);
       // 상태 (카테고리)
       document.getElementById('detailStatus').innerHTML =
-        `⚪ ${escHtml(CAT_LABELS[cat] || 'Auto')}${p.isPremium ? ' <span class="rea-dot">•</span> ⭐ 추천' : ''}`;
+        `⚪ ${escHtml(CAT_LABELS[cat] || 'Auto')}${p.isPremium ? ' <span class="rea-dot">•</span> ⭐ 추천' : ''}` +
+        ` <span class="rea-dot">•</span> 작성자: <strong>${authorLabel(p)}</strong>`;   // authorLabel 이미 escHtml — 이중 이스케이프 금지
       // 가격 (총액 $ — 주당 표기 제거). 정비소/견인(업체)은 가격 필드 없음 → 영업시간/문의 안내.
       const priceHtml = (cat === 'maintenance')
         ? (p.hours ? `<span class="rea-price-na">🕒 ${escHtml(p.hours)}</span>` : '<span class="rea-price-na">문의</span>')

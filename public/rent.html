@@ -1711,7 +1711,7 @@
       return false;
     }
     function authorLabel(p) {
-      return escHtml(p.author);
+      return escHtml(p.author || '익명');   // 별명만(이메일 X) · 비면 '익명' · 반환값은 이미 escHtml
     }
 
     // ── Filter ──
@@ -1943,7 +1943,8 @@
       if (p.propType) summary.push(`🏠 ${propTypeLabel(p.propType)}`);
       (Array.isArray(p.types) ? p.types : []).forEach(t => { if (typeof TYPE_LABELS === 'object' && TYPE_LABELS && TYPE_LABELS[t]) summary.push('📅 ' + (TYPE_LABELS[t].ko || t)); });
       if (p.minStay && MINSTAY_LABELS[p.minStay]) summary.push('⏱ 미니멈 ' + MINSTAY_LABELS[p.minStay]);
-      document.getElementById('detailSummary').innerHTML = summary.map(s => `<span class="rea-chip">${escHtml(s)}</span>`).join('');
+      document.getElementById('detailSummary').innerHTML = summary.map(s => `<span class="rea-chip">${escHtml(s)}</span>`).join('')
+        + `<span class="rea-chip">작성자: <strong>${authorLabel(p)}</strong></span>`;   // authorLabel 이미 escHtml — 이중 이스케이프 금지
 
       // Hero 사진 갤러리 + 카운터
       const hero = document.getElementById('detailHero');
