@@ -1438,8 +1438,8 @@ select.board-write-btn--ghost:focus { outline: none; border-color: var(--text-pr
   .koaus-hero-pc .swiper-button-next::after { font-size: 11px; }
   .koaus-hero-pc .swiper-pagination-bullet { width: 6px; height: 6px; }
   .koaus-hero-pc .swiper-pagination-bullet-active { width: 18px; }
-  /* 본문 가로 스크롤 방지 — 광고 배너 등이 화면 폭 초과 못 함 */
-  html, body { max-width: 100%; overflow-x: hidden; }
+  /* 본문 가로 스크롤 방지 — 광고 배너 등이 화면 폭 초과 못 함 (overflow-x 제거: body 중첩 스크롤 컨테이너화 방지 → 모바일 세로 스크롤 복구. 가로 넘침은 개별 요소 max-width 로 차단) */
+  html, body { max-width: 100%; }
 
   /* 모바일 섹션 간격 초밀착 — PC 는 영향 0
      · hero ↔ notice ↔ state ↔ 섹션 제목 사이 여백 2~3px 단위로 압축
