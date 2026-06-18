@@ -1166,12 +1166,6 @@ select.board-write-btn--ghost:focus { outline: none; border-color: var(--text-pr
   padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.2s;
 }
 .write-overlay.open { opacity: 1; pointer-events: auto; }
-/* 글쓰기·상세 모달 열림 시 배경(글 목록) 스크롤 잠금 — 휠이 모달만 스크롤. :has 라 DOM 상태 반응형(닫히면 자동 해제, JS body-lock 보다 안전).
-   상세는 .post-detail-overlay 자체가 overflow-y:auto(긴 글은 오버레이 안에서 스크롤) — 카드 max-height 미설정으로 rea-detail 풀스크린 변형이 안 깨지게 오버레이 스크롤 채택. */
-/* 실제 스크롤러가 html(documentElement)이라 body 에만 걸면 배경이 안 잠김 — html 도 함께 잠금. */
-html:has(.write-overlay.open), html:has(.post-detail-overlay.open),
-body:has(.write-overlay.open), body:has(.post-detail-overlay.open) { overflow: hidden; }
-html { scrollbar-gutter: stable; }   /* 모달 열릴 때 스크롤바 소멸로 생기는 가로 흔들림 방지 */
 .write-modal {
   background: var(--bg-surface); border: 1px solid var(--border);
   border-radius: var(--r-xl); padding: 24px 28px;
