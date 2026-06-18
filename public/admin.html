@@ -1383,6 +1383,23 @@
         });
         result.appendChild(sb);
       }
+      // 🗑 강제 삭제 — 보드 UI 유무와 무관하게 운영자가 조회한 글(본인·친구 글 다)을 영구 삭제.
+      //   · col/docId 는 위 getDoc 조회에서 확보한 값 그대로 재사용.
+      //   · admin.html 은 koausIsAdmin set + rules isAdmin(email==sinhang0122) 허용 → forceDelete 통과.
+      const delBtn = document.createElement('button');
+      delBtn.type = 'button'; delBtn.textContent = '🗑 강제 삭제';
+      delBtn.className = 'mt-3 ml-2 bg-gray-800 hover:bg-black text-white font-bold py-2 px-4 rounded-lg text-sm';
+      delBtn.addEventListener('click', async () => {
+        if (!confirm('이 글을 영구 삭제하시겠습니까? (되돌릴 수 없음)')) return;
+        if (!window.koausRbac || !window.koausRbac.forceDelete) { alert('권한 모듈(koaus-rbac.js) 미로드'); return; }
+        delBtn.disabled = true;
+        try {
+          await window.koausRbac.forceDelete(col, docId);
+          result.textContent = ''; result.classList.add('hidden');
+          document.getElementById('ftNote').textContent = '🗑 삭제 완료 — ' + col + ' / ' + docId;
+        } catch (e) { alert('삭제 실패: ' + (e && (e.code || e.message) || e)); delBtn.disabled = false; }
+      });
+      result.appendChild(delBtn);
       result.classList.remove('hidden');
     }
     const _ftBtn = document.getElementById('ftLookup');
