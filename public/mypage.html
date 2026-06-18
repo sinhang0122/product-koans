@@ -959,7 +959,7 @@
       return readJSON('koaus-saved-posts');
     }
     const boardStoreKey = b => b === 'accom' ? 'koaus-accom-posts' : b === 'rent' ? 'koaus-rent-posts' : b === 'jobs' ? 'koaus-jobs-posts' : null;
-    async function deleteMyPost(board, id) {
+    async function deleteMyPost(board, id, fsDocIdArg) {
       if (!confirm('정말 이 게시글을 삭제하시겠습니까?')) return;
       const sk = boardStoreKey(board);
       // ── Firestore 문서까지 삭제 — LS 만 지우면 onSnapshot 재캐싱으로 좀비(다시 뜸). ──
@@ -970,7 +970,10 @@
                  : 'services';
       const _hit   = (sk ? readJSON(sk) : []).find(x => String(x.id) === String(id));
       const _fsHit = (typeof _fsMine !== 'undefined' && _fsMine) ? _fsMine.find(x => x.board === board && String(x.id) === String(id)) : null;
-      const fsDocId = (_hit && (_hit.fsDocId || _hit._fsDocId)) || (_fsHit && _fsHit.fsDocId) || null;
+      // 렌더 목록(dataFor)은 각 항목에 이미 fsDocId 를 갖고 있음 → 삭제 버튼이 직접 넘긴 인자 우선.
+      //  · _hit(보드store: accom/rent/jobs만) + _fsHit(_fsMine: 작성자 uid 쿼리)만으로는
+      //    auto/services/points·uid 다른 글의 fsDocId 가 안 잡혀 FS 삭제를 건너뛰던 회귀 수정.
+      const fsDocId = (fsDocIdArg && String(fsDocIdArg)) || (_hit && (_hit.fsDocId || _hit._fsDocId)) || (_fsHit && _fsHit.fsDocId) || null;
       if (fsDocId && window.koausRbac && window.koausRbac.selfDelete) {
         try {
           // 운영자는 타인 글도 삭제 가능 → forceDelete, 작성자 본인 글은 selfDelete.
@@ -1022,7 +1025,7 @@
                   ? '<button class="mp-toggle-locked" type="button" style="color:#9ca3af;cursor:not-allowed;" title="운영자 숨김은 직접 해제할 수 없습니다.">🔒 해제 불가</button>'
                   : '<button class="mp-toggle" data-board="' + p.board + '" data-id="' + p.id + '" data-hidden="' + (p.isHidden ? '1' : '0') + '">' + toggleLabel + '</button>')
             +   '<button class="mp-dup" data-board="' + p.board + '" data-id="' + p.id + '">재업로드</button>'
-            +   '<button class="mp-del" data-board="' + p.board + '" data-id="' + p.id + '">삭제</button>'
+            +   '<button class="mp-del" data-board="' + p.board + '" data-id="' + p.id + '" data-fsdocid="' + (p.fsDocId || p._fsDocId || '') + '">삭제</button>'
             + '</span>'
             + '</div>';
         }
@@ -1030,7 +1033,7 @@
       }).join('');
       el.querySelectorAll('.mp-del').forEach(b => b.addEventListener('click', e => {
         e.preventDefault(); e.stopPropagation();
-        deleteMyPost(b.dataset.board, b.dataset.id);
+        deleteMyPost(b.dataset.board, b.dataset.id, b.dataset.fsdocid);
       }));
       el.querySelectorAll('.mp-dup').forEach(b => b.addEventListener('click', e => {
         e.preventDefault(); e.stopPropagation();
