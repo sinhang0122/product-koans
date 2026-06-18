@@ -105,14 +105,14 @@ input, textarea, select,
   --orange:         #fb923c;
 }
 
-html { font-size: 16px; scroll-behavior: smooth; overflow-x: clip; }   /* clip: 가로 넘침만 차단, 세로 스크롤 컨테이너는 안 만듦(데스크탑 스크롤 정상화) */
+html { font-size: 16px; scroll-behavior: smooth; }   /* overflow-x 제거 — 기본 visible 로 데스크탑 문서 스크롤 복구 (모바일 가로차단은 @media 에서 유지) */
 
 body {
   font-family: var(--font);
   background: var(--bg-base);
   color: var(--text-primary);
   min-height: 100vh;
-  overflow-x: clip;   /* hidden→clip: 세로 스크롤이 죽던 회귀 복구 (clip 은 스크롤 컨테이너를 안 만듦) */
+  /* overflow-x 제거 — 기본 visible 로 데스크탑 문서 세로 스크롤 복구 (모바일 가로차단은 @media max-width:767 에서 유지) */
   max-width: 100%;
   display: flex;
   flex-direction: column;
