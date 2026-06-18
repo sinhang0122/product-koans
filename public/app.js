@@ -4,6 +4,7 @@ import {
   createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile,
 } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
 import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app-check.js';
+import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
 
 const firebaseConfig = {
   apiKey:            'AIzaSyCamqnt0bNUD9uz1N5BbCuQjSkWLSpPqlU',
@@ -35,6 +36,7 @@ import('https://www.gstatic.com/firebasejs/12.13.0/firebase-analytics.js')
   .catch(() => {});
 const auth        = getAuth(firebaseApp);
 const provider    = new GoogleAuthProvider();
+const db          = getFirestore(firebaseApp);
 
 // ── Sidebar toggle ──
 const hBtn = document.getElementById('hamburgerBtn');
@@ -394,6 +396,31 @@ onAuthStateChanged(auth, user => {
     loginBtn.title = '로그인 / 회원가입';
     loginBtn.onclick = openAuthModal;
   }
+});
+
+// ── 닉네임 읽기 동기화 (Firestore = 진실) ──
+// 다른 기기에서 바꾼 닉네임 반영: 로그인 시 users/{uid}.nickname 을 읽어 localStorage('koaus-nickname')에
+// 단방향 덮어쓰기. LS 가 전 페이지 표시명·작성자명의 소스라 1 doc read 로 모든 보드가 최신화된다.
+// (닉네임 변경 트랜잭션은 mypage 그대로 — 여기는 '읽기 동기화'만.)
+function _refreshNicknameUI(nick) {
+  const acct = document.getElementById('sidebarAccountBtn');
+  if (acct) acct.textContent = nick + ' (My Account)';
+  const mp = document.getElementById('mpName');
+  if (mp) mp.textContent = nick;
+}
+onAuthStateChanged(auth, async user => {
+  if (!user) return;
+  try {
+    const snap = await getDoc(doc(db, 'users', user.uid));
+    const remote = snap.exists() ? snap.data().nickname : '';
+    if (typeof remote === 'string' && remote.trim()) {
+      const trimmed = remote.trim();
+      if (localStorage.getItem('koaus-nickname') !== trimmed) {
+        localStorage.setItem('koaus-nickname', trimmed);
+      }
+      _refreshNicknameUI(trimmed);   // 동기화 후 현재 화면 표시명 즉시 갱신
+    }
+  } catch (_) { /* 권한/네트워크 실패 — LS 옛값 유지(무해) */ }
 });
 
 // bfcache 복원 (Back/Forward 캐시) 시 — 로그인 버튼 onclick 재바인딩
