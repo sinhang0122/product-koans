@@ -973,8 +973,13 @@
       const fsDocId = (_hit && (_hit.fsDocId || _hit._fsDocId)) || (_fsHit && _fsHit.fsDocId) || null;
       if (fsDocId && window.koausRbac && window.koausRbac.selfDelete) {
         try {
-          // 운영자는 타인 글도 삭제 가능 → forceDelete, 작성자 본인 글은 selfDelete
-          const _isAdmin = window.koausRbac.isAdmin && window.koausRbac.isAdmin();
+          // 운영자는 타인 글도 삭제 가능 → forceDelete, 작성자 본인 글은 selfDelete.
+          //  · admin 판정은 koausIsAdmin(admin-mark 비동기)에만 의존하면 인식 실패 시 selfDelete 로
+          //    가 "본인 글만" 거부 → 로그인 이메일 직접 체크를 OR 로 추가(타이밍 무관).
+          //    (firestore rules isAdmin() 도 email==sinhang0122 허용 → forceDelete 통과.)
+          const _ADMIN = ['sinhang0122@gmail.com'];
+          const _email = ((window.koausAuth && window.koausAuth.user && window.koausAuth.user.email) || '').toLowerCase();
+          const _isAdmin = (window.koausRbac.isAdmin && window.koausRbac.isAdmin()) || _ADMIN.includes(_email);
           await (_isAdmin ? window.koausRbac.forceDelete : window.koausRbac.selfDelete)(_col, String(fsDocId));
         } catch (e) {
           alert('삭제 실패: ' + (e && e.code === 'permission-denied' ? '본인 글만 삭제할 수 있습니다.' : (e && (e.code || e.message) || e)));
