@@ -16,7 +16,8 @@ html, body {
   -webkit-tap-highlight-color: transparent;
   /* 끝까지 스크롤 시 고무줄 바운스 차단 */
   overscroll-behavior-y: none;
-  -webkit-overflow-scrolling: touch;
+  /* -webkit-overflow-scrolling: touch 제거 — 데스크탑 크롬에서 트랙패드/휠 스크롤을
+     깨뜨리는 알려진 버그(iOS 모멘텀용 비표준 속성, 모바일 영향 미미). */
 }
 /* 입력 가능한 요소는 반드시 선택 허용 — 회원가입/글쓰기/검색 동작 보장 */
 input, textarea, select,
@@ -104,14 +105,14 @@ input, textarea, select,
   --orange:         #fb923c;
 }
 
-html { font-size: 16px; scroll-behavior: smooth; overflow-x: hidden; }
+html { font-size: 16px; scroll-behavior: smooth; overflow-x: clip; }   /* clip: 가로 넘침만 차단, 세로 스크롤 컨테이너는 안 만듦(데스크탑 스크롤 정상화) */
 
 body {
   font-family: var(--font);
   background: var(--bg-base);
   color: var(--text-primary);
   min-height: 100vh;
-  overflow-x: hidden;
+  overflow-x: clip;   /* hidden→clip: 세로 스크롤이 죽던 회귀 복구 (clip 은 스크롤 컨테이너를 안 만듦) */
   max-width: 100%;
   display: flex;
   flex-direction: column;
