@@ -985,6 +985,10 @@
       ['koaus-my-posts','koaus-saved-posts','koaus-recent-posts'].forEach(k => {
         localStorage.setItem(k, JSON.stringify(readJSON(k).filter(r => !(r.board === board && String(r.id) === String(id)))));
       });
+      // _fsMine 캐시에서도 제거 — 안 지우면 dataFor 가 다시 끼워 넣어 새로고침 전까지 화면에 남음.
+      if (typeof _fsMine !== 'undefined' && Array.isArray(_fsMine)) {
+        _fsMine = _fsMine.filter(x => !(x.board === board && (String(x.fsDocId) === String(fsDocId) || String(x.id) === String(id))));
+      }
       renderList();
     }
     function renderList() {

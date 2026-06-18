@@ -529,12 +529,17 @@ onAuthStateChanged(auth, async user => {
     const email = (user.email || '').toLowerCase();
     setAdminEmail(email);
     const isAdminEmail = ADMIN_EMAILS.includes(email);
+    // 화이트리스트 운영자는 claim 조회(아래 await)를 기다리지 않고 즉시 동기 set.
+    //  · getIdTokenResult 지연/실패 시에도 koausIsAdmin=true 유지 → mypage 가 forceDelete 로 가서
+    //    uid 다른 글(운영자 삭제)도 정상 삭제. 캐시도 미리 써 둬 아래 outer catch 가 못 내림.
+    setAdminFlag(isAdminEmail);
+    if (isAdminEmail) writeAdminCache(email);
     let isAdminClaim = false;
     try {
       const t = await user.getIdTokenResult();
       isAdminClaim = !!(t.claims && t.claims.admin === true);
     } catch (_) {}
-    const isAdmin = isAdminEmail || isAdminClaim;
+    const isAdmin = isAdminEmail || isAdminClaim;   // claim 으로 보강 (||=)
     setAdminFlag(isAdmin);
     if (isAdmin) writeAdminCache(email);
     else clearAdminCache();
