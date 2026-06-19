@@ -884,7 +884,7 @@
     const readJSON = k => { try { return JSON.parse(localStorage.getItem(k) || '[]'); } catch { return []; } };
     const escHtml = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     const boardLabel = b => b === 'accom' ? '쉐어' : b === 'rent' ? '렌트' : b === 'jobs' ? 'Work' : b;
-    const boardHref  = b => b === 'accom' ? 'accom.html' : b === 'rent' ? 'rent.html' : b === 'jobs' ? 'jobs.html' : '#';
+    const boardHref  = b => ({accom:'accom.html',rent:'rent.html',jobs:'jobs.html',auto:'auto.html',points:'points.html',trades:'trades.html',gp:'gp.html',salon:'salon.html',restaurants:'restaurants.html',care:'care.html'}[b] || '#');
 
     let mtab = 'mine';
     const emptyMsg = { mine: '아직 작성한 글이 없습니다.', recent: '최근 본 글이 없습니다.', saved: '저장한 글이 없습니다.', contacted: '연락한 글이 없습니다.' };
@@ -1005,8 +1005,9 @@
       if (!items.length) { el.innerHTML = '<div class="post-empty">' + emptyMsg[mtab] + '</div>'; return; }
       el.innerHTML = items.map(p => {
         const meta = escHtml(p.author || '') + ' · ' + (p.date || '') + (p.time ? ' ' + p.time : '');
+        const postUrl = boardHref(p.board) + '?id=' + encodeURIComponent(p.fsDocId || p.id);
         const head = '<span class="mypage-item-badge">' + boardLabel(p.board) + '</span>'
-          + '<span class="mypage-item-title">' + escHtml(p.title || '') + '</span>'
+          + '<a class="mypage-item-title" href="' + postUrl + '" style="color:inherit;text-decoration:none;cursor:pointer;">' + escHtml(p.title || '') + '</a>'
           + '<span class="mypage-item-meta">' + meta + '</span>';
         if (mtab === 'mine') {
           const editUrl = boardHref(p.board) + '?state=' + encodeURIComponent(p.state || '') + '&edit=' + encodeURIComponent(p.id);
@@ -1029,7 +1030,7 @@
             + '</span>'
             + '</div>';
         }
-        return '<a class="mypage-item" href="' + boardHref(p.board) + '">' + head + '</a>';
+        return '<div class="mypage-item">' + head + '</div>';
       }).join('');
       el.querySelectorAll('.mp-del').forEach(b => b.addEventListener('click', e => {
         e.preventDefault(); e.stopPropagation();
