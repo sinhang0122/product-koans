@@ -509,8 +509,8 @@
         <!-- 폼 본문 — 4그룹 + 등록 버튼 -->
         <form id="dashPinnedPostForm" class="space-y-5" autocomplete="off">
 
-          <!-- A) Grid 3-cols : 앵커 우선순위 / 지역 필터 / 섹션 앵커 -->
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <!-- A) 한 항목 한 줄(세로) : 앵커 우선순위 / 지역 필터 / 섹션 앵커 -->
+          <div class="grid grid-cols-1 gap-4">
             <div>
               <label for="dashPinPriority" class="block text-sm text-gray-700 font-semibold mb-2">
                 앵커 우선순위
@@ -555,8 +555,8 @@
             </div>
           </div>
 
-          <!-- B) Grid 2-cols : 게시글 제목 / 연락처 -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- B) 한 항목 한 줄(세로) : 제목 / 자유 연락처 / 주소 / 분리 연락처(전화·카톡·이메일) -->
+          <div class="grid grid-cols-1 gap-4">
             <div>
               <label for="dashPinTitle" class="block text-sm text-gray-700 font-semibold mb-2">
                 게시글 제목 <span class="text-red-500">*</span>
@@ -567,10 +567,42 @@
             </div>
             <div>
               <label for="dashPinContact" class="block text-sm text-gray-700 font-semibold mb-2">
-                연락처 정보
+                연락처 정보 <span class="text-gray-400 font-normal text-xs">(자유 표기)</span>
               </label>
               <input id="dashPinContact" name="contact" type="text" maxlength="200"
                      placeholder="카카오 ID · 전화번호 · 이메일 등"
+                     class="w-full p-3 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent" />
+            </div>
+            <div>
+              <label for="dashPinAddress" class="block text-sm text-gray-700 font-semibold mb-2">
+                주소 <span class="text-gray-400 font-normal text-xs">(상세 지도 표시용 — 선택)</span>
+              </label>
+              <input id="dashPinAddress" name="address" type="text" maxlength="200"
+                     placeholder="예: 123 George St, Sydney NSW 2000"
+                     class="w-full p-3 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent" />
+            </div>
+            <div>
+              <label for="dashPinPhone" class="block text-sm text-gray-700 font-semibold mb-2">
+                전화번호 <span class="text-gray-400 font-normal text-xs">(상세 연락 버튼용 — 선택)</span>
+              </label>
+              <input id="dashPinPhone" name="phone" type="text" maxlength="40"
+                     placeholder="예: 0412 345 678"
+                     class="w-full p-3 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent" />
+            </div>
+            <div>
+              <label for="dashPinKakao" class="block text-sm text-gray-700 font-semibold mb-2">
+                카카오톡 ID / 오픈채팅 <span class="text-gray-400 font-normal text-xs">(선택)</span>
+              </label>
+              <input id="dashPinKakao" name="kakao" type="text" maxlength="200"
+                     placeholder="예: koaus_help 또는 오픈채팅 링크"
+                     class="w-full p-3 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent" />
+            </div>
+            <div>
+              <label for="dashPinEmail" class="block text-sm text-gray-700 font-semibold mb-2">
+                이메일 <span class="text-gray-400 font-normal text-xs">(선택)</span>
+              </label>
+              <input id="dashPinEmail" name="email" type="email" maxlength="120"
+                     placeholder="예: contact@example.com"
                      class="w-full p-3 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent" />
             </div>
           </div>
@@ -593,7 +625,7 @@
             </label>
             <input id="dashPinImage" name="image" type="file" accept="image/*" multiple
                    class="w-full p-3 border border-gray-300 rounded-lg text-sm text-gray-900 file:mr-4 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:bg-green-50 file:text-green-700 file:font-semibold file:cursor-pointer hover:file:bg-green-100 cursor-pointer focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent" />
-            <p class="mt-1.5 text-xs text-gray-500">JPG / PNG / WebP — 장당 최대 <strong class="text-gray-700">5 MB</strong> · 최대 4장 · 자동 압축.</p>
+            <p class="mt-1.5 text-xs text-gray-500">JPG / PNG / WebP — 장당 최대 <strong class="text-gray-700">5 MB</strong> · 최대 10장 · 자동 압축. <span id="dashPinImgEditNote" class="text-gray-400"></span></p>
           </div>
 
           <!-- 등록 버튼 -->
@@ -689,6 +721,7 @@
     import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app-check.js';
     import { getFirestore, collection, addDoc, deleteDoc, doc, getDoc, getDocs, setDoc, updateDoc, onSnapshot, query, where, orderBy, limit, serverTimestamp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
     import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-functions.js';
+    import { uploadPostImages } from './compress.js';   // 핀공지 리치 게시글 사진 — 보드 글쓰기와 동일 압축/업로드(1200px/q0.7, 동시성 3)
 
     const firebaseConfig = {
       apiKey:            'AIzaSyCamqnt0bNUD9uz1N5BbCuQjSkWLSpPqlU',
@@ -942,6 +975,7 @@
       el.style.color = ok ? '#16a34a' : '#dc2626';
     }
     // ── 카드 3 · 게시판 핀공지 (board_pinned_notices/{board}) ──
+    let _pinEditImages = [];   // 수정 모드에서 보존할 기존 imageUrls (새 사진은 이어붙임)
     const _pinForm = document.getElementById('dashPinnedPostForm');
     if (_pinForm) _pinForm.addEventListener('submit', async e => {
       e.preventDefault();
@@ -954,15 +988,41 @@
         const priority = Number(document.getElementById('dashPinPriority').value) || 100;
         const title    = (document.getElementById('dashPinTitle').value || '').trim();
         const contact  = (document.getElementById('dashPinContact').value || '').trim();
+        const address  = (document.getElementById('dashPinAddress').value || '').trim();
+        const phone    = (document.getElementById('dashPinPhone').value || '').trim();
+        const kakao    = (document.getElementById('dashPinKakao').value || '').trim();
+        const email    = (document.getElementById('dashPinEmail').value || '').trim();
         const text     = (document.getElementById('dashPinBody').value || '').trim();
         if (!board || !text) { flashNote(note, '섹션과 본문은 필수입니다.', false); return; }
         if (btn) { btn.disabled = true; btn.textContent = '저장 중…'; }
+        // ── 사진 업로드 (선택) — 새로 고른 파일 압축·업로드 후 기존 이미지에 이어붙임(최대 10장) ──
+        const fileEl = document.getElementById('dashPinImage');
+        const files  = fileEl && fileEl.files ? Array.from(fileEl.files) : [];
+        let imageUrls = Array.isArray(_pinEditImages) ? _pinEditImages.slice() : [];
+        if (files.length) {
+          try {
+            if (btn) btn.textContent = `사진 업로드 중… 0/${files.length}`;
+            const urls = await uploadPostImages(app, `post_images/pinned/${board}`, files,
+              { maxDim: 1200, quality: 0.7, onProgress: (i, t) => { if (btn) btn.textContent = `사진 업로드 중… ${i}/${t}`; } });
+            imageUrls = imageUrls.concat(urls);
+          } catch (upErr) {
+            console.error('[admin] 핀공지 사진 업로드 실패', upErr);
+            flashNote(note, '❌ 사진 업로드 실패: ' + (upErr.message || upErr), false);
+            if (btn) { btn.disabled = false; btn.textContent = '노출 등록'; }
+            return;
+          }
+        }
+        imageUrls = imageUrls.slice(0, 10);
+        if (btn) btn.textContent = '저장 중…';
         await setDoc(doc(db, 'board_pinned_notices', board), {
           board, regions, priority, title, contact, text, active: true,
+          address, phone, kakaoLink: kakao, contactEmail: email, imageUrls,
           updatedAt: serverTimestamp(), uid: auth.currentUser.uid,
         }, { merge: true });
         flashNote(note, '✅ 핀공지 등록 완료', true);
         _pinForm.reset();
+        _pinEditImages = [];
+        const _imgNote = document.getElementById('dashPinImgEditNote'); if (_imgNote) _imgNote.textContent = '';
       } catch (err) {
         console.error('[admin] board_pinned_notices 저장 실패', err);
         flashNote(note, '❌ 등록 실패: ' + (err.message || err), false);
@@ -1069,7 +1129,16 @@
       _set('dashPinPriority', d.priority || 100);
       _set('dashPinTitle', d.title || '');
       _set('dashPinContact', d.contact || '');
+      _set('dashPinAddress', d.address || '');
+      _set('dashPinPhone', d.phone || '');
+      _set('dashPinKakao', d.kakaoLink || '');
+      _set('dashPinEmail', d.contactEmail || '');
       _set('dashPinBody', d.text || '');
+      // 기존 사진 보존 — 새 파일을 안 고르면 그대로 유지, 고르면 이어붙임(최대 10장)
+      _pinEditImages = Array.isArray(d.imageUrls) ? d.imageUrls.slice(0, 10) : [];
+      const _imgNote = document.getElementById('dashPinImgEditNote');
+      if (_imgNote) _imgNote.textContent = _pinEditImages.length ? `· 기존 ${_pinEditImages.length}장 유지(새 파일 선택 시 이어붙임)` : '';
+      const fileEl = document.getElementById('dashPinImage'); if (fileEl) fileEl.value = '';
       const stSel = document.getElementById('dashPinState');
       if (stSel) { const regions = Array.isArray(d.regions) ? d.regions.map(String) : []; [...stSel.options].forEach(o => { o.selected = regions.includes(o.value); }); }
       if (_pinForm) _pinForm.scrollIntoView({ behavior: 'smooth', block: 'start' });

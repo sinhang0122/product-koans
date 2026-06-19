@@ -57,6 +57,25 @@ service firebase.storage {
     }
 
     // ════════════════════════════════════════════════════════════
+    // post_images/pinned/** — admin 핀공지(board_pinned_notices) 리치 게시글 사진
+    //   · 경로: post_images/pinned/{board}/{filename} (admin-pinned.html)
+    //   · uid 폴더가 아니라 board 폴더 구조 → 일반 post_images 룰(uid 일치)로는 거부됨.
+    //   · 쓰기: admin 전용 (custom claim or 화이트리스트) + 5MB + image/*. 읽기: 퍼블릭.
+    //   ※ 일반 post_images/{board}/{uid}/{filename} 룰과 경로가 겹치지만 Storage 는 매칭 룰 OR —
+    //     이 admin 분기가 통과시키므로(uid 폴더 아님) 업로드 허용. (선언 순서 무관)
+    // ════════════════════════════════════════════════════════════
+    match /post_images/pinned/{allPaths=**} {
+      allow read: if true;
+      allow write: if isSignedIn()
+                      && (
+                        request.auth.token.admin == true
+                        || request.auth.token.email == 'sinhang0122@gmail.com'
+                      )
+                      && under5MB()
+                      && isImage();
+    }
+
+    // ════════════════════════════════════════════════════════════
     // profile_images/{uid}/avatar.jpg — 사용자 프로필 사진
     // ════════════════════════════════════════════════════════════
     match /profile_images/{uid}/{filename} {
