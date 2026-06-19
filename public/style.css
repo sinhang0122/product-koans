@@ -2068,6 +2068,9 @@ select.write-input {
 .rea-report:hover { color: var(--red); }
 /* 하단 고정 액션바 */
 .rea-actionbar { flex-shrink: 0; padding: 12px 16px; background: var(--bg-surface); border-top: 1px solid var(--border); }
+/* 상세 모달 RBAC 액션(작성자/운영자) — 액션바 안 일반 흐름 배치 (카드용 absolute toolbar 와 구분) */
+.rea-rbac-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.rea-rbac-actions:empty { display: none; }
 .rea-contact-btn {
   width: 100%; padding: 15px; border-radius: var(--r-md); cursor: pointer;
   background: var(--accent); color: var(--accent-text); border: 1px solid var(--accent);
