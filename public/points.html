@@ -689,6 +689,8 @@
 
         <!-- Sticky 하단 액션바 (연락처) -->
         <div class="rea-actionbar">
+          <!-- RBAC 3단계 액션 (agent.md §2-E) — openVisaDetail 이 권한별 렌더 -->
+          <div class="koaus-admin-toolbar" id="visaDetailRbac"></div>
           <button class="rea-contact-btn" id="visaDetailContactBtn" type="button" style="display:none;">연락처 보기</button>
           <div id="contact-action-container" class="contact-action-container" aria-label="연락 수단"></div>
         </div>
@@ -1507,6 +1509,45 @@
             cbtn.textContent = isLink ? '💬 연락하기' : '📞 연락처 보기';
             cbtn.onclick = () => { if (isLink) window.open(p.contact, '_blank', 'noopener'); else { try { navigator.clipboard.writeText(p.contact); } catch (_) {} alert('연락처: ' + p.contact); } };
           } else { cbtn.style.display = 'none'; cbtn.onclick = null; }
+        }
+        // ── RBAC 3단계 액션 (agent.md §2-E · accom 상세 툴바 동일 패턴) ──
+        //   카드 미니액션(selfDelete/markCompleted)과 동일 경로 재사용. 권한 없는 버튼 미렌더.
+        window.currentDetailPost = p;   // 신고 스냅샷 등 공용 노출
+        const rbacEl = $('visaDetailRbac');
+        if (rbacEl) {
+          rbacEl.innerHTML = '';
+          const R = window.koausRbac;
+          const fsId = p._fsDocId || '';
+          const fail = (act, e) => alert(act + ' 실패: ' + ((e && (e.code || e.message)) || e));
+          const done = (msg) => { alert(msg); detailOv.classList.remove('open'); try { location.reload(); } catch (_) {} };
+          if (R && fsId && R.isAuthor(p)) {
+            // 작성자: 수정 / 마감 / 삭제
+            rbacEl.innerHTML = '<button class="detail-edit-btn" id="visaRbacEdit" type="button">수정</button>'
+              + '<button class="detail-delete-btn" id="visaRbacComplete" type="button">마감</button>'
+              + '<button class="detail-delete-btn" id="visaRbacDelete" type="button">삭제</button>';
+            $('visaRbacEdit').onclick = () => alert('수정 흐름은 후속 작업입니다. 현재는 [삭제] 후 새 글로 다시 등록해 주세요.');
+            $('visaRbacComplete').onclick = async () => {
+              if (!confirm('이 글을 [마감] 처리하시겠습니까?\n(상태가 completed 로 변경되며 시각적으로 흐려집니다)')) return;
+              try { await R.markCompleted('services', fsId); done('✅ 마감 처리 완료.'); } catch (e) { fail('마감', e); }
+            };
+            $('visaRbacDelete').onclick = async () => {
+              if (!confirm('이 글을 삭제하시겠습니까?')) return;
+              try { await R.selfDelete('services', fsId); done('🗑 삭제되었습니다.'); } catch (e) { fail('삭제', e); }
+            };
+          } else if (R && fsId && R.canHide()) {
+            // 운영자(타인 글): 블라인드 토글 / 강제 삭제
+            rbacEl.innerHTML = '<button class="detail-delete-btn" id="visaRbacHide" type="button">' + (p.isHidden ? '▶️ 블라인드 해제' : '🚫 블라인드') + '</button>'
+              + '<button class="detail-delete-btn" id="visaRbacForceDel" type="button">🗑 강제삭제</button>';
+            $('visaRbacHide').onclick = async () => {
+              const willHide = !p.isHidden;
+              if (!confirm(willHide ? '이 글을 블라인드 처리하시겠습니까? (작성자 자가 해제 불가)' : '블라인드를 해제하시겠습니까?')) return;
+              try { await R.toggleHidden('services', fsId, p.isHidden); done(willHide ? '⏸️ 블라인드 처리 완료' : '▶️ 블라인드 해제 완료'); } catch (e) { fail('블라인드', e); }
+            };
+            $('visaRbacForceDel').onclick = async () => {
+              if (!confirm('관리자 권한으로 이 글을 영구 삭제하시겠습니까? (사진·위치정보 포함 완전 삭제)')) return;
+              try { await R.forceDelete('services', fsId); done('🗑 강제 삭제 완료'); } catch (e) { fail('강제 삭제', e); }
+            };
+          }
         }
         detailOv.classList.add('open');
         const sc = detailOv.querySelector('.rea-scroll'); if (sc) sc.scrollTop = 0;
