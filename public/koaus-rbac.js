@@ -133,14 +133,18 @@ async function _readDocBeforeDelete(collection, docId) {
 //   권한 거부 / 네트워크 오류 → throw → 부모 doc 삭제 중단 (사용자 명시 4번 정책).
 async function _purgePrivateDataFirst(collection, docId, result) {
   if (!db) return;
-  // 정확 주소 로그용 스냅샷 (best-effort)
+  // private_data/location 이 실제로 존재할 때만 삭제 시도.
+  //   · jobs_posts·services 는 private_data 규칙 자체가 없어(룰 미정의) 비존재 doc 삭제가
+  //     permission-denied 로 튀어 삭제 전체가 '본인 글만 삭제'로 중단되던 버그를 차단.
+  //   · accom/rent/auto 도 정확주소 없는 글이면 동일(비존재 delete = deny).
+  let snap = null;
   try {
-    const ps = await getDoc(doc(db, collection, docId, 'private_data', 'location'));
-    if (ps.exists() && result) {
-      result.exactAddress = (ps.data() || {}).exactAddress || null;
-    }
-  } catch (_) { /* 스냅샷 실패는 무시 */ }
-  // 실제 삭제
+    snap = await getDoc(doc(db, collection, docId, 'private_data', 'location'));
+  } catch (_) {
+    return;   // get 거부(룰 미정의 보드) 또는 미존재 → private_data 없음으로 간주, 삭제 시도 안 함
+  }
+  if (!snap || !snap.exists()) return;   // 서브독 없음 → 정리할 것 없음
+  if (result) result.exactAddress = (snap.data() || {}).exactAddress || null;
   try {
     await deleteDoc(doc(db, collection, docId, 'private_data', 'location'));
   } catch (e) {
