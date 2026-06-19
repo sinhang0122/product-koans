@@ -188,7 +188,7 @@ async function _logDeletionError(collectionName, docId, result, user) {
 function isAuthor(post, user) {
   user = user || (window.koausAuth && window.koausAuth.user);
   if (!post || !user || !user.uid) return false;
-  const postUid = String(post.uid || post.authorUid || '');
+  const postUid = String(post.uid || post.authorUid || post.authorId || '');
   return postUid !== '' && postUid === String(user.uid);
 }
 

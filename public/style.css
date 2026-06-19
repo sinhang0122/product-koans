@@ -1954,9 +1954,12 @@ select.write-input {
    상세보기 — Realestate 스타일 (B&W)
 ════════════════════════════════════════════════════════════════════════ */
 .rea-detail {
-  padding: 0; gap: 0; max-width: 480px; overflow: hidden;
-  max-height: calc(100vh - 80px); display: flex; flex-direction: column;
+  padding: 0; gap: 0; max-width: 100%; width: 100%; overflow: hidden;
+  height: 100vh; height: 100dvh; max-height: 100vh; max-height: 100dvh;
+  border-radius: 0; border: none; display: flex; flex-direction: column;
 }
+/* 상세(.rea-detail) 모달은 데스크탑·모바일 모두 풀스크린 — 오버레이 여백 제거 */
+.post-detail-overlay:has(.rea-detail) { padding: 0; align-items: stretch; }
 .rea-scroll { flex: 1 1 auto; overflow-y: auto; min-height: 0; }
 /* Hero 사진 영역 (Placeholder) */
 .rea-hero {
