@@ -895,7 +895,7 @@
     let _fsMine = [];
     async function fetchMyFsPosts(uid) {
       if (!uid) { _fsMine = []; return; }
-      const cols = [['accom', 'accom_posts'], ['rent', 'rent_posts'], ['jobs', 'jobs_posts']];
+      const cols = [['accom', 'accom_posts'], ['rent', 'rent_posts'], ['jobs', 'jobs_posts'], ['auto', 'auto_posts'], ['services', 'services']];
       const out = [];
       for (const [board, col] of cols) {
         try {
@@ -912,7 +912,13 @@
                 time = time || (z(dt.getHours()) + ':' + z(dt.getMinutes()));
               }
             } catch (_) {}
-            out.push({ board, id: d.id, title: p.title, state: p.state || '', author: p.author,
+            // services 는 비자/정비/미용 공유 컬렉션 → 실제 페이지 보드 결정 (현재 비자=points 만 운용)
+            let realBoard = board;
+            if (col === 'services') {
+              const VISA_CATS = ['legal', 'education', 'visa-edu', 'visa', 'points'];
+              realBoard = p.board || (VISA_CATS.includes(p.category) ? 'points' : 'points');
+            }
+            out.push({ board: realBoard, id: d.id, title: p.title, state: p.state || '', author: p.author,
                        authorEmail: p.email || p.authorEmail || '', date, time, _ts: ts,
                        isHidden: !!p.isHidden, hiddenBy: p.hiddenBy || '', fsDocId: d.id });
           });
