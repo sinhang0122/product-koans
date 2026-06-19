@@ -1802,7 +1802,7 @@
           limit(20)
         ), snap => {
           window.partners = snap.docs
-            .map(d => ({ id: d.id, ...d.data() }));
+            .map(d => ({ ...d.data(), id: d.id, _fsDocId: d.id }));   // id/_fsDocId 를 spread 뒤로 → doc.id 확정 (RBAC fsId)
           // 인라인 스크립트의 partners 배열 갱신 (글로벌 통해 전달)
           if (typeof window.__renderPartners === 'function') {
             window.__renderPartners(window.partners);
