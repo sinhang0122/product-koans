@@ -149,10 +149,12 @@
       ],
     },
     state: {
-      gradients: ['hero-bg--home2', 'hero-bg--edu2'],
+      gradients: ['hero-bg--home2', 'hero-bg--edu2', 'hero-bg--legal3', 'hero-bg--home1'],
       slides: [
-        { eyebrow: '🗺 주별 정보', title: 'NSW · VIC · QLD — 주별 생활 정보 허브.',    sub: '교통 · 의료 · 교육 정보를 주별로',                 cta: null },
-        { eyebrow: '📢 KoAus',    title: '쉐어 · 구인 · 중고차 — 한인 게시판.',        sub: '호주 한인 커뮤니티 포털',                          cta: { href: 'index.html', label: '둘러보기 →' } },
+        { eyebrow: '🗺 주별 정보',       title: 'NSW · VIC · QLD — 주별 생활 정보 허브.', sub: '교통 · 의료 · 교육 정보를 주별로 한눈에',     cta: null },
+        { eyebrow: '🚆 교통 · 패스',     title: '주별 대중교통 · 교통카드 안내.',          sub: 'Opal · Myki · Go Card — 주별 정보 정리',      cta: null },
+        { eyebrow: '🏥 의료 · 메디케어', title: '주별 병원 · 메디케어 정보.',              sub: '한국어 가능 GP · 응급실 · 약국 안내',          cta: null },
+        { eyebrow: '📢 KoAus',          title: '쉐어 · 구인 · 중고차 — 한인 게시판.',      sub: '호주 한인 커뮤니티 포털',                      cta: { href: 'index.html', label: '둘러보기 →' } },
       ],
     },
   };
