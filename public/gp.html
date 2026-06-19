@@ -493,7 +493,7 @@
 
     <!-- List View -->
     <div id="listView">
-      <div id="pinnedNoticeBox" class="pinned-notice" hidden></div>
+      <div id="pinnedNoticeBox" data-board="gp" class="pinned-notice" hidden></div>
       <div id="postGrid" class="accom-grid accom-grid--compact"></div>
       <div class="pagination" id="pagination"></div>
     </div>
@@ -2708,30 +2708,7 @@
     })();
   </script>
 
-  <!-- ── 게시판 상단 핀공지 (board_pinned_notices 컬렉션, doc id = 'restaurants') -->
-  <script type="module">
-    import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
-    import { getFirestore, doc, onSnapshot } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
-    const cfg = {
-      apiKey:'AIzaSyCamqnt0bNUD9uz1N5BbCuQjSkWLSpPqlU', authDomain:'koaus-f564c.firebaseapp.com',
-      projectId:'koaus-f564c', storageBucket:'koaus-f564c.firebasestorage.app',
-      messagingSenderId:'663988594088', appId:'1:663988594088:web:ef30c2fd557407b00b299d',
-    };
-    try {
-      const app = getApps().length ? getApp() : initializeApp(cfg);
-      const db = getFirestore(app);
-      const box = document.getElementById('pinnedNoticeBox');
-      if (!box) throw new Error('pinnedNoticeBox not found');
-      const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/\n/g,'<br>');
-      onSnapshot(doc(db, 'board_pinned_notices', 'gp'), snap => {
-        const data = snap.exists() ? snap.data() : null;
-        if (data && data.text && String(data.text).trim()) {
-          box.innerHTML = '<div class="pn-body">' + ((data.title || '').trim() ? '<strong>' + esc((data.title || '').trim()) + '</strong> · ' : '') + esc(data.text) + '</div>';
-          box.hidden = false;
-        } else { box.hidden = true; box.innerHTML = ''; }
-      }, err => console.warn('[gp] pinned-notice 구독 실패', err));
-    } catch (e) { console.warn('[gp] pinned-notice 초기화 실패', e); }
-  </script>
+  <script type="module" src="koaus-pinned.js"></script>
 
   <!-- ── 등록 요청 모달 (유저 → services 컬렉션, status='approved' 즉시 노출) ── -->
   <div class="request-overlay" id="requestOverlay" hidden>
