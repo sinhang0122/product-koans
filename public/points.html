@@ -702,6 +702,8 @@
       <div class="points-section-head">
         <h2 class="points-section-title">기술심사 점수 가채점</h2>
         <p class="points-section-sub">호주 General Skilled Migration (189/190/491) 포인트 테스트 · 항목을 선택하면 점수가 자동 계산됩니다.</p>
+        <!-- 정보제공/확인일 (app_settings/points_info — admin 편집, 값 있을 때만 표시) -->
+        <p class="points-section-sub" id="pointsInfoProvenance" style="display:none;font-size:12px;color:var(--text-muted);margin-top:4px;"></p>
       </div>
 
       <div class="points-form" id="pointsForm">
@@ -2054,6 +2056,33 @@
   </script>
 
   <script type="module" src="koaus-pinned.js"></script>
+
+  <!-- ── 가채점 정보제공/확인일 (app_settings/points_info) — admin 편집 값 표시. 점수 계산 로직 무관. ── -->
+  <script type="module">
+    import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
+    import { getFirestore, doc, onSnapshot } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
+    const cfg = {
+      apiKey:'AIzaSyCamqnt0bNUD9uz1N5BbCuQjSkWLSpPqlU', authDomain:'koaus-f564c.firebaseapp.com',
+      projectId:'koaus-f564c', storageBucket:'koaus-f564c.firebasestorage.app',
+      messagingSenderId:'663988594088', appId:'1:663988594088:web:ef30c2fd557407b00b299d',
+    };
+    try {
+      const app = getApps().length ? getApp() : initializeApp(cfg);
+      const db = getFirestore(app);
+      const el = document.getElementById('pointsInfoProvenance');
+      onSnapshot(doc(db, 'app_settings', 'points_info'), snap => {
+        const d = snap.exists() ? snap.data() : null;
+        const prov = (d && d.provider ? String(d.provider) : '').trim();
+        const rev  = (d && d.reviewedDate ? String(d.reviewedDate) : '').trim();
+        if (!el) return;
+        const parts = [];
+        if (prov) parts.push('정보제공: ' + prov);
+        if (rev)  parts.push('확인일: ' + rev);
+        if (parts.length) { el.textContent = parts.join(' · '); el.style.display = ''; }   // textContent — XSS 안전
+        else { el.textContent = ''; el.style.display = 'none'; }
+      }, err => console.warn('[points] points_info 구독 실패', err));
+    } catch (e) { console.warn('[points] points_info 초기화 실패', e); }
+  </script>
 
   <!-- ── 사진 첨부 (선택 6장) + 미리보기 + Storage 업로드 (auto used 패턴 이식) ── -->
   <script type="module">
