@@ -1960,6 +1960,14 @@ select.write-input {
 }
 /* 상세(.rea-detail) 모달은 데스크탑·모바일 모두 풀스크린 — 오버레이 여백 제거 */
 .post-detail-overlay:has(.rea-detail) { padding: 0; align-items: stretch; }
+/* car-sale 상세(.post-detail-card 단독, rea-detail 없음)도 동일하게 풀스크린.
+   .post-detail-card 는 상세 모달 전용(전 보드 .post-detail-overlay 내부)이라 :not(.rea-detail) 로 car-sale 만 정확히 타겟. */
+.post-detail-overlay:has(.post-detail-card:not(.rea-detail)) { padding: 0; align-items: stretch; }
+.post-detail-card:not(.rea-detail) {
+  max-width: 100%; width: 100%;
+  height: 100vh; height: 100dvh; max-height: 100vh; max-height: 100dvh;
+  border-radius: 0; overflow-y: auto;
+}
 .rea-scroll { flex: 1 1 auto; overflow-y: auto; min-height: 0; }
 /* Hero 사진 영역 (Placeholder) */
 .rea-hero {
