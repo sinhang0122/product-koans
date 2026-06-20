@@ -651,7 +651,7 @@
       </div>
 
       <!-- ── 렌트카(Rental) 글쓰기 폼 ── -->
-      <!-- ── 중고차 판매(Used Car) 글쓰기 폼 — 기존 rental 폼 재사용 + 사진 6장 ── -->
+      <!-- ── 중고차 판매(Used Car) 글쓰기 폼 — 기존 rental 폼 재사용 + 사진 8장 ── -->
       <div class="write-grid cat-form" data-form="used">
         <div class="write-col">
           <div class="write-field">
@@ -730,7 +730,7 @@
         </div>
         <!-- 사진 6 장 첨부 + 미리보기 -->
         <div class="write-field" style="grid-column:1/-1;">
-          <label class="write-label">차량 사진 Photos <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(최대 6장)</em></label>
+          <label class="write-label">차량 사진 Photos <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(최대 8장)</em></label>
           <button type="button" class="photo-upload-btn" id="usedPhotoBtn" style="display:flex;align-items:center;gap:8px;padding:11px 16px;border:1.5px dashed var(--border);border-radius:10px;background:var(--bg-input);color:var(--text-muted);font-size:14px;font-weight:600;cursor:pointer;width:100%;justify-content:center;">
             <span aria-hidden="true">📷</span>
             <span id="usedPhotoBtnLabel">사진 첨부 (0/6)</span>
@@ -781,9 +781,9 @@
           <label class="write-label" for="mBody">서비스 설명 Comments</label>
           <textarea class="write-textarea" id="mBody" placeholder="제공 서비스(정비·검사·견인 등)·전문 분야·요금 안내·예약 방법 등을 자유롭게 적어주세요"></textarea>
         </div>
-        <!-- 사진 첨부 (선택 6장) -->
+        <!-- 사진 첨부 (선택 8장) -->
         <div class="write-field" style="grid-column:1/-1;">
-          <label class="write-label">업체 사진 Photos <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택 · 최대 6장)</em></label>
+          <label class="write-label">업체 사진 Photos <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택 · 최대 8장)</em></label>
           <button type="button" class="photo-upload-btn" id="maintPhotoBtn" style="display:flex;align-items:center;gap:8px;padding:11px 16px;border:1.5px dashed var(--border);border-radius:10px;background:var(--bg-input);color:var(--text-muted);font-size:14px;font-weight:600;cursor:pointer;width:100%;justify-content:center;">
             <span aria-hidden="true">📷</span>
             <span id="maintPhotoBtnLabel">사진 첨부 (0/6)</span>
@@ -3398,7 +3398,7 @@
     else bind();
   </script>
 
-  <!-- ── 중고차 판매 사진 6장 첨부 + 미리보기 + Storage 업로드 (compress.js 재사용) ── -->
+  <!-- ── 중고차 판매 사진 8장 첨부 + 미리보기 + Storage 업로드 (compress.js 재사용) ── -->
   <script type="module">
     import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
     import { getAuth } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
@@ -3412,7 +3412,7 @@
     const auth = getAuth(app);
     const storage = getStorage(app);
 
-    const MAX_PHOTOS = 6;
+    const MAX_PHOTOS = 8;
     window.__usedPhotoUrls  = [];   // submitPost 가 읽어가는 업로드 URL 목록
     window.__usedPhotoFiles = [];   // 로컬 File 객체 + previewUrl
 
@@ -3476,7 +3476,7 @@
         const files = Array.from(e.target.files || []);
         e.target.value = '';  // 같은 파일 재선택 가능
         const remain = MAX_PHOTOS - (window.__usedPhotoFiles || []).length;
-        if (remain <= 0) { alert('최대 6장까지 첨부할 수 있습니다.'); return; }
+        if (remain <= 0) { alert('최대 8장까지 첨부할 수 있습니다.'); return; }
         const u = auth.currentUser;
         if (!u) { alert('사진 업로드는 로그인 후 이용 가능합니다.'); return; }
         // 동시성 3 병렬 (직렬→3병렬, 체감 ~3× 단축) + 단계 표시
@@ -3526,7 +3526,7 @@
     };
   </script>
 
-  <!-- ── 정비소/견인 사진 6장 첨부 + 미리보기 + Storage 업로드 (used 모듈과 동일 패턴, 격리) ── -->
+  <!-- ── 정비소/견인 사진 8장 첨부 + 미리보기 + Storage 업로드 (used 모듈과 동일 패턴, 격리) ── -->
   <script type="module">
     import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
     import { getAuth } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
@@ -3540,7 +3540,7 @@
     const auth = getAuth(app);
     const storage = getStorage(app);
 
-    const MAX_PHOTOS = 6;
+    const MAX_PHOTOS = 8;
     window.__maintPhotoUrls  = [];
     window.__maintPhotoFiles = [];
 
@@ -3595,7 +3595,7 @@
         const files = Array.from(e.target.files || []);
         e.target.value = '';
         const remain = MAX_PHOTOS - (window.__maintPhotoFiles || []).length;
-        if (remain <= 0) { alert('최대 6장까지 첨부할 수 있습니다.'); return; }
+        if (remain <= 0) { alert('최대 8장까지 첨부할 수 있습니다.'); return; }
         const u = auth.currentUser;
         if (!u) { alert('사진 업로드는 로그인 후 이용 가능합니다.'); return; }
         const batch = files.slice(0, remain);

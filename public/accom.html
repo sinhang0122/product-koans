@@ -722,9 +722,9 @@
         </div>
       </div>
 
-      <!-- 사진 첨부 (최대 6장, 클라이언트 압축 후 Firebase Storage 업로드) -->
+      <!-- 사진 첨부 (최대 8장, 클라이언트 압축 후 Firebase Storage 업로드) -->
       <div class="write-field">
-        <label class="write-label">사진 첨부 Photos <em style="font-style:normal;color:var(--text-muted);font-size:11px;">최대 6장 · 자동 압축됩니다</em></label>
+        <label class="write-label">사진 첨부 Photos <em style="font-style:normal;color:var(--text-muted);font-size:11px;">최대 8장 · 자동 압축됩니다</em></label>
         <div class="photo-upload" id="wPhotoBox">
           <input type="file" id="wPhotoInput" accept="image/*" multiple hidden />
           <button type="button" class="photo-add-btn" id="wPhotoAddBtn">
@@ -1414,8 +1414,8 @@
       document.body.style.overflow = '';
     }
 
-    // ── 사진 첨부 (최대 6장) — 클라이언트 압축 후 Firebase Storage 업로드 ──
-    const MAX_PHOTOS = 6;
+    // ── 사진 첨부 (최대 8장) — 클라이언트 압축 후 Firebase Storage 업로드 ──
+    const MAX_PHOTOS = 8;
     window.pendingPhotoFiles = [];
     function renderPhotoThumbs() {
       const box = document.getElementById('wPhotoThumbs');

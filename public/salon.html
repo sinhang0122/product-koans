@@ -1230,8 +1230,8 @@
       document.body.style.overflow = '';
     }
 
-    // ── 사진 첨부 (최대 6장) — 클라이언트 압축 후 Firebase Storage 업로드 ──
-    const MAX_PHOTOS = 6;
+    // ── 사진 첨부 (최대 8장) — 클라이언트 압축 후 Firebase Storage 업로드 ──
+    const MAX_PHOTOS = 8;
     window.pendingPhotoFiles = [];
     function renderPhotoThumbs() {
       const box = document.getElementById('wPhotoThumbs');
@@ -2743,7 +2743,7 @@
 
         <!-- 사진 6 장 업로드 + 미리보기 (Storage 자동 압축·업로드) -->
         <div class="request-field">
-          <label>가게 사진 <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(최대 6장)</em></label>
+          <label>가게 사진 <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(최대 8장)</em></label>
           <button type="button" class="photo-upload-btn" id="rqPhotoBtn" style="display:flex;align-items:center;gap:8px;padding:11px 16px;border:1.5px dashed var(--border);border-radius:10px;background:var(--bg-input);color:var(--text-muted);font-size:14px;font-weight:600;cursor:pointer;width:100%;justify-content:center;">
             <span aria-hidden="true">📷</span>
             <span id="rqPhotoBtnLabel">사진 첨부 (0/6)</span>
@@ -2800,7 +2800,7 @@
         const kakaoLink = ($('rqKakao') && $('rqKakao').value.trim()) || '';
         if (!title || !contact) { note.textContent = '상호명과 연락처는 필수입니다.'; note.classList.add('is-error'); return; }
         const address = $('rqAddress').value.trim(), summary = $('rqSummary').value.trim();
-        // 사진 6장 (window.__rqPhotoUrls 에 Storage 업로드 URL 누적)
+        // 사진 8장 (window.__rqPhotoUrls 에 Storage 업로드 URL 누적)
         const imgs = Array.isArray(window.__rqPhotoUrls) ? window.__rqPhotoUrls.slice(0, 6).filter(Boolean) : [];
         // 운영시간 — 텍스트(요약) + JSON(요일별 객체) 둘 다 저장
         const hours = ($('rqHours') && $('rqHours').value) || '';
@@ -2911,7 +2911,7 @@
     })();
   </script>
 
-  <!-- ── 사장님 글쓰기 모달: 사진 6장 업로드 + 운영시간 위젯 + 사장님 인증 버튼 ── -->
+  <!-- ── 사장님 글쓰기 모달: 사진 8장 업로드 + 운영시간 위젯 + 사장님 인증 버튼 ── -->
   <script type="module">
     import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
     import { getAuth } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
@@ -2971,7 +2971,7 @@
       inp.addEventListener('change', async e => {
         const files = Array.from(e.target.files || []); e.target.value = '';
         const rem = MAX - (window.__rqPhotoFiles || []).length;
-        if (rem <= 0) { alert('최대 6장까지 첨부할 수 있습니다.'); return; }
+        if (rem <= 0) { alert('최대 8장까지 첨부할 수 있습니다.'); return; }
         const u = auth.currentUser; if (!u) { alert('로그인 후 사진 업로드 가능합니다.'); return; }
         const batch = files.slice(0, rem);
         const _lb = $$('rqPhotoBtnLabel');

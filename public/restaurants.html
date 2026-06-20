@@ -922,9 +922,9 @@
         </div>
       </div>
 
-      <!-- 사진 첨부 (최대 6장, 클라이언트 압축 후 Firebase Storage 업로드) -->
+      <!-- 사진 첨부 (최대 8장, 클라이언트 압축 후 Firebase Storage 업로드) -->
       <div class="write-field">
-        <label class="write-label">사진 첨부 Photos <em style="font-style:normal;color:var(--text-muted);font-size:11px;">최대 6장 · 자동 압축됩니다</em></label>
+        <label class="write-label">사진 첨부 Photos <em style="font-style:normal;color:var(--text-muted);font-size:11px;">최대 8장 · 자동 압축됩니다</em></label>
         <div class="photo-upload" id="wPhotoBox">
           <input type="file" id="wPhotoInput" accept="image/*" multiple hidden />
           <button type="button" class="photo-add-btn" id="wPhotoAddBtn">
@@ -1355,8 +1355,8 @@
       document.body.style.overflow = '';
     }
 
-    // ── 사진 첨부 (최대 6장) — 클라이언트 압축 후 Firebase Storage 업로드 ──
-    const MAX_PHOTOS = 6;
+    // ── 사진 첨부 (최대 8장) — 클라이언트 압축 후 Firebase Storage 업로드 ──
+    const MAX_PHOTOS = 8;
     window.pendingPhotoFiles = [];
     function renderPhotoThumbs() {
       const box = document.getElementById('wPhotoThumbs');
@@ -2957,7 +2957,7 @@
     })();
   </script>
 
-  <!-- ── 사장님 글쓰기 모달: 사진 6장 업로드 + 운영시간 위젯 + 사장님 인증 버튼 ── -->
+  <!-- ── 사장님 글쓰기 모달: 사진 8장 업로드 + 운영시간 위젯 + 사장님 인증 버튼 ── -->
   <script type="module">
     import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
     import { getAuth } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
@@ -3017,7 +3017,7 @@
       inp.addEventListener('change', async e => {
         const files = Array.from(e.target.files || []); e.target.value = '';
         const rem = MAX - (window.__rqPhotoFiles || []).length;
-        if (rem <= 0) { alert('최대 6장까지 첨부할 수 있습니다.'); return; }
+        if (rem <= 0) { alert('최대 8장까지 첨부할 수 있습니다.'); return; }
         const u = auth.currentUser; if (!u) { alert('로그인 후 사진 업로드 가능합니다.'); return; }
         const batch = files.slice(0, rem);
         const _lb = $$('rqPhotoBtnLabel');

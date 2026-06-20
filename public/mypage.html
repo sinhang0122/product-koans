@@ -895,34 +895,39 @@
     let _fsMine = [];
     async function fetchMyFsPosts(uid) {
       if (!uid) { _fsMine = []; return; }
-      const cols = [['accom', 'accom_posts'], ['rent', 'rent_posts'], ['jobs', 'jobs_posts'], ['auto', 'auto_posts'], ['services', 'services']];
-      const out = [];
+      const cols = [['accom','accom_posts'],['rent','rent_posts'],['jobs','jobs_posts'],['auto','auto_posts'],['services','services']];
+      const AUTHOR_FIELDS = ['uid','authorId','authorUid'];   // 카드 '파란테두리'와 동일 기준 — 누락 0
+      const out = [], seen = new Set();
       for (const [board, col] of cols) {
-        try {
-          const snap = await getDocs(query(collection(db, col), where('uid', '==', uid), limit(20)));
-          snap.docs.forEach(d => {
-            const p = d.data() || {};
-            if (p.status === 'deleted') return;   // 소프트삭제 글은 작성자 본인 목록에서도 숨김(사기 추적용 보관만)
-            let date = p.date || '', time = p.time || '', ts = 0;
-            try {
-              if (p.createdAt && p.createdAt.toDate) {
-                const dt = p.createdAt.toDate(); const z = n => String(n).padStart(2, '0');
-                ts = p.createdAt.toMillis();
-                date = date || (z(dt.getMonth() + 1) + '/' + z(dt.getDate()));
-                time = time || (z(dt.getHours()) + ':' + z(dt.getMinutes()));
+        for (const f of AUTHOR_FIELDS) {
+          try {
+            const snap = await getDocs(query(collection(db, col), where(f, '==', uid), limit(20)));
+            snap.docs.forEach(d => {
+              const key = col + ':' + d.id;
+              if (seen.has(key)) return;
+              const p = d.data() || {};
+              if (p.status === 'deleted') return;
+              seen.add(key);
+              let date = p.date || '', time = p.time || '', ts = 0;
+              try {
+                if (p.createdAt && p.createdAt.toDate) {
+                  const dt = p.createdAt.toDate(); const z = n => String(n).padStart(2,'0');
+                  ts = p.createdAt.toMillis();
+                  date = date || (z(dt.getMonth()+1)+'/'+z(dt.getDate()));
+                  time = time || (z(dt.getHours())+':'+z(dt.getMinutes()));
+                }
+              } catch (_) {}
+              let realBoard = board;
+              if (col === 'services') {
+                const VISA_CATS = ['legal','education','visa-edu','visa','points'];
+                realBoard = p.board || (VISA_CATS.includes(p.category) ? 'points' : 'points');
               }
-            } catch (_) {}
-            // services 는 비자/정비/미용 공유 컬렉션 → 실제 페이지 보드 결정 (현재 비자=points 만 운용)
-            let realBoard = board;
-            if (col === 'services') {
-              const VISA_CATS = ['legal', 'education', 'visa-edu', 'visa', 'points'];
-              realBoard = p.board || (VISA_CATS.includes(p.category) ? 'points' : 'points');
-            }
-            out.push({ board: realBoard, id: d.id, title: p.title, state: p.state || '', author: p.author,
-                       authorEmail: p.email || p.authorEmail || '', date, time, _ts: ts,
-                       isHidden: !!p.isHidden, hiddenBy: p.hiddenBy || '', fsDocId: d.id });
-          });
-        } catch (e) { console.warn('[mypage] ' + col + ' 본인 글 조회 실패', e); }
+              out.push({ board: realBoard, id: d.id, title: p.title, state: p.state || '', author: p.author,
+                         authorEmail: p.email || p.authorEmail || '', date, time, _ts: ts,
+                         isHidden: !!p.isHidden, hiddenBy: p.hiddenBy || '', fsDocId: d.id });
+            });
+          } catch (e) { console.warn('[mypage] '+col+'/'+f+' 조회 실패', e); }
+        }
       }
       _fsMine = out;
     }

@@ -694,9 +694,9 @@
             </div>
           </div>
 
-          <!-- 사진 첨부 (최대 6장, 클라이언트 압축 후 Firebase Storage 업로드) -->
+          <!-- 사진 첨부 (최대 8장, 클라이언트 압축 후 Firebase Storage 업로드) -->
           <div class="write-field">
-            <label class="write-label">사진 첨부 Photos <em style="font-style:normal;color:var(--text-muted);font-size:11px;">최대 6장 · 자동 압축됩니다</em></label>
+            <label class="write-label">사진 첨부 Photos <em style="font-style:normal;color:var(--text-muted);font-size:11px;">최대 8장 · 자동 압축됩니다</em></label>
             <div class="photo-upload">
               <input type="file" id="wPhotoInput" accept="image/*" multiple hidden />
               <button type="button" class="photo-add-btn" id="wPhotoAddBtn">
@@ -1568,7 +1568,7 @@
         console.log('[KoAus] rent 글 Firestore 저장 — fsDocId:', docRef.id, '| locationPrivate:', !!target.locationPrivate);
       }
 
-      // 사진 처리 (최대 6장) — 기존(existing) URL 은 유지, 새로 추가한 file 만 압축 업로드
+      // 사진 처리 (최대 8장) — 기존(existing) URL 은 유지, 새로 추가한 file 만 압축 업로드
       // 지시 2/4 — Storage path 버그 수정 (target.id → user.uid) + Firestore imageUrls 갱신
       if (window.pendingPhotoFiles && window.koausPhotos) {
         const existing = window.pendingPhotoFiles.filter(p => p.existing).map(p => p.url);
@@ -2595,9 +2595,9 @@
     })();
 
     // ════════════════════════════════════════════════════════════════════
-    //  사진 첨부 (최대 6장) — pendingPhotoFiles 글로벌
+    //  사진 첨부 (최대 8장) — pendingPhotoFiles 글로벌
     // ════════════════════════════════════════════════════════════════════
-    const MAX_PHOTOS = 6;
+    const MAX_PHOTOS = 8;
     window.pendingPhotoFiles = window.pendingPhotoFiles || [];
     function renderPhotoThumbs() {
       const box = document.getElementById('wPhotoThumbs');
