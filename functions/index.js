@@ -99,7 +99,7 @@ exports.releaseRecycledPhone = onCall(CALL_OPTS, async (request) => {
     throw new HttpsError('unauthenticated', '로그인이 필요합니다.');
   }
   const phone = request.data && request.data.phoneNumber;
-  if (typeof phone !== 'string' || !/^\+61[0-9]{8,10}$/.test(phone)) {
+  if (typeof phone !== 'string' || !/^\+(61|82)[0-9]{8,11}$/.test(phone)) {
     throw new HttpsError('invalid-argument', '휴대폰 번호 형식이 올바르지 않습니다.');
   }
   // 현재 이 번호의 소유자(A) 조회

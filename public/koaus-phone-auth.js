@@ -352,7 +352,7 @@ async function verifyCode() {
     console.warn('[phone-auth] verifyCode 실패', err);
     if (err && err.code === 'auth/invalid-verification-code') setCodeMsg('인증코드가 일치하지 않습니다.', 'err');
     else if (err && err.code === 'auth/code-expired') setCodeMsg('인증코드가 만료됐습니다. 재전송 해주세요.', 'err');
-    else if (err && err.code === 'auth/credential-already-in-use') handleRecycledPhone();   // 폰④ 재활용 번호 자동 해제+재연결
+    else if (err && (err.code === 'auth/credential-already-in-use' || err.code === 'auth/account-exists-with-different-credential')) handleRecycledPhone();   // 폰④ 재활용 번호 자동 해제+재연결
     else if (err && err.code === 'auth/requires-recent-login') setCodeMsg('보안을 위해 다시 로그인한 뒤 변경해 주세요.', 'err');   // 폰③ 번호 변경 reauth 필요
     else setCodeMsg('인증 실패: ' + ((err && err.message) || err), 'err');
   }
