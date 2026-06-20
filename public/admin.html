@@ -716,6 +716,22 @@
              style="max-height:300px;overflow-y:auto;font-size:12.5px;">
           <div class="text-sm text-gray-500 text-center py-8">로딩 중…</div>
         </div>
+
+        <!-- 번호로 계정 찾기 → 정지 (카드7 _fcQueries/_fcRender/callSuspendUser 재사용) -->
+        <div class="mt-6 pt-5 border-t border-gray-200">
+          <h3 class="text-sm font-bold text-gray-900 mb-2">📞 번호로 계정 찾기 → 정지</h3>
+          <div class="flex gap-2 flex-wrap">
+            <input id="susPhoneInput" type="text" placeholder="전화번호 전체 또는 일부(숫자)"
+                   class="flex-1 p-2.5 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-400" />
+            <button type="button" id="susPhoneSearch"
+                    class="bg-amber-700 hover:bg-amber-800 active:bg-amber-900 text-white font-bold px-5 rounded-lg text-sm whitespace-nowrap">번호 검색</button>
+          </div>
+          <label class="flex items-center gap-2 mt-2 text-xs text-gray-600">
+            <input type="checkbox" id="susPhonePartial" /> 부분 일치(번호 일부 포함) — 컬렉션당 최근 1000건 검색(느릴 수 있음)
+          </label>
+          <p id="susPhoneNote" class="text-sm text-center text-gray-500 mt-2" role="status" aria-live="polite"></p>
+          <div id="susPhoneResult" class="hidden mt-2 space-y-2"></div>
+        </div>
       </section>
 
       <!-- ══════════════════════════════════════════════════
@@ -1512,10 +1528,10 @@
       }
       if (!found.size) { note.textContent = '일치하는 보관 글 없음'; return; }
       note.textContent = found.size + '건 발견 (보관·삭제 글 포함)';
-      _fcRender([...found.values()]);
+      _fcRender([...found.values()], result);
     }
-    function _fcRender(items) {
-      const result = document.getElementById('fcResult');
+    function _fcRender(items, containerEl) {
+      const result = containerEl || document.getElementById('fcResult');
       result.textContent = '';
       items.forEach(({ col, id, data: d }) => {
         const card = document.createElement('div');
@@ -1559,6 +1575,63 @@
     if (_fcBtn) _fcBtn.addEventListener('click', _fcSearch);
     const _fcIn = document.getElementById('fcInput');
     if (_fcIn) _fcIn.addEventListener('keydown', e => { if (e.key === 'Enter') _fcSearch(); });
+
+    // ── 카드 6 · 번호로 계정 찾기 → 정지 (정확/부분) — 카드7 _fcQueries/_FC_COLS/_fcRender/callSuspendUser 재사용 ──
+    // 저장된 번호를 로컬 숫자형으로 정규화(+61/+82 → 0…) 한 비교 후보 목록.
+    function _digitsVariants(s) {
+      const d = String(s == null ? '' : s).replace(/\D/g, '');
+      if (!d) return [];
+      const out = new Set([d]);
+      if (d.startsWith('61')) out.add('0' + d.slice(2));   // +61412… → 0412…
+      if (d.startsWith('82')) out.add('0' + d.slice(2));   // +8210…   → 010…
+      return [...out];
+    }
+    async function _susPhoneSearch() {
+      const note = document.getElementById('susPhoneNote');
+      const result = document.getElementById('susPhoneResult');
+      const raw = (document.getElementById('susPhoneInput').value || '').trim();
+      const partial = document.getElementById('susPhonePartial').checked;
+      const inputDigits = raw.replace(/\D/g, '');
+      if (!inputDigits) { note.textContent = '전화번호(숫자)를 입력하세요.'; return; }
+      note.textContent = '검색 중…'; result.classList.add('hidden'); result.textContent = '';
+      const found = new Map();   // 'col/id' → { col, id, data }
+      try {
+        if (!partial) {
+          // 정확 검색 — 카드7 _fcQueries 변형 + where() 그대로 재사용
+          const pairs = _fcQueries(raw);
+          for (const col of _FC_COLS) {
+            for (const [field, value] of pairs) {
+              try {
+                const snap = await getDocs(query(collection(db, col), where(field, '==', value), limit(20)));
+                snap.forEach(s => { const k = col + '/' + s.id; if (!found.has(k)) found.set(k, { col, id: s.id, data: s.data() }); });
+              } catch (_) {}
+            }
+          }
+        } else {
+          // 부분 포함 검색 — 컬렉션당 최근 1000건 읽어 클라에서 includes 필터(admin list 캡 우회).
+          //   ⚠️ 글 많아지면 읽기↑ 비용. 대규모 시 끝자리 인덱스(예: phoneSuffix 필드 + where) 방식으로 후속 전환 권장.
+          for (const col of _FC_COLS) {
+            try {
+              const snap = await getDocs(query(collection(db, col), orderBy('createdAt', 'desc'), limit(1000)));
+              snap.forEach(s => {
+                const d = s.data() || {};
+                const variants = [].concat(_digitsVariants(d.phone), _digitsVariants(d.contact));
+                if (variants.some(v => v.includes(inputDigits))) {
+                  const k = col + '/' + s.id; if (!found.has(k)) found.set(k, { col, id: s.id, data: d });
+                }
+              });
+            } catch (e) { console.warn('[admin] 번호 부분검색 ' + col + ' 실패', e); }
+          }
+        }
+      } catch (e) { note.textContent = '검색 오류: ' + (e.message || e); return; }
+      if (!found.size) { note.textContent = '일치하는 계정/글 없음'; return; }
+      note.textContent = found.size + '건 발견' + (partial ? ' (부분 일치 · 최근 1000건 내)' : '');
+      _fcRender([...found.values()], result);
+    }
+    const _susBtn = document.getElementById('susPhoneSearch');
+    if (_susBtn) _susBtn.addEventListener('click', _susPhoneSearch);
+    const _susIn = document.getElementById('susPhoneInput');
+    if (_susIn) _susIn.addEventListener('keydown', e => { if (e.key === 'Enter') _susPhoneSearch(); });
 
     const _sanRefresh = document.getElementById('dashSanctionRefresh');
     if (_sanRefresh) _sanRefresh.addEventListener('click', loadSanctions);
