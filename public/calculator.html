@@ -488,7 +488,7 @@
       <span class="exchange-live-text" id="liveText">1 AUD = — KRW (API 매매기준율 로딩 중…)</span>
       <label class="exchange-live-input-wrap">
         <span class="exchange-live-input-label">기준 환율</span>
-        <input class="exchange-live-input" id="baseRateInput" type="number" step="0.01" min="0" placeholder="자동" />
+        <input class="exchange-live-input" id="baseRateInput" type="number" step="0.01" min="0" placeholder="원하는 환율 입력" />
         <span class="exchange-live-input-unit">KRW</span>
       </label>
     </div>
@@ -863,8 +863,7 @@
       apiBaseRate = +result.rate.toFixed(2);
       const userTouched = baseRateInput.value !== '' && parseFloat(baseRateInput.value) > 0;
       if (!userTouched) {
-        baseRate = apiBaseRate;
-        baseRateInput.value = apiBaseRate.toFixed(2);
+        baseRate = apiBaseRate;   // 계산은 API값 사용 · 입력칸은 빈칸 유지(API 환율은 위 liveText 에 표시)
       }
       setLiveRateBadge(result.rate, true);
       setUpdatedFromApi(result.timeUtc);
