@@ -881,7 +881,7 @@ html[data-koaus-auth="checking"]  .topbar-my-btn { display: none; }
   font-size: 11px; font-weight: 700; color: var(--text-muted); letter-spacing: 0.04em; white-space: nowrap;
 }
 .exchange-live-input {
-  width: 92px; padding: 5px 8px; background: transparent; border: none;
+  width: 150px; padding: 5px 8px; background: transparent; border: none;   /* placeholder "원하는 환율 입력" 전체 노출 (부모 flex-wrap 으로 모바일 한 줄 내림) */
   font-family: var(--font); font-size: 13px; font-weight: 800; color: var(--text-primary); text-align: right;
   outline: none;
 }
