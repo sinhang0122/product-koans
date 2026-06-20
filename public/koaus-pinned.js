@@ -7,6 +7,7 @@
 //  · 의존: window.koausGallery(open), window.koausContactActions(render) — 전 보드 로드됨(가드 포함).
 //  · 전 보드 공용: 인라인 핀공지 스크립트(title+text 만)를 대체.
 // ════════════════════════════════════════════════════════════════════════
+import './koaus-appcheck-init.js';   // App Check 공용 init — 자체 init 없는 페이지(points·car-sale 등)의 Enforce 차단 방지 (marquee.js 동일 패턴)
 import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
 import { getFirestore, doc, onSnapshot } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
 
