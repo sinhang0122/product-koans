@@ -30,7 +30,7 @@ const functions = getFunctions(app, 'australia-southeast1');
 
 // ── canPost: 글쓰기 자격 검증 ──
 // 폰 인증 강제 토글 — 폰 인프라(①~④·국가선택·KR지원·재인증)는 그대로 두고 "강제"만 on/off.
-const PHONE_GATE_ENABLED = false;   // 소프트런칭: 폰 인증 비강제. 트래픽 차면 true 로 (1줄 변경+재배포).
+const PHONE_GATE_ENABLED = true;   // 폰 인증 강제 ON — 글쓰기 시 SMS 본인 인증 필수(전원). 끄려면 false.
 window.koausCanPost = function (user) {
   if (!user) return false;
   return PHONE_GATE_ENABLED ? !!user.phoneNumber : true;   // false = 로그인만 하면 글쓰기 OK(폰 모달 안 뜸)
