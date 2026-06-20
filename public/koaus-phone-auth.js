@@ -223,8 +223,14 @@ let recaptchaVerifier = null;
 async function _freshRecaptcha() {
   try { if (recaptchaVerifier) await recaptchaVerifier.clear(); } catch (_) {}
   recaptchaVerifier = null;
-  const slot = document.getElementById('koausRecaptchaSlot');
-  if (slot) slot.innerHTML = '';   // 잔존 위젯 제거 — already rendered 방지
+  // innerHTML='' 만으론 grecaptcha 가 element 를 기억 → 노드 자체를 새 div 로 교체(동일 id/스타일)
+  let slot = document.getElementById('koausRecaptchaSlot');
+  if (slot && slot.parentNode) {
+    const fresh = document.createElement('div');
+    fresh.id = 'koausRecaptchaSlot';
+    fresh.style.cssText = slot.style.cssText;
+    slot.parentNode.replaceChild(fresh, slot);
+  }
   recaptchaVerifier = new RecaptchaVerifier(auth, 'koausRecaptchaSlot', { size: 'invisible' });
   await recaptchaVerifier.render();
   return recaptchaVerifier;
