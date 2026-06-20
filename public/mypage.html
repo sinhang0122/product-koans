@@ -740,7 +740,7 @@
       reauthenticateWithPopup, reauthenticateWithCredential, EmailAuthProvider,
     } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
     import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app-check.js';
-    import { getFirestore, doc, getDoc, setDoc, deleteDoc, runTransaction, collection, getDocs, query, where, limit } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
+    import { getFirestore, doc, getDoc, setDoc, deleteDoc, updateDoc, runTransaction, collection, getDocs, query, where, limit } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
     import { compressImage, uploadCompressed } from './compress.js';
 
     const firebaseConfig = {
@@ -1245,6 +1245,16 @@
         localStorage.setItem('koaus-nickname-changed-at', String(Date.now()));
         applyNick(nick);
         closeNickEdit();
+        // ── 본인 기존 글 author 백필 — 별명 변경 시 게시판 표시명도 새 별명으로 (best-effort) ──
+        //   where('uid'==본인) → 룰상 본인 글만, author 만 변경(uid/status/모더필드 불변)이라 통과.
+        //   3개월 1회 변경이라 빈도 낮음. 개별 실패 무시.
+        const _COLS = ['accom_posts','rent_posts','jobs_posts','auto_posts','services'];
+        for (const c of _COLS) {
+          try {
+            const _snap = await getDocs(query(collection(db, c), where('uid','==', u.uid), limit(50)));
+            for (const s of _snap.docs) { try { await updateDoc(doc(db, c, s.id), { author: nick }); } catch (_) {} }
+          } catch (_) {}
+        }
       } finally {
         saveBtn.disabled = false;
       }
