@@ -478,21 +478,11 @@
     <div class="accom-main-tabs auto-cat-tabs" id="autoTabs">
       <button class="accom-tab active" data-cat="used"><span class="tab-text">중고차 판매 (Used Car)</span></button>
       <button class="accom-tab" data-cat="maintenance"><span class="tab-text">정비소/견인 (Maintenance &amp; Towing)</span></button>
+      <button class="accom-tab" data-cat="insurance"><span class="tab-text">자동차 보험 (Insurance)</span></button>
     </div>
 
     <!-- 표준 레이아웃: 공지 → 검색 → 필터/뷰 → 본문 -->
     <div id="pinnedNoticeBox" data-board="auto" class="pinned-notice" hidden></div>
-
-    <!-- 자동차 보험 가이드 진입 배너 (auto 상단 노출) -->
-    <a href="car-insurance.html" class="auto-insurance-banner"
-       style="display:flex;align-items:center;gap:10px;margin:0 0 12px;padding:13px 16px;border:1px solid var(--border);border-left:4px solid #E4572E;border-radius:12px;background:var(--bg-card);color:var(--text-primary);text-decoration:none;font-size:14px;line-height:1.4;">
-      <span style="font-size:20px;flex-shrink:0;">🛡️</span>
-      <span style="flex:1;min-width:0;">
-        <b style="display:block;font-weight:800;">자동차 보험, 알고 가입하세요</b>
-        <span style="color:var(--text-secondary);font-size:13px;">'대인·대물만' 들면 내 차 못 고칩니다 — 보험 종류·사고/야생동물 대처 가이드</span>
-      </span>
-      <span style="flex-shrink:0;font-weight:800;color:#E4572E;">자세히 ›</span>
-    </a>
 
     <!-- 조건별 텍스트 검색 (search-bar.js 자동 빌드) -->
     <div data-koaus-search="auto"></div>
@@ -526,6 +516,86 @@
     <div id="mapView" style="display:none;">
       <button class="area-search-btn" id="areaSearchBtn">이 지역 매물 검색하기</button>
       <div id="accomMap"></div>
+    </div>
+
+    <!-- 자동차 보험 안내 (정적 정보 탭 — Firestore 미사용) -->
+    <div id="insuranceView" style="display:none;">
+      <style>
+        #insuranceView{max-width:760px;margin:0 auto;}
+        #insuranceView .ins-lead{font-size:15px;color:var(--text-secondary);line-height:1.7;margin:6px 0 18px;}
+        #insuranceView h2{font-size:clamp(19px,2.4vw,23px);font-weight:900;margin:30px 0 10px;color:var(--text-primary);}
+        #insuranceView h3{font-size:16px;font-weight:800;margin:18px 0 6px;color:var(--text-primary);}
+        #insuranceView p{margin:0 0 12px;color:var(--text-secondary);font-size:14.5px;line-height:1.75;}
+        #insuranceView ul,#insuranceView ol{margin:0 0 12px;padding-left:22px;color:var(--text-secondary);}
+        #insuranceView li{margin:6px 0;font-size:14px;line-height:1.65;}
+        #insuranceView b{color:var(--text-primary);}
+        #insuranceView .ins-callout{border:1px solid var(--border);border-left:4px solid #E4572E;background:var(--bg-card);border-radius:10px;padding:13px 15px;margin:16px 0;color:var(--text-secondary);font-size:14px;}
+        #insuranceView .ins-callout b{color:#E4572E;}
+        #insuranceView .ins-flag{list-style:none;padding-left:0;}
+        #insuranceView .ins-flag li{padding-left:2px;}
+        #insuranceView .ins-sources{background:var(--bg-surface);border:1px solid var(--border);border-radius:12px;padding:15px 17px;margin:20px 0;}
+        #insuranceView .ins-sources h3{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#0B5FA5;margin:0 0 8px;}
+        #insuranceView .ins-sources a{color:#0B5FA5;}
+        #insuranceView .ins-disclaimer{font-size:12.5px;color:var(--text-muted);background:var(--bg-card);border:1px dashed var(--border);border-radius:10px;padding:11px 13px;margin:18px 0;}
+      </style>
+
+      <p class="ins-lead">호주에서 자동차는 거의 필수지만, 보험을 잘못 들면 사고 한 번에 큰돈을 물거나 정작 내 차를 못 고치는 일이 생깁니다. 특히 "대인·대물만" 들었다가 사고가 났을 때 아무것도 받지 못하는 경우가 흔합니다.</p>
+
+      <h2>호주 자동차 보험은 크게 4가지</h2>
+      <p>핵심은 <b>"내 차 손해까지 보장되는가"</b>입니다.</p>
+      <h3>1. CTP (강제보험) — NSW에서는 '그린슬립(Green Slip)'</h3>
+      <p>모든 주에서 가입이 강제되는 보험으로 차량 등록(rego)에 포함됩니다. <b>사람이 다치거나 사망한 경우(상대 운전자·승객·보행자 등)만</b> 보상하고, 차량·물건 손해는 전혀 보상하지 않습니다. VIC은 등록비(TAC)에 포함, NSW는 '그린슬립'을 따로 구입, QLD·SA·ACT 등은 등록 시 함께 가입합니다.</p>
+      <h3>2. 대물 배상 (Third Party Property Damage)</h3>
+      <p>내가 <b>남의 차·재산에 입힌 손해</b>를 보상합니다. 기본 선택 보험이지만 <b>내 차 수리는 안 됩니다.</b></p>
+      <h3>3. 대물 + 화재·도난 (Third Party Fire &amp; Theft)</h3>
+      <p>대물 배상에 더해 내 차가 <b>불에 타거나 도난당한 경우</b>만 추가 보상합니다. 사고로 인한 내 차 파손은 여전히 보장되지 않습니다.</p>
+      <h3>4. 종합보험 (Comprehensive)</h3>
+      <p>위 모든 것에 더해 <b>내 차 손해까지</b> 보장합니다. 사고·악천후·도난·파손은 물론 <b>야생동물 충돌</b>도 대개 포함되고, 상품에 따라 견인·렌터카·임시 숙소까지 보장됩니다.</p>
+      <div class="ins-callout"><b>정리:</b> CTP는 '사람'만, 대물은 '남의 차'만 보상합니다. <b>내 차까지 보장받으려면 종합보험(Comprehensive)이 필요</b>합니다.</div>
+
+      <h2>"대인·대물만" 들면 위험한 이유</h2>
+      <p>CTP(사람)와 대물(남의 차)만 있으면 <b>정작 내 차가 망가져도 한 푼도 받지 못합니다.</b> 전봇대·가드레일·동물과 부딪힌 단독사고나 내 과실 사고면 내 차 수리비를 전액 자비로 부담해야 합니다. 차량 가치가 어느 정도 되거나 갑작스러운 목돈이 부담되면 종합보험을 권합니다.</p>
+
+      <h2>가입 전 확인할 것</h2>
+      <ul>
+        <li>내 차 손해까지 보장되는지(= 종합보험인지)</li>
+        <li>자기부담금(excess) — 청구 시 내가 먼저 내는 돈</li>
+        <li>보장 한도·제외 항목(약관·PDS)</li>
+        <li>운전자 연령·무사고 할인, 추가 운전자 등록</li>
+        <li>야생동물·홍수·우박 등 자연재해 포함 여부</li>
+        <li>견인·렌터카·긴급출동 포함 여부</li>
+        <li>여러 보험사 비교 견적</li>
+      </ul>
+
+      <h2>사고가 났을 때 순서</h2>
+      <ol>
+        <li>안전한 곳에 정차, 비상등. 부상자 확인 — 심하면 즉시 <b>000</b>.</li>
+        <li>상대방과 정보 교환 — 이름·연락처·주소·차량번호(rego)·면허·보험사.</li>
+        <li>현장 사진·메모(위치·시간·상황·손상).</li>
+        <li>가능한 한 빨리 보험사에 신고.</li>
+        <li>뺑소니·도난·부상자·과실 다툼·큰 손해는 경찰 신고 후 <b>사건번호(event number)</b> 확보.</li>
+      </ol>
+      <div class="ins-callout"><b>주의:</b> 현장에서 "내 잘못"이라 단정하거나 현금으로 즉석 합의하지 마세요. 과실·보상은 보험사가 정리합니다.</div>
+
+      <h2>캥거루 등 야생동물과 부딪혔다면</h2>
+      <p>교외·시골 도로에선 캥거루·웜뱃 충돌이 드물지 않고, 특히 <b>해 뜰 무렵·해 질 무렵·밤</b>에 활발합니다.</p>
+      <ul class="ins-flag">
+        <li>⚠ 갓길 정차·비상등. 도로가 위험하면 차 안에 머무름. 부상(채찍질 부상은 몇 시간~며칠 뒤 나타나기도) 확인, 다치면 000.</li>
+        <li>⚠ <b>피하려고 급하게 핸들을 꺾지 마세요.</b> 마주 오는 차·나무와 더 큰 사고로 이어질 수 있어 안전하게 감속·제동이 일반적 권고.</li>
+        <li>⚠ 다친 동물은 직접 만지지 말고 야생동물 구조단체에 연락(예: NSW WIRES 1300 094 737). 캥거루는 주머니 속 새끼가 살아있을 수 있습니다.</li>
+        <li>⚠ 차량 손상은 사진으로 남겨 보험사에 청구.</li>
+      </ul>
+      <p><b>종합보험이라야 내 차 수리가 보장</b>됩니다. 대물·대인만으론 내 차 손해를 못 받아요. 동물 충돌은 보통 '과실(at-fault) 사고'로 보지 않아 페널티는 덜하지만, 자기부담금(excess)을 내야 하고 무사고 할인·보험료에는 영향이 있을 수 있습니다.</p>
+
+      <div class="ins-sources">
+        <h3>공식·비교 자료</h3>
+        <ul>
+          <li>NSW 그린슬립(CTP): <a href="https://www.sira.nsw.gov.au/motor/compulsory-third-party-motor-vehicle-insurance-green-slips" target="_blank" rel="noopener">SIRA — Compulsory Green Slip</a></li>
+          <li>CTP 주별 안내: 각 주 교통·등록청(VIC TAC, QLD MAIC 등)</li>
+          <li>보험 비교: Canstar, Compare the Market 등 비교 사이트 또는 여러 보험사 직접 견적</li>
+        </ul>
+      </div>
+      <div class="ins-disclaimer">본 안내는 일반적인 참고 정보이며 금융·법률 자문이 아닙니다. 보장 내용·자기부담금·제외 항목은 보험사·약관(PDS)·주(state)에 따라 다르므로 가입 전 반드시 약관과 보험사에 직접 확인하세요.</div>
     </div>
 
     <!-- 견인: 호주 로컬 견인 서비스 외부 링크 안내 (견인 카테고리에서만, 화면 최하단 노출) -->
@@ -1178,12 +1248,13 @@
 
     // ── Auto 5대 카테고리 (used 신설, 기본 최상단) ──
     // ── Auto 3그룹 통폐합 (렌트카·견인 단독 삭제, 견인은 정비소/견인 통합) ──
-    const CAT_LABELS = { used:'중고차 판매', maintenance:'정비소/견인' };
-    const CAT_EN     = { used:'Used Car',    maintenance:'Maintenance & Towing' };
+    const CAT_LABELS = { used:'중고차 판매', maintenance:'정비소/견인', insurance:'자동차 보험' };
+    const CAT_EN     = { used:'Used Car',    maintenance:'Maintenance & Towing', insurance:'Car Insurance' };
     const CAT_CFG = {
       // 2 카테고리 모두 유저 직접 글쓰기 + List/Map 양쪽 활성 (등록 요청 폐기)
       used:        { map:true, write:'user', filter:'used' },
       maintenance: { map:true, write:'user', filter:'maintenance' },   // 견인 글도 여기로 매핑
+      insurance:   { map:false, write:'none', filter:'none', static:true },   // 정적 정보 탭 (Firestore 미사용)
     };
     const ADMIN_EMAIL = 'koaus.official@gmail.com';  // 글 등록 문의 수신 주소 (운영 시 교체)
     // 구 카테고리/링크 → 신 3그룹 매핑 (rental → used / towing → maintenance 로 흡수)
@@ -1193,6 +1264,7 @@
       inspection:'inspection',   // 섹션 삭제(2026-06-11) — 기존 글 비노출 보존용. 지우면 groupOf 폴백이 'used'라 중고차 탭에 누수됨
       maintenance:'maintenance', mechanic:'maintenance', repair:'maintenance', quote:'maintenance',
       towing:'maintenance', tow:'maintenance', emergency:'maintenance',   // 견인 → 정비소/견인 통합
+      insurance:'insurance',   // 정적 정보 탭
     };
     const groupOf = c => CAT_GROUP[c] || 'used';
 
@@ -1215,7 +1287,8 @@
     function updateBoardTitle() {
       const st = STATE_NAMES[currentState];
       document.getElementById('boardTitle').textContent = `🚗 ${st ? st + ' ' : ''}${CAT_LABELS[activeCategory]}`;
-      document.getElementById('boardSubtitle').textContent = `Auto · ${st ? st + ' · ' : ''}${CAT_LABELS[activeCategory]} 게시판`;
+      const _sfx = (CAT_CFG[activeCategory] && CAT_CFG[activeCategory].static) ? '안내' : '게시판';
+      document.getElementById('boardSubtitle').textContent = `Auto · ${st ? st + ' · ' : ''}${CAT_LABELS[activeCategory]} ${_sfx}`;
     }
 
     function switchCategory(cat) {
@@ -1237,6 +1310,28 @@
         asb.textContent = ASB_TEXT[cat] || '이 지역 매물 검색하기';
       }
       document.querySelectorAll('#autoTabs .accom-tab').forEach(b => b.classList.toggle('active', b.dataset.cat === cat));
+
+      // ── 정적 정보 탭(자동차 보험): 게시판 UI 숨김 + 정보 패널 노출 후 조기 종료 (Firestore 미조회) ──
+      const _staticCat = !!(CAT_CFG[cat] && CAT_CFG[cat].static);
+      const _insV  = document.getElementById('insuranceView');
+      const _srch  = document.querySelector('[data-koaus-search="auto"]');
+      const _ctrls = document.querySelector('.accom-controls');
+      const _pin   = document.getElementById('pinnedNoticeBox');
+      const _ad0   = document.getElementById('autoDisclaimer');
+      if (_srch)  _srch.style.display  = _staticCat ? 'none' : '';
+      if (_ctrls) _ctrls.style.display = _staticCat ? 'none' : '';
+      if (_pin)   _pin.style.display   = _staticCat ? 'none' : '';
+      if (_insV)  _insV.style.display  = _staticCat ? '' : 'none';
+      if (_staticCat) {
+        const _lv = document.getElementById('listView'); if (_lv) _lv.style.display = 'none';
+        const _mv = document.getElementById('mapView');  if (_mv) _mv.style.display = 'none';
+        const _tb = document.getElementById('towBanner'); if (_tb) _tb.style.display = 'none';
+        if (_ad0) _ad0.style.display = 'none';
+        updateBoardTitle();
+        return;
+      }
+      if (_ad0) _ad0.style.display = '';
+
       const cfg = CAT_CFG[cat];
       // 지도 뷰 토글: 정비소/견인 모두 List/Map 전환 버튼 노출 (직접 선택), 그 외는 List 단독
       const vt = document.getElementById('viewToggle');
@@ -2094,6 +2189,7 @@
     }
     // ── Render ──
     function renderAll() {
+      if (CAT_CFG[activeCategory] && CAT_CFG[activeCategory].static) return;   // 정적 정보 탭은 렌더 생략
       const posts    = loadPosts();
       const filtered = applyAutoSearchKw(applyFilters(posts));
       document.getElementById('boardCount').textContent = `총 ${filtered.length}건`;
