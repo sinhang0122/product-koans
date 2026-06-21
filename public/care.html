@@ -594,16 +594,17 @@
     applyTheme(localStorage.getItem('koaus-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
 
     // ── 영사관 주별 매핑 (선택한 주 관할 영사관을 최상단 강조) ──
-    const STATE_GOV = { act:'canberra', nsw:'sydney', qld:'sydney', nt:'sydney', vic:'melbourne', tas:'melbourne', sa:'melbourne', wa:'melbourne' };
+    const STATE_GOV = { act:'canberra', nsw:'sydney', qld:'brisbane', nt:'sydney', vic:'melbourne', tas:'melbourne', sa:'melbourne', wa:'melbourne' };
     const CONSULATES = {
       canberra:  { name:'주호주 대한민국 대사관',     region:'ACT 관할',           tel:'0262704100', telDisp:'(02) 6270 4100', addr:'113 Empire Circuit, Yarralumla ACT 2600' },
-      sydney:    { name:'주시드니 대한민국 총영사관', region:'NSW · QLD · NT 관할', tel:'0292100200', telDisp:'(02) 9210 0200', addr:'Level 10, 44 Market St, Sydney NSW 2000' },
+      sydney:    { name:'주시드니 대한민국 총영사관', region:'NSW · NT 관할', tel:'0292100200', telDisp:'(02) 9210 0200', addr:'Level 10, 44 Market St, Sydney NSW 2000' },
+      brisbane:  { name:'주브리즈번 대한민국 출장소', region:'QLD 관할', tel:'0732211440', telDisp:'(07) 3221 1440', addr:'Level 1, 102 Adelaide St, Brisbane City QLD 4000' },
       melbourne: { name:'주멜버른 대한민국 분관',     region:'VIC · TAS · SA · WA 관할', tel:'0395333800', telDisp:'(03) 9533 3800', addr:'Level 9, 459 Little Collins St, Melbourne VIC 3000' },
     };
     const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     const careState = (new URLSearchParams(location.search).get('state') || '').toLowerCase();
     const gov = STATE_GOV[careState];
-    const order = gov ? [gov, ...['canberra','sydney','melbourne'].filter(k => k !== gov)] : ['canberra','sydney','melbourne'];
+    const order = gov ? [gov, ...['canberra','sydney','brisbane','melbourne'].filter(k => k !== gov)] : ['canberra','sydney','brisbane','melbourne'];
     document.getElementById('consulateList').innerHTML = order.map(k => {
       const c = CONSULATES[k];
       const isGov = k === gov;
