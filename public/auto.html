@@ -791,6 +791,12 @@
           <input type="file" id="maintPhotoInput" accept="image/*" multiple style="display:none;" />
           <div class="photo-thumbs" id="maintPhotoThumbs" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;"></div>
         </div>
+        <!-- 구글 리뷰 링크 (선택) — 상세에 '구글 리뷰 보기' 버튼 노출 (업체 폼 전용) -->
+        <div class="write-field" style="grid-column:1/-1;">
+          <label class="write-label" for="maintGoogleUrl">구글 리뷰 링크 (선택)</label>
+          <input class="write-input" id="maintGoogleUrl" type="url" maxlength="300" placeholder="예: https://maps.app.goo.gl/..." />
+          <p style="font-size:11px;color:var(--text-muted);margin-top:4px;">업체 구글 지도 페이지 링크를 넣으면 상세에 '구글 리뷰 보기' 버튼이 떠요.</p>
+        </div>
       </div>
 
       <p class="auth-error" id="wError"></p>
@@ -897,6 +903,8 @@
               <span>📍 길찾기 <em>See travel times</em></span><span class="rea-loc-arrow">›</span></a>
             <a class="rea-loc-btn" id="detailSvBtn" target="_blank" rel="noopener noreferrer">
               <span>🛣️ 스트릿뷰 <em>Street View</em></span><span class="rea-loc-arrow">›</span></a>
+            <a class="rea-loc-btn" id="detailGoogleBtn" target="_blank" rel="noopener noreferrer" style="display:none;">
+              <span>⭐ 구글 리뷰 보기 <em>Google Reviews</em></span><span class="rea-loc-arrow">›</span></a>
           </div>
         </div>
 
@@ -1773,6 +1781,7 @@
           contact,
           contactEmail: _fv('mContactEmail'),
           imageUrls: Array.isArray(window.__maintPhotoUrls) ? window.__maintPhotoUrls.slice(0, 6) : [],
+          ...( /^https:\/\/\S+$/.test(_fv('maintGoogleUrl')) ? { googleMapsUrl: _fv('maintGoogleUrl').slice(0, 300) } : {} ),   // 구글 지도/리뷰 링크 (https 만 · 업체 폼 전용)
         };
         // 좌표(자동완성 dataset) — 업체는 위치 공개 (locationPrivate 미적용)
         const mRegionEl = document.getElementById('mRegion');
@@ -2680,6 +2689,10 @@
       const sec = document.getElementById('detailLocation');
       // auto.html은 address 가 없어도 region 사용 — 둘 다 없으면 hide
       const addr = p.address || p.region || '';
+      // 구글 리뷰 버튼 — 항상 먼저 리셋(이전 글 잔상 방지). 섹션이 보일 때만(주소 있을 때) 노출됨. 업체(googleMapsUrl)만 표시.
+      const _gBtn = document.getElementById('detailGoogleBtn');
+      const _gurl = (p.googleMapsUrl && /^https:\/\/\S+$/.test(p.googleMapsUrl)) ? p.googleMapsUrl : '';
+      if (_gBtn) { if (_gurl) _gBtn.href = _gurl; _gBtn.style.display = _gurl ? '' : 'none'; }
       if (!addr) { sec.style.display = 'none'; detailCoords = null; return; }
       sec.style.display = '';
       detailAddr = addr;
