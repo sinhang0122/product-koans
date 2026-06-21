@@ -126,6 +126,24 @@ function start() {
   if ($prev) $prev.addEventListener('click', () => jump(-1));
   if ($next) $next.addEventListener('click', () => jump(+1));
 
+  // ── 깜빡임 방지: 기본 문구 저장 + 직전 방문 공지(cache) 즉시 렌더 ──
+  const MARQUEE_CACHE = 'koaus_marquee_cache_v1';
+  const DEFAULT_SPONSOR = $sponsor ? $sponsor.textContent : '';
+  const DEFAULT_CONTENT = $content ? $content.textContent : '';
+  function restoreDefault() {
+    if ($sponsor) $sponsor.textContent = DEFAULT_SPONSOR;
+    if ($content) $content.textContent = DEFAULT_CONTENT;
+    if ($item)  { $item.removeAttribute('href'); $item.removeAttribute('target'); $item.removeAttribute('rel'); }
+    if ($arrow)   $arrow.textContent = '';
+  }
+  try {
+    const cachedNotices = JSON.parse(localStorage.getItem(MARQUEE_CACHE) || '[]');
+    if (Array.isArray(cachedNotices) && cachedNotices.length) {
+      cachedNotices.forEach(t => items.push(t));
+      idx = 0; render();
+    }
+  } catch (_) {}
+
   // Firestore notices 구독 — text → content, link → linkUrl 매핑
   //   · 데이터 0건이면 페이지에 박힌 기본 문구 유지
   //   · limit 20 — firestore.rules limitedList() 와 일치
@@ -169,6 +187,10 @@ function start() {
             content: data.text,
             linkUrl: (data.link || '').trim() || '',
           }));
+        try {
+          if (next.length) localStorage.setItem(MARQUEE_CACHE, JSON.stringify(next));
+          else localStorage.removeItem(MARQUEE_CACHE);
+        } catch (_) {}
         items.length = 0;
         next.forEach(t => items.push(t));
         if (!items.length) {
@@ -180,6 +202,7 @@ function start() {
           //         섹션은 빈 결과 가능성으로 hide 발동 → 영구 안 보임.
           //   해결: hide 호출 제거. items 0 이면 기본 마크업(line 445 ticker-content) 그대로 유지.
           //         사용자 진입 시 항상 최소한의 안내 텍스트 노출 보장.
+          restoreDefault();   // 캐시로 그려졌던 옛 공지 잔상 제거 → 기본 문구 복원
           return;
         }
         if (idx >= items.length) idx = 0;

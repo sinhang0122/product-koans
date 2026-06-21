@@ -548,13 +548,21 @@
       });
     }
 
-    // 1) ── LCP 단축 ── SLOTS 폴백을 App Check/Firestore 대기 없이 즉시 렌더 (첫 화면 즉시 표시).
-    paint([]);
-    // 2) admin 배너 도착 시에만 해당 슬롯 교체 재렌더 (도착 전 빈 placeholder 없음).
+    // ── 깜빡임 방지: 직전 방문 배너(cache) 즉시 렌더 → 최신 배너와 다를 때만 재렌더 ──
+    const HERO_CACHE = 'koaus_hero_banners_v1';
+    let cachedBanners = [];
+    try { cachedBanners = JSON.parse(localStorage.getItem(HERO_CACHE) || '[]'); } catch (_) {}
+    if (!Array.isArray(cachedBanners)) cachedBanners = [];
+    if (cachedBanners.length && !(window.koausUrlGuard && window.koausUrlGuard.isSafeHttp)) cachedBanners = [];
+    let painted = JSON.stringify(cachedBanners);
+    paint(cachedBanners);   // cachedBanners 비면 paint([]) 와 동일(기본 슬라이드 즉시 표시 — 기존 LCP 동작 유지)
+
     let banners = [];
     try { banners = await fetchAdminBanners(); } catch (_) {}
-    if (banners.length) {
-      // 기존 swiper 정리 후 재렌더 (render 의 __koausHeroRendered 가드 해제)
+    if (!Array.isArray(banners)) banners = [];
+    const fresh = JSON.stringify(banners);
+    try { if (banners.length) localStorage.setItem(HERO_CACHE, fresh); else localStorage.removeItem(HERO_CACHE); } catch (_) {}
+    if (fresh !== painted) {
       containers.forEach(c => {
         const sw = c.querySelector('.koaus-hero-pc .swiper');
         if (sw && sw.__koausSwiper) { try { sw.__koausSwiper.destroy(true, true); } catch (_) {} }
