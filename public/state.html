@@ -541,7 +541,7 @@
       { href:'jobs.html',        extra:'',                 label:'Work · 워크',   emoji:'💼', desc:'구인구직 — 일자리를 찾고 직원을 모집해 보세요' },
       { href:'auto.html',        extra:'&category=used',   label:'Auto · 오토',   emoji:'🚗', desc:'중고차 판매 — 직거래 · 딜러 매물' },
       { href:'points.html',      extra:'&cat=legal',       label:'Visa · 비자',   emoji:'🛡', desc:'법무법인 — 비자 · 이민 전문 상담' },
-      { href:'restaurants.html', extra:'',                 label:'Others · 아더스', emoji:'🍱', desc:'K-Food — 한식·아시안 식당' },
+      { href:'restaurants.html', extra:'',                 label:'Others · 아더스', emoji:'🍱', desc:'K-Food — 한식·아시안 식당', disabled:true },
     ];
     const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
@@ -558,12 +558,20 @@
 
     // 2) 5개 카테고리 카드 — 각 페이지의 ?state= 로 분기 + 카테고리별 보조 파라미터 동시 전달
     document.getElementById('stateHubGrid').innerHTML = CATEGORIES.map(c =>
-      `<a class="state-hub-card" href="${esc(c.href)}?state=${esc(cur.id)}${esc(c.extra)}">
-        <span class="state-hub-card-arrow" aria-hidden="true">→</span>
-        <span class="state-hub-card-emoji" aria-hidden="true">${c.emoji}</span>
-        <span class="state-hub-card-label">${esc(c.label)}</span>
-        <span class="state-hub-card-desc">${esc(c.desc)}</span>
-      </a>`
+      c.disabled
+       ? `<a class="state-hub-card section-disabled" href="#" aria-disabled="true"
+            onclick="event.preventDefault();alert('아더스(K-Food) 섹션은 준비 중입니다.');return false;">
+            <span class="state-hub-card-arrow" aria-hidden="true">→</span>
+            <span class="state-hub-card-emoji" aria-hidden="true">${c.emoji}</span>
+            <span class="state-hub-card-label">${esc(c.label)}</span>
+            <span class="state-hub-card-desc">준비 중인 섹션입니다</span>
+          </a>`
+       : `<a class="state-hub-card" href="${esc(c.href)}?state=${esc(cur.id)}${esc(c.extra)}">
+            <span class="state-hub-card-arrow" aria-hidden="true">→</span>
+            <span class="state-hub-card-emoji" aria-hidden="true">${c.emoji}</span>
+            <span class="state-hub-card-label">${esc(c.label)}</span>
+            <span class="state-hub-card-desc">${esc(c.desc)}</span>
+          </a>`
     ).join('');
   </script>
 </body>
