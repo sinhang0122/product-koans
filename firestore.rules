@@ -241,9 +241,8 @@ service cloud.firestore {
         && pOptStr(d, 'body', 5000)
         && pOptStr(d, 'state', 10)
         && pOptList(d, 'imageUrls', 8)
-        // [B4] legal(법무법인/비자·이민) 글은 MARN 7자리 필수 — OMARA 등록 대리인만 (소비자 보호)
-        && (d.category != 'legal'
-            || ('marn' in d && d.marn is string && d.marn.matches('^[0-9]{7}$')))
+        // [B4] MARN 은 선택 — 변호사 등은 등록번호가 없음. 단 입력 시 7자리 숫자 형식 강제(소비자 보호).
+        && (!('marn' in d) || d.marn == '' || (d.marn is string && d.marn.matches('^[0-9]{7}$')))
         && pOptStr(d, 'marn', 7)
         && pOptStr(d, 'providedBy', 100)
         && pOptStr(d, 'lastReviewedAt', 30)
