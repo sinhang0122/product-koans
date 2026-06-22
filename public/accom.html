@@ -2017,12 +2017,18 @@
         ? '<span class="accom-card-find">방 구하기</span>'
         : (p.price ? `<span class="accom-price">$${p.price}<small>/wk</small></span>` : '<span class="accom-card-find">가격 협의</span>');
       const sub = isFind ? (p.body || '') : (p.address || '');
+      // 사진 없을 때 동네 지도풍 플레이스홀더 (주소 있는 글만 / 주·우편번호 제거 후 동네명)
+      var _subb = (p.address || '').replace(/[,\s]+(NSW|VIC|QLD|WA|SA|TAS|ACT|NT)\b\s*\d{0,4}\s*$/i, '').replace(/[,\s]+\d{4}\s*$/, '').trim();
+      _subb = _subb.split(',').pop().trim();
+      const mapPh = _subb
+        ? `<div class="koaus-map-ph"><span class="mp-pin" aria-hidden="true">📍</span><span class="mp-name">${escHtml(_subb)}</span></div>`
+        : '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>';
       return `
         <div class="accom-card${isMine(p) ? ' my-post-highlight' : ''}" data-id="${p.id}">
           <div class="accom-card-thumb">
             ${(Array.isArray(p.imageUrls) && p.imageUrls.length)
               ? `<img src="${escHtml(p.imageUrls[0])}" alt="${escHtml(p.title || '')}" loading="lazy" />`
-              : '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>'}
+              : mapPh}
           </div>
           <div class="accom-card-info">
             <!-- 지시 4/10 — Row 1: 제목(좌) + 액션 그룹(우, 별 + 공유/신고/수정/숨김/삭제) -->
