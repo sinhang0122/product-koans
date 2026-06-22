@@ -731,6 +731,10 @@
           </div>
 
           <div class="write-field">
+            <label class="write-label" for="wAvailDate">입주 가능한 날 Available Date <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택)</em></label>
+            <input class="write-input" id="wAvailDate" type="date" />
+          </div>
+          <div class="write-field">
             <label class="write-label" for="wMinStay">미니멈 스테이 Minimum Stay <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택)</em></label>
             <select class="write-input" id="wMinStay">
               <option value="">선택 안 함</option>
@@ -1238,6 +1242,7 @@
       ['wTitle','wAddress','wPrice','wBody','wAuthor','wContact','wPhone','wKakao','wContactEmail'].forEach(id => { const _el = document.getElementById(id); if (_el) _el.value = ''; });
       document.getElementById('wPropType').value = '';
       document.getElementById('wMinStay').value = '';
+      document.getElementById('wAvailDate').value = '';
       ['wParking','wPet','wKids','wAirCon'].forEach(id => { document.getElementById(id).checked = false; });
       document.querySelectorAll('#wTypes input').forEach(c => { c.checked = false; });
     }
@@ -1296,6 +1301,7 @@
       set('wAddress', d.address);
       set('wPropType', d.propType);
       set('wMinStay', d.minStay);
+      set('wAvailDate', d.availableDate);
       set('wPrice', d.price);
       set('wBody',  d.body);
       set('wContact', d.contact);
@@ -1319,6 +1325,7 @@
       document.getElementById('wAddress').value  = p.address || '';
       document.getElementById('wPropType').value = p.propType || '';
       document.getElementById('wMinStay').value  = p.minStay || '';
+      document.getElementById('wAvailDate').value = p.availableDate || '';
       document.getElementById('wPrice').value    = p.price || '';
       // 신규: bedrooms/bathrooms/carSpaces segmented 동기화 (hidden + 버튼 active)
       const setSeg = (hiddenId, val) => {
@@ -1436,6 +1443,7 @@
         const priceVal = document.getElementById('wPrice').value.trim();
         const propType = document.getElementById('wPropType').value;  // 선택 사항
         const minStay  = document.getElementById('wMinStay').value;   // 선택 사항
+        const availableDate = document.getElementById('wAvailDate').value;  // 선택 사항
         const bedrooms  = Number(document.getElementById('wBedrooms').value || 0);
         const bathrooms = Number(document.getElementById('wBathrooms').value || 0);
         const carSpaces = Number(document.getElementById('wCarSpaces').value || 0);
@@ -1455,7 +1463,7 @@
           }
         }
         fields = {
-          mode: 'offer', types, title, body, address, price, propType, minStay,
+          mode: 'offer', types, title, body, address, price, propType, minStay, availableDate,
           bedrooms, bathrooms, carSpaces,
           parking:     document.getElementById('wParking').checked,
           petFriendly: document.getElementById('wPet').checked,
@@ -1655,6 +1663,7 @@
       else if (p.roomType === 'share') tags.push('🛏 쉐어 (Share)');
       if (p.bathroom === 'ensuite') tags.push('🚿 개인욕실 (Ensuite)');
       else if (p.bathroom === 'shared') tags.push('🚿 공용욕실 (Shared)');
+      if (p.availableDate) tags.push('🗓 입주 ' + p.availableDate);
       if (p.minStay && MINSTAY_LABELS[p.minStay]) tags.push('⏱ 미니멈 ' + MINSTAY_LABELS[p.minStay]);
       if (p.parking)     tags.push('🅿 주차 가능');
       if (p.petFriendly) tags.push('🐾 반려동물 가능');
@@ -1953,6 +1962,7 @@
       if (p.carSpaces) summary.push(`🅿 ${p.carSpaces}`);
       if (p.propType) summary.push(`🏠 ${propTypeLabel(p.propType)}`);
       (Array.isArray(p.types) ? p.types : []).forEach(t => { if (typeof TYPE_LABELS === 'object' && TYPE_LABELS && TYPE_LABELS[t]) summary.push('📅 ' + (TYPE_LABELS[t].ko || t)); });
+      if (p.availableDate) summary.push('🗓 입주 ' + p.availableDate);
       if (p.minStay && MINSTAY_LABELS[p.minStay]) summary.push('⏱ 미니멈 ' + MINSTAY_LABELS[p.minStay]);
       document.getElementById('detailSummary').innerHTML = summary.map(s => `<span class="rea-chip">${escHtml(s)}</span>`).join('')
         + `<span class="rea-chip">작성자: <strong>${authorLabel(p)}</strong></span>`;   // authorLabel 이미 escHtml — 이중 이스케이프 금지
@@ -2404,7 +2414,7 @@
     };
     const AUS_VIEW        = { center: { lat: -25.2744, lng: 133.7751 }, zoom: 4 };  // 전국
     const urlState        = (new URLSearchParams(location.search).get('state') || '').toLowerCase();
-    const activeStateView = STATE_VIEWS[urlState] || AUS_VIEW;
+    const activeStateView = STATE_VIEWS[urlState] || STATE_VIEWS.nsw;  // 주 미지정 시 전국(AUS_VIEW) 대신 기본 대도시(시드니) — 각 보드 map view 표준
 
     // 주소 자동완성 (네이티브 Places Autocomplete 위젯)
     function whenPlacesReady(cb) {

@@ -2815,7 +2815,7 @@
     };
     const AUS_VIEW        = { center: { lat: -25.2744, lng: 133.7751 }, zoom: 4 };  // 전국
     const urlState        = (new URLSearchParams(location.search).get('state') || '').toLowerCase();
-    const activeStateView = STATE_VIEWS[urlState] || AUS_VIEW;
+    const activeStateView = STATE_VIEWS[urlState] || STATE_VIEWS.nsw;  // 주 미지정 시 전국(AUS_VIEW) 대신 기본 대도시(시드니) — 각 보드 map view 표준
 
 
     // 글쓰기 주소 자동완성 선택 시 메인 지도 마커 미리보기 (jobs 패턴 이식)
