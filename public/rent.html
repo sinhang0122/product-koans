@@ -888,6 +888,7 @@
         <div class="rea-section">
           <h3 class="rea-subtitle">Description</h3>
           <div class="rea-desc" id="detailBody"></div>
+          <button class="rea-more" id="detailMore" type="button" style="display:none;">더보기 ›</button>
         </div>
 
         <div class="rea-owner-actions" id="detailActions"></div>
@@ -1988,8 +1989,18 @@
         }
       }
 
-      // Description
-      document.getElementById('detailBody').textContent = p.body || '';
+      // Description (+ 더보기)
+      const bodyEl = document.getElementById('detailBody');
+      const moreBtn = document.getElementById('detailMore');
+      bodyEl.textContent = p.body || '';
+      bodyEl.classList.remove('expanded');
+      if (moreBtn) {
+        moreBtn.textContent = '더보기 ›';
+        moreBtn.onclick = () => { const e = bodyEl.classList.toggle('expanded'); moreBtn.textContent = e ? '접기 ‹' : '더보기 ›'; };
+        requestAnimationFrame(() => {
+          moreBtn.style.display = (bodyEl.scrollHeight > bodyEl.clientHeight + 4) ? '' : 'none';
+        });
+      }
 
       // Location — setupDetailLocation 호출 (agent.md §2-D Detail Page Standard:
       //   사진/Map View/길찾기/스트릿뷰 4요소 의무. p.lat/lng 우선 + geocode(p.address) 폴백)
