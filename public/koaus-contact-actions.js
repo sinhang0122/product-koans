@@ -53,6 +53,32 @@
     } catch (_) { return false; }
   }
 
+  // 주소 단축 — 주(state)·우편번호 제거 (비공개: 동네만 / 공개: 도로명+동네)
+  function shortAddr(raw) {
+    var a = String(raw == null ? '' : raw).trim();
+    if (!a) return '';
+    a = a.replace(/[,\s]+(NSW|VIC|QLD|WA|SA|TAS|ACT|NT)\b\s*\d{0,4}\s*$/i, '').trim();
+    a = a.replace(/[,\s]+\d{4}\s*$/, '').trim();
+    return a.replace(/,\s*$/, '').trim();
+  }
+  // 현재 보고 있는 매물의 고유 딥링크 (?id=)
+  function listingLink(post) {
+    var id = post && (post._fsDocId || post.fsDocId || post.id);
+    if (!id) return '';
+    try { return location.origin + location.pathname + '?id=' + encodeURIComponent(String(id)); }
+    catch (_) { return ''; }
+  }
+  // KoAus 브랜드 문의 양식 본문 — 문자/메일에 자동 채움 ([KoAus] 주소 + 링크 + 입력 안내)
+  function inquiryBody(post) {
+    var addr = shortAddr(post && post.address);
+    var link = listingLink(post);
+    var lines = ['[KoAus]' + (addr ? ' ' + addr : '')];
+    if (link) lines.push(link);
+    lines.push('');
+    lines.push('(성함과 문의 내용을 입력해 주세요)');
+    return lines.join('\n');
+  }
+
   // ── 메인 렌더 함수 ──────────────────────────────────────────────
   function render(post) {
     const container = document.getElementById('contact-action-container');
@@ -60,21 +86,15 @@
 
     // ── A) contactHTML 초기화 ──
     let contactHTML = '';
+    const inqBody = inquiryBody(post);   // 문자·메일 자동 채움용 KoAus 문의 양식
 
     // ── B) post.phone → 전화 + SMS ──
     const phone = normalizePhone(post && post.phone);
     if (phone) {
       contactHTML +=
-        '<a class="contact-action-btn contact-action-btn--call"' +
-        ' href="tel:' + esc(phone) + '"' +
-        ' aria-label="전화 걸기">' +
-          '<span class="ca-ico" aria-hidden="true">📞</span>' +
-          '<span class="ca-label">전화</span>' +
-        '</a>';
-      contactHTML +=
         '<a class="contact-action-btn contact-action-btn--sms"' +
-        ' href="sms:' + esc(phone) + '"' +
-        ' aria-label="문자 보내기">' +
+        ' href="' + esc('sms:' + phone + '?&body=' + encodeURIComponent(inqBody)) + '"' +
+        ' aria-label="문자로 문의">' +
           '<span class="ca-ico" aria-hidden="true">💬</span>' +
           '<span class="ca-label">문자</span>' +
         '</a>';
@@ -98,8 +118,8 @@
     if (cmail && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cmail)) {
       contactHTML +=
         '<a class="contact-action-btn contact-action-btn--mail"' +
-        ' href="mailto:' + esc(cmail) + '"' +
-        ' aria-label="이메일로 연락">' +
+        ' href="' + esc('mailto:' + cmail + '?subject=' + encodeURIComponent('[KoAus] 매물 문의') + '&body=' + encodeURIComponent(inqBody)) + '"' +
+        ' aria-label="이메일로 문의">' +
           '<span class="ca-ico" aria-hidden="true">✉️</span>' +
           '<span class="ca-label">메일</span>' +
         '</a>';
