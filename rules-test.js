@@ -3,7 +3,8 @@
 //  · 사용법:  node rules-test.js [rules파일경로]   (기본: ./firestore.rules)
 //  · 토큰:   firebase-tools 로그인 세션에서 실행 시점에 취득 — 디스크 저장 없음
 //            (env RULES_TEST_TOKEN 으로 수동 주입 가능)
-//  · 구성:   ① create/update 검증 15케이스 (게시판 검증기 v2 + M5 trim + services UGC)
+//  · 구성:   ① create/update 검증 16케이스 (게시판 검증기 v2 + M5 trim + services UGC +
+//               chatAllowed 옵트인 pOptBool — 2026-07)
 //            ② 비로그인 공개 read 21케이스 (2026-06-10 회귀 의심 사건 후 상시화 —
 //               notices/ads/ad_banners/emails/nicknames/accom_posts/핀공지/services,
 //               실제 클라이언트 쿼리 형태 그대로: orderBy 포함 · limit 유/무.
@@ -12,6 +13,15 @@
 //               functionMocks 로 users/{uid} get/exists 모킹) · reports 복합 ID 패턴 ·
 //               reports admin 전용 read 회수 · users.status 자가 변조 차단(F-B) ·
 //               moderation_logs 클라 접근 차단 · admin 블라인드 잠금(F-A, hiddenBy)
+//            ⑥ 홈 영상 승인 큐 24케이스 (2026-07) — create pending 강제(자가 승인 차단) · CTA(ctaText/ctaUrl 유튜브 링크만) ·
+//               createdAt==request.time(serverTimestamp 강제) · 유튜브 URL 형태 ·
+//               approved 만 공개 read(쿼리 provability) · admin 승인 update · 본인 delete ·
+//               본인 authorUid list(마이페이지 내 등록 영상) 허용/타인 거부
+//            ⑦ 1:1 채팅 46케이스 (2026-07) — chats ID 패턴 {postId}_{inquirerUid} ·
+//               participants 위조/자기채팅 거부 · unreadFor⊆participants(배지 DoS 가드) ·
+//               blockedBy 본인만 증감 + 차단 시 대화 동결(요약 갱신·메시지 거부, 읽음 처리는 허용) ·
+//               messages 부모 chat get 모킹(getMock) · 수정/삭제 금지(기록 보존) ·
+//               profiles 공개 카드(본인 쓰기·hasOnly·https 사진·list 차단)
 //  · 주의:   App Check Enforce 계층 차단은 본 스위트로 못 잡는다 — 콘솔 작업(K4류)
 //            후엔 운영 도메인에서 공개 페이지 1회 열람 확인 병행할 것.
 // ════════════════════════════════════════════════════════════════════
@@ -55,6 +65,7 @@ const accomMax = Object.assign({}, accomData, {
   bedrooms: 3, bathrooms: 2, carSpaces: 1,
   types: ['house', 'unit'], roomTypes: ['master', 'second'],
   imageUrls: ['https://x.com/a.jpg', 'https://x.com/b.jpg'],
+  chatAllowed: true,   // 채팅 문의 옵트인 (2026-07)
 });
 const jobsLikeData = {
   title: '구인', body: '본문', state: 'qld', postType: 'offer', empType: 'casual',
@@ -62,6 +73,7 @@ const jobsLikeData = {
   kakaoLink: '', author: 'a', uid: 'testuser123',
   authorUid: 'testuser123', date: '06/10', time: '12:00',
   status: 'approved', createdAt: '2026-06-10T00:00:00Z', id: 'x',
+  chatAllowed: true,   // 채팅 문의 옵트인 (2026-07)
 };
 const autoData = {
   title: '2020 Corolla', body: '본문', state: 'qld', category: 'used',
@@ -73,6 +85,7 @@ const autoData = {
   author: 'a', uid: 'testuser123', authorUid: 'testuser123',
   date: '06/10', time: '12:00', id: 'x',
   createdAt: '2026-06-10T00:00:00Z',
+  chatAllowed: true,   // 채팅 문의 옵트인 (2026-07)
 };
 const badPriceData   = Object.assign({}, accomData, { price: '222' });
 const rogueKeyData   = Object.assign({}, accomData, { garbage: 'x' });
@@ -139,6 +152,15 @@ function mk(opts) {
       { function: 'get',    args: [{ anyValue: {} }], result: { value: { data: { status: opts.userDocStatus } } } },
     ];
   }
+  //   · getMock: 임의 get() 반환 데이터 모킹 (chats/messages — 부모 chat doc 검증용).
+  //     exists 는 false 유지 → notSuspended/isAdmin 이 users get 을 안 타므로
+  //     get 모킹이 부모 chat doc 전용으로 작동 (users get 과 충돌 없음).
+  if (opts.getMock) {
+    c.functionMocks = [
+      { function: 'exists', args: [{ anyValue: {} }], result: { value: false } },
+      { function: 'get',    args: [{ anyValue: {} }], result: { value: { data: opts.getMock } } },
+    ];
+  }
   return c;
 }
 // reports 표준 페이로드 — koaus-report.js 신규 스키마 (복합 ID + 스냅샷)
@@ -149,15 +171,60 @@ const reportData = {
   postAuthorUid: 'author456', postBodyExcerpt: '본문 요약',
   status: 'pending', createdAt: '2026-06-10T00:00:00Z',
 };
+// videos 표준 페이로드 — koaus-home-videos.js 등록 모달 스키마 (승인 큐: pending 강제)
+//   createdAt 은 rules 가 == request.time 강제(serverTimestamp) — mkCreate 의 time 과 동일 문자열.
+const videoData = {
+  videoId: 'abc123XYZ_-',
+  url: 'https://www.youtube.com/shorts/abc123XYZ_-',
+  title: '테스트 영상',
+  status: 'pending', authorUid: 'testuser123',
+  createdAt: '2026-06-10T00:00:00Z',
+};
+// daily_posts 표준 페이로드 — trades.html 일상 자기 PR 보드 (2026-07 개편) 클라 스키마
+//   title=이름/상호(≤60) · body=포트폴리오(≤3000) · category food|beauty|tech ·
+//   openKakaoUrl=open.kakao.com 만 · googleReviewUrl=구글 지도 도메인만 · phone=숫자만
+const dailyData = {
+  title: '시드니 한식 반찬가게', body: '10년 경력 반찬 전문. 주문 제작 가능합니다.',
+  category: 'food', intro: '정성으로 만드는 집반찬', closing: '편하게 연락 주세요!',
+  address: 'Strathfield NSW 2135', lat: -33.87, lng: 151.09, locationPrivate: true,
+  chatAllowed: true, imageUrls: [], coverImageUrl: '', avatarUrl: '',
+  phone: '0412345678', openKakaoUrl: 'https://open.kakao.com/o/abc123',
+  googleReviewUrl: 'https://maps.app.goo.gl/xyz789',
+  state: 'nsw', status: 'approved', author: '테스터',
+  uid: 'testuser123', authorUid: 'testuser123',
+  date: '07/11', time: '12:00', createdAt: '2026-06-10T00:00:00Z',
+};
+// chats 표준 페이로드 — koaus-contact-actions.js ensure-create 스키마 (2026-07 채팅)
+//   chatId = {postId}_{inquirerUid} · participants = [ownerUid, inquirerUid] 고정 순서
+//   createdAt == request.time 강제 — mkCreate/mk 의 time 과 동일 문자열
+const chatData = {
+  postId: 'post123', board: 'accom', postTitle: '테스트 글',
+  ownerUid: 'owner456xyz', inquirerUid: 'testuser123',
+  participants: ['owner456xyz', 'testuser123'],
+  ownerNick: '글쓴이', inquirerNick: '문의자',
+  unreadFor: [], blockedBy: [],
+  createdAt: '2026-06-10T00:00:00Z',
+};
+// messages 표준 페이로드 + 부모 chat get 모킹 데이터 (mk getMock)
+const msgData = {
+  senderUid: 'testuser123', text: '안녕하세요, 문의드립니다',
+  createdAt: '2026-06-10T00:00:00Z',
+};
+const chatParent = {
+  participants: ['owner456xyz', 'testuser123'],
+  blockedBy: [],
+};
 
 const cases = [
   // ① create / update
   mkCreate(accomData,     'ALLOW', 'accom_posts', 'create: accom 기본 31키'),
-  mkCreate(accomMax,      'ALLOW', 'accom_posts', 'create: accom 최대 37키 (평가한도 감시)'),
+  mkCreate(accomMax,      'ALLOW', 'accom_posts', 'create: accom 최대 38키 (평가한도 감시)'),
   mkCreate(accomData,     'ALLOW', 'rent_posts',  'create: rent 동일 페이로드'),
   mkCreate(jobsLikeData,  'ALLOW', 'jobs_posts',  'create: jobs'),
   mkCreate(autoData,      'ALLOW', 'auto_posts',  'create: auto'),
   mkCreate(badPriceData,  'DENY',  'accom_posts', 'create: price 문자열 → 거부'),
+  mkCreate(Object.assign({}, accomData, { chatAllowed: 'yes' }),
+                          'DENY',  'accom_posts', 'create: chatAllowed 문자열 → 거부 (pOptBool)'),
   mkCreate(rogueKeyData,  'DENY',  'accom_posts', 'create: 화이트리스트 밖 키 → 거부'),
   mkCreate(crossBoardData,'DENY',  'accom_posts', 'create: 타 게시판 필드(empType) 혼입 → 거부'),
   (() => { const c = mkCreate(accomData, 'DENY', 'accom_posts', 'create: 비로그인 → 거부'); delete c.request.auth; return c; })(),
@@ -305,6 +372,23 @@ const cases = [
   mk({ label: 'reports create postAuthorContact 포함 → 허용 (연락처 스냅샷)', expectation: 'ALLOW',
        path: 'reports/post123_testuser123', method: 'create', uid: 'testuser123',
        data: Object.assign({}, reportData, { postAuthorContact: '📞 0412345678 · ✉️ x@example.com' }) }),
+  // 자기소개서 Living/Work 분리 (2026-07) — users introLiving/introWork ≤700 개별 가드
+  mk({ label: 'users 본인 introLiving 700자 → 허용', expectation: 'ALLOW',
+       path: 'users/testuser123', method: 'update', uid: 'testuser123',
+       data:         { email: 'e@e.com', nickname: 'n', introLiving: '가'.repeat(700) },
+       resourceData: { email: 'e@e.com', nickname: 'n' } }),
+  mk({ label: 'users 본인 introLiving 701자(>700) → 거부', expectation: 'DENY',
+       path: 'users/testuser123', method: 'update', uid: 'testuser123',
+       data:         { email: 'e@e.com', nickname: 'n', introLiving: '가'.repeat(701) },
+       resourceData: { email: 'e@e.com', nickname: 'n' } }),
+  mk({ label: 'users 본인 introWork 숫자형 → 거부 (string 강제)', expectation: 'DENY',
+       path: 'users/testuser123', method: 'update', uid: 'testuser123',
+       data:         { email: 'e@e.com', nickname: 'n', introWork: 12345 },
+       resourceData: { email: 'e@e.com', nickname: 'n' } }),
+  mk({ label: 'users 타인 doc 에 introWork 쓰기 → 거부', expectation: 'DENY',
+       path: 'users/testuser123', method: 'update', uid: 'attacker999',
+       data:         { email: 'e@e.com', nickname: 'n', introWork: '워크 소개' },
+       resourceData: { email: 'e@e.com', nickname: 'n' } }),
   // ⑤ 제재 관리 카드 (2026-06-11) — users list admin 한정 ≤100
   mk({ label: 'users list admin limit 100 → 허용 (제재 관리 카드)', expectation: 'ALLOW',
        path: 'users/someuid', method: 'list', uid: 'adminuid1', admin: true, query: { limit: 100 } }),
@@ -312,6 +396,284 @@ const cases = [
        path: 'users/someuid', method: 'list', uid: 'adminuid1', admin: true, query: { limit: 200 } }),
   mk({ label: 'users list 일반유저 limit 100 → 거부 (enumeration 차단 유지)', expectation: 'DENY',
        path: 'users/someuid', method: 'list', uid: 'testuser123', query: { limit: 100 } }),
+  // ⑥ 홈 영상(videos) 승인 큐 (2026-07) — create pending 강제 / approved 만 공개 / admin 승인
+  mkCreate(videoData,                                              'ALLOW', 'videos', 'create: videos 유효 pending 등록'),
+  mkCreate(Object.assign({}, videoData, { status: 'approved' }),   'DENY',  'videos', 'create: videos 자가 승인(status=approved) → 거부'),
+  mkCreate(Object.assign({}, videoData, { authorEmail: 'l@e.c' }), 'DENY',  'videos', 'create: videos authorEmail 포함 → 거부 (H4)'),
+  mkCreate(Object.assign({}, videoData, { plays: 999 }),           'DENY',  'videos', 'create: videos 화이트리스트 밖 키 → 거부'),
+  mkCreate(Object.assign({}, videoData, { url: 'https://evil.com/watch?v=abc123XYZ' }),
+                                                                   'DENY',  'videos', 'create: videos 유튜브 외 URL → 거부'),
+  (() => { const c = mkCreate(videoData, 'DENY', 'videos', 'create: videos 비로그인 → 거부'); delete c.request.auth; return c; })(),
+  mkCreate(videoData, 'DENY', 'videos', 'create: videos 미인증(폰X·이메일미인증) → 거부 (H2)',
+           { firebase: { sign_in_provider: 'password' } }),
+  mkUnauth('ALLOW', 'videos/abc', 'list', { limit: 20, orderBy: 'createdAt DESC' }, 'unauth: videos approved list (홈 실쿼리)',            { status: 'approved' }),
+  mkUnauth('DENY',  'videos/abc', 'list', { limit: 50, orderBy: 'createdAt DESC' }, 'unauth: videos list limit 50 → 거부 (빌링 캡)',       { status: 'approved' }),
+  mkUnauth('DENY',  'videos/abc', 'list', { limit: 20 },                            'unauth: videos 상태조건 없는 list → 거부 (approved 쿼리 강제)'),
+  mkUnauth('ALLOW', 'videos/abc', 'get',  null, 'unauth: videos approved get',            { status: 'approved', authorUid: 'x' }),
+  mkUnauth('DENY',  'videos/abc', 'get',  null, 'unauth: videos pending get → 거부',      { status: 'pending',  authorUid: 'x' }),
+  mk({ label: 'videos 본인 pending get → 허용 (내 등록 확인)', expectation: 'ALLOW',
+       path: 'videos/vid1', method: 'get', uid: 'testuser123',
+       resourceData: { status: 'pending', authorUid: 'testuser123' } }),
+  mk({ label: 'videos 타인 pending get → 거부', expectation: 'DENY',
+       path: 'videos/vid1', method: 'get', uid: 'attacker999',
+       resourceData: { status: 'pending', authorUid: 'testuser123' } }),
+  mk({ label: 'videos admin 승인(update status→approved) → 허용', expectation: 'ALLOW',
+       path: 'videos/vid1', method: 'update', uid: 'adminuid1', admin: true,
+       data:         Object.assign({}, videoData, { status: 'approved' }),
+       resourceData: Object.assign({}, videoData) }),
+  mk({ label: 'videos 작성자 자가 승인 update → 거부 (admin 전용)', expectation: 'DENY',
+       path: 'videos/vid1', method: 'update', uid: 'testuser123',
+       data:         Object.assign({}, videoData, { status: 'approved' }),
+       resourceData: Object.assign({}, videoData) }),
+  mk({ label: 'videos 작성자 delete(등록 취소) → 허용', expectation: 'ALLOW',
+       path: 'videos/vid1', method: 'delete', uid: 'testuser123',
+       resourceData: { status: 'pending', authorUid: 'testuser123' } }),
+  mk({ label: 'videos 타인 delete → 거부', expectation: 'DENY',
+       path: 'videos/vid1', method: 'delete', uid: 'attacker999',
+       resourceData: { status: 'pending', authorUid: 'testuser123' } }),
+  // videos CTA (2026-07): ctaText ≤60 + ctaUrl 유튜브 링크만(https) — 등록자 입력·운영자 승인 게이트
+  mkCreate(Object.assign({}, videoData, { ctaText: '채널 구경하기', ctaUrl: 'https://www.youtube.com/@koaus' }),
+                                                                   'ALLOW', 'videos', 'create: videos CTA(text+유튜브 url) 포함 → 허용'),
+  mkCreate(Object.assign({}, videoData, { ctaUrl: 'http://evil.com/phish' }),
+                                                                   'DENY',  'videos', 'create: videos ctaUrl http(비-https) → 거부'),
+  mkCreate(Object.assign({}, videoData, { ctaUrl: 'https://www.instagram.com/koaus' }),
+                                                                   'DENY',  'videos', 'create: videos ctaUrl 유튜브 외 https → 거부 (유튜브 전용)'),
+  mkCreate(Object.assign({}, videoData, { ctaText: 'x'.repeat(61) }),
+                                                                   'DENY',  'videos', 'create: videos ctaText 61자 초과 → 거부'),
+  // videos 내 등록 영상 (2026-07 마이페이지): 본인 authorUid list — koaus-video-reg.js 실쿼리
+  //   where('authorUid','==',uid)+orderBy('createdAt','desc')+limit(20) (복합 인덱스 별도)
+  mk({ label: 'videos 본인 authorUid list (마이페이지 내 등록 영상) → 허용', expectation: 'ALLOW',
+       path: 'videos/vid1', method: 'list', uid: 'testuser123',
+       query: { limit: 20, orderBy: 'createdAt DESC' },
+       resourceData: { status: 'pending', authorUid: 'testuser123' } }),
+  mk({ label: 'videos 타인 pending 포함 list → 거부', expectation: 'DENY',
+       path: 'videos/vid1', method: 'list', uid: 'attacker999',
+       query: { limit: 20, orderBy: 'createdAt DESC' },
+       resourceData: { status: 'pending', authorUid: 'testuser123' } }),
+  // ⑧ 일상 자기 PR 보드 daily_posts (2026-07 trades.html 개편) — validDailyCreate
+  mkCreate(dailyData, 'ALLOW', 'daily_posts', 'create: daily 유효 payload (food+비공개 위치)'),
+  mkCreate(Object.assign({}, dailyData, { category: 'legal' }),
+           'DENY',  'daily_posts', 'create: daily 카테고리 3종 외(legal) → 거부'),
+  mkCreate(Object.assign({}, dailyData, { title: 'x'.repeat(61) }),
+           'DENY',  'daily_posts', 'create: daily 이름/상호 61자(>60) → 거부'),
+  mkCreate(Object.assign({}, dailyData, { intro: 'x'.repeat(301) }),
+           'DENY',  'daily_posts', 'create: daily intro 301자(>300) → 거부'),
+  mkCreate(Object.assign({}, dailyData, { phone: '0412-345-678' }),
+           'DENY',  'daily_posts', 'create: daily phone 비숫자 포함 → 거부'),
+  mkCreate(Object.assign({}, dailyData, { phone: '' }),
+           'ALLOW', 'daily_posts', 'create: daily phone 빈값 → 허용 (선택 필드)'),
+  mkCreate(Object.assign({}, dailyData, { openKakaoUrl: 'https://evil.com/o/abc' }),
+           'DENY',  'daily_posts', 'create: daily openKakaoUrl 오픈카톡 외 도메인 → 거부'),
+  mkCreate(Object.assign({}, dailyData, { googleReviewUrl: 'https://phish.com/maps' }),
+           'DENY',  'daily_posts', 'create: daily googleReviewUrl 구글 외 도메인 → 거부'),
+  mkCreate(Object.assign({}, dailyData, { googleReviewUrl: 'https://www.google.com/maps/place/abc' }),
+           'ALLOW', 'daily_posts', 'create: daily googleReviewUrl google.com/maps → 허용'),
+  mkCreate(Object.assign({}, dailyData, { coverImageUrl: 'http://evil.com/a.jpg' }),
+           'DENY',  'daily_posts', 'create: daily coverImageUrl http(비-https) → 거부'),
+  mkCreate(Object.assign({}, dailyData, { garbage: 'x' }),
+           'DENY',  'daily_posts', 'create: daily 화이트리스트 밖 키 → 거부'),
+  mkCreate(Object.assign({}, dailyData, { mode: 'offer', price: 120 }),
+           'DENY',  'daily_posts', 'create: daily 쉐어-클론 필드(mode/price) 혼입 → 거부'),
+  // 2차 개편 (2026-07): coverOrient/primaryContact enum + imageUrls 10 + comment ≤500
+  mkCreate(Object.assign({}, dailyData, { coverOrient: 'portrait', primaryContact: 'sms' }),
+           'ALLOW', 'daily_posts', "create: daily coverOrient 'portrait' + primaryContact 'sms' → 허용"),
+  mkCreate(Object.assign({}, dailyData, { coverOrient: 'diagonal' }),
+           'DENY',  'daily_posts', "create: daily coverOrient enum 외('diagonal') → 거부"),
+  mkCreate(Object.assign({}, dailyData, { primaryContact: 'email' }),
+           'DENY',  'daily_posts', "create: daily primaryContact enum 외('email') → 거부"),
+  mkCreate(Object.assign({}, dailyData, { comment: '코'.repeat(500) }),
+           'ALLOW', 'daily_posts', 'create: daily comment 500자 → 허용'),
+  mkCreate(Object.assign({}, dailyData, { comment: '코'.repeat(501) }),
+           'DENY',  'daily_posts', 'create: daily comment 501자(>500) → 거부'),
+  mkCreate(Object.assign({}, dailyData, { imageUrls: Array(10).fill('https://x.com/a.jpg') }),
+           'ALLOW', 'daily_posts', 'create: daily imageUrls 10개 → 허용 (캐러셀 상한)'),
+  mkCreate(Object.assign({}, dailyData, { imageUrls: Array(11).fill('https://x.com/a.jpg') }),
+           'DENY',  'daily_posts', 'create: daily imageUrls 11개(>10) → 거부'),
+  mkCreate(Object.assign({}, dailyData, { avatarHidden: true }),
+           'ALLOW', 'daily_posts', 'create: daily avatarHidden bool → 허용 (프로필 숨기기)'),
+  mkCreate(Object.assign({}, dailyData, { avatarHidden: 'yes' }),
+           'DENY',  'daily_posts', 'create: daily avatarHidden 문자열 → 거부 (pOptBool)'),
+  mkCreate(Object.assign({}, dailyData, { authorEmail: 'leak@e.com' }),
+           'DENY',  'daily_posts', 'create: daily authorEmail 포함 → 거부 (H4)'),
+  mkCreate(dailyData, 'DENY', 'daily_posts', 'create: daily 미인증(폰X·이메일미인증) → 거부 (H2)',
+           { firebase: { sign_in_provider: 'password' } }),
+  (() => { const c = mkCreate(dailyData, 'DENY', 'daily_posts', 'create: daily 비로그인 → 거부'); delete c.request.auth; return c; })(),
+  mk({ label: 'daily 정지 계정 create → 거부 (notSuspended)', expectation: 'DENY',
+       path: 'daily_posts/newdoc9', method: 'create', uid: 'testuser123',
+       data: dailyData, userDocStatus: 'suspended' }),
+  mkUnauth('ALLOW', 'daily_posts/abc', 'list', { limit: 20, orderBy: 'createdAt DESC' }, 'unauth: daily list limit 20 (보드 실쿼리)'),
+  mkUnauth('DENY',  'daily_posts/abc', 'list', { limit: 100 },                           'unauth: daily list limit 100 → 거부 (빌링 캡)'),
+  mkUnauth('ALLOW', 'daily_posts/abc', 'get',  null,                                     'unauth: daily get (상세 딥링크)'),
+  mk({ label: 'daily 작성자 본인 update → 허용', expectation: 'ALLOW',
+       path: 'daily_posts/existdoc9', method: 'update', uid: 'testuser123',
+       data: Object.assign({}, dailyData, { intro: '수정된 소개' }),
+       resourceData: dailyData }),
+  mk({ label: 'daily 타인 update → 거부', expectation: 'DENY',
+       path: 'daily_posts/existdoc9', method: 'update', uid: 'attacker999',
+       data: Object.assign({}, dailyData, { intro: '변조' }),
+       resourceData: dailyData }),
+  mk({ label: 'daily 작성자 본인 delete → 허용', expectation: 'ALLOW',
+       path: 'daily_posts/existdoc9', method: 'delete', uid: 'testuser123',
+       resourceData: dailyData }),
+  // ⑦ 1:1 채팅 (2026-07) — chats/messages/profiles
+  //   chatId = {postId}_{inquirerUid} (reports 패턴) · participants 고정 2명 ·
+  //   unreadFor⊆participants DoS 가드 · blockedBy 본인만 증감 · 차단 시 대화 동결 ·
+  //   messages 는 부모 chat get 모킹(getMock) 필요
+  mk({ label: 'chats create 유효 {postId}_{inquirerUid} → 허용', expectation: 'ALLOW',
+       path: 'chats/post123_testuser123', method: 'create', uid: 'testuser123',
+       data: chatData }),
+  mk({ label: 'chats create ID 패턴 불일치(임의 ID) → 거부', expectation: 'DENY',
+       path: 'chats/randomid999', method: 'create', uid: 'testuser123',
+       data: chatData }),
+  mk({ label: 'chats create 자기 글에 채팅(owner==본인) → 거부', expectation: 'DENY',
+       path: 'chats/post123_testuser123', method: 'create', uid: 'testuser123',
+       data: Object.assign({}, chatData, { ownerUid: 'testuser123', participants: ['testuser123', 'testuser123'] }) }),
+  mk({ label: 'chats create participants 제3자 위조 → 거부', expectation: 'DENY',
+       path: 'chats/post123_testuser123', method: 'create', uid: 'testuser123',
+       data: Object.assign({}, chatData, { participants: ['owner456xyz', 'attacker999'] }) }),
+  mk({ label: 'chats create unreadFor 비참여자 주입 → 거부 (배지 DoS 가드)', expectation: 'DENY',
+       path: 'chats/post123_testuser123', method: 'create', uid: 'testuser123',
+       data: Object.assign({}, chatData, { unreadFor: ['victimuid9'] }) }),
+  mk({ label: 'chats create blockedBy 선차단 → 거부 (빈 배열 강제)', expectation: 'DENY',
+       path: 'chats/post123_testuser123', method: 'create', uid: 'testuser123',
+       data: Object.assign({}, chatData, { blockedBy: ['testuser123'] }) }),
+  mk({ label: 'chats create 화이트리스트 밖 키 → 거부', expectation: 'DENY',
+       path: 'chats/post123_testuser123', method: 'create', uid: 'testuser123',
+       data: Object.assign({}, chatData, { spam: 'x' }) }),
+  mk({ label: 'chats create 비로그인 → 거부', expectation: 'DENY',
+       path: 'chats/post123_testuser123', method: 'create',
+       data: chatData }),
+  (() => { const c = mk({ label: 'chats create 미인증(폰X·이메일미인증) → 거부 (H2)', expectation: 'DENY',
+       path: 'chats/post123_testuser123', method: 'create', uid: 'testuser123',
+       data: chatData }); delete c.request.auth.token.email_verified; return c; })(),
+  mk({ label: 'chats create 정지 계정 → 거부 (notSuspended)', expectation: 'DENY',
+       path: 'chats/post123_testuser123', method: 'create', uid: 'testuser123',
+       data: chatData, userDocStatus: 'suspended' }),
+  mk({ label: 'chats get 참여자 → 허용', expectation: 'ALLOW',
+       path: 'chats/post123_testuser123', method: 'get', uid: 'testuser123',
+       resourceData: chatData }),
+  mk({ label: 'chats get 비참여자 → 거부', expectation: 'DENY',
+       path: 'chats/post123_testuser123', method: 'get', uid: 'attacker999',
+       resourceData: chatData }),
+  mk({ label: 'chats list 참여자 limit 20 (목록 실쿼리) → 허용', expectation: 'ALLOW',
+       path: 'chats/post123_testuser123', method: 'list', uid: 'testuser123',
+       query: { limit: 20, orderBy: 'lastMsgAt DESC' },
+       resourceData: chatData }),
+  mk({ label: 'chats list limit 50 → 거부 (빌링 캡)', expectation: 'DENY',
+       path: 'chats/post123_testuser123', method: 'list', uid: 'testuser123',
+       query: { limit: 50, orderBy: 'lastMsgAt DESC' },
+       resourceData: chatData }),
+  mk({ label: 'chats list 배지 쿼리(unreadFor 포함 doc, limit 1) → 허용', expectation: 'ALLOW',
+       path: 'chats/post123_testuser123', method: 'list', uid: 'testuser123',
+       query: { limit: 1 },
+       resourceData: Object.assign({}, chatData, { unreadFor: ['testuser123'] }) }),
+  mk({ label: 'chats update 메시지 요약(본인 발신) → 허용', expectation: 'ALLOW',
+       path: 'chats/post123_testuser123', method: 'update', uid: 'testuser123',
+       data: Object.assign({}, chatData, { lastMsg: '안녕하세요', lastMsgAt: '2026-06-10T00:00:00Z',
+                                           lastSenderUid: 'testuser123', unreadFor: ['owner456xyz'] }),
+       resourceData: chatData }),
+  mk({ label: 'chats update 허용 외 필드(postTitle) 변조 → 거부', expectation: 'DENY',
+       path: 'chats/post123_testuser123', method: 'update', uid: 'testuser123',
+       data: Object.assign({}, chatData, { postTitle: '변조 제목' }),
+       resourceData: chatData }),
+  mk({ label: 'chats update 비참여자 → 거부', expectation: 'DENY',
+       path: 'chats/post123_testuser123', method: 'update', uid: 'attacker999',
+       data: Object.assign({}, chatData, { lastMsg: 'x', lastMsgAt: '2026-06-10T00:00:00Z',
+                                           lastSenderUid: 'attacker999' }),
+       resourceData: chatData }),
+  mk({ label: 'chats update lastSenderUid 위조(상대 명의 발신) → 거부', expectation: 'DENY',
+       path: 'chats/post123_testuser123', method: 'update', uid: 'testuser123',
+       data: Object.assign({}, chatData, { lastMsg: 'x', lastMsgAt: '2026-06-10T00:00:00Z',
+                                           lastSenderUid: 'owner456xyz' }),
+       resourceData: chatData }),
+  mk({ label: 'chats update unreadFor 비참여자 주입 → 거부 (배지 DoS 가드)', expectation: 'DENY',
+       path: 'chats/post123_testuser123', method: 'update', uid: 'testuser123',
+       data: Object.assign({}, chatData, { unreadFor: ['victimuid9'] }),
+       resourceData: chatData }),
+  mk({ label: 'chats update 차단(blockedBy 본인 추가) → 허용', expectation: 'ALLOW',
+       path: 'chats/post123_testuser123', method: 'update', uid: 'testuser123',
+       data: Object.assign({}, chatData, { blockedBy: ['testuser123'] }),
+       resourceData: chatData }),
+  mk({ label: 'chats update blockedBy 에 타인 uid 추가 → 거부 (본인만 증감)', expectation: 'DENY',
+       path: 'chats/post123_testuser123', method: 'update', uid: 'testuser123',
+       data: Object.assign({}, chatData, { blockedBy: ['owner456xyz'] }),
+       resourceData: chatData }),
+  mk({ label: 'chats update 상대 차단 해제 시도 → 거부 (본인만 증감)', expectation: 'DENY',
+       path: 'chats/post123_testuser123', method: 'update', uid: 'testuser123',
+       data: Object.assign({}, chatData, { blockedBy: [] }),
+       resourceData: Object.assign({}, chatData, { blockedBy: ['owner456xyz'] }) }),
+  mk({ label: 'chats update 차단 상태 메시지 요약 갱신 → 거부 (대화 동결)', expectation: 'DENY',
+       path: 'chats/post123_testuser123', method: 'update', uid: 'testuser123',
+       data: Object.assign({}, chatData, { blockedBy: ['owner456xyz'], lastMsg: 'x',
+                                           lastMsgAt: '2026-06-10T00:00:00Z', lastSenderUid: 'testuser123' }),
+       resourceData: Object.assign({}, chatData, { blockedBy: ['owner456xyz'] }) }),
+  mk({ label: 'chats update 차단 상태 읽음 처리(unreadFor 비우기) → 허용', expectation: 'ALLOW',
+       path: 'chats/post123_testuser123', method: 'update', uid: 'testuser123',
+       data: Object.assign({}, chatData, { blockedBy: ['owner456xyz'], unreadFor: [] }),
+       resourceData: Object.assign({}, chatData, { blockedBy: ['owner456xyz'], unreadFor: ['testuser123'] }) }),
+  mk({ label: 'chats update 본인 차단 해제 → 허용', expectation: 'ALLOW',
+       path: 'chats/post123_testuser123', method: 'update', uid: 'testuser123',
+       data: Object.assign({}, chatData, { blockedBy: [] }),
+       resourceData: Object.assign({}, chatData, { blockedBy: ['testuser123'] }) }),
+  mk({ label: 'chats delete 참여자 본인 → 거부 (기록 보존 — admin 전용)', expectation: 'DENY',
+       path: 'chats/post123_testuser123', method: 'delete', uid: 'testuser123',
+       resourceData: chatData }),
+  mk({ label: 'messages create 참여자 → 허용 (부모 chat get 모킹)', expectation: 'ALLOW',
+       path: 'chats/post123_testuser123/messages/msg1', method: 'create', uid: 'testuser123',
+       data: msgData, getMock: chatParent }),
+  mk({ label: 'messages create 비참여자 → 거부', expectation: 'DENY',
+       path: 'chats/post123_testuser123/messages/msg1', method: 'create', uid: 'attacker999',
+       data: Object.assign({}, msgData, { senderUid: 'attacker999' }), getMock: chatParent }),
+  mk({ label: 'messages create senderUid 위조 → 거부', expectation: 'DENY',
+       path: 'chats/post123_testuser123/messages/msg1', method: 'create', uid: 'testuser123',
+       data: Object.assign({}, msgData, { senderUid: 'owner456xyz' }), getMock: chatParent }),
+  mk({ label: 'messages create 차단 상태 → 거부 (대화 동결)', expectation: 'DENY',
+       path: 'chats/post123_testuser123/messages/msg1', method: 'create', uid: 'testuser123',
+       data: msgData, getMock: Object.assign({}, chatParent, { blockedBy: ['owner456xyz'] }) }),
+  mk({ label: 'messages create 1001자 → 거부 (길이 캡)', expectation: 'DENY',
+       path: 'chats/post123_testuser123/messages/msg1', method: 'create', uid: 'testuser123',
+       data: Object.assign({}, msgData, { text: 'x'.repeat(1001) }), getMock: chatParent }),
+  mk({ label: 'messages create 화이트리스트 밖 키 → 거부', expectation: 'DENY',
+       path: 'chats/post123_testuser123/messages/msg1', method: 'create', uid: 'testuser123',
+       data: Object.assign({}, msgData, { imageUrl: 'https://x.com/a.jpg' }), getMock: chatParent }),
+  mk({ label: 'messages list 참여자 limit 50 → 허용', expectation: 'ALLOW',
+       path: 'chats/post123_testuser123/messages/msg1', method: 'list', uid: 'testuser123',
+       query: { limit: 50, orderBy: 'createdAt DESC' }, getMock: chatParent,
+       resourceData: msgData }),
+  mk({ label: 'messages list limit 100 → 거부 (빌링 캡)', expectation: 'DENY',
+       path: 'chats/post123_testuser123/messages/msg1', method: 'list', uid: 'testuser123',
+       query: { limit: 100, orderBy: 'createdAt DESC' }, getMock: chatParent,
+       resourceData: msgData }),
+  mk({ label: 'messages list 비참여자 → 거부', expectation: 'DENY',
+       path: 'chats/post123_testuser123/messages/msg1', method: 'list', uid: 'attacker999',
+       query: { limit: 50, orderBy: 'createdAt DESC' }, getMock: chatParent,
+       resourceData: msgData }),
+  mk({ label: 'messages update 발신자 본인 → 거부 (수정 금지·기록 보존)', expectation: 'DENY',
+       path: 'chats/post123_testuser123/messages/msg1', method: 'update', uid: 'testuser123',
+       data: Object.assign({}, msgData, { text: '수정' }), resourceData: msgData }),
+  mk({ label: 'messages delete 발신자 본인 → 거부 (admin 전용)', expectation: 'DENY',
+       path: 'chats/post123_testuser123/messages/msg1', method: 'delete', uid: 'testuser123',
+       resourceData: msgData }),
+  // profiles — 공개 최소 카드 (닉네임/사진만)
+  mk({ label: 'profiles 본인 create(nickname+photoURL) → 허용', expectation: 'ALLOW',
+       path: 'profiles/testuser123', method: 'create', uid: 'testuser123',
+       data: { nickname: '테스터', photoURL: 'https://firebasestorage.googleapis.com/v0/b/x/o/p.jpg',
+               updatedAt: '2026-06-10T00:00:00Z' } }),
+  mk({ label: 'profiles 타인 doc 쓰기 → 거부', expectation: 'DENY',
+       path: 'profiles/owner456xyz', method: 'create', uid: 'testuser123',
+       data: { nickname: '사칭' } }),
+  mk({ label: 'profiles PII(email) 포함 → 거부 (hasOnly)', expectation: 'DENY',
+       path: 'profiles/testuser123', method: 'create', uid: 'testuser123',
+       data: { nickname: '테스터', email: 'leak@e.com' } }),
+  mk({ label: 'profiles photoURL http(비-https) → 거부', expectation: 'DENY',
+       path: 'profiles/testuser123', method: 'create', uid: 'testuser123',
+       data: { nickname: '테스터', photoURL: 'http://evil.com/p.jpg' } }),
+  mk({ label: 'profiles get 로그인 유저 → 허용 (채팅 상대 별명 조회)', expectation: 'ALLOW',
+       path: 'profiles/owner456xyz', method: 'get', uid: 'testuser123',
+       resourceData: { nickname: '글쓴이' } }),
+  mkUnauth('DENY', 'profiles/owner456xyz', 'get', null, 'unauth: profiles get → 거부 (크롤링 차단)'),
+  mk({ label: 'profiles list → 거부 (열거 차단)', expectation: 'DENY',
+       path: 'profiles/owner456xyz', method: 'list', uid: 'testuser123', query: { limit: 20 } }),
 ];
 
 // ── 기본 functionMocks 주입 ──

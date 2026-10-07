@@ -155,6 +155,7 @@ service cloud.firestore {
         && pOptBool(d, 'kidsInHouse')
         && pOptBool(d, 'airCon')
         && pOptBool(d, 'locationPrivate')
+        && pOptBool(d, 'chatAllowed')
         && pOptList(d, 'imageUrls', 8)
         && pOptList(d, 'types', 10)
         && pOptList(d, 'roomTypes', 10)
@@ -162,7 +163,7 @@ service cloud.firestore {
              'uid', 'authorUid', 'author',
              'state', 'status', 'date', 'time', 'createdAt', 'updatedAt', 'id',
              'title', 'body', 'mode', 'contact', 'phone', 'kakaoLink', 'contactEmail',
-             'address', 'lat', 'lng', 'locationPrivate', 'imageUrls',
+             'address', 'lat', 'lng', 'locationPrivate', 'chatAllowed', 'imageUrls',
              'propType', 'types', 'roomTypes', 'gender', 'availableDate', 'minStay',
              'bedrooms', 'bathrooms', 'carSpaces',
              'parking', 'petFriendly', 'kidsInHouse', 'airCon', 'price'
@@ -178,13 +179,14 @@ service cloud.firestore {
         && pOptStr(d, 'payUnit', 20)
         && pOptInt(d, 'payAmount', 0, 9999999)
         && pOptBool(d, 'visaEligible')
+        && pOptBool(d, 'chatAllowed')
         && pOptList(d, 'imageUrls', 8)
         && d.keys().hasOnly([
              'uid', 'authorUid', 'author',
              'state', 'status', 'date', 'time', 'createdAt', 'updatedAt', 'id',
              'title', 'body', 'mode', 'contact', 'phone', 'kakaoLink', 'contactEmail',
              'address', 'lat', 'lng', 'imageUrls',
-             'postType', 'category', 'empType', 'payUnit', 'payAmount', 'visaEligible'
+             'postType', 'category', 'empType', 'payUnit', 'payAmount', 'visaEligible', 'chatAllowed'
            ]);
     }
     // auto(차량) — 중고차/점검·긴급출동 필드 + 스키마 화이트리스트
@@ -208,16 +210,63 @@ service cloud.firestore {
         && pOptBool(d, 'inspectionAvailable')
         && pOptBool(d, 'emergencyAvailable')
         && pOptBool(d, 'locationPrivate')
+        && pOptBool(d, 'chatAllowed')
         && pOptList(d, 'imageUrls', 8)
         && d.keys().hasOnly([
              'uid', 'authorUid', 'author',
              'state', 'status', 'date', 'time', 'createdAt', 'updatedAt', 'id',
              'title', 'body', 'mode', 'contact', 'phone', 'kakaoLink', 'contactEmail',
-             'address', 'lat', 'lng', 'locationPrivate', 'imageUrls',
+             'address', 'lat', 'lng', 'locationPrivate', 'chatAllowed', 'imageUrls',
              'category', 'region', 'brand', 'model', 'year', 'mileage',
              'rwc', 'regoExpiry', 'hours', 'isPremium', 'timeSlot',
              'inspectionAvailable', 'inspectionPrice',
              'emergencyAvailable', 'emergencyPrice', 'price'
+           ]);
+    }
+
+    // daily(일상 자기 PR 보드 — trades.html 2026-07 개편) — 음식/미용/기술 3카테고리 PR 필드
+    //   · 별도 검증기 — 기존 검증기 3개에 합치지 말 것 (1,000 표현식 평가 한도 회귀 방지)
+    //   · title = 이름/상호(≤60), body = 포트폴리오 본문(≤3000), intro = 자기소개(≤300)
+    //   · openKakaoUrl: open.kakao.com 만 / googleReviewUrl: 구글 지도 도메인만 (클라 regex 와 이중 게이트)
+    //   · phone: 숫자만 (클라 input 은 inputmode=numeric + 비숫자 즉시 필터)
+    //   · 정확 위치는 daily_posts/{id}/private_data — 공개 doc 은 redact 주소 + 오프셋 좌표만
+    function validDailyCreate() {
+      let d = request.resource.data;
+      return validBaseCreate(d)
+        && d.title.size() <= 60
+        && d.body.size() <= 3000
+        && pReqStr(d, 'category', 1, 20)
+        && (d.category == 'food' || d.category == 'beauty' || d.category == 'tech')
+        && pOptStr(d, 'intro', 300)
+        && pOptStr(d, 'closing', 200)
+        && pOptStr(d, 'comment', 500)
+        // 커버 사진 방향 + 우선 문의 수단 (2026-07 2차 — 커버 우하단 바로가기 버튼)
+        && (!('coverOrient' in d) || d.coverOrient == 'portrait' || d.coverOrient == 'landscape')
+        && (!('primaryContact' in d) || d.primaryContact == 'sms' || d.primaryContact == 'kakao' || d.primaryContact == 'chat')
+        && (!('phone' in d) || d.phone == '' || d.phone.matches('[0-9]{6,15}'))
+        && (!('openKakaoUrl' in d) || d.openKakaoUrl == ''
+            || (d.openKakaoUrl is string && d.openKakaoUrl.size() <= 300
+                && d.openKakaoUrl.matches('https://open[.]kakao[.]com/.+')))
+        && (!('googleReviewUrl' in d) || d.googleReviewUrl == ''
+            || (d.googleReviewUrl is string && d.googleReviewUrl.size() <= 500
+                && d.googleReviewUrl.matches('https://((www[.])?google[.]com/maps.*|maps[.]app[.]goo[.]gl/.+|g[.]page/.+)')))
+        && (!('coverImageUrl' in d) || d.coverImageUrl == ''
+            || (d.coverImageUrl is string && d.coverImageUrl.size() <= 500
+                && d.coverImageUrl.matches('https://.+')))
+        && (!('avatarUrl' in d) || d.avatarUrl == ''
+            || (d.avatarUrl is string && d.avatarUrl.size() <= 500
+                && d.avatarUrl.matches('https://.+')))
+        && pOptBool(d, 'locationPrivate')
+        && pOptBool(d, 'chatAllowed')
+        && pOptBool(d, 'avatarHidden')
+        && pOptList(d, 'imageUrls', 10)
+        && d.keys().hasOnly([
+             'uid', 'authorUid', 'author',
+             'state', 'status', 'date', 'time', 'createdAt', 'updatedAt', 'id',
+             'title', 'body', 'category', 'intro', 'closing', 'comment',
+             'address', 'lat', 'lng', 'locationPrivate', 'chatAllowed',
+             'imageUrls', 'coverImageUrl', 'avatarUrl', 'avatarHidden', 'coverOrient', 'primaryContact',
+             'phone', 'openKakaoUrl', 'googleReviewUrl'
            ]);
     }
 
@@ -361,6 +410,20 @@ service cloud.firestore {
       allow delete: if isAdmin() || ownerOnExisting();
     }
 
+    // 일상 자기 PR 보드 (trades.html 2026-07 개편 — services 사용 중단, 전용 컬렉션)
+    match /daily_posts/{postId} {
+      allow get:    if true;
+      allow list:   if isAdmin() || limitedList();   // isAdmin: count() 집계(limit 없음) 허용
+      allow create: if validDailyCreate();
+      allow update: if isAdmin()
+                       || ( ownerOnExisting()
+                            && uidLocked()
+                            && noModeratorFieldChange()
+                            && statusAllowedForOwner()
+                            && adminBlindLock() );
+      allow delete: if isAdmin() || ownerOnExisting();
+    }
+
     // ════════════════════════════════════════════════════════════════
     // 정확 위치 정보 서브컬렉션 (지시 2/5 — 위치 프라이버시 대공사)
     //   각 매물 글이 '비공개(locationPrivate:true)'로 등록된 경우,
@@ -439,6 +502,25 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
+    match /daily_posts/{postId}/private_data/{docId} {
+      allow get:  if isSignedIn()
+                     && (isAdmin() || resource.data.ownerUid == request.auth.uid);
+      allow list: if false;
+      allow create: if isAdmin()
+                       || ( isSignedIn()
+                            && request.resource.data.ownerUid == request.auth.uid
+                            && get(/databases/$(database)/documents/daily_posts/$(postId)).data.uid == request.auth.uid
+                            && reqStr('exactAddress', 1, 500)
+                            && request.resource.data.exactLat is number
+                            && request.resource.data.exactLng is number
+                            && request.resource.data.exactLat >= -90
+                            && request.resource.data.exactLat <= 90
+                            && request.resource.data.exactLng >= -180
+                            && request.resource.data.exactLng <= 180 );
+      allow update, delete: if isAdmin()
+                               || (isSignedIn() && resource.data.ownerUid == request.auth.uid);
+    }
+
     match /auto_posts/{postId}/private_data/{docId} {
       allow get:  if isSignedIn()
                      && (isAdmin() || resource.data.ownerUid == request.auth.uid);
@@ -488,7 +570,15 @@ service cloud.firestore {
                        // role 필드 자체 부여 차단 (시스템 향후 확장 대비 — 'user' 외 값 봉쇄)
                        && (!('role' in request.resource.data) || request.resource.data.role == 'user')
                        // status 자체 부여 차단 — 제재 상태는 suspendUser callable(Admin SDK) 전용
-                       && !('status' in request.resource.data);
+                       && !('status' in request.resource.data)
+                       // 자기소개서 — 선택, 문자열, 700자 이하 (빌링/악용 방어)
+                       && (!('introText' in request.resource.data)
+                           || (request.resource.data.introText is string && request.resource.data.introText.size() <= 700))
+                       // 자기소개서 Living/Work 분리 (2026-07) — introText 는 옛 클라 호환 유지, 저장은 신규 2필드
+                       && (!('introLiving' in request.resource.data)
+                           || (request.resource.data.introLiving is string && request.resource.data.introLiving.size() <= 700))
+                       && (!('introWork' in request.resource.data)
+                           || (request.resource.data.introWork is string && request.resource.data.introWork.size() <= 700));
       allow update: if isAdmin()
                        || ( isSignedIn()
                             && request.auth.uid == uid
@@ -504,6 +594,14 @@ service cloud.firestore {
                             // status 변조 금지 (F-B) — 정지자가 자기 status 를 'active' 로 되돌리는 우회 차단
                             && (!('status' in request.resource.data)
                                 || (('status' in resource.data) && request.resource.data.status == resource.data.status))
+                            // 자기소개서 — 선택, 문자열, 700자 이하 (빌링/악용 방어)
+                            && (!('introText' in request.resource.data)
+                                || (request.resource.data.introText is string && request.resource.data.introText.size() <= 700))
+                            // 자기소개서 Living/Work 분리 (2026-07)
+                            && (!('introLiving' in request.resource.data)
+                                || (request.resource.data.introLiving is string && request.resource.data.introLiving.size() <= 700))
+                            && (!('introWork' in request.resource.data)
+                                || (request.resource.data.introWork is string && request.resource.data.introWork.size() <= 700))
                           );
       allow delete: if isAdmin() || (isSignedIn() && request.auth.uid == uid);
     }
@@ -534,6 +632,49 @@ service cloud.firestore {
       allow update: if isSignedIn() && resource.data.uid == request.auth.uid
                        && request.resource.data.uid == request.auth.uid;
       allow delete: if isSignedIn() && resource.data.uid == request.auth.uid;
+    }
+
+    // ── 홈 영상(videos) — 유저 등록 → 운영자 승인 큐 (2026-07) ──
+    //   · create: 폰인증 유저 + 미정지, status 'pending' 강제(자가 승인 차단),
+    //     유튜브 URL/videoId 형태만, createdAt == request.time (serverTimestamp 강제 — 큐 순서 위조 차단)
+    //   · 공개 read: approved 만 — 홈 쿼리는 where('status','==','approved') 필수
+    //     (조건 없는 list 는 rules 가 통째로 거부). 본인 글은 pending 도 조회 가능, admin 은 전부.
+    //   · update: admin 전용 (승인 = status 'approved'). 작성자 수정 불가 — 거부 후 재등록 정책.
+    //   · delete: admin + 작성자 본인(등록 취소).
+    //   · 빌링 방어: list ≤20 (limitedList), 필드 길이 캡 + hasOnly 화이트리스트.
+    //   · CTA(선택): ctaText ≤60 + ctaUrl **유튜브 링크만**(youtube.com/youtu.be, https) ≤300 —
+    //     등록자 입력, 운영자가 승인 큐에서 링크 검토 후 승인(스팸/피싱 게이트).
+    //     플레이어 하단 "텍스트 >" 링크로 렌더. (2026-07: 임의 https → 유튜브 전용으로 조임)
+    match /videos/{id} {
+      allow create: if isVerifiedUser()
+                       && notSuspended()
+                       && data().authorUid == request.auth.uid
+                       && data().status == 'pending'
+                       && reqStr('videoId', 6, 20)
+                       && data().videoId.matches('[A-Za-z0-9_-]+')
+                       && reqStr('url', 10, 300)
+                       && data().url.matches('https://((www|m)[.])?(youtube[.]com|youtu[.]be)/.*')
+                       && optStr('title', 200)
+                       && optStr('ctaText', 60)
+                       && (!('ctaUrl' in data())
+                           || (data().ctaUrl is string
+                               && data().ctaUrl.size() <= 300
+                               && data().ctaUrl.matches('https://((www|m)[.])?(youtube[.]com|youtu[.]be)/.+')))
+                       && 'createdAt' in data() && data().createdAt == request.time
+                       && data().keys().hasOnly([
+                            'videoId', 'url', 'title', 'status', 'authorUid', 'createdAt',
+                            'ctaText', 'ctaUrl'
+                          ]);
+      allow get:  if resource.data.status == 'approved'
+                     || isAdmin()
+                     || (isSignedIn() && resource.data.authorUid == request.auth.uid);
+      allow list: if limitedList()
+                     && (resource.data.status == 'approved'
+                         || isAdmin()
+                         || (isSignedIn() && resource.data.authorUid == request.auth.uid));
+      allow update: if isAdmin();
+      allow delete: if isAdmin()
+                       || (isSignedIn() && resource.data.authorUid == request.auth.uid && notSuspended());
     }
 
     // ── 신고(reports) — 제재 시스템 3단계 (2026-06-11 확장) ──
@@ -594,6 +735,30 @@ service cloud.firestore {
                        && optStr('contact', 100)
                        && optStr('email', 200);
       allow update, delete: if isAdmin();
+    }
+
+    // ── 문의 클릭 로그(inquiry_logs) — 연락 버튼(문자/카톡/메일/복사) 탭 집계 ──
+    //   · 목적: 운영자가 "문의하기를 눌렀는지" 관리자 화면(문의 로그 카드)에서 확인 (GA 보조)
+    //   · 기록 시점 = 버튼 탭 순간만. 메시지 실제 발송/계약 성사 여부는 알 수 없음(한계).
+    //   · 문서 ID = {board}_{listingId}_{uid}_{method} 고정 → 같은 사람 같은 버튼 반복 클릭은
+    //     update(덮어쓰기)로 합쳐져 read/write 폭탄 방어 (dedup, 빌링 안전망)
+    //   · create/update: 로그인 + 정지 아님 + 본인(uid 일치)만. 필드 길이 강제.
+    //   · read/list/delete 는 admin 전용 (list ≤ 200).
+    match /inquiry_logs/{id} {
+      allow get:    if isAdmin();
+      allow list:   if isAdmin() && request.query.limit <= 200;
+      allow create, update:
+                    if isSignedIn()
+                       && notSuspended()
+                       && data().uid == request.auth.uid
+                       && data().keys().hasOnly(['board','listingId','method','uid','at','listingTitle','state','nickname'])
+                       && reqStr('board', 1, 40)
+                       && reqStr('listingId', 1, 200)
+                       && reqStr('method', 1, 20)
+                       && optStr('listingTitle', 300)
+                       && optStr('state', 12)
+                       && optStr('nickname', 100);
+      allow delete: if isAdmin();
     }
 
     // ════════════════════════════════════════════════════════════════
@@ -820,6 +985,131 @@ service cloud.firestore {
                                && optInt('heroDelaySec',       1,   30)
                                && optInt('marqueeDurationSec', 5,  300);
       allow delete: if isAdmin();
+    }
+
+    // ── 공개 프로필 카드(profiles) — 1:1 채팅 별명/사진 표시용 (2026-07 채팅 도입) ──
+    //   · 배경: users/{uid} get 은 admin||본인 전용(이메일·보안질문 PII) → 채팅 상대 별명을
+    //     읽을 공개 최소 카드가 필요. nicknames/{nick} 은 닉→uid 방향이라 역조회 불가(list:false).
+    //   · 필드: nickname / photoURL / updatedAt 만 (hasOnly) — PII 없음.
+    //   · get: 로그인 유저만(비로그인 크롤링 차단) · list: 전면 차단(열거 방지).
+    //   · 쓰기: 본인만. settings.html 닉네임/사진 저장 시 동기화 + 채팅 페이지 lazy self-heal.
+    match /profiles/{uid} {
+      allow get:  if isSignedIn();
+      allow list: if false;
+      allow create, update: if isSignedIn()
+                               && request.auth.uid == uid
+                               && notSuspended()
+                               && optStr('nickname', 30)
+                               && (!('photoURL' in data())
+                                   || (data().photoURL is string
+                                       && data().photoURL.size() <= 500
+                                       && data().photoURL.matches('https://.+')))
+                               && (!('updatedAt' in data()) || data().updatedAt == request.time)
+                               && data().keys().hasOnly(['nickname', 'photoURL', 'updatedAt']);
+      allow delete: if isAdmin() || (isSignedIn() && request.auth.uid == uid);
+    }
+
+    // ── 1:1 채팅(chats) — 상세페이지 "채팅 문의" (2026-07) ──
+    //   · 문서 ID = {postId}_{inquirerUid} (reports 패턴) — 같은 글·같은 문의자는 항상 같은 방
+    //     (중복 방 방지) + 임의 ID(addDoc) 차단. 문의자만 create (글쓴이 자신과의 채팅 금지).
+    //   · participants = [ownerUid, inquirerUid] 고정 순서 2명 — 목록 쿼리
+    //     where('participants','array-contains',uid) + orderBy('lastMsgAt') (복합 인덱스 필수).
+    //   · 별명 정책(사용자 확정): 익명 아님·별명끼리, 별명 변경해도 대화 기록 유지 —
+    //     doc 에는 스냅샷(ownerNick/inquirerNick)만 두고 표시 시 profiles/{uid} 로 갱신.
+    //   · unreadFor DoS 방어: participants.hasAll(unreadFor) 필수 — 이 가드가 없으면 임의 uid 를
+    //     unreadFor 에 심어 그 사용자의 배지 쿼리(unreadFor array-contains)에 남의 방을 노출 가능.
+    //     list 의 'uid in unreadFor' disjunct 는 배지 쿼리 provability 용 — unreadFor ⊆ participants
+    //     불변식 위에서만 안전하므로 이 가드를 절대 제거하지 말 것.
+    //   · blockedBy = 차단 누른 참여자 uid 목록. 본인 uid 만 추가/제거 가능(removeAll 양방향 검증).
+    //     한쪽이라도 차단하면 대화 동결 — 요약 필드(lastMsg 등) 갱신·메시지 create 거부,
+    //     읽음 처리(unreadFor)·차단 해제는 허용.
+    //   · delete 금지(참여자 포함) — "대화 기록은 남아야" 사용자 확정. admin 만 삭제.
+    //   · 빌링 방어: list ≤20, 메시지 서브컬렉션 list ≤50, 필드 길이 캡 + hasOnly.
+    match /chats/{chatId} {
+      allow create: if isVerifiedUser()
+                       && notSuspended()
+                       && data().inquirerUid == request.auth.uid
+                       && data().ownerUid is string
+                       && data().ownerUid.size() >= 6 && data().ownerUid.size() <= 128
+                       && data().ownerUid != request.auth.uid
+                       && reqStr('postId', 1, 100)
+                       && chatId == data().postId + '_' + request.auth.uid
+                       && reqStr('board', 1, 30)
+                       && optStr('postTitle', 200)
+                       && optStr('ownerNick', 60)
+                       && optStr('inquirerNick', 60)
+                       && data().participants is list
+                       && data().participants.size() == 2
+                       && data().participants[0] == data().ownerUid
+                       && data().participants[1] == data().inquirerUid
+                       && optStr('lastMsg', 200)
+                       && (!('lastMsgAt' in data()) || data().lastMsgAt == request.time)
+                       && (!('lastSenderUid' in data()) || data().lastSenderUid == request.auth.uid)
+                       && data().unreadFor is list
+                       && data().unreadFor.size() <= 2
+                       && data().participants.hasAll(data().unreadFor)
+                       && data().blockedBy is list
+                       && data().blockedBy.size() == 0
+                       && 'createdAt' in data() && data().createdAt == request.time
+                       && data().keys().hasOnly([
+                            'postId', 'board', 'postTitle', 'ownerUid', 'inquirerUid',
+                            'ownerNick', 'inquirerNick', 'participants',
+                            'lastMsg', 'lastMsgAt', 'lastSenderUid',
+                            'unreadFor', 'blockedBy', 'createdAt'
+                          ]);
+      allow get:  if isAdmin()
+                     || (isSignedIn() && request.auth.uid in resource.data.participants);
+      allow list: if limitedList()
+                     && (isAdmin()
+                         || (isSignedIn() && request.auth.uid in resource.data.participants)
+                         || (isSignedIn() && request.auth.uid in resource.data.unreadFor));
+      allow update: if isSignedIn()
+                       && notSuspended()
+                       && request.auth.uid in resource.data.participants
+                       && request.resource.data.diff(resource.data).affectedKeys()
+                            .hasOnly(['lastMsg', 'lastMsgAt', 'lastSenderUid', 'unreadFor', 'blockedBy'])
+                       // 메시지 요약 갱신은 미차단 상태 + 본인 발신 + serverTimestamp 강제
+                       && (!request.resource.data.diff(resource.data).affectedKeys()
+                              .hasAny(['lastMsg', 'lastMsgAt', 'lastSenderUid'])
+                           || (resource.data.blockedBy.size() == 0
+                               && data().lastSenderUid == request.auth.uid
+                               && data().lastMsg is string && data().lastMsg.size() <= 200
+                               && data().lastMsgAt == request.time))
+                       && data().unreadFor is list
+                       && data().unreadFor.size() <= 2
+                       && resource.data.participants.hasAll(data().unreadFor)
+                       && data().blockedBy is list
+                       && data().blockedBy.size() <= 2
+                       && resource.data.participants.hasAll(data().blockedBy)
+                       // blockedBy 증감은 본인 uid 만 (차단/해제는 각자 자기 몫만)
+                       && data().blockedBy.removeAll(resource.data.blockedBy).hasOnly([request.auth.uid])
+                       && resource.data.blockedBy.removeAll(data().blockedBy).hasOnly([request.auth.uid]);
+      allow delete: if isAdmin();
+
+      // ── 채팅 메시지(messages) — 부모 chat doc 로 참여자·차단 검증 ──
+      //   · create 비용: 부모 get 1 read (notSuspended 의 users get 과 별개 doc).
+      //   · 전송 = writeBatch(메시지 addDoc + 부모 요약 update) — 차단 시 양쪽 다 거부.
+      //   · update/delete 금지(기록 보존·위조 차단) — admin 만 delete(불법 콘텐츠 제재).
+      match /messages/{msgId} {
+        allow create: if isVerifiedUser()
+                         && notSuspended()
+                         && data().senderUid == request.auth.uid
+                         && reqStr('text', 1, 1000)
+                         && 'createdAt' in data() && data().createdAt == request.time
+                         && data().keys().hasOnly(['senderUid', 'text', 'createdAt'])
+                         && request.auth.uid in
+                            get(/databases/$(database)/documents/chats/$(chatId)).data.participants
+                         && get(/databases/$(database)/documents/chats/$(chatId)).data.blockedBy.size() == 0;
+        allow get:  if isAdmin()
+                       || (isSignedIn() && request.auth.uid in
+                           get(/databases/$(database)/documents/chats/$(chatId)).data.participants);
+        allow list: if request.query.limit <= 50
+                       && (isAdmin()
+                           || (isSignedIn() && request.auth.uid in
+                               get(/databases/$(database)/documents/chats/$(chatId)).data.participants));
+        allow update: if false;
+        allow delete: if isAdmin();
+      }
     }
 
     // ── 그 외 모든 경로: 기본 거부 ──
