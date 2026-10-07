@@ -104,6 +104,12 @@ const closeAuthModal = () => {
   clearAuthErrors();
 };
 
+// ── window.koausAuth 노출 (index 등 인라인 koausAuth 없는 페이지용) ──
+//   카테고리 페이지 인라인이 자체 koausAuth 를 정의하면 그쪽을 존중(미덮어쓰기) —
+//   공용 스크립트(koaus-home-videos.js / save-guard / report 등)의 로그인 게이트 공통 진입점.
+window.koausAuth = window.koausAuth || {};
+if (!window.koausAuth.openAuthModal) window.koausAuth.openAuthModal = openAuthModal;
+
 authClose.addEventListener('click', () => {
   authOverlay.classList.remove('open');
   document.body.style.overflow = '';
@@ -386,6 +392,7 @@ function wireLoginBtn() {
 }
 
 onAuthStateChanged(auth, user => {
+  try { window.koausAuth.user = user; } catch (_) {}   // 공용 로그인 게이트 상태 동기화
   if (!loginBtn) return;
   if (user) {
     loginBtn.textContent = '로그아웃';
@@ -412,7 +419,17 @@ onAuthStateChanged(auth, async user => {
   if (!user) return;
   try {
     const snap = await getDoc(doc(db, 'users', user.uid));
-    const remote = snap.exists() ? snap.data().nickname : '';
+    const _ud   = snap.exists() ? (snap.data() || {}) : {};
+    const remote = _ud.nickname;
+    // 자기소개서 Living/Work 캐시 — 보드별 문의 프리필에 사용 (기기 간 동기화, 2026-07 분리)
+    //   introLiving 없으면 introText(옛 데이터 = Living 용으로 간주) 폴백. 옛 'koaus-my-intro' 키 쓰기는 중단
+    //   (읽기 폴백은 koaus-contact-actions.js getMyIntro 가 처리).
+    try {
+      const _liv = (typeof _ud.introLiving === 'string') ? _ud.introLiving
+                 : ((typeof _ud.introText === 'string') ? _ud.introText : null);
+      if (_liv !== null) localStorage.setItem('koaus-my-intro-living', _liv);
+      if (typeof _ud.introWork === 'string') localStorage.setItem('koaus-my-intro-work', _ud.introWork);
+    } catch (_) {}
     if (typeof remote === 'string' && remote.trim()) {
       const trimmed = remote.trim();
       if (localStorage.getItem('koaus-nickname') !== trimmed) {

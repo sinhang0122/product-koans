@@ -66,35 +66,72 @@
   //     · Postcode: 4자리 숫자
   //   매칭 실패 시 안전 fallback (입력 그대로 또는 도로명/번지 제거 시도).
   //   결과 예: "Strathfield NSW 2135" / "Sydney NSW 2000"
+  //   ⚠️ 도로명 누출 방지가 최우선 — 실패하더라도 절대 도로명을 반환하지 않는다.
+  //      (구버전은 번지 없는 도로명 "Pitt Street, Sydney NSW" 나 콤마 없는 주소에서
+  //       전체 문자열을 그대로 반환 → 비공개 매물 상세에 도로명 노출 회귀. 2026-06 수정.)
+  //   최악의 경우(주(state) 토큰도 못 찾고 도로타입만 남음)엔 '위치 비공개' 반환.
+  const _STATE    = '(NSW|VIC|QLD|WA|SA|ACT|NT|TAS)';
+  const _ROADTYPE = '(?:St|Street|Rd|Road|Ave|Avenue|Dr|Drive|Ln|Lane|Pl|Place|Ct|Court|Cres|Crescent|Hwy|Highway|Blvd|Boulevard|Pde|Parade|Tce|Terrace|Way|Cct|Circuit|Esp|Esplanade|Gr|Grove|Cl|Close|Row|Mall|Sq|Square)';
+  const _ROAD_RE  = new RegExp('\\b' + _ROADTYPE + '\\b', 'i');
+
+  // ── (b-0) 한글 현지화 주소 정규화 — Google 지도 한국어 로캘 대응 ───────────
+  //   Google Places 가 한국어 UI 로 반환하는 주소는 주(state)·국가(country)가 한글:
+  //     "Winchester Court, Springwood 퀸즐랜드 주 오스트레일리아"
+  //   → 영문 약어로 환원해 영문 주소 파이프라인(redactAddress/shortAddr)에 그대로 태운다.
+  //   · 국가명(Australia/오스트레일리아/호주) 꼬리 제거
+  //   · 한글 주(state) → 영문 약어. 긴 이름(ACT/NT 준주) 먼저 등록 — 부분일치 방지.
+  //   · "<주> 주" / "<주>주" / "<주>" (뒤가 공백·콤마·끝) 모두 매칭.
+  const _KO_STATE = [
+    ['오스트레일리아 수도 준주', 'ACT'], ['오스트레일리아 캐피털 준주', 'ACT'], ['수도 준주', 'ACT'],
+    ['노던 준주', 'NT'], ['노던 테리토리', 'NT'], ['노던준주', 'NT'],
+    ['뉴사우스웨일스', 'NSW'], ['뉴사우스웨일즈', 'NSW'], ['뉴 사우스 웨일스', 'NSW'],
+    ['웨스턴오스트레일리아', 'WA'], ['웨스턴 오스트레일리아', 'WA'], ['서호주', 'WA'],
+    ['사우스오스트레일리아', 'SA'], ['사우스 오스트레일리아', 'SA'], ['남호주', 'SA'],
+    ['태즈메이니아', 'TAS'], ['태즈매니아', 'TAS'], ['타스마니아', 'TAS'],
+    ['퀸즐랜드', 'QLD'], ['퀸스랜드', 'QLD'],
+    ['빅토리아', 'VIC'],
+  ];
+  function normalizeAddress(raw) {
+    var s = String(raw == null ? '' : raw).trim();
+    if (!s) return '';
+    s = s.replace(/,?\s*(Australia|오스트레일리아|호주)\s*$/i, '').trim();   // 국가명 꼬리 제거
+    for (var i = 0; i < _KO_STATE.length; i++) {
+      var re = new RegExp(_KO_STATE[i][0] + '(?:\\s*주)?(?=\\s|,|$)', 'g');
+      s = s.replace(re, _KO_STATE[i][1]);
+    }
+    return s.replace(/\s{2,}/g, ' ').replace(/\s+,/g, ',').replace(/,\s*$/, '').trim();
+  }
+
   function redactAddress(address) {
     if (!address || typeof address !== 'string') return '';
-    const text = address.trim();
+    let text = normalizeAddress(address);   // 한글 현지화(주/국가) → 영문 정규화 + 국가명 꼬리 제거
     if (!text) return '';
 
-    // 1순위: "Suburb State Postcode" 패턴 매칭
-    //   문자열 어느 위치에서도 추출 가능. Suburb 는 영문/공백/하이픈/아포스트로피 허용.
-    const m = text.match(/([A-Za-z][A-Za-z\s\-']*?)\s+(NSW|VIC|QLD|WA|SA|ACT|NT|TAS)\s+(\d{4})/i);
-    if (m) {
-      const suburb   = m[1].trim().replace(/\s+/g, ' ');
-      const state    = m[2].toUpperCase();
-      const postcode = m[3];
-      return `${suburb} ${state} ${postcode}`;
+    // (1) 콤마 분리 — 도로명/번지는 주(state) 조각 '이전' 콤마 조각에 있으므로,
+    //     주 토큰을 가진 조각만 취하면 도로명이 자연 제거된다.
+    //     예: "12 Coronation Dr, Green Valley NSW 2168" → "Green Valley NSW 2168"
+    //         "George Street, Sydney NSW"               → "Sydney NSW"
+    //     콤마 없는 변형("123 George St Sydney NSW 2000")도 한 조각 안에서 처리.
+    const parts  = text.split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+    const partRe = new RegExp('([A-Za-z][A-Za-z\\s\\-\']*?)\\s+' + _STATE + '(?:\\s+(\\d{4}))?\\s*$', 'i');
+    for (var i = parts.length - 1; i >= 0; i--) {
+      var m = parts[i].match(partRe);
+      if (!m) continue;
+      var suburb = m[1].trim().replace(/\s+/g, ' ');
+      var cut = suburb.match(new RegExp('\\b' + _ROADTYPE + '\\s+(.+)$', 'i'));   // "Coronation Dr Green Valley" → "Green Valley"
+      if (cut) suburb = cut[1].trim();
+      else suburb = suburb.replace(/^\d+[A-Za-z]?\/?\d*\s+/, '').trim();          // 앞 번지 제거
+      if (_ROAD_RE.test(suburb)) {                                               // 도로타입 잔존 → 마지막 1단어만
+        var w = suburb.split(/\s+/); suburb = w[w.length - 1];
+      }
+      var pc = m[3] ? ' ' + m[3] : '';
+      return (suburb ? suburb + ' ' : '') + m[2].toUpperCase() + pc;
     }
 
-    // 2순위: 마지막 콤마 뒤 부분 (Australia 같은 국가명 제거)
-    const parts = text.split(',').map(s => s.trim()).filter(Boolean);
-    if (parts.length >= 2) {
-      const tail = parts.slice(-2).join(', ');
-      if (/(NSW|VIC|QLD|WA|SA|ACT|NT|TAS)\s+\d{4}/i.test(tail)) return tail;
-    }
-
-    // 3순위: 도로명·번지 패턴 제거 (앞쪽 "<숫자> <단어> St/Rd/Ave/...")
-    //   안전한 fallback — 실패하면 원본 반환.
-    const stripped = text.replace(
-      /^\d+[A-Za-z]?\/?\d*\s+[A-Za-z][\w\s\-']*?\s+(St|Street|Rd|Road|Ave|Avenue|Dr|Drive|Ln|Lane|Pl|Place|Ct|Court|Cres|Crescent|Hwy|Highway|Blvd|Boulevard|Pde|Parade|Tce|Terrace|Way),?\s*/i,
-      ''
-    ).trim();
-    return stripped || text;
+    // (2) 주(state) 토큰조차 없음 — 도로타입 기준 절단. 그래도 도로명이 남으면 '위치 비공개'.
+    var stripped = text.replace(new RegExp('^.*?\\b' + _ROADTYPE + '\\b,?\\s*', 'i'), '').trim();
+    if (_ROAD_RE.test(stripped)) return '위치 비공개';
+    return stripped || '위치 비공개';
   }
 
   // ── (c) 지도 원 그리기 — 400m 반경 흐릿한 원 ─────────────────────────
@@ -225,6 +262,7 @@
     PRIVATE_FIELDS,        // 외부에서 같은 상수 참조 가능 (필드 추가 시 단일 진입점)
     stripPrivateFields,    // Firestore 저장 직전 검문소 (불변 복사본 반환)
     offsetCoords,
+    normalizeAddress,      // 한글 현지화 주소(주/국가) → 영문 정규화 (공개/비공개 공통 전처리)
     redactAddress,
     drawPrivacyCircle,
     savePrivateLocation,

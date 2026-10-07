@@ -447,8 +447,20 @@ function hbChips(d){
 }
 function hbRenderList(){
   if (!hbRows.length){ $('hbList').innerHTML = '<div class="empty-list">아직 등록된 히어로 배너가 없습니다. 위에서 추가해 보세요.</div>'; return; }
+  // 주별 격리 — 각 주 탭은 그 주에 배정된 배너만 노출(각 주에 올린 건 그 주에서만 보이게).
+  //   · 'all'(전 지역) 탭 = 전 지역 배너 + 슬롯 미배정(고아) 배너 → 관리·삭제 안전망(어디서도 사라지지 않음).
+  //   · 라이브 노출(hero-banner.js · localStorage 성향주)·현황 그리드(hbViewSlot)는 그대로. 목록 필터만 변경.
+  var rows = hbRows.filter(function(d){
+    var m = hbNormSlots(d);
+    if (hbState === 'all') return (m.all != null) || !Object.keys(m).length;
+    return m[hbState] != null;
+  });
+  if (!rows.length){
+    $('hbList').innerHTML = '<div class="empty-list">'+esc(HB_LABELS[hbState])+'에 배정된 배너가 없습니다. 위 “추가”에서 이 지역 배너를 올려보세요.</div>';
+    return;
+  }
   var html = '';
-  hbRows.forEach(function(d){
+  rows.forEach(function(d){
     var cur = hbNormSlots(d)[hbState];
     var active = d.active !== false;
     var live = active && inWindow(d);

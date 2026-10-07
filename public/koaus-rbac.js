@@ -282,18 +282,21 @@ async function selfUpdate(collection, docId, patch) {
 
 // 블라인드 토글 — isHidden:true/false + status='hidden'/'approved' 동시 갱신
 //   currentHidden 미전달 시 isHidden:true 강제
-//   · admin 호출 시 hiddenBy:'admin' 잠금 부여 (F-A) — 작성자가 마이페이지 ▶️ 로
-//     운영자 블라인드를 자가 해제하지 못하도록 firestore.rules adminBlindLock 과 한 쌍.
-//   · 작성자 일시숨김 경로는 hiddenBy 미기록 — rules 의 moderatorOnlyFields 가
-//     작성자 update 에 hiddenBy 포함 시 거부하므로 분기 필수.
-async function toggleHidden(collection, docId, currentHidden) {
+//   · asModerator=true 일 때만 hiddenBy:'admin' 잠금 부여/해제 (F-A) — 작성자가 마이페이지
+//     ▶️ 로 운영자 블라인드를 자가 해제하지 못하도록 firestore.rules adminBlindLock 과 한 쌍.
+//   · 작성자 일시숨김 경로(마이페이지·미니숨김·본인 글 detailHideBtn)는 hiddenBy 미기록 —
+//     ① rules 의 moderatorOnlyFields 가 작성자 update 에 hiddenBy 포함 시 거부, ②(중요)
+//     운영자 계정이 '본인' 글을 일시숨김할 때 isAdmin()=true 만으로 hiddenBy:'admin' 이
+//     찍혀 스스로 잠기던 회귀(자가잠금)를 방지. 따라서 '운영자 여부'가 아니라 '이 액션이
+//     모더레이션이냐'를 호출부가 명시(asModerator). 미지정 시 기존 동작(isAdmin) 유지.
+async function toggleHidden(collection, docId, currentHidden, asModerator = isAdmin()) {
   const next = !currentHidden;
   const patch = {
     isHidden: next,
     status:   next ? 'hidden' : 'approved',
     hiddenAt: next ? serverTimestamp() : null,
   };
-  if (isAdmin()) patch.hiddenBy = next ? 'admin' : '';
+  if (asModerator) patch.hiddenBy = next ? 'admin' : '';
   await updateDoc(_ref(collection, docId), patch);
 }
 
@@ -410,9 +413,9 @@ document.addEventListener('click', async function (e) {
       const arr2 = JSON.parse(localStorage.getItem(sk) || '[]');
       const hit = arr2.find(x => String(x.id) === String(id));
       const fsDocId = hit && (hit.fsDocId || hit._fsDocId);
-      if (fsDocId && db) await toggleHidden(col, String(fsDocId), !willHide);
+      if (fsDocId && db) await toggleHidden(col, String(fsDocId), !willHide, false);   // 작성자 일시숨김 — hiddenBy 미기록(운영자 자가잠금 방지)
     } else {
-      if (db) await toggleHidden(col, String(id), false);
+      if (db) await toggleHidden(col, String(id), false, false);   // 〃 (3번째 false=currentHidden, 4번째 false=author 모드)
     }
   } catch (err) { console.warn('[mini-hide] Firestore 동기화 실패 (local 반영은 OK):', err); }
   // 3) 페이지 재렌더 트리거 (페이지별 함수)

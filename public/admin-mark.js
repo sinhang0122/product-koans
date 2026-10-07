@@ -418,11 +418,17 @@ window.addEventListener('koaus-services-updated', () => setTimeout(injectCardAct
   [400, 1500].forEach(ms => setTimeout(wire, ms));
 })();
 
-// ── State(주) 바로가기 카드 — 전역 자동 빌드 ──
+// ── 바로가기 카드 — 전역 자동 빌드 ──
 //  · 사용법: 페이지 본문 어디든 `<section data-koaus-state-quick></section>` 한 줄만 추가.
-//  · 8개 주 카드 그리드(state.html?id=xxx) 가 자동 주입된다. 페이지 본체 JS 수정 불필요.
+//  · 카드 10장 단일 그리드: 돌봄(care) → 환율 → 주 8개 (2026-07 홈 개편 — 옛 '주 바로가기'
+//    타이틀을 '바로가기'로 바꾸고 홈의 Care/환율 페어 섹션을 이 그리드 선두로 흡수).
 //  · 이미 빌드된 그리드는 재실행 시 스킵 (idempotent).
 (function setupGlobalStateQuick() {
+  // 주 앞에 붙는 기능 카드 — [href, code(라벨), name(설명)]
+  const EXTRAS = [
+    ['care.html',       '🤝 Care', '호주 생활 케어 · 긴급 연락처'],
+    ['calculator.html', '💱 환율', 'AUD ↔ KRW 송금 앱 비교'],
+  ];
   // 지시 2/2: 대도시 한글 병기 — 신규 방문자 가독성 (호주 지리 미숙 사용자 친절 안내)
   const STATES = [
     ['nsw','NSW','New South Wales','🦘','시드니'],
@@ -435,9 +441,37 @@ window.addEventListener('koaus-services-updated', () => setTimeout(injectCardAct
     ['nt', 'NT', 'Northern Territory','🌵','다윈'],
   ];
   const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  // 아코디언(접힘) 변형 스타일 — data-koaus-collapsible 인 섹션에만 적용(홈 전용)
+  function injectAccCss() {
+    if (document.getElementById('koaus-state-acc-style')) return;
+    const css =
+      '.state-section--acc .state-acc-toggle{display:flex;align-items:center;justify-content:space-between;' +
+        'width:100%;background:none;border:0;cursor:pointer;font:inherit;color:inherit;padding:0;text-align:left;' +
+        'gap:8px;-webkit-tap-highlight-color:transparent;}' +
+      '.state-section--acc .state-acc-caret{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;' +
+        'width:34px;height:34px;border-radius:50%;font-size:22px;font-weight:900;line-height:1;' +
+        'color:#fff;background:var(--brand,#0a84ff);box-shadow:0 2px 6px rgba(10,132,255,.35);' +
+        'transition:transform .25s ease,background .2s ease;}' +
+      '.state-section--acc .state-acc-toggle:hover .state-acc-caret{background:var(--brand-dark,#0060df);}' +
+      '.state-section--acc[data-open="1"] .state-acc-caret{transform:rotate(180deg);}' +
+      '.state-section--acc .state-grid[hidden]{display:none;}';
+    const s = document.createElement('style');
+    s.id = 'koaus-state-acc-style';
+    s.textContent = css;
+    document.head.appendChild(s);
+  }
   function buildOne(host) {
     if (!host || host.__koausStateBuilt) return;
-    const cards = STATES.map(([id,code,name,flag,city]) =>
+    const collapsible = host.hasAttribute('data-koaus-collapsible');
+    // 선두 2장: 돌봄·환율 (기능 카드 — 주 카드와 100% 동일 클래스/디자인 토큰)
+    const extraCards = EXTRAS.map(([href,code,name]) =>
+      '<a class="state-card" href="' + href + '">' +
+        '<span class="state-card-arrow" aria-hidden="true">→</span>' +
+        '<span class="state-card-code">' + code + '</span>' +
+        '<span class="state-card-name">' + esc(name) + '</span>' +
+      '</a>'
+    ).join('');
+    const stateCards = STATES.map(([id,code,name,flag,city]) =>
       '<a class="state-card" href="state.html?id=' + id + '">' +
         '<span class="state-card-arrow" aria-hidden="true">→</span>' +
         '<span class="state-card-code">' + code +
@@ -446,15 +480,36 @@ window.addEventListener('koaus-services-updated', () => setTimeout(injectCardAct
         '<span class="state-card-name">' + flag + ' ' + esc(name) + '</span>' +
       '</a>'
     ).join('');
-    host.innerHTML =
-      '<section class="state-section" aria-label="주 바로가기">' +
-        '<div class="state-section-head">' +
-          '<span class="state-section-title">📍 주(State) 바로가기 ' +
-            '<em style="font-style:normal;font-weight:600;color:var(--text-muted);">· State Hub</em></span>' +
-          '<span class="state-section-hint">8개 주 · 카테고리 통합</span>' +
-        '</div>' +
-        '<div class="state-grid">' + cards + '</div>' +
-      '</section>';
+    if (collapsible) {
+      injectAccCss();
+      host.innerHTML =
+        '<section class="state-section state-section--acc" aria-label="바로가기" data-open="0">' +
+          '<button type="button" class="state-section-head state-acc-toggle" aria-expanded="false" aria-controls="stateQuickGrid">' +
+            '<span class="state-section-title">📍 바로가기</span>' +
+            '<span class="state-acc-caret" aria-hidden="true">▾</span>' +
+          '</button>' +
+          '<div class="state-grid" id="stateQuickGrid" hidden>' + extraCards + stateCards + '</div>' +
+        '</section>';
+      const sec  = host.querySelector('.state-section--acc');
+      const btn  = host.querySelector('.state-acc-toggle');
+      const grid = host.querySelector('#stateQuickGrid');
+      if (btn && grid && sec) {
+        btn.addEventListener('click', function () {
+          const open = sec.getAttribute('data-open') === '1';
+          sec.setAttribute('data-open', open ? '0' : '1');
+          btn.setAttribute('aria-expanded', open ? 'false' : 'true');
+          if (open) grid.setAttribute('hidden', ''); else grid.removeAttribute('hidden');
+        });
+      }
+    } else {
+      host.innerHTML =
+        '<section class="state-section" aria-label="바로가기">' +
+          '<div class="state-section-head">' +
+            '<span class="state-section-title">📍 바로가기</span>' +
+          '</div>' +
+          '<div class="state-grid">' + extraCards + stateCards + '</div>' +
+        '</section>';
+    }
     host.__koausStateBuilt = true;
   }
   function buildAll() { document.querySelectorAll('[data-koaus-state-quick]').forEach(buildOne); }

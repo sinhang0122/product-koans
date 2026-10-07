@@ -48,6 +48,7 @@
   <script src="local-analytics.js" defer></script>
   <script src="koaus-gallery.js" defer></script>
   <script src="koaus-dedupe.js" defer></script>
+  <script src="koaus-state.js" defer></script>
   <script src="koaus-map-cluster.js" defer></script>
   <script src="koaus-listing-privacy.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/@googlemaps/markerclusterer@2.5.3/dist/index.min.js" defer></script>
@@ -121,22 +122,16 @@
             </div>
           </div>
           <div class="accord-subgroup">
-            <button class="accord-sublabel sub-toggle" type="button"><span>Visa &amp; Migration</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
-            <div class="sub-menu">
-            <a href="points.html?state=nsw&amp;cat=visa-edu" class="accord-link accord-link--sub">비자/유학 (Visa &amp; Edu)</a>
-            <a href="points.html?state=nsw&amp;cat=points" class="accord-link accord-link--sub">기술심사 가채점</a>
-            </div>
-          </div>
-          <div class="accord-subgroup">
             <button class="accord-sublabel sub-toggle" type="button"><span>Auto</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="auto.html?state=nsw&amp;category=used" class="accord-link accord-link--sub">중고차 판매 (Used Car)</a>
-            <a href="auto.html?state=nsw&amp;category=maintenance" class="accord-link accord-link--sub">정비소/견인 (Maintenance &amp; Towing)</a>            </div>
+            <a href="auto.html?state=nsw&amp;category=insurance" class="accord-link accord-link--sub">보험 정보 (Insurance)</a>            </div>
           </div>
           <div class="accord-subgroup">
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
-            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
+            <a href="trades.html?state=nsw" class="accord-link accord-link--sub">일상 (Daily)</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('비자/이민 섹션은 준비 중입니다.');return false;">비자/이민 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -162,22 +157,16 @@
             </div>
           </div>
           <div class="accord-subgroup">
-            <button class="accord-sublabel sub-toggle" type="button"><span>Visa &amp; Migration</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
-            <div class="sub-menu">
-            <a href="points.html?state=vic&amp;cat=visa-edu" class="accord-link accord-link--sub">비자/유학 (Visa &amp; Edu)</a>
-            <a href="points.html?state=vic&amp;cat=points" class="accord-link accord-link--sub">기술심사 가채점</a>
-            </div>
-          </div>
-          <div class="accord-subgroup">
             <button class="accord-sublabel sub-toggle" type="button"><span>Auto</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="auto.html?state=vic&amp;category=used" class="accord-link accord-link--sub">중고차 판매 (Used Car)</a>
-            <a href="auto.html?state=vic&amp;category=maintenance" class="accord-link accord-link--sub">정비소/견인 (Maintenance &amp; Towing)</a>            </div>
+            <a href="auto.html?state=vic&amp;category=insurance" class="accord-link accord-link--sub">보험 정보 (Insurance)</a>            </div>
           </div>
           <div class="accord-subgroup">
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
-            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
+            <a href="trades.html?state=vic" class="accord-link accord-link--sub">일상 (Daily)</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('비자/이민 섹션은 준비 중입니다.');return false;">비자/이민 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -203,22 +192,16 @@
             </div>
           </div>
           <div class="accord-subgroup">
-            <button class="accord-sublabel sub-toggle" type="button"><span>Visa &amp; Migration</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
-            <div class="sub-menu">
-            <a href="points.html?state=qld&amp;cat=visa-edu" class="accord-link accord-link--sub">비자/유학 (Visa &amp; Edu)</a>
-            <a href="points.html?state=qld&amp;cat=points" class="accord-link accord-link--sub">기술심사 가채점</a>
-            </div>
-          </div>
-          <div class="accord-subgroup">
             <button class="accord-sublabel sub-toggle" type="button"><span>Auto</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="auto.html?state=qld&amp;category=used" class="accord-link accord-link--sub">중고차 판매 (Used Car)</a>
-            <a href="auto.html?state=qld&amp;category=maintenance" class="accord-link accord-link--sub">정비소/견인 (Maintenance &amp; Towing)</a>            </div>
+            <a href="auto.html?state=qld&amp;category=insurance" class="accord-link accord-link--sub">보험 정보 (Insurance)</a>            </div>
           </div>
           <div class="accord-subgroup">
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
-            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
+            <a href="trades.html?state=qld" class="accord-link accord-link--sub">일상 (Daily)</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('비자/이민 섹션은 준비 중입니다.');return false;">비자/이민 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -244,22 +227,16 @@
             </div>
           </div>
           <div class="accord-subgroup">
-            <button class="accord-sublabel sub-toggle" type="button"><span>Visa &amp; Migration</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
-            <div class="sub-menu">
-            <a href="points.html?state=wa&amp;cat=visa-edu" class="accord-link accord-link--sub">비자/유학 (Visa &amp; Edu)</a>
-            <a href="points.html?state=wa&amp;cat=points" class="accord-link accord-link--sub">기술심사 가채점</a>
-            </div>
-          </div>
-          <div class="accord-subgroup">
             <button class="accord-sublabel sub-toggle" type="button"><span>Auto</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="auto.html?state=wa&amp;category=used" class="accord-link accord-link--sub">중고차 판매 (Used Car)</a>
-            <a href="auto.html?state=wa&amp;category=maintenance" class="accord-link accord-link--sub">정비소/견인 (Maintenance &amp; Towing)</a>            </div>
+            <a href="auto.html?state=wa&amp;category=insurance" class="accord-link accord-link--sub">보험 정보 (Insurance)</a>            </div>
           </div>
           <div class="accord-subgroup">
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
-            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
+            <a href="trades.html?state=wa" class="accord-link accord-link--sub">일상 (Daily)</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('비자/이민 섹션은 준비 중입니다.');return false;">비자/이민 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -285,22 +262,16 @@
             </div>
           </div>
           <div class="accord-subgroup">
-            <button class="accord-sublabel sub-toggle" type="button"><span>Visa &amp; Migration</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
-            <div class="sub-menu">
-            <a href="points.html?state=sa&amp;cat=visa-edu" class="accord-link accord-link--sub">비자/유학 (Visa &amp; Edu)</a>
-            <a href="points.html?state=sa&amp;cat=points" class="accord-link accord-link--sub">기술심사 가채점</a>
-            </div>
-          </div>
-          <div class="accord-subgroup">
             <button class="accord-sublabel sub-toggle" type="button"><span>Auto</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="auto.html?state=sa&amp;category=used" class="accord-link accord-link--sub">중고차 판매 (Used Car)</a>
-            <a href="auto.html?state=sa&amp;category=maintenance" class="accord-link accord-link--sub">정비소/견인 (Maintenance &amp; Towing)</a>            </div>
+            <a href="auto.html?state=sa&amp;category=insurance" class="accord-link accord-link--sub">보험 정보 (Insurance)</a>            </div>
           </div>
           <div class="accord-subgroup">
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
-            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
+            <a href="trades.html?state=sa" class="accord-link accord-link--sub">일상 (Daily)</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('비자/이민 섹션은 준비 중입니다.');return false;">비자/이민 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -326,22 +297,16 @@
             </div>
           </div>
           <div class="accord-subgroup">
-            <button class="accord-sublabel sub-toggle" type="button"><span>Visa &amp; Migration</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
-            <div class="sub-menu">
-            <a href="points.html?state=tas&amp;cat=visa-edu" class="accord-link accord-link--sub">비자/유학 (Visa &amp; Edu)</a>
-            <a href="points.html?state=tas&amp;cat=points" class="accord-link accord-link--sub">기술심사 가채점</a>
-            </div>
-          </div>
-          <div class="accord-subgroup">
             <button class="accord-sublabel sub-toggle" type="button"><span>Auto</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="auto.html?state=tas&amp;category=used" class="accord-link accord-link--sub">중고차 판매 (Used Car)</a>
-            <a href="auto.html?state=tas&amp;category=maintenance" class="accord-link accord-link--sub">정비소/견인 (Maintenance &amp; Towing)</a>            </div>
+            <a href="auto.html?state=tas&amp;category=insurance" class="accord-link accord-link--sub">보험 정보 (Insurance)</a>            </div>
           </div>
           <div class="accord-subgroup">
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
-            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
+            <a href="trades.html?state=tas" class="accord-link accord-link--sub">일상 (Daily)</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('비자/이민 섹션은 준비 중입니다.');return false;">비자/이민 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -367,22 +332,16 @@
             </div>
           </div>
           <div class="accord-subgroup">
-            <button class="accord-sublabel sub-toggle" type="button"><span>Visa &amp; Migration</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
-            <div class="sub-menu">
-            <a href="points.html?state=act&amp;cat=visa-edu" class="accord-link accord-link--sub">비자/유학 (Visa &amp; Edu)</a>
-            <a href="points.html?state=act&amp;cat=points" class="accord-link accord-link--sub">기술심사 가채점</a>
-            </div>
-          </div>
-          <div class="accord-subgroup">
             <button class="accord-sublabel sub-toggle" type="button"><span>Auto</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="auto.html?state=act&amp;category=used" class="accord-link accord-link--sub">중고차 판매 (Used Car)</a>
-            <a href="auto.html?state=act&amp;category=maintenance" class="accord-link accord-link--sub">정비소/견인 (Maintenance &amp; Towing)</a>            </div>
+            <a href="auto.html?state=act&amp;category=insurance" class="accord-link accord-link--sub">보험 정보 (Insurance)</a>            </div>
           </div>
           <div class="accord-subgroup">
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
-            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
+            <a href="trades.html?state=act" class="accord-link accord-link--sub">일상 (Daily)</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('비자/이민 섹션은 준비 중입니다.');return false;">비자/이민 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -408,22 +367,16 @@
             </div>
           </div>
           <div class="accord-subgroup">
-            <button class="accord-sublabel sub-toggle" type="button"><span>Visa &amp; Migration</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
-            <div class="sub-menu">
-            <a href="points.html?state=nt&amp;cat=visa-edu" class="accord-link accord-link--sub">비자/유학 (Visa &amp; Edu)</a>
-            <a href="points.html?state=nt&amp;cat=points" class="accord-link accord-link--sub">기술심사 가채점</a>
-            </div>
-          </div>
-          <div class="accord-subgroup">
             <button class="accord-sublabel sub-toggle" type="button"><span>Auto</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="auto.html?state=nt&amp;category=used" class="accord-link accord-link--sub">중고차 판매 (Used Car)</a>
-            <a href="auto.html?state=nt&amp;category=maintenance" class="accord-link accord-link--sub">정비소/견인 (Maintenance &amp; Towing)</a>            </div>
+            <a href="auto.html?state=nt&amp;category=insurance" class="accord-link accord-link--sub">보험 정보 (Insurance)</a>            </div>
           </div>
           <div class="accord-subgroup">
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
-            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
+            <a href="trades.html?state=nt" class="accord-link accord-link--sub">일상 (Daily)</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('비자/이민 섹션은 준비 중입니다.');return false;">비자/이민 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -474,11 +427,10 @@
 
 
 
-    <!-- Auto 3대 카테고리 탭 (렌트카·견인 단독 삭제 — 견인은 정비소/견인 통합) -->
+    <!-- Auto 2대 카테고리 탭 (정비소/견인 → Others·일상 준비중으로 이전, 탭 제거 2026-06) -->
     <div class="accom-main-tabs auto-cat-tabs" id="autoTabs">
       <button class="accom-tab active" data-cat="used"><span class="tab-text">중고차 판매 (Used Car)</span></button>
-      <button class="accom-tab" data-cat="maintenance"><span class="tab-text">정비소/견인 (Maintenance &amp; Towing)</span></button>
-      <button class="accom-tab" data-cat="insurance"><span class="tab-text">자동차 보험 (Insurance)</span></button>
+      <button class="accom-tab" data-cat="insurance"><span class="tab-text">보험 정보 (Insurance)</span></button>
     </div>
 
     <!-- 표준 레이아웃: 공지 → 검색 → 필터/뷰 → 본문 -->
@@ -790,14 +742,14 @@
             </label>
           </div>
           <div class="write-field">
-            <label class="write-label" for="rPhone">📞 전화번호 Phone <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택 · 전화 + 문자 둘 다 활성)</em></label>
+            <label class="write-label" for="rPhone">📞 전화번호 Phone <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택 · 문자 문의 가능)</em></label>
             <input class="write-input" id="rPhone" type="tel" placeholder="04xx xxx xxx" maxlength="30" autocomplete="tel" />
           </div>
           <div class="write-field">
             <label class="write-label" for="rKakao">💛 카톡 오픈채팅 링크 <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택)</em></label>
             <input class="write-input" id="rKakao" type="url" placeholder="https://open.kakao.com/o/..." maxlength="500" />
           </div>
-          <div class="write-field">
+          <div class="write-field" style="display:none">
             <label class="write-label" for="rContact">기타 통합 입력 Misc <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택 · 위 분리 필드 우선)</em></label>
             <input class="write-input" id="rContact" type="text" placeholder="기타 연락 수단·시간대·메모 등 자유 입력" maxlength="200" />
           </div>
@@ -843,14 +795,14 @@
         </div>
         <div class="write-col">
           <div class="write-field">
-            <label class="write-label" for="mPhone">📞 전화번호 Phone<span class="required-mark">*</span> <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(전화 + 문자 둘 다 활성)</em></label>
+            <label class="write-label" for="mPhone">📞 전화번호 Phone<span class="required-mark">*</span> <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(문자 문의 가능)</em></label>
             <input class="write-input" id="mPhone" type="tel" placeholder="04xx xxx xxx" maxlength="30" autocomplete="tel" />
           </div>
           <div class="write-field">
             <label class="write-label" for="mKakao">💛 카톡 오픈채팅 링크 <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택)</em></label>
             <input class="write-input" id="mKakao" type="url" placeholder="https://open.kakao.com/o/..." maxlength="500" />
           </div>
-          <div class="write-field">
+          <div class="write-field" style="display:none">
             <label class="write-label" for="mContact">기타 통합 입력 Misc <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택 · 위 분리 필드 우선)</em></label>
             <input class="write-input" id="mContact" type="text" placeholder="기타 연락 수단·예약 방법·메모 등 자유 입력" maxlength="200" />
           </div>
@@ -881,6 +833,16 @@
         </div>
       </div>
 
+      <!-- 채팅 문의 허용 (옵트인) — 상세 '채팅 문의' 버튼 노출 여부. used/maintenance 공통, 기본 ON -->
+      <div class="write-field privacy-toggle-field">
+        <label class="privacy-toggle">
+          <input type="checkbox" id="wChatAllowed" checked />
+          <span class="privacy-toggle-text">
+            <strong>🗨️ 채팅 문의 허용</strong>
+            <em>상세 페이지에 '채팅 문의' 버튼이 표시돼 KoAus 안에서 별명으로 대화할 수 있어요. (해제 시 채팅 버튼 미표시)</em>
+          </span>
+        </label>
+      </div>
       <p class="auth-error" id="wError"></p>
         <!-- [필수] 게시 규정 동의 — agent.md §2-C Mandatory Consent (글쓰기 표준 철칙) -->
         <div class="write-consent-row" style="display:flex;align-items:flex-start;gap:8px;padding:10px 12px;margin:14px 0 8px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-sm);">
@@ -1179,7 +1141,7 @@
     <div class="footer-links">
       <a href="about.html">KoAus 소개 / About</a>
       <a href="faq.html">자주 묻는 질문 / FAQ</a>
-      <a href="guide.html">이용 가이드 / Guide</a>
+      <a href="guide.html">보안·이용 가이드 / Guide</a>
       <a href="privacy.html">Privacy Policy / 개인정보처리방침</a>
       <a href="terms.html">Terms of Service / 서비스 이용약관</a>
       <a href="contact.html">Contact / 문의하기</a>
@@ -1337,7 +1299,7 @@
       const vt = document.getElementById('viewToggle');
       if (vt) vt.style.display = cfg.map ? '' : 'none';
       if (!cfg.map) switchView('list');
-      else          switchView('list');  // 진입 시 기본은 List, 사용자가 Map으로 토글 가능
+      else          switchView(_koausSavedView() || 'list');  // 진입 시 기본 List · 저장된 뷰 복원(task49)
       // 상세 필터 버튼: 렌트카/인스펙션만 노출
       const fb = document.getElementById('filterModalBtn');
       if (fb) fb.style.display = (cfg.filter === 'none') ? 'none' : '';
@@ -1645,6 +1607,7 @@
         const el = document.getElementById(id); if (el) el.value = '';
       });
       if (window.__koausResetBizHours) window.__koausResetBizHours('m');  // 요일별 그리드 초기화
+      const _caReset = document.getElementById('wChatAllowed'); if (_caReset) _caReset.checked = true;   // 새 글 기본 ON
       try { window.dispatchEvent(new Event('koaus-maint-form-reset')); } catch (_) {}
     }
     // 로그인 사용자 닉네임 (작성자 고정값)
@@ -1684,6 +1647,7 @@
         if (window.__koausSetBizHours) window.__koausSetBizHours('m', p.hoursJson);  // 요일별 그리드 복원
         _set('mPhone', p.phone); _set('mKakao', p.kakaoLink); _set('mContact', p.contact); _set('mContactEmail', p.contactEmail); _set('mBody', p.body);
       }
+      const _caEdit = document.getElementById('wChatAllowed'); if (_caEdit) _caEdit.checked = p.chatAllowed === true;   // 옛 글(필드 없음) = 해제 상태
       document.getElementById('wAuthorName').textContent = p.author || currentNickname() || '-';
       setWriteMode('edit');
       showCatForm();
@@ -1873,8 +1837,8 @@
         if (!title) { alert('업체명(제목)을 입력해 주세요.'); return; }
         const region = _fv('mRegion');
         if (!region) { alert('위치(주소)를 입력해 주세요.'); return; }
-        const phone = _fv('mPhone'), contact = _fv('mContact');
-        if (!phone && !contact) { alert('연락처(전화번호 또는 기타 연락 수단)를 입력해 주세요.'); return; }
+        const phone = _fv('mPhone'), kakao = _fv('mKakao'), contact = _fv('mContact');
+        if (!phone && !kakao && !contact) { alert('연락처(전화번호 또는 카카오톡)를 입력해 주세요.'); return; }
         let _mHoursJson = null;  // 요일별 그리드(admin-mark) 동기화 hidden — detail 7일 표 렌더용
         try { const _hj = _fv('mHoursJson'); if (_hj) _mHoursJson = JSON.parse(_hj); } catch (_) {}
         fields = {
@@ -1898,6 +1862,12 @@
         }
       } else {
         return;  // 그 외 카테고리(rental 조회 전용 등)는 직접 글쓰기 불가
+      }
+
+      // 채팅 문의 허용 (옵트인) — used/maintenance 공통. false 도 명시 저장(수정 시 해제 반영)
+      {
+        const _chatEl = document.getElementById('wChatAllowed');
+        fields.chatAllowed = !!(_chatEl && _chatEl.checked);
       }
 
       // 연락처 형식 검증 (선택 필드 — 값 있을 때만). used(r*)/maintenance(m*) 공통 — fields 빌드 후, create/edit 전.
@@ -1963,7 +1933,7 @@
         if (!window.koausDb || !window.koausFs) { alert('Firestore 미초기화 — 잠시 후 다시 시도해 주세요.'); return; }
         const { addDoc: _add, collection: _col, serverTimestamp: _ts } = window.koausFs;
         const target = {
-          state: currentState, category: activeCategory, isPremium: false,
+          state: ((window.koausState && window.koausState.fromAddress(fields.address || fields.region)) || currentState), category: activeCategory, isPremium: false,
           author: nick, uid: user.uid || '', authorUid: user.uid || '',
           date, time, status: 'approved', ...fields,
         };
@@ -1998,7 +1968,7 @@
         const { addDoc: _add, collection: _col, serverTimestamp: _ts } = window.koausFs;
         if (!fields.contact) fields.contact = fields.phone || '연락처 문의';   // rules pReqStr contact≥1 — 빈 채 가면 permission-denied
         const target = {
-          state: currentState, category: activeCategory, status: 'approved', isUserPost: true,
+          state: ((window.koausState && window.koausState.fromAddress(fields.address || fields.region)) || currentState), category: activeCategory, status: 'approved', isUserPost: true,
           author: nick, uid: user.uid || '', authorUid: user.uid || '',
           date, time, ...fields,
         };
@@ -2089,12 +2059,12 @@
       const saved = readJSON(SAVED_KEY);
       const idx = saved.findIndex(s => s.board === BOARD && String(s.id) === String(p.id));
       if (idx >= 0) saved.splice(idx, 1);
-      else saved.unshift({ board: BOARD, id: p.id, title: p.title, author: p.author, authorEmail: p.authorEmail || '', date: p.date, time: p.time || '', price: p.price || 0 });
+      else saved.unshift({ board: BOARD, id: p.id, fsDocId: String(p._fsDocId || p.fsDocId || ''), state: (window.koausState ? window.koausState.effective(p) : (p.state || '')), address: p.address || p.region || '', title: p.title, author: p.author, authorEmail: p.authorEmail || '', date: p.date, time: p.time || '', price: p.price || 0 });
       localStorage.setItem(SAVED_KEY, JSON.stringify(saved));
     }
     function recordRecent(p) {
       let recent = readJSON(RECENT_KEY).filter(r => !(r.board === BOARD && String(r.id) === String(p.id)));
-      recent.unshift({ board: BOARD, id: p.id, title: p.title, author: p.author, authorEmail: p.authorEmail || '', date: p.date, time: p.time || '' });
+      recent.unshift({ board: BOARD, id: p.id, fsDocId: String(p._fsDocId || p.fsDocId || ''), state: (window.koausState ? window.koausState.effective(p) : (p.state || '')), address: p.address || p.region || '', title: p.title, author: p.author, authorEmail: p.authorEmail || '', date: p.date, time: p.time || '' });
       localStorage.setItem(RECENT_KEY, JSON.stringify(recent.slice(0, 30)));
     }
     function recordMyPost(p) {
@@ -2128,7 +2098,8 @@
       return posts.filter(p => {
         // 주(State)별 분리: 현재 주가 지정된 경우 같은 주의 글만 노출
         // 주(State)별 분리: 관리자 글(state='')은 전 지역 노출, 그 외는 동일 주만 노출
-        if (currentState && p.state && p.state !== currentState) return false;
+        const _es = (window.koausState ? window.koausState.effective(p) : (p.state || ''));
+        if (currentState && _es && _es !== currentState) return false;
         // 카테고리(렌트카/인스펙션/정비소/견인)별 분리
         if (groupOf(p.category) !== activeCategory) return false;
         // 관리자 프리미엄 글: 어떠한 상세 필터/지도 범위에서도 항상 노출 (최상단 고정은 정렬에서 처리)
@@ -2153,8 +2124,11 @@
 
     // ── View Toggle ──
     let currentView = 'list';
-    document.getElementById('viewListBtn').addEventListener('click', () => switchView('list'));
-    document.getElementById('viewMapBtn').addEventListener('click',  () => switchView('map'));
+    // ── 뷰 선택 기억: 명시적 토글만 저장, 새로고침 시 복원 (task49) ──
+    function _koausSavedView(){ try { return localStorage.getItem('koaus-view-auto'); } catch (_) { return null; } }
+    function _koausSaveView(v){ try { localStorage.setItem('koaus-view-auto', v); } catch (_) {} }
+    document.getElementById('viewListBtn').addEventListener('click', () => { _koausSaveView('list'); switchView('list'); });
+    document.getElementById('viewMapBtn').addEventListener('click',  () => { _koausSaveView('map'); switchView('map'); });
 
     function switchView(v) {
       currentView = v;
@@ -2527,10 +2501,10 @@
       const cbtn = document.getElementById('detailContactBtn');
       if (p.contact) {
         const isLink = /^https?:\/\//i.test(p.contact);
-        cbtn.disabled = false;
+        cbtn.disabled = false; cbtn.style.display = '';
         if (isLink) { cbtn.textContent = '💬 카카오톡으로 연락하기'; cbtn.onclick = () => window.open(p.contact, '_blank', 'noopener'); }
         else { cbtn.textContent = '📞 연락처 보기'; cbtn.onclick = () => copyText(p.contact, `연락처: ${p.contact}`); }
-      } else { cbtn.textContent = '연락처 미등록'; cbtn.disabled = true; cbtn.onclick = null; }
+      } else { cbtn.style.display = 'none'; cbtn.disabled = true; cbtn.onclick = null; }
 
       setupDetailLocation(p);
       recordRecent(p);
@@ -2660,7 +2634,7 @@
               const data = snap.data();
               const myUid = window.koausAuth && window.koausAuth.user && window.koausAuth.user.uid;
               const isOwner = data.uid && myUid && String(data.uid) === String(myUid);
-              const blocked = (data.status === 'hidden' || data.status === 'closed' || data.isHidden || data.status === 'pending');
+              const blocked = (data.status === 'hidden' || data.status === 'closed' || data.isHidden || data.status === 'pending' || data.status === 'deleted');
               if (blocked && !isOwner && !window.koausIsAdmin) {
                 _toast('존재하지 않거나 비공개된 게시물입니다.');
               } else {
@@ -2778,7 +2752,7 @@
 
     // ── 상세보기 Location 미니맵 + 전체화면 확대 모달 ──
     let detailCoords = null, detailAddr = '';
-    let miniMapObj = null, miniMarker = null, expandMapObj = null, expandMarker = null;
+    let miniMapObj = null, miniMarker = null, expandMapObj = null, expandMarker = null, _expandCircle = null, detailIsPrivate = false;
     // google.maps 준비될 때까지 대기 후 콜백 (보드/상세 어느 쪽이 로드하든 동작)
     function whenMapsReady(cb) {
       if (window.google && google.maps && google.maps.Map) { cb(); return; }
@@ -2807,6 +2781,7 @@
       const dirBtn = document.getElementById('detailDirBtn');
       const svBtn  = document.getElementById('detailSvBtn');
       const isPrivate = !!p.locationPrivate;
+      detailIsPrivate = isPrivate;   // 지도확대 FAB(길찾기/스트릿뷰) 비공개 차단 + 확대맵 원/마커 분기용 (openMapExpand 참조)
       const isOwnerOrAdmin = (typeof isMine === 'function' && isMine(p)) || window.koausIsAdmin;
 
       // 옛 Circle/마커 정리
@@ -2861,7 +2836,7 @@
       const c = detailCoords;
       whenMapsReady(() => {
         if (!miniMapObj) {
-          miniMapObj = new google.maps.Map(el, { gestureHandling: 'greedy',
+          miniMapObj = new google.maps.Map(el, { gestureHandling: 'none',
             center: c, zoom: isPrivate ? 13 : 15, disableDefaultUI: true, clickableIcons: false,
           });
         } else {
@@ -2881,26 +2856,45 @@
     const mapExpandOverlay = document.getElementById('mapExpandOverlay');
     function openMapExpand() {
       if (!detailCoords) { showToast('지도 위치를 찾을 수 없습니다.'); return; }
-      // 플로팅 버튼 외부 링크 세팅
-      document.getElementById('mapFabDir').href =
-        `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(detailAddr)}&travelmode=transit`;
-      document.getElementById('mapFabSv').href =
-        `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${detailCoords.lat},${detailCoords.lng}`;
+      const fabDir = document.getElementById('mapFabDir');
+      const fabSv  = document.getElementById('mapFabSv');
+      // 비공개 매물: 길찾기·스트릿뷰 차단 (정확 위치 비노출). 공개 매물만 FAB 활성.
+      if (detailIsPrivate) {
+        if (fabDir) fabDir.style.display = 'none';
+        if (fabSv)  fabSv.style.display  = 'none';
+      } else {
+        if (fabDir) {
+          fabDir.style.display = '';
+          fabDir.href = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(detailAddr)}&travelmode=transit`;
+        }
+        if (fabSv) {
+          fabSv.style.display = '';
+          fabSv.href = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${detailCoords.lat},${detailCoords.lng}`;
+        }
+      }
       mapExpandOverlay.classList.add('open');
       document.body.style.overflow = 'hidden';
       whenMapsReady(() => {
         const el = document.getElementById('mapExpandCanvas');
         if (!expandMapObj) {
           expandMapObj = new google.maps.Map(el, { gestureHandling: 'greedy',
-            center: detailCoords, zoom: 16, mapTypeControl: false, streetViewControl: false, fullscreenControl: false,
+            center: detailCoords, zoom: detailIsPrivate ? 14 : 16, mapTypeControl: false, streetViewControl: false, fullscreenControl: false,
           });
         }
         // 모달 표시 후 컨테이너 크기가 잡히면 리사이즈 + 중심 재설정
         setTimeout(() => {
           google.maps.event.trigger(expandMapObj, 'resize');
-          expandMapObj.setCenter(detailCoords); expandMapObj.setZoom(16);
-          if (expandMarker) expandMarker.setMap(null);
-          expandMarker = new google.maps.Marker({ position: detailCoords, map: expandMapObj });
+          expandMapObj.setCenter(detailCoords); expandMapObj.setZoom(detailIsPrivate ? 14 : 16);
+          if (expandMarker) { expandMarker.setMap(null); expandMarker = null; }
+          if (_expandCircle) { try { _expandCircle.setMap(null); } catch (_) {} _expandCircle = null; }
+          // 비공개: 마커 대신 프라이버시 원(400m). 공개: 정확 마커.
+          if (detailIsPrivate) {
+            if (window.koausListingPrivacy && window.koausListingPrivacy.drawPrivacyCircle) {
+              _expandCircle = window.koausListingPrivacy.drawPrivacyCircle(expandMapObj, detailCoords.lat, detailCoords.lng, { radius: 400 });
+            }
+          } else {
+            expandMarker = new google.maps.Marker({ position: detailCoords, map: expandMapObj });
+          }
         }, 120);
       });
     }
@@ -3756,5 +3750,7 @@
 
   <script type="module" src="koaus-pinned.js"></script>
   <script src="hero-banner.js" defer></script>
+  <script src="koaus-map-header.js" defer></script>
+  <script src="koaus-tabbar.js" defer></script>
 </body>
 </html>

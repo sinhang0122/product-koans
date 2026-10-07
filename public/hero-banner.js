@@ -207,8 +207,14 @@
   //   · IIFE 안에서 dynamic import 로 Firebase SDK 로드 (페이지 script 태그 변경 불필요)
   // ════════════════════════════════════════════════════════════════════
   function currentState() {
-    try { return (new URLSearchParams(location.search).get('state') || '').toLowerCase(); }
-    catch (_) { return ''; }
+    // state.html 은 ?id=nsw (주 바로가기 카드), 게시판은 ?state=nsw — 둘 다 인식.
+    //   안 그러면 state 허브에서 타겟 주가 빈값 → 주별 광고 미매칭 + 캐시 재렌더로
+    //   기본(초록/파랑) 슬라이드가 떴다 사라지는 깜빡임 회귀. id 값은 targetState() 의
+    //   TARGET_STATES 화이트리스트로 검증되므로 비-주 id(글 doc id 등)는 자동 무시됨.
+    try {
+      var q = new URLSearchParams(location.search);
+      return (q.get('state') || q.get('id') || '').toLowerCase();
+    } catch (_) { return ''; }
   }
 
   // ── 유저 성향 주 판정 — local-analytics.js 의 koaus_state_scores 를 읽기 전용 사용 ──
@@ -292,11 +298,16 @@
           return Array.isArray(b.regions) && b.regions.length
                  && (b.regions.includes('all') || (state && b.regions.includes(state)));
         };
-        return snap.docs
+        const result = snap.docs
           .map(d => ({ id: d.id, ...d.data() }))
           .filter(b => matchesTarget(b) && inPeriod(b));
+        // 빈 결과(렉·유휴 후 App Check 토큰 지연 등 일시적 가능)는 메모이제이션하지 않음 —
+        //   다음 호출/재시도에서 실제 재조회해 정상 배너를 받도록 (기본 슬라이드 고정 방지).
+        if (!result.length) _adminBannersPromise = null;
+        return result;
       } catch (e) {
-        console.warn('[hero-banner] admin 배너 fetch 실패 — SLOTS fallback', e);
+        console.warn('[hero-banner] admin 배너 fetch 실패 — 재시도 가능', e);
+        _adminBannersPromise = null;   // 실패도 메모 안 함 — run() 재시도 / 다음 진입 재조회
         return [];
       }
     })();
@@ -548,28 +559,61 @@
       });
     }
 
-    // ── 깜빡임 방지: 직전 방문 배너(cache) 즉시 렌더 → 최신 배너와 다를 때만 재렌더 ──
+    // ── 깜빡임 방지 (2026-06 개선) ──────────────────────────────────────
+    //  · 신뢰 캐시(직전 방문 배너)가 있으면 즉시 렌더 → 반복 방문 깜빡임 0 (LCP 유지).
+    //  · 캐시가 없거나 비면(콜드 캐시 · iPhone Safari 등 localStorage 휘발) 기본 슬라이드를
+    //    "먼저 칠하지 않는다". 예전엔 캐시 미스 시 기본(초록/파랑) 슬라이드를 즉시 칠한 뒤
+    //    admin 배너로 교체 → 매 로드마다 옛 기본 배너가 ~1초 떴다 사라지는 깜빡임이 발생.
+    //    이제는 fetch 결과로 "한 번만" 렌더 (그동안 .koaus-hero:empty placeholder 가 18/7
+    //    높이·자리를 확보하므로 reflow/레이아웃 점프 0).
+    //  · fetch 가 느릴 때만(>1200ms) 빈 히어로 장시간 노출 방지용 기본 슬라이드 폴백.
     const HERO_CACHE = 'koaus_hero_banners_v1';
     let cachedBanners = [];
     try { cachedBanners = JSON.parse(localStorage.getItem(HERO_CACHE) || '[]'); } catch (_) {}
     if (!Array.isArray(cachedBanners)) cachedBanners = [];
     if (cachedBanners.length && !(window.koausUrlGuard && window.koausUrlGuard.isSafeHttp)) cachedBanners = [];
-    let painted = JSON.stringify(cachedBanners);
-    paint(cachedBanners);   // cachedBanners 비면 paint([]) 와 동일(기본 슬라이드 즉시 표시 — 기존 LCP 동작 유지)
 
+    let painted = null;   // null = 아직 아무것도 안 칠함
+    if (cachedBanners.length) {
+      painted = JSON.stringify(cachedBanners);
+      paint(cachedBanners);   // 신뢰 캐시 즉시 렌더
+    }
+    // ── 기본(초록/파랑) 슬라이드 폴백 제거 (2026-07) ────────────────────────
+    //  · 예전엔 콜드 캐시 + fetch 지연(>1200ms) 시 기본 슬라이드를 칠했음(paint([])).
+    //    → 렉/유휴 후 등록 이미지 배너가 늦게 와도 초록/파랑이 먼저 떠 버리는 회귀의 직접 원인.
+    //  · 이제는 결과가 올 때까지 .koaus-hero:empty(중립 회색, 18/7 높이 확보) 를 유지하고,
+    //    "이미지 배너가 있을 때만" 칠한다. 기본 슬라이드는 어떤 경로로도 칠하지 않는다.
     let banners = [];
     try { banners = await fetchAdminBanners(); } catch (_) {}
     if (!Array.isArray(banners)) banners = [];
-    const fresh = JSON.stringify(banners);
-    try { if (banners.length) localStorage.setItem(HERO_CACHE, fresh); else localStorage.removeItem(HERO_CACHE); } catch (_) {}
-    if (fresh !== painted) {
-      containers.forEach(c => {
-        const sw = c.querySelector('.koaus-hero-pc .swiper');
-        if (sw && sw.__koausSwiper) { try { sw.__koausSwiper.destroy(true, true); } catch (_) {} }
-        c.__koausHeroRendered = false;
-      });
-      paint(banners);
+    // 렉/유휴 후 첫 조회가 App Check 토큰·콜드 네트워크로 빈 결과가 올 수 있음 → 1회 재시도.
+    //   fetchAdminBanners 가 빈 결과의 메모를 비워두므로 재호출 시 실제 재조회된다.
+    if (!banners.length) {
+      await new Promise(r => setTimeout(r, 1500));
+      try { banners = await fetchAdminBanners(); } catch (_) {}
+      if (!Array.isArray(banners)) banners = [];
     }
+    const fresh = JSON.stringify(banners);
+    // 빈 결과일 땐 캐시를 "지우지 않는다" — 일시적 렉으로 [] 가 와도 직전 정상 배너 캐시를 보존해
+    //   다음 진입이 콜드 캐시(→ 예전 기본 슬라이드)로 떨어지는 연쇄를 차단. 정상 배너 받았을 때만 갱신.
+    try { if (banners.length) localStorage.setItem(HERO_CACHE, fresh); } catch (_) {}
+
+    if (banners.length) {
+      if (painted === null) {
+        paint(banners);                // 콜드 캐시 → 결과로 1회 렌더 (기본 슬라이드 없이)
+      } else if (fresh !== painted) {
+        // 캐시와 실제 결과가 다름 → 재렌더 (배너 변경 직후 1회만)
+        containers.forEach(c => {
+          const sw = c.querySelector('.koaus-hero-pc .swiper');
+          if (sw && sw.__koausSwiper) { try { sw.__koausSwiper.destroy(true, true); } catch (_) {} }
+          c.__koausHeroRendered = false;
+        });
+        paint(banners);
+      }
+    }
+    // banners.length === 0 (재시도 후에도 빈 결과): 기본 슬라이드 절대 칠하지 않음.
+    //   · 캐시로 이미 정상 배너를 칠했으면 그대로 유지(다운그레이드 금지).
+    //   · 콜드 캐시였으면 .koaus-hero:empty 중립 회색 유지 — 잠시 후 배너 도착 시 위에서 렌더.
   }
 
   if (document.readyState === 'loading') {

@@ -1274,10 +1274,31 @@ select.board-write-btn--ghost:focus { outline: none; border-color: var(--text-pr
      1200px)로 달라도 히어로는 항상 동일 폭으로 렌더. 1040px = 두 부모의 usable 폭(홈 ~1052/서브 ~1144)
      안에 모두 들어가는 공통값 → 데스크톱(≥1100px)에서 홈·서브·strip 픽셀 동일. (모바일 ≤767 은 아래 max-width:100%) */
   width: 100%; max-width: 1040px;
-  margin: 14px auto 18px;
-  padding: 0 16px;
+  /* 2026-07 "더 꽉차게": 내부 패딩 제거(1008→1040px 풀 캐논 폭) + 상하 여백 축소. 비율(18/7)은 .swiper 가 폭 기준 산출이라 불변 */
+  margin: 8px auto 10px;
+  padding: 0;
   box-sizing: border-box;
   overflow: hidden;   /* Swiper 슬라이드가 컨테이너 폭 초과 시 클립 */
+}
+/* ── 히어로 반응형 풀블리드 (2026-07) ────────────────────────────────
+   모바일·반화면(뷰포트 <1100px)에선 부모 컨테이너 캡(.home-main 760px / .page-container)을
+   탈출해 화면 폭을 거의 꽉 채움(좌우 10px 여백). 18/7 비율은 .swiper 의 aspect-ratio 가
+   폭 기준으로 산출하므로 절대 안 틀어짐. 전체화면 데스크탑(≥1100px)은 기존 규격
+   (max-width:1040px 캐논) 그대로 불변.
+   · 100vw 풀블리드의 미세 가로 넘침(스크롤바 폭)은 body overflow-x:clip 으로 차단 —
+     clip 은 hidden 과 달리 스크롤 컨테이너를 만들지 않아 과거 overflow-x:hidden 의
+     '모바일 세로 스크롤 죽음' 회귀(아래 ~1441 주석 참조) 재발 없음. */
+@media (max-width: 1099px) {
+  body { overflow-x: clip; }
+  .koaus-hero {
+    width: 100vw; max-width: 100vw;
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+    padding: 0;   /* 2026-07 edge-to-edge — 좌우 여백 0 */
+  }
+  /* edge-to-edge 에선 모서리 라운드가 화면 밖으로 잘려 보이므로 0 (placeholder 포함) */
+  .koaus-hero:empty,
+  .koaus-hero-pc .swiper { border-radius: 0; }
 }
 /* ── 지시 1/10 ── hero fetch 전 placeholder (reflow 차단) ──────────────
    문제: hero-banner.js fetch 완료 전 .koaus-hero 가 세로 0 → fetch 후 swiper(18/7)로 갑자기 부풀어
@@ -1402,6 +1423,25 @@ select.board-write-btn--ghost:focus { outline: none; border-color: var(--text-pr
 .koaus-hero-pc .swiper-button-next::after { font-size: 14px; font-weight: 900; }
 .koaus-hero-pc .swiper-button-prev:hover,
 .koaus-hero-pc .swiper-button-next:hover { opacity: 1; background: rgba(0,0,0,.4); }
+/* ‹› 화살표 노출 정책 (2026-07): 데스크탑 = 평소 숨김, 히어로 hover 시만 표시.
+   터치(hover 미지원) = 화살표 자체 제거 — 스와이프 전용 (사용자 확정: 모바일은 스크롤로 충분).
+   ⚠️ hover:none 쪽은 display:none 필수 — opacity 방식이면 터치 탭 후 :hover 잔류(sticky hover)로
+   화살표가 어중간하게 떠 있는 부작용. 아래 블록이 위 기본 opacity 규칙보다 뒤(승자)여야 함. */
+@media (hover: hover) and (pointer: fine) {
+  .koaus-hero-pc .swiper-button-prev,
+  .koaus-hero-pc .swiper-button-next {
+    opacity: 0; pointer-events: none;
+    transition: opacity .18s ease, background .18s ease;
+  }
+  .koaus-hero-pc:hover .swiper-button-prev,
+  .koaus-hero-pc:hover .swiper-button-next { opacity: .8; pointer-events: auto; }
+  .koaus-hero-pc:hover .swiper-button-prev:hover,
+  .koaus-hero-pc:hover .swiper-button-next:hover { opacity: 1; }
+}
+@media (hover: none) {
+  .koaus-hero-pc .swiper-button-prev,
+  .koaus-hero-pc .swiper-button-next { display: none; }
+}
 
 /* admin 등록 배너 슬라이드 — 이미지 전면 노출 (3클래스 = 모바일 패딩 규칙보다 우선)
    ::before 그라데이션 오버레이가 앵커 위에 페인트되어 클릭을 가로채던 버그 수정 + 원본 색감 유지 */
@@ -1410,11 +1450,13 @@ select.board-write-btn--ghost:focus { outline: none; border-color: var(--text-pr
 
 /* 모바일 (≤ 767): PC swiper 그대로 노출 + 컴팩트 슬라이드 + 여백 타이트 */
 @media (max-width: 767px) {
-  /* hero 컨테이너 — overflow 차단 + 좌우 패딩 최소화, 상하 여백 최소화 */
+  /* hero 컨테이너 — 2026-07 폰에서도 edge-to-edge 유지.
+     ⚠️ margin 쇼트핸드·max-width:100% 금지 — ≤1099 블록의 풀블리드(margin-left/right calc(50%-50vw),
+     width:100vw)를 되돌려 좌우 여백이 부활하는 회귀(구버전 실제 발생) */
   .koaus-hero {
-    margin: 3px auto 4px;
-    padding: 0 8px;
-    max-width: 100%;
+    margin-top: 3px;
+    margin-bottom: 4px;
+    padding: 0;
     box-sizing: border-box;
     overflow: hidden;
   }
@@ -1423,9 +1465,9 @@ select.board-write-btn--ghost:focus { outline: none; border-color: var(--text-pr
   /* PC swiper 의 모바일 컴팩트 — 전 디바이스 동일 종횡비(18/7) 유지 (지시 3/3)
      · 옛 'aspect-ratio: unset + height: clamp(120px, 18vh, 180px)' 폐기 — viewport 높이에 따른 늘어남 버그 해소.
      · 데스크탑 기본 룰(aspect-ratio: 18/7) 그대로 상속 — 모바일에서도 가로 폭 비례로 자연 축소.
-     · border-radius 만 모바일 컴팩트(12px) 로 조정. */
+     · border-radius 0 — edge-to-edge 풀블리드(≤1099 블록과 동일 정책, 12px 로 되돌리면 모서리 잘림). */
   .koaus-hero-pc .swiper {
-    border-radius: 12px;
+    border-radius: 0;
   }
   .koaus-hero-pc .swiper-slide { padding: 12px 16px; }
   .koaus-hero-pc .hero-eyebrow { font-size: 10px; padding: 2px 7px; }
@@ -1997,7 +2039,9 @@ select.write-input {
 }
 /* Sticky 네비 헤더 */
 .rea-navbar {
-  position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: 6px;
+  /* z-index 15: sticky 네비바가 지도 우상단 확대버튼(.fullscreen-btn z-index:5) 위에 그려지도록.
+     옛 z-index:5 동률 시 나중 DOM(확대버튼)이 네비바 닫기 ✕ 를 덮어 스크롤 중 겹침 회귀(2026-06 수정). */
+  position: sticky; top: 0; z-index: 15; display: flex; align-items: center; gap: 6px;
   padding: 10px 14px; background: var(--bg-surface); border-bottom: 1px solid var(--border);
 }
 .rea-back {
@@ -2067,7 +2111,7 @@ select.write-input {
   font-family: var(--font); font-size: 12.5px; font-weight: 600; color: var(--text-muted); }
 .rea-report:hover { color: var(--red); }
 /* 하단 고정 액션바 */
-.rea-actionbar { flex-shrink: 0; padding: 12px 16px; background: var(--bg-surface); border-top: 1px solid var(--border); }
+.rea-actionbar { flex-shrink: 0; padding: 12px 16px; padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)); background: var(--bg-surface); border-top: 1px solid var(--border); }
 /* 상세 모달 RBAC 액션(작성자/운영자) — 액션바 안 일반 흐름 배치 (카드용 absolute toolbar 와 구분) */
 .rea-rbac-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
 .rea-rbac-actions:empty { display: none; }
@@ -2109,8 +2153,14 @@ select.write-input {
 .contact-action-btn .ca-label { overflow: hidden; text-overflow: ellipsis; }
 
 /* ── Variants — 서비스별 브랜드 톤 ──
+   · 채팅(chat): 브랜드 모노(--accent — 라이트 검정/다크 흰색 자동 반전.
+     order:0 풀폭 상단 행, koaus-contact-actions.js 가 inject)
    · 전화(call): 녹색  · SMS: 파랑  · 카카오: 노랑(검정 텍스트)
    · 이메일: 회색       · 웹사이트: 라이트(ghost) */
+.contact-action-btn--chat  {
+  background: var(--accent); border-color: var(--accent); color: var(--accent-text);
+}
+.contact-action-btn--chat:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
 .contact-action-btn--call  { background: #16a34a; border-color: #16a34a; color: #fff; }
 .contact-action-btn--sms   { background: #3b82f6; border-color: #3b82f6; color: #fff; }
 .contact-action-btn--kakao { background: #FEE500; border-color: #FEE500; color: #181818; }
@@ -2121,16 +2171,37 @@ select.write-input {
 .contact-action-btn--web:hover,
 .contact-action-btn--ghost:hover { border-color: var(--text-primary); }
 
+/* ── 연락 버튼 그리드 — '내 소개글 복사'(풀폭) 아래, 개수 N 별 셀 폭 (2026-06 사용자 확정) ──
+   순서: order 인라인(문자1 / 오픈채팅2 / 연락처보기3 / 메일4)로 시각 고정.
+   N=1 풀폭 · N=2 반반 · N=3 한 줄 3개 · N=4 2×2(두 개+아래 두 개). */
+.contact-action-grid { display: flex; flex-wrap: wrap; gap: 8px; width: 100%; }
+.contact-action-grid > * { flex: 1 1 0; min-width: 0; }
+.contact-action-grid.ca-n1 > * { flex-basis: 100%; }
+.contact-action-grid.ca-n2 > * { flex-basis: calc(50% - 4px); }
+.contact-action-grid.ca-n3 > * { flex-basis: calc(33.333% - 6px); }
+.contact-action-grid.ca-n4 > * { flex-basis: calc(50% - 4px); }
+/* 그리드로 이식된 레거시 '연락처 보기'(.rea-contact-btn) — 풀폭 무력화하고 그리드 셀 규격에 맞춤 */
+.contact-action-grid > .rea-contact-btn {
+  width: auto; margin: 0; padding: 12px 14px; font-size: 14px; font-weight: 800;
+  border-radius: var(--r-md); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+/* 미이식(폴백) 상태의 레거시 버튼만 숨김 — 그리드 안으로 들어가면(직계 자식 아님) 위 규칙으로 표시 */
+.rea-actionbar > #detailContactBtn { display: none !important; }
+
 /* 모바일 < 480px — 패딩·폰트 축소 + 4버튼도 자연스럽게 한 줄 유지 */
 @media (max-width: 480px) {
   .contact-action-container { gap: 6px; }
+  .contact-action-grid { gap: 6px; }
+  .contact-action-grid.ca-n2 > *, .contact-action-grid.ca-n4 > * { flex-basis: calc(50% - 3px); }
+  .contact-action-grid.ca-n3 > * { flex-basis: calc(33.333% - 4px); }
   .contact-action-btn { padding: 10px 8px; font-size: 12.5px; gap: 4px; }
   .contact-action-btn .ca-ico { font-size: 14px; }
+  .contact-action-grid > .rea-contact-btn { padding: 10px 8px; font-size: 12.5px; }
 }
 /* 모바일: 풀스크린 (쉐어 상세 .rea-detail 한정 — 렌트 등 다른 모달 영향 없음) */
 @media (max-width: 768px) {
   .post-detail-overlay:has(.rea-detail) { padding: 0; align-items: stretch; }
-  .rea-detail { max-width: 100%; max-height: 100vh; height: 100vh; border-radius: 0; border: none; }
+  .rea-detail { max-width: 100%; max-height: 100vh; max-height: 100dvh; height: 100vh; height: 100dvh; border-radius: 0; border: none; }
 }
 
 /* ════════════════════════════════════════════════════════════════════════
@@ -2956,6 +3027,60 @@ select.filter-mini-input {
   cursor: zoom-in;
 }
 .detail-hero-gallery img { cursor: zoom-in; }
+
+/* ════════════════════════════════════════════════════════════════════════
+   상세 모달 — 와이드 PC 분할 레이아웃 (사진 좌 / 상세 우)
+   · ≥1024px(풀스크린 PC)에서만 적용. 모바일·노트북 반화면(<1024px)은 기존 풀스크린 스택 유지.
+   · 좌: 사진(1·2번 동시 표시, 세로 스택) / 우: 네비 + 본문(스크롤) + 액션바.
+   · .rea-scroll 를 display:contents 로 풀어 자식을 .rea-detail 그리드에 직접 배치
+     (rent 는 .rea-actionbar 없음 → actionbar 행(auto)이 0 으로 접힘, 무해).
+   · 선택자에 .rea-detail 접두(specificity)로 위 기본 .rea-hero/.detail-hero-gallery 규칙 확실히 오버라이드.
+   ════════════════════════════════════════════════════════════════════════ */
+@media (min-width: 1024px) {
+  /* 오버레이: 풀스크린 stretch → 중앙 정렬 모달 */
+  .post-detail-overlay:has(.rea-detail) {
+    padding: 24px; align-items: center; justify-content: center;
+  }
+  /* 카드: 풀스크린 → 캡 사이즈 2분할 그리드 */
+  .post-detail-card.rea-detail {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      "hero navbar"
+      "hero content"
+      "hero actionbar";
+    width: min(1120px, 94vw); max-width: min(1120px, 94vw);
+    height: min(88vh, 880px); max-height: 88vh;
+    border: 1px solid var(--border); border-radius: var(--r-xl);
+    overflow: hidden;
+  }
+  /* .rea-scroll 박스 해제 → 자식(.rea-hero/.rea-navbar/.rea-content)이 그리드 아이템이 됨 */
+  .rea-detail .rea-scroll { display: contents; }
+  /* 좌측: 사진 영역 (카드 전체 높이) */
+  .rea-detail .rea-hero {
+    grid-area: hero;
+    aspect-ratio: auto; height: 100%; min-height: 0;
+    border-bottom: none; border-right: 1px solid var(--border);
+  }
+  /* 우측: 네비 / 본문(스크롤) / 액션바 */
+  .rea-detail .rea-navbar { grid-area: navbar; }
+  .rea-detail .rea-content { grid-area: content; overflow-y: auto; min-height: 0; }
+  .rea-detail .rea-actionbar { grid-area: actionbar; }
+  /* 갤러리: 가로 캐러셀 → 세로 스택 (1·2번 사진 동시 노출, 3장+ 는 스크롤) */
+  .rea-detail .detail-hero-gallery {
+    flex-direction: column;
+    overflow-x: hidden; overflow-y: auto;
+    scroll-snap-type: y proximity;
+  }
+  .rea-detail .detail-hero-gallery img {
+    flex: 0 0 50%; width: 100%; height: auto; min-height: 0;
+  }
+  /* 사진 1장뿐이면 전체 높이 채움 */
+  .rea-detail .detail-hero-gallery img:only-child { flex-basis: 100%; }
+  /* 세로 스택에선 가로 위치 카운터 무의미 → 숨김 */
+  .rea-detail .rea-hero-counter { display: none; }
+}
 
 /* rent 카드 hero — Realestate 스타일 큰 사진 (16:9) + 사진 개수 배지 */
 .accom-card-hero {
@@ -4519,8 +4644,8 @@ html, body { max-width: 100%; overflow-x: clip; }
 @media (max-width: 960px) { .state-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (max-width: 640px) { .state-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; } }
 @media (max-width: 360px) { .state-grid { gap: 8px; } }
-/* modifier — 카드 2개만 한 줄로 (홈의 Care/환율 페어 등) */
-.state-grid.state-grid--pair { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+/* (2026-07) .state-grid--pair modifier 제거 — 홈 Care/환율 페어 섹션이 '바로가기' 그리드
+   (admin-mark.js state-quick, 돌봄→환율→주8 카드 10장)로 흡수되어 사용처 0. */
 /* .home-shortcut(홈 Care/환율 카드)와 100% 동일 디자인 토큰 — 사이즈만 8개 그리드용으로 컴팩트 */
 .state-card {
   position: relative; display: flex; flex-direction: column;
@@ -4701,3 +4826,47 @@ img, iframe, video, canvas, svg, table { max-width: 100%; }
   font-size: 12.5px; line-height: 1.5; color: #4a3a00;
 }
 .detail-private-owner-info strong { color: #1a1a1a; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   모바일 Map View 풀스크린 (≤768px 전용 · 2026-07)
+   ─ 목록은 기존 그대로, 지도만 화면 전체를 덮는다 (앱 UX).
+   ─ 트리거: koaus-tabbar.js 의 MutationObserver 가 #mapView 표시 시
+     body.koaus-map-active 를 토글 — 8개 보드의 switchView() 무수정.
+   ─ z-index: 지도 920 (topbar 900 위 · 모달 1000+ 아래 — 지도에서 연
+     상세/신고/로그인 모달은 정상 동작) · 지도 상단 헤더 925 (koaus-map-header.js).
+   ─ 상단은 지도 헤더(env(safe-top)+96px: 1행 50 + 2행 46) 아래부터,
+     하단은 탭바(60px + safe-area)까지 — 탭바로 즉시 이탈 가능.
+   ─ 데스크탑(>768px)은 완전히 무변화.
+   ═══════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  body.koaus-map-active { overflow: hidden; }
+
+  body.koaus-map-active #mapView {
+    position: fixed; left: 0; right: 0;
+    top: calc(env(safe-area-inset-top, 0px) + 96px);   /* 지도 헤더 아래부터 */
+    bottom: calc(60px + env(safe-area-inset-bottom, 0px));
+    z-index: 920;
+    background: var(--bg-base, #fff);
+    display: flex !important; flex-direction: column;
+    padding: 0; margin: 0;
+  }
+  /* 지도 캔버스가 남은 높이를 전부 차지 (jobs 인라인 height:480px 무력화) */
+  body.koaus-map-active #mapView #accomMap,
+  body.koaus-map-active #mapView #jobsMap,
+  body.koaus-map-active #mapView #visaMap {
+    flex: 1 1 auto;
+    height: auto !important; min-height: 0 !important;
+    border: 0 !important; border-radius: 0 !important;
+  }
+  /* 하단 카드 드로어는 지도 아래 고정 높이로 */
+  body.koaus-map-active #mapView #mapCardDrawer {
+    flex: 0 0 auto;
+    margin: 8px 8px calc(8px + 0px);
+  }
+  /* '이 지역 검색' 버튼은 페이지 JS 기존 동작(지도 이동 시 .show) 그대로 —
+     #mapView 기준 absolute 라 헤더 바로 아래 상단 중앙에 뜬다.
+     목록/지도 전환·상세 필터·섹션 이동은 지도 상단 헤더(koaus-map-header.js) 담당. */
+}
+
+/* (2026-07) 옛 홈 12타일 cat-grid CSS 제거 — 카테고리 이동은 하단 탭바/바로가기가 담당,
+   그 자리는 홈 영상 칸(#koausHomeVideos, koaus-home-videos.js 자체 주입 스타일)으로 대체. */

@@ -126,8 +126,9 @@ function mountSignupExtra() {
   });
   if (nickCheckBtn) nickCheckBtn.addEventListener('click', async () => {
     const nick = (nickInput?.value || '').trim();
-    if (!/^[a-zA-Z0-9가-힣]{3,12}$/.test(nick)) {
-      setNickMsg('3~12자 한글·영문·숫자만 사용 가능합니다.', 'err');
+    // 한글 포함 시 2~12자, 영문·숫자만은 3~12자 (숫자 단독 불가) — mypage.html 닉네임 변경과 동일 정책
+    if (!/^(?:(?=.*[가-힣])[a-zA-Z가-힣0-9]{2,12}|(?=.*[a-zA-Z])[a-zA-Z0-9]{3,12})$/.test(nick)) {
+      setNickMsg('한글 포함 2~12자, 영문·숫자는 3~12자만 사용 가능합니다. (숫자 단독 불가)', 'err');
       _nickConfirmed = ''; return;
     }
     nickCheckBtn.disabled = true; nickCheckBtn.textContent = '확인 중…';
