@@ -32,8 +32,6 @@
   </script>
 
 
-  <script type="module" src="marquee.js"></script>
-
   <script src="pw-toggle.js" defer></script>
   <script src="offline.js" defer></script>
   <script src="koaus-textsize.js" defer></script>
@@ -42,11 +40,25 @@
   <script src="koaus-gallery.js" defer></script>
   <script src="koaus-dedupe.js" defer></script>
   <script src="koaus-url-guard.js" defer></script>
+  <script src="koaus-state.js" defer></script>
   <script src="koaus-report.js" defer></script>
   <script type="module" src="admin-mark.js"></script>
   <script type="module" src="koaus-rbac.js"></script>
   <script type="module" src="auth-extra.js"></script>
   <script type="module" src="koaus-phone-auth.js"></script>
+  <style>
+    /* 마이페이지 슬림 개편 (2026-07) — ⚙️ 환경설정 진입 + 최근 본 영상 그리드 */
+    .mp-settings-gear{flex:0 0 auto;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+      color:var(--text-secondary,#374151);background:var(--bg-subtle,#f3f4f6);border:1px solid var(--border,#e5e7eb);text-decoration:none;}
+    .mp-settings-gear:hover{background:var(--border,#e5e7eb);}
+    .mp-settings-gear svg{display:block;}
+    .mp-videos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;}
+    .mp-video-card{display:flex;flex-direction:column;gap:6px;text-decoration:none;color:inherit;}
+    .mp-video-card img{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:12px;background:var(--bg-subtle,#f3f4f6);display:block;}
+    .mp-video-title{font-size:12.5px;font-weight:700;line-height:1.35;color:var(--text-primary,#111);
+      display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+    .mp-video-date{font-size:11px;color:var(--text-muted,#8e8e93);}
+  </style>
 </head>
 <body>
 
@@ -106,22 +118,16 @@
             </div>
           </div>
           <div class="accord-subgroup">
-            <button class="accord-sublabel sub-toggle" type="button"><span>Visa &amp; Migration</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
-            <div class="sub-menu">
-            <a href="points.html?state=nsw&amp;cat=visa-edu" class="accord-link accord-link--sub">비자/유학 (Visa &amp; Edu)</a>
-            <a href="points.html?state=nsw&amp;cat=points" class="accord-link accord-link--sub">기술심사 가채점</a>
-            </div>
-          </div>
-          <div class="accord-subgroup">
             <button class="accord-sublabel sub-toggle" type="button"><span>Auto</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="auto.html?state=nsw&amp;category=used" class="accord-link accord-link--sub">중고차 판매 (Used Car)</a>
-            <a href="auto.html?state=nsw&amp;category=maintenance" class="accord-link accord-link--sub">정비소/견인 (Maintenance &amp; Towing)</a>            </div>
+            <a href="auto.html?state=nsw&amp;category=insurance" class="accord-link accord-link--sub">보험 정보 (Insurance)</a>            </div>
           </div>
           <div class="accord-subgroup">
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
-            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
+            <a href="trades.html?state=nsw" class="accord-link accord-link--sub">일상 (Daily)</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('비자/이민 섹션은 준비 중입니다.');return false;">비자/이민 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -147,22 +153,16 @@
             </div>
           </div>
           <div class="accord-subgroup">
-            <button class="accord-sublabel sub-toggle" type="button"><span>Visa &amp; Migration</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
-            <div class="sub-menu">
-            <a href="points.html?state=vic&amp;cat=visa-edu" class="accord-link accord-link--sub">비자/유학 (Visa &amp; Edu)</a>
-            <a href="points.html?state=vic&amp;cat=points" class="accord-link accord-link--sub">기술심사 가채점</a>
-            </div>
-          </div>
-          <div class="accord-subgroup">
             <button class="accord-sublabel sub-toggle" type="button"><span>Auto</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="auto.html?state=vic&amp;category=used" class="accord-link accord-link--sub">중고차 판매 (Used Car)</a>
-            <a href="auto.html?state=vic&amp;category=maintenance" class="accord-link accord-link--sub">정비소/견인 (Maintenance &amp; Towing)</a>            </div>
+            <a href="auto.html?state=vic&amp;category=insurance" class="accord-link accord-link--sub">보험 정보 (Insurance)</a>            </div>
           </div>
           <div class="accord-subgroup">
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
-            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
+            <a href="trades.html?state=vic" class="accord-link accord-link--sub">일상 (Daily)</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('비자/이민 섹션은 준비 중입니다.');return false;">비자/이민 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -188,22 +188,16 @@
             </div>
           </div>
           <div class="accord-subgroup">
-            <button class="accord-sublabel sub-toggle" type="button"><span>Visa &amp; Migration</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
-            <div class="sub-menu">
-            <a href="points.html?state=qld&amp;cat=visa-edu" class="accord-link accord-link--sub">비자/유학 (Visa &amp; Edu)</a>
-            <a href="points.html?state=qld&amp;cat=points" class="accord-link accord-link--sub">기술심사 가채점</a>
-            </div>
-          </div>
-          <div class="accord-subgroup">
             <button class="accord-sublabel sub-toggle" type="button"><span>Auto</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="auto.html?state=qld&amp;category=used" class="accord-link accord-link--sub">중고차 판매 (Used Car)</a>
-            <a href="auto.html?state=qld&amp;category=maintenance" class="accord-link accord-link--sub">정비소/견인 (Maintenance &amp; Towing)</a>            </div>
+            <a href="auto.html?state=qld&amp;category=insurance" class="accord-link accord-link--sub">보험 정보 (Insurance)</a>            </div>
           </div>
           <div class="accord-subgroup">
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
-            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
+            <a href="trades.html?state=qld" class="accord-link accord-link--sub">일상 (Daily)</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('비자/이민 섹션은 준비 중입니다.');return false;">비자/이민 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -229,22 +223,16 @@
             </div>
           </div>
           <div class="accord-subgroup">
-            <button class="accord-sublabel sub-toggle" type="button"><span>Visa &amp; Migration</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
-            <div class="sub-menu">
-            <a href="points.html?state=wa&amp;cat=visa-edu" class="accord-link accord-link--sub">비자/유학 (Visa &amp; Edu)</a>
-            <a href="points.html?state=wa&amp;cat=points" class="accord-link accord-link--sub">기술심사 가채점</a>
-            </div>
-          </div>
-          <div class="accord-subgroup">
             <button class="accord-sublabel sub-toggle" type="button"><span>Auto</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="auto.html?state=wa&amp;category=used" class="accord-link accord-link--sub">중고차 판매 (Used Car)</a>
-            <a href="auto.html?state=wa&amp;category=maintenance" class="accord-link accord-link--sub">정비소/견인 (Maintenance &amp; Towing)</a>            </div>
+            <a href="auto.html?state=wa&amp;category=insurance" class="accord-link accord-link--sub">보험 정보 (Insurance)</a>            </div>
           </div>
           <div class="accord-subgroup">
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
-            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
+            <a href="trades.html?state=wa" class="accord-link accord-link--sub">일상 (Daily)</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('비자/이민 섹션은 준비 중입니다.');return false;">비자/이민 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -270,22 +258,16 @@
             </div>
           </div>
           <div class="accord-subgroup">
-            <button class="accord-sublabel sub-toggle" type="button"><span>Visa &amp; Migration</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
-            <div class="sub-menu">
-            <a href="points.html?state=sa&amp;cat=visa-edu" class="accord-link accord-link--sub">비자/유학 (Visa &amp; Edu)</a>
-            <a href="points.html?state=sa&amp;cat=points" class="accord-link accord-link--sub">기술심사 가채점</a>
-            </div>
-          </div>
-          <div class="accord-subgroup">
             <button class="accord-sublabel sub-toggle" type="button"><span>Auto</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="auto.html?state=sa&amp;category=used" class="accord-link accord-link--sub">중고차 판매 (Used Car)</a>
-            <a href="auto.html?state=sa&amp;category=maintenance" class="accord-link accord-link--sub">정비소/견인 (Maintenance &amp; Towing)</a>            </div>
+            <a href="auto.html?state=sa&amp;category=insurance" class="accord-link accord-link--sub">보험 정보 (Insurance)</a>            </div>
           </div>
           <div class="accord-subgroup">
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
-            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
+            <a href="trades.html?state=sa" class="accord-link accord-link--sub">일상 (Daily)</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('비자/이민 섹션은 준비 중입니다.');return false;">비자/이민 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -311,22 +293,16 @@
             </div>
           </div>
           <div class="accord-subgroup">
-            <button class="accord-sublabel sub-toggle" type="button"><span>Visa &amp; Migration</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
-            <div class="sub-menu">
-            <a href="points.html?state=tas&amp;cat=visa-edu" class="accord-link accord-link--sub">비자/유학 (Visa &amp; Edu)</a>
-            <a href="points.html?state=tas&amp;cat=points" class="accord-link accord-link--sub">기술심사 가채점</a>
-            </div>
-          </div>
-          <div class="accord-subgroup">
             <button class="accord-sublabel sub-toggle" type="button"><span>Auto</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="auto.html?state=tas&amp;category=used" class="accord-link accord-link--sub">중고차 판매 (Used Car)</a>
-            <a href="auto.html?state=tas&amp;category=maintenance" class="accord-link accord-link--sub">정비소/견인 (Maintenance &amp; Towing)</a>            </div>
+            <a href="auto.html?state=tas&amp;category=insurance" class="accord-link accord-link--sub">보험 정보 (Insurance)</a>            </div>
           </div>
           <div class="accord-subgroup">
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
-            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
+            <a href="trades.html?state=tas" class="accord-link accord-link--sub">일상 (Daily)</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('비자/이민 섹션은 준비 중입니다.');return false;">비자/이민 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -352,22 +328,16 @@
             </div>
           </div>
           <div class="accord-subgroup">
-            <button class="accord-sublabel sub-toggle" type="button"><span>Visa &amp; Migration</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
-            <div class="sub-menu">
-            <a href="points.html?state=act&amp;cat=visa-edu" class="accord-link accord-link--sub">비자/유학 (Visa &amp; Edu)</a>
-            <a href="points.html?state=act&amp;cat=points" class="accord-link accord-link--sub">기술심사 가채점</a>
-            </div>
-          </div>
-          <div class="accord-subgroup">
             <button class="accord-sublabel sub-toggle" type="button"><span>Auto</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="auto.html?state=act&amp;category=used" class="accord-link accord-link--sub">중고차 판매 (Used Car)</a>
-            <a href="auto.html?state=act&amp;category=maintenance" class="accord-link accord-link--sub">정비소/견인 (Maintenance &amp; Towing)</a>            </div>
+            <a href="auto.html?state=act&amp;category=insurance" class="accord-link accord-link--sub">보험 정보 (Insurance)</a>            </div>
           </div>
           <div class="accord-subgroup">
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
-            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
+            <a href="trades.html?state=act" class="accord-link accord-link--sub">일상 (Daily)</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('비자/이민 섹션은 준비 중입니다.');return false;">비자/이민 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -393,22 +363,16 @@
             </div>
           </div>
           <div class="accord-subgroup">
-            <button class="accord-sublabel sub-toggle" type="button"><span>Visa &amp; Migration</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
-            <div class="sub-menu">
-            <a href="points.html?state=nt&amp;cat=visa-edu" class="accord-link accord-link--sub">비자/유학 (Visa &amp; Edu)</a>
-            <a href="points.html?state=nt&amp;cat=points" class="accord-link accord-link--sub">기술심사 가채점</a>
-            </div>
-          </div>
-          <div class="accord-subgroup">
             <button class="accord-sublabel sub-toggle" type="button"><span>Auto</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="auto.html?state=nt&amp;category=used" class="accord-link accord-link--sub">중고차 판매 (Used Car)</a>
-            <a href="auto.html?state=nt&amp;category=maintenance" class="accord-link accord-link--sub">정비소/견인 (Maintenance &amp; Towing)</a>            </div>
+            <a href="auto.html?state=nt&amp;category=insurance" class="accord-link accord-link--sub">보험 정보 (Insurance)</a>            </div>
           </div>
           <div class="accord-subgroup">
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
-            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
+            <a href="trades.html?state=nt" class="accord-link accord-link--sub">일상 (Daily)</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('비자/이민 섹션은 준비 중입니다.');return false;">비자/이민 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -422,31 +386,8 @@
     </nav>
   </aside>
   <main class="page-container">
-    <section class="koaus-hero" data-koaus-hero-cat="mypage" aria-label="KoAus 배너"></section>
-
-    <section class="notice-section">
-      <div class="notice-row" id="tickerRow">
-        <div class="ticker-fixed">
-          <span class="notice-badge">Notice</span>
-          <span class="ticker-sep">|</span>
-          <span class="ticker-sponsor" id="tickerSponsor">KoAus</span>
-          <span class="ticker-sep">|</span>
-        </div>
-        <div class="ticker-viewport">
-          <div class="ticker-track" id="tickerTrack">
-            <a class="ticker-item" id="tickerItem" rel="noopener noreferrer">
-              <span class="ticker-content" id="tickerContent">숙소 · 구인구직 · 차량 · 환전 게시판을 자유롭게 이용해 보세요 · KoAus는 호주 한인 커뮤니티의 새로운 기준을 만들어 갑니다</span>
-              <span class="ticker-arrow" id="tickerArrow" aria-hidden="true"></span>
-            </a>
-          </div>
-        </div>
-        <div class="ticker-nav-group">
-          <button type="button" class="ticker-nav" id="tickerPrev" aria-label="이전 배너">‹</button>
-          <button type="button" class="ticker-nav" id="tickerNext" aria-label="다음 배너">›</button>
-        </div>
-      </div>
-    </section>
-
+    <!-- 마이페이지 슬림 규격 (2026-07 사용자 확정) — 광고성 요소(히어로·마퀴) 없이 깔끔하게.
+         상단 컴포넌트 ①②(히어로/마퀴) 의도적 생략 페이지 -->
     <div class="page-header">
       <div>
         <h1 class="page-title">👤 마이페이지</h1>
@@ -465,9 +406,21 @@
     </section>
 
     <section class="mypage-account" id="profileSection" style="display:none;">
-      <header class="mypage-account-header">
-        <h2 class="mypage-account-title">KoAus 계정</h2>
-        <p class="mypage-account-subtitle">프로필 사진과 이름·닉네임을 관리합니다.</p>
+      <header class="mypage-account-header" style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;">
+        <div>
+          <h2 class="mypage-account-title">KoAus 계정</h2>
+          <p class="mypage-account-subtitle">닉네임 · 사진 · 인증 · 영상 · 계정 관리는 ⚙️ 환경설정에서</p>
+        </div>
+        <!-- 우측 액션 2종: 💬 채팅(chat.html — 데스크탑 진입점, 모바일은 탭바와 병행)
+             + ⚙️ 환경설정(각자의 고유링크 ?uid= 는 로그인 후 onAuthStateChanged 가 세팅) -->
+        <div style="display:flex;align-items:center;gap:8px;flex:none;">
+        <a class="mp-settings-gear" id="mpChatLink" href="chat.html" aria-label="채팅" title="채팅">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.4c0 3.98-4.03 7.2-9 7.2-1.02 0-2-.13-2.9-.38L4.3 19.7l1.02-3.1C4.07 15.3 3 13.44 3 11.4 3 7.42 7.03 4.2 12 4.2s9 3.22 9 7.2z"/></svg>
+        </a>
+        <a class="mp-settings-gear" id="mpSettingsLink" href="settings.html" aria-label="환경설정" title="환경설정">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </a>
+        </div>
       </header>
 
       <!-- 1) 프로필 카드: 아바타 + 이름 + 이메일 -->
@@ -481,58 +434,15 @@
         </div>
       </div>
 
-      <!-- 2) 닉네임 변경 행 -->
-      <div class="mypage-account-row">
-        <div class="mypage-account-row-info">
-          <div class="mypage-account-row-label">닉네임 (Nickname)</div>
-          <div class="mypage-account-row-desc">게시판에 표시되는 별명 · 3~12자 한글·영문</div>
-        </div>
-        <button class="mypage-edit-btn" id="mpEditBtn">닉네임 변경</button>
-      </div>
-      <div class="mypage-nick-edit" id="mpNickEdit" style="display:none;">
-        <input class="auth-input" id="mpNickInput" type="text" maxlength="12" placeholder="3~12자 한글/영문" autocomplete="off" />
-        <div class="mypage-nick-actions">
-          <button class="mypage-edit-btn" id="mpNickSave">저장</button>
-          <button class="mypage-photo-btn" id="mpNickCancel">취소</button>
-        </div>
-      </div>
-      <p class="auth-error" id="mpNickError"></p>
-      <p class="mypage-nick-note">닉네임은 한 번 변경하면 3개월 동안 다시 변경할 수 없습니다.</p>
-
-      <!-- 3) 사진 교체 행 -->
-      <div class="mypage-account-row">
-        <div class="mypage-account-row-info">
-          <div class="mypage-account-row-label">프로필 사진 (Photo)</div>
-          <div class="mypage-account-row-desc">정사각 권장 · 자동 압축 후 업로드</div>
-        </div>
-        <button class="mypage-photo-btn" id="mpPhotoBtn">사진 교체</button>
-      </div>
-
-      <!-- 4) 휴대폰 번호 (Phone) — 본인확인 보조 인증(로그인은 이메일/구글). 변경 시 reauth 후 재인증 -->
-      <div class="mypage-account-row">
-        <div class="mypage-account-row-info">
-          <div class="mypage-account-row-label">휴대폰 번호 (Phone)</div>
-          <div class="mypage-account-row-desc" id="mpPhone">—</div>
-        </div>
-        <button class="mypage-edit-btn" id="mpPhoneBtn">휴대폰 인증</button>
-      </div>
-
-      <!-- 5) Danger Zone — 계정 삭제 (탈퇴) · Privacy Policy §9 (6개월 암호화 보관 후 파기) -->
-      <div class="mypage-account-row" id="mpDeleteRow" style="border-top:2px solid var(--red,#dc2626);margin-top:14px;padding-top:14px;">
-        <div class="mypage-account-row-info">
-          <div class="mypage-account-row-label" style="color:var(--red,#dc2626);">계정 삭제 · Delete Account</div>
-          <div class="mypage-account-row-desc">탈퇴 시 프로필과 서비스 접근 권한이 영구히 제거됩니다. 신중히 결정해 주세요.</div>
-        </div>
-        <button class="mypage-photo-btn" id="mpDeleteBtn" type="button"
-                style="border:1.5px solid var(--red,#dc2626);color:var(--red,#dc2626);font-weight:800;">계정 삭제</button>
-      </div>
+      <!-- 계정 관리 행들(닉네임/사진/휴대폰/자기소개서/영상/계정삭제)은 2026-07 개편으로
+           settings.html(환경설정) · security.html(보안) 로 이동 — 여기 다시 넣지 말 것 -->
     </section>
 
     <div class="mypage-tabs" id="mypageTabs" style="display:none;">
       <button class="mypage-tab active" data-mtab="mine">내가 쓴 글</button>
-      <button class="mypage-tab" data-mtab="recent">최근 본 글</button>
       <button class="mypage-tab" data-mtab="saved">저장한 글</button>
-      <button class="mypage-tab" data-mtab="contacted">연락한 글</button>
+      <button class="mypage-tab" data-mtab="recent">최근 본 글</button>
+      <button class="mypage-tab" data-mtab="videos">최근 본 영상</button>
     </div>
 
     <div class="mypage-list" id="mypageList" style="display:none;"></div>
@@ -543,7 +453,7 @@
     <div class="footer-links">
       <a href="about.html">KoAus 소개 / About</a>
       <a href="faq.html">자주 묻는 질문 / FAQ</a>
-      <a href="guide.html">이용 가이드 / Guide</a>
+      <a href="guide.html">보안·이용 가이드 / Guide</a>
       <a href="privacy.html">Privacy Policy / 개인정보처리방침</a>
       <a href="terms.html">Terms of Service / 서비스 이용약관</a>
       <a href="contact.html">Contact / 문의하기</a>
@@ -640,30 +550,6 @@
     </div>
   </div>
 
-  <!-- ── 계정 삭제(탈퇴) 확인 모달 — Privacy Policy §9 (6개월 암호화 보관 후 파기) ── -->
-  <div class="report-overlay" id="deleteAcctOverlay" role="dialog" aria-modal="true" aria-labelledby="deleteAcctTitle">
-    <div class="report-modal">
-      <div class="report-header">
-        <span class="report-title" id="deleteAcctTitle" style="color:var(--red,#dc2626);">⚠ Delete Account · 계정 삭제</span>
-        <button class="report-close" id="deleteAcctCancel" type="button" aria-label="닫기 / Cancel">✕</button>
-      </div>
-      <div class="tos-body">
-        <p><strong>⚠ Warning:</strong> Deleting your account will permanently remove your profile and access. However, in accordance with our <a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a>, your essential account details may be securely held in an encrypted format for 6 months to prevent misuse and comply with legal obligations.</p>
-        <p><strong>⚠ 경고:</strong> 계정을 삭제하면 프로필과 서비스 접근 권한이 영구히 제거됩니다. 다만, <a href="privacy.html" target="_blank" rel="noopener">개인정보처리방침</a>에 따라 부정이용 방지 및 법적 의무 이행을 위해 주요 계정 정보는 6개월간 암호화되어 안전하게 보관된 후 파기됩니다.</p>
-      </div>
-      <div class="report-actions" style="display:flex;gap:8px;">
-        <button class="filter-apply-btn" id="deleteAcctConfirm" type="button"
-                style="flex:1;background:var(--red,#dc2626);border-color:var(--red,#dc2626);color:#fff;font-weight:800;">
-          최종 삭제 확인 · Confirm Delete
-        </button>
-        <button class="filter-apply-btn" id="deleteAcctCancel2" type="button"
-                style="flex:0 0 auto;padding:0 18px;background:transparent;color:var(--text-primary);">
-          취소 · Cancel
-        </button>
-      </div>
-    </div>
-  </div>
-
   <div class="auth-overlay" id="authOverlay">
     <div class="auth-modal">
       <button class="auth-close" id="authClose" aria-label="닫기">
@@ -737,12 +623,10 @@
     import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
     import {
       getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut,
-      createUserWithEmailAndPassword, signInWithEmailAndPassword, deleteUser,
-      reauthenticateWithPopup, reauthenticateWithCredential, EmailAuthProvider,
+      createUserWithEmailAndPassword, signInWithEmailAndPassword,
     } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
     import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app-check.js';
-    import { getFirestore, doc, getDoc, setDoc, deleteDoc, updateDoc, runTransaction, collection, getDocs, query, where, limit } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
-    import { compressImage, uploadCompressed } from './compress.js';
+    import { getFirestore, doc, getDoc, collection, getDocs, query, where, limit } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
 
     const firebaseConfig = {
       apiKey:            'AIzaSyCamqnt0bNUD9uz1N5BbCuQjSkWLSpPqlU',
@@ -888,14 +772,33 @@
     const boardHref  = b => ({accom:'accom.html',rent:'rent.html',jobs:'jobs.html',auto:'auto.html',points:'points.html',trades:'trades.html',gp:'gp.html',salon:'salon.html',restaurants:'restaurants.html',care:'care.html'}[b] || '#');
 
     let mtab = 'mine';
-    const emptyMsg = { mine: '아직 작성한 글이 없습니다.', recent: '최근 본 글이 없습니다.', saved: '저장한 글이 없습니다.', contacted: '연락한 글이 없습니다.' };
+    const emptyMsg = { mine: '아직 작성한 글이 없습니다.', recent: '최근 본 글이 없습니다.', saved: '저장한 글이 없습니다.', videos: '최근 본 영상이 없습니다.' };
     // ── 본인 글 Firestore 직접 조회 (accom/rent/jobs) ──────────────────
     //   게시판 캐시는 approved 스냅샷으로 통째 덮어써서 숨김/블라인드 글이 증발 —
     //   localStorage 만으로는 ▶️ 되살리기·운영자 블라인드 표기가 불가능하다.
     //   where('uid'==본인) limit 20 × 3 (단일 필드 — 복합 인덱스 불필요, 클라 정렬).
     let _fsMine = [];
+    let _fsMineLoaded = false;   // FS 조회 1회 완료 여부 — 완료 전엔 '글 없음' 대신 '불러오는 중'
+    // ── 숨김 own-post 증발 방지: _fsMine 을 uid 키 LS 캐시로 시드/저장 ──
+    //   board approved-snapshot 이 LS 보드캐시에서 숨김글을 evict + 초기 렌더가 FS 조회 전 실행 →
+    //   '내가 쓴 글'에서 숨김글이 사라져 ▶️ 다시 노출을 못 누르는 회귀(간헐: FS 조회 타이밍).
+    //   직전 조회 결과(숨김글 포함)를 캐시로 즉시 렌더 → 해제 가능. 콜드 캐시만 FS 대기.
+    const _FSMINE_CACHE = 'koaus-my-fsposts';
+    function loadFsMineCache(uid) {
+      try {
+        const c = JSON.parse(localStorage.getItem(_FSMINE_CACHE) || 'null');
+        if (c && c.uid === uid && Array.isArray(c.posts)) return c.posts;
+      } catch (_) {}
+      return [];
+    }
+    function saveFsMineCache(uid) {
+      try {
+        if (uid) localStorage.setItem(_FSMINE_CACHE, JSON.stringify({ uid, posts: _fsMine }));
+        else localStorage.removeItem(_FSMINE_CACHE);
+      } catch (_) {}
+    }
     async function fetchMyFsPosts(uid) {
-      if (!uid) { _fsMine = []; return; }
+      if (!uid) { _fsMine = []; _fsMineLoaded = true; return; }
       const cols = [['accom','accom_posts'],['rent','rent_posts'],['jobs','jobs_posts'],['auto','auto_posts'],['services','services']];
       const AUTHOR_FIELDS = ['uid','authorId','authorUid'];   // 카드 '파란테두리'와 동일 기준 — 누락 0
       const out = [], seen = new Set();
@@ -925,12 +828,15 @@
               }
               out.push({ board: realBoard, id: d.id, title: p.title, state: p.state || '', author: p.author,
                          authorEmail: p.email || p.authorEmail || '', date, time, _ts: ts,
+                         address: p.address || p.region || '',   // 주소가 진실 — 클릭 시 effective(주소→주)로 올바른 주 탭 이동
                          isHidden: !!p.isHidden, hiddenBy: p.hiddenBy || '', fsDocId: d.id });
             });
           } catch (e) { console.warn('[mypage] '+col+'/'+f+' 조회 실패', e); }
         }
       }
       _fsMine = out;
+      _fsMineLoaded = true;
+      saveFsMineCache(uid);   // 숨김글 포함 — 다음 진입 시 즉시 시드 렌더(증발 방지)
     }
     function dataFor(tab) {
       if (tab === 'mine') {
@@ -944,7 +850,7 @@
             const pmail = p.email || p.authorEmail;
             const mine = (u.uid && puid && u.uid === puid) || (u.email && pmail && u.email === pmail);
             // 마이페이지 '내가 쓴 글' — 일시 숨김된 글도 포함 (지시 5/7)
-            if (mine) out.push({ board, id: p.id, title: p.title, state: p.state || '', author: p.author, authorEmail: pmail || '', date: p.date, time: p.time || '', _ts: p._ts || 0, isHidden: !!p.isHidden, hiddenBy: p.hiddenBy || '', fsDocId: p.fsDocId || p._fsDocId || null });
+            if (mine) out.push({ board, id: p.id, title: p.title, state: p.state || '', author: p.author, authorEmail: pmail || '', date: p.date, time: p.time || '', _ts: p._ts || 0, address: p.address || p.region || '', isHidden: !!p.isHidden, hiddenBy: p.hiddenBy || '', fsDocId: p.fsDocId || p._fsDocId || null });
           });
         });
         // Firestore 본인 글 병합 — 같은 글은 Firestore 쪽(최신 상태) 우선
@@ -952,25 +858,40 @@
         const localOnly = out.filter(p => !seen.has(p.board + ':' + String(p.fsDocId || p.id)));
         return _fsMine.concat(localOnly).sort((a, b) => (b._ts || +b.id || 0) - (a._ts || +a.id || 0));
       }
-      if (tab === 'recent') return readJSON('koaus-recent-posts');
-      if (tab === 'contacted') {
-        // 연락 완료 체크한 글 — 모든 board store에서 ID 매칭 후 카드 데이터 복원
-        const ids = readJSON('koaus_contacted_posts').map(String);
-        if (!ids.length) return [];
-        const idSet = new Set(ids);
-        const out = [];
-        [['accom','koaus-accom-posts'], ['rent','koaus-rent-posts'], ['jobs','koaus-jobs-posts']].forEach(([board, key]) => {
-          readJSON(key).forEach(p => {
-            if (idSet.has(String(p.id))) {
-              out.push({ board, id: p.id, title: p.title, author: p.author, authorEmail: p.email || p.authorEmail || '', date: p.date, time: p.time || '' });
-            }
-          });
-        });
-        return out.sort((a, b) => b.id - a.id);
+      if (tab === 'recent') return hydrateSnaps(readJSON('koaus-recent-posts'));
+      if (tab === 'videos') {
+        // 최근 본 영상 — koaus-home-videos.js 풀스크린 플레이어가 기록 (기기-로컬 LS 'koaus-recent-videos')
+        //   videoId 는 렌더에서 URL/HTML 에 직접 삽입되므로 유튜브 ID 패턴 검증(안전망)
+        return readJSON('koaus-recent-videos')
+          .filter(v => v && /^[A-Za-z0-9_-]{6,20}$/.test(String(v.videoId || '')));
       }
-      return readJSON('koaus-saved-posts');
+      return hydrateSnaps(readJSON('koaus-saved-posts'));
     }
-    const boardStoreKey = b => b === 'accom' ? 'koaus-accom-posts' : b === 'rent' ? 'koaus-rent-posts' : b === 'jobs' ? 'koaus-jobs-posts' : null;
+    // ── 옛 저장/최근 스냅샷 보강 — state·address·fsDocId 가 없던 시절 항목을 보드 캐시에서 복원 ──
+    //   없으면 목적지가 통합 탭으로 열리고(?state 누락) 상세 오픈도 실패할 수 있음(딥링크 회귀).
+    //   신규 스냅샷은 8개 보드 toggleSaved/recordRecent 가 기록 시점에 직접 채움(2026-07).
+    const _HYDRATE_STORES = { accom:'koaus-accom-posts', rent:'koaus-rent-posts', jobs:'koaus-jobs-posts', auto:'koaus-auto-posts',
+                              gp:'koaus-gp-posts', trades:'koaus-trades-posts', salon:'koaus-salon-posts', restaurants:'koaus-restaurants-posts' };
+    function hydrateSnaps(items) {
+      if (!Array.isArray(items) || !items.length) return items || [];
+      const cache = {};
+      return items.map(it => {
+        if (!it || !it.board || (it.address && it.fsDocId)) return it;
+        const key = _HYDRATE_STORES[it.board];
+        if (!key) return it;
+        if (!cache[key]) cache[key] = readJSON(key);
+        const full = cache[key].find(x => String(x.id) === String(it.id) || String(x._fsDocId || '') === String(it.id));
+        if (!full) return it;
+        return Object.assign({}, it, {
+          fsDocId: it.fsDocId || full._fsDocId || full.fsDocId || '',
+          state:   it.state   || full.state || '',
+          address: it.address || full.address || full.region || ''
+        });
+      });
+    }
+    // 8개 보드 전부 — accom/rent/jobs 만 있던 옛 매핑은 auto/서비스 보드 글의 숨김 토글·재업로드가
+    // 조용히 무동작(sk null)하던 원인. _HYDRATE_STORES(위) 재사용.
+    const boardStoreKey = b => _HYDRATE_STORES[b] || null;
     async function deleteMyPost(board, id, fsDocIdArg) {
       if (!confirm('정말 이 게시글을 삭제하시겠습니까?')) return;
       const sk = boardStoreKey(board);
@@ -1008,24 +929,53 @@
       // _fsMine 캐시에서도 제거 — 안 지우면 dataFor 가 다시 끼워 넣어 새로고침 전까지 화면에 남음.
       if (typeof _fsMine !== 'undefined' && Array.isArray(_fsMine)) {
         _fsMine = _fsMine.filter(x => !(x.board === board && (String(x.fsDocId) === String(fsDocId) || String(x.id) === String(id))));
+        try { saveFsMineCache((window.koausAuth && window.koausAuth.user && window.koausAuth.user.uid) || ''); } catch (_) {}
       }
       renderList();
     }
     function renderList() {
       const items = dataFor(mtab);
       const el = document.getElementById('mypageList');
-      if (!items.length) { el.innerHTML = '<div class="post-empty">' + emptyMsg[mtab] + '</div>'; return; }
+      if (!items.length) {
+        // 콜드 캐시(첫 기기)에서 FS 조회 완료 전엔 '글 없음' 대신 로딩 — 숨김글 증발 오인 방지
+        const msg = (mtab === 'mine' && !_fsMineLoaded) ? '불러오는 중…' : emptyMsg[mtab];
+        el.innerHTML = '<div class="post-empty">' + msg + '</div>'; return;
+      }
+      if (mtab === 'videos') {
+        // 최근 본 영상 — 썸네일 그리드. 클릭 → 홈 플레이어 딥링크(index.html?v=<id>).
+        //   id 는 dataFor 의 정규식 검증을 통과한 값만 (직접 삽입 안전)
+        el.innerHTML = '<div class="mp-videos-grid">' + items.map(v => {
+          const id = String(v.videoId || '');
+          let dt = '';
+          try { const d = new Date(v.at || 0); if (v.at) dt = (d.getMonth() + 1) + '/' + d.getDate(); } catch (_) {}
+          return '<a class="mp-video-card" href="index.html?v=' + encodeURIComponent(id) + '">'
+            + '<img src="https://i.ytimg.com/vi/' + id + '/mqdefault.jpg" alt="" loading="lazy">'
+            + '<span class="mp-video-title">' + escHtml(v.title || '(제목 없음)') + '</span>'
+            + (dt ? '<span class="mp-video-date">' + dt + ' 시청</span>' : '')
+            + '</a>';
+        }).join('') + '</div>';
+        return;
+      }
       el.innerHTML = items.map(p => {
         const meta = escHtml(p.author || '') + ' · ' + (p.date || '') + (p.time ? ' ' + p.time : '');
-        const postUrl = boardHref(p.board) + '?id=' + encodeURIComponent(p.fsDocId || p.id);
+        // 글의 주(state)도 함께 — 없으면 목적지 목록이 통합(기본 NSW)으로 열리는 회귀 방지.
+        //   ⚠️ p.state 는 "주소가 진실" 모델에서 대개 비어 있음 → 주소 기반 effective(주소→주)로 도출.
+        //   (koaus-state.js 미로드 시에만 저장된 p.state 폴백)
+        const _st = (window.koausState ? window.koausState.effective(p) : (p.state || ''));
+        const postUrl = boardHref(p.board) + '?id=' + encodeURIComponent(p.fsDocId || p.id)
+          + (_st ? '&state=' + encodeURIComponent(_st) : '');
         const head = '<span class="mypage-item-badge">' + boardLabel(p.board) + '</span>'
           + '<a class="mypage-item-title" href="' + postUrl + '" style="color:inherit;text-decoration:none;cursor:pointer;">' + escHtml(p.title || '') + '</a>'
           + '<span class="mypage-item-meta">' + meta + '</span>';
         if (mtab === 'mine') {
-          const editUrl = boardHref(p.board) + '?state=' + encodeURIComponent(p.state || '') + '&edit=' + encodeURIComponent(p.id);
+          const editUrl = boardHref(p.board) + '?state=' + encodeURIComponent(_st || '') + '&edit=' + encodeURIComponent(p.id);
           // 운영자 블라인드 (hiddenBy:'admin') — 작성자 자가 해제 불가 (rules adminBlindLock).
           // ▶️ 토글 미노출 + 안내 표기. 일반 ⏸️ 자가 숨김만 토글 허용.
-          const adminBlind  = p.isHidden && p.hiddenBy === 'admin';
+          //   단, 운영자(본인) 은 자기 글을 직접 관리할 수 있어야 하므로 잠금 제외 — 과거
+          //   본인 글 일시숨김 시 hiddenBy:'admin' 이 잘못 찍혀 스스로 잠긴 글도 여기서
+          //   '▶️ 다시 노출' 로 복구된다(토글 핸들러가 모더레이터 모드로 hiddenBy 비움).
+          const _amAdmin    = !!(window.koausRbac && window.koausRbac.isAdmin && window.koausRbac.isAdmin());
+          const adminBlind  = p.isHidden && p.hiddenBy === 'admin' && !_amAdmin;
           const toggleLabel = p.isHidden ? '▶️ 다시 노출' : '⏸️ 일시 숨김';
           const hiddenMark  = adminBlind
             ? '<span class="mp-hidden-mark" style="color:#b91c1c;" title="운영 정책 위반으로 숨김 처리된 글입니다. 이의신청은 문의하기(Contact) 페이지를 이용해 주세요.">🚫 운영자에 의해 숨김 처리됨</span>'
@@ -1062,6 +1012,10 @@
         e.preventDefault(); e.stopPropagation();
         const board = b.dataset.board, id = b.dataset.id, willHide = b.dataset.hidden !== '1';
         if (!confirm(willHide ? '이 글을 일시 숨김 처리하시겠습니까? (메인 리스트에서 제외)' : '다시 노출하시겠습니까?')) return;
+        const _amAdmin = !!(window.koausRbac && window.koausRbac.isAdmin && window.koausRbac.isAdmin());
+        // 운영자가 '다시 노출' 할 때만 모더레이터 모드 — 과거 잘못 찍힌 hiddenBy 잠금을 비워 복구.
+        //   일시숨김(=숨기기)·일반 작성자는 author 모드(hiddenBy 미기록 → 자가잠금 방지).
+        const _asMod = _amAdmin && !willHide;
         // 1) localStorage 갱신 — 즉시 UI 반영
         const sk = boardStoreKey(board);
         if (sk) {
@@ -1070,6 +1024,7 @@
           if (idx >= 0) {
             arr[idx].isHidden = willHide;
             arr[idx].status   = willHide ? 'hidden' : 'approved';
+            if (!willHide) arr[idx].hiddenBy = '';   // 다시 노출 시 잠금 표식 제거(캐시 일관성)
             localStorage.setItem(sk, JSON.stringify(arr));
           }
         }
@@ -1079,10 +1034,14 @@
           const hit = arr2.find(x => String(x.id) === String(id));
           const fsHit = _fsMine.find(x => x.board === board && String(x.id) === String(id));
           const fsDocId = (hit && (hit.fsDocId || hit._fsDocId)) || (fsHit && fsHit.fsDocId) || null;
-          const colName = board === 'jobs' ? 'jobs_posts' : board === 'accom' ? 'accom_posts' : board === 'rent' ? 'rent_posts' : null;
+          // deleteMyPost 의 _col 매핑과 동일 — auto/서비스 보드 글의 숨김 토글이 FS 동기화를
+          // 건너뛰어(null) 새로고침 시 되돌아가던 무동작 수정 (각 보드 페이지와 같은 컬렉션 사용).
+          const colName = board === 'jobs' ? 'jobs_posts' : board === 'accom' ? 'accom_posts' : board === 'rent' ? 'rent_posts'
+                        : board === 'auto' ? 'auto_posts' : 'services';
           if (fsDocId && colName && window.koausRbac && window.koausRbac.toggleHidden) {
-            await window.koausRbac.toggleHidden(colName, String(fsDocId), !willHide);
-            if (fsHit) { fsHit.isHidden = willHide; }
+            await window.koausRbac.toggleHidden(colName, String(fsDocId), !willHide, _asMod);
+            if (fsHit) { fsHit.isHidden = willHide; if (!willHide) fsHit.hiddenBy = ''; }
+            try { saveFsMineCache((window.koausAuth && window.koausAuth.user && window.koausAuth.user.uid) || ''); } catch (_) {}
           }
         } catch (err) { console.warn('[mypage] Firestore 토글 실패 (local 반영은 OK):', err); }
         renderList();
@@ -1093,7 +1052,8 @@
     // localStorage 'koaus-duplicate-<board>' 에 저장 → 해당 board 페이지로 이동.
     function duplicatePost(board, id) {
       const sk = boardStoreKey(board);
-      if (!sk) { alert('지원되지 않는 게시판입니다.'); return; }
+      // auto 는 ?duplicate=1 프리필 리더가 없어 제외 (이동해도 조용히 버려짐 — 오인 방지)
+      if (!sk || board === 'auto') { alert('이 게시판은 재업로드를 지원하지 않습니다. 글쓰기에서 새로 등록해 주세요.'); return; }
       let posts = [];
       try { posts = JSON.parse(localStorage.getItem(sk) || '[]'); } catch (_) {}
       const orig = posts.find(p => String(p.id) === String(id));
@@ -1112,204 +1072,15 @@
       mtab = t.dataset.mtab;
       renderList();
     }));
-
-    // ── 닉네임 변경 (검증 + 금지어 + 중복 방지) ──
-    // 3~12자 · 한글/영문/숫자 조합 (숫자 단독 불가: 최소 1개의 한글/영문 포함)
-    const NICK_RE = /^(?=.*[a-zA-Z가-힣])[a-zA-Z가-힣0-9]{3,12}$/;
-    // 관리자 사칭 방지 금지어 (대소문자 무시, 부분 포함도 차단)
-    const RESERVED_NICKS = ['운영', '관리', 'admin', 'KoAus', '대표'];
-    // 욕설/금칙어 필터 (부분 포함 시 차단)
-    const BAD_WORDS = ['시발','씨발','시팔','씨팔','씨발년','개새끼','새끼','병신','지랄','존나','좆','좆같','니미','닥쳐','꺼져','엿먹어','미친놈','미친년','썅','등신','후레','보지','자지','걸레','창녀','fuck','fucking','shit','bitch','asshole','bastard','dick','cunt','motherfucker','slut','whore','retard'];
-    function hasProfanity(text) {
-      if (!text) return false;
-      const low = String(text).toLowerCase().replace(/\s+/g, '');
-      return BAD_WORDS.some(w => low.includes(w.toLowerCase().replace(/\s+/g, '')));
-    }
-    const THREE_MONTHS = 1000 * 60 * 60 * 24 * 90;
-    const nickError = () => document.getElementById('mpNickError');
-    function showNickError(msg) { nickError().textContent = msg; }
-
-    function openNickEdit() {
-      // 3개월 재변경 제한 (최초 변경은 허용)
-      const last = parseInt(localStorage.getItem('koaus-nickname-changed-at') || '0', 10);
-      if (last && Date.now() - last < THREE_MONTHS) {
-        const days = Math.ceil((THREE_MONTHS - (Date.now() - last)) / (1000 * 60 * 60 * 24));
-        showNickError(`닉네임은 3개월에 한 번만 변경할 수 있습니다. (약 ${days}일 후 가능)`);
-        return;
-      }
-      showNickError('');
-      document.getElementById('mpNickInput').value = localStorage.getItem('koaus-nickname') || '';
-      document.getElementById('mpNameRow').style.display = 'none';
-      document.getElementById('mpNickEdit').style.display = '';
-      document.getElementById('mpNickInput').focus();
-    }
-    function closeNickEdit() {
-      showNickError('');
-      document.getElementById('mpNickEdit').style.display = 'none';
-      document.getElementById('mpNameRow').style.display = '';
-    }
-    function applyNick(nick) {
-      document.getElementById('mpName').textContent = nick;
-      document.getElementById('mpAvatar').textContent = (nick[0] || '?').toUpperCase();
-      const tlb = document.getElementById('topbarLoginBtn');
-      if (tlb && window.koausAuth.user) tlb.textContent = nick;
-    }
-
-    // 중복 검사 (Firestore best-effort) — 같은 닉네임이 '다른 유저' 소유면 true
-    async function isNicknameTaken(nick) {
-      try {
-        const u = window.koausAuth && window.koausAuth.user;
-        if (!db || !u) return false;  // Firestore 미설정 시 검사 생략(차단 안 함)
-        const snap = await getDoc(doc(db, 'nicknames', nick.toLowerCase()));
-        return snap.exists() && snap.data().uid !== u.uid;
-      } catch (e) { return false; }
-    }
-    // 닉네임 변경 — 트랜잭션 1세트로 원자 처리 (알박기 방지 + 부분 실패 롤백)
-    //   a) nicknames/{new}.exists 검증 (없거나 본인 소유여야 함) → 없으면 신규 create
-    //   b) 옛 nicknames/{old} delete (점유 해제)
-    //   c) users/{uid}.nickname update
-    //  실패 시 throw → saveNickname 의 catch 가 사용자 메시지 표시 (어느 doc 도 변경되지 않음)
-    async function reserveNickname(nick) {
-      const u = window.koausAuth && window.koausAuth.user;
-      if (!db || !u) throw new Error('DB_NOT_READY');
-      const newNickLow = nick.toLowerCase();
-      await runTransaction(db, async tx => {
-        const userRef    = doc(db, 'users', u.uid);
-        const newNickRef = doc(db, 'nicknames', newNickLow);
-        // ── Reads (모든 read 가 write 보다 앞서야 함) ──
-        const userSnap  = await tx.get(userRef);
-        const userData  = userSnap.exists() ? userSnap.data() : {};
-        const oldNickLow = String(userData.nickname || '').toLowerCase();
-        let newNickAlreadyMine = false;
-        if (newNickLow !== oldNickLow) {
-          const newNickSnap = await tx.get(newNickRef);
-          if (newNickSnap.exists()) {
-            if (newNickSnap.data().uid !== u.uid) throw new Error('NICK_TAKEN');
-            newNickAlreadyMine = true;   // 이전 가입 트랜잭션이 남긴 본인 doc — 덮어쓰기 OK
-          }
-        }
-        // ── Writes ──
-        // 새 닉네임 doc — 이름만 바뀐 경우(대소문자 변경 포함)도 작성, 옛 doc 과 동일 id 면 skip
-        if (newNickLow !== oldNickLow || newNickAlreadyMine) {
-          tx.set(newNickRef, {
-            uid: u.uid,
-            nickname: nick,
-            email: String(userData.email || '').toLowerCase(),
-            createdAt: Date.now(),
-          });
-        }
-        // 옛 닉네임 doc 해제 (id 가 다를 때만)
-        if (oldNickLow && oldNickLow !== newNickLow) {
-          tx.delete(doc(db, 'nicknames', oldNickLow));
-        }
-        // 유저 문서 갱신
-        tx.update(userRef, { nickname: nick });
-      });
-    }
-
-    async function saveNickname() {
-      const nick = document.getElementById('mpNickInput').value.trim();
-      if (!NICK_RE.test(nick)) {
-        showNickError('닉네임은 3~12자의 한글, 영문, 숫자 조합만 가능합니다. (숫자 단독 불가)');
-        return;
-      }
-      // 욕설/금칙어 필터
-      if (hasProfanity(nick)) {
-        showNickError('부적절한 단어가 포함되어 있습니다.');
-        return;
-      }
-      // 관리자 사칭 방지 금지어 — 일부라도 포함되면 차단 (대소문자 무시)
-      const low = nick.toLowerCase();
-      if (RESERVED_NICKS.some(w => low.includes(w.toLowerCase()))) {
-        showNickError('해당 닉네임은 관리자 사칭 방지를 위해 사용할 수 없습니다.');
-        return;
-      }
-      const saveBtn = document.getElementById('mpNickSave');
-      saveBtn.disabled = true;
-      try {
-        // 금지어·정규식 통과 시에만 Firestore 중복 검사 (pre-check — 공통 케이스)
-        if (await isNicknameTaken(nick)) {
-          showNickError('이미 사용 중인 닉네임입니다.');
-          return;
-        }
-        // 실제 변경은 트랜잭션 — pre-check 와 commit 사이 race 도 안전하게 차단
-        try {
-          await reserveNickname(nick);
-        } catch (e) {
-          if (e && e.message === 'NICK_TAKEN') { showNickError('이미 사용 중인 닉네임입니다.'); return; }
-          if (e && e.message === 'DB_NOT_READY') { showNickError('잠시 후 다시 시도해 주세요.'); return; }
-          console.warn('[mypage] 닉네임 변경 실패', e);
-          showNickError('저장 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
-          return;
-        }
-        localStorage.setItem('koaus-nickname', nick);
-        localStorage.setItem('koaus-nickname-changed-at', String(Date.now()));
-        applyNick(nick);
-        closeNickEdit();
-        // ── 본인 기존 글 author 백필 — 별명 변경 시 게시판 표시명도 새 별명으로 (best-effort) ──
-        //   where('uid'==본인) → 룰상 본인 글만, author 만 변경(uid/status/모더필드 불변)이라 통과.
-        //   3개월 1회 변경이라 빈도 낮음. 개별 실패 무시.
-        const _COLS = ['accom_posts','rent_posts','jobs_posts','auto_posts','services'];
-        for (const c of _COLS) {
-          try {
-            const _snap = await getDocs(query(collection(db, c), where('uid','==', u.uid), limit(50)));
-            for (const s of _snap.docs) { try { await updateDoc(doc(db, c, s.id), { author: nick }); } catch (_) {} }
-          } catch (_) {}
-        }
-      } finally {
-        saveBtn.disabled = false;
-      }
-    }
-
-    document.getElementById('mpEditBtn').addEventListener('click', openNickEdit);
-    document.getElementById('mpNickCancel').addEventListener('click', closeNickEdit);
-    document.getElementById('mpNickSave').addEventListener('click', saveNickname);
-    document.getElementById('mpNickInput').addEventListener('keydown', e => { if (e.key === 'Enter') saveNickname(); });
-    // 프로필 사진 — 1장, 클라이언트 압축(max 500px, q 0.7) → Storage 'profile_images/{uid}/avatar.jpg'
-    (function bindProfilePhoto() {
-      const btn = document.getElementById('mpPhotoBtn');
-      if (!btn) return;
-      const fileInput = document.createElement('input');
-      fileInput.type = 'file'; fileInput.accept = 'image/*'; fileInput.className = 'profile-photo-input';
-      document.body.appendChild(fileInput);
-      btn.addEventListener('click', () => {
-        const u = window.koausAuth && window.koausAuth.user;
-        if (!u) { alert('로그인이 필요합니다.'); return; }
-        fileInput.click();
-      });
-      fileInput.addEventListener('change', async () => {
-        const u = window.koausAuth && window.koausAuth.user;
-        const f = fileInput.files && fileInput.files[0];
-        fileInput.value = '';
-        if (!u || !f) return;
-        const orig = btn.textContent;
-        btn.disabled = true; btn.textContent = '업로드 중…';
-        try {
-          const url = await uploadCompressed(
-            app, `profile_images/${u.uid}/avatar.jpg`, f,
-            { maxDim: 500, quality: 0.7, mimeType: 'image/jpeg' }
-          );
-          // users 문서에 photoURL 저장
-          await setDoc(doc(db, 'users', u.uid), { photoURL: url }, { merge: true });
-          // UI 즉시 반영 — innerHTML 대신 DOM 생성 (XSS·attribute breakout 방어)
-          //   url 은 방금 Storage 업로드 결과 (firebasestorage.googleapis.com) 라 안전하지만 일관성 유지
-          const av = document.getElementById('mpAvatar');
-          if (av && window.koausUrlGuard && window.koausUrlGuard.isSafeHttp(url)) {
-            av.textContent = '';
-            const imgEl = document.createElement('img');
-            imgEl.src = url; imgEl.alt = '프로필 사진';
-            av.appendChild(imgEl);
-          }
-          localStorage.setItem('koaus-photo-url', url);
-          alert('프로필 사진이 변경되었습니다.');
-        } catch (e) {
-          console.error('[mypage] 프로필 사진 업로드 실패', { code: e && e.code, message: e && e.message, error: e });
-          alert(`사진 업로드 실패: ${(e && e.code) || 'unknown'}\n${(e && e.message) || ''}`);
-        } finally {
-          btn.disabled = false; btn.textContent = orig;
-        }
-      });
+    // ── URL ?tab= 딥링크 — 하단 탭바(koaus-tabbar.js) '저장'/'최근 본' 진입점 ──
+    //    기존 클릭 핸들러 재사용(active 클래스 + mtab + renderList 일괄 처리).
+    (() => {
+      const t = new URLSearchParams(location.search).get('tab');
+      if (!t || t === 'mine') return;
+      const btn = document.querySelector('.mypage-tab[data-mtab="' + t.replace(/[^a-z]/g, '') + '"]');
+      if (btn) btn.click();
     })();
+
     document.getElementById('mypageLoginBtn').addEventListener('click', openAuthModal);
 
     const tlb = document.getElementById('topbarLoginBtn');
@@ -1336,104 +1107,6 @@
       try { location.replace('index.html'); } catch (_) { location.href = 'index.html'; }
     });
 
-    // ── 계정 삭제(탈퇴) 흐름 ──
-    //  Privacy Policy §9 (탈퇴 후 6개월 암호화 보관 후 파기):
-    //   1) Firestore 트랜잭션:
-    //      · users/{uid} update — { deletedAt, deletionStatus: 'pending' }  (6개월 후 Admin SDK 가 파기)
-    //      · nicknames/{nick.lower} delete  (다른 유저가 즉시 재사용 가능)
-    //      · emails/{email.lower} delete   (다른 유저가 즉시 재가입 가능)
-    //   2) Firebase Auth user.delete() — 서비스 접근 권한 즉시 차단
-    //   3) 캐시 wipe (logout 흐름과 동일)
-    //   4) index.html 리다이렉트
-    //  에러 처리: auth/requires-recent-login 시 안내 + 자동 signOut + index 로 (재로그인 유도)
-    const _delOv      = document.getElementById('deleteAcctOverlay');
-    const _delOpen    = document.getElementById('mpDeleteBtn');
-    const _delClose1  = document.getElementById('deleteAcctCancel');
-    const _delClose2  = document.getElementById('deleteAcctCancel2');
-    const _delConfirm = document.getElementById('deleteAcctConfirm');
-    function openDeleteAcctModal() {
-      if (!_delOv) return;
-      _delOv.classList.add('open');
-      try { document.body.style.overflow = 'hidden'; } catch (_) {}
-    }
-    function closeDeleteAcctModal() {
-      if (!_delOv) return;
-      _delOv.classList.remove('open');
-      try { document.body.style.overflow = ''; } catch (_) {}
-    }
-    if (_delOpen)   _delOpen.addEventListener('click', openDeleteAcctModal);
-    if (_delClose1) _delClose1.addEventListener('click', closeDeleteAcctModal);
-    if (_delClose2) _delClose2.addEventListener('click', closeDeleteAcctModal);
-    if (_delOv) _delOv.addEventListener('click', e => { if (e.target === _delOv) closeDeleteAcctModal(); });
-    document.addEventListener('keydown', e => {
-      if (e.key === 'Escape' && _delOv && _delOv.classList.contains('open')) closeDeleteAcctModal();
-    });
-
-    if (_delConfirm) _delConfirm.addEventListener('click', async () => {
-      const u = auth.currentUser;
-      if (!u) {
-        alert('로그인 상태가 아닙니다.\nYou are not logged in.');
-        closeDeleteAcctModal();
-        return;
-      }
-      const origText = _delConfirm.textContent;
-      _delConfirm.disabled = true;
-      _delConfirm.textContent = '처리 중 · Processing…';
-      try {
-        // Step 1: Firestore 정리 — users 마킹 + nicknames/emails 인덱스 삭제 (트랜잭션 1세트)
-        await runTransaction(db, async tx => {
-          const userRef  = doc(db, 'users', u.uid);
-          const userSnap = await tx.get(userRef);
-          const userData = userSnap.exists() ? userSnap.data() : {};
-          const lowNick  = String(userData.nickname || '').toLowerCase();
-          const lowEmail = String(userData.email || u.email || '').toLowerCase();
-          // users 즉시 삭제 X — deletedAt 마킹으로 6개월 retention 유지
-          tx.update(userRef, {
-            deletedAt:           Date.now(),
-            deletionStatus:      'pending',  // 6개월 후 Admin SDK 가 hard delete
-            deletionRequestedAt: Date.now(),
-          });
-          // 인덱스는 즉시 삭제 — 동일 닉/이메일로 신규 가입 가능
-          if (lowNick)  tx.delete(doc(db, 'nicknames', lowNick));
-          if (lowEmail) tx.delete(doc(db, 'emails',    lowEmail));
-        });
-
-        // Step 2: Firebase Auth 즉시 삭제 (서비스 접근 권한 차단)
-        await deleteUser(u);
-
-        // Step 3: 캐시 wipe (기존 logout 흐름과 동일)
-        ['koaus-admin', 'isAdmin', 'isAdminLoggedIn'].forEach(k => {
-          try { sessionStorage.removeItem(k); } catch (_) {}
-        });
-        ['koaus-nickname', 'koaus-nickname-changed-at', 'koaus-photo-url'].forEach(k => {
-          try { localStorage.removeItem(k); } catch (_) {}
-        });
-        try {
-          Object.keys(localStorage).filter(k => k.startsWith('koaus-duplicate-'))
-            .forEach(k => localStorage.removeItem(k));
-        } catch (_) {}
-
-        // Step 4: 메인 페이지 리다이렉트
-        alert('계정이 삭제되었습니다.\nAccount deleted. Redirecting to home.');
-        try { location.replace('index.html'); } catch (_) { location.href = 'index.html'; }
-      } catch (e) {
-        console.error('[mypage] 계정 삭제 실패', { code: e && e.code, message: e && e.message });
-        if (e && e.code === 'auth/requires-recent-login') {
-          alert(
-            '보안상의 이유로 재로그인이 필요합니다.\n로그아웃 후 다시 로그인하신 뒤 [계정 삭제]를 다시 시도해 주세요.\n\n' +
-            'For security reasons, you must sign in again. Please log back in and try again.'
-          );
-          closeDeleteAcctModal();
-          try { await signOut(auth); } catch (_) {}
-          try { location.replace('index.html'); } catch (_) { location.href = 'index.html'; }
-        } else {
-          alert('계정 삭제 실패 · Delete failed: ' + ((e && e.message) || 'unknown error'));
-          _delConfirm.disabled = false;
-          _delConfirm.textContent = origText;
-        }
-      }
-    });
-
     onAuthStateChanged(auth, user => {
       window.koausAuth.user = user;
       const loginReq = document.getElementById('loginRequired');
@@ -1458,71 +1131,33 @@
         if (!setAvatarPhoto(cachedPhoto)) {
           av.textContent = (nick[0] || '?').toUpperCase();
         }
-        // 휴대폰 번호 행 (폰③) — 보조 인증 표시. 마스킹 + 상태별 버튼 라벨.
-        const _mpPhoneEl  = document.getElementById('mpPhone');
-        const _mpPhoneBtn = document.getElementById('mpPhoneBtn');
-        function _renderPhoneRow(released) {
-          const ph = user.phoneNumber || '';
-          if (ph) {
-            if (_mpPhoneEl) _mpPhoneEl.textContent = ph.slice(0, 3) + ' ··· ··· ' + ph.slice(-3);
-            if (_mpPhoneBtn) _mpPhoneBtn.textContent = '번호 변경';
-          } else if (released) {
-            if (_mpPhoneEl) _mpPhoneEl.textContent = '이전 번호가 재발급되어 연결이 해제됐어요. 새 번호로 다시 인증해 주세요.';
-            if (_mpPhoneBtn) _mpPhoneBtn.textContent = '휴대폰 인증';
-          } else {
-            if (_mpPhoneEl) _mpPhoneEl.textContent = '미인증';
-            if (_mpPhoneBtn) _mpPhoneBtn.textContent = '휴대폰 인증';
-          }
-        }
-        _renderPhoneRow(false);
         try {
           getDoc(doc(db, 'users', user.uid)).then(snap => {
             const data = snap && snap.exists() ? snap.data() : null;
             if (data && data.photoURL && setAvatarPhoto(data.photoURL)) {
               localStorage.setItem('koaus-photo-url', data.photoURL);
             }
-            // 폰④로 번호 해제된 상태(phoneReleased) + 현재 미연결 → 재인증 안내 (읽기 전용 — 재인증 시 phoneNumber 생겨 자연 소멸)
-            if (data && data.phoneReleased && !user.phoneNumber) _renderPhoneRow(true);
           });
         } catch (_) {}
+        // ⚙️ 환경설정 — 각자의 고유링크(?uid=) 부여 (계정 관리는 settings.html 로 이동, 2026-07)
+        const gear = document.getElementById('mpSettingsLink');
+        if (gear) gear.href = 'settings.html?uid=' + encodeURIComponent(user.uid);
         document.getElementById('mpEmail').textContent = user.email || '';
         loginReq.style.display = 'none';
         prof.style.display = ''; tabs.style.display = ''; list.style.display = '';
+        // 캐시 시드 — 직전 조회의 own-post(숨김 포함)를 즉시 렌더해 증발/깜빡임 방지. FS 응답이 덮어씀.
+        _fsMine = loadFsMineCache(user.uid);
+        _fsMineLoaded = false;
         renderList();
         fetchMyFsPosts(user.uid).then(() => { try { renderList(); } catch (_) {} });
         if (tlb) tlb.textContent = nick;
       } else {
-        _fsMine = [];
+        _fsMine = []; _fsMineLoaded = true; saveFsMineCache('');   // 로그아웃 — 타 계정 글 노출 방지
         loginReq.style.display = ''; prof.style.display = 'none'; tabs.style.display = 'none'; list.style.display = 'none';
         if (tlb) tlb.textContent = '로그인';
       }
     });
 
-    // 휴대폰 번호 변경/재인증 (폰③) — 변경은 reauth(본인 재확인) 후 koausPhoneVerify(link/교체)
-    const _mpPhoneBtnEl = document.getElementById('mpPhoneBtn');
-    if (_mpPhoneBtnEl) _mpPhoneBtnEl.addEventListener('click', async () => {
-      const u = auth.currentUser;
-      if (!u) return;
-      if (!u.phoneNumber) {
-        // 최초 인증 / ④ 해제 후 재인증 — 바로 phone 모달(link 경로)
-        if (window.koausPhoneVerify) window.koausPhoneVerify({ onVerified: () => location.reload() });
-        return;
-      }
-      // 번호 변경 — 먼저 본인 재확인(reauth: 구글 팝업 / 이메일 비밀번호)
-      const pid = (u.providerData.find(p => p.providerId === 'google.com') || {}).providerId
-                || (u.providerData[0] || {}).providerId;
-      try {
-        if (pid === 'google.com') {
-          await reauthenticateWithPopup(u, new GoogleAuthProvider());
-        } else {
-          const pw = prompt('보안을 위해 비밀번호를 다시 입력해 주세요');
-          if (!pw) return;
-          await reauthenticateWithCredential(u, EmailAuthProvider.credential(u.email, pw));
-        }
-      } catch (e) { alert('본인 확인에 실패했어요. 다시 시도해 주세요.'); return; }
-      if (window.koausPhoneVerify) window.koausPhoneVerify({ mode: 'change', onVerified: () => location.reload() });
-    });
   </script>
-  <script src="hero-banner.js" defer></script>
 </body>
 </html>

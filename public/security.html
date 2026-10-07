@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>보안 — KoAus</title>
+  <meta name="robots" content="noindex" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;800;900&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <script>
+    (function () {
+      const saved = localStorage.getItem('koaus-theme');
+      const sys = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      if ((saved ?? sys) === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+    })();
+  </script>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-9PHEG679SB"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-9PHEG679SB');
+  </script>
+
+  <script src="offline.js" defer></script>
+  <script src="koaus-textsize.js" defer></script>
+  <script type="module" src="session-timeout.js"></script>
+  <script src="local-analytics.js" defer></script>
+</head>
+<body>
+
+  <div class="topbar" id="topbar">
+    <a class="topbar-brand" href="index.html">
+      <span class="topbar-logo-icon"><span class="logo-ks">K/A</span></span>
+      <span class="topbar-logo-text">KoAus</span>
+      <span class="topbar-tagline"><b>Korea&nbsp;-&nbsp;Australia</b><span class="topbar-tagline-div">|</span>호주 한인 커뮤니티의 새로운 기준</span>
+    </a>
+    <div class="topbar-actions">
+      <button type="button" class="topbar-login-btn" id="topbarLoginBtn">로그인</button>
+      <button class="topbar-theme-btn" id="themeToggleBtn" type="button" aria-label="테마 변경" title="테마 변경 (Light / Dark)">
+        <svg class="ico-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <svg class="ico-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+      </button>
+      <a href="mypage.html" class="topbar-my-btn" id="topbarMyBtn" aria-label="내 계정" title="내 계정 (마이페이지)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></a>
+      <button class="topbar-menu-btn" id="hamburgerBtn" aria-label="메뉴 열기" aria-expanded="false">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+          <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <aside class="sidebar" id="sidebar" aria-label="사이드 메뉴">
+    <div class="sidebar-header">
+      <span class="sidebar-brand"><span class="topbar-logo-icon"><span class="logo-ks">K/A</span></span><span class="sidebar-brand-text">KoAus</span></span>
+      <div class="sidebar-header-right">
+        <a href="mypage.html" class="sidebar-acct-top">내 계정</a>
+        <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="닫기">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="accord-item" data-group="nsw">
+        <button class="accord-header">
+          <span>NSW <em>뉴사우스 웨일스 주</em></span>
+          <svg class="accord-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="accord-body">
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Living</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="accom.html?state=nsw" class="accord-link accord-link--sub">쉐어 (Share)</a>
+            <a href="rent.html?state=nsw" class="accord-link accord-link--sub">렌트 (Rent)</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Work</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="jobs.html?state=nsw" class="accord-link accord-link--sub">구인구직 (Jobs)</a>
+            <a href="jobs-info.html?state=nsw" class="accord-link accord-link--sub">취업 정보 (Work Guide)</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Auto</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="auto.html?state=nsw&amp;category=used" class="accord-link accord-link--sub">중고차 판매 (Used Car)</a>
+            <a href="auto.html?state=nsw&amp;category=insurance" class="accord-link accord-link--sub">보험 정보 (Insurance)</a>            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="trades.html?state=nsw" class="accord-link accord-link--sub">일상 (Daily)</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('비자/이민 섹션은 준비 중입니다.');return false;">비자/이민 - 준비 중인 섹션입니다</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="accord-item" data-group="vic">
+        <button class="accord-header">
+          <span>VIC <em>빅토리아 주</em></span>
+          <svg class="accord-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="accord-body">
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Living</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="accom.html?state=vic" class="accord-link accord-link--sub">쉐어 (Share)</a>
+            <a href="rent.html?state=vic" class="accord-link accord-link--sub">렌트 (Rent)</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Work</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="jobs.html?state=vic" class="accord-link accord-link--sub">구인구직 (Jobs)</a>
+            <a href="jobs-info.html?state=vic" class="accord-link accord-link--sub">취업 정보 (Work Guide)</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Auto</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="auto.html?state=vic&amp;category=used" class="accord-link accord-link--sub">중고차 판매 (Used Car)</a>
+            <a href="auto.html?state=vic&amp;category=insurance" class="accord-link accord-link--sub">보험 정보 (Insurance)</a>            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="trades.html?state=vic" class="accord-link accord-link--sub">일상 (Daily)</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('비자/이민 섹션은 준비 중입니다.');return false;">비자/이민 - 준비 중인 섹션입니다</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="accord-item" data-group="qld">
+        <button class="accord-header">
+          <span>QLD <em>퀸즐랜드 주</em></span>
+          <svg class="accord-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="accord-body">
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Living</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="accom.html?state=qld" class="accord-link accord-link--sub">쉐어 (Share)</a>
+            <a href="rent.html?state=qld" class="accord-link accord-link--sub">렌트 (Rent)</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Work</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="jobs.html?state=qld" class="accord-link accord-link--sub">구인구직 (Jobs)</a>
+            <a href="jobs-info.html?state=qld" class="accord-link accord-link--sub">취업 정보 (Work Guide)</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Auto</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="auto.html?state=qld&amp;category=used" class="accord-link accord-link--sub">중고차 판매 (Used Car)</a>
+            <a href="auto.html?state=qld&amp;category=insurance" class="accord-link accord-link--sub">보험 정보 (Insurance)</a>            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="trades.html?state=qld" class="accord-link accord-link--sub">일상 (Daily)</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('비자/이민 섹션은 준비 중입니다.');return false;">비자/이민 - 준비 중인 섹션입니다</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="accord-item" data-group="wa">
+        <button class="accord-header">
+          <span>WA <em>웨스턴 오스트레일리아 주</em></span>
+          <svg class="accord-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="accord-body">
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Living</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="accom.html?state=wa" class="accord-link accord-link--sub">쉐어 (Share)</a>
+            <a href="rent.html?state=wa" class="accord-link accord-link--sub">렌트 (Rent)</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Work</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="jobs.html?state=wa" class="accord-link accord-link--sub">구인구직 (Jobs)</a>
+            <a href="jobs-info.html?state=wa" class="accord-link accord-link--sub">취업 정보 (Work Guide)</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Auto</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="auto.html?state=wa&amp;category=used" class="accord-link accord-link--sub">중고차 판매 (Used Car)</a>
+            <a href="auto.html?state=wa&amp;category=insurance" class="accord-link accord-link--sub">보험 정보 (Insurance)</a>            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="trades.html?state=wa" class="accord-link accord-link--sub">일상 (Daily)</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('비자/이민 섹션은 준비 중입니다.');return false;">비자/이민 - 준비 중인 섹션입니다</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="accord-item" data-group="sa">
+        <button class="accord-header">
+          <span>SA <em>사우스 오스트레일리아 주</em></span>
+          <svg class="accord-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="accord-body">
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Living</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="accom.html?state=sa" class="accord-link accord-link--sub">쉐어 (Share)</a>
+            <a href="rent.html?state=sa" class="accord-link accord-link--sub">렌트 (Rent)</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Work</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="jobs.html?state=sa" class="accord-link accord-link--sub">구인구직 (Jobs)</a>
+            <a href="jobs-info.html?state=sa" class="accord-link accord-link--sub">취업 정보 (Work Guide)</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Auto</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="auto.html?state=sa&amp;category=used" class="accord-link accord-link--sub">중고차 판매 (Used Car)</a>
+            <a href="auto.html?state=sa&amp;category=insurance" class="accord-link accord-link--sub">보험 정보 (Insurance)</a>            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="trades.html?state=sa" class="accord-link accord-link--sub">일상 (Daily)</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('비자/이민 섹션은 준비 중입니다.');return false;">비자/이민 - 준비 중인 섹션입니다</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="accord-item" data-group="tas">
+        <button class="accord-header">
+          <span>TAS <em>태즈메이니아 주</em></span>
+          <svg class="accord-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="accord-body">
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Living</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="accom.html?state=tas" class="accord-link accord-link--sub">쉐어 (Share)</a>
+            <a href="rent.html?state=tas" class="accord-link accord-link--sub">렌트 (Rent)</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Work</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="jobs.html?state=tas" class="accord-link accord-link--sub">구인구직 (Jobs)</a>
+            <a href="jobs-info.html?state=tas" class="accord-link accord-link--sub">취업 정보 (Work Guide)</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Auto</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="auto.html?state=tas&amp;category=used" class="accord-link accord-link--sub">중고차 판매 (Used Car)</a>
+            <a href="auto.html?state=tas&amp;category=insurance" class="accord-link accord-link--sub">보험 정보 (Insurance)</a>            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="trades.html?state=tas" class="accord-link accord-link--sub">일상 (Daily)</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('비자/이민 섹션은 준비 중입니다.');return false;">비자/이민 - 준비 중인 섹션입니다</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="accord-item" data-group="act">
+        <button class="accord-header">
+          <span>ACT <em>호주 수도 준주</em></span>
+          <svg class="accord-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="accord-body">
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Living</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="accom.html?state=act" class="accord-link accord-link--sub">쉐어 (Share)</a>
+            <a href="rent.html?state=act" class="accord-link accord-link--sub">렌트 (Rent)</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Work</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="jobs.html?state=act" class="accord-link accord-link--sub">구인구직 (Jobs)</a>
+            <a href="jobs-info.html?state=act" class="accord-link accord-link--sub">취업 정보 (Work Guide)</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Auto</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="auto.html?state=act&amp;category=used" class="accord-link accord-link--sub">중고차 판매 (Used Car)</a>
+            <a href="auto.html?state=act&amp;category=insurance" class="accord-link accord-link--sub">보험 정보 (Insurance)</a>            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="trades.html?state=act" class="accord-link accord-link--sub">일상 (Daily)</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('비자/이민 섹션은 준비 중입니다.');return false;">비자/이민 - 준비 중인 섹션입니다</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="accord-item" data-group="nt">
+        <button class="accord-header">
+          <span>NT <em>노던 준주</em></span>
+          <svg class="accord-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="accord-body">
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Living</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="accom.html?state=nt" class="accord-link accord-link--sub">쉐어 (Share)</a>
+            <a href="rent.html?state=nt" class="accord-link accord-link--sub">렌트 (Rent)</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Work</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="jobs.html?state=nt" class="accord-link accord-link--sub">구인구직 (Jobs)</a>
+            <a href="jobs-info.html?state=nt" class="accord-link accord-link--sub">취업 정보 (Work Guide)</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Auto</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="auto.html?state=nt&amp;category=used" class="accord-link accord-link--sub">중고차 판매 (Used Car)</a>
+            <a href="auto.html?state=nt&amp;category=insurance" class="accord-link accord-link--sub">보험 정보 (Insurance)</a>            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="trades.html?state=nt" class="accord-link accord-link--sub">일상 (Daily)</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('비자/이민 섹션은 준비 중입니다.');return false;">비자/이민 - 준비 중인 섹션입니다</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="accord-foot-group">
+        <a href="care.html" class="accord-direct-link"><span>Care <em>호주 생활 케어</em></span></a>
+        <a href="calculator.html" class="accord-direct-link"><span>환율 계산 비교 <em>FX Calculator</em></span></a>
+        <a href="contact.html" class="accord-direct-link"><span>문의 <em>Inquiry</em></span></a>
+        <a href="powerball.html" class="accord-direct-link"><span>파워볼 당첨번호 <em>Powerball</em></span></a>
+      </div>
+    </nav>
+  </aside>
+  <main class="page-container">
+
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">🔐 보안</h1>
+        <p class="page-subtitle">비밀번호 재설정과 계정 삭제를 관리하세요</p>
+      </div>
+      <div class="page-header-actions page-header-actions--col">
+        <a href="settings.html" class="page-back" id="secBackLink">← 환경설정</a>
+      </div>
+    </div>
+
+    <section class="mypage-login-required" id="loginRequired" style="display:none;">
+      <div class="mypage-lr-icon">🔒</div>
+      <p class="mypage-lr-text">로그인 후 이용할 수 있습니다.</p>
+      <button class="mypage-login-btn" id="securityLoginBtn">로그인하러 가기</button>
+    </section>
+
+    <section class="mypage-account" id="profileSection" style="display:none;">
+      <header class="mypage-account-header">
+        <h2 class="mypage-account-title">보안 (Security)</h2>
+        <p class="mypage-account-subtitle">본인 계정의 비밀번호와 탈퇴를 관리합니다.</p>
+      </header>
+
+      <!-- 1) 비밀번호 재설정 — 이메일 가입: 재설정 메일 / 구글 전용: Google 계정 관리 링크 -->
+      <div class="mypage-account-row">
+        <div class="mypage-account-row-info">
+          <div class="mypage-account-row-label">비밀번호 재설정 (Password)</div>
+          <div class="mypage-account-row-desc" id="secPwDesc">—</div>
+        </div>
+        <button class="mypage-edit-btn" id="secPwBtn" type="button">재설정 메일 발송</button>
+      </div>
+
+      <!-- 2) Danger Zone — 계정 삭제 (탈퇴) · Privacy Policy §9 (6개월 암호화 보관 후 파기) -->
+      <div class="mypage-account-row" id="mpDeleteRow" style="border-top:2px solid var(--red,#dc2626);margin-top:14px;padding-top:14px;">
+        <div class="mypage-account-row-info">
+          <div class="mypage-account-row-label" style="color:var(--red,#dc2626);">계정 삭제 · Delete Account</div>
+          <div class="mypage-account-row-desc">탈퇴 시 프로필과 서비스 접근 권한이 영구히 제거됩니다. 신중히 결정해 주세요.</div>
+        </div>
+        <button class="mypage-photo-btn" id="mpDeleteBtn" type="button"
+                style="border:1.5px solid var(--red,#dc2626);color:var(--red,#dc2626);font-weight:800;">계정 삭제</button>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer-v2">
+    <div class="footer-links">
+      <a href="about.html">KoAus 소개 / About</a>
+      <a href="faq.html">자주 묻는 질문 / FAQ</a>
+      <a href="guide.html">보안·이용 가이드 / Guide</a>
+      <a href="privacy.html">Privacy Policy / 개인정보처리방침</a>
+      <a href="terms.html">Terms of Service / 서비스 이용약관</a>
+      <a href="contact.html">Contact / 문의하기</a>
+    </div>
+    <p class="footer-copy">© 2026 Koaus Community. All rights reserved.</p>
+  </footer>
+
+  <!-- ── 계정 삭제(탈퇴) 확인 모달 — Privacy Policy §9 (6개월 암호화 보관 후 파기) ── -->
+  <div class="report-overlay" id="deleteAcctOverlay" role="dialog" aria-modal="true" aria-labelledby="deleteAcctTitle">
+    <div class="report-modal">
+      <div class="report-header">
+        <span class="report-title" id="deleteAcctTitle" style="color:var(--red,#dc2626);">⚠ Delete Account · 계정 삭제</span>
+        <button class="report-close" id="deleteAcctCancel" type="button" aria-label="닫기 / Cancel">✕</button>
+      </div>
+      <div class="tos-body">
+        <p><strong>⚠ Warning:</strong> Deleting your account will permanently remove your profile and access. However, in accordance with our <a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a>, your essential account details may be securely held in an encrypted format for 6 months to prevent misuse and comply with legal obligations.</p>
+        <p><strong>⚠ 경고:</strong> 계정을 삭제하면 프로필과 서비스 접근 권한이 영구히 제거됩니다. 다만, <a href="privacy.html" target="_blank" rel="noopener">개인정보처리방침</a>에 따라 부정이용 방지 및 법적 의무 이행을 위해 주요 계정 정보는 6개월간 암호화되어 안전하게 보관된 후 파기됩니다.</p>
+      </div>
+      <div class="report-actions" style="display:flex;gap:8px;">
+        <button class="filter-apply-btn" id="deleteAcctConfirm" type="button"
+                style="flex:1;background:var(--red,#dc2626);border-color:var(--red,#dc2626);color:#fff;font-weight:800;">
+          최종 삭제 확인 · Confirm Delete
+        </button>
+        <button class="filter-apply-btn" id="deleteAcctCancel2" type="button"
+                style="flex:0 0 auto;padding:0 18px;background:transparent;color:var(--text-primary);">
+          취소 · Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ── Sidebar / Theme ──
+    const hBtn = document.getElementById('hamburgerBtn');
+    const cBtn = document.getElementById('sidebarCloseBtn');
+    const sb   = document.getElementById('sidebar');
+    const ov   = document.getElementById('sidebarOverlay');
+    const openSb  = () => { sb.classList.add('open'); ov.classList.add('open'); document.body.style.overflow='hidden'; hBtn.setAttribute('aria-expanded','true'); };
+    const closeSb = () => { sb.classList.remove('open'); ov.classList.remove('open'); document.body.style.overflow=''; hBtn.setAttribute('aria-expanded','false'); };
+    hBtn.addEventListener('click', openSb);
+    cBtn.addEventListener('click', closeSb);
+    ov.addEventListener('click', closeSb);
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSb(); });
+    // 초기 상태: 모든 아코디언 강제 닫힘 (펼침 방지)
+    document.querySelectorAll('.accord-item, .accord-subgroup').forEach(it => it.classList.remove('open'));
+    // Depth 2 (대분류) 토글 — 클릭 시 해당 소분류 컨테이너만 열고/닫음 (소분류 링크는 그대로 라우팅)
+    document.querySelectorAll('.sub-toggle').forEach(t => t.addEventListener('click', () => t.closest('.accord-subgroup').classList.toggle('open')));
+    document.querySelectorAll('.accord-header').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const item = btn.closest('.accord-item');
+        const willOpen = !item.classList.contains('open');
+        // 한 번에 하나만 — 열려있는 다른 카테고리는 닫기
+        document.querySelectorAll('.accord-item.open').forEach(o => { if (o !== item) o.classList.remove('open'); });
+        item.classList.toggle('open', willOpen);
+      });
+    });
+    function applyTheme(t) {
+      if (t === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+      else document.documentElement.removeAttribute('data-theme');
+      localStorage.setItem('koaus-theme', t);
+    }
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    if (themeToggleBtn) themeToggleBtn.addEventListener('click', () => applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'));
+    applyTheme(localStorage.getItem('koaus-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+  </script>
+
+  <script type="module">
+    import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
+    import { getAuth, onAuthStateChanged, signOut, deleteUser, sendPasswordResetEmail } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
+    import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app-check.js';
+    import { getFirestore, doc, runTransaction } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
+
+    const firebaseConfig = {
+      apiKey:            'AIzaSyCamqnt0bNUD9uz1N5BbCuQjSkWLSpPqlU',
+      authDomain:        'koaus-f564c.firebaseapp.com',
+      projectId:         'koaus-f564c',
+      storageBucket:     'koaus-f564c.firebasestorage.app',
+      messagingSenderId: '663988594088',
+      appId:             '1:663988594088:web:ef30c2fd557407b00b299d',
+      measurementId:     'G-DERZ9MTKPL',
+    };
+    const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+
+    // ── App Check (reCAPTCHA v3) — 봇·외부 스크립트의 백엔드(인증/DB) 접근 차단 ──
+    const APP_CHECK_SITE_KEY = '6Ld1mAwtAAAAADURkCq0J6GOr3wFg9DQVOsxVG5v';
+    if (APP_CHECK_SITE_KEY && !APP_CHECK_SITE_KEY.startsWith('TODO')) {
+      initializeAppCheck(app, {
+        provider: new ReCaptchaV3Provider(APP_CHECK_SITE_KEY),
+        isTokenAutoRefreshEnabled: true,
+      });
+    }
+
+    const auth = getAuth(app);
+    let db = null;
+    try { db = getFirestore(app); } catch (e) { /* Firestore 미설정 무시 */ }
+
+    let _user = null;
+    const _sLoginBtn = document.getElementById('securityLoginBtn');
+    if (_sLoginBtn) _sLoginBtn.addEventListener('click', () => { location.href = 'mypage.html'; });
+    const tlb = document.getElementById('topbarLoginBtn');
+    if (tlb) tlb.addEventListener('click', () => { if (!_user) location.href = 'mypage.html'; });
+
+    // ── 비밀번호 재설정 — 이메일 가입: sendPasswordResetEmail / 구글 전용: Google 계정 관리 ──
+    const _pwBtn  = document.getElementById('secPwBtn');
+    const _pwDesc = document.getElementById('secPwDesc');
+    if (_pwBtn) _pwBtn.addEventListener('click', async () => {
+      const u = auth.currentUser;
+      if (!u) return;
+      if (_pwBtn.dataset.mode === 'google') {
+        window.open('https://myaccount.google.com/security', '_blank', 'noopener');
+        return;
+      }
+      if (!u.email) { alert('이메일 정보가 없습니다.'); return; }
+      _pwBtn.disabled = true;
+      try {
+        await sendPasswordResetEmail(auth, u.email);
+        alert('비밀번호 재설정 메일을 보냈습니다.\n' + u.email + ' 받은편지함(스팸함 포함)을 확인해 주세요.');
+        // 60초 쿨다운 — 중복 발송 방지
+        let s = 60;
+        _pwBtn.textContent = '발송됨 (60초)';
+        const iv = setInterval(() => {
+          s -= 1;
+          if (s <= 0) { clearInterval(iv); _pwBtn.disabled = false; _pwBtn.textContent = '재설정 메일 발송'; }
+          else _pwBtn.textContent = '발송됨 (' + s + '초)';
+        }, 1000);
+      } catch (e) {
+        console.warn('[security] 재설정 메일 발송 실패', e);
+        alert('메일 발송에 실패했습니다. 잠시 후 다시 시도해 주세요.');
+        _pwBtn.disabled = false;
+      }
+    });
+
+    // ── 계정 삭제(탈퇴) 흐름 ──
+    //  Privacy Policy §9 (탈퇴 후 6개월 암호화 보관 후 파기):
+    //   1) Firestore 트랜잭션:
+    //      · users/{uid} update — { deletedAt, deletionStatus: 'pending' }  (6개월 후 Admin SDK 가 파기)
+    //      · nicknames/{nick.lower} delete  (다른 유저가 즉시 재사용 가능)
+    //      · emails/{email.lower} delete   (다른 유저가 즉시 재가입 가능)
+    //   2) Firebase Auth user.delete() — 서비스 접근 권한 즉시 차단
+    //   3) 캐시 wipe (logout 흐름과 동일)
+    //   4) index.html 리다이렉트
+    //  에러 처리: auth/requires-recent-login 시 안내 + 자동 signOut + index 로 (재로그인 유도)
+    const _delOv      = document.getElementById('deleteAcctOverlay');
+    const _delOpen    = document.getElementById('mpDeleteBtn');
+    const _delClose1  = document.getElementById('deleteAcctCancel');
+    const _delClose2  = document.getElementById('deleteAcctCancel2');
+    const _delConfirm = document.getElementById('deleteAcctConfirm');
+    function openDeleteAcctModal() {
+      if (!_delOv) return;
+      _delOv.classList.add('open');
+      try { document.body.style.overflow = 'hidden'; } catch (_) {}
+    }
+    function closeDeleteAcctModal() {
+      if (!_delOv) return;
+      _delOv.classList.remove('open');
+      try { document.body.style.overflow = ''; } catch (_) {}
+    }
+    if (_delOpen)   _delOpen.addEventListener('click', openDeleteAcctModal);
+    if (_delClose1) _delClose1.addEventListener('click', closeDeleteAcctModal);
+    if (_delClose2) _delClose2.addEventListener('click', closeDeleteAcctModal);
+    if (_delOv) _delOv.addEventListener('click', e => { if (e.target === _delOv) closeDeleteAcctModal(); });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && _delOv && _delOv.classList.contains('open')) closeDeleteAcctModal();
+    });
+
+    if (_delConfirm) _delConfirm.addEventListener('click', async () => {
+      const u = auth.currentUser;
+      if (!u) {
+        alert('로그인 상태가 아닙니다.\nYou are not logged in.');
+        closeDeleteAcctModal();
+        return;
+      }
+      const origText = _delConfirm.textContent;
+      _delConfirm.disabled = true;
+      _delConfirm.textContent = '처리 중 · Processing…';
+      try {
+        // Step 1: Firestore 정리 — users 마킹 + nicknames/emails 인덱스 삭제 (트랜잭션 1세트)
+        await runTransaction(db, async tx => {
+          const userRef  = doc(db, 'users', u.uid);
+          const userSnap = await tx.get(userRef);
+          const userData = userSnap.exists() ? userSnap.data() : {};
+          const lowNick  = String(userData.nickname || '').toLowerCase();
+          const lowEmail = String(userData.email || u.email || '').toLowerCase();
+          // 인덱스 doc — 실존 + 본인 소유일 때만 delete 예약.
+          // (없는 doc 의 delete 는 rules 평가 오류 → 트랜잭션 전체 거부.
+          //  구글 계정은 emails/nicknames 인덱스가 애초에 없어 탈퇴가 통째로 실패했음)
+          let delNick = false, delEmail = false;
+          if (lowNick) {
+            const s = await tx.get(doc(db, 'nicknames', lowNick));
+            delNick = s.exists() && s.data().uid === u.uid;
+          }
+          if (lowEmail) {
+            const s = await tx.get(doc(db, 'emails', lowEmail));
+            delEmail = s.exists() && s.data().uid === u.uid;
+          }
+          // users 즉시 삭제 X — deletedAt 마킹으로 6개월 retention 유지.
+          // 구글 로그인 등 users doc 이 없던 계정은 마킹 doc 을 create (update 는 NOT_FOUND 실패).
+          const marker = {
+            deletedAt:           Date.now(),
+            deletionStatus:      'pending',  // 6개월 후 Admin SDK 가 hard delete
+            deletionRequestedAt: Date.now(),
+          };
+          if (userSnap.exists()) tx.update(userRef, marker);
+          else tx.set(userRef, { email: lowEmail, createdAt: Date.now(), ...marker });
+          // 인덱스는 즉시 삭제 — 동일 닉/이메일로 신규 가입 가능
+          if (delNick)  tx.delete(doc(db, 'nicknames', lowNick));
+          if (delEmail) tx.delete(doc(db, 'emails',    lowEmail));
+        });
+
+        // Step 2: Firebase Auth 즉시 삭제 (서비스 접근 권한 차단)
+        await deleteUser(u);
+
+        // Step 3: 캐시 wipe (기존 logout 흐름과 동일)
+        ['koaus-admin', 'isAdmin', 'isAdminLoggedIn'].forEach(k => {
+          try { sessionStorage.removeItem(k); } catch (_) {}
+        });
+        ['koaus-nickname', 'koaus-nickname-changed-at', 'koaus-photo-url'].forEach(k => {
+          try { localStorage.removeItem(k); } catch (_) {}
+        });
+        try {
+          Object.keys(localStorage).filter(k => k.startsWith('koaus-duplicate-'))
+            .forEach(k => localStorage.removeItem(k));
+        } catch (_) {}
+
+        // Step 4: 메인 페이지 리다이렉트
+        alert('계정이 삭제되었습니다.\nAccount deleted. Redirecting to home.');
+        try { location.replace('index.html'); } catch (_) { location.href = 'index.html'; }
+      } catch (e) {
+        console.error('[security] 계정 삭제 실패', { code: e && e.code, message: e && e.message });
+        if (e && e.code === 'auth/requires-recent-login') {
+          alert(
+            '보안상의 이유로 재로그인이 필요합니다.\n로그아웃 후 다시 로그인하신 뒤 [계정 삭제]를 다시 시도해 주세요.\n\n' +
+            'For security reasons, you must sign in again. Please log back in and try again.'
+          );
+          closeDeleteAcctModal();
+          try { await signOut(auth); } catch (_) {}
+          try { location.replace('index.html'); } catch (_) { location.href = 'index.html'; }
+        } else {
+          alert('계정 삭제 실패 · Delete failed: ' + ((e && e.message) || 'unknown error'));
+          _delConfirm.disabled = false;
+          _delConfirm.textContent = origText;
+        }
+      }
+    });
+
+    onAuthStateChanged(auth, user => {
+      _user = user;
+      const loginReq = document.getElementById('loginRequired');
+      const prof = document.getElementById('profileSection');
+      if (user) {
+        // ── 각자의 고유링크 — 주소창 ?uid= 를 본인 uid 로 정규화 (표시/북마크용.
+        //    모든 연산은 auth.currentUser 기준이라 타인 uid 로 열어도 본인 계정만 대상) ──
+        try {
+          const u2 = new URL(location.href);
+          if (u2.searchParams.get('uid') !== user.uid) {
+            u2.searchParams.set('uid', user.uid);
+            history.replaceState(null, '', u2.pathname + u2.search + u2.hash);
+          }
+        } catch (_) {}
+        const back = document.getElementById('secBackLink');
+        if (back) back.href = 'settings.html?uid=' + encodeURIComponent(user.uid);
+        // 비밀번호 행 모드 — 이메일 가입 vs 구글 전용
+        const hasPw = (user.providerData || []).some(p => p.providerId === 'password');
+        if (hasPw) {
+          if (_pwDesc) _pwDesc.textContent = (user.email || '') + ' 로 재설정 메일을 보냅니다';
+          if (_pwBtn) { _pwBtn.textContent = '재설정 메일 발송'; _pwBtn.dataset.mode = 'email'; }
+        } else {
+          if (_pwDesc) _pwDesc.textContent = 'Google 계정으로 로그인 중 — 비밀번호는 Google 계정에서 관리합니다';
+          if (_pwBtn) { _pwBtn.textContent = 'Google 계정 관리 ↗'; _pwBtn.dataset.mode = 'google'; }
+        }
+        loginReq.style.display = 'none';
+        prof.style.display = '';
+        if (tlb) tlb.textContent = localStorage.getItem('koaus-nickname') || user.displayName?.split(' ')[0] || user.email?.split('@')[0] || '사용자';
+      } else {
+        loginReq.style.display = '';
+        prof.style.display = 'none';
+        if (tlb) tlb.textContent = '로그인';
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>환경설정 — KoAus</title>
+  <meta name="robots" content="noindex" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin />
+  <link rel="preconnect" href="https://firebasestorage.googleapis.com" crossorigin />
+  <link rel="preconnect" href="https://www.google.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;800;900&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <script>
+    (function () {
+      const saved = localStorage.getItem('koaus-theme');
+      const sys = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      if ((saved ?? sys) === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+    })();
+  </script>
+  <!-- Google reCAPTCHA (휴대폰 인증 RecaptchaVerifier 안전망) -->
+  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-9PHEG679SB"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-9PHEG679SB');
+  </script>
+
+  <script src="offline.js" defer></script>
+  <script src="koaus-textsize.js" defer></script>
+  <script type="module" src="session-timeout.js"></script>
+  <script src="local-analytics.js" defer></script>
+  <script src="koaus-url-guard.js" defer></script>
+  <script type="module" src="koaus-phone-auth.js"></script>
+  <script type="module" src="koaus-video-reg.js"></script>
+</head>
+<body>
+
+  <div class="topbar" id="topbar">
+    <a class="topbar-brand" href="index.html">
+      <span class="topbar-logo-icon"><span class="logo-ks">K/A</span></span>
+      <span class="topbar-logo-text">KoAus</span>
+      <span class="topbar-tagline"><b>Korea&nbsp;-&nbsp;Australia</b><span class="topbar-tagline-div">|</span>호주 한인 커뮤니티의 새로운 기준</span>
+    </a>
+    <div class="topbar-actions">
+      <button type="button" class="topbar-login-btn" id="topbarLoginBtn">로그인</button>
+      <button class="topbar-theme-btn" id="themeToggleBtn" type="button" aria-label="테마 변경" title="테마 변경 (Light / Dark)">
+        <svg class="ico-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <svg class="ico-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+      </button>
+      <a href="mypage.html" class="topbar-my-btn" id="topbarMyBtn" aria-label="내 계정" title="내 계정 (마이페이지)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></a>
+      <button class="topbar-menu-btn" id="hamburgerBtn" aria-label="메뉴 열기" aria-expanded="false">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+          <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <aside class="sidebar" id="sidebar" aria-label="사이드 메뉴">
+    <div class="sidebar-header">
+      <span class="sidebar-brand"><span class="topbar-logo-icon"><span class="logo-ks">K/A</span></span><span class="sidebar-brand-text">KoAus</span></span>
+      <div class="sidebar-header-right">
+        <a href="mypage.html" class="sidebar-acct-top">내 계정</a>
+        <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="닫기">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="accord-item" data-group="nsw">
+        <button class="accord-header">
+          <span>NSW <em>뉴사우스 웨일스 주</em></span>
+          <svg class="accord-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="accord-body">
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Living</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="accom.html?state=nsw" class="accord-link accord-link--sub">쉐어 (Share)</a>
+            <a href="rent.html?state=nsw" class="accord-link accord-link--sub">렌트 (Rent)</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Work</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="jobs.html?state=nsw" class="accord-link accord-link--sub">구인구직 (Jobs)</a>
+            <a href="jobs-info.html?state=nsw" class="accord-link accord-link--sub">취업 정보 (Work Guide)</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Auto</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="auto.html?state=nsw&amp;category=used" class="accord-link accord-link--sub">중고차 판매 (Used Car)</a>
+            <a href="auto.html?state=nsw&amp;category=insurance" class="accord-link accord-link--sub">보험 정보 (Insurance)</a>            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="trades.html?state=nsw" class="accord-link accord-link--sub">일상 (Daily)</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('비자/이민 섹션은 준비 중입니다.');return false;">비자/이민 - 준비 중인 섹션입니다</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="accord-item" data-group="vic">
+        <button class="accord-header">
+          <span>VIC <em>빅토리아 주</em></span>
+          <svg class="accord-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="accord-body">
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Living</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="accom.html?state=vic" class="accord-link accord-link--sub">쉐어 (Share)</a>
+            <a href="rent.html?state=vic" class="accord-link accord-link--sub">렌트 (Rent)</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Work</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="jobs.html?state=vic" class="accord-link accord-link--sub">구인구직 (Jobs)</a>
+            <a href="jobs-info.html?state=vic" class="accord-link accord-link--sub">취업 정보 (Work Guide)</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Auto</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="auto.html?state=vic&amp;category=used" class="accord-link accord-link--sub">중고차 판매 (Used Car)</a>
+            <a href="auto.html?state=vic&amp;category=insurance" class="accord-link accord-link--sub">보험 정보 (Insurance)</a>            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="trades.html?state=vic" class="accord-link accord-link--sub">일상 (Daily)</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('비자/이민 섹션은 준비 중입니다.');return false;">비자/이민 - 준비 중인 섹션입니다</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="accord-item" data-group="qld">
+        <button class="accord-header">
+          <span>QLD <em>퀸즐랜드 주</em></span>
+          <svg class="accord-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="accord-body">
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Living</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="accom.html?state=qld" class="accord-link accord-link--sub">쉐어 (Share)</a>
+            <a href="rent.html?state=qld" class="accord-link accord-link--sub">렌트 (Rent)</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Work</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="jobs.html?state=qld" class="accord-link accord-link--sub">구인구직 (Jobs)</a>
+            <a href="jobs-info.html?state=qld" class="accord-link accord-link--sub">취업 정보 (Work Guide)</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Auto</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="auto.html?state=qld&amp;category=used" class="accord-link accord-link--sub">중고차 판매 (Used Car)</a>
+            <a href="auto.html?state=qld&amp;category=insurance" class="accord-link accord-link--sub">보험 정보 (Insurance)</a>            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="trades.html?state=qld" class="accord-link accord-link--sub">일상 (Daily)</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('비자/이민 섹션은 준비 중입니다.');return false;">비자/이민 - 준비 중인 섹션입니다</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="accord-item" data-group="wa">
+        <button class="accord-header">
+          <span>WA <em>웨스턴 오스트레일리아 주</em></span>
+          <svg class="accord-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="accord-body">
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Living</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="accom.html?state=wa" class="accord-link accord-link--sub">쉐어 (Share)</a>
+            <a href="rent.html?state=wa" class="accord-link accord-link--sub">렌트 (Rent)</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Work</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="jobs.html?state=wa" class="accord-link accord-link--sub">구인구직 (Jobs)</a>
+            <a href="jobs-info.html?state=wa" class="accord-link accord-link--sub">취업 정보 (Work Guide)</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Auto</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="auto.html?state=wa&amp;category=used" class="accord-link accord-link--sub">중고차 판매 (Used Car)</a>
+            <a href="auto.html?state=wa&amp;category=insurance" class="accord-link accord-link--sub">보험 정보 (Insurance)</a>            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="trades.html?state=wa" class="accord-link accord-link--sub">일상 (Daily)</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('비자/이민 섹션은 준비 중입니다.');return false;">비자/이민 - 준비 중인 섹션입니다</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="accord-item" data-group="sa">
+        <button class="accord-header">
+          <span>SA <em>사우스 오스트레일리아 주</em></span>
+          <svg class="accord-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="accord-body">
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Living</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="accom.html?state=sa" class="accord-link accord-link--sub">쉐어 (Share)</a>
+            <a href="rent.html?state=sa" class="accord-link accord-link--sub">렌트 (Rent)</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Work</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="jobs.html?state=sa" class="accord-link accord-link--sub">구인구직 (Jobs)</a>
+            <a href="jobs-info.html?state=sa" class="accord-link accord-link--sub">취업 정보 (Work Guide)</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Auto</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="auto.html?state=sa&amp;category=used" class="accord-link accord-link--sub">중고차 판매 (Used Car)</a>
+            <a href="auto.html?state=sa&amp;category=insurance" class="accord-link accord-link--sub">보험 정보 (Insurance)</a>            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="trades.html?state=sa" class="accord-link accord-link--sub">일상 (Daily)</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('비자/이민 섹션은 준비 중입니다.');return false;">비자/이민 - 준비 중인 섹션입니다</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="accord-item" data-group="tas">
+        <button class="accord-header">
+          <span>TAS <em>태즈메이니아 주</em></span>
+          <svg class="accord-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="accord-body">
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Living</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="accom.html?state=tas" class="accord-link accord-link--sub">쉐어 (Share)</a>
+            <a href="rent.html?state=tas" class="accord-link accord-link--sub">렌트 (Rent)</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Work</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="jobs.html?state=tas" class="accord-link accord-link--sub">구인구직 (Jobs)</a>
+            <a href="jobs-info.html?state=tas" class="accord-link accord-link--sub">취업 정보 (Work Guide)</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Auto</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="auto.html?state=tas&amp;category=used" class="accord-link accord-link--sub">중고차 판매 (Used Car)</a>
+            <a href="auto.html?state=tas&amp;category=insurance" class="accord-link accord-link--sub">보험 정보 (Insurance)</a>            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="trades.html?state=tas" class="accord-link accord-link--sub">일상 (Daily)</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('비자/이민 섹션은 준비 중입니다.');return false;">비자/이민 - 준비 중인 섹션입니다</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="accord-item" data-group="act">
+        <button class="accord-header">
+          <span>ACT <em>호주 수도 준주</em></span>
+          <svg class="accord-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="accord-body">
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Living</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="accom.html?state=act" class="accord-link accord-link--sub">쉐어 (Share)</a>
+            <a href="rent.html?state=act" class="accord-link accord-link--sub">렌트 (Rent)</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Work</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="jobs.html?state=act" class="accord-link accord-link--sub">구인구직 (Jobs)</a>
+            <a href="jobs-info.html?state=act" class="accord-link accord-link--sub">취업 정보 (Work Guide)</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Auto</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="auto.html?state=act&amp;category=used" class="accord-link accord-link--sub">중고차 판매 (Used Car)</a>
+            <a href="auto.html?state=act&amp;category=insurance" class="accord-link accord-link--sub">보험 정보 (Insurance)</a>            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="trades.html?state=act" class="accord-link accord-link--sub">일상 (Daily)</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('비자/이민 섹션은 준비 중입니다.');return false;">비자/이민 - 준비 중인 섹션입니다</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="accord-item" data-group="nt">
+        <button class="accord-header">
+          <span>NT <em>노던 준주</em></span>
+          <svg class="accord-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="accord-body">
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Living</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="accom.html?state=nt" class="accord-link accord-link--sub">쉐어 (Share)</a>
+            <a href="rent.html?state=nt" class="accord-link accord-link--sub">렌트 (Rent)</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Work</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="jobs.html?state=nt" class="accord-link accord-link--sub">구인구직 (Jobs)</a>
+            <a href="jobs-info.html?state=nt" class="accord-link accord-link--sub">취업 정보 (Work Guide)</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Auto</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="auto.html?state=nt&amp;category=used" class="accord-link accord-link--sub">중고차 판매 (Used Car)</a>
+            <a href="auto.html?state=nt&amp;category=insurance" class="accord-link accord-link--sub">보험 정보 (Insurance)</a>            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="trades.html?state=nt" class="accord-link accord-link--sub">일상 (Daily)</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('비자/이민 섹션은 준비 중입니다.');return false;">비자/이민 - 준비 중인 섹션입니다</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="accord-foot-group">
+        <a href="care.html" class="accord-direct-link"><span>Care <em>호주 생활 케어</em></span></a>
+        <a href="calculator.html" class="accord-direct-link"><span>환율 계산 비교 <em>FX Calculator</em></span></a>
+        <a href="contact.html" class="accord-direct-link"><span>문의 <em>Inquiry</em></span></a>
+        <a href="powerball.html" class="accord-direct-link"><span>파워볼 당첨번호 <em>Powerball</em></span></a>
+      </div>
+    </nav>
+  </aside>
+  <main class="page-container">
+
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">⚙️ 환경설정</h1>
+        <p class="page-subtitle">닉네임 · 사진 · 인증 · 영상 · 계정을 관리하세요</p>
+      </div>
+      <div class="page-header-actions page-header-actions--col">
+        <a href="mypage.html" class="page-back">← 마이페이지</a>
+      </div>
+    </div>
+
+    <section class="mypage-login-required" id="loginRequired" style="display:none;">
+      <div class="mypage-lr-icon">🔒</div>
+      <p class="mypage-lr-text">로그인 후 이용할 수 있습니다.</p>
+      <button class="mypage-login-btn" id="settingsLoginBtn">로그인하러 가기</button>
+    </section>
+
+    <section class="mypage-account" id="profileSection" style="display:none;">
+      <header class="mypage-account-header">
+        <h2 class="mypage-account-title">KoAus 계정</h2>
+        <p class="mypage-account-subtitle">프로필 사진과 이름·닉네임을 관리합니다.</p>
+      </header>
+
+      <!-- 1) 프로필 카드: 아바타 + 이름 + 이메일 -->
+      <div class="mypage-account-card">
+        <div class="mypage-avatar" id="mpAvatar">?</div>
+        <div class="mypage-profile-info">
+          <div class="mypage-name-row" id="mpNameRow">
+            <span class="mypage-name" id="mpName">—</span>
+          </div>
+          <div class="mypage-email" id="mpEmail">—</div>
+        </div>
+      </div>
+
+      <!-- 2) 닉네임 변경 행 -->
+      <div class="mypage-account-row">
+        <div class="mypage-account-row-info">
+          <div class="mypage-account-row-label">닉네임 (Nickname)</div>
+          <div class="mypage-account-row-desc">게시판에 표시되는 별명 · 3~12자 한글·영문</div>
+        </div>
+        <button class="mypage-edit-btn" id="mpEditBtn">닉네임 변경</button>
+      </div>
+      <div class="mypage-nick-edit" id="mpNickEdit" style="display:none;">
+        <input class="auth-input" id="mpNickInput" type="text" maxlength="12" placeholder="3~12자 한글/영문" autocomplete="off" />
+        <div class="mypage-nick-actions">
+          <button class="mypage-edit-btn" id="mpNickSave">저장</button>
+          <button class="mypage-photo-btn" id="mpNickCancel">취소</button>
+        </div>
+      </div>
+      <p class="auth-error" id="mpNickError"></p>
+      <p class="mypage-nick-note">닉네임은 한 번 변경하면 3개월 동안 다시 변경할 수 없습니다.</p>
+
+      <!-- 3) 사진 교체 행 -->
+      <div class="mypage-account-row">
+        <div class="mypage-account-row-info">
+          <div class="mypage-account-row-label">프로필 사진 (Photo)</div>
+          <div class="mypage-account-row-desc">정사각 권장 · 자동 압축 후 업로드</div>
+        </div>
+        <button class="mypage-photo-btn" id="mpPhotoBtn">사진 교체</button>
+      </div>
+
+      <!-- 4) 휴대폰 번호 (Phone) — 본인확인 보조 인증(로그인은 이메일/구글). 변경 시 reauth 후 재인증 -->
+      <div class="mypage-account-row">
+        <div class="mypage-account-row-info">
+          <div class="mypage-account-row-label">휴대폰 번호 (Phone)</div>
+          <div class="mypage-account-row-desc" id="mpPhone">—</div>
+        </div>
+        <button class="mypage-edit-btn" id="mpPhoneBtn">휴대폰 인증</button>
+      </div>
+
+      <!-- 5) 자기소개서 (Self-intro) — Living/Work 분리 (2026-07). 문의 프리필에 보드별 자동 삽입:
+           Living → 쉐어·렌트(accom/rent) / Work → 구인구직(jobs). users/{uid}.introLiving·introWork (본인만 read)
+           + LS 캐시 'koaus-my-intro-living'/'koaus-my-intro-work'. 옛 introText 는 Living 폴백(읽기 전용). 각 700자 -->
+      <div class="mypage-account-row" id="mpIntroLivingRow" style="flex-direction:column;align-items:stretch;gap:8px;">
+        <div class="mypage-account-row-info" style="width:100%;">
+          <div class="mypage-account-row-label">자기소개서 — Living (쉐어·렌트 문의용)</div>
+          <div class="mypage-account-row-desc" style="line-height:1.5;">
+            쉐어·렌트 문의(문자·오픈채팅)에 자동으로 들어가는 소개예요. 상대방에게 보여줘도 괜찮은 내용만 적어주세요.
+            TFN, 주민번호 등 민감정보는 적지 마세요.
+          </div>
+        </div>
+        <textarea id="mpIntroLivingText" maxlength="700" rows="5" placeholder="예) 안녕하세요! 워홀 중인 28세입니다. 비흡연·반려동물 없음, 깔끔한 편이에요. 입주 가능 시기는…"
+                  style="width:100%;box-sizing:border-box;resize:vertical;min-height:96px;padding:12px;border:1.5px solid var(--border,#d1d5db);border-radius:10px;font-size:15px;line-height:1.5;font-family:inherit;"></textarea>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+          <span id="mpIntroLivingCount" style="font-size:12px;color:var(--muted,#6b7280);">0/700</span>
+          <button class="mypage-edit-btn" id="mpIntroLivingSaveBtn" type="button">저장</button>
+        </div>
+      </div>
+      <div class="mypage-account-row" id="mpIntroWorkRow" style="flex-direction:column;align-items:stretch;gap:8px;">
+        <div class="mypage-account-row-info" style="width:100%;">
+          <div class="mypage-account-row-label">자기소개서 — Work (구인구직 문의용)</div>
+          <div class="mypage-account-row-desc" style="line-height:1.5;">
+            구인구직 문의(문자·오픈채팅)에 자동으로 들어가는 소개예요. 경력·가능 시간대 등 일자리용 소개만 적어주세요.
+            TFN, 주민번호 등 민감정보는 적지 마세요.
+          </div>
+        </div>
+        <textarea id="mpIntroWorkText" maxlength="700" rows="5" placeholder="예) 안녕하세요! 시드니 거주 중이고 주방 경력 2년입니다. 평일 오전 가능하고, 커피 자격증(RSA)…"
+                  style="width:100%;box-sizing:border-box;resize:vertical;min-height:96px;padding:12px;border:1.5px solid var(--border,#d1d5db);border-radius:10px;font-size:15px;line-height:1.5;font-family:inherit;"></textarea>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+          <span id="mpIntroWorkCount" style="font-size:12px;color:var(--muted,#6b7280);">0/700</span>
+          <button class="mypage-edit-btn" id="mpIntroWorkSaveBtn" type="button">저장</button>
+        </div>
+      </div>
+
+      <!-- 6) 영상 등록 (Video) — 홈 '🎬 영상' 칸 게시 신청, 운영자 승인 후 노출.
+           버튼 클릭은 koaus-video-reg.js 의 [data-koaus-video-reg] 위임 리스너가 처리 (홈 ＋ 버튼 폐지 — 등록은 여기서만) -->
+      <div class="mypage-account-row">
+        <div class="mypage-account-row-info">
+          <div class="mypage-account-row-label">영상 등록 (Video)</div>
+          <div class="mypage-account-row-desc">유튜브 쇼츠(60초 이하)를 홈 🎬 영상 칸에 신청 · 운영자 승인 후 게시</div>
+        </div>
+        <button class="mypage-edit-btn" id="mpVideoRegBtn" type="button" data-koaus-video-reg>영상 등록</button>
+      </div>
+      <!-- 6-b) 내 등록 영상 — koaus-video-reg.js 가 본인(authorUid) 영상 구독으로 hydrate.
+           승인 대기/게시 중 상태 표시 + 본인 삭제(rules 기허용). 없으면 hidden 유지 -->
+      <div id="mpMyVideos" hidden></div>
+
+      <!-- 7) 보안 (Security) — 비밀번호 재설정 · 계정 삭제는 각자의 고유 보안 페이지에서 -->
+      <div class="mypage-account-row">
+        <div class="mypage-account-row-info">
+          <div class="mypage-account-row-label">보안 (Security)</div>
+          <div class="mypage-account-row-desc">비밀번호 재설정 · 계정 삭제</div>
+        </div>
+        <a class="mypage-edit-btn" id="mpSecurityLink" href="security.html"
+           style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center;">보안 설정 →</a>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer-v2">
+    <div class="footer-links">
+      <a href="about.html">KoAus 소개 / About</a>
+      <a href="faq.html">자주 묻는 질문 / FAQ</a>
+      <a href="guide.html">보안·이용 가이드 / Guide</a>
+      <a href="privacy.html">Privacy Policy / 개인정보처리방침</a>
+      <a href="terms.html">Terms of Service / 서비스 이용약관</a>
+      <a href="contact.html">Contact / 문의하기</a>
+    </div>
+    <p class="footer-copy">© 2026 Koaus Community. All rights reserved.</p>
+  </footer>
+
+  <script>
+    // ── Sidebar / Theme ──
+    const hBtn = document.getElementById('hamburgerBtn');
+    const cBtn = document.getElementById('sidebarCloseBtn');
+    const sb   = document.getElementById('sidebar');
+    const ov   = document.getElementById('sidebarOverlay');
+    const openSb  = () => { sb.classList.add('open'); ov.classList.add('open'); document.body.style.overflow='hidden'; hBtn.setAttribute('aria-expanded','true'); };
+    const closeSb = () => { sb.classList.remove('open'); ov.classList.remove('open'); document.body.style.overflow=''; hBtn.setAttribute('aria-expanded','false'); };
+    hBtn.addEventListener('click', openSb);
+    cBtn.addEventListener('click', closeSb);
+    ov.addEventListener('click', closeSb);
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSb(); });
+    // 초기 상태: 모든 아코디언 강제 닫힘 (펼침 방지)
+    document.querySelectorAll('.accord-item, .accord-subgroup').forEach(it => it.classList.remove('open'));
+    // Depth 2 (대분류) 토글 — 클릭 시 해당 소분류 컨테이너만 열고/닫음 (소분류 링크는 그대로 라우팅)
+    document.querySelectorAll('.sub-toggle').forEach(t => t.addEventListener('click', () => t.closest('.accord-subgroup').classList.toggle('open')));
+    document.querySelectorAll('.accord-header').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const item = btn.closest('.accord-item');
+        const willOpen = !item.classList.contains('open');
+        // 한 번에 하나만 — 열려있는 다른 카테고리는 닫기
+        document.querySelectorAll('.accord-item.open').forEach(o => { if (o !== item) o.classList.remove('open'); });
+        item.classList.toggle('open', willOpen);
+      });
+    });
+    function applyTheme(t) {
+      if (t === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+      else document.documentElement.removeAttribute('data-theme');
+      localStorage.setItem('koaus-theme', t);
+    }
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    if (themeToggleBtn) themeToggleBtn.addEventListener('click', () => applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'));
+    applyTheme(localStorage.getItem('koaus-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+  </script>
+
+  <script type="module">
+    import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
+    import {
+      getAuth, onAuthStateChanged, GoogleAuthProvider,
+      reauthenticateWithPopup, reauthenticateWithCredential, EmailAuthProvider,
+    } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
+    import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app-check.js';
+    import { getFirestore, doc, getDoc, setDoc, updateDoc, runTransaction, collection, getDocs, query, where, limit, serverTimestamp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
+    import { uploadCompressed } from './compress.js';
+
+    const firebaseConfig = {
+      apiKey:            'AIzaSyCamqnt0bNUD9uz1N5BbCuQjSkWLSpPqlU',
+      authDomain:        'koaus-f564c.firebaseapp.com',
+      projectId:         'koaus-f564c',
+      storageBucket:     'koaus-f564c.firebasestorage.app',
+      messagingSenderId: '663988594088',
+      appId:             '1:663988594088:web:ef30c2fd557407b00b299d',
+      measurementId:     'G-DERZ9MTKPL',
+    };
+    const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+
+    // ── App Check (reCAPTCHA v3) — 봇·외부 스크립트의 백엔드(인증/DB) 접근 차단 ──
+    const APP_CHECK_SITE_KEY = '6Ld1mAwtAAAAADURkCq0J6GOr3wFg9DQVOsxVG5v';
+    if (APP_CHECK_SITE_KEY && !APP_CHECK_SITE_KEY.startsWith('TODO')) {
+      initializeAppCheck(app, {
+        provider: new ReCaptchaV3Provider(APP_CHECK_SITE_KEY),
+        isTokenAutoRefreshEnabled: true,
+      });
+    }
+
+    const auth = getAuth(app);
+    let db = null;
+    try { db = getFirestore(app); } catch (e) { /* Firestore 미설정 무시 */ }
+
+    // ── 로그인 게이트 — settings 에는 auth 모달이 없어 마이페이지로 보냄.
+    //    koaus-video-reg.js / koaus-phone-auth.js 의 window.koausAuth 게이트와 호환. ──
+    window.koausAuth = { user: null, openAuthModal: () => { try { location.href = 'mypage.html'; } catch (_) {} } };
+
+    const _sLoginBtn = document.getElementById('settingsLoginBtn');
+    if (_sLoginBtn) _sLoginBtn.addEventListener('click', () => { location.href = 'mypage.html'; });
+    const tlb = document.getElementById('topbarLoginBtn');
+    if (tlb) tlb.addEventListener('click', () => { if (!window.koausAuth.user) location.href = 'mypage.html'; });
+
+    // ── 닉네임 변경 (검증 + 금지어 + 중복 방지) ──
+    // 3~12자 · 한글/영문/숫자 조합 (숫자 단독 불가: 최소 1개의 한글/영문 포함)
+    // 한글 포함 시 2~12자 허용, 영문·숫자만은 3~12자 (숫자 단독 불가) — auth-extra.js 가입 검증과 동일 정책
+    const NICK_RE = /^(?:(?=.*[가-힣])[a-zA-Z가-힣0-9]{2,12}|(?=.*[a-zA-Z])[a-zA-Z0-9]{3,12})$/;
+    // 관리자 사칭 방지 금지어 (대소문자 무시, 부분 포함도 차단)
+    const RESERVED_NICKS = ['운영', '관리', 'admin', 'KoAus', '대표'];
+    // 욕설/금칙어 필터 (부분 포함 시 차단)
+    const BAD_WORDS = ['시발','씨발','시팔','씨팔','씨발년','개새끼','새끼','병신','지랄','존나','좆','좆같','니미','닥쳐','꺼져','엿먹어','미친놈','미친년','썅','등신','후레','보지','자지','걸레','창녀','fuck','fucking','shit','bitch','asshole','bastard','dick','cunt','motherfucker','slut','whore','retard'];
+    function hasProfanity(text) {
+      if (!text) return false;
+      const low = String(text).toLowerCase().replace(/\s+/g, '');
+      return BAD_WORDS.some(w => low.includes(w.toLowerCase().replace(/\s+/g, '')));
+    }
+    const THREE_MONTHS = 1000 * 60 * 60 * 24 * 90;
+    const nickError = () => document.getElementById('mpNickError');
+    function showNickError(msg) { nickError().textContent = msg; }
+
+    function openNickEdit() {
+      // 3개월 재변경 제한 (최초 변경은 허용)
+      const last = parseInt(localStorage.getItem('koaus-nickname-changed-at') || '0', 10);
+      if (last && Date.now() - last < THREE_MONTHS) {
+        const days = Math.ceil((THREE_MONTHS - (Date.now() - last)) / (1000 * 60 * 60 * 24));
+        showNickError(`닉네임은 3개월에 한 번만 변경할 수 있습니다. (약 ${days}일 후 가능)`);
+        return;
+      }
+      showNickError('');
+      document.getElementById('mpNickInput').value = localStorage.getItem('koaus-nickname') || '';
+      document.getElementById('mpNameRow').style.display = 'none';
+      document.getElementById('mpNickEdit').style.display = '';
+      document.getElementById('mpNickInput').focus();
+    }
+    function closeNickEdit() {
+      showNickError('');
+      document.getElementById('mpNickEdit').style.display = 'none';
+      document.getElementById('mpNameRow').style.display = '';
+    }
+    function applyNick(nick) {
+      document.getElementById('mpName').textContent = nick;
+      document.getElementById('mpAvatar').textContent = (nick[0] || '?').toUpperCase();
+      const tlb2 = document.getElementById('topbarLoginBtn');
+      if (tlb2 && window.koausAuth.user) tlb2.textContent = nick;
+    }
+
+    // 중복 검사 (Firestore best-effort) — 같은 닉네임이 '다른 유저' 소유면 true
+    async function isNicknameTaken(nick) {
+      try {
+        const u = window.koausAuth && window.koausAuth.user;
+        if (!db || !u) return false;  // Firestore 미설정 시 검사 생략(차단 안 함)
+        const snap = await getDoc(doc(db, 'nicknames', nick.toLowerCase()));
+        return snap.exists() && snap.data().uid !== u.uid;
+      } catch (e) { return false; }
+    }
+    // 닉네임 변경 — 트랜잭션 1세트로 원자 처리 (알박기 방지 + 부분 실패 롤백)
+    //   a) nicknames/{new}.exists 검증 (없거나 본인 소유여야 함) → 없으면 신규 create
+    //   b) 옛 nicknames/{old} delete (점유 해제)
+    //   c) users/{uid}.nickname update
+    //  실패 시 throw → saveNickname 의 catch 가 사용자 메시지 표시 (어느 doc 도 변경되지 않음)
+    async function reserveNickname(nick) {
+      const u = window.koausAuth && window.koausAuth.user;
+      if (!db || !u) throw new Error('DB_NOT_READY');
+      const newNickLow = nick.toLowerCase();
+      await runTransaction(db, async tx => {
+        const userRef    = doc(db, 'users', u.uid);
+        const newNickRef = doc(db, 'nicknames', newNickLow);
+        // ── Reads (모든 read 가 write 보다 앞서야 함) ──
+        const userSnap  = await tx.get(userRef);
+        const userData  = userSnap.exists() ? userSnap.data() : {};
+        const oldNickLow = String(userData.nickname || '').toLowerCase();
+        let newNickAlreadyMine = false;
+        if (newNickLow !== oldNickLow) {
+          const newNickSnap = await tx.get(newNickRef);
+          if (newNickSnap.exists()) {
+            if (newNickSnap.data().uid !== u.uid) throw new Error('NICK_TAKEN');
+            newNickAlreadyMine = true;   // 이전 가입 트랜잭션이 남긴 본인 doc — 덮어쓰기 OK
+          }
+        }
+        // 옛 닉네임 doc — 실존 + 본인 소유일 때만 delete 예약.
+        // (없는 doc 의 delete 는 rules 의 resource.data.uid 평가 오류 → permission-denied 로
+        //  트랜잭션 전체가 거부되는 함정 — 인덱스 없는 레거시/구글 계정 방어)
+        let oldNickOwned = false;
+        if (oldNickLow && oldNickLow !== newNickLow) {
+          const oldSnap = await tx.get(doc(db, 'nicknames', oldNickLow));
+          oldNickOwned = oldSnap.exists() && oldSnap.data().uid === u.uid;
+        }
+        // ── Writes ──
+        // 새 닉네임 doc — 이름만 바뀐 경우(대소문자 변경 포함)도 작성, 옛 doc 과 동일 id 면 skip
+        if (newNickLow !== oldNickLow || newNickAlreadyMine) {
+          tx.set(newNickRef, {
+            uid: u.uid,
+            nickname: nick,
+            email: String(userData.email || u.email || '').toLowerCase(),
+            createdAt: Date.now(),
+          });
+        }
+        // 옛 닉네임 doc 해제
+        if (oldNickOwned) {
+          tx.delete(doc(db, 'nicknames', oldNickLow));
+        }
+        // 유저 문서 갱신 — 구글 로그인 등 users doc 이 아직 없는 계정은 create.
+        // (없는 doc 의 update 는 NOT_FOUND 로 트랜잭션 전체 실패 — '저장 오류' 원인이었음.
+        //  create payload 에 status/isAdmin/role 미포함이라 rules create 검증 통과)
+        if (userSnap.exists()) {
+          tx.update(userRef, { nickname: nick });
+        } else {
+          tx.set(userRef, {
+            nickname: nick,
+            email: String(u.email || '').toLowerCase(),
+            createdAt: Date.now(),
+          });
+        }
+      });
+    }
+
+    async function saveNickname() {
+      const nick = document.getElementById('mpNickInput').value.trim();
+      if (!NICK_RE.test(nick)) {
+        showNickError('닉네임은 한글 포함 2~12자, 영문·숫자는 3~12자 조합만 가능합니다. (숫자 단독 불가)');
+        return;
+      }
+      // 욕설/금칙어 필터
+      if (hasProfanity(nick)) {
+        showNickError('부적절한 단어가 포함되어 있습니다.');
+        return;
+      }
+      // 관리자 사칭 방지 금지어 — 일부라도 포함되면 차단 (대소문자 무시)
+      const low = nick.toLowerCase();
+      if (RESERVED_NICKS.some(w => low.includes(w.toLowerCase()))) {
+        showNickError('해당 닉네임은 관리자 사칭 방지를 위해 사용할 수 없습니다.');
+        return;
+      }
+      const saveBtn = document.getElementById('mpNickSave');
+      saveBtn.disabled = true;
+      try {
+        // 금지어·정규식 통과 시에만 Firestore 중복 검사 (pre-check — 공통 케이스)
+        if (await isNicknameTaken(nick)) {
+          showNickError('이미 사용 중인 닉네임입니다.');
+          return;
+        }
+        // 실제 변경은 트랜잭션 — pre-check 와 commit 사이 race 도 안전하게 차단
+        try {
+          await reserveNickname(nick);
+        } catch (e) {
+          if (e && e.message === 'NICK_TAKEN') { showNickError('이미 사용 중인 닉네임입니다.'); return; }
+          if (e && e.message === 'DB_NOT_READY') { showNickError('잠시 후 다시 시도해 주세요.'); return; }
+          console.warn('[settings] 닉네임 변경 실패', e);
+          showNickError('저장 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
+          return;
+        }
+        localStorage.setItem('koaus-nickname', nick);
+        localStorage.setItem('koaus-nickname-changed-at', String(Date.now()));
+        applyNick(nick);
+        closeNickEdit();
+        syncProfileCard();   // 채팅 공개 프로필 카드에 새 별명 반영 (best-effort)
+        // ── 본인 기존 글 author 백필 — 별명 변경 시 게시판 표시명도 새 별명으로 (best-effort) ──
+        //   where('uid'==본인) → 룰상 본인 글만, author 만 변경(uid/status/모더필드 불변)이라 통과.
+        //   3개월 1회 변경이라 빈도 낮음. 개별 실패 무시.
+        const _COLS = ['accom_posts','rent_posts','jobs_posts','auto_posts','services'];
+        const _bu = window.koausAuth && window.koausAuth.user;
+        if (_bu) for (const c of _COLS) {
+          try {
+            const _snap = await getDocs(query(collection(db, c), where('uid','==', _bu.uid), limit(50)));
+            for (const s of _snap.docs) { try { await updateDoc(doc(db, c, s.id), { author: nick }); } catch (_) {} }
+          } catch (_) {}
+        }
+      } finally {
+        saveBtn.disabled = false;
+      }
+    }
+
+    // ── 공개 프로필 카드(profiles/{uid}) 동기화 — 인앱 채팅의 "현재 별명/사진" 소스 (2026-07) ──
+    //   · chats doc 은 개설 시점 닉 스냅샷만 보관 → chat.html 이 profiles 를 lazy 참조해
+    //     최신 별명·사진 표시 ("별명 변경해도 대화 기록 유지 + 현재 별명" 정책의 짝).
+    //   · sig(uid|nick|photo) 를 LS koaus-profile-synced 에 기록 — 같은 값 재쓰기 방지(빌링 0).
+    //   · rules(profiles): nickname ≤30 / photoURL https ≤500 / updatedAt == request.time
+    //     / hasOnly 3필드 / 본인만 쓰기. photoURL 은 https 일 때만 포함(빈 문자열은 거부됨).
+    //   · 실패 전부 silent — 프로필 카드 없어도 채팅은 스냅샷 닉으로 동작.
+    async function syncProfileCard() {
+      try {
+        const u = window.koausAuth && window.koausAuth.user;
+        if (!u || !db) return;
+        let nick = '', photo = '';
+        try { nick = (localStorage.getItem('koaus-nickname') || '').trim().slice(0, 30); } catch (_) {}
+        try { photo = (localStorage.getItem('koaus-photo-url') || '').trim(); } catch (_) {}
+        if (!/^https:\/\//.test(photo) || photo.length > 500) photo = '';
+        if (!nick && !photo) return;
+        const sig = u.uid + '|' + nick + '|' + photo;
+        try { if (localStorage.getItem('koaus-profile-synced') === sig) return; } catch (_) {}
+        const payload = { updatedAt: serverTimestamp() };
+        if (nick) payload.nickname = nick;
+        if (photo) payload.photoURL = photo;
+        await setDoc(doc(db, 'profiles', u.uid), payload, { merge: true });
+        try { localStorage.setItem('koaus-profile-synced', sig); } catch (_) {}
+      } catch (_) { /* silent */ }
+    }
+
+    document.getElementById('mpEditBtn').addEventListener('click', openNickEdit);
+    document.getElementById('mpNickCancel').addEventListener('click', closeNickEdit);
+    document.getElementById('mpNickSave').addEventListener('click', saveNickname);
+    document.getElementById('mpNickInput').addEventListener('keydown', e => { if (e.key === 'Enter') saveNickname(); });
+    // 프로필 사진 — 1장, 클라이언트 압축(max 500px, q 0.7) → Storage 'profile_images/{uid}/avatar.jpg'
+    (function bindProfilePhoto() {
+      const btn = document.getElementById('mpPhotoBtn');
+      if (!btn) return;
+      const fileInput = document.createElement('input');
+      fileInput.type = 'file'; fileInput.accept = 'image/*'; fileInput.className = 'profile-photo-input';
+      document.body.appendChild(fileInput);
+      btn.addEventListener('click', () => {
+        const u = window.koausAuth && window.koausAuth.user;
+        if (!u) { alert('로그인이 필요합니다.'); return; }
+        fileInput.click();
+      });
+      fileInput.addEventListener('change', async () => {
+        const u = window.koausAuth && window.koausAuth.user;
+        const f = fileInput.files && fileInput.files[0];
+        fileInput.value = '';
+        if (!u || !f) return;
+        const orig = btn.textContent;
+        btn.disabled = true; btn.textContent = '업로드 중…';
+        try {
+          const url = await uploadCompressed(
+            app, `profile_images/${u.uid}/avatar.jpg`, f,
+            { maxDim: 500, quality: 0.7, mimeType: 'image/jpeg' }
+          );
+          // users 문서에 photoURL 저장
+          await setDoc(doc(db, 'users', u.uid), { photoURL: url }, { merge: true });
+          // UI 즉시 반영 — innerHTML 대신 DOM 생성 (XSS·attribute breakout 방어)
+          //   url 은 방금 Storage 업로드 결과 (firebasestorage.googleapis.com) 라 안전하지만 일관성 유지
+          const av = document.getElementById('mpAvatar');
+          if (av && window.koausUrlGuard && window.koausUrlGuard.isSafeHttp(url)) {
+            av.textContent = '';
+            const imgEl = document.createElement('img');
+            imgEl.src = url; imgEl.alt = '프로필 사진';
+            av.appendChild(imgEl);
+          }
+          localStorage.setItem('koaus-photo-url', url);
+          syncProfileCard();   // 채팅 공개 프로필 카드에 새 사진 반영 (best-effort)
+          alert('프로필 사진이 변경되었습니다.');
+        } catch (e) {
+          console.error('[settings] 프로필 사진 업로드 실패', { code: e && e.code, message: e && e.message, error: e });
+          alert(`사진 업로드 실패: ${(e && e.code) || 'unknown'}\n${(e && e.message) || ''}`);
+        } finally {
+          btn.disabled = false; btn.textContent = orig;
+        }
+      });
+    })();
+
+    onAuthStateChanged(auth, user => {
+      window.koausAuth.user = user;
+      const loginReq = document.getElementById('loginRequired');
+      const prof = document.getElementById('profileSection');
+      if (user) {
+        // ── 각자의 고유링크 — 주소창 ?uid= 를 본인 uid 로 정규화 (표시/북마크용.
+        //    모든 연산은 auth.currentUser 기준이라 타인 uid 로 열어도 본인 설정만 보임) ──
+        try {
+          const u2 = new URL(location.href);
+          if (u2.searchParams.get('uid') !== user.uid) {
+            u2.searchParams.set('uid', user.uid);
+            history.replaceState(null, '', u2.pathname + u2.search + u2.hash);
+          }
+        } catch (_) {}
+        syncProfileCard();   // 채팅 공개 프로필 카드 백필 — sig 일치 시 write 0 (best-effort)
+        const sec = document.getElementById('mpSecurityLink');
+        if (sec) sec.href = 'security.html?uid=' + encodeURIComponent(user.uid);
+
+        const nick = localStorage.getItem('koaus-nickname') || user.displayName?.split(' ')[0] || user.email?.split('@')[0] || '사용자';
+        document.getElementById('mpName').textContent = nick;
+        const av = document.getElementById('mpAvatar');
+        // Firestore users/<uid> 에 저장된 photoURL 우선, 없으면 첫 글자 이니셜
+        // innerHTML 대신 DOM 생성 — 사용자가 photoURL 필드를 변조해도 attribute breakout 차단
+        function setAvatarPhoto(rawUrl) {
+          if (!window.koausUrlGuard || !window.koausUrlGuard.isSafeHttp(rawUrl)) return false;
+          av.textContent = '';
+          const imgEl = document.createElement('img');
+          imgEl.src = rawUrl; imgEl.alt = '프로필 사진';
+          av.appendChild(imgEl);
+          return true;
+        }
+        const cachedPhoto = localStorage.getItem('koaus-photo-url');
+        if (!setAvatarPhoto(cachedPhoto)) {
+          av.textContent = (nick[0] || '?').toUpperCase();
+        }
+        // 휴대폰 번호 행 (폰③) — 보조 인증 표시. 마스킹 + 상태별 버튼 라벨.
+        const _mpPhoneEl  = document.getElementById('mpPhone');
+        const _mpPhoneBtn = document.getElementById('mpPhoneBtn');
+        function _renderPhoneRow(released) {
+          const ph = user.phoneNumber || '';
+          if (ph) {
+            if (_mpPhoneEl) _mpPhoneEl.textContent = ph.slice(0, 3) + ' ··· ··· ' + ph.slice(-3);
+            if (_mpPhoneBtn) _mpPhoneBtn.textContent = '번호 변경';
+          } else if (released) {
+            if (_mpPhoneEl) _mpPhoneEl.textContent = '이전 번호가 재발급되어 연결이 해제됐어요. 새 번호로 다시 인증해 주세요.';
+            if (_mpPhoneBtn) _mpPhoneBtn.textContent = '휴대폰 인증';
+          } else {
+            if (_mpPhoneEl) _mpPhoneEl.textContent = '미인증';
+            if (_mpPhoneBtn) _mpPhoneBtn.textContent = '휴대폰 인증';
+          }
+        }
+        _renderPhoneRow(false);
+        // 자기소개서 Living/Work — localStorage 캐시로 즉시 표시 (Firestore 응답 전 깜빡임 방지)
+        function _setIntroField(kind, val) {
+          const t = typeof val === 'string' ? val : '';
+          const el  = document.getElementById(kind === 'living' ? 'mpIntroLivingText'  : 'mpIntroWorkText');
+          const cnt = document.getElementById(kind === 'living' ? 'mpIntroLivingCount' : 'mpIntroWorkCount');
+          if (el) el.value = t;
+          if (cnt) cnt.textContent = t.length + '/700';
+        }
+        // Living 은 옛 단일 캐시('koaus-my-intro' — introText 시절)를 읽기 폴백으로만 사용
+        try { _setIntroField('living', localStorage.getItem('koaus-my-intro-living') || localStorage.getItem('koaus-my-intro') || ''); } catch (_) {}
+        try { _setIntroField('work',   localStorage.getItem('koaus-my-intro-work') || ''); } catch (_) {}
+        try {
+          getDoc(doc(db, 'users', user.uid)).then(snap => {
+            const data = snap && snap.exists() ? snap.data() : null;
+            if (data && data.photoURL && setAvatarPhoto(data.photoURL)) {
+              localStorage.setItem('koaus-photo-url', data.photoURL);
+            }
+            // 자기소개서 — Firestore 값을 textarea + LS 캐시에 반영 (기기 간 동기화)
+            //   introLiving 없으면 introText(옛 데이터 = Living 용으로 간주) 폴백. 저장은 새 필드로만.
+            if (data) {
+              const liv = (typeof data.introLiving === 'string') ? data.introLiving
+                        : ((typeof data.introText === 'string') ? data.introText : null);
+              if (liv !== null) {
+                _setIntroField('living', liv);
+                try { localStorage.setItem('koaus-my-intro-living', liv); } catch (_) {}
+              }
+              if (typeof data.introWork === 'string') {
+                _setIntroField('work', data.introWork);
+                try { localStorage.setItem('koaus-my-intro-work', data.introWork); } catch (_) {}
+              }
+            }
+            // 폰④로 번호 해제된 상태(phoneReleased) + 현재 미연결 → 재인증 안내 (읽기 전용 — 재인증 시 phoneNumber 생겨 자연 소멸)
+            if (data && data.phoneReleased && !user.phoneNumber) _renderPhoneRow(true);
+          });
+        } catch (_) {}
+        document.getElementById('mpEmail').textContent = user.email || '';
+        loginReq.style.display = 'none';
+        prof.style.display = '';
+        if (tlb) tlb.textContent = nick;
+      } else {
+        loginReq.style.display = '';
+        prof.style.display = 'none';
+        if (tlb) tlb.textContent = '로그인';
+      }
+    });
+
+    // 휴대폰 번호 변경/재인증 (폰③) — 변경은 reauth(본인 재확인) 후 koausPhoneVerify(link/교체)
+    const _mpPhoneBtnEl = document.getElementById('mpPhoneBtn');
+    if (_mpPhoneBtnEl) _mpPhoneBtnEl.addEventListener('click', async () => {
+      const u = auth.currentUser;
+      if (!u) return;
+      if (!u.phoneNumber) {
+        // 최초 인증 / ④ 해제 후 재인증 — 바로 phone 모달(link 경로)
+        if (window.koausPhoneVerify) window.koausPhoneVerify({ onVerified: () => location.reload() });
+        return;
+      }
+      // 번호 변경 — 먼저 본인 재확인(reauth: 구글 팝업 / 이메일 비밀번호)
+      const pid = (u.providerData.find(p => p.providerId === 'google.com') || {}).providerId
+                || (u.providerData[0] || {}).providerId;
+      try {
+        if (pid === 'google.com') {
+          await reauthenticateWithPopup(u, new GoogleAuthProvider());
+        } else {
+          const pw = prompt('보안을 위해 비밀번호를 다시 입력해 주세요');
+          if (!pw) return;
+          await reauthenticateWithCredential(u, EmailAuthProvider.credential(u.email, pw));
+        }
+      } catch (e) { alert('본인 확인에 실패했어요. 다시 시도해 주세요.'); return; }
+      if (window.koausPhoneVerify) window.koausPhoneVerify({ mode: 'change', onVerified: () => location.reload() });
+    });
+
+    // 자기소개서 Living/Work — 글자수 카운터 + 저장 (users/{uid}.introLiving·introWork merge + LS 캐시)
+    //   저장은 새 필드로만 (introText 미기록 — 옛 필드는 읽기 폴백 전용)
+    function wireIntroField(taId, cntId, btnId, fieldName, lsKey) {
+      const ta  = document.getElementById(taId);
+      const cnt = document.getElementById(cntId);
+      const btn = document.getElementById(btnId);
+      if (!ta || !btn) return;
+      ta.addEventListener('input', () => {
+        if (ta.value.length > 700) ta.value = ta.value.slice(0, 700);  // maxlength 이중 안전망
+        if (cnt) cnt.textContent = ta.value.length + '/700';
+      });
+      btn.addEventListener('click', async () => {
+        const u = auth.currentUser;
+        if (!u) { alert('로그인이 필요합니다.'); return; }
+        const txt = (ta.value || '').slice(0, 700);
+        const orig = btn.textContent;
+        btn.disabled = true; btn.textContent = '저장 중…';
+        try {
+          const patch = {}; patch[fieldName] = txt;
+          await setDoc(doc(db, 'users', u.uid), patch, { merge: true });
+          try { localStorage.setItem(lsKey, txt); } catch (_) {}
+          btn.textContent = '저장됨 ✓';
+          setTimeout(() => { btn.textContent = orig; btn.disabled = false; }, 1600);
+        } catch (e) {
+          alert('저장에 실패했어요. 잠시 후 다시 시도해 주세요.');
+          btn.textContent = orig; btn.disabled = false;
+        }
+      });
+    }
+    wireIntroField('mpIntroLivingText', 'mpIntroLivingCount', 'mpIntroLivingSaveBtn', 'introLiving', 'koaus-my-intro-living');
+    wireIntroField('mpIntroWorkText',   'mpIntroWorkCount',   'mpIntroWorkSaveBtn',   'introWork',   'koaus-my-intro-work');
+  </script>
+</body>
+</html>
