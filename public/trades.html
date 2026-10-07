@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>호주 한인 기술직 — 전기·배관·타일·핸디맨 | KoAus</title>
-  <meta name="description" content="호주 한인 기술직(Skilled Trades) 게시판 — 전기·배관·타일·핸디맨 등 한인 사장님이 직접 등록한 서비스 정보를 확인하세요." />
+  <title>호주 한인 일상 — 음식·미용·기술 자기 PR 보드 | KoAus</title>
+  <meta name="description" content="호주 한인 일상 자기 PR 보드 — 음식·미용·기술 분야에서 나를 알리는 포트폴리오형 소개 페이지를 만들어 보세요." />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="KoAus" />
-  <meta property="og:title" content="호주 한인 기술직 — 전기·배관·타일·핸디맨 | KoAus" />
-  <meta property="og:description" content="호주 한인 기술직(Skilled Trades) 게시판 — 전기·배관·타일·핸디맨 등 한인 사장님이 직접 등록한 서비스 정보를 확인하세요." />
+  <meta property="og:title" content="호주 한인 일상 — 음식·미용·기술 자기 PR 보드 | KoAus" />
+  <meta property="og:description" content="호주 한인 일상 자기 PR 보드 — 음식·미용·기술 분야에서 나를 알리는 포트폴리오형 소개 페이지를 만들어 보세요." />
   <meta property="og:url" content="https://koaus.com.au/trades.html" />
   <meta property="og:image" content="https://koaus.com.au/og-image.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -47,7 +47,9 @@
   <script src="local-analytics.js" defer></script>
   <script src="koaus-gallery.js" defer></script>
   <script src="koaus-dedupe.js" defer></script>
+  <script src="koaus-state.js" defer></script>
   <script src="koaus-map-cluster.js" defer></script>
+  <script src="koaus-listing-privacy.js" defer></script>
   <script src="koaus-url-guard.js" defer></script>
   <script src="koaus-report.js" defer></script>
   <script src="koaus-toast.js" defer></script>
@@ -59,6 +61,197 @@
   <script src="koaus-contact-actions.js" defer></script>
   <script type="module" src="auth-extra.js"></script>
   <script type="module" src="koaus-phone-auth.js"></script>
+
+  <!-- ── 일상 자기 PR 상세 (prd-*) — trades.html 전용 스코프 스타일 ── -->
+  <style>
+    /* 카테고리 탭 (전체/음식/미용/기술) */
+    .daily-cat-tabs { display: flex; gap: 8px; margin: 0 0 14px; flex-wrap: wrap; }
+    .daily-cat-tab {
+      font-family: var(--font); font-size: 13px; font-weight: 700; color: var(--text-secondary);
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: 999px;
+      padding: 7px 14px; cursor: pointer; transition: all .12s;
+    }
+    .daily-cat-tab:hover { border-color: var(--text-primary); color: var(--text-primary); }
+    .daily-cat-tab.active { background: var(--text-primary); color: var(--bg-surface); border-color: var(--text-primary); }
+    /* 카드 카테고리 뱃지 */
+    .daily-card-badge {
+      display: inline-flex; align-items: center; gap: 3px; flex-shrink: 0;
+      font-size: 11px; font-weight: 800; color: var(--text-primary);
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: 999px;
+      padding: 2px 8px; white-space: nowrap;
+    }
+
+    /* ── PR 상세 오버레이 — 반응형 2모드 ──
+       · 좁은 뷰포트(<900px): 풀스크린 오버레이
+       · 넓은 뷰포트(≥900px): 중앙 카드 모달 (기존 KoAus 상세와 동일 톤) */
+    .prd-overlay { padding: 0; align-items: stretch; }
+    .prd-card {
+      position: relative; width: 100%; height: 100%; max-width: none;
+      background: var(--bg-surface); display: flex; flex-direction: column;
+      border: none; border-radius: 0; padding: 0; gap: 0;
+      transform: translateY(16px); transition: transform .2s;
+    }
+    .prd-overlay.open .prd-card { transform: translateY(0); }
+    @media (min-width: 900px) {
+      .prd-overlay { padding: 48px 20px; align-items: center; justify-content: center; }
+      .prd-card {
+        max-width: 760px; height: min(90vh, 980px);
+        border: 1px solid var(--border); border-radius: var(--r-xl); overflow: hidden;
+      }
+    }
+    .prd-topbar {
+      display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+      padding: 10px 12px; border-bottom: 1px solid var(--border); background: var(--bg-surface);
+    }
+    .prd-back, .prd-x {
+      font-family: var(--font); background: none; border: none; cursor: pointer;
+      color: var(--text-primary); font-size: 22px; line-height: 1; padding: 4px 8px;
+    }
+    .prd-x { font-size: 16px; }
+    .prd-navtitle {
+      flex: 1; min-width: 0; font-size: 14px; font-weight: 800; color: var(--text-primary);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .prd-top-actions { display: flex; align-items: center; gap: 4px; }
+    .prd-ovl {
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: 999px;
+      width: 34px; height: 34px; font-size: 15px; cursor: pointer; color: var(--text-primary);
+      display: inline-flex; align-items: center; justify-content: center;
+    }
+    .prd-ovl.saved { color: #f5a623; }
+    .prd-scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+
+    /* 스크롤 리빌 */
+    .prd-reveal { opacity: 0; transform: translateY(26px); transition: opacity .7s ease, transform .8s cubic-bezier(.2,.7,.2,1); }
+    .prd-reveal.in { opacity: 1; transform: none; }
+    @media (prefers-reduced-motion: reduce) {
+      .prd-reveal { opacity: 1; transform: none; transition: none; }
+    }
+    /* 복사 방지 (intro/portfolio) */
+    .prd-noselect { -webkit-user-select: none; -moz-user-select: none; user-select: none; }
+
+    /* ① 커버 — 청첩장 스타일 (사진 원본 그대로 + 우하단 문의 버튼, 텍스트는 사진 아래) */
+    .prd-cover { padding: 0 0 26px; border-bottom: 1px solid var(--border); }
+    /* 스테이지 — coverOrient 가 비율 결정. 사진(wrap)은 contain 계산으로 스테이지 안에 fit */
+    .prd-cover-stage {
+      width: 100%; background: var(--bg-card); overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .prd-stage-landscape { aspect-ratio: 16 / 9; }
+    .prd-stage-portrait  { aspect-ratio: 3 / 4; max-height: 72vh; }
+    @media (min-width: 900px) { .prd-stage-portrait { max-height: 560px; } }
+    /* 실제 사진 박스 — JS 가 스테이지 fit 크기를 계산해 width/height 지정. 버튼은 이 박스 기준 우하단 */
+    .prd-photo-wrap { position: relative; }
+    .prd-photo-wrap img { display: block; width: 100%; height: 100%; }
+    .prd-cover-cta {
+      position: absolute; right: 12px; bottom: 12px; z-index: 2;
+      font-family: var(--font); font-size: 13px; font-weight: 800; cursor: pointer;
+      color: #16181d; background: rgba(255,255,255,.94); border: none; border-radius: 999px;
+      padding: 10px 16px; box-shadow: 0 6px 18px rgba(0,0,0,.28);
+      display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;
+    }
+    .prd-cover-cta:active { transform: scale(.97); }
+    /* 커버 사진 없을 때 — 카테고리 그라데이션 + 이모지 폴백 (유지) */
+    .prd-cover-fallback {
+      position: relative; width: 100%; aspect-ratio: 16 / 9; background: #2b2f36;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .prd-cover-fallback .prd-cover-emo { font-size: 64px; opacity: .55; pointer-events: none; }
+    .prd-cover-food   { background-image: linear-gradient(135deg, #b4552d, #7a2e14 70%); }
+    .prd-cover-beauty { background-image: linear-gradient(135deg, #a04a86, #5c2350 70%); }
+    .prd-cover-tech   { background-image: linear-gradient(135deg, #2f5f8f, #1c3050 70%); }
+    /* 커버 메타 — 아바타/이름/배지/인트로는 사진 아래 (사진을 가리지 않음) */
+    .prd-cover-meta {
+      display: flex; flex-direction: column; align-items: center; gap: 10px;
+      text-align: center; padding: 0 24px; max-width: 520px; margin: 0 auto;
+    }
+    .prd-cover-meta.prd-no-avatar { padding-top: 20px; }   /* 아바타 숨김 시 겹침 오프셋 보정 */
+    .prd-avatar {
+      width: 96px; height: 96px; border-radius: 50%; overflow: hidden; flex-shrink: 0;
+      border: 3px solid var(--bg-surface); background: #b9bec6;
+      box-shadow: 0 10px 28px rgba(0,0,0,.25);
+      display: flex; align-items: flex-end; justify-content: center;
+      margin-top: -48px; position: relative; z-index: 1;   /* 커버 하단에 살짝 겹침 */
+    }
+    .prd-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .prd-avatar svg { width: 74%; height: 74%; color: #eceef1; }
+    .prd-name { font-size: 24px; font-weight: 900; color: var(--text-primary); letter-spacing: .01em; word-break: keep-all; }
+    .prd-cat-badge {
+      font-size: 12px; font-weight: 800; color: var(--text-primary); background: var(--bg-card);
+      border: 1px solid var(--border); border-radius: 999px; padding: 4px 12px;
+    }
+    .prd-intro { font-size: 14.5px; line-height: 1.8; color: var(--text-secondary); margin: 4px 0 0; word-break: keep-all; white-space: pre-wrap; }
+
+    /* 공통 섹션 */
+    .prd-sec { padding: 26px 20px; border-bottom: 1px solid var(--border); }
+    @media (min-width: 900px) { .prd-sec { padding: 30px 32px; } }
+    .prd-subtitle { font-size: 15px; font-weight: 900; color: var(--text-primary); margin: 0 0 14px; }
+    .prd-body { font-size: 14.5px; line-height: 1.9; color: var(--text-primary); white-space: pre-wrap; word-break: break-word; }
+
+    /* ③ 포트폴리오 사진 캐러셀 — ‹ › + 1/N 카운터 + 스크롤 스냅(터치 스와이프) */
+    .prd-carousel { position: relative; }
+    .prd-car-track {
+      display: flex; overflow-x: auto; scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch; scrollbar-width: none;
+      border-radius: var(--r-md); border: 1px solid var(--border); background: var(--bg-card);
+    }
+    .prd-car-track::-webkit-scrollbar { display: none; }
+    .prd-car-slide {
+      flex: 0 0 100%; scroll-snap-align: center; scroll-snap-stop: always;
+      aspect-ratio: 4 / 3; display: flex; align-items: center; justify-content: center;
+    }
+    .prd-car-slide img { width: 100%; height: 100%; object-fit: contain; display: block; cursor: pointer; }
+    .prd-car-nav {
+      position: absolute; top: 50%; transform: translateY(-50%); z-index: 2;
+      width: 36px; height: 36px; border-radius: 50%; border: none; cursor: pointer;
+      background: rgba(17,24,39,.55); color: #fff; font-size: 20px; line-height: 1;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .prd-car-nav:disabled { opacity: .3; cursor: default; }
+    .prd-car-prev { left: 8px; }
+    .prd-car-next { right: 8px; }
+    .prd-car-counter {
+      position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); z-index: 2;
+      font-size: 12px; font-weight: 800; color: #fff; background: rgba(17,24,39,.6);
+      border-radius: 999px; padding: 3px 12px; pointer-events: none;
+    }
+    .prd-photo-ph {
+      font-size: 13px; color: var(--text-muted); background: var(--bg-card);
+      border: 1px dashed var(--border); border-radius: var(--r-md); padding: 22px 16px; text-align: center;
+    }
+
+    /* ④ 위치 */
+    .prd-addr { font-size: 13.5px; color: var(--text-secondary); margin: 0 0 10px; }
+
+    /* ⑤ 구글 리뷰 */
+    .prd-review-btn {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      font-size: 14px; font-weight: 800; color: var(--text-primary); text-decoration: none;
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-md);
+      padding: 14px 16px; transition: border-color .12s;
+    }
+    .prd-review-btn:hover { border-color: var(--text-primary); }
+
+    /* ⑥ 문의 + 마무리 멘트 */
+    .prd-contact-sec .contact-action-container { display: flex; }
+    .prd-closing {
+      margin: 18px 0 0; text-align: center; font-size: 15px; font-weight: 700;
+      line-height: 1.9; color: var(--text-primary); word-break: keep-all; white-space: pre-wrap;
+    }
+
+    /* RBAC 액션 / 신고 */
+    .prd-actions-wrap { padding: 18px 20px 6px; }
+    .prd-actions-wrap .rea-owner-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .prd-report-wrap { padding: 4px 20px 0; }
+
+    /* ⑦ 브랜드 태그 */
+    .prd-brand {
+      text-align: center; font-size: 11.5px; color: var(--text-muted); line-height: 1.8;
+      padding: 34px 20px 42px;
+    }
+    .prd-brand a { color: var(--text-secondary); font-weight: 800; text-decoration: none; }
+    .prd-brand b { color: var(--text-secondary); }
+  </style>
 </head>
 <body>
 
@@ -118,22 +311,16 @@
             </div>
           </div>
           <div class="accord-subgroup">
-            <button class="accord-sublabel sub-toggle" type="button"><span>Visa &amp; Migration</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
-            <div class="sub-menu">
-            <a href="points.html?state=nsw&amp;cat=visa-edu" class="accord-link accord-link--sub">비자/유학 (Visa &amp; Edu)</a>
-            <a href="points.html?state=nsw&amp;cat=points" class="accord-link accord-link--sub">기술심사 가채점</a>
-            </div>
-          </div>
-          <div class="accord-subgroup">
             <button class="accord-sublabel sub-toggle" type="button"><span>Auto</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="auto.html?state=nsw&amp;category=used" class="accord-link accord-link--sub">중고차 판매 (Used Car)</a>
-            <a href="auto.html?state=nsw&amp;category=maintenance" class="accord-link accord-link--sub">정비소/견인 (Maintenance &amp; Towing)</a>            </div>
+            <a href="auto.html?state=nsw&amp;category=insurance" class="accord-link accord-link--sub">보험 정보 (Insurance)</a>            </div>
           </div>
           <div class="accord-subgroup">
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
-            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
+            <a href="trades.html?state=nsw" class="accord-link accord-link--sub">일상 (Daily)</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('비자/이민 섹션은 준비 중입니다.');return false;">비자/이민 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -159,22 +346,16 @@
             </div>
           </div>
           <div class="accord-subgroup">
-            <button class="accord-sublabel sub-toggle" type="button"><span>Visa &amp; Migration</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
-            <div class="sub-menu">
-            <a href="points.html?state=vic&amp;cat=visa-edu" class="accord-link accord-link--sub">비자/유학 (Visa &amp; Edu)</a>
-            <a href="points.html?state=vic&amp;cat=points" class="accord-link accord-link--sub">기술심사 가채점</a>
-            </div>
-          </div>
-          <div class="accord-subgroup">
             <button class="accord-sublabel sub-toggle" type="button"><span>Auto</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="auto.html?state=vic&amp;category=used" class="accord-link accord-link--sub">중고차 판매 (Used Car)</a>
-            <a href="auto.html?state=vic&amp;category=maintenance" class="accord-link accord-link--sub">정비소/견인 (Maintenance &amp; Towing)</a>            </div>
+            <a href="auto.html?state=vic&amp;category=insurance" class="accord-link accord-link--sub">보험 정보 (Insurance)</a>            </div>
           </div>
           <div class="accord-subgroup">
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
-            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
+            <a href="trades.html?state=vic" class="accord-link accord-link--sub">일상 (Daily)</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('비자/이민 섹션은 준비 중입니다.');return false;">비자/이민 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -200,22 +381,16 @@
             </div>
           </div>
           <div class="accord-subgroup">
-            <button class="accord-sublabel sub-toggle" type="button"><span>Visa &amp; Migration</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
-            <div class="sub-menu">
-            <a href="points.html?state=qld&amp;cat=visa-edu" class="accord-link accord-link--sub">비자/유학 (Visa &amp; Edu)</a>
-            <a href="points.html?state=qld&amp;cat=points" class="accord-link accord-link--sub">기술심사 가채점</a>
-            </div>
-          </div>
-          <div class="accord-subgroup">
             <button class="accord-sublabel sub-toggle" type="button"><span>Auto</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="auto.html?state=qld&amp;category=used" class="accord-link accord-link--sub">중고차 판매 (Used Car)</a>
-            <a href="auto.html?state=qld&amp;category=maintenance" class="accord-link accord-link--sub">정비소/견인 (Maintenance &amp; Towing)</a>            </div>
+            <a href="auto.html?state=qld&amp;category=insurance" class="accord-link accord-link--sub">보험 정보 (Insurance)</a>            </div>
           </div>
           <div class="accord-subgroup">
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
-            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
+            <a href="trades.html?state=qld" class="accord-link accord-link--sub">일상 (Daily)</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('비자/이민 섹션은 준비 중입니다.');return false;">비자/이민 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -241,22 +416,16 @@
             </div>
           </div>
           <div class="accord-subgroup">
-            <button class="accord-sublabel sub-toggle" type="button"><span>Visa &amp; Migration</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
-            <div class="sub-menu">
-            <a href="points.html?state=wa&amp;cat=visa-edu" class="accord-link accord-link--sub">비자/유학 (Visa &amp; Edu)</a>
-            <a href="points.html?state=wa&amp;cat=points" class="accord-link accord-link--sub">기술심사 가채점</a>
-            </div>
-          </div>
-          <div class="accord-subgroup">
             <button class="accord-sublabel sub-toggle" type="button"><span>Auto</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="auto.html?state=wa&amp;category=used" class="accord-link accord-link--sub">중고차 판매 (Used Car)</a>
-            <a href="auto.html?state=wa&amp;category=maintenance" class="accord-link accord-link--sub">정비소/견인 (Maintenance &amp; Towing)</a>            </div>
+            <a href="auto.html?state=wa&amp;category=insurance" class="accord-link accord-link--sub">보험 정보 (Insurance)</a>            </div>
           </div>
           <div class="accord-subgroup">
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
-            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
+            <a href="trades.html?state=wa" class="accord-link accord-link--sub">일상 (Daily)</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('비자/이민 섹션은 준비 중입니다.');return false;">비자/이민 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -282,22 +451,16 @@
             </div>
           </div>
           <div class="accord-subgroup">
-            <button class="accord-sublabel sub-toggle" type="button"><span>Visa &amp; Migration</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
-            <div class="sub-menu">
-            <a href="points.html?state=sa&amp;cat=visa-edu" class="accord-link accord-link--sub">비자/유학 (Visa &amp; Edu)</a>
-            <a href="points.html?state=sa&amp;cat=points" class="accord-link accord-link--sub">기술심사 가채점</a>
-            </div>
-          </div>
-          <div class="accord-subgroup">
             <button class="accord-sublabel sub-toggle" type="button"><span>Auto</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="auto.html?state=sa&amp;category=used" class="accord-link accord-link--sub">중고차 판매 (Used Car)</a>
-            <a href="auto.html?state=sa&amp;category=maintenance" class="accord-link accord-link--sub">정비소/견인 (Maintenance &amp; Towing)</a>            </div>
+            <a href="auto.html?state=sa&amp;category=insurance" class="accord-link accord-link--sub">보험 정보 (Insurance)</a>            </div>
           </div>
           <div class="accord-subgroup">
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
-            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
+            <a href="trades.html?state=sa" class="accord-link accord-link--sub">일상 (Daily)</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('비자/이민 섹션은 준비 중입니다.');return false;">비자/이민 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -323,22 +486,16 @@
             </div>
           </div>
           <div class="accord-subgroup">
-            <button class="accord-sublabel sub-toggle" type="button"><span>Visa &amp; Migration</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
-            <div class="sub-menu">
-            <a href="points.html?state=tas&amp;cat=visa-edu" class="accord-link accord-link--sub">비자/유학 (Visa &amp; Edu)</a>
-            <a href="points.html?state=tas&amp;cat=points" class="accord-link accord-link--sub">기술심사 가채점</a>
-            </div>
-          </div>
-          <div class="accord-subgroup">
             <button class="accord-sublabel sub-toggle" type="button"><span>Auto</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="auto.html?state=tas&amp;category=used" class="accord-link accord-link--sub">중고차 판매 (Used Car)</a>
-            <a href="auto.html?state=tas&amp;category=maintenance" class="accord-link accord-link--sub">정비소/견인 (Maintenance &amp; Towing)</a>            </div>
+            <a href="auto.html?state=tas&amp;category=insurance" class="accord-link accord-link--sub">보험 정보 (Insurance)</a>            </div>
           </div>
           <div class="accord-subgroup">
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
-            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
+            <a href="trades.html?state=tas" class="accord-link accord-link--sub">일상 (Daily)</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('비자/이민 섹션은 준비 중입니다.');return false;">비자/이민 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -364,22 +521,16 @@
             </div>
           </div>
           <div class="accord-subgroup">
-            <button class="accord-sublabel sub-toggle" type="button"><span>Visa &amp; Migration</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
-            <div class="sub-menu">
-            <a href="points.html?state=act&amp;cat=visa-edu" class="accord-link accord-link--sub">비자/유학 (Visa &amp; Edu)</a>
-            <a href="points.html?state=act&amp;cat=points" class="accord-link accord-link--sub">기술심사 가채점</a>
-            </div>
-          </div>
-          <div class="accord-subgroup">
             <button class="accord-sublabel sub-toggle" type="button"><span>Auto</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="auto.html?state=act&amp;category=used" class="accord-link accord-link--sub">중고차 판매 (Used Car)</a>
-            <a href="auto.html?state=act&amp;category=maintenance" class="accord-link accord-link--sub">정비소/견인 (Maintenance &amp; Towing)</a>            </div>
+            <a href="auto.html?state=act&amp;category=insurance" class="accord-link accord-link--sub">보험 정보 (Insurance)</a>            </div>
           </div>
           <div class="accord-subgroup">
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
-            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
+            <a href="trades.html?state=act" class="accord-link accord-link--sub">일상 (Daily)</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('비자/이민 섹션은 준비 중입니다.');return false;">비자/이민 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -405,22 +556,16 @@
             </div>
           </div>
           <div class="accord-subgroup">
-            <button class="accord-sublabel sub-toggle" type="button"><span>Visa &amp; Migration</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
-            <div class="sub-menu">
-            <a href="points.html?state=nt&amp;cat=visa-edu" class="accord-link accord-link--sub">비자/유학 (Visa &amp; Edu)</a>
-            <a href="points.html?state=nt&amp;cat=points" class="accord-link accord-link--sub">기술심사 가채점</a>
-            </div>
-          </div>
-          <div class="accord-subgroup">
             <button class="accord-sublabel sub-toggle" type="button"><span>Auto</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
             <a href="auto.html?state=nt&amp;category=used" class="accord-link accord-link--sub">중고차 판매 (Used Car)</a>
-            <a href="auto.html?state=nt&amp;category=maintenance" class="accord-link accord-link--sub">정비소/견인 (Maintenance &amp; Towing)</a>            </div>
+            <a href="auto.html?state=nt&amp;category=insurance" class="accord-link accord-link--sub">보험 정보 (Insurance)</a>            </div>
           </div>
           <div class="accord-subgroup">
             <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
             <div class="sub-menu">
-            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;">일상 - 준비 중인 섹션입니다</a>
+            <a href="trades.html?state=nt" class="accord-link accord-link--sub">일상 (Daily)</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('비자/이민 섹션은 준비 중입니다.');return false;">비자/이민 - 준비 중인 섹션입니다</a>
             </div>
           </div>
         </div>
@@ -462,8 +607,8 @@
 
     <div class="page-header">
       <div class="page-header-left">
-        <h1 class="page-title" id="boardTitle">🌿 호주 한인 일상 게시판</h1>
-        <p class="page-subtitle" id="boardSubtitle">미용·의료·기술·생활 — 한인 사장님 직접 등록 정보</p>
+        <h1 class="page-title" id="boardTitle">🌿 호주 한인 일상 — 자기 PR 보드</h1>
+        <p class="page-subtitle" id="boardSubtitle">음식·미용·기술 — 나를 알리는 포트폴리오형 소개 페이지</p>
       </div>
       <div class="page-header-actions page-header-actions--flat">
         <div class="page-header-btn-row">
@@ -473,7 +618,7 @@
 
     </div>
 
-    <nav class="others-nav others-nav--2" aria-label="Others 카테고리 이동"><a href="restaurants.html" class="others-nav-item"><span class="others-nav-emo" aria-hidden="true">🍱</span><span class="others-nav-label">K-Food</span></a><a href="#" class="others-nav-item is-active section-disabled" onclick="event.preventDefault();alert('일상 섹션은 준비 중입니다.');return false;"><span class="others-nav-emo" aria-hidden="true">🌿</span><span class="others-nav-label">일상 - 준비 중</span></a></nav>    <!-- Controls (List View 전용 — 상세 필터 + 등록 요청) -->
+    <nav class="others-nav others-nav--2" aria-label="Others 카테고리 이동"><a href="restaurants.html" class="others-nav-item"><span class="others-nav-emo" aria-hidden="true">🍱</span><span class="others-nav-label">K-Food</span></a><a href="trades.html" class="others-nav-item is-active"><span class="others-nav-emo" aria-hidden="true">🌿</span><span class="others-nav-label">일상 (Daily)</span></a></nav>    <!-- Controls (List/Map 토글 + 상세 필터 + 글쓰기) -->
     <div class="accom-controls">
       <div class="view-toggle" id="viewToggle">
         <button class="view-btn active" id="viewListBtn" type="button">
@@ -488,8 +633,16 @@
       <span class="board-count" id="boardCount">총 0건</span>
       <div class="accom-ctrl-actions">
         <button class="board-write-btn board-write-btn--ghost" id="filterModalBtn">상세 필터</button>
-        <button class="board-write-btn" id="writeBtnOpen" type="button">+ 글쓰기</button>
+        <button class="board-write-btn" id="writeBtnOpen" type="button">+ PR 등록</button>
       </div>
+    </div>
+
+    <!-- 카테고리 탭 (음식/미용/기술) — List/Map 공통 필터 -->
+    <div class="daily-cat-tabs" id="dailyCatTabs" role="tablist" aria-label="카테고리 필터">
+      <button class="daily-cat-tab active" data-cat="" type="button">전체</button>
+      <button class="daily-cat-tab" data-cat="food" type="button">🍚 음식</button>
+      <button class="daily-cat-tab" data-cat="beauty" type="button">💇 미용</button>
+      <button class="daily-cat-tab" data-cat="tech" type="button">🔧 기술</button>
     </div>
 
     <!-- List View -->
@@ -525,55 +678,13 @@
       </div>
 
       <div class="filter-section">
-        <label class="filter-section-label">직종 종류 Trade Type · 복수 선택</label>
+        <label class="filter-section-label">카테고리 Category</label>
         <div class="trades-chip-grid">
-          <label class="trades-chip"><input type="checkbox" class="tr-ftype" value="electrician"> 전기</label>
-          <label class="trades-chip"><input type="checkbox" class="tr-ftype" value="plumber"> 배관</label>
-          <label class="trades-chip"><input type="checkbox" class="tr-ftype" value="painter"> 페인팅</label>
-          <label class="trades-chip"><input type="checkbox" class="tr-ftype" value="tiler"> 타일</label>
-          <label class="trades-chip"><input type="checkbox" class="tr-ftype" value="carpenter"> 목공</label>
-          <label class="trades-chip"><input type="checkbox" class="tr-ftype" value="interior"> 인테리어</label>
-          <label class="trades-chip"><input type="checkbox" class="tr-ftype" value="handyman"> 핸디맨</label>
-          <label class="trades-chip"><input type="checkbox" class="tr-ftype" value="demolition"> 철거</label>
-          <label class="trades-chip"><input type="checkbox" class="tr-ftype" value="landscaping"> 조경</label>
-          <label class="trades-chip"><input type="checkbox" class="tr-ftype" value="other"> 기타</label>
+          <label class="trades-chip"><input type="checkbox" class="daily-fcat" value="food"> 🍚 음식</label>
+          <label class="trades-chip"><input type="checkbox" class="daily-fcat" value="beauty"> 💇 미용</label>
+          <label class="trades-chip"><input type="checkbox" class="daily-fcat" value="tech"> 🔧 기술</label>
         </div>
       </div>
-
-      <div class="filter-section">
-        <label class="filter-section-label" for="trFCallout">최대 출장비 Max Callout ($)</label>
-        <input class="write-input" id="trFCallout" type="number" min="0" max="2000" step="10" placeholder="예: 150 (이하만 표시)" />
-      </div>
-
-      <div class="filter-section">
-        <label class="filter-section-label" for="trFExp">최소 경력 Min Experience</label>
-        <select class="write-input" id="trFExp">
-          <option value="">전체</option>
-          <option value="0-2">0~2년 이상</option>
-          <option value="3-5">3~5년 이상</option>
-          <option value="6-10">6~10년 이상</option>
-          <option value="11-20">11~20년 이상</option>
-          <option value="20+">20년 이상</option>
-        </select>
-      </div>
-
-      <div class="filter-section">
-        <label class="filter-section-label">자격 / 보험 Credentials</label>
-        <div class="trades-chip-grid">
-          <label class="trades-chip"><input type="checkbox" id="trFLicensed"> 🛡 자격증 보유</label>
-          <label class="trades-chip"><input type="checkbox" id="trFInsured"> 🔒 보험 가입</label>
-          <label class="trades-chip"><input type="checkbox" id="trFABN"> 📄 ABN 보유</label>
-        </div>
-      </div>
-
-      <!-- ⚠️ 호환: 기존 accom 필터 JS 가 참조하는 hidden id 들 — null 참조 방지 -->
-      <input type="hidden" id="fbPriceMin" value="0" />
-      <input type="hidden" id="fbPriceMax" value="999" />
-      <input type="hidden" id="fbPriceMinInput" value="0" />
-      <input type="hidden" id="fbPriceMaxInput" value="999" />
-      <input type="hidden" id="fbPrice" value="999" />
-      <input type="hidden" id="fbRoom" value="" />
-      <input type="hidden" id="fbDuration" value="" />
 
       <div class="filter-modal-actions">
         <button class="filter-reset-btn" id="filterResetBtn">초기화</button>
@@ -583,49 +694,77 @@
   </div>
 
 
-  <!-- ── Post Detail Modal (Realestate 스타일) ── -->
-  <div class="post-detail-overlay" id="detailOverlay">
-    <div class="post-detail-card rea-detail">
-     <div class="rea-scroll">
-      <!-- Hero 사진 영역 (첨부 사진이 있으면 첫 사진, 없으면 placeholder) -->
-      <div class="rea-hero" id="detailHero">
-        <div class="rea-hero-ph" id="detailHeroPh">
-          <svg width="54" height="54" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-        </div>
-        <div class="rea-hero-top">
-          <button class="rea-ovl-btn" id="detailSaveBtn" type="button" aria-label="저장">☆</button>
+  <!-- ── PR 상세 (일상 자기 PR 보드 — 세로 스크롤 리빌) ──
+       · 좁은 뷰포트: 풀스크린 오버레이 / 넓은 뷰포트(≥900px): 중앙 카드 모달
+       · 섹션 순서: ①커버 ②포트폴리오 ③사진 ④지도 ⑤구글리뷰 ⑥문의(채팅/문자/오픈카톡+마무리) ⑦브랜드 -->
+  <div class="post-detail-overlay prd-overlay" id="detailOverlay">
+    <div class="prd-card">
+      <div class="prd-topbar">
+        <button class="prd-back" id="detailClose" type="button" aria-label="뒤로가기">‹</button>
+        <span class="prd-navtitle" id="detailNavTitle"></span>
+        <div class="prd-top-actions">
+          <button class="prd-ovl" id="detailSaveBtn" type="button" aria-label="저장">☆</button>
           <div class="rea-share-wrap">
-            <button class="rea-ovl-btn" id="detailShareBtn" type="button" aria-label="공유하기">🔗</button>
+            <button class="prd-ovl" id="detailShareBtn" type="button" aria-label="공유하기">🔗</button>
             <div class="detail-share-menu" id="detailShareMenu">
               <button type="button" data-share="kakao">💬 카카오톡 공유</button>
               <button type="button" data-share="facebook">📘 페이스북 공유</button>
               <button type="button" data-share="copy">🔗 링크 복사</button>
             </div>
           </div>
+          <button class="prd-x" id="detailCloseX" type="button" aria-label="닫기">✕</button>
         </div>
-        <div class="rea-hero-counter" id="detailHeroCounter">1 / 1</div>
       </div>
 
-      <!-- Sticky 네비 헤더 -->
-      <div class="rea-navbar">
-        <button class="rea-back" id="detailClose" type="button" aria-label="뒤로가기">‹</button>
-        <span class="rea-nav-title" id="detailNavTitle"></span>
-        <button class="rea-nav-close" id="detailCloseX" type="button" aria-label="닫기">✕</button>
-      </div>
+      <div class="prd-scroll" id="prdScroll">
+        <!-- ① 커버 — 사진 원본(크롭 없음, coverOrient 스테이지) + 우하단 문의 버튼 + 사진 아래 메타 -->
+        <section class="prd-cover prd-reveal">
+          <div class="prd-cover-stage prd-stage-landscape" id="prdCoverStage" style="display:none;">
+            <div class="prd-photo-wrap" id="prdCoverWrap">
+              <img id="prdCoverImg" alt="" />
+              <button type="button" class="prd-cover-cta" id="prdCoverCta" style="display:none;">문의하기</button>
+            </div>
+          </div>
+          <div class="prd-cover-fallback" id="prdCoverFallback">
+            <span class="prd-cover-emo" id="prdCoverEmo" aria-hidden="true"></span>
+            <button type="button" class="prd-cover-cta" id="prdCoverCtaFb" style="display:none;">문의하기</button>
+          </div>
+          <div class="prd-cover-meta">
+            <div class="prd-avatar" id="prdAvatar"></div>
+            <div class="prd-name" id="prdName"></div>
+            <span class="prd-cat-badge" id="prdCatBadge"></span>
+            <p class="prd-intro prd-noselect" id="prdIntro"></p>
+          </div>
+        </section>
 
-      <div class="rea-content">
-        <div class="rea-status" id="detailStatus"></div>
-        <div class="rea-price" id="detailPrice"></div>
-        <div class="rea-addr-row">
-          <span class="rea-addr" id="detailAddrText"></span>
-          <button class="detail-addr-copy" id="detailAddrCopy" type="button" title="주소 복사" aria-label="주소 복사">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-          </button>
-        </div>
-        <div class="rea-summary" id="detailSummary"></div>
+        <!-- ② 포트폴리오 본문 -->
+        <section class="prd-sec prd-reveal">
+          <h3 class="prd-subtitle">📌 포트폴리오</h3>
+          <div class="prd-body prd-noselect" id="prdBody"></div>
+        </section>
 
-        <div class="rea-section" id="detailLocation" style="display:none;">
-          <h3 class="rea-subtitle">Location</h3>
+        <!-- 코멘트 (선택 — comment 필드 있는 글만 노출) -->
+        <section class="prd-sec prd-reveal" id="prdCommentSec" style="display:none;">
+          <h3 class="prd-subtitle">💬 코멘트</h3>
+          <div class="prd-body" id="prdComment"></div>
+        </section>
+
+        <!-- ③ 포트폴리오 사진 캐러셀 (0장: 타인 비노출 · 작성자 본인에게만 placeholder) -->
+        <section class="prd-sec prd-reveal" id="prdPhotosSec">
+          <h3 class="prd-subtitle">📷 사진</h3>
+          <div class="prd-carousel" id="prdCarousel">
+            <div class="prd-car-track" id="prdCarTrack"></div>
+            <button type="button" class="prd-car-nav prd-car-prev" id="prdCarPrev" aria-label="이전 사진">‹</button>
+            <button type="button" class="prd-car-nav prd-car-next" id="prdCarNext" aria-label="다음 사진">›</button>
+            <span class="prd-car-counter" id="prdCarCounter">1 / 1</span>
+          </div>
+          <p class="prd-photo-ph" id="prdPhotoPh" hidden>아직 등록한 사진이 없습니다.<br />'수정하기'에서 포트폴리오 사진을 추가해 보세요. <em>(작성자 본인에게만 보이는 안내입니다)</em></p>
+        </section>
+
+        <!-- ④ 지도 — Map View 동일 사이즈 · locationPrivate 시 400m 원 + 길찾기/스트릿뷰 숨김 -->
+        <section class="prd-sec prd-reveal" id="detailLocation" style="display:none;">
+          <h3 class="prd-subtitle">📍 위치</h3>
+          <p class="prd-addr" id="detailAddrText"></p>
           <div class="rea-map-wrap" id="detailMapWrap">
             <div class="detail-mini-map" id="detailMiniMap"></div>
             <button class="fullscreen-btn" id="detailMapFullscreenBtn" type="button" aria-label="전체화면">
@@ -634,36 +773,41 @@
               </svg>
             </button>
           </div>
-          <div class="rea-loc-btns">
+          <div class="rea-loc-btns" id="detailLocBtns">
             <a class="rea-loc-btn" id="detailDirBtn" target="_blank" rel="noopener noreferrer">
               <span>📍 길찾기 <em>See travel times</em></span><span class="rea-loc-arrow">›</span></a>
             <a class="rea-loc-btn" id="detailSvBtn" target="_blank" rel="noopener noreferrer">
               <span>🛣️ 스트릿뷰 <em>Street View</em></span><span class="rea-loc-arrow">›</span></a>
           </div>
+        </section>
+
+        <!-- ⑤ 구글 리뷰 — 링크 버튼만 (Places API 호출 없음) -->
+        <section class="prd-sec prd-reveal" id="prdReviewSec" style="display:none;">
+          <a class="prd-review-btn" id="prdReviewBtn" target="_blank" rel="noopener noreferrer">
+            <span>⭐ 구글 리뷰 보기</span><span aria-hidden="true">↗</span>
+          </a>
+        </section>
+
+        <!-- ⑥ 문의 — 채팅(옵트인)/문자/오픈카톡 (koaus-contact-actions.js) + 마무리 멘트 -->
+        <section class="prd-sec prd-reveal prd-contact-sec" id="prdContactSec">
+          <h3 class="prd-subtitle">🤝 문의하기</h3>
+          <div id="contact-action-container" class="contact-action-container" aria-label="연락 수단"></div>
+          <p class="prd-closing" id="prdClosing"></p>
+        </section>
+
+        <!-- RBAC 액션(작성자/운영자) + 신고 -->
+        <div class="prd-actions-wrap">
+          <div class="rea-owner-actions" id="detailActions"></div>
+        </div>
+        <div class="prd-report-wrap">
+          <button class="rea-report" id="detailReportBtn" type="button">🚨 신고하기</button>
         </div>
 
-        <div class="rea-section">
-          <h3 class="rea-subtitle">Description</h3>
-          <div class="rea-desc" id="detailBody"></div>
-          <button class="rea-more" id="detailMore" type="button" style="display:none;">더보기 ›</button>
+        <!-- ⑦ KoAus 브랜드 태그 + 사이트 링크 -->
+        <div class="prd-brand">
+          이 페이지는 <b>KoAus 일상 — 자기 PR 보드</b>에 등록된 소개 페이지입니다.<br />
+          <a href="https://koaus.com.au" target="_blank" rel="noopener">koaus.com.au</a> · 호주 한인 커뮤니티의 새로운 기준
         </div>
-
-        <div class="rea-section" id="detailFeaturesSec" style="display:none;">
-          <h3 class="rea-subtitle">Property features</h3>
-          <ul class="rea-features" id="detailFeatures"></ul>
-        </div>
-
-        <div class="rea-owner-actions" id="detailActions"></div>
-
-        <button class="rea-report" id="detailReportBtn" type="button">🚨 신고하기</button>
-      </div>
-     </div><!-- /rea-scroll -->
-
-      <!-- Sticky 하단 액션바 -->
-      <div class="rea-actionbar" style="display:flex;gap:8px;flex-wrap:wrap;">
-        <button class="rea-contact-btn" id="detailContactBtn" type="button" style="flex:1;min-width:0;">📞 연락처 보기</button>
-        <!-- 동적 연락 버튼 컨테이너 — 다음 지시에서 JS 가 작성자 연락처에 맞춰 1~4개 버튼 inject -->
-        <div id="contact-action-container" class="contact-action-container" aria-label="연락 수단"></div>
       </div>
     </div>
   </div>
@@ -827,11 +971,182 @@
     </div>
   </div>
 
+  <!-- ── PR 등록 모달 (일상 자기 PR 보드) ── -->
+  <div class="write-overlay" id="writeOverlay">
+    <div class="write-modal write-modal--tall">
+      <div class="write-modal-header">
+        <div class="write-modal-title">PR 등록 <em>Daily PR</em></div>
+        <span class="write-author-badge">작성자 : <b id="wAuthorName">-</b></span>
+        <button class="write-modal-close" id="writeBtnClose">✕</button>
+      </div>
+
+      <!-- 작성 주의사항 안내 박스 -->
+      <div class="write-rules-box" role="note" aria-label="작성 주의사항">
+        <span class="wrb-icon" aria-hidden="true">⚠️</span>
+        <div class="wrb-body">
+          <strong class="wrb-title">작성 전 주의사항</strong>
+          <p>💡 나를 알리는 소개 페이지입니다. 정확한 이름(상호)·경력·연락처를 기재해 주세요. 허위 경력, 타인 사칭, 커뮤니티 신뢰도를 저해하는 부정 홍보성 게시글은 즉시 삭제됩니다.</p>
+        </div>
+      </div>
+
+      <div class="write-grid" id="writeGrid">
+        <div class="write-col">
+          <div class="write-field">
+            <label class="write-label" for="wName">이름 / 상호 Name<span class="required-mark">*</span></label>
+            <input class="write-input" id="wName" type="text" placeholder="예: 시드니 반찬가게 · 미용사 김코아" maxlength="60" />
+          </div>
+          <div class="write-field">
+            <span class="write-label">카테고리 Category<span class="required-mark">*</span></span>
+            <div class="write-opts" id="wCatOpts">
+              <label class="write-opt"><input type="radio" name="wCat" value="food"> 🍚 음식</label>
+              <label class="write-opt"><input type="radio" name="wCat" value="beauty"> 💇 미용</label>
+              <label class="write-opt"><input type="radio" name="wCat" value="tech"> 🔧 기술</label>
+            </div>
+          </div>
+          <div class="write-field">
+            <label class="write-label" for="wIntro">자기소개 Intro<span class="required-mark">*</span> <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(커버에 표시 · 300자 이내)</em></label>
+            <textarea class="write-textarea" id="wIntro" maxlength="300" rows="3" placeholder="첫 화면에 보이는 짧은 소개예요. 예: 10년 경력 홈베이킹 — 주문 케이크 제작합니다."></textarea>
+          </div>
+          <div class="write-field">
+            <label class="write-label" for="wAddress">활동 지역 / 주소 Address <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택 · 지도에 표시)</em></label>
+            <div class="addr-ac">
+              <input class="write-input" id="wAddress" type="text" autocomplete="off" placeholder="도로명·지역명만 입력해도 OK (예: Strathfield NSW)" />
+              <ul class="addr-suggest" id="wAddressSuggest"></ul>
+            </div>
+          </div>
+          <!-- 위치 비공개 (기본 ON) — 오프셋 좌표 + 동네까지만 표시 -->
+          <div class="write-field privacy-toggle-field">
+            <label class="privacy-toggle">
+              <input type="checkbox" id="wLocationPrivate" checked />
+              <span class="privacy-toggle-text">
+                <strong>🔒 위치 비공개</strong>
+                <em>지도에 대략적인 위치(반경 400m)만 표시되고, 주소는 동네까지만 공개돼요. 정확한 주소는 본인만 볼 수 있어요.</em>
+              </span>
+            </label>
+          </div>
+          <div class="write-field">
+            <label class="write-label" for="wPhone">📞 전화번호 Phone <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택 · 숫자만 · 문자 문의 버튼 표시)</em></label>
+            <input class="write-input" id="wPhone" type="tel" inputmode="numeric" pattern="[0-9]*" placeholder="0412345678 (숫자만)" maxlength="15" autocomplete="tel" />
+          </div>
+          <div class="write-field">
+            <label class="write-label" for="wKakao">💛 카톡 오픈채팅 링크 <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택 · open.kakao.com 링크만)</em></label>
+            <input class="write-input" id="wKakao" type="url" placeholder="https://open.kakao.com/o/..." maxlength="300" />
+          </div>
+          <div class="write-field">
+            <label class="write-label" for="wGReview">⭐ 구글 리뷰 링크 <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택 · google.com/maps · maps.app.goo.gl · g.page 만)</em></label>
+            <input class="write-input" id="wGReview" type="url" placeholder="https://maps.app.goo.gl/..." maxlength="500" />
+          </div>
+        </div>
+
+        <div class="write-col">
+          <div class="write-field write-field--grow">
+            <label class="write-label" for="wBody">포트폴리오 본문 Portfolio<span class="required-mark">*</span> <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(3000자 이내)</em></label>
+            <textarea class="write-textarea" id="wBody" maxlength="3000" placeholder="경력·작업 이력·전문 분야·가격대 등 나를 소개하는 본문을 자유롭게 적어주세요"></textarea>
+          </div>
+          <div class="write-field">
+            <label class="write-label" for="wClosing">마무리 멘트 Closing <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택 · 200자 이내 · 문의 섹션 하단 표시)</em></label>
+            <input class="write-input" id="wClosing" type="text" maxlength="200" placeholder="예: 끝까지 읽어 주셔서 감사합니다. 편하게 연락 주세요!" />
+          </div>
+        </div>
+      </div>
+
+      <!-- 포트폴리오 사진 (최대 10장, 클라이언트 압축 후 Firebase Storage 업로드) -->
+      <div class="write-field">
+        <label class="write-label">포트폴리오 사진 Photos <em style="font-style:normal;color:var(--text-muted);font-size:11px;">최대 10장 · 자동 압축됩니다</em></label>
+        <div class="photo-upload" id="wPhotoBox">
+          <input type="file" id="wPhotoInput" accept="image/*" multiple hidden />
+          <button type="button" class="photo-add-btn" id="wPhotoAddBtn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            <span>사진 추가</span>
+          </button>
+          <div class="photo-thumbs" id="wPhotoThumbs"></div>
+        </div>
+      </div>
+
+      <!-- 배경사진 (1장) + 방향 선택 + 얼굴 프로필 (1장) -->
+      <div class="write-field">
+        <label class="write-label">커버 배경사진 Cover <em style="font-style:normal;color:var(--text-muted);font-size:11px;">1장 · 없으면 카테고리 기본 배경</em></label>
+        <div class="photo-upload">
+          <input type="file" id="wCoverInput" accept="image/*" hidden />
+          <button type="button" class="photo-add-btn" id="wCoverAddBtn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <span>배경 추가</span>
+          </button>
+          <div class="photo-thumbs" id="wCoverThumb"></div>
+        </div>
+      </div>
+      <div class="write-field">
+        <span class="write-label">커버 사진 방향 Cover Orientation <em style="font-style:normal;color:var(--text-muted);font-size:11px;">상세 커버 표시 비율 (사진은 크롭 없이 전체 노출)</em></span>
+        <div class="write-opts" id="wCoverOrientOpts">
+          <label class="write-opt"><input type="radio" name="wCoverOrient" value="landscape" checked> 🖼 가로형</label>
+          <label class="write-opt"><input type="radio" name="wCoverOrient" value="portrait"> 📱 세로형</label>
+        </div>
+      </div>
+      <div class="write-field">
+        <label class="write-label">얼굴 프로필 사진 Profile <em style="font-style:normal;color:var(--text-muted);font-size:11px;">1장 · 없으면 기본 아바타</em></label>
+        <div class="photo-upload">
+          <input type="file" id="wAvatarInput" accept="image/*" hidden />
+          <button type="button" class="photo-add-btn" id="wAvatarAddBtn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <span>프로필 추가</span>
+          </button>
+          <div class="photo-thumbs" id="wAvatarThumb"></div>
+        </div>
+        <label class="write-opt" style="margin-top:8px;display:inline-flex;align-items:center;gap:6px;">
+          <input type="checkbox" id="wAvatarHidden" /> 🙈 프로필 사진 숨기기 <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(커버에 아바타를 표시하지 않아요 — 업로드 사진·기본 아바타 모두 비노출)</em>
+        </label>
+        <p class="duplicate-notice" id="editPhotoNotice" hidden>* 수정 시 사진을 새로 첨부하면 기존 사진이 교체됩니다. (첨부하지 않으면 기존 사진 유지)</p>
+      </div>
+
+      <!-- 코멘트 (선택) — 옛 '주의사항' 입력 파트 → 코멘트 칸 (2026-07 2차) -->
+      <div class="write-field">
+        <label class="write-label" for="wComment">💬 코멘트 Comment <em style="font-style:normal;color:var(--text-muted);font-size:11px;">(선택 · 500자 · 방문 전 참고사항, 예약 안내 등)</em></label>
+        <textarea class="write-textarea" id="wComment" maxlength="500" rows="3" placeholder="예: 주말 예약은 이틀 전까지 부탁드려요 · 주차는 건물 뒤편 이용"></textarea>
+      </div>
+
+      <!-- 채팅 문의 허용 (옵트인) — 상세 '채팅 문의' 버튼 노출 여부. 기본 ON -->
+      <div class="write-field privacy-toggle-field">
+        <label class="privacy-toggle">
+          <input type="checkbox" id="wChatAllowed" checked />
+          <span class="privacy-toggle-text">
+            <strong>🗨️ 채팅 문의 허용</strong>
+            <em>상세 페이지에 '채팅 문의' 버튼이 표시돼 KoAus 안에서 별명으로 대화할 수 있어요. (해제 시 채팅 버튼 미표시)</em>
+          </span>
+        </label>
+      </div>
+
+      <!-- 우선 문의 수단 (선택 1개) — 커버 사진 우하단 '문의하기' 버튼에 노출 -->
+      <div class="write-field">
+        <span class="write-label">📣 우선 문의 수단 Primary Contact <em style="font-style:normal;color:var(--text-muted);font-size:11px;">문의하기 버튼에 우선 노출할 수단 1개를 체크해주세요 (선택)</em></span>
+        <div class="write-opts" id="wPrimaryContactOpts">
+          <label class="write-opt"><input type="checkbox" class="daily-pc" value="sms"> 💬 문자</label>
+          <label class="write-opt"><input type="checkbox" class="daily-pc" value="kakao"> 💛 오픈채팅</label>
+          <label class="write-opt"><input type="checkbox" class="daily-pc" value="chat"> 🗨️ 채팅</label>
+        </div>
+      </div>
+      <p class="auth-error" id="wError"></p>
+        <!-- [필수] 게시 규정 동의 — agent.md §2-C Mandatory Consent (글쓰기 표준 철칙) -->
+        <div class="write-consent-row" style="display:flex;align-items:flex-start;gap:8px;padding:10px 12px;margin:14px 0 8px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-sm);">
+          <input type="checkbox" id="writeConsent" style="flex-shrink:0;width:18px;height:18px;margin-top:1px;cursor:pointer;" />
+          <label for="writeConsent" style="flex:1;font-size:12.5px;line-height:1.5;color:var(--text-primary);cursor:pointer;">
+            <strong style="color:var(--red,#dc2626);">[필수]</strong>
+            <a href="terms.html" target="_blank" rel="noopener" style="color:var(--text-primary);text-decoration:underline;font-weight:700;"
+               title="이용약관 §3 (금지행위 — 허위 매물·사기·욕설·타인 사칭·봇 스팸·불법 콘텐츠 금지) + §10 (서비스별 면책)">이용약관 및 주의사항</a>을 확인하였으며,
+            서비스 규정 위반 시 게시물 삭제 및 계정 제재가 이루어질 수 있음에 동의합니다.
+          </label>
+        </div>
+      <div class="write-modal-actions">
+        <button class="write-cancel-btn" id="writeBtnCancel">취소</button>
+        <button class="write-submit-btn" id="writeBtnSubmit">등록하기</button>
+      </div>
+    </div>
+  </div>
+
   <footer class="site-footer-v2">
     <div class="footer-links">
       <a href="about.html">KoAus 소개 / About</a>
       <a href="faq.html">자주 묻는 질문 / FAQ</a>
-      <a href="guide.html">이용 가이드 / Guide</a>
+      <a href="guide.html">보안·이용 가이드 / Guide</a>
       <a href="privacy.html">Privacy Policy / 개인정보처리방침</a>
       <a href="terms.html">Terms of Service / 서비스 이용약관</a>
       <a href="contact.html">Contact / 문의하기</a>
@@ -881,82 +1196,73 @@
     if (themeToggleBtn) themeToggleBtn.addEventListener('click', () => applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'));
     applyTheme(localStorage.getItem('koaus-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
 
-    // ── Data ──
-    const STORE_KEY    = 'koaus-trades-posts';
-    const SEED_VERSION = '2026-05-empty';   // SAMPLES 변경 시 localStorage 재시드용
-    const SAMPLES = [];
-
-    // ── State ──
-    // 숙박 기간(Duration) 분류 — 중복 선택 가능(배열)
-    const TYPE_ORDER  = ['ultra_short', 'short', 'mid', 'long'];
-    const TYPE_LABELS = {
-      ultra_short: { ko: '초단기', desc: '1일~2주' },
-      short:       { ko: '단기',   desc: '2주~4주' },
-      mid:         { ko: '중단기', desc: '1달~2달' },
-      long:        { ko: '장기',   desc: '2달 이상' },
-      any:         { ko: '기간 상관 없음', desc: '' },
+    // ═══════════════════════════════════════════════════════════════════
+    //  일상 자기 PR 보드 (2026-07 개편) — Firestore 'daily_posts' 전용 컬렉션
+    //   · 카테고리 3종: food(음식) / beauty(미용) / tech(기술)
+    //   · title = 이름/상호(≤60) · body = 포트폴리오 본문(≤3000) · intro = 자기소개(≤300)
+    //   · 위치 프라이버시: koaus-listing-privacy.js (redact + offsetCoords + private_data)
+    //   · onSnapshot 이 LS('koaus-daily-posts')에 캐싱 — 작성자 액션은 koausRbac 경유
+    // ═══════════════════════════════════════════════════════════════════
+    const STORE_KEY = 'koaus-daily-posts';
+    // 옛 쉐어-클론 캐시(services 기반) 정리 — daily_posts 전환으로 폐기
+    try { localStorage.removeItem('koaus-trades-posts'); localStorage.removeItem('koaus-trades-posts-v'); } catch (_) {}
+    const CAT_META = {
+      food:   { ko: '음식', emo: '🍚', cover: 'prd-cover-food' },
+      beauty: { ko: '미용', emo: '💇', cover: 'prd-cover-beauty' },
+      tech:   { ko: '기술', emo: '🔧', cover: 'prd-cover-tech' },
     };
     const STATE_NAMES = { nsw:'NSW', vic:'VIC', qld:'QLD', wa:'WA', sa:'SA', tas:'TAS', act:'ACT', nt:'NT' };
-    const MODE_LABELS = { offer: '방 올리기', find: '방 구하기' };
-
     const currentState = (new URLSearchParams(location.search).get('state') || '').toLowerCase();
-    const urlMode      = new URLSearchParams(location.search).get('mode');
-    // URL ?mode=offer | seek(=find). 페이지 내 탭으로도 전환
-    let activeMode     = (urlMode === 'find' || urlMode === 'seek') ? 'find' : 'offer';
-    let currentPage    = 1;
-    // 한 번에 20개씩만 렌더(페이지네이션). 향후 Firestore 전환 시:
-    //   query(collection(db,'accom_posts'), orderBy('id','desc'), limit(PER_PAGE))
-    //   다음 페이지는 startAfter(lastDoc) 커서로만 추가 조회 → read 비용 최소화.
-    const PER_PAGE     = 10;
+    // ── 페이지네이션 (2026-07 2차) — rules list 캡 20 = 페이지당 20개 고정 ──
+    //   · 1페이지 = onSnapshot(limit 20, LS 캐시) / 2페이지~ = startAfter 커서 getDocs 일회성(빌링 방어)
+    //   · 커서·fetch 는 구독 모듈이 window.koausDailyPager 로 노출, 가져온 페이지는 _pageItems 메모리 캐시
+    let currentPage = 1;
+    const PER_PAGE  = 20;
+    const _pageItems = {};        // {2: [...], 3: [...]} — 2페이지 이후 메모리 캐시 (LS 미기록)
+    let _lastPageReached = 0;     // 다음 fetch 가 0건이었던 페이지 경계 (0 = 미확정)
+    // 우선 문의 수단 → ⑥ 문의 그리드 버튼 매핑 (커버 우하단 바로가기)
+    const PC_SELECTOR = { sms: '.contact-action-btn--sms', kakao: '.contact-action-btn--kakao', chat: '.contact-action-btn--chat' };
+    const PC_LABEL    = { sms: '💬 문자 문의', kakao: '💛 오픈채팅 문의', chat: '🗨️ 채팅 문의' };
 
-    // ── 모드 탭 전환 (방 올리기 / 방 구하기) ──
-    // trades.html: modeTabs DOM 없음 — querySelectorAll은 빈 NodeList, forEach no-op으로 안전
-    document.querySelectorAll('#modeTabs .accom-tab').forEach(btn => {
-      btn.addEventListener('click', () => switchMode(btn.dataset.mode));
-    });
+    // 클라이언트 이중 게이트 regex — firestore.rules validDailyCreate 와 한 쌍
+    const OPEN_KAKAO_RE = /^https:\/\/open\.kakao\.com\/.+/;
+    const GREVIEW_RE    = /^https:\/\/((www\.)?google\.com\/maps.*|maps\.app\.goo\.gl\/.+|g\.page\/.+)/;
 
     function updateBoardTitle() {
       const st = STATE_NAMES[currentState];
       const t = document.getElementById('boardTitle');
       const s = document.getElementById('boardSubtitle');
-      if (t) t.textContent = `🌿 ${st ? st + ' ' : '호주 한인 '}일상 게시판`;
-      if (s) s.textContent = `${st ? st + ' · ' : ''}미용·의료·기술·생활 — 한인 사장님 직접 등록 정보`;
+      if (t) t.textContent = `🌿 ${st ? st + ' ' : '호주 한인 '}일상 — 자기 PR 보드`;
+      if (s) s.textContent = `${st ? st + ' · ' : ''}음식·미용·기술 — 나를 알리는 포트폴리오형 소개 페이지`;
     }
 
-    function switchMode(mode) {
-      if (mode !== 'offer' && mode !== 'find') return;
-      activeMode = mode;
-      currentPage = 1;
-      areaBounds = null;  // 탭 전환 시 지역 검색 초기화
-      const asb = document.getElementById('areaSearchBtn');
-      if (asb) asb.classList.remove('show');
-      document.querySelectorAll('#modeTabs .accom-tab').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
-      // 일상 은 'find/offer' 모드 컨셉이 부적절 — view-toggle/필터는 mode 와 무관하게 항상 표시
-      // (옛 동작: isFind 시 viewToggle 숨김 + switchView('list') 강제 → Map View 버튼 사라져 '클릭 먹통' 버그)
-      const isFind = mode === 'find';
-      const vt = document.getElementById('viewToggle');
-      const fb = document.getElementById('filterModalBtn');
-      if (vt) vt.style.display = '';
-      if (fb) fb.style.display = '';
-      updateBoardTitle();
-      renderAll();
+    // ── 카테고리 필터 (인라인 탭 + 상세 필터 모달 체크박스 — 단일 상태 catFilter) ──
+    let catFilter = new Set();   // 빈 Set = 전체
+    function syncCatTabs() {
+      document.querySelectorAll('#dailyCatTabs .daily-cat-tab').forEach(b => {
+        const c = b.dataset.cat;
+        b.classList.toggle('active', c ? (catFilter.size === 1 && catFilter.has(c)) : catFilter.size === 0);
+      });
     }
-
-    // ── 상세 필터 모달 (지역 / 주당 쉐어비 ≤ $999 / 방 형태 / 숙박 기간) ──
-    const fbPrice    = document.getElementById('fbPrice');     // applyFilters가 참조
-    const fbRoom     = document.getElementById('fbRoom');
-    const fbDuration = document.getElementById('fbDuration');
-    const ffRegion   = document.getElementById('ffRegion');
-    const filterOverlay = document.getElementById('filterOverlay');
-
-    // 주당 쉐어비: 최대 $999로 자동 보정
-    fbPrice.addEventListener('input', () => {
-      const v = parseInt(fbPrice.value, 10);
-      if (Number.isFinite(v) && v > 999) fbPrice.value = '999';
+    document.querySelectorAll('#dailyCatTabs .daily-cat-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const c = btn.dataset.cat;
+        catFilter = c ? new Set([c]) : new Set();
+        document.querySelectorAll('.daily-fcat').forEach(cb => { cb.checked = catFilter.has(cb.value); });
+        currentPage = 1;
+        syncCatTabs();
+        renderAll();
+      });
     });
+
+    // ── 상세 필터 모달 (지역 검색 + 카테고리 복수 선택) ──
+    const ffRegion      = document.getElementById('ffRegion');
+    const filterOverlay = document.getElementById('filterOverlay');
 
     function openFilterModal() {
       renderRecentSearches();
+      // 현재 catFilter 상태를 모달 체크박스에 반영
+      document.querySelectorAll('.daily-fcat').forEach(cb => { cb.checked = catFilter.has(cb.value); });
       filterOverlay.classList.add('open');
       document.body.style.overflow = 'hidden';
       loadMapScript();           // Places(지역 자동완성) 로드 보장
@@ -970,10 +1276,16 @@
     document.getElementById('filterModalClose').addEventListener('click', closeFilterModal);
     filterOverlay.addEventListener('click', e => { if (e.target === filterOverlay) closeFilterModal(); });
 
-    // 적용하기: 최근 검색 저장 → (지역 있으면) 지도 이동 + 영역 필터 → 리스트 갱신
-    document.getElementById('filterApplyBtn').addEventListener('click', () => runSearch(true));
+    document.getElementById('filterApplyBtn').addEventListener('click', () => {
+      catFilter = new Set([...document.querySelectorAll('.daily-fcat:checked')].map(c => c.value));
+      syncCatTabs();
+      runSearch(true);
+    });
     document.getElementById('filterResetBtn').addEventListener('click', () => {
-      ffRegion.value = ''; fbPrice.value = ''; fbRoom.value = ''; fbDuration.value = '';
+      ffRegion.value = '';
+      document.querySelectorAll('.daily-fcat').forEach(cb => { cb.checked = false; });
+      catFilter = new Set();
+      syncCatTabs();
       areaBounds = null; currentPage = 1;
       const asb = document.getElementById('areaSearchBtn'); if (asb) asb.classList.remove('show');
       renderAll();
@@ -983,7 +1295,7 @@
     function runSearch(save) {
       currentPage = 1;
       const region = ffRegion.value.trim();
-      if (save) { addRecentSearch({ region, price: fbPrice.value, room: fbRoom.value, dur: fbDuration.value }); }
+      if (save) { addRecentSearch({ region, cats: [...catFilter] }); }
       closeFilterModal();
       if (region) {
         loadMapScript();
@@ -993,7 +1305,7 @@
           else { areaBounds = null; renderAll(); }
         });
       } else {
-        // areaBounds 유지 — 상세 필터만 변경된 경우 '이 지역 검색' 영역을 보존
+        // areaBounds 유지 — 카테고리만 변경된 경우 '이 지역 검색' 영역을 보존
         renderAll();
       }
     }
@@ -1021,13 +1333,11 @@
     function searchLabel(s) {
       const parts = [];
       if (s.region) parts.push(s.region);
-      if (s.price)  parts.push('≤$' + s.price);
-      if (s.room && ROOM_LABELS[s.room]) parts.push(ROOM_LABELS[s.room]);
-      if (s.dur && TYPE_LABELS[s.dur])   parts.push(TYPE_LABELS[s.dur].ko);
+      (Array.isArray(s.cats) ? s.cats : []).forEach(c => { if (CAT_META[c]) parts.push(CAT_META[c].emo + ' ' + CAT_META[c].ko); });
       return parts.join(' · ') || '전체';
     }
     function addRecentSearch(s) {
-      if (!s.region && !s.price && !s.room && !s.dur) return;  // 빈 검색은 저장 안 함
+      if (!s.region && !(s.cats && s.cats.length)) return;  // 빈 검색은 저장 안 함
       const label = searchLabel(s);
       let arr = loadRecentSearches().filter(x => searchLabel(x) !== label);
       arr.unshift(s);
@@ -1052,8 +1362,10 @@
         btn.addEventListener('click', () => {
           const s = loadRecentSearches()[parseInt(btn.dataset.idx, 10)];
           if (!s) return;
-          ffRegion.value = s.region || ''; fbPrice.value = s.price || '';
-          fbRoom.value = s.room || ''; fbDuration.value = s.dur || '';
+          ffRegion.value = s.region || '';
+          catFilter = new Set(Array.isArray(s.cats) ? s.cats : []);
+          document.querySelectorAll('.daily-fcat').forEach(cb => { cb.checked = catFilter.has(cb.value); });
+          syncCatTabs();
           runSearch(false);  // 원클릭: 즉시 검색 (중복 저장 안 함)
         });
       });
@@ -1067,16 +1379,15 @@
       if (idx < 0 || idx >= arr.length) return;
       arr.splice(idx, 1);
       saveRecentSearches(arr);
-      syncRecentToFirestore(arr);  // 해당 데이터만 빠진 배열로 Firestore 업데이트
+      syncRecentToFirestore(arr);
       renderRecentSearches();
     }
-    // 최근 검색 전체 삭제 — UI 즉시 비움 + localStorage 제거 + Firestore []로 업데이트
     function clearRecentSearches() {
       localStorage.removeItem(RECENT_SEARCH_KEY());
       syncRecentToFirestore([]);
       renderRecentSearches();
     }
-    // Firestore best-effort (콘솔에서 Firestore 활성화 + users 규칙 배포 시 동작)
+    // Firestore best-effort (users.recentSearches)
     async function syncRecentToFirestore(arr) {
       try {
         const u = window.koausAuth && window.koausAuth.user;
@@ -1102,21 +1413,16 @@
     // 지역 검색창 자동완성 (글쓰기 주소와 동일 로직 재사용)
     function initRegionAutocomplete() { wireAutocomplete('ffRegion', 'ffRegionSuggest'); }
 
-    // ── Write Modal ──
-    //   · Others 카테고리(restaurants/trades) — accom(Share) 와 1:1 마크업 정합. 현재 정상.
-    //   · 그러나 미래 마크업 변경 시점에서도 Map View 토글이 깨지지 않도록 salon/gp 패턴
-    //     fallback 가드를 일괄 적용 → null TypeError 가 페이지 로드 시 발생해도
-    //     이후 viewListBtn/viewMapBtn 의 listener 부착이 차단되지 않음.
+    // ── Write Modal (PR 등록) ──
     const writeOverlay = document.getElementById('writeOverlay')
       || { addEventListener(){}, classList: { add(){}, remove(){} } };
 
-    let editingId = null;  // 수정 중인 글 id (null이면 새 글)
+    let editingId   = null;  // 수정 중인 글 Firestore docId (null이면 새 글)
+    let editingOrig = null;  // 수정 원본 post 스냅샷 — 주소 미변경 시 좌표/프라이버시 보존
 
-    // 글쓰기 버튼 클릭 시에만 이메일 인증 검사 (소프트 게이트)
-    // trades.html — 글쓰기 버튼 없음 (관리자 전용 등록). 안전한 no-op 가드.
-    (document.getElementById('writeBtnOpen') || { addEventListener(){} }).addEventListener('click', () => {
+    document.getElementById('writeBtnOpen').addEventListener('click', () => {
       const u = window.koausAuth && window.koausAuth.user;
-      if (!u) { alert('글을 작성하려면 로그인이 필요합니다.'); window.koausAuth && window.koausAuth.openAuthModal(); return; }
+      if (!u) { alert('PR을 등록하려면 로그인이 필요합니다.'); window.koausAuth && window.koausAuth.openAuthModal(); return; }
       // 휴대폰 인증은 로그인 시점 글로벌 인터셉터에서 강제 — 여기선 로그인 여부만 신뢰
       openWriteModal();
     });
@@ -1127,116 +1433,117 @@
     function setWriteMode(mode) {
       const isEdit = mode === 'edit';
       document.querySelector('.write-modal-title').innerHTML = isEdit
-        ? '글 수정 <em>Edit Post</em>'
-        : `글쓰기 <em>쉐어 · ${MODE_LABELS[activeMode]}</em>`;
+        ? 'PR 수정 <em>Edit PR</em>'
+        : 'PR 등록 <em>Daily PR</em>';
       document.getElementById('writeBtnSubmit').textContent = isEdit ? '수정 완료' : '등록하기';
     }
+    function setCatRadio(v) {
+      document.querySelectorAll('#wCatOpts input').forEach(r => { r.checked = r.value === v; });
+    }
+    function getCatRadio() {
+      const r = document.querySelector('#wCatOpts input:checked');
+      return r ? r.value : '';
+    }
+    function setCoverOrientRadio(v) {
+      const val = v === 'portrait' ? 'portrait' : 'landscape';   // 기본 landscape
+      document.querySelectorAll('input[name="wCoverOrient"]').forEach(r => { r.checked = r.value === val; });
+    }
+    function getCoverOrientRadio() {
+      const r = document.querySelector('input[name="wCoverOrient"]:checked');
+      return (r && r.value === 'portrait') ? 'portrait' : 'landscape';
+    }
+    // 우선 문의 수단 — 체크박스 3개지만 사실상 라디오: 하나 체크 시 나머지 disable, 해제 시 전체 복원
+    function setPrimaryContact(v) {
+      document.querySelectorAll('.daily-pc').forEach(cb => {
+        cb.checked = cb.value === v;
+        cb.disabled = !!v && cb.value !== v;
+      });
+    }
+    function getPrimaryContact() {
+      const cb = document.querySelector('.daily-pc:checked');
+      return cb ? cb.value : '';
+    }
+    document.querySelectorAll('.daily-pc').forEach(cb => {
+      cb.addEventListener('change', () => setPrimaryContact(cb.checked ? cb.value : ''));
+    });
     function resetWriteForm() {
-      ['wTitle','wAddress','wPrice','wBody','wAvailDate','wContact','wPhone','wKakao'].forEach(id => { const _el = document.getElementById(id); if (_el) _el.value = ''; });
-      ['wParking','wPet','wKids','wAirCon'].forEach(id => { document.getElementById(id).checked = false; });
-      document.querySelectorAll('#wTypes input, #wRoomTypes input').forEach(c => { c.checked = false; });
-      document.getElementById('wGender').value = '';
+      ['wName','wIntro','wBody','wComment','wClosing','wAddress','wPhone','wKakao','wGReview'].forEach(id => { const _el = document.getElementById(id); if (_el) _el.value = ''; });
+      setCatRadio('');
+      setCoverOrientRadio('landscape');
+      setPrimaryContact('');
+      const _lp = document.getElementById('wLocationPrivate'); if (_lp) _lp.checked = true;   // 위치 비공개 기본 ON
+      const _ca = document.getElementById('wChatAllowed');     if (_ca) _ca.checked = true;   // 채팅 허용 기본 ON
+      const _ah = document.getElementById('wAvatarHidden');    if (_ah) _ah.checked = false;  // 프로필 숨김 기본 OFF
+      const _cs = document.getElementById('writeConsent');     if (_cs) _cs.checked = false;
+      window.pendingPhotoFiles = []; window.pendingCoverFile = null; window.pendingAvatarFile = null;
+      renderPhotoThumbs(); renderSingleThumb('cover'); renderSingleThumb('avatar');
+      editingId = null; editingOrig = null;
     }
     // 로그인 사용자 닉네임 (작성자 고정값)
     function currentNickname() {
       const u = window.koausAuth && window.koausAuth.user;
       return localStorage.getItem('koaus-nickname') || u?.displayName?.split(' ')[0] || u?.email?.split('@')[0] || '';
     }
-    function setTypeChecks(arr) {
-      const set = new Set(arr || []);
-      document.querySelectorAll('#wTypes input').forEach(c => { c.checked = set.has(c.dataset.type); });
-    }
-    // 모드에 따라 글쓰기 폼 표시 (방 구하기 = 자유 양식: 제목/코멘트/연락처만)
-    function applyWriteModeUI() {
-      const isFind = activeMode === 'find';
-      document.querySelectorAll('.offer-only').forEach(el => { el.style.display = isFind ? 'none' : ''; });
-      document.getElementById('writeGrid').classList.toggle('write-grid--find', isFind);
-      document.getElementById('wBodyLabel').textContent = isFind ? '자유 코멘트 Comments' : '상세 설명 Comments';
-      document.getElementById('wBody').placeholder = isFind
-        ? '구하는 조건·예산·기간·연락처 등을 자유롭게 적어주세요'
-        : '자세한 조건·시설·환경 등을 적어주세요';
-    }
     function openWriteModal() {
-      editingId = null;
+      resetWriteForm();
       setWriteMode('create');
-      setTypeChecks([]);  // 기간 체크 초기화
-      applyWriteModeUI();
       document.getElementById('wAuthorName').textContent = currentNickname() || '-';  // 헤더 작성자 배지
       loadMapScript();              // Places(주소 자동완성) 미리 로드
       initAddressAutocomplete();    // 이미 로드돼 있으면 즉시 연결
-      window.pendingPhotoFiles = []; renderPhotoThumbs();  // 사진 첨부 초기화
-      applyDuplicateData();         // ?duplicate=1 진입 시 원본 데이터 prefill (이미지 제외)
       writeOverlay.classList.add('open');
       document.body.style.overflow = 'hidden';
     }
-
-    // 마이페이지에서 [재업로드] 클릭 후 진입 시 — localStorage 의 원본 데이터로 폼 채움.
-    // 사진은 빈 상태 + 빨간 안내문 노출. 1회용(읽은 후 키 삭제).
-    function applyDuplicateData() {
-      const notice = document.getElementById('duplicateNotice');
-      if (notice) notice.hidden = true;
-      const raw = localStorage.getItem('koaus-duplicate-accom');
-      if (!raw) return;
-      let d; try { d = JSON.parse(raw); } catch (_) { localStorage.removeItem('koaus-duplicate-accom'); return; }
-      localStorage.removeItem('koaus-duplicate-accom');
-      const set = (id, v) => { const el = document.getElementById(id); if (el && v != null) el.value = v; };
-      const check = (id, v) => { const el = document.getElementById(id); if (el) el.checked = !!v; };
-      // 모드(방 올리기/구하기) 결정
-      const mode = (d.mode === 'find') ? 'find' : 'offer';
-      activeMode = mode;
-      applyWriteModeUI();
-      set('wTitle', d.title);
-      set('wAddress', d.address);
-      set('wPrice', d.price);
-      set('wBody',  d.body);
-      set('wContact', d.contact);
-      set('wPhone',   d.phone);
-      set('wKakao',   d.kakaoLink);
-      set('wAvailDate', d.availableDate);
-      set('wGender', d.gender);
-      setTypeChecks(Array.isArray(d.types) ? d.types : []);
-      // 방 형태 체크 (roomTypes)
-      const rooms = new Set(Array.isArray(d.roomTypes) ? d.roomTypes : (d.roomType ? [d.roomType] : []));
-      document.querySelectorAll('#wRoomTypes input').forEach(c => { c.checked = rooms.has(c.dataset.room); });
-      check('wParking',  d.parking);
-      check('wPet',      d.petFriendly);
-      check('wKids',     d.kidsInHouse);
-      check('wAirCon',   d.airCon);
-      if (notice) notice.hidden = false;
-    }
     function openWriteModalForEdit(p) {
-      editingId = p.id;
-      setTypeChecks(Array.isArray(p.types) ? p.types : (p.type ? [p.type] : []));
-      document.getElementById('wTitle').value    = p.title || '';
-      document.getElementById('wAddress').value  = p.address || '';
-      document.getElementById('wPrice').value    = p.price || '';
-      const roomSet = new Set(Array.isArray(p.roomTypes) ? p.roomTypes : (p.roomType ? [p.roomType] : []));
-      document.querySelectorAll('#wRoomTypes input').forEach(c => { c.checked = roomSet.has(c.dataset.room); });
-      document.getElementById('wGender').value = p.gender || '';
-      document.getElementById('wAvailDate').value = p.availableDate || '';
-      document.getElementById('wContact').value = p.contact || '';
-      const _ph = document.getElementById('wPhone'); if (_ph) _ph.value = p.phone || '';
-      const _kk = document.getElementById('wKakao'); if (_kk) _kk.value = p.kakaoLink || '';
-      document.getElementById('wParking').checked = !!p.parking;
-      document.getElementById('wPet').checked     = !!p.petFriendly;
-      document.getElementById('wKids').checked    = !!p.kidsInHouse;
-      document.getElementById('wAirCon').checked  = !!p.airCon;
-      document.getElementById('wBody').value     = p.body || '';
+      if (!p || !p._fsDocId) { alert('이 글은 수정할 수 없습니다. 새로 등록해 주세요.'); return; }
+      resetWriteForm();
+      editingId   = String(p._fsDocId);
+      editingOrig = p;
+      document.getElementById('wName').value    = p.title || '';
+      setCatRadio(p.category || '');
+      document.getElementById('wIntro').value   = p.intro || '';
+      document.getElementById('wBody').value    = p.body === ' ' ? '' : (p.body || '');
+      document.getElementById('wComment').value = p.comment || '';
+      document.getElementById('wClosing').value = p.closing || '';
+      setCoverOrientRadio(p.coverOrient || 'landscape');
+      setPrimaryContact(PC_SELECTOR[p.primaryContact] ? p.primaryContact : '');
+      const _ahEdit = document.getElementById('wAvatarHidden'); if (_ahEdit) _ahEdit.checked = p.avatarHidden === true;
+      // 비공개 글의 address 는 이미 redact 된 값 — 주소를 다시 선택하지 않으면 기존 좌표/주소 보존
+      document.getElementById('wAddress').value = p.address || '';
+      const _lp = document.getElementById('wLocationPrivate'); if (_lp) _lp.checked = p.locationPrivate !== false;
+      document.getElementById('wPhone').value   = p.phone || '';
+      document.getElementById('wKakao').value   = p.openKakaoUrl || '';
+      document.getElementById('wGReview').value = p.googleReviewUrl || '';
+      const _ca = document.getElementById('wChatAllowed'); if (_ca) _ca.checked = p.chatAllowed === true;
       document.getElementById('wAuthorName').textContent = p.author || currentNickname() || '-';
       setWriteMode('edit');
-      applyWriteModeUI();
+      const notice = document.getElementById('editPhotoNotice'); if (notice) notice.hidden = false;
       document.getElementById('detailOverlay').classList.remove('open');
+      loadMapScript();
+      initAddressAutocomplete();
       writeOverlay.classList.add('open');
       document.body.style.overflow = 'hidden';
     }
     function closeWriteModal() {
       writeOverlay.classList.remove('open');
+      const notice = document.getElementById('editPhotoNotice'); if (notice) notice.hidden = true;
       document.body.style.overflow = '';
     }
 
-    // ── 사진 첨부 (최대 8장) — 클라이언트 압축 후 Firebase Storage 업로드 ──
-    const MAX_PHOTOS = 8;
+    // 전화번호 입력 — 숫자 외 즉시 필터 (rules phone 숫자만 매칭과 한 쌍)
+    (function bindPhoneNumericFilter() {
+      const el = document.getElementById('wPhone');
+      if (!el) return;
+      el.addEventListener('input', () => {
+        const v = el.value.replace(/\D/g, '').slice(0, 15);
+        if (el.value !== v) el.value = v;
+      });
+    })();
+
+    // ── 사진 첨부 — 포트폴리오(최대 10장) + 배경 1장 + 프로필 1장 ──
+    const MAX_PHOTOS = 10;
     window.pendingPhotoFiles = [];
+    window.pendingCoverFile  = null;   // { file, preview } | null
+    window.pendingAvatarFile = null;
     function renderPhotoThumbs() {
       const box = document.getElementById('wPhotoThumbs');
       const addBtn = document.getElementById('wPhotoAddBtn');
@@ -1250,24 +1557,61 @@
       }));
       if (addBtn) addBtn.style.display = window.pendingPhotoFiles.length >= MAX_PHOTOS ? 'none' : '';
     }
+    // 단일 이미지(배경/프로필) 썸네일 렌더
+    function renderSingleThumb(kind) {
+      const box    = document.getElementById(kind === 'cover' ? 'wCoverThumb'  : 'wAvatarThumb');
+      const addBtn = document.getElementById(kind === 'cover' ? 'wCoverAddBtn' : 'wAvatarAddBtn');
+      const cur    = kind === 'cover' ? window.pendingCoverFile : window.pendingAvatarFile;
+      if (!box) return;
+      box.innerHTML = cur
+        ? `<div class="photo-thumb"><img src="${cur.preview}" alt="${kind === 'cover' ? '배경사진' : '프로필 사진'}"><button type="button" class="photo-thumb-x" data-kind="${kind}" aria-label="삭제">✕</button></div>`
+        : '';
+      const xBtn = box.querySelector('.photo-thumb-x');
+      if (xBtn) xBtn.addEventListener('click', () => {
+        if (kind === 'cover') window.pendingCoverFile = null; else window.pendingAvatarFile = null;
+        renderSingleThumb(kind);
+      });
+      if (addBtn) addBtn.style.display = cur ? 'none' : '';
+    }
     (function bindPhotoInputs() {
       const input  = document.getElementById('wPhotoInput');
       const addBtn = document.getElementById('wPhotoAddBtn');
-      if (!input || !addBtn) return;
-      addBtn.addEventListener('click', () => input.click());
-      input.addEventListener('change', async () => {
-        const files = Array.from(input.files || []);
-        for (const f of files) {
-          if (window.pendingPhotoFiles.length >= MAX_PHOTOS) { alert(`사진은 최대 ${MAX_PHOTOS}장까지 첨부 가능합니다.`); break; }
+      if (input && addBtn) {
+        addBtn.addEventListener('click', () => input.click());
+        input.addEventListener('change', async () => {
+          const files = Array.from(input.files || []);
+          for (const f of files) {
+            if (window.pendingPhotoFiles.length >= MAX_PHOTOS) { alert(`사진은 최대 ${MAX_PHOTOS}장까지 첨부 가능합니다.`); break; }
+            try {
+              const preview = window.koausPhotos
+                ? await window.koausPhotos.thumbDataURL(f, 240)
+                : URL.createObjectURL(f);
+              window.pendingPhotoFiles.push({ file: f, preview });
+            } catch (e) { console.warn('썸네일 생성 실패', e); }
+          }
+          input.value = '';
+          renderPhotoThumbs();
+        });
+      }
+      // 배경/프로필 — 1장 제한 (교체는 삭제 후 재첨부)
+      [['wCoverInput','wCoverAddBtn','cover'], ['wAvatarInput','wAvatarAddBtn','avatar']].forEach(([inId, btnId, kind]) => {
+        const sIn  = document.getElementById(inId);
+        const sBtn = document.getElementById(btnId);
+        if (!sIn || !sBtn) return;
+        sBtn.addEventListener('click', () => sIn.click());
+        sIn.addEventListener('change', async () => {
+          const f = (sIn.files || [])[0];
+          sIn.value = '';
+          if (!f) return;
           try {
             const preview = window.koausPhotos
               ? await window.koausPhotos.thumbDataURL(f, 240)
               : URL.createObjectURL(f);
-            window.pendingPhotoFiles.push({ file: f, preview });
+            if (kind === 'cover') window.pendingCoverFile = { file: f, preview };
+            else                  window.pendingAvatarFile = { file: f, preview };
+            renderSingleThumb(kind);
           } catch (e) { console.warn('썸네일 생성 실패', e); }
-        }
-        input.value = '';
-        renderPhotoThumbs();
+        });
       });
     })();
 
@@ -1280,10 +1624,9 @@
         try { _consent.focus(); _consent.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (_) {}
         return;
       }
-
       // 로그인 필수: 미로그인 시 로그인 모달을 띄우고, 로그인 직후 등록을 이어서 진행
       if (!window.koausAuth || !window.koausAuth.user) {
-        alert('글을 등록하려면 로그인이 필요합니다.');
+        alert('PR을 등록하려면 로그인이 필요합니다.');
         if (window.koausAuth) {
           window.koausAuth.afterLogin = submitPost;  // 로그인 성공 시 자동 재시도
           window.koausAuth.openAuthModal();
@@ -1330,14 +1673,12 @@
         const desc = li.dataset.desc;
         input.value = desc;  // 번지수 없는 도로명/지역명도 그대로 인정
         hide();
-        // 글쓰기 주소 입력 시점 — 좌표 추출 + 메인 지도 마커 미리보기 (jobs 패턴 일관)
-        if ((inputId === 'wAddress' || inputId === 'rRegion' || inputId === 'iRegion') && typeof geocode === 'function') {
+        if (inputId === 'wAddress' && typeof geocode === 'function') {
           try {
             const coords = await geocode(desc);
-            if (coords && typeof showPendingMarker === 'function') {
+            if (coords) {
               input.dataset.lat = String(coords.lat);
               input.dataset.lng = String(coords.lng);
-              showPendingMarker(coords.lat, coords.lng);
             }
           } catch (_) {}
         }
@@ -1370,26 +1711,60 @@
     }
 
     // ─────────────────────────────────────────────────────────────────
-    //  지시 5-B ─ submitPost: Firestore 'services' 컬렉션 + Storage 업로드
-    //  옛 localStorage 꼼수(loadPosts/savePosts) 폐기. firestore.rules 의
-    //  services.create 일반 유저 분기(line 413-428) 정합:
-    //    · status='approved' (즉시 노출) · uid 본인 일치
-    //    · 필수: category(='trades'), title, contact
-    //    · 옵션: region/address/summary/body/state/imageUrls
-    //  Storage path: post_images/trades/{auth.uid}/{randomname} — Rules 정합.
+    //  submitPost — Firestore 'daily_posts' + Storage 업로드 + 위치 프라이버시
+    //    · stripPrivateFields 검문소 → 공개 doc 에 exact* 누수 차단
+    //    · locationPrivate(기본 ON) → 오프셋 좌표 + redact 주소 + private_data 저장
+    //    · Storage: post_images/daily/{auth.uid}/{randomname} (compress.js 1200px/q0.7 · 병렬 3)
     // ─────────────────────────────────────────────────────────────────
     async function submitPost() {
       const user = window.koausAuth && window.koausAuth.user;
       if (!user) { window.koausAuth && window.koausAuth.openAuthModal(); return; }
 
-      const isFind = activeMode === 'find';
-      const title  = document.getElementById('wTitle').value.trim();
-      const body   = document.getElementById('wBody').value.trim();
-
       const wErr = document.getElementById('wError');
       wErr.textContent = '';
-      if (hasProfanity(title) || hasProfanity(body)) {
+
+      const name     = document.getElementById('wName').value.trim();
+      const category = getCatRadio();
+      const intro    = document.getElementById('wIntro').value.trim();
+      const body     = document.getElementById('wBody').value.trim();
+      const comment  = document.getElementById('wComment').value.trim();
+      const closing  = document.getElementById('wClosing').value.trim();
+      const phone    = document.getElementById('wPhone').value.replace(/\D/g, '').slice(0, 15);
+      const kakao    = document.getElementById('wKakao').value.trim();
+      const greview  = document.getElementById('wGReview').value.trim();
+      const coverOrient    = getCoverOrientRadio();
+      const primaryContact = getPrimaryContact();
+      const chatOn   = !!(document.getElementById('wChatAllowed') && document.getElementById('wChatAllowed').checked);
+      let   address  = document.getElementById('wAddress').value.trim();
+
+      if (!name)     { alert('이름(상호)을 입력해 주세요.'); return; }
+      if (!category) { alert('카테고리(음식/미용/기술)를 선택해 주세요.'); return; }
+      if (!intro)    { alert('자기소개를 입력해 주세요.'); return; }
+      if (!body)     { alert('포트폴리오 본문을 입력해 주세요.'); return; }
+      if (hasProfanity(name) || hasProfanity(intro) || hasProfanity(body) || hasProfanity(comment) || hasProfanity(closing)) {
         wErr.textContent = '부적절한 단어가 포함되어 있습니다.';
+        return;
+      }
+      // 우선 문의 수단 ↔ 해당 수단 데이터 정합 (커버 버튼이 빈 동작이 되지 않게)
+      if (primaryContact === 'sms' && !phone) {
+        alert('우선 문의 수단을 문자로 선택하셨어요.\n전화번호를 입력해 주세요.'); return;
+      }
+      if (primaryContact === 'kakao' && !kakao) {
+        alert('우선 문의 수단을 오픈채팅으로 선택하셨어요.\n카톡 오픈채팅 링크를 입력해 주세요.'); return;
+      }
+      if (primaryContact === 'chat' && !chatOn) {
+        alert("우선 문의 수단을 채팅으로 선택하셨어요.\n'채팅 문의 허용'에 체크해 주세요."); return;
+      }
+      if (phone && phone.length < 6) {
+        wErr.textContent = '전화번호는 숫자 6자리 이상으로 입력해 주세요. (예: 0412345678)';
+        return;
+      }
+      if (kakao && !OPEN_KAKAO_RE.test(kakao)) {
+        wErr.textContent = '오픈카톡 링크는 https://open.kakao.com/ 으로 시작해야 합니다.';
+        return;
+      }
+      if (greview && !GREVIEW_RE.test(greview)) {
+        wErr.textContent = '구글 리뷰 링크는 google.com/maps · maps.app.goo.gl · g.page 만 등록할 수 있습니다.';
         return;
       }
       if (!window.koausDb || !window.koausFs) {
@@ -1397,140 +1772,185 @@
         alert('Firestore 미초기화 — 잠시 후 다시 시도해 주세요.');
         return;
       }
+      const { addDoc, updateDoc, doc: _fsDoc, collection: _fsCol, serverTimestamp } = window.koausFs;
 
-      // 모드별 필드 수집
-      let extra = {}, coords = null, address = '';
-      if (isFind) {
-        if (!title) { alert('제목을 입력해 주세요.'); return; }
-        extra = { mode: 'find' };
-      } else {
-        const types     = [...document.querySelectorAll('#wTypes input:checked')].map(c => c.dataset.type);
-        const roomTypes = [...document.querySelectorAll('#wRoomTypes input:checked')].map(c => c.dataset.room);
-        const gender    = document.getElementById('wGender').value;
-        const availableDate = document.getElementById('wAvailDate').value;
-        const contact   = document.getElementById('wContact').value.trim();
-        const phone     = (document.getElementById('wPhone')?.value || '').trim();
-        const kakaoLink = (document.getElementById('wKakao')?.value || '').trim();
-        address = document.getElementById('wAddress').value.trim();
-        const priceVal = document.getElementById('wPrice').value.trim();
-        if (!title || !address || !priceVal) {
-          alert('제목, 주소, 주당 쉐어비는 필수 입력 항목입니다.');
-          return;
-        }
-        const price = parseInt(priceVal, 10);
-        if (!(price > 0)) { alert('주당 쉐어비를 숫자로 올바르게 입력해 주세요.'); return; }
-        extra = {
-          mode: 'offer', price, types, roomTypes, gender, availableDate,
-          contact, phone, kakaoLink,
-          parking:     document.getElementById('wParking').checked,
-          petFriendly: document.getElementById('wPet').checked,
-          kidsInHouse: document.getElementById('wKids').checked,
-          airCon:      document.getElementById('wAirCon').checked,
-        };
+      const fields = {
+        title: name, category, intro,
+        body: body || ' ',
+        comment, closing, phone,
+        openKakaoUrl: kakao, googleReviewUrl: greview,
+        coverOrient,
+        chatAllowed: chatOn,
+        avatarHidden: !!(document.getElementById('wAvatarHidden') && document.getElementById('wAvatarHidden').checked),
+      };
+      // primaryContact — rules enum(sms|kakao|chat)이라 빈 값은 키 자체를 생략.
+      //   수정에서 해제 시엔 deleteField 로 제거 (update 는 hasOnly 미적용 — 필드 삭제 허용)
+      if (primaryContact) fields.primaryContact = primaryContact;
+      else if (editingId != null && window.koausFs.deleteField) fields.primaryContact = window.koausFs.deleteField();
+
+      // ── 위치 + 프라이버시 분기 ──
+      const _lpEl     = document.getElementById('wLocationPrivate');
+      const isPrivate = _lpEl ? _lpEl.checked : true;   // 기본 ON
+      let coords = null;
+      const addrUnchanged = !!(editingOrig && address === String(editingOrig.address || '').trim());
+      if (address && !addrUnchanged) {
         loadMapScript();
         coords = await geocode(address);
+        if (coords && isPrivate && window.koausListingPrivacy) {
+          fields.locationPrivate = true;
+          fields.exactAddress    = address;              // stripPrivateFields 가 공개 doc 에서 제거
+          fields.exactLat        = coords.lat;
+          fields.exactLng        = coords.lng;
+          const off = window.koausListingPrivacy.offsetCoords(coords.lat, coords.lng);
+          coords = { lat: off.lat, lng: off.lng };
+          fields.address = window.koausListingPrivacy.redactAddress(address) || address;
+        } else if (isPrivate && window.koausListingPrivacy) {
+          // 지오코딩 실패 — 좌표는 없어도 비공개 의사는 존중: 주소 redact 유지 (공개 doc 도로명 누수 차단)
+          fields.locationPrivate = true;
+          fields.address = window.koausListingPrivacy.redactAddress(address) || '위치 비공개';
+        } else {
+          fields.locationPrivate = false;
+          fields.address = address;
+        }
+      } else if (addrUnchanged) {
+        // 주소 미변경(수정) — 기존 주소/좌표/프라이버시 보존 (redact 재적용·좌표 재오프셋 방지)
+        fields.address = editingOrig.address || '';
+        fields.locationPrivate = editingOrig.locationPrivate === true;
+        coords = (editingOrig.lat && editingOrig.lng) ? { lat: editingOrig.lat, lng: editingOrig.lng } : null;
+      } else {
+        // 주소 없음 (신규) 또는 수정에서 주소 삭제 — 좌표도 함께 제거 (지도 마커 좀비 방지)
+        fields.address = '';
+        fields.locationPrivate = false;
+        fields.lat = null;
+        fields.lng = null;
       }
 
       const nick = currentNickname()
         || user.displayName?.split(' ')[0] || user.email?.split('@')[0] || '사용자';
-
-      // 수정은 후속 작업 — 안내만 표시하고 종료
-      if (editingId != null) {
-        alert('수정 기능은 곧 지원됩니다. (현재는 신규 등록만 가능)');
-        editingId = null;
-        return;
-      }
+      const now = new Date();
+      const pad = n => String(n).padStart(2, '0');
 
       const wsb = document.getElementById('writeBtnSubmit');
-      if (wsb) { wsb.disabled = true; wsb.textContent = '등록 중…'; }
+      if (wsb) { wsb.disabled = true; wsb.textContent = editingId ? '수정 중…' : '등록 중…'; }
+      const restoreBtn = () => { if (wsb) { wsb.disabled = false; wsb.textContent = editingId ? '수정 완료' : '등록하기'; } };
 
-      // Firestore Rules 정합 payload (services.create 일반 유저 분기)
-      const contactSafe = (extra.contact || extra.phone || '게시글 본문 또는 댓글 참고');
-      const payload = {
-        category: 'trades',
-        title,
-        body: body || ' ',
-        address: address || '',
-        contact: contactSafe,
-        state: currentState || '',
-        status: 'approved',     // 즉시 노출 (자율 등록형 — points.html 패턴)
-        isUserPost: true,       // 커뮤니티 자율 등록 마커
-        author: nick,
-        uid: user.uid,          // 룰 보안 — request.auth.uid 일치
-        authorId: user.uid,     // RBAC 작성자 식별
-        authorUid: user.uid,
-        lat: coords?.lat || null,
-        lng: coords?.lng || null,
-        imageUrls: [],
-        createdAt: window.koausFs.serverTimestamp(),
-        // trades 보조 필드 (Rules optStr/optUrlList 명시 외 — 추가 필드도 허용)
-        mode: extra.mode || 'offer',
-        ...(extra.mode === 'offer' ? {
-          price: extra.price, types: extra.types, roomTypes: extra.roomTypes,
-          gender: extra.gender, availableDate: extra.availableDate,
-          phone: extra.phone, kakaoLink: extra.kakaoLink,
-          parking: extra.parking, petFriendly: extra.petFriendly,
-          kidsInHouse: extra.kidsInHouse, airCon: extra.airCon,
-        } : {}),
-      };
+      const strip = (window.koausListingPrivacy && window.koausListingPrivacy.stripPrivateFields)
+        ? window.koausListingPrivacy.stripPrivateFields
+        : (o => { const c = Object.assign({}, o); delete c.exactAddress; delete c.exactLat; delete c.exactLng; return c; });
 
-      const { addDoc, collection, doc, updateDoc } = window.koausFs;
-      let docRef;
-      try {
-        docRef = await addDoc(collection(window.koausDb, 'services'), payload);
-      } catch (e) {
-        console.error('[trades] Firestore 등록 실패', { code: e?.code, message: e?.message, error: e });
-        let msg;
-        if (e?.code === 'permission-denied') {
-          msg = '권한 거부 — 로그인 상태 및 필수 필드(제목/주소/연락처)를 확인해 주세요.';
-        } else if (e?.code === 'unavailable') {
-          msg = '서비스 일시 중단 — 인터넷 연결을 확인 후 다시 시도해 주세요.';
-        } else {
-          msg = '등록 실패: ' + (e?.code || e?.message || String(e));
+      let target, docId;
+      if (editingId != null) {
+        // ── 수정 ──
+        target = Object.assign({}, fields);
+        if (coords) { target.lat = coords.lat; target.lng = coords.lng; }
+        const updatePayload = strip(Object.assign({}, target, { updatedAt: serverTimestamp() }));
+        try {
+          await updateDoc(_fsDoc(window.koausDb, 'daily_posts', String(editingId)), updatePayload);
+        } catch (e) {
+          console.error('[daily] 수정 실패', e);
+          alert('수정 실패: ' + (e?.code || e?.message || e));
+          restoreBtn();
+          return;
         }
-        wErr.textContent = msg;
-        alert('❌ ' + msg);
-        if (wsb) { wsb.disabled = false; wsb.textContent = '등록하기'; }
-        return;
+        docId = String(editingId);
+      } else {
+        // ── 새 글 ──
+        target = {
+          state: ((window.koausState && window.koausState.fromAddress(fields.address)) || currentState || ''),
+          author: nick,
+          uid: user.uid || '',
+          authorUid: user.uid || '',
+          date: `${pad(now.getMonth() + 1)}/${pad(now.getDate())}`,
+          time: `${pad(now.getHours())}:${pad(now.getMinutes())}`,
+          lat: null, lng: null,
+          imageUrls: [], coverImageUrl: '', avatarUrl: '',
+          ...fields,
+          status: 'approved',     // 즉시 노출 (firestore.rules daily_posts 정합)
+        };
+        if (coords) { target.lat = coords.lat; target.lng = coords.lng; }
+        const safePayload = strip(Object.assign({}, target, { createdAt: serverTimestamp() }));
+        let docRef;
+        try {
+          docRef = await addDoc(_fsCol(window.koausDb, 'daily_posts'), safePayload);
+        } catch (e) {
+          console.error('[daily] Firestore 등록 실패', { code: e?.code, message: e?.message, error: e });
+          const msg = e?.code === 'permission-denied'
+            ? '권한 거부 — 로그인 상태 및 필수 입력(이름/카테고리/소개/본문)을 확인해 주세요.'
+            : '등록 실패: ' + (e?.code || e?.message || e);
+          wErr.textContent = msg;
+          alert('❌ ' + msg);
+          restoreBtn();
+          return;
+        }
+        docId = docRef.id;
       }
 
-      // ── Storage 이미지 업로드 (post_images/trades/{uid} — 룰 정합) ──
-      if (window.pendingPhotoFiles?.length && window.koausPhotos) {
+      // private_data 서브컬렉션 — 비공개 위치 정확 주소/좌표 (본인+admin 만 read)
+      if (fields.locationPrivate && fields.exactAddress && window.koausListingPrivacy && window.koausListingPrivacy.savePrivateLocation) {
         try {
-          if (wsb) wsb.textContent = `사진 업로드 중… 0/${window.pendingPhotoFiles.length}`;
-          const urls = await window.koausPhotos.uploadPostImages(
-            window.koausPhotos.app,
-            `post_images/trades/${user.uid}`,
-            window.pendingPhotoFiles.map(p => p.file),
-            { maxDim: 1200, quality: 0.7, onProgress: (i, total) => {
-              if (wsb) wsb.textContent = `사진 업로드 중… ${i}/${total}`;
-            } }
+          await window.koausListingPrivacy.savePrivateLocation(
+            window.koausDb, window.koausFs, 'daily_posts', docId,
+            { exactAddress: fields.exactAddress, exactLat: fields.exactLat, exactLng: fields.exactLng },
+            user.uid
           );
-          if (urls.length) {
-            await updateDoc(doc(window.koausDb, 'services', docRef.id), { imageUrls: urls });
+        } catch (e) { console.warn('[daily] private_data 저장 실패 — 글은 등록됨', e); }
+      }
+
+      // ── Storage 업로드 — 포트폴리오(≤8) + 배경 1장 + 프로필 1장 (compress.js 병렬 3) ──
+      const patch = {};
+      try {
+        if (window.koausPhotos) {
+          if (window.pendingPhotoFiles?.length) {
+            if (wsb) wsb.textContent = `사진 업로드 중… 0/${window.pendingPhotoFiles.length}`;
+            patch.imageUrls = await window.koausPhotos.uploadPostImages(
+              window.koausPhotos.app,
+              `post_images/daily/${user.uid}`,
+              window.pendingPhotoFiles.map(p => p.file),
+              { maxDim: 1200, quality: 0.7, onProgress: (i, total) => {
+                if (wsb) wsb.textContent = `사진 업로드 중… ${i}/${total}`;
+              } }
+            );
           }
-          window.pendingPhotoFiles = [];
-        } catch (e) {
-          console.error('[trades] 사진 업로드 실패', { code: e?.code, message: e?.message, error: e });
-          alert(`사진 업로드 실패: ${e?.code || 'unknown'}\n${e?.message || ''}\n글은 등록되었습니다 — 수정에서 다시 시도해 주세요.`);
+          if (window.pendingCoverFile) {
+            if (wsb) wsb.textContent = '배경사진 업로드 중…';
+            const u = await window.koausPhotos.uploadPostImages(
+              window.koausPhotos.app, `post_images/daily/${user.uid}`,
+              [window.pendingCoverFile.file], { maxDim: 1200, quality: 0.7 });
+            if (u && u[0]) patch.coverImageUrl = u[0];
+          }
+          if (window.pendingAvatarFile) {
+            if (wsb) wsb.textContent = '프로필 사진 업로드 중…';
+            const u = await window.koausPhotos.uploadPostImages(
+              window.koausPhotos.app, `post_images/daily/${user.uid}`,
+              [window.pendingAvatarFile.file], { maxDim: 800, quality: 0.7 });
+            if (u && u[0]) patch.avatarUrl = u[0];
+          }
         }
+        if (Object.keys(patch).length) {
+          await updateDoc(_fsDoc(window.koausDb, 'daily_posts', docId), patch);
+        }
+        window.pendingPhotoFiles = []; window.pendingCoverFile = null; window.pendingAvatarFile = null;
+      } catch (e) {
+        console.error('[daily] 사진 업로드 실패', { code: e?.code, message: e?.message, error: e });
+        alert(`사진 업로드 실패: ${e?.code || 'unknown'}\n${e?.message || ''}\n글은 등록되었습니다 — 수정에서 다시 시도해 주세요.`);
       }
 
       // 마이페이지 연동 — fsDocId 기록
       try {
         recordMyPost({
-          id: docRef.id, _fsDocId: docRef.id,
-          title, address, mode: extra.mode || 'offer',
+          id: docId, _fsDocId: docId,
+          title: fields.title, state: target.state || '', author: nick,
         });
       } catch (_) {}
 
-      if (wsb) { wsb.disabled = false; wsb.textContent = '등록하기'; }
+      const wasEdit = editingId != null;
+      editingId = null; editingOrig = null;
+      restoreBtn();
       closeWriteModal();
       resetWriteForm();
       currentPage = 1;
-      alert('✅ 등록이 완료되었습니다.\n게시판에 즉시 노출됩니다.');
-      // onSnapshot 콜백이 자동으로 fsItems fetch + renderAll 호출됨.
-      // 안전망: 0.6초 뒤에도 리렌더 (네트워크 지연 대비)
+      alert(wasEdit ? '✅ 수정이 완료되었습니다.' : '✅ 등록이 완료되었습니다.\n게시판에 즉시 노출됩니다.');
+      // onSnapshot 콜백이 자동으로 fetch + renderAll. 안전망: 0.6초 뒤에도 리렌더
       setTimeout(() => { try { renderAll(); } catch (_) {} }, 600);
     }
 
@@ -1538,61 +1958,33 @@
     function escHtml(s) {
       return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
-    function propTypeLabel(t) {
-      return { house:'House', apartment:'Apartment', townhouse:'Townhouse', villa:'Villa', unit:'Unit' }[t] || 'Property';
+    function safeImgUrl(u) {
+      if (!u || typeof u !== 'string') return '';
+      if (window.koausUrlGuard && window.koausUrlGuard.isSafeHttp) return window.koausUrlGuard.isSafeHttp(u) ? u : '';
+      return /^https:\/\//i.test(u) ? u : '';
     }
-    const ROOM_LABELS = { master:'마스터룸', second:'세컨룸', single:'독방', living_share:'거실쉐어', sunroom:'썬룸', share:'쉐어' };
-    const GENDER_LABELS = { male:'남', female:'여', any:'성별 무관' };
-    // 욕설/금칙어 필터 — 제목/상세 설명/닉네임 검사용 (부분 포함 시 차단)
+    function catOf(p) {
+      return CAT_META[p && p.category] || { ko: '일상', emo: '🌿', cover: '' };
+    }
+    // 욕설/금칙어 필터 — 이름/소개/본문/마무리 멘트 검사용 (부분 포함 시 차단)
     const BAD_WORDS = ['시발','씨발','시팔','씨팔','씨발년','개새끼','새끼','병신','지랄','존나','좆','좆같','니미','닥쳐','꺼져','엿먹어','미친놈','미친년','썅','등신','후레','보지','자지','걸레','창녀','fuck','fucking','fuck you','shit','bitch','asshole','bastard','dick','cunt','motherfucker','slut','whore','retard'];
     function hasProfanity(text) {
       if (!text) return false;
       const low = String(text).toLowerCase().replace(/\s+/g, '');
       return BAD_WORDS.some(w => low.includes(w.toLowerCase().replace(/\s+/g, '')));
     }
-    // 게시글의 상세 필터 항목들을 태그 텍스트 배열로
-    function filterTags(p) {
-      const tags = [];
-      const ptypes = Array.isArray(p.types) ? p.types : (p.type ? [p.type] : []);
-      ptypes.forEach(t => { if (TYPE_LABELS[t]) tags.push('📅 ' + TYPE_LABELS[t].ko); });
-      if (p.propType) tags.push(propTypeLabel(p.propType));
-      const rooms = Array.isArray(p.roomTypes) ? p.roomTypes : (p.roomType ? [p.roomType] : []);
-      rooms.forEach(r => { if (ROOM_LABELS[r]) tags.push('🛏 ' + ROOM_LABELS[r]); });
-      if (p.gender && GENDER_LABELS[p.gender]) tags.push('👤 ' + GENDER_LABELS[p.gender]);
-      if (p.availableDate) tags.push('🗓 입주 ' + p.availableDate);
-      if (p.parking)     tags.push('🅿 주차 가능');
-      if (p.petFriendly) tags.push('🐾 반려동물 가능');
-      if (p.kidsInHouse) tags.push('👶 아이 있는 집');
-      if (p.airCon)      tags.push('❄ 에어컨');
-      return tags;
-    }
     function loadPosts() {
-      const ver = localStorage.getItem(STORE_KEY + '-v');
-      const raw = localStorage.getItem(STORE_KEY);
-      if (raw && ver === SEED_VERSION) {
-        const posts = JSON.parse(raw);
-        // 기존 데이터 맵핑: mode(방올리기/구하기) 및 types(기간 배열) 보정
-        let migrated = false;
-        posts.forEach(p => {
-          if (!p.mode) { p.mode = p.postType === 'looking' ? 'find' : 'offer'; migrated = true; }
-          if (!Array.isArray(p.types)) { p.types = p.type ? [p.type] : ['short']; migrated = true; }
-          if (!Array.isArray(p.roomTypes)) { p.roomTypes = p.roomType ? [p.roomType] : []; migrated = true; }
-        });
-        if (migrated) localStorage.setItem(STORE_KEY, JSON.stringify(posts));
-        return posts;
-      }
-      // 시드 버전이 바뀌면 최신 테스트 데이터로 재시드
-      localStorage.setItem(STORE_KEY, JSON.stringify(SAMPLES));
-      localStorage.setItem(STORE_KEY + '-v', SEED_VERSION);
-      return SAMPLES;
+      try {
+        const arr = JSON.parse(localStorage.getItem(STORE_KEY) || '[]');
+        return Array.isArray(arr) ? arr : [];
+      } catch { return []; }
     }
-    function savePosts(posts) { localStorage.setItem(STORE_KEY, JSON.stringify(posts)); }
 
     // ── 저장(북마크) / 최근 본 글 / 내가 쓴 글 (마이페이지 연동) ──
     const SAVED_KEY   = 'koaus-saved-posts';
     const RECENT_KEY  = 'koaus-recent-posts';
     const MYPOSTS_KEY = 'koaus-my-posts';
-    const BOARD       = 'accom';
+    const BOARD       = 'trades';   // 마이페이지 딥링크 = trades.html?id=
 
     function readJSON(key) { try { return JSON.parse(localStorage.getItem(key) || '[]'); } catch { return []; } }
     function isSaved(id)   { return readJSON(SAVED_KEY).some(s => s.board === BOARD && String(s.id) === String(id)); }
@@ -1600,75 +1992,52 @@
       const saved = readJSON(SAVED_KEY);
       const idx = saved.findIndex(s => s.board === BOARD && String(s.id) === String(p.id));
       if (idx >= 0) saved.splice(idx, 1);
-      else saved.unshift({ board: BOARD, id: p.id, title: p.title, author: p.author, authorEmail: p.authorEmail || '', date: p.date, time: p.time || '', price: p.price || 0 });
+      else saved.unshift({ board: BOARD, id: p.id, fsDocId: String(p._fsDocId || p.fsDocId || ''), state: (window.koausState ? window.koausState.effective(p) : (p.state || '')), address: p.address || '', title: p.title, author: p.author, date: p.date, time: p.time || '' });
       localStorage.setItem(SAVED_KEY, JSON.stringify(saved));
     }
     function recordRecent(p) {
       let recent = readJSON(RECENT_KEY).filter(r => !(r.board === BOARD && String(r.id) === String(p.id)));
-      recent.unshift({ board: BOARD, id: p.id, title: p.title, author: p.author, authorEmail: p.authorEmail || '', date: p.date, time: p.time || '' });
+      recent.unshift({ board: BOARD, id: p.id, fsDocId: String(p._fsDocId || p.fsDocId || ''), state: (window.koausState ? window.koausState.effective(p) : (p.state || '')), address: p.address || '', title: p.title, author: p.author, date: p.date, time: p.time || '' });
       localStorage.setItem(RECENT_KEY, JSON.stringify(recent.slice(0, 30)));
     }
     function recordMyPost(p) {
       const mine = readJSON(MYPOSTS_KEY).filter(r => !(r.board === BOARD && String(r.id) === String(p.id)));
-      mine.unshift({ board: BOARD, id: p.id, title: p.title, state: p.state || '', author: p.author, authorEmail: p.authorEmail || '', date: p.date, time: p.time || '' });
+      mine.unshift({ board: BOARD, id: p.id, title: p.title, state: p.state || '', author: p.author, date: p.date, time: p.time || '' });
       localStorage.setItem(MYPOSTS_KEY, JSON.stringify(mine));
     }
     function removeRecord(key, id) {
       localStorage.setItem(key, JSON.stringify(readJSON(key).filter(r => !(r.board === BOARD && String(r.id) === String(id)))));
     }
-    // 현재 로그인 사용자가 작성한 글인지 — 닉네임이 아닌 고유 식별자(uid/email)로 판별
+    // 현재 로그인 사용자가 작성한 글인지 — 닉네임이 아닌 고유 식별자(uid)로 판별
     function isMine(p) {
       const u = window.koausAuth && window.koausAuth.user;
       if (!u) return false;
-      const puid  = p.uid   || p.authorUid;
-      const pmail = p.email || p.authorEmail;
-      if (u.uid && puid && u.uid === puid) return true;
-      if (u.email && pmail && u.email === pmail) return true;
-      return false;
-    }
-    function authorLabel(p) {
-      return escHtml(p.author);
+      const puid = p.uid || p.authorUid;
+      return !!(u.uid && puid && u.uid === puid);
     }
 
-    // ── Filter ──
+    // ── Filter — 카테고리(catFilter) + 주(state) + 지역(areaBounds) ──
     function applyFilters(posts) {
-      // 지시 8/10 — 숨김(hidden) 처리 글은 모든 뷰(List/Map)에서 즉시 제외
-      posts = posts.filter(p => !(p.isHidden || p.status === 'hidden'));
-      // Dual Range Slider 기반 가격 필터 — 기존 fbPrice 는 max 값으로 폴백 유지
-      const minEl = document.getElementById('fbPriceMin');
-      const maxEl = document.getElementById('fbPriceMax');
-      const minPrice = minEl ? Number(minEl.value) : 0;
-      const maxPrice = maxEl ? Number(maxEl.value) : 999;
-      const room = fbRoom.value;       // '' = 전체
-      const dur  = fbDuration.value;   // '' = 전체
+      // 숨김(hidden)·소프트삭제 글은 모든 뷰(List/Map)에서 제외
+      posts = posts.filter(p => !(p.isHidden || p.status === 'hidden' || p.status === 'deleted'));
       return posts.filter(p => {
-        if (currentState && p.state && p.state !== currentState) return false;
-        if ((p.mode || 'offer') !== activeMode) return false;
+        const _es = (window.koausState ? window.koausState.effective(p) : (p.state || ''));
+        if (currentState && _es && _es !== currentState) return false;
+        if (catFilter.size && !catFilter.has(p.category)) return false;
+        // §2-B Map+Filter 표준 — areaBounds AND 분기 항상 포함
         if (areaBounds) {
           if (!(p.lat && p.lng) || !areaBounds.contains({ lat: p.lat, lng: p.lng })) return false;
-        }
-        // 가격 범위: minPrice ≤ p.price ≤ maxPrice
-        if (typeof p.price === 'number') {
-          if (p.price < minPrice || p.price > maxPrice) return false;
-        }
-        // 방 형태: 선택 시 글의 방형태 배열에 포함되어야 노출
-        if (room) {
-          const pRooms = Array.isArray(p.roomTypes) ? p.roomTypes : (p.roomType ? [p.roomType] : []);
-          if (!pRooms.includes(room)) return false;
-        }
-        // 숙박 기간: 선택 시 글의 기간 배열에 포함되어야 노출
-        if (dur) {
-          const pTypes = Array.isArray(p.types) ? p.types : (p.type ? [p.type] : []);
-          if (!pTypes.includes(dur)) return false;
         }
         return true;
       });
     }
 
-    // ── View Toggle ── (trades.html: List View 전용 — 토글 버튼 없음, no-op 가드)
+    // ── View Toggle ──
     let currentView = 'list';
-    (document.getElementById('viewListBtn') || { addEventListener(){} }).addEventListener('click', () => switchView('list'));
-    (document.getElementById('viewMapBtn')  || { addEventListener(){} }).addEventListener('click', () => switchView('map'));
+    function _koausSavedView(){ try { return localStorage.getItem('koaus-view-trades'); } catch (_) { return null; } }
+    function _koausSaveView(v){ try { localStorage.setItem('koaus-view-trades', v); } catch (_) {} }
+    (document.getElementById('viewListBtn') || { addEventListener(){} }).addEventListener('click', () => { _koausSaveView('list'); switchView('list'); });
+    (document.getElementById('viewMapBtn')  || { addEventListener(){} }).addEventListener('click', () => { _koausSaveView('map'); switchView('map'); });
 
     function switchView(v) {
       currentView = v;
@@ -1686,46 +2055,97 @@
       }
     }
 
-    // ── Render ──
+    // ── Render — 서버 페이지 모델 (2026-07 2차) ──
+    //   1페이지 = onSnapshot(LS 캐시) / 2페이지~ = 커서 getDocs 결과의 메모리 캐시(_pageItems)
+    //   필터·Map 마커는 "현재 로드된 페이지" 데이터 기준 (전체 로드 시도 금지 — 빌링 방어)
     document.addEventListener('koaus-admin-ready', () => { try { renderAll(); } catch (_) {} }); // admin claim 확정 후 카드 admin 버튼 재렌더
+    function currentPageItems() {
+      return currentPage === 1 ? loadPosts() : (_pageItems[currentPage] || []);
+    }
+    // 카드/상세가 참조하는 글 탐색 — LS(1p) + 메모리 페이지 캐시 + 딥링크 폴백 주입분
+    function findPost(id) {
+      const pools = [loadPosts()];
+      Object.keys(_pageItems).forEach(k => pools.push(_pageItems[k]));
+      if (window.__koausDeepLinkPost) pools.push([window.__koausDeepLinkPost]);
+      for (const arr of pools) {
+        const hit = arr.find(x => String(x.id) === String(id) || String(x._fsDocId || '') === String(id));
+        if (hit) return hit;
+      }
+      return null;
+    }
     function renderAll() {
-      const posts    = loadPosts();
-      const filtered = applyFilters(posts);
-      document.getElementById('boardCount').textContent = `총 ${filtered.length}건`;
-      const sorted = filtered.slice().sort((a, b) => a.id - b.id);   // 등록순(오래된 글 먼저) — 초기 입점 업체 상단 노출 보장
-      const totalPages = Math.max(1, Math.ceil(sorted.length / PER_PAGE));
-      if (currentPage > totalPages) currentPage = totalPages;
-      renderListView(sorted, totalPages);
+      const filtered = applyFilters(currentPageItems());
+      document.getElementById('boardCount').textContent = `${currentPage} 페이지 · ${filtered.length}건`;
+      const sorted = filtered.slice().sort((a, b) => (a.id || 0) - (b.id || 0));   // 선착순 — 먼저 쓴 글이 앞
+      renderListView(sorted);
       if (currentView === 'map' && mapReady) updateMapMarkers(filtered);
     }
 
-    function renderListView(sorted, totalPages) {
+    let _pagingBusy = false;
+    async function goNextPage() {
+      if (_pagingBusy) return;
+      const next = currentPage + 1;
+      if (_pageItems[next]) {   // 재방문 — 메모리 캐시 재사용 (재조회 0, 빌링 방어)
+        currentPage = next; renderAll(); window.scrollTo({ top: 0, behavior: 'smooth' }); return;
+      }
+      const pagerApi = window.koausDailyPager;
+      if (!pagerApi || !pagerApi.fetchPage) return;
+      _pagingBusy = true;
+      try {
+        const items = await pagerApi.fetchPage(next);   // 일회성 getDocs (onSnapshot 아님)
+        if (!items || !items.length) { _lastPageReached = currentPage; renderAll(); return; }
+        _pageItems[next] = items;
+        currentPage = next;
+        renderAll();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } catch (e) {
+        console.warn('[daily] 다음 페이지 로드 실패', e);
+      } finally {
+        _pagingBusy = false;
+      }
+    }
+
+    function renderListView(pageItems) {
       const grid  = document.getElementById('postGrid');
       const pager = document.getElementById('pagination');
-      if (!sorted.length) {
-        grid.innerHTML = '<div class="post-empty">아직 등록된 글이 없습니다. 첫 글을 올려보세요!</div>';
+      // 페이저 — ‹ 이전 / 현재 페이지 / 다음 › (rawCount<20 = 마지막 페이지 확정, fetch 0건 = 경계 학습)
+      const pagerApi = window.koausDailyPager;
+      const rawCnt = (pagerApi && pagerApi.rawCount) ? pagerApi.rawCount(currentPage) : -1;
+      const noNext = (_lastPageReached === currentPage) || (rawCnt >= 0 && rawCnt < PER_PAGE);
+      if (currentPage === 1 && noNext) {
         pager.innerHTML = '';
+      } else {
+        pager.innerHTML =
+          `<button class="pagination-btn pagination-nav" id="dailyPrevBtn"${currentPage === 1 ? ' disabled' : ''} aria-label="이전 페이지">‹ 이전</button>` +
+          `<button class="pagination-btn active" disabled>${currentPage}</button>` +
+          `<button class="pagination-btn pagination-nav" id="dailyNextBtn"${noNext ? ' disabled' : ''} aria-label="다음 페이지">다음 ›</button>`;
+        const pv = document.getElementById('dailyPrevBtn');
+        const nx = document.getElementById('dailyNextBtn');
+        if (pv) pv.addEventListener('click', () => {
+          if (currentPage <= 1) return;
+          currentPage -= 1; renderAll(); window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+        if (nx) nx.addEventListener('click', () => { if (!nx.disabled) goNextPage(); });
+      }
+      if (!pageItems.length) {
+        grid.innerHTML = currentPage === 1
+          ? '<div class="post-empty">아직 등록된 PR이 없습니다. 첫 소개 페이지를 만들어 보세요!</div>'
+          : '<div class="post-empty">이 페이지에 표시할 PR이 없습니다.</div>';
         return;
       }
-      const start = (currentPage - 1) * PER_PAGE;
-      const pageItems = sorted.slice(start, start + PER_PAGE);
       grid.innerHTML = pageItems.map(p => {
-        const saved  = isSaved(p.id);
-        const isFind = (p.mode || 'offer') === 'find';
-        // 카드는 accom 기준 2줄(제목 / 가격·위치). 분야·자격 칩은 상세 모달로 이관.
-        const priceHtml = isFind
-          ? '<span class="accom-card-find">의뢰 정보</span>'
-          : (p.price ? `<span class="accom-price">$${p.price}</span>` : '<span class="accom-card-find">견적 상담</span>');
-        const sub = isFind ? (p.body || '') : (p.address || '');
+        const saved = isSaved(p.id);
+        const cat   = catOf(p);
+        const thumb = safeImgUrl(p.coverImageUrl) || safeImgUrl(Array.isArray(p.imageUrls) ? p.imageUrls[0] : '') || safeImgUrl(p.avatarUrl);
+        const sub   = p.address ? ('📍 ' + p.address) : (p.intro || '');
         return `
         <div class="accom-card${isMine(p) ? ' my-post-highlight' : ''}" data-id="${p.id}">
           <div class="accom-card-thumb">
-            ${(Array.isArray(p.imageUrls) && p.imageUrls.length)
-              ? `<img src="${escHtml(p.imageUrls[0])}" alt="${escHtml(p.title || '')}" loading="lazy" />`
-              : '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>'}
+            ${thumb
+              ? `<img src="${escHtml(thumb)}" alt="${escHtml(p.title || '')}" loading="lazy" />`
+              : `<span style="font-size:24px;" aria-hidden="true">${cat.emo}</span>`}
           </div>
           <div class="accom-card-info">
-            <!-- 지시 4/10 — Row 1: 제목(좌) + 액션(우) -->
             <div class="accom-card-row1">
               <div class="accom-card-title2">${escHtml(p.title)}</div>
               <div class="accom-card-actions">
@@ -1734,14 +2154,13 @@
                   <button class="mini-btn mini-share" data-id="${p.id}" type="button">공유</button>
                   ${(!isMine(p) && !window.koausIsAdmin) ? `<button class="mini-btn mini-report" data-id="${p.id}" data-uid="${p.uid || p.authorUid || ''}" type="button">신고</button>` : ''}
                   ${(isMine(p) && !window.koausIsAdmin) ? `<button class="mini-btn mini-edit" data-id="${p.id}" type="button">수정</button>` : ''}
-                  ${(isMine(p) || window.koausIsAdmin) ? `<button class="mini-btn mini-hide" data-id="${p.id}" type="button">숨김</button><button class="mini-btn mini-del" data-id="${p.id}" type="button">삭제</button>` : ''}
+                  ${(isMine(p) || window.koausIsAdmin) ? `<button class="mini-btn mini-del" data-id="${p.id}" type="button">삭제</button>` : ''}
                 </div>
               </div>
             </div>
-            <!-- Row 2: 가격(좌) + 위치(우) — 카드 전 게시판 통일 (제목·메타 2개) -->
             <div class="accom-card-row2">
-              ${priceHtml ? `<div class="accom-card-price-wrap">${priceHtml}</div>` : ''}
-              ${sub ? `<div class="accom-card-sub">${isFind ? '' : '📍 '}${escHtml(sub)}</div>` : ''}
+              <div class="accom-card-price-wrap"><span class="daily-card-badge">${cat.emo} ${escHtml(cat.ko)}</span></div>
+              ${sub ? `<div class="accom-card-sub">${escHtml(sub)}</div>` : ''}
             </div>
           </div>
         </div>`;
@@ -1750,23 +2169,10 @@
       grid.querySelectorAll('.accom-card').forEach(card => {
         card.addEventListener('click', () => openDetail(card.dataset.id));
       });
-      grid.querySelectorAll('.card-edit').forEach(btn => {
-        btn.addEventListener('click', e => {
-          e.stopPropagation();
-          const p = loadPosts().find(x => String(x.id) === String(btn.dataset.id));
-          if (p) openWriteModalForEdit(p);
-        });
-      });
-      grid.querySelectorAll('.card-del').forEach(btn => {
-        btn.addEventListener('click', e => {
-          e.stopPropagation();
-          deletePost(btn.dataset.id);
-        });
-      });
       grid.querySelectorAll('.bookmark-btn').forEach(btn => {
         btn.addEventListener('click', e => {
           e.stopPropagation();
-          const p = loadPosts().find(x => String(x.id) === String(btn.dataset.id));
+          const p = findPost(btn.dataset.id);
           if (!p) return;
           toggleSaved(p);
           renderAll();
@@ -1775,7 +2181,7 @@
       // 미니 액션: 수정·삭제(본인) / 공유·신고(모든 사용자) — 카드 클릭(상세 열기)과 분리
       grid.querySelectorAll('.mini-edit').forEach(btn => btn.addEventListener('click', e => {
         e.stopPropagation();
-        const p = loadPosts().find(x => String(x.id) === String(btn.dataset.id));
+        const p = findPost(btn.dataset.id);
         if (p) openWriteModalForEdit(p);
       }));
       grid.querySelectorAll('.mini-del').forEach(btn => btn.addEventListener('click', e => {
@@ -1784,133 +2190,249 @@
       }));
       grid.querySelectorAll('.mini-share').forEach(btn => btn.addEventListener('click', async e => {
         e.stopPropagation();
-        const url = `${location.origin}${location.pathname}?id=${encodeURIComponent(btn.dataset.id)}`;
-        try { await navigator.clipboard.writeText(url); } catch (_) { /* 권한 없을 경우 fallback */
+        const p = findPost(btn.dataset.id);
+        const pid = p ? (p._fsDocId || p.id) : btn.dataset.id;
+        const url = `${location.origin}${location.pathname}?id=${encodeURIComponent(pid)}`;
+        try { await navigator.clipboard.writeText(url); } catch (_) {
           const ta = document.createElement('textarea'); ta.value = url; document.body.appendChild(ta);
           ta.select(); try { document.execCommand('copy'); } catch (_) {} ta.remove();
         }
         alert('링크가 복사되었습니다.');
       }));
-
-      pager.innerHTML = '';
-      if (totalPages > 1) {
-        // 슬라이딩 윈도우 — 번호 버튼 최대 5개 (현재 페이지 중심)
-        let winStart = Math.max(1, currentPage - 2);
-        const winEnd = Math.min(totalPages, winStart + 4);
-        winStart = Math.max(1, winEnd - 4);
-        const parts = [];
-        parts.push(`<button class="pagination-btn pagination-nav" data-page="${currentPage - 1}"${currentPage === 1 ? ' disabled' : ''} aria-label="이전 페이지">‹</button>`);
-        for (let i = winStart; i <= winEnd; i++) {
-          parts.push(`<button class="pagination-btn${i === currentPage ? ' active' : ''}" data-page="${i}">${i}</button>`);
-        }
-        parts.push(`<button class="pagination-btn pagination-nav" data-page="${currentPage + 1}"${currentPage === totalPages ? ' disabled' : ''} aria-label="다음 페이지">›</button>`);
-        pager.innerHTML = parts.join('');
-        pager.querySelectorAll('.pagination-btn').forEach(b => {
-          b.addEventListener('click', () => {
-            if (b.disabled) return;
-            const target = parseInt(b.dataset.page, 10);
-            if (!Number.isFinite(target) || target < 1 || target > totalPages) return;
-            currentPage = target;
-            renderAll();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          });
-        });
-      }
     }
 
+    // ═══════════════════════════════════════════════════════════════════
+    //  PR 상세 — 세로 스크롤 리빌 (IntersectionObserver)
+    //   섹션: ①커버 ②포트폴리오 ③사진 ④지도 ⑤구글리뷰 ⑥문의 ⑦브랜드
+    // ═══════════════════════════════════════════════════════════════════
     let currentDetailPost = null;
-    function openDetail(id) {
-      const posts = loadPosts();
-      const p = posts.find(x => String(x.id) === String(id));
+    let _prdRevealIO = null;
+    function setupPrReveal() {
+      const scroller = document.getElementById('prdScroll');
+      if (!scroller) return;
+      const els = scroller.querySelectorAll('.prd-reveal');
+      els.forEach(el => el.classList.remove('in'));
+      if (_prdRevealIO) { try { _prdRevealIO.disconnect(); } catch (_) {} }
+      _prdRevealIO = new IntersectionObserver(ents => {
+        ents.forEach(en => { if (en.isIntersecting) { en.target.classList.add('in'); _prdRevealIO.unobserve(en.target); } });
+      }, { threshold: 0.15, root: scroller });
+      els.forEach(el => _prdRevealIO.observe(el));
+      // 첫 화면에 이미 보이는 섹션은 즉시 리빌
+      setTimeout(() => {
+        els.forEach(el => { if (el.getBoundingClientRect().top < window.innerHeight * 0.9) el.classList.add('in'); });
+      }, 60);
+    }
+    // intro/portfolio 복사 방지 — user-select:none(CSS) + copy/cut 이벤트 차단
+    ['copy', 'cut'].forEach(ev => {
+      const scroller = document.getElementById('prdScroll');
+      if (scroller) scroller.addEventListener(ev, e => {
+        const sel = (window.getSelection && String(window.getSelection())) || '';
+        const inProtected = e.target && e.target.closest && e.target.closest('.prd-noselect');
+        if (inProtected || sel) { e.preventDefault(); }
+      });
+    });
+
+    const AVATAR_SILHOUETTE =
+      '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 12.2c2.5 0 4.5-2.1 4.5-4.7S14.5 2.8 12 2.8 7.5 4.9 7.5 7.5s2 4.7 4.5 4.7zm0 2.3c-4.4 0-8 2.6-8 5.9V22h16v-1.6c0-3.3-3.6-5.9-8-5.9z"/></svg>';
+
+    // 커버 사진 fit — 크롭 없이 전체 노출 + 여백 방향 규칙 (2026-07 확정):
+    //   · 세로(portrait): 커버 높이 고정(CSS 3/4 + max-height) — 사진이 높이를 채우고 좌우에만 여백
+    //   · 가로(landscape): 사진이 커버 폭 100% 를 항상 채움(좌우 여백 0) —
+    //     렌더 높이가 최소 높이(16:9 기준)보다 낮을 때만 위아래 여백, maxH 캡 초과 시에만 미세 cover-crop
+    //   · 정사각(~1:1, naturalWidth/Height 자동 감지): coverOrient 무관 여백 0 풀블리드 —
+    //     데스크탑 과신장 방지 maxH 캡, 캡에 걸릴 때만 미세 cover-crop 허용
+    //   문의 버튼은 세 경우 모두 사진 렌더 박스(wrap — 여백 아님) 우하단 고정.
+    function fitCoverPhoto() {
+      const stage = document.getElementById('prdCoverStage');
+      const wrap  = document.getElementById('prdCoverWrap');
+      const img   = document.getElementById('prdCoverImg');
+      if (!stage || !wrap || !img) return;
+      if (stage.style.display === 'none' || !img.naturalWidth || !img.naturalHeight) return;
+      const r  = img.naturalWidth / img.naturalHeight;
+      const sw = stage.clientWidth;
+      if (!sw || !r) return;
+      const maxH = Math.round(Math.min(window.innerHeight * 0.72, 560));
+      const isSquare = r >= 0.9 && r <= 1.1;
+      img.style.objectFit = '';
+      if (isSquare) {
+        // 정사각 — 풀블리드 (여백 0)
+        const natH = Math.round(sw / r);
+        const h = Math.min(natH, maxH);
+        stage.style.height = h + 'px';
+        wrap.style.width = '100%'; wrap.style.height = '100%';
+        if (natH > maxH) img.style.objectFit = 'cover';   // 캡에 걸릴 때만 미세 크롭
+      } else if (stage.classList.contains('prd-stage-portrait')) {
+        // 세로 — 커버 높이 고정, 좌우 여백만
+        stage.style.height = '';                          // CSS 비율(3/4 + max-height) 복원
+        const sh = stage.clientHeight;
+        let w = Math.round(sh * r), h = sh;
+        if (w > sw) { w = sw; h = Math.round(sw / r); }   // 극단 가로사진 방어 (크롭 없이)
+        wrap.style.width = w + 'px'; wrap.style.height = h + 'px';
+      } else {
+        // 가로 — 폭 100% 고정 (좌우 여백 0)
+        const minH = Math.round(sw * 9 / 16);
+        const h = Math.round(sw / r);
+        if (h > maxH) {
+          stage.style.height = maxH + 'px';
+          wrap.style.width = '100%'; wrap.style.height = '100%';
+          img.style.objectFit = 'cover';                  // 캡에 걸릴 때만 미세 크롭
+        } else {
+          stage.style.height = Math.max(minH, h) + 'px';
+          wrap.style.width = '100%'; wrap.style.height = h + 'px';   // h < minH 면 위아래 여백
+        }
+      }
+    }
+    window.addEventListener('resize', () => { try { fitCoverPhoto(); } catch (_) {} });
+
+    // 커버 우하단 문의 버튼 — primaryContact 를 ⑥ 문의 그리드의 해당 버튼으로 위임(.click())
+    //   → 로그인 게이트(capture)·inquiry_logs 로깅·채팅 create-first·문자 프리필 전부 그대로 상속
+    function wireCoverCta(p) {
+      const pc = p.primaryContact;
+      const target = (pc && PC_SELECTOR[pc])
+        ? document.querySelector('#contact-action-container ' + PC_SELECTOR[pc])
+        : null;
+      [document.getElementById('prdCoverCta'), document.getElementById('prdCoverCtaFb')].forEach(btn => {
+        if (!btn) return;
+        if (!target) { btn.style.display = 'none'; btn.onclick = null; return; }
+        btn.textContent = PC_LABEL[pc];
+        btn.style.display = '';
+        btn.onclick = e => {
+          e.stopPropagation();
+          const t = document.querySelector('#contact-action-container ' + PC_SELECTOR[pc]);
+          if (t) t.click();
+        };
+      });
+    }
+
+    function openDetail(id, presetPost) {
+      const p = presetPost || findPost(id);
       if (!p) return;
       currentDetailPost = p;
       window.currentDetailPost = p; // koaus-report.js 신고 스냅샷용 노출 (id 일치 시에만 소비)
+      const cat = catOf(p);
 
-      // Hero 영역에 첨부 사진(있을 시) — 가로 스크롤 갤러리 + 카운터 동기화 + 클릭 시 라이트박스
-      const hero = document.getElementById('detailHero');
-      const heroPh = document.getElementById('detailHeroPh');
-      const counter = document.getElementById('detailHeroCounter');
-      if (hero) {
-        const oldGal = hero.querySelector('.detail-hero-img, .detail-hero-gallery');
-        if (oldGal) oldGal.remove();
-        if (Array.isArray(p.imageUrls) && p.imageUrls.length) {
-          const N = p.imageUrls.length;
-          if (heroPh) heroPh.style.display = 'none';
-          if (counter) { counter.textContent = `1 / ${N}`; counter.style.display = ''; }
-          const wrap = document.createElement('div');
-          wrap.className = 'detail-hero-gallery';
-          wrap.innerHTML = p.imageUrls.map(u =>
-            `<img src="${escHtml(u)}" alt="" loading="lazy" data-src="${escHtml(u)}" />`
-          ).join('');
-          hero.appendChild(wrap);
-          // 스크롤 시 현재 인덱스 → counter 갱신
-          wrap.addEventListener('scroll', () => {
-            const w = wrap.clientWidth || 1;
-            const idx = Math.min(N, Math.max(1, Math.round(wrap.scrollLeft / w) + 1));
-            if (counter) counter.textContent = `${idx} / ${N}`;
-          }, { passive: true });
-          // 이미지 클릭 → 라이트박스 (urls 배열 + 클릭한 인덱스)
-          wrap.addEventListener('click', e => {
-            const t = e.target.closest('img'); if (!t) return;
-            const imgs = [...wrap.querySelectorAll('img')];
-            const idx = Math.max(0, imgs.indexOf(t));
-            openLightbox(p.imageUrls, idx);
-          });
-        } else {
-          if (heroPh) heroPh.style.display = '';
-          if (counter) counter.style.display = 'none';
-        }
+      document.getElementById('detailNavTitle').textContent = p.title || '';
+
+      // ① 커버 — 사진 원본(coverOrient 스테이지, 크롭 없음·오버레이 없음) / 없으면 그라데이션+이모지 폴백
+      const stage    = document.getElementById('prdCoverStage');
+      const wrap     = document.getElementById('prdCoverWrap');
+      const coverImg = document.getElementById('prdCoverImg');
+      const fallback = document.getElementById('prdCoverFallback');
+      const emo      = document.getElementById('prdCoverEmo');
+      const coverUrl = safeImgUrl(p.coverImageUrl);
+      const orient   = p.coverOrient === 'portrait' ? 'portrait' : 'landscape';
+      stage.classList.toggle('prd-stage-portrait',  orient === 'portrait');
+      stage.classList.toggle('prd-stage-landscape', orient !== 'portrait');
+      if (coverUrl) {
+        stage.style.display = '';
+        stage.style.height = '';                      // 이전 글의 JS 높이 잔재 리셋
+        fallback.style.display = 'none';
+        wrap.style.width = ''; wrap.style.height = '';
+        coverImg.style.objectFit = '';
+        coverImg.onload = () => { try { fitCoverPhoto(); } catch (_) {} };
+        coverImg.src = coverUrl;
+        if (coverImg.complete) { try { fitCoverPhoto(); } catch (_) {} }
+      } else {
+        stage.style.display = 'none';
+        coverImg.removeAttribute('src');
+        fallback.style.display = '';
+        fallback.className = 'prd-cover-fallback' + (cat.cover ? ' ' + cat.cover : '');
+        emo.textContent = cat.emo;
+      }
+      // 아바타 — avatarHidden 이면 아예 미렌더 (사진 있어도 비노출, 없어도 실루엣 미표시)
+      const avatar = document.getElementById('prdAvatar');
+      const metaEl = avatar.parentElement;
+      if (p.avatarHidden === true) {
+        avatar.style.display = 'none';
+        avatar.innerHTML = '';
+        metaEl.classList.add('prd-no-avatar');
+      } else {
+        avatar.style.display = '';
+        metaEl.classList.remove('prd-no-avatar');
+        const avatarUrl = safeImgUrl(p.avatarUrl);
+        avatar.innerHTML = avatarUrl
+          ? `<img src="${escHtml(avatarUrl)}" alt="${escHtml(p.title || '')} 프로필" />`
+          : AVATAR_SILHOUETTE;
+      }
+      document.getElementById('prdName').textContent = p.title || '';
+      document.getElementById('prdCatBadge').textContent = `${cat.emo} ${cat.ko}`;
+      document.getElementById('prdIntro').textContent = p.intro || '';
+
+      // ② 포트폴리오 본문
+      document.getElementById('prdBody').textContent = (p.body === ' ' ? '' : (p.body || ''));
+
+      // 코멘트 (선택)
+      const commentSec = document.getElementById('prdCommentSec');
+      document.getElementById('prdComment').textContent = p.comment || '';
+      commentSec.style.display = p.comment ? '' : 'none';
+
+      // ③ 사진 캐러셀 — ‹ › + 1/N 카운터 + 스크롤 스냅. 0장: 타인 비노출, 본인/운영자만 placeholder
+      const photosSec = document.getElementById('prdPhotosSec');
+      const carousel  = document.getElementById('prdCarousel');
+      const track     = document.getElementById('prdCarTrack');
+      const carPrev   = document.getElementById('prdCarPrev');
+      const carNext   = document.getElementById('prdCarNext');
+      const carCnt    = document.getElementById('prdCarCounter');
+      const photoPh   = document.getElementById('prdPhotoPh');
+      const urls = (Array.isArray(p.imageUrls) ? p.imageUrls : []).map(safeImgUrl).filter(Boolean);
+      if (urls.length) {
+        photosSec.style.display = '';
+        carousel.style.display = '';
+        photoPh.hidden = true;
+        track.innerHTML = urls.map((u, i) =>
+          `<div class="prd-car-slide"><img src="${escHtml(u)}" alt="포트폴리오 사진 ${i + 1}" loading="lazy" data-idx="${i}" /></div>`).join('');
+        track.scrollLeft = 0;
+        const carIndex = () => Math.min(urls.length - 1, Math.max(0, Math.round(track.scrollLeft / (track.clientWidth || 1))));
+        const syncCar = () => {
+          const i = carIndex();
+          carCnt.textContent = `${i + 1} / ${urls.length}`;
+          carPrev.disabled = i <= 0;
+          carNext.disabled = i >= urls.length - 1;
+        };
+        // 핸들러는 프로퍼티 할당(onscroll/onclick) — 재오픈 시 중복 부착 방지
+        track.onscroll = () => syncCar();
+        carPrev.onclick = () => track.scrollBy({ left: -track.clientWidth, behavior: 'smooth' });
+        carNext.onclick = () => track.scrollBy({ left:  track.clientWidth, behavior: 'smooth' });
+        track.onclick = e => {
+          const im = e.target.closest('img'); if (!im) return;
+          openLightbox(urls, Number(im.dataset.idx) || 0);
+        };
+        const navShow = urls.length > 1 ? '' : 'none';
+        carPrev.style.display = navShow; carNext.style.display = navShow; carCnt.style.display = navShow;
+        syncCar();
+      } else if (isMine(p) || window.koausIsAdmin) {
+        photosSec.style.display = '';
+        carousel.style.display = 'none';
+        track.innerHTML = '';
+        photoPh.hidden = false;
+      } else {
+        photosSec.style.display = 'none';
+        track.innerHTML = '';
       }
 
-      document.getElementById('detailNavTitle').textContent = p.title;
-      // 상태 + 입주 가능일
-      document.getElementById('detailStatus').innerHTML =
-        `⚪ 쉐어 <span class="rea-dot">•</span> 입주 가능일: <strong>${escHtml(p.availableDate || '협의')}</strong>`;
-      // 가격 (Huge Bold) — XSS 방어: p.price escape (firestore.rules optInt 와 이중 방어)
-      document.getElementById('detailPrice').innerHTML = p.price
-        ? `$${escHtml(String(p.price))} <span class="rea-price-unit">per week</span>`
-        : '<span class="rea-price-na">가격 협의</span>';
-      // 주소 + 복사
-      const addrText = document.getElementById('detailAddrText');
-      const addrCopy = document.getElementById('detailAddrCopy');
-      if (p.address) {
-        addrText.textContent = '📍 ' + p.address;
-        addrCopy.style.display = '';
-        addrCopy.onclick = () => copyAddress(p.address);
-      } else { addrText.textContent = '주소 미등록'; addrCopy.style.display = 'none'; }
+      // ④ 지도 (프라이버시 분기 내장)
+      setupDetailLocation(p);
 
-      // 핵심 요약 칩 (방형태 / 성별 / 숙박기간)
-      const sum = [];
-      const rooms = Array.isArray(p.roomTypes) ? p.roomTypes : (p.roomType ? [p.roomType] : []);
-      rooms.forEach(r => { if (ROOM_LABELS[r]) sum.push('🛏 ' + ROOM_LABELS[r]); });
-      if (p.gender && GENDER_LABELS[p.gender]) sum.push('👤 ' + GENDER_LABELS[p.gender]);
-      const durs = Array.isArray(p.types) ? p.types : (p.type ? [p.type] : []);
-      durs.forEach(t => { if (TYPE_LABELS[t]) sum.push('📅 ' + TYPE_LABELS[t].ko); });
-      document.getElementById('detailSummary').innerHTML = sum.map(s => `<span class="rea-chip">${escHtml(s)}</span>`).join('');
+      // ⑤ 구글 리뷰 — 링크 버튼만
+      const reviewSec = document.getElementById('prdReviewSec');
+      const reviewBtn = document.getElementById('prdReviewBtn');
+      if (p.googleReviewUrl && GREVIEW_RE.test(String(p.googleReviewUrl).trim())) {
+        reviewBtn.href = String(p.googleReviewUrl).trim();
+        reviewSec.style.display = '';
+      } else {
+        reviewSec.style.display = 'none';
+      }
 
-      // Description (+ 더보기)
-      const bodyEl = document.getElementById('detailBody');
-      const moreBtn = document.getElementById('detailMore');
-      bodyEl.textContent = p.body || '';
-      bodyEl.classList.remove('expanded');
-      moreBtn.textContent = '더보기 ›';
-      moreBtn.onclick = () => { const e = bodyEl.classList.toggle('expanded'); moreBtn.textContent = e ? '접기 ‹' : '더보기 ›'; };
-      requestAnimationFrame(() => {
-        moreBtn.style.display = (bodyEl.scrollHeight > bodyEl.clientHeight + 4) ? '' : 'none';
-      });
-
-      // Property features (옵션)
-      const feats = [];
-      if (p.parking)     feats.push('주차 가능');
-      if (p.petFriendly) feats.push('반려동물 가능');
-      if (p.kidsInHouse) feats.push('아이 있는 집');
-      if (p.airCon)      feats.push('에어컨');
-      const featSec = document.getElementById('detailFeaturesSec');
-      if (feats.length) {
-        document.getElementById('detailFeatures').innerHTML = feats.map(f =>
-          `<li class="rea-feat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>${escHtml(f)}</li>`).join('');
-        featSec.style.display = '';
-      } else { featSec.style.display = 'none'; }
+      // ⑥ 문의 — koaus-contact-actions.js (채팅 옵트인 create-first + 문자 prefill + 오픈카톡)
+      //    모듈은 post.kakaoLink 를 읽으므로 openKakaoUrl 을 매핑해 전달
+      if (window.koausContactActions) {
+        window.koausContactActions.render(Object.assign({}, p, { kakaoLink: p.openKakaoUrl || '' }));
+      }
+      // 커버 우하단 바로가기 버튼 — ⑥ 렌더 후에 배선 (그리드 버튼 존재 확인)
+      wireCoverCta(p);
+      const closingEl = document.getElementById('prdClosing');
+      closingEl.textContent = p.closing || '';
+      closingEl.style.display = p.closing ? '' : 'none';
 
       // 저장(★) 토글
       const saveBtn = document.getElementById('detailSaveBtn');
@@ -1918,7 +2440,7 @@
       setStar();
       saveBtn.onclick = () => { toggleSaved(p); setStar(); renderAll(); };
 
-      // 본인 글: 수정/삭제
+      // RBAC 3단계 뷰 — 일반(공유만) / 작성자(수정·삭제) / 운영자(블라인드·강제 삭제)
       const actEl = document.getElementById('detailActions');
       if (isMine(p)) {
         actEl.innerHTML = `<button class="detail-edit-btn" id="detailEditBtn">수정하기</button><button class="detail-delete-btn" id="detailDeleteBtn">삭제하기</button>`;
@@ -1926,16 +2448,12 @@
         document.getElementById('detailDeleteBtn').onclick = () => deletePost(p.id);
         actEl.style.display = 'flex';
       } else if (window.koausIsAdmin && p._fsDocId && window.koausRbac) {
-        // 운영자 (타인 글): 블라인드 토글 + 강제 삭제 — 신고 큐 "글 보기" 동선 즉석 제재
         actEl.innerHTML = `<button class="detail-delete-btn" id="detailAdminHideBtn">${p.isHidden ? '▶️ 블라인드 해제' : '⏸️ 블라인드'}</button><button class="detail-delete-btn" id="detailAdminDelBtn">🗑 강제 삭제</button>`;
         document.getElementById('detailAdminHideBtn').onclick = async () => {
           const willHide = !p.isHidden;
           if (!confirm(willHide ? '이 글을 블라인드 처리하시겠습니까? (작성자 자가 해제 불가)' : '블라인드를 해제하시겠습니까?')) return;
           try {
-            await window.koausRbac.toggleHidden('services', String(p._fsDocId), !!p.isHidden);
-            const arr = loadPosts(); const hit = arr.find(x => String(x.id) === String(p.id));
-            if (hit) { hit.isHidden = willHide; hit.status = willHide ? 'hidden' : 'approved'; hit.hiddenBy = willHide ? 'admin' : ''; savePosts(arr); }
-            p.isHidden = willHide;
+            await window.koausRbac.toggleHidden('daily_posts', String(p._fsDocId), !!p.isHidden);
             alert(willHide ? '⏸️ 블라인드 처리 완료' : '▶️ 블라인드 해제 완료');
             document.getElementById('detailOverlay').classList.remove('open'); renderAll();
           } catch (e) { alert('블라인드 실패: ' + (e.message || e)); }
@@ -1943,8 +2461,8 @@
         document.getElementById('detailAdminDelBtn').onclick = async () => {
           if (!confirm('관리자 권한으로 이 글을 영구 삭제하시겠습니까? (사진·위치정보 포함 완전 삭제)')) return;
           try {
-            await window.koausRbac.forceDelete('services', String(p._fsDocId));
-            savePosts(loadPosts().filter(x => String(x.id) !== String(p.id)));
+            await window.koausRbac.forceDelete('daily_posts', String(p._fsDocId));
+            localStorage.setItem(STORE_KEY, JSON.stringify(loadPosts().filter(x => String(x.id) !== String(p.id))));
             alert('🗑 강제 삭제 완료');
             document.getElementById('detailOverlay').classList.remove('open'); renderAll();
           } catch (e) { alert('강제 삭제 실패: ' + (e.message || e)); }
@@ -1952,50 +2470,40 @@
         actEl.style.display = 'flex';
       } else { actEl.innerHTML = ''; actEl.style.display = 'none'; }
 
-      // 하단 연락처 버튼
-      // 동적 연락 버튼 컨테이너 — phone/kakaoLink/email 분리 필드 기반 자동 렌더 (koaus-contact-actions.js)
-      if (window.koausContactActions) window.koausContactActions.render(p);
-      const cbtn = document.getElementById('detailContactBtn');
-      if (p.contact) {
-        const isLink = /^https?:\/\//i.test(p.contact);
-        cbtn.disabled = false;
-        if (isLink) { cbtn.textContent = '💬 카카오톡으로 연락하기'; cbtn.onclick = () => window.open(p.contact, '_blank', 'noopener'); }
-        else { cbtn.textContent = '📞 연락처 보기'; cbtn.onclick = () => copyText(p.contact, `연락처: ${p.contact}`); }
-      } else { cbtn.textContent = '연락처 미등록'; cbtn.disabled = true; cbtn.onclick = null; }
-
-      setupDetailLocation(p);
       recordRecent(p);
-      // 마커 visited 상태 갱신 (이후 마커 색 흰색으로) — markerIcon은 지도가 로드돼 있을 때만
+      // 마커 visited 상태 갱신 (이후 마커 색 흰색으로)
       if (typeof markVisited === 'function') markVisited(p.id);
       document.getElementById('detailOverlay').classList.add('open');
-      const rc = document.querySelector('.rea-content'); if (rc) rc.scrollTop = 0;
+      const sc = document.getElementById('prdScroll'); if (sc) sc.scrollTop = 0;
+      setupPrReveal();
     }
 
     async function deletePost(id) {
-      if (window.__tradesDeleting) return;   // 처리 중 중복 클릭 방지
-      if (!confirm('정말 이 게시글을 삭제하시겠습니까?')) return;
-      window.__tradesDeleting = true;
+      if (window.__dailyDeleting) return;   // 처리 중 중복 클릭 방지
+      if (!confirm('정말 이 PR을 삭제하시겠습니까?')) return;
+      window.__dailyDeleting = true;
       try {
-        // trades user 글은 Firestore 'services' 에 저장(_fsDocId) — 작성자 본인 FS 문서까지 삭제해야 좀비 방지.
-        //   · services 룰이 작성자 본인 delete 허용(resource.data.uid == auth.uid). FS 삭제 실패 시 LS 도 안 지우고 중단(좀비 재발 방지).
-        const rec  = loadPosts().find(x => String(x.id) === String(id));
+        const rec  = findPost(id);
         const fsId = rec && rec._fsDocId;
         if (fsId && window.koausRbac && window.koausRbac.selfDelete) {
           try {
-            await window.koausRbac.selfDelete('services', String(fsId));
+            await window.koausRbac.selfDelete('daily_posts', String(fsId));
           } catch (e) {
             alert('삭제 실패: ' + (e.code || e.message || e));
             return;
           }
         }
-        savePosts(loadPosts().filter(x => String(x.id) !== String(id)));
+        localStorage.setItem(STORE_KEY, JSON.stringify(loadPosts().filter(x => String(x.id) !== String(id))));
+        Object.keys(_pageItems).forEach(k => {
+          _pageItems[k] = _pageItems[k].filter(x => String(x.id) !== String(id));
+        });
         removeRecord(MYPOSTS_KEY, id);
         removeRecord(SAVED_KEY, id);
         removeRecord(RECENT_KEY, id);
         document.getElementById('detailOverlay').classList.remove('open');
         renderAll();
       } finally {
-        window.__tradesDeleting = false;
+        window.__dailyDeleting = false;
       }
     }
 
@@ -2029,11 +2537,50 @@
       try { document.execCommand('copy'); cb && cb(); } catch (e) {}
       document.body.removeChild(ta);
     }
-    function copyAddress(addr) { copyText(addr, '주소가 복사되었습니다.'); }
+
+    // 공유·마이페이지 딥링크 — 로드 시 ?id 있으면 캐시 폴링 후 상세 자동 오픈 (읽기전용)
+    //   캐시(1페이지 20개) 밖으로 밀려난 글은 getDoc 폴백 1회 — 공개(approved·비숨김) 글만 오픈
+    (function _shareDeepLink() {
+      const _did = new URLSearchParams(location.search).get('id');
+      if (!_did) return;
+      let _fbDone = false;
+      async function _fsFallback() {
+        if (_fbDone) return; _fbDone = true;
+        // Firestore docId 형태만 조회 (옛 숫자 id 공유링크는 조용히 포기 — 오탐 alert 방지)
+        if (!/^[A-Za-z0-9_-]{15,}$/.test(String(_did))) return;
+        try {
+          const db = window.koausDb, fs = window.koausFs;
+          if (!db || !fs || !fs.getDoc || !fs.doc) return;
+          const snap = await fs.getDoc(fs.doc(db, 'daily_posts', String(_did)));
+          if (!snap || !snap.exists()) { alert('삭제되었거나 더 이상 공개되지 않는 글입니다.'); return; }
+          const d = snap.data() || {};
+          // 공개 상태만 오픈 — pending/블라인드/소프트삭제 글 소급 오픈 금지 (?v= 만료 가드와 같은 원리)
+          if (d.status !== 'approved' || d.isHidden) { alert('삭제되었거나 더 이상 공개되지 않는 글입니다.'); return; }
+          const p = Object.assign({ _fsDocId: snap.id }, d);
+          if (p.createdAt && p.createdAt.toMillis) {
+            const dt = p.createdAt.toDate(); const z = n => String(n).padStart(2, '0');
+            p.id   = p.createdAt.toMillis();
+            p.date = `${z(dt.getMonth() + 1)}/${z(dt.getDate())}`;
+            p.time = `${z(dt.getHours())}:${z(dt.getMinutes())}`;
+          } else { p.id = String(_did); }
+          window.__koausDeepLinkPost = p;   // 메모리 주입만 — LS 캐시(onSnapshot 전용) 직접 조작 금지
+          openDetail(p.id, p);
+        } catch (e) {
+          // services 형 컬렉션과 달리 daily_posts get 은 공개 — 실패는 silent (네트워크/일시 오류)
+        }
+      }
+      let _tries = 0;
+      const _t = setInterval(() => {
+        if (++_tries > 10) { clearInterval(_t); _fsFallback(); return; }   // ~1.5s 캐시 미발견 → getDoc 폴백 1회
+        if (typeof openDetail !== 'function' || typeof loadPosts !== 'function') return;
+        const _posts = loadPosts() || [];
+        const _found = _posts.find(x => String(x._fsDocId || '') === String(_did) || String(x.id) === String(_did));
+        if (_found) { clearInterval(_t); try { openDetail(_found.id); } catch (_) {} }
+      }, 150);
+    })();
 
     // ── 공유하기 (모바일: 네이티브 / PC: 드롭다운) ──
     const shareMenu = document.getElementById('detailShareMenu');
-    // 지시 3/3 — 공유 URL: origin + pathname + ?id=<글ID> 강제 조립
     function shareUrl() {
       const fromUrl = new URLSearchParams(location.search).get('id');
       if (fromUrl) return location.origin + location.pathname + '?id=' + encodeURIComponent(fromUrl);
@@ -2047,7 +2594,7 @@
       const p = currentDetailPost; if (!p) return;
       const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
       if (isMobile && navigator.share) {
-        navigator.share({ title: 'KoAus 쉐어', text: `[KoAus 쉐어] ${p.title}`, url: shareUrl() }).catch(() => {});
+        navigator.share({ title: 'KoAus 일상', text: `[KoAus 일상] ${p.title}`, url: shareUrl() }).catch(() => {});
       } else {
         shareMenu.classList.toggle('show');
       }
@@ -2066,9 +2613,9 @@
       }
       shareMenu.classList.remove('show');
     });
-    document.addEventListener('click', e => { if (!e.target.closest('.detail-share-wrap')) shareMenu.classList.remove('show'); });
+    document.addEventListener('click', e => { if (!e.target.closest('.rea-share-wrap')) shareMenu.classList.remove('show'); });
 
-    // ── 신고하기 모달 ──
+    // ── 신고하기 모달 (접수 로직은 koaus-report.js 단일 진입점이 capture 로 담당) ──
     let reportingPostId = null;
     const reportOverlay = document.getElementById('reportOverlay');
     document.getElementById('detailReportBtn').addEventListener('click', () => {
@@ -2090,9 +2637,10 @@
       });
     });
 
-    // ── 상세보기 Location 미니맵 + 전체화면 확대 모달 ──
-    let detailCoords = null, detailAddr = '';
+    // ── 상세보기 Location 미니맵 + 전체화면 확대 모달 — 위치 프라이버시 분기 내장 ──
+    let detailCoords = null, detailAddr = '', detailIsPrivate = false;
     let miniMapObj = null, miniMarker = null, expandMapObj = null, expandMarker = null;
+    let _detailPrivacyCircle = null, _expandPrivacyCircle = null;
     // google.maps 준비될 때까지 대기 후 콜백 (보드/상세 어느 쪽이 로드하든 동작)
     function whenMapsReady(cb) {
       if (window.google && google.maps && google.maps.Map) { cb(); return; }
@@ -2106,62 +2654,95 @@
       const sec = document.getElementById('detailLocation');
       if (!p.address) { sec.style.display = 'none'; detailCoords = null; return; }
       sec.style.display = '';
-      detailAddr = p.address;
-      // 길찾기 / 스트릿뷰 리스트 버튼 외부 링크
-      document.getElementById('detailDirBtn').href =
-        `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(p.address)}&travelmode=transit`;
+      detailIsPrivate = !!p.locationPrivate;
+      // 표시 주소 — 비공개는 redactAddress 안전망 재적용 (옛 글 방어)
+      const shownAddr = (detailIsPrivate && window.koausListingPrivacy && window.koausListingPrivacy.redactAddress)
+        ? (window.koausListingPrivacy.redactAddress(p.address) || p.address)
+        : p.address;
+      detailAddr = shownAddr;
+      document.getElementById('detailAddrText').textContent =
+        '📍 ' + shownAddr + (detailIsPrivate ? ' · 대략적인 위치예요 (반경 400m)' : '');
+      // 비공개: 길찾기/스트릿뷰 숨김 (정확 위치 유도 차단)
+      const locBtns = document.getElementById('detailLocBtns');
+      locBtns.style.display = detailIsPrivate ? 'none' : '';
+      if (!detailIsPrivate) {
+        document.getElementById('detailDirBtn').href =
+          `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(shownAddr)}&travelmode=transit`;
+      }
+      detailCoords = (p.lat && p.lng) ? { lat: p.lat, lng: p.lng } : null;
       const setSvHref = () => {
+        if (detailIsPrivate) return;
         document.getElementById('detailSvBtn').href = detailCoords
           ? `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${detailCoords.lat},${detailCoords.lng}`
-          : `https://www.google.com/maps?q=${encodeURIComponent(p.address)}&layer=c`;
+          : `https://www.google.com/maps?q=${encodeURIComponent(shownAddr)}&layer=c`;
       };
-      detailCoords = (p.lat && p.lng) ? { lat: p.lat, lng: p.lng } : null;
       setSvHref();
-      if (!detailCoords) {            // 좌표 없으면 주소로 지오코딩 (best-effort)
+      if (!detailCoords) {            // 좌표 없으면 주소로 지오코딩 (best-effort — 이미 redact 된 주소라 안전)
         loadMapScript();
-        detailCoords = await geocode(p.address);
+        detailCoords = await geocode(shownAddr);
         setSvHref();
       }
       const el = document.getElementById('detailMiniMap');
-      if (!detailCoords) { el.innerHTML = '<div class="map-empty">지도 위치를 찾을 수 없습니다.</div>'; return; }
+      if (!detailCoords) {
+        // 컨테이너를 안내문으로 덮으면 기존 Map 인스턴스의 DOM 이 파괴됨 —
+        // 참조를 비워 다음 글에서 지도를 새로 생성 (재오픈 회색 지도/원 미표시 방지)
+        miniMapObj = null; miniMarker = null; _detailPrivacyCircle = null;
+        el.innerHTML = '<div class="map-empty">지도 위치를 찾을 수 없습니다.</div>';
+        return;
+      }
       const c = detailCoords;
       whenMapsReady(() => {
+        const zoom = detailIsPrivate ? 13 : 15;
         if (!miniMapObj) {
-          miniMapObj = new google.maps.Map(el, { gestureHandling: 'greedy',
-            center: c, zoom: 15, disableDefaultUI: true, clickableIcons: false,
+          miniMapObj = new google.maps.Map(el, { gestureHandling: 'none',
+            center: c, zoom, disableDefaultUI: true, clickableIcons: false,
           });
         } else {
           google.maps.event.trigger(miniMapObj, 'resize');
-          miniMapObj.setCenter(c); miniMapObj.setZoom(15);
+          miniMapObj.setCenter(c); miniMapObj.setZoom(zoom);
         }
-        if (miniMarker) miniMarker.setMap(null);
-        miniMarker = new google.maps.Marker({ position: c, map: miniMapObj });
+        if (miniMarker) { miniMarker.setMap(null); miniMarker = null; }
+        if (_detailPrivacyCircle) { _detailPrivacyCircle.setMap(null); _detailPrivacyCircle = null; }
+        if (detailIsPrivate && window.koausListingPrivacy && window.koausListingPrivacy.drawPrivacyCircle) {
+          _detailPrivacyCircle = window.koausListingPrivacy.drawPrivacyCircle(miniMapObj, c.lat, c.lng, { radius: 400 });
+        } else {
+          miniMarker = new google.maps.Marker({ position: c, map: miniMapObj });
+        }
       });
     }
 
     const mapExpandOverlay = document.getElementById('mapExpandOverlay');
     function openMapExpand() {
       if (!detailCoords) { showToast('지도 위치를 찾을 수 없습니다.'); return; }
-      // 플로팅 버튼 외부 링크 세팅
-      document.getElementById('mapFabDir').href =
-        `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(detailAddr)}&travelmode=transit`;
-      document.getElementById('mapFabSv').href =
-        `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${detailCoords.lat},${detailCoords.lng}`;
+      // 플로팅 버튼 외부 링크 — 비공개 매물은 숨김 (정확 위치 유도 차단)
+      const fabDir = document.getElementById('mapFabDir');
+      const fabSv  = document.getElementById('mapFabSv');
+      fabDir.style.display = detailIsPrivate ? 'none' : '';
+      fabSv.style.display  = detailIsPrivate ? 'none' : '';
+      if (!detailIsPrivate) {
+        fabDir.href = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(detailAddr)}&travelmode=transit`;
+        fabSv.href  = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${detailCoords.lat},${detailCoords.lng}`;
+      }
       mapExpandOverlay.classList.add('open');
       document.body.style.overflow = 'hidden';
       whenMapsReady(() => {
         const el = document.getElementById('mapExpandCanvas');
         if (!expandMapObj) {
           expandMapObj = new google.maps.Map(el, { gestureHandling: 'greedy',
-            center: detailCoords, zoom: 16, mapTypeControl: false, streetViewControl: false, fullscreenControl: false,
+            center: detailCoords, zoom: detailIsPrivate ? 14 : 16, mapTypeControl: false, streetViewControl: false, fullscreenControl: false,
           });
         }
         // 모달 표시 후 컨테이너 크기가 잡히면 리사이즈 + 중심 재설정
         setTimeout(() => {
           google.maps.event.trigger(expandMapObj, 'resize');
-          expandMapObj.setCenter(detailCoords); expandMapObj.setZoom(16);
-          if (expandMarker) expandMarker.setMap(null);
-          expandMarker = new google.maps.Marker({ position: detailCoords, map: expandMapObj });
+          expandMapObj.setCenter(detailCoords); expandMapObj.setZoom(detailIsPrivate ? 14 : 16);
+          if (expandMarker) { expandMarker.setMap(null); expandMarker = null; }
+          if (_expandPrivacyCircle) { _expandPrivacyCircle.setMap(null); _expandPrivacyCircle = null; }
+          if (detailIsPrivate && window.koausListingPrivacy && window.koausListingPrivacy.drawPrivacyCircle) {
+            _expandPrivacyCircle = window.koausListingPrivacy.drawPrivacyCircle(expandMapObj, detailCoords.lat, detailCoords.lng, { radius: 400 });
+          } else {
+            expandMarker = new google.maps.Marker({ position: detailCoords, map: expandMapObj });
+          }
         }, 120);
       });
     }
@@ -2182,14 +2763,18 @@
         }
         const req = wrap.requestFullscreen || wrap.webkitRequestFullscreen;
         if (req) {
-          req.call(wrap).catch(err => { console.warn('[accom] requestFullscreen 실패', err); });
+          req.call(wrap).catch(err => { console.warn('[daily] requestFullscreen 실패', err); });
         }
       });
       // 전체화면 진입/이탈 시 지도 리사이즈 트리거
       const onFsChange = () => {
+        const fs = !!(document.fullscreenElement || document.webkitFullscreenElement);
         setTimeout(() => {
-          if (miniMapObj && window.google) google.maps.event.trigger(miniMapObj, 'resize');
-          if (detailCoords && miniMapObj) miniMapObj.setCenter(detailCoords);
+          if (miniMapObj && window.google) {
+            miniMapObj.setOptions({ gestureHandling: fs ? 'greedy' : 'none' });
+            google.maps.event.trigger(miniMapObj, 'resize');
+            if (detailCoords) miniMapObj.setCenter(detailCoords);
+          }
         }, 120);
       };
       document.addEventListener('fullscreenchange', onFsChange);
@@ -2211,19 +2796,6 @@
         try { localStorage.setItem(VISITED_KEY, JSON.stringify(arr.slice(-500))); } catch (_) {}
       }
     }
-    // ── 연락 완료 상태 — localStorage 'koaus_contacted_posts' ──
-    const CONTACTED_KEY = 'koaus_contacted_posts';
-    function contactedIds() { try { return JSON.parse(localStorage.getItem(CONTACTED_KEY) || '[]'); } catch (_) { return []; } }
-    function isContacted(id) { return contactedIds().includes(String(id)); }
-    function toggleContacted(id) {
-      const arr = contactedIds(); const s = String(id);
-      const idx = arr.indexOf(s);
-      if (idx >= 0) arr.splice(idx, 1); else arr.push(s);
-      try { localStorage.setItem(CONTACTED_KEY, JSON.stringify(arr.slice(-500))); } catch (_) {}
-      return idx < 0;  // true = 새로 contacted
-    }
-    const ICON_BOX     = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>';
-    const ICON_CHECKED = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><polyline points="7 12 11 16 17 8"/></svg>';
     function markerIcon(id) {
       const v = isVisited(id);
       return {
@@ -2233,21 +2805,13 @@
       };
     }
 
-    // InfoWindow 위임: ⭐ + ☑ 우선(stopPropagation), 카드는 markVisited + openDetail
+    // InfoWindow 위임: ⭐ 우선(stopPropagation), 카드는 markVisited + openDetail
     document.addEventListener('click', e => {
-      const cb = e.target.closest('.iw-contact[data-pid]');
-      if (cb) {
-        e.stopPropagation(); e.preventDefault();
-        const on = toggleContacted(cb.dataset.pid);
-        cb.classList.toggle('contacted', on);
-        cb.innerHTML = on ? ICON_CHECKED : ICON_BOX;
-        return;
-      }
       const star = e.target.closest('.iw-star[data-pid]');
       if (star) {
         e.stopPropagation(); e.preventDefault();
         const id = star.dataset.pid;
-        const p = (typeof loadPosts === 'function') ? loadPosts().find(x => String(x.id) === String(id)) : null;
+        const p = (typeof findPost === 'function') ? findPost(id) : null;
         if (p && typeof toggleSaved === 'function') {
           toggleSaved(p);
           star.textContent = isSaved(p.id) ? '★' : '☆';
@@ -2267,7 +2831,7 @@
     let infoWindow = null;
     let markers    = [];
     let areaBounds = null;        // '이 지역 검색' 활성 경계 (null이면 전체)
-    let programmaticMove = false; // 글 등록 후 자동 이동 시 버튼 노출 억제
+    let programmaticMove = false; // 프로그램적 이동 시 버튼 노출 억제
 
     // '이 지역 매물 검색하기' 버튼: 현재 지도 범위로 리스트·마커 필터
     document.getElementById('areaSearchBtn').addEventListener('click', () => {
@@ -2289,32 +2853,15 @@
       tas: { center: { lat: -42.8821, lng: 147.3272 }, zoom: 11 },  // 호바트
       act: { center: { lat: -35.2809, lng: 149.1300 }, zoom: 11 },  // 캔버라
     };
-    const AUS_VIEW        = { center: { lat: -25.2744, lng: 133.7751 }, zoom: 4 };  // 전국
+    // 주 미지정 진입 시 전국 대신 기본 대도시(시드니) 센터 (rent·accom 정책 정합)
     const urlState        = (new URLSearchParams(location.search).get('state') || '').toLowerCase();
-    const activeStateView = STATE_VIEWS[urlState] || AUS_VIEW;
-
-
-    // 글쓰기 주소 자동완성 선택 시 메인 지도 마커 미리보기 (jobs 패턴 이식)
-    //  · agent.md §2-D Detail Page Standard 일관 — 위치 정보 즉시 시각화
-    let pendingMarker = null;
-    function showPendingMarker(lat, lng) {
-      whenMapsReady(() => {
-        if (!map) { loadMapScript(); return; }
-        if (pendingMarker) pendingMarker.setMap(null);
-        pendingMarker = new google.maps.Marker({
-          position: { lat, lng }, map: map, title: '선택한 주소',
-          animation: google.maps.Animation.DROP,
-        });
-        map.panTo({ lat, lng });
-        try { map.setZoom(Math.max(14, map.getZoom() || 11)); } catch (_) {}
-      });
-    }
+    const activeStateView = STATE_VIEWS[urlState] || STATE_VIEWS.nsw;
 
     function loadMapScript() {
       if (mapReady || mapLoading) return;
       if (GOOGLE_MAPS_KEY === 'YOUR_API_KEY') {
         document.getElementById('accomMap').innerHTML =
-          '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-muted);font-size:14px;">Google Maps API 키를 설정해 주세요 (accom.html 내 GOOGLE_MAPS_KEY)</div>';
+          '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-muted);font-size:14px;">Google Maps API 키를 설정해 주세요</div>';
         return;
       }
       mapLoading = true;
@@ -2349,51 +2896,46 @@
     }
 
     function updateMapMarkers(filteredPosts) {
-      // 외부 필터 모듈 (Stage 2 필터 후처리) 에서 호출할 수 있도록 노출
+      // 외부에서 호출할 수 있도록 노출
       window.__koausUpdateMap = updateMapMarkers;
       if (!map) return;
       markers.forEach(m => m.setMap(null));
       markers = [];
       const bounds = new google.maps.LatLngBounds();
-      let hasCoord  = false;
 
       function buildCardHtml(p) {
-        const iwTags = filterTags(p).slice(0, 3).map(t =>
-          `<span style="display:inline-block;font-size:10px;color:#000;background:#fff;border:1px solid #000;border-radius:999px;padding:1px 7px;margin:2px 3px 0 0;white-space:nowrap;">${escHtml(t)}</span>`
-        ).join('');
-        const thumb = (Array.isArray(p.imageUrls) && p.imageUrls.length)
-          ? `<img src="${escHtml(p.imageUrls[0])}" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;" />`
-          : `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#777" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>`;
+        const cat = catOf(p);
+        const thumbUrl = safeImgUrl(p.coverImageUrl) || safeImgUrl(Array.isArray(p.imageUrls) ? p.imageUrls[0] : '') || safeImgUrl(p.avatarUrl);
+        const thumb = thumbUrl
+          ? `<img src="${escHtml(thumbUrl)}" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;" />`
+          : `<span style="font-size:26px;">${cat.emo}</span>`;
         const starOn = isSaved(p.id);
-        const cOn = isContacted(p.id);
         return `
-          <div class="iw-card" data-pid="${p.id}" style="position:relative;display:flex;gap:10px;max-width:270px;padding:4px 56px 4px 2px;cursor:pointer;font-family:'Urbanist','Noto Sans KR',sans-serif;">
+          <div class="iw-card" data-pid="${p.id}" style="position:relative;display:flex;gap:10px;max-width:270px;padding:4px 34px 4px 2px;cursor:pointer;font-family:'Urbanist','Noto Sans KR',sans-serif;">
             <div class="iw-actions" style="position:absolute;top:-2px;right:-4px;display:inline-flex;align-items:center;gap:2px;">
               <button class="iw-star" data-pid="${p.id}" aria-label="찜하기" style="width:28px;height:28px;border:none;background:transparent;font-size:18px;line-height:1;cursor:pointer;color:${starOn ? '#000' : '#777'};padding:0;display:inline-flex;align-items:center;justify-content:center;">${starOn ? '★' : '☆'}</button>
-              <button class="iw-contact ${cOn ? 'contacted' : ''}" data-pid="${p.id}" aria-label="연락 완료 표시" style="width:28px;height:28px;border:none;background:transparent;line-height:1;cursor:pointer;padding:0;display:inline-flex;align-items:center;justify-content:center;color:${cOn ? '#d92626' : '#777'};">${cOn ? ICON_CHECKED : ICON_BOX}</button>
             </div>
             <div style="flex-shrink:0;width:72px;height:72px;border-radius:6px;overflow:hidden;border:1px solid #000;background:#f5f5f5;display:flex;align-items:center;justify-content:center;">${thumb}</div>
             <div style="min-width:0;flex:1;">
               <div style="font-weight:800;font-size:13px;line-height:1.3;color:#000;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${escHtml(p.title)}</div>
-              ${p.price ? `<div style="font-size:14px;font-weight:800;color:#000;margin-top:3px;">$${p.price}<span style="font-size:10px;font-weight:500;">/wk</span></div>` : ''}
-              ${iwTags ? `<div style="margin-top:3px;line-height:1.4;">${iwTags}</div>` : ''}
-              <div style="font-size:10px;color:#666;margin-top:4px;">탭하여 상세 보기 →</div>
+              <div style="margin-top:3px;"><span style="display:inline-block;font-size:10px;color:#000;background:#fff;border:1px solid #000;border-radius:999px;padding:1px 7px;white-space:nowrap;">${cat.emo} ${escHtml(cat.ko)}</span></div>
+              ${p.intro ? `<div style="font-size:11px;color:#444;margin-top:3px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;">${escHtml(p.intro)}</div>` : ''}
+              <div style="font-size:10px;color:#666;margin-top:4px;">탭하여 PR 보기 →</div>
             </div>
           </div>`;
       }
       if (window.koausMapCluster) {
-        const n = window.koausMapCluster.attachMarkers({
+        window.koausMapCluster.attachMarkers({
           map, infoWindow, posts: filteredPosts, markers, bounds,
           markerIcon: p => markerIcon(p.id),
           buildCardHtml,
           onSingleClick: p => markVisited(p.id),
         });
-        if (n > 0) hasCoord = true;
       }
-      // 중심은 initMap(주별 도시) 및 글 등록 시 지오코딩 좌표로 제어 — 여기선 마커만 갱신.
+      // 중심은 initMap(주별 도시) 이 제어 — 여기선 마커만 갱신.
     }
 
-    // ── Geocoding (for future use) ──
+    // ── Geocoding (REST 폴백) ──
     async function geocodeAddress(address) {
       try {
         const res  = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${GOOGLE_MAPS_KEY}`);
@@ -2412,62 +2954,17 @@
       const params = new URLSearchParams(location.search);
       const editId = params.get('edit');
       if (editId) {
-        const p = loadPosts().find(x => String(x.id) === String(editId));
+        const p = loadPosts().find(x => String(x._fsDocId || '') === String(editId) || String(x.id) === String(editId));
         if (p && isMine(p)) openWriteModalForEdit(p);
-      } else if (params.get('duplicate') === '1' && localStorage.getItem('koaus-duplicate-accom')) {
-        openWriteModal();   // duplicate prefill 은 openWriteModal 내부에서 자동 적용
       }
     }, { once: true });
 
-    switchMode(activeMode);  // URL ?mode= 반영 + 초기 렌더/타이틀
-    // Firestore services 컬렉션이 갱신되면 현재 모드 리스트 즉시 재렌더
-    window.addEventListener('koaus-services-updated', () => renderAll());
-
-    // Dual Range Slider + 입력창 양방향 동기화 (쉐어 가격)
-    (function bindShareDualRange() {
-      const root = document.getElementById('filterSharePriceRange');
-      if (!root) return;
-      const minIn  = document.getElementById('fbPriceMin');
-      const maxIn  = document.getElementById('fbPriceMax');
-      const minTxt = document.getElementById('fbPriceMinInput');
-      const maxTxt = document.getElementById('fbPriceMaxInput');
-      const fill   = document.getElementById('filterSharePriceFill');
-      const label  = document.getElementById('filterSharePriceLabel');
-      const hidden = document.getElementById('fbPrice');
-      const MIN = Number(root.dataset.min), MAX = Number(root.dataset.max);
-      const STEP = Number(root.dataset.step) || 10;
-      const clamp = v => Math.min(MAX, Math.max(MIN, Math.round(v / STEP) * STEP));
-      function paint(srcEl) {
-        let lo = Number(minIn.value), hi = Number(maxIn.value);
-        if (lo > hi - STEP) {
-          if (srcEl === minIn || srcEl === minTxt) { lo = hi - STEP; }
-          else                                      { hi = lo + STEP; }
-        }
-        lo = clamp(lo); hi = clamp(hi);
-        minIn.value = lo; maxIn.value = hi;
-        if (minTxt && document.activeElement !== minTxt) minTxt.value = lo;
-        if (maxTxt && document.activeElement !== maxTxt) maxTxt.value = hi;
-        const a = ((lo - MIN) / (MAX - MIN)) * 100;
-        const b = ((hi - MIN) / (MAX - MIN)) * 100;
-        fill.style.left  = a + '%';
-        fill.style.right = (100 - b) + '%';
-        const hiTxt = hi >= MAX ? `$${MAX}+` : `$${hi}`;
-        label.textContent = `$${lo} to ${hiTxt}`;
-        // 기존 fbPrice 참조 코드 호환 — max 값 mirror
-        if (hidden) hidden.value = hi;
-      }
-      minIn.addEventListener('input', e => paint(e.target));
-      maxIn.addEventListener('input', e => paint(e.target));
-      const fromText = e => {
-        const v = clamp(Number(e.target.value) || 0);
-        if (e.target === minTxt) minIn.value = v;
-        else                     maxIn.value = v;
-        paint(e.target);
-      };
-      if (minTxt) { minTxt.addEventListener('input', fromText); minTxt.addEventListener('change', fromText); }
-      if (maxTxt) { maxTxt.addEventListener('input', fromText); maxTxt.addEventListener('change', fromText); }
-      paint();
-    })();
+    updateBoardTitle();
+    syncCatTabs();
+    renderAll();
+    try { const _sv = _koausSavedView(); if (_sv === 'map' || _sv === 'list') switchView(_sv); } catch (_) {}  // 저장된 뷰 복원
+    // Firestore daily_posts 컬렉션이 갱신되면 리스트 즉시 재렌더
+    window.addEventListener('koaus-daily-updated', () => renderAll());
   </script>
 
   <!-- ── Firebase Auth (로그인 모달 + 로그인 상태) ── -->
@@ -2478,7 +2975,7 @@
       createUserWithEmailAndPassword, signInWithEmailAndPassword,
     } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
     import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app-check.js';
-    import { getFirestore, doc, getDoc, setDoc, addDoc, updateDoc, collection, serverTimestamp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
+    import { getFirestore, doc, getDoc, setDoc, addDoc, updateDoc, collection, serverTimestamp, deleteField } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
 
     const firebaseConfig = {
       apiKey:            'AIzaSyCamqnt0bNUD9uz1N5BbCuQjSkWLSpPqlU',
@@ -2505,7 +3002,7 @@
 
     const auth = getAuth(app);
     // 최근 검색 기록 동기화용 Firestore (콘솔에서 Firestore 활성화 + users 규칙 배포 시 동작)
-    try { window.koausDb = getFirestore(app); window.koausFs = { doc, getDoc, setDoc, addDoc, updateDoc, collection, serverTimestamp }; } catch (e) { /* Firestore 미설정 무시 */ }
+    try { window.koausDb = getFirestore(app); window.koausFs = { doc, getDoc, setDoc, addDoc, updateDoc, collection, serverTimestamp, deleteField }; } catch (e) { /* Firestore 미설정 무시 */ }
 
     // 사진 첨부 — 클라이언트 압축 + Firebase Storage 업로드 모듈 노출
     import('./compress.js').then(mod => {
@@ -2686,70 +3183,71 @@
     });
   </script>
 
-  <!-- ── Firestore services 컬렉션 실시간 구독 (기술직 관리자 글 자동 노출) ── -->
+  <!-- ── Firestore daily_posts 실시간 구독(1페이지) + 커서 페이저(2페이지~) ── -->
   <script type="module">
     import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
-    import { getFirestore, collection, query, orderBy, limit, where, onSnapshot } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
+    import { getFirestore, collection, query, orderBy, limit, where, onSnapshot, getDocs, startAfter } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
     const firebaseConfig = {
       apiKey:'AIzaSyCamqnt0bNUD9uz1N5BbCuQjSkWLSpPqlU', authDomain:'koaus-f564c.firebaseapp.com',
       projectId:'koaus-f564c', storageBucket:'koaus-f564c.firebasestorage.app',
       messagingSenderId:'663988594088', appId:'1:663988594088:web:ef30c2fd557407b00b299d',
     };
     const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
-    let db; try { db = getFirestore(app); } catch (e) { console.warn('[trades] Firestore 미초기화', e); }
+    let db; try { db = getFirestore(app); } catch (e) { console.warn('[daily] Firestore 미초기화', e); }
     if (db) {
-      // trades 페이지는 accom의 LocalStorage 패턴을 재활용 (저장 키는 trades 전용으로 분리)
-      const STORE = 'koaus-trades-posts';
+      const STORE = 'koaus-daily-posts';
+      const PAGE  = 20;   // rules limitedList 정합 (빌링 캡, 완화 금지)
+      // 페이저 상태 — 커서(DocumentSnapshot)는 모듈 내부 보관, 메인 스크립트는 fetchPage/rawCount 만 사용
+      //   선착순(asc) 정렬이라 새 글은 항상 뒤에 붙음 → 페이지 경계·커서가 안정적
+      const _cursors  = {};   // {페이지번호: 그 페이지 마지막 DocumentSnapshot}
+      const _rawCount = {};   // {페이지번호: 필터 전 raw doc 수} — <20 이면 마지막 페이지 확정
+      const mapDoc = d => {
+        const s = { _fsDocId: d.id, ...d.data() };
+        if (s.createdAt && s.createdAt.toMillis) {
+          const dt = s.createdAt.toDate(); const p = n => String(n).padStart(2,'0');
+          s.id   = s.createdAt.toMillis();
+          s.date = `${p(dt.getMonth()+1)}/${p(dt.getDate())}`;
+          s.time = `${p(dt.getHours())}:${p(dt.getMinutes())}`;
+        } else { s.id = Date.now(); }
+        return s;
+      };
       try {
-        // category 서버사이드 필터 — windowing 방지 (services 50건 초과 시 안전망)
-        //   복합 인덱스: (category ASC, status ASC, createdAt ASC)
+        // 1페이지 — where('status','==','approved') + orderBy('createdAt','asc') 선착순 (복합 인덱스 필수:
+        //   firestore.indexes.json daily_posts (status ASC, createdAt ASC) — firestore:indexes 별도 배포)
         onSnapshot(query(
-          collection(db, 'services'),
-          where('category', '==', 'trades'),
+          collection(db, 'daily_posts'),
           where('status', '==', 'approved'),
           orderBy('createdAt', 'asc'),
-          limit(50)
+          limit(PAGE)
         ), snap => {
-          const fsItems = snap.docs
-            .map(d => ({ _fsDocId: d.id, ...d.data() }))
-            .filter(s => !s.isHidden);
-          fsItems.forEach(s => {
-            if (s.createdAt && s.createdAt.toMillis) {
-              const d = s.createdAt.toDate(); const p = n => String(n).padStart(2,'0');
-              s.id   = s.createdAt.toMillis();
-              s.date = `${p(d.getMonth()+1)}/${p(d.getDate())}`;
-              s.time = `${p(d.getHours())}:${p(d.getMinutes())}`;
-            } else { s.id = Date.now(); }
-            // ── 지시 5-B ── 사용자 글(isUserPost=true)에 adminPost 잘못 부여 차단
-            if (!s.isUserPost) s.adminPost = true;
-            s.address   = s.address || s.region;
-            s.tagline   = s.tagline || s.summary;
-            // 사용자 글은 mode 그대로 보존, admin 글만 'offer' 기본값 부여 (옛 호환)
-            if (!s.isUserPost) {
-              s.mode = s.mode || 'offer';
-              if (!Array.isArray(s.types))     s.types     = ['any'];
-              if (!Array.isArray(s.roomTypes)) s.roomTypes = [];
-            } else {
-              s.mode = s.mode || 'offer';
-              if (!Array.isArray(s.types))     s.types     = s.types || [];
-              if (!Array.isArray(s.roomTypes)) s.roomTypes = s.roomTypes || [];
-            }
-          });
-          // ── 지시 5/10 ── 글쓰기 복구: 로컬 사용자 글 보존 + admin 글 머지 ──
-          //   · 옛 코드: localStorage.setItem(STORE, JSON.stringify(fsItems)) — 사용자 글 wipe.
-          //   · 신규: 로컬 글(_fsDocId 없는 = 사용자 작성) 보존하고 fsItems(admin) 만 위에 머지.
-          //   · 같은 _fsDocId 충돌 시 fsItems 우선 (최신 admin 상태 반영).
-          let existing = [];
-          try { existing = JSON.parse(localStorage.getItem(STORE) || '[]'); } catch (_) { existing = []; }
-          if (!Array.isArray(existing)) existing = [];
-          const userPosts  = existing.filter(p => p && !p._fsDocId);   // 로컬 사용자 글
-          const fsKeySet   = new Set(fsItems.map(s => s._fsDocId));
-          const keptAdmin  = existing.filter(p => p && p._fsDocId && !fsKeySet.has(p._fsDocId));  // 옛 admin 캐시 잔재 정리
-          const merged     = [...userPosts, ...fsItems];   // 사용자 글 + 최신 admin
-          localStorage.setItem(STORE, JSON.stringify(merged));
-          window.dispatchEvent(new Event('koaus-services-updated'));
-        }, err => console.warn('[trades] services 구독 실패', err));
-      } catch (e) { console.warn('[trades] Firestore services subscribe 실패', e); }
+          _rawCount[1] = snap.docs.length;
+          if (snap.docs.length) _cursors[1] = snap.docs[snap.docs.length - 1];
+          const fsItems = snap.docs.map(mapDoc).filter(s => !s.isHidden);
+          // daily_posts 는 전량 Firestore — LS 는 onSnapshot 캐시 전용 (직접 조작 금지, koausRbac 경유)
+          localStorage.setItem(STORE, JSON.stringify(fsItems));
+          window.dispatchEvent(new Event('koaus-daily-updated'));
+        }, err => console.warn('[daily] daily_posts 구독 실패', err));
+      } catch (e) { console.warn('[daily] Firestore subscribe 실패', e); }
+
+      // 2페이지 이후 — startAfter 커서 + 일회성 getDocs (onSnapshot 아님, 빌링 방어)
+      window.koausDailyPager = {
+        rawCount(n) { return (n in _rawCount) ? _rawCount[n] : -1; },
+        async fetchPage(n) {
+          if (n < 2) return null;
+          const cur = _cursors[n - 1];
+          if (!cur) return null;   // 순차 페이징 전용 — 이전 페이지 커서 필수
+          const qs = await getDocs(query(
+            collection(db, 'daily_posts'),
+            where('status', '==', 'approved'),
+            orderBy('createdAt', 'asc'),
+            startAfter(cur),
+            limit(PAGE)
+          ));
+          _rawCount[n] = qs.docs.length;
+          if (qs.docs.length) _cursors[n] = qs.docs[qs.docs.length - 1];
+          return qs.docs.map(mapDoc).filter(s => !s.isHidden);
+        },
+      };
     }
   </script>
 
@@ -2818,215 +3316,8 @@
 
   <script type="module" src="koaus-pinned.js"></script>
 
-  <!-- ── 글쓰기 모달 (유저 직접 작성 · accom 패턴 5:5) ── -->
-  <div class="write-overlay" id="writeOverlay">
-    <div class="write-modal write-modal--tall">
-      <div class="write-modal-header">
-        <div class="write-modal-title">글쓰기 <em>Write Post</em></div>
-        <span class="write-author-badge">작성자 : <b id="wAuthorName">-</b></span>
-        <button class="write-modal-close" id="writeBtnClose">✕</button>
-      </div>
-
-      <!-- 작성 주의사항 안내 박스 — 다음 작업에서 본문 inject -->
-      <div class="write-rules-box" role="note" aria-label="작성 주의사항">
-        <span class="wrb-icon" aria-hidden="true">⚠️</span>
-        <div class="wrb-body">
-          <strong class="wrb-title">작성 전 주의사항</strong>
-          <p>💡 업체 및 서비스 등록 시 정확한 상호명, ABN, 공식 연락처 및 영업시간을 기재해 주세요. 커뮤니티의 신뢰도를 저해하는 허위 리뷰나 부정 홍보성 게시글은 즉시 삭제됩니다.</p>
-        </div>
-      </div>
-
-      <div class="write-grid" id="writeGrid">
-        <div class="write-col">
-          <div class="write-field">
-            <label class="write-label" for="wTitle">제목 Title<span class="required-mark">*</span></label>
-            <input class="write-input" id="wTitle" type="text" placeholder="예: 멜번 Box Hill 싱글룸 · 주 $210" maxlength="80" />
-          </div>
-          <div class="write-field offer-only">
-            <label class="write-label" for="wAddress">주소 Address<span class="required-mark">*</span></label>
-            <div class="addr-ac">
-              <input class="write-input" id="wAddress" type="text" autocomplete="off" placeholder="도로명·지역명만 입력해도 OK (예: Coronation Dr, Green Valley NSW)" />
-              <ul class="addr-suggest" id="wAddressSuggest"></ul>
-            </div>
-          </div>
-          <div class="write-field offer-only">
-            <label class="write-label" for="wPrice">주당 쉐어비 Price / wk ($)<span class="required-mark">*</span></label>
-            <input class="write-input" id="wPrice" type="number" placeholder="숫자만 입력" min="0" />
-          </div>
-          <div class="write-field offer-only">
-            <span class="write-label">방 형태 Room Type (중복 선택 가능)</span>
-            <div class="write-opts" id="wRoomTypes">
-              <label class="write-opt"><input type="checkbox" data-room="master"> 마스터룸</label>
-              <label class="write-opt"><input type="checkbox" data-room="second"> 세컨룸</label>
-              <label class="write-opt"><input type="checkbox" data-room="single"> 독방</label>
-              <label class="write-opt"><input type="checkbox" data-room="living_share"> 거실쉐어</label>
-              <label class="write-opt"><input type="checkbox" data-room="sunroom"> 썬룸</label>
-            </div>
-          </div>
-          <div class="write-field offer-only">
-            <span class="write-label">숙박 기간 Duration (중복 선택 가능)</span>
-            <div class="write-opts" id="wTypes">
-              <label class="write-opt"><input type="checkbox" data-type="ultra_short"> 초단기 (1일~2주)</label>
-              <label class="write-opt"><input type="checkbox" data-type="short"> 단기 (2주~4주)</label>
-              <label class="write-opt"><input type="checkbox" data-type="mid"> 중단기 (1달~2달)</label>
-              <label class="write-opt"><input type="checkbox" data-type="long"> 장기 (2달 이상)</label>
-              <label class="write-opt"><input type="checkbox" data-type="any"> 기간 상관 없음</label>
-            </div>
-          </div>
-          <div class="write-field offer-only">
-            <label class="write-label" for="wPhone">📞 전화번호 Phone <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택 · 전화 + 문자 둘 다 활성)</em></label>
-            <input class="write-input" id="wPhone" type="tel" placeholder="04xx xxx xxx" maxlength="30" autocomplete="tel" />
-          </div>
-          <div class="write-field offer-only">
-            <label class="write-label" for="wKakao">💛 카톡 오픈채팅 링크 <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택)</em></label>
-            <input class="write-input" id="wKakao" type="url" placeholder="https://open.kakao.com/o/..." maxlength="500" />
-          </div>
-          <div class="write-field offer-only">
-            <label class="write-label" for="wContact">기타 통합 입력 Misc <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택 · 위 분리 필드 우선)</em></label>
-            <input class="write-input" id="wContact" type="text" placeholder="기타 연락 수단·시간대·메모 등 자유 입력" maxlength="200" />
-          </div>
-        </div>
-
-        <div class="write-col">
-          <div class="write-field offer-only">
-            <label class="write-label" for="wAvailDate">입주 가능한 날 Available Date</label>
-            <input class="write-input" id="wAvailDate" type="date" />
-          </div>
-          <div class="write-field offer-only">
-            <label class="write-label" for="wGender">성별 조건 Gender</label>
-            <select class="write-input" id="wGender">
-              <option value="">선택 안 함</option>
-              <option value="male">남</option>
-              <option value="female">여</option>
-              <option value="any">성별 무관</option>
-            </select>
-          </div>
-          <div class="write-field offer-only">
-            <span class="write-label">옵션 Options</span>
-            <div class="write-opts">
-              <label class="write-opt"><input type="checkbox" id="wParking"> 🅿 주차</label>
-              <label class="write-opt"><input type="checkbox" id="wPet"> 🐾 반려동물</label>
-              <label class="write-opt"><input type="checkbox" id="wKids"> 👶 아이</label>
-              <label class="write-opt"><input type="checkbox" id="wAirCon"> ❄ 에어컨</label>
-            </div>
-          </div>
-          <div class="write-field write-field--grow">
-            <label class="write-label" for="wBody" id="wBodyLabel">상세 설명 Comments</label>
-            <textarea class="write-textarea" id="wBody" placeholder="자세한 조건·시설·환경 등을 적어주세요"></textarea>
-          </div>
-        </div>
-      </div>
-
-      <!-- 사진 첨부 (최대 8장, 클라이언트 압축 후 Firebase Storage 업로드) -->
-      <div class="write-field">
-        <label class="write-label">사진 첨부 Photos <em style="font-style:normal;color:var(--text-muted);font-size:11px;">최대 8장 · 자동 압축됩니다</em></label>
-        <div class="photo-upload" id="wPhotoBox">
-          <input type="file" id="wPhotoInput" accept="image/*" multiple hidden />
-          <button type="button" class="photo-add-btn" id="wPhotoAddBtn">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-            <span>사진 추가</span>
-          </button>
-          <div class="photo-thumbs" id="wPhotoThumbs"></div>
-        </div>
-        <p class="duplicate-notice" id="duplicateNotice" hidden>* 안전한 개인정보 보호를 위해 사진은 새로 첨부해 주셔야 합니다.</p>
-      </div>
-
-      <div class="caution-box" aria-label="주의사항 및 공지사항">
-        <div class="caution-title">⚠ 주의사항 및 공지사항</div>
-        <ol>
-          <li>욕설, 혐오 발언 및 타인 비방 금지</li>
-          <li>환전 및 담배 등 호주 내 불법·편법 거래 금지</li>
-          <li>호주 법률 위반 글 또는 타인의 초상권·저작권 침해 사진 업로드 시 무통보 삭제 및 사이트 영구 이용 불가</li>
-          <li>1일 2회 등록 가능 (주소만 살짝 바꾸는 중복 도배 글은 동일 글로 간주하여 제재)</li>
-          <li>단기 렌트·쉐어 거래 시 보증금(Deposit) 사기 및 먹튀에 각별히 주의하세요.</li>
-          <li>상세 정보 없이 외부 메신저(카카오톡 등)로 유도하는 글은 피싱 사기일 확률이 높습니다.</li>
-        </ol>
-      </div>
-
-      <p class="auth-error" id="wError"></p>
-        <!-- [필수] 게시 규정 동의 — agent.md §2-C Mandatory Consent (글쓰기 표준 철칙) -->
-        <div class="write-consent-row" style="display:flex;align-items:flex-start;gap:8px;padding:10px 12px;margin:14px 0 8px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-sm);">
-          <input type="checkbox" id="writeConsent" style="flex-shrink:0;width:18px;height:18px;margin-top:1px;cursor:pointer;" />
-          <label for="writeConsent" style="flex:1;font-size:12.5px;line-height:1.5;color:var(--text-primary);cursor:pointer;">
-            <strong style="color:var(--red,#dc2626);">[필수]</strong>
-            <a href="terms.html" target="_blank" rel="noopener" style="color:var(--text-primary);text-decoration:underline;font-weight:700;"
-               title="이용약관 §3 (금지행위 — 허위 매물·사기·욕설·타인 사칭·봇 스팸·불법 콘텐츠 금지) + §10 (서비스별 면책)">이용약관 및 주의사항</a>을 확인하였으며,
-            서비스 규정 위반 시 게시물 삭제 및 계정 제재가 이루어질 수 있음에 동의합니다.
-          </label>
-        </div>
-      <div class="write-modal-actions">
-        <button class="write-cancel-btn" id="writeBtnCancel">취소</button>
-        <button class="write-submit-btn" id="writeBtnSubmit">등록하기</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── 상세 필터 후처리 (trades: 직종·출장비·경력·자격) ── -->
-  <script>
-    (function () {
-      const STORE_KEY = 'koaus-trades-posts';
-      const EXP_ORDER = ['0-2','3-5','6-10','11-20','20+'];
-      function expGte(actual, min) {
-        if (!min) return true;
-        const ai = EXP_ORDER.indexOf(actual);
-        const mi = EXP_ORDER.indexOf(min);
-        if (ai < 0 || mi < 0) return true;
-        return ai >= mi;
-      }
-      function collect() {
-        return {
-          types:    Array.from(document.querySelectorAll('.tr-ftype:checked')).map(c => c.value),
-          maxCallout: (() => { const v = (document.getElementById('trFCallout') || {}).value; const n = Number(v); return v && !isNaN(n) ? n : null; })(),
-          minExp:   (document.getElementById('trFExp') || {}).value || '',
-          licensed: !!(document.getElementById('trFLicensed') || {}).checked,
-          insured:  !!(document.getElementById('trFInsured')  || {}).checked,
-          abn:      !!(document.getElementById('trFABN')      || {}).checked,
-        };
-      }
-      function matches(p, f) {
-        if (f.types.length && !f.types.includes(p.tradeType)) return false;
-        if (f.maxCallout != null && typeof p.callout === 'number' && p.callout > f.maxCallout) return false;
-        if (f.minExp && !expGte(p.experience, f.minExp)) return false;
-        if (f.licensed && !p.licensed) return false;
-        if (f.insured  && !p.insured)  return false;
-        if (f.abn      && !p.abn)      return false;
-        return true;
-      }
-      function readData() { try { return JSON.parse(localStorage.getItem(STORE_KEY) || '[]'); } catch { return []; } }
-      function apply() {
-        const f = collect();
-        const empty = !f.types.length && f.maxCallout == null && !f.minExp && !f.licensed && !f.insured && !f.abn;
-        const data = readData();
-        const filtered = empty ? data : data.filter(p => matches(p, f));
-        const ids = new Set(filtered.map(p => String(p.id)));
-        document.querySelectorAll('#postGrid .accom-card').forEach(card => {
-          card.style.display = empty || ids.has(card.dataset.id) ? '' : 'none';
-        });
-        const cnt = document.getElementById('boardCount');
-        if (cnt) cnt.textContent = '총 ' + (empty ? data.length : filtered.length) + '건';
-        if (typeof window.__koausUpdateMap === 'function') {
-          window.__koausUpdateMap(empty ? data : filtered);
-        }
-      }
-      function bind() {
-        const apply_ = document.getElementById('filterApplyBtn');
-        const reset_ = document.getElementById('filterResetBtn');
-        if (apply_) apply_.addEventListener('click', () => setTimeout(apply, 50));
-        if (reset_) reset_.addEventListener('click', () => {
-          document.querySelectorAll('.tr-ftype').forEach(c => c.checked = false);
-          const ca = document.getElementById('trFCallout'); if (ca) ca.value = '';
-          const ex = document.getElementById('trFExp');     if (ex) ex.value = '';
-          ['trFLicensed','trFInsured','trFABN'].forEach(id => {
-            const el = document.getElementById(id); if (el) el.checked = false;
-          });
-          setTimeout(apply, 50);
-        });
-        window.addEventListener('koaus-services-updated', () => setTimeout(apply, 100));
-      }
-      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind, { once: true });
-      else bind();
-    })();
-  </script>
   <script src="hero-banner.js" defer></script>
+  <script src="koaus-map-header.js" defer></script>
+  <script src="koaus-tabbar.js" defer></script>
 </body>
 </html>
