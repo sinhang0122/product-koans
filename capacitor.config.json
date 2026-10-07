@@ -1,0 +1,18 @@
+{
+  "appId": "com.koaus.app",
+  "appName": "KoAus",
+  "webDir": "app-shell",
+  "server": {
+    "url": "https://koaus.com.au",
+    "errorPath": "offline.html",
+    "allowNavigation": [
+      "koaus.com.au",
+      "www.koaus.com.au",
+      "koaus-f564c.firebaseapp.com"
+    ]
+  },
+  "android": {
+    "appendUserAgent": "KoAusApp/1.0",
+    "allowMixedContent": false
+  }
+}
