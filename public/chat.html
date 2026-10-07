@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>채팅 — KoAus</title>
+  <meta name="robots" content="noindex" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin />
+  <link rel="preconnect" href="https://firebasestorage.googleapis.com" crossorigin />
+  <link rel="preconnect" href="https://www.google.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;800;900&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <script>
+    (function () {
+      const saved = localStorage.getItem('koaus-theme');
+      const sys = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      if ((saved ?? sys) === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+    })();
+  </script>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-9PHEG679SB"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-9PHEG679SB');
+  </script>
+
+  <script src="offline.js" defer></script>
+  <script src="koaus-textsize.js" defer></script>
+  <script type="module" src="session-timeout.js"></script>
+  <script src="local-analytics.js" defer></script>
+  <script src="koaus-url-guard.js" defer></script>
+  <script src="koaus-report.js" defer></script>
+  <script src="koaus-tabbar.js" defer></script>
+
+  <!-- ── 1:1 채팅 페이지 전용 스타일 (2026-07) — 사이트 CSS 변수 기반 (다크 테마 자동) ── -->
+  <style>
+    /* 목록 */
+    .kc-list { display: flex; flex-direction: column; gap: 10px; }
+    .kc-item {
+      display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
+      padding: 13px 14px; background: var(--bg-card, #fff);
+      border: 1px solid var(--border, #e0e0e0); border-radius: 14px;
+      cursor: pointer; font-family: inherit; transition: border-color .15s;
+    }
+    .kc-item:hover { border-color: var(--border-focus, #9ca3af); }
+    .kc-ava {
+      flex: 0 0 44px; width: 44px; height: 44px; border-radius: 50%;
+      background: var(--bg-elevated, #f3f4f6); color: var(--text-secondary, #4b5563);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 17px; overflow: hidden; user-select: none;
+    }
+    .kc-ava img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .kc-item-main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+    .kc-item-top { display: flex; align-items: baseline; gap: 8px; }
+    .kc-item-nick {
+      font-weight: 800; font-size: 15px; color: var(--text-primary, #111);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .kc-item-time { margin-left: auto; flex: none; font-size: 11.5px; color: var(--text-muted, #8e8e93); }
+    .kc-item-post {
+      font-size: 12px; color: var(--text-muted, #8e8e93);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .kc-item-last { display: flex; align-items: center; gap: 7px; min-width: 0; }
+    .kc-item-msg {
+      flex: 1 1 auto; min-width: 0; font-size: 13.5px; color: var(--text-secondary, #4b5563);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .kc-item.kc-unread .kc-item-msg { font-weight: 700; color: var(--text-primary, #111); }
+    .kc-dot { flex: none; width: 9px; height: 9px; border-radius: 50%; background: var(--red, #ef4444); }
+    .kc-chip-blocked {
+      flex: none; font-size: 10.5px; font-weight: 700; color: var(--text-muted, #8e8e93);
+      border: 1px solid var(--border, #e0e0e0); border-radius: 8px; padding: 1px 6px;
+    }
+    .kc-empty {
+      text-align: center; padding: 56px 18px; color: var(--text-muted, #8e8e93);
+      border: 1.5px dashed var(--border, #e0e0e0); border-radius: 16px; font-size: 14.5px; line-height: 1.7;
+    }
+    .kc-empty b { color: var(--text-secondary, #4b5563); }
+
+    /* 대화방 */
+    .kc-room {
+      display: flex; flex-direction: column; height: calc(100dvh - 250px); min-height: 420px;
+      background: var(--bg-card, #fff); border: 1px solid var(--border, #e0e0e0);
+      border-radius: 16px; overflow: hidden;
+    }
+    .kc-room-head {
+      display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+      border-bottom: 1px solid var(--border, #e0e0e0); background: var(--bg-card, #fff);
+    }
+    .kc-back {
+      flex: none; width: 34px; height: 34px; border: 0; background: none; cursor: pointer;
+      font-size: 26px; line-height: 1; color: var(--text-primary, #111); border-radius: 50%;
+      display: flex; align-items: center; justify-content: center; padding-bottom: 3px;
+    }
+    .kc-back:hover { background: var(--bg-elevated, #f3f4f6); }
+    .kc-room-peer { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1 1 auto; }
+    .kc-room-peer .kc-ava { flex-basis: 38px; width: 38px; height: 38px; font-size: 15px; }
+    .kc-room-names { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+    .kc-room-nick {
+      font-weight: 800; font-size: 15px; color: var(--text-primary, #111);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .kc-room-post {
+      font-size: 12px; color: var(--text-muted, #8e8e93); text-decoration: none;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .kc-room-post:hover { color: var(--accent, #2563eb); text-decoration: underline; }
+    .kc-room-actions { display: flex; gap: 6px; flex: none; }
+    .kc-mini-btn {
+      border: 1px solid var(--border, #e0e0e0); background: var(--bg-card, #fff);
+      color: var(--text-secondary, #4b5563); font-family: inherit; font-size: 12px; font-weight: 700;
+      border-radius: 9px; padding: 6px 10px; cursor: pointer;
+    }
+    .kc-mini-btn:hover { border-color: var(--border-focus, #9ca3af); color: var(--text-primary, #111); }
+    .kc-msgs {
+      flex: 1 1 auto; overflow-y: auto; -webkit-overflow-scrolling: touch;
+      display: flex; flex-direction: column; gap: 8px; padding: 16px 14px;
+      background: var(--bg-base, #fafafa);
+    }
+    .kc-row { display: flex; flex-direction: column; max-width: 78%; }
+    .kc-row.me   { align-self: flex-end; align-items: flex-end; }
+    .kc-row.them { align-self: flex-start; align-items: flex-start; }
+    .kc-bubble {
+      padding: 9px 13px; border-radius: 16px; font-size: 14.5px; line-height: 1.5;
+      word-break: break-word; white-space: pre-wrap;
+    }
+    .kc-row.me .kc-bubble   { background: var(--accent, #2563eb); color: var(--accent-text, #fff); border-bottom-right-radius: 6px; }
+    .kc-row.them .kc-bubble { background: var(--bg-elevated, #eef0f3); color: var(--text-primary, #111); border-bottom-left-radius: 6px; }
+    .kc-msg-time { font-size: 10.5px; color: var(--text-muted, #8e8e93); margin: 3px 4px 0; }
+    .kc-blocked-bar {
+      flex: none; text-align: center; font-size: 13px; font-weight: 700;
+      color: var(--text-muted, #8e8e93); background: var(--bg-elevated, #f3f4f6);
+      padding: 10px 14px; border-top: 1px solid var(--border, #e0e0e0);
+    }
+    .kc-blocked-bar button {
+      margin-left: 8px; border: 1px solid var(--border, #e0e0e0); background: var(--bg-card, #fff);
+      color: var(--text-primary, #111); font-family: inherit; font-size: 12px; font-weight: 700;
+      border-radius: 8px; padding: 4px 10px; cursor: pointer;
+    }
+    .kc-composer {
+      flex: none; display: flex; align-items: flex-end; gap: 8px;
+      padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px));
+      border-top: 1px solid var(--border, #e0e0e0); background: var(--bg-card, #fff);
+    }
+    .kc-composer textarea {
+      flex: 1 1 auto; resize: none; max-height: 120px; min-height: 40px;
+      padding: 10px 14px; border: 1.5px solid var(--border, #d1d5db); border-radius: 20px;
+      background: var(--bg-input, #fff); color: var(--text-primary, #111);
+      font-family: inherit; font-size: 15px; line-height: 1.4; outline: none;
+    }
+    .kc-composer textarea:focus { border-color: var(--border-focus, #6b7280); }
+    .kc-composer button {
+      flex: none; height: 40px; padding: 0 16px; border: 0; border-radius: 20px;
+      background: var(--accent, #2563eb); color: var(--accent-text, #fff);
+      font-family: inherit; font-size: 14px; font-weight: 800; cursor: pointer;
+    }
+    .kc-composer button:disabled { opacity: .5; cursor: default; }
+    .kc-composer.kc-disabled textarea { opacity: .55; pointer-events: none; }
+
+    /* 모바일 — 대화방 열림 시 페이지 제목 숨김 + 높이 최적화 (탭바 60px 고려) */
+    @media (max-width: 768px) {
+      body.kc-room-open .page-header, body.kc-room-open #chatPageHeader { display: none; }
+      .kc-room { height: calc(100dvh - 175px); min-height: 340px; border-radius: 12px; }
+      .kc-row { max-width: 84%; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="topbar" id="topbar">
+    <a class="topbar-brand" href="index.html">
+      <span class="topbar-logo-icon"><span class="logo-ks">K/A</span></span>
+      <span class="topbar-logo-text">KoAus</span>
+      <span class="topbar-tagline"><b>Korea&nbsp;-&nbsp;Australia</b><span class="topbar-tagline-div">|</span>호주 한인 커뮤니티의 새로운 기준</span>
+    </a>
+    <div class="topbar-actions">
+      <button type="button" class="topbar-login-btn" id="topbarLoginBtn">로그인</button>
+      <button class="topbar-theme-btn" id="themeToggleBtn" type="button" aria-label="테마 변경" title="테마 변경 (Light / Dark)">
+        <svg class="ico-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <svg class="ico-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+      </button>
+      <a href="mypage.html" class="topbar-my-btn" id="topbarMyBtn" aria-label="내 계정" title="내 계정 (마이페이지)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></a>
+      <button class="topbar-menu-btn" id="hamburgerBtn" aria-label="메뉴 열기" aria-expanded="false">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+          <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <aside class="sidebar" id="sidebar" aria-label="사이드 메뉴">
+    <div class="sidebar-header">
+      <span class="sidebar-brand"><span class="topbar-logo-icon"><span class="logo-ks">K/A</span></span><span class="sidebar-brand-text">KoAus</span></span>
+      <div class="sidebar-header-right">
+        <a href="mypage.html" class="sidebar-acct-top">내 계정</a>
+        <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="닫기">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="accord-item" data-group="nsw">
+        <button class="accord-header">
+          <span>NSW <em>뉴사우스 웨일스 주</em></span>
+          <svg class="accord-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="accord-body">
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Living</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="accom.html?state=nsw" class="accord-link accord-link--sub">쉐어 (Share)</a>
+            <a href="rent.html?state=nsw" class="accord-link accord-link--sub">렌트 (Rent)</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Work</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="jobs.html?state=nsw" class="accord-link accord-link--sub">구인구직 (Jobs)</a>
+            <a href="jobs-info.html?state=nsw" class="accord-link accord-link--sub">취업 정보 (Work Guide)</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Auto</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="auto.html?state=nsw&amp;category=used" class="accord-link accord-link--sub">중고차 판매 (Used Car)</a>
+            <a href="auto.html?state=nsw&amp;category=insurance" class="accord-link accord-link--sub">보험 정보 (Insurance)</a>            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="trades.html?state=nsw" class="accord-link accord-link--sub">일상 (Daily)</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('비자/이민 섹션은 준비 중입니다.');return false;">비자/이민 - 준비 중인 섹션입니다</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="accord-item" data-group="vic">
+        <button class="accord-header">
+          <span>VIC <em>빅토리아 주</em></span>
+          <svg class="accord-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="accord-body">
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Living</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="accom.html?state=vic" class="accord-link accord-link--sub">쉐어 (Share)</a>
+            <a href="rent.html?state=vic" class="accord-link accord-link--sub">렌트 (Rent)</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Work</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="jobs.html?state=vic" class="accord-link accord-link--sub">구인구직 (Jobs)</a>
+            <a href="jobs-info.html?state=vic" class="accord-link accord-link--sub">취업 정보 (Work Guide)</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Auto</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="auto.html?state=vic&amp;category=used" class="accord-link accord-link--sub">중고차 판매 (Used Car)</a>
+            <a href="auto.html?state=vic&amp;category=insurance" class="accord-link accord-link--sub">보험 정보 (Insurance)</a>            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="trades.html?state=vic" class="accord-link accord-link--sub">일상 (Daily)</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('비자/이민 섹션은 준비 중입니다.');return false;">비자/이민 - 준비 중인 섹션입니다</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="accord-item" data-group="qld">
+        <button class="accord-header">
+          <span>QLD <em>퀸즐랜드 주</em></span>
+          <svg class="accord-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="accord-body">
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Living</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="accom.html?state=qld" class="accord-link accord-link--sub">쉐어 (Share)</a>
+            <a href="rent.html?state=qld" class="accord-link accord-link--sub">렌트 (Rent)</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Work</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="jobs.html?state=qld" class="accord-link accord-link--sub">구인구직 (Jobs)</a>
+            <a href="jobs-info.html?state=qld" class="accord-link accord-link--sub">취업 정보 (Work Guide)</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Auto</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="auto.html?state=qld&amp;category=used" class="accord-link accord-link--sub">중고차 판매 (Used Car)</a>
+            <a href="auto.html?state=qld&amp;category=insurance" class="accord-link accord-link--sub">보험 정보 (Insurance)</a>            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="trades.html?state=qld" class="accord-link accord-link--sub">일상 (Daily)</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('비자/이민 섹션은 준비 중입니다.');return false;">비자/이민 - 준비 중인 섹션입니다</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="accord-item" data-group="wa">
+        <button class="accord-header">
+          <span>WA <em>웨스턴 오스트레일리아 주</em></span>
+          <svg class="accord-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="accord-body">
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Living</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="accom.html?state=wa" class="accord-link accord-link--sub">쉐어 (Share)</a>
+            <a href="rent.html?state=wa" class="accord-link accord-link--sub">렌트 (Rent)</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Work</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="jobs.html?state=wa" class="accord-link accord-link--sub">구인구직 (Jobs)</a>
+            <a href="jobs-info.html?state=wa" class="accord-link accord-link--sub">취업 정보 (Work Guide)</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Auto</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="auto.html?state=wa&amp;category=used" class="accord-link accord-link--sub">중고차 판매 (Used Car)</a>
+            <a href="auto.html?state=wa&amp;category=insurance" class="accord-link accord-link--sub">보험 정보 (Insurance)</a>            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="trades.html?state=wa" class="accord-link accord-link--sub">일상 (Daily)</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('비자/이민 섹션은 준비 중입니다.');return false;">비자/이민 - 준비 중인 섹션입니다</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="accord-item" data-group="sa">
+        <button class="accord-header">
+          <span>SA <em>사우스 오스트레일리아 주</em></span>
+          <svg class="accord-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="accord-body">
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Living</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="accom.html?state=sa" class="accord-link accord-link--sub">쉐어 (Share)</a>
+            <a href="rent.html?state=sa" class="accord-link accord-link--sub">렌트 (Rent)</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Work</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="jobs.html?state=sa" class="accord-link accord-link--sub">구인구직 (Jobs)</a>
+            <a href="jobs-info.html?state=sa" class="accord-link accord-link--sub">취업 정보 (Work Guide)</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Auto</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="auto.html?state=sa&amp;category=used" class="accord-link accord-link--sub">중고차 판매 (Used Car)</a>
+            <a href="auto.html?state=sa&amp;category=insurance" class="accord-link accord-link--sub">보험 정보 (Insurance)</a>            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="trades.html?state=sa" class="accord-link accord-link--sub">일상 (Daily)</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('비자/이민 섹션은 준비 중입니다.');return false;">비자/이민 - 준비 중인 섹션입니다</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="accord-item" data-group="tas">
+        <button class="accord-header">
+          <span>TAS <em>태즈메이니아 주</em></span>
+          <svg class="accord-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="accord-body">
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Living</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="accom.html?state=tas" class="accord-link accord-link--sub">쉐어 (Share)</a>
+            <a href="rent.html?state=tas" class="accord-link accord-link--sub">렌트 (Rent)</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Work</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="jobs.html?state=tas" class="accord-link accord-link--sub">구인구직 (Jobs)</a>
+            <a href="jobs-info.html?state=tas" class="accord-link accord-link--sub">취업 정보 (Work Guide)</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Auto</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="auto.html?state=tas&amp;category=used" class="accord-link accord-link--sub">중고차 판매 (Used Car)</a>
+            <a href="auto.html?state=tas&amp;category=insurance" class="accord-link accord-link--sub">보험 정보 (Insurance)</a>            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="trades.html?state=tas" class="accord-link accord-link--sub">일상 (Daily)</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('비자/이민 섹션은 준비 중입니다.');return false;">비자/이민 - 준비 중인 섹션입니다</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="accord-item" data-group="act">
+        <button class="accord-header">
+          <span>ACT <em>호주 수도 준주</em></span>
+          <svg class="accord-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="accord-body">
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Living</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="accom.html?state=act" class="accord-link accord-link--sub">쉐어 (Share)</a>
+            <a href="rent.html?state=act" class="accord-link accord-link--sub">렌트 (Rent)</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Work</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="jobs.html?state=act" class="accord-link accord-link--sub">구인구직 (Jobs)</a>
+            <a href="jobs-info.html?state=act" class="accord-link accord-link--sub">취업 정보 (Work Guide)</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Auto</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="auto.html?state=act&amp;category=used" class="accord-link accord-link--sub">중고차 판매 (Used Car)</a>
+            <a href="auto.html?state=act&amp;category=insurance" class="accord-link accord-link--sub">보험 정보 (Insurance)</a>            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="trades.html?state=act" class="accord-link accord-link--sub">일상 (Daily)</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('비자/이민 섹션은 준비 중입니다.');return false;">비자/이민 - 준비 중인 섹션입니다</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="accord-item" data-group="nt">
+        <button class="accord-header">
+          <span>NT <em>노던 준주</em></span>
+          <svg class="accord-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="accord-body">
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Living</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="accom.html?state=nt" class="accord-link accord-link--sub">쉐어 (Share)</a>
+            <a href="rent.html?state=nt" class="accord-link accord-link--sub">렌트 (Rent)</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Work</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="jobs.html?state=nt" class="accord-link accord-link--sub">구인구직 (Jobs)</a>
+            <a href="jobs-info.html?state=nt" class="accord-link accord-link--sub">취업 정보 (Work Guide)</a>
+            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Auto</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="auto.html?state=nt&amp;category=used" class="accord-link accord-link--sub">중고차 판매 (Used Car)</a>
+            <a href="auto.html?state=nt&amp;category=insurance" class="accord-link accord-link--sub">보험 정보 (Insurance)</a>            </div>
+          </div>
+          <div class="accord-subgroup">
+            <button class="accord-sublabel sub-toggle" type="button"><span>Others</span><svg class="sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="sub-menu">
+            <a href="trades.html?state=nt" class="accord-link accord-link--sub">일상 (Daily)</a>
+            <a href="#" class="accord-link accord-link--sub section-disabled" onclick="event.preventDefault();alert('비자/이민 섹션은 준비 중입니다.');return false;">비자/이민 - 준비 중인 섹션입니다</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="accord-foot-group">
+        <a href="care.html" class="accord-direct-link"><span>Care <em>호주 생활 케어</em></span></a>
+        <a href="calculator.html" class="accord-direct-link"><span>환율 계산 비교 <em>FX Calculator</em></span></a>
+        <a href="contact.html" class="accord-direct-link"><span>문의 <em>Inquiry</em></span></a>
+        <a href="powerball.html" class="accord-direct-link"><span>파워볼 당첨번호 <em>Powerball</em></span></a>
+      </div>
+    </nav>
+  </aside>
+  <main class="page-container">
+
+    <div class="page-header" id="chatPageHeader">
+      <div>
+        <h1 class="page-title">💬 채팅</h1>
+        <p class="page-subtitle">게시글 문의를 앱 안에서 별명으로 주고받으세요</p>
+      </div>
+      <div class="page-header-actions page-header-actions--col">
+        <a href="mypage.html" class="page-back">← 마이페이지</a>
+      </div>
+    </div>
+
+    <section class="mypage-login-required" id="loginRequired" style="display:none;">
+      <div class="mypage-lr-icon">🔒</div>
+      <p class="mypage-lr-text">로그인 후 이용할 수 있습니다.</p>
+      <button class="mypage-login-btn" id="chatLoginBtn">로그인하러 가기</button>
+    </section>
+
+    <!-- 채팅 목록 -->
+    <section id="chatListView" style="display:none;">
+      <div class="kc-empty" id="chatListEmpty" hidden>
+        아직 채팅이 없어요.<br />
+        게시글 상세의 <b>💬 채팅 문의</b> 버튼으로 대화를 시작해 보세요.
+      </div>
+      <div class="kc-list" id="chatList"></div>
+    </section>
+
+    <!-- 대화방 -->
+    <section id="chatRoomView" class="kc-room" style="display:none;" aria-label="대화방">
+      <header class="kc-room-head">
+        <button type="button" class="kc-back" id="kcBackBtn" aria-label="목록으로">‹</button>
+        <div class="kc-room-peer">
+          <div class="kc-ava" id="kcRoomAva">?</div>
+          <div class="kc-room-names">
+            <strong class="kc-room-nick" id="kcRoomNick">—</strong>
+            <a class="kc-room-post" id="kcRoomPost" href="#" hidden>게시글 보기 ›</a>
+          </div>
+        </div>
+        <div class="kc-room-actions">
+          <button type="button" class="kc-mini-btn" id="kcBlockBtn">차단</button>
+          <button type="button" class="kc-mini-btn" id="kcReportBtn">신고</button>
+        </div>
+      </header>
+      <div class="kc-msgs" id="kcMsgs" aria-live="polite"></div>
+      <div class="kc-blocked-bar" id="kcBlockedBar" hidden></div>
+      <form class="kc-composer" id="kcComposer">
+        <textarea id="kcInput" maxlength="1000" rows="1" placeholder="메시지 입력…" aria-label="메시지 입력"></textarea>
+        <button type="submit" id="kcSendBtn">전송</button>
+      </form>
+    </section>
+
+  </main>
+
+  <footer class="site-footer-v2">
+    <div class="footer-links">
+      <a href="about.html">KoAus 소개 / About</a>
+      <a href="faq.html">자주 묻는 질문 / FAQ</a>
+      <a href="guide.html">보안·이용 가이드 / Guide</a>
+      <a href="privacy.html">Privacy Policy / 개인정보처리방침</a>
+      <a href="terms.html">Terms of Service / 서비스 이용약관</a>
+      <a href="contact.html">Contact / 문의하기</a>
+    </div>
+    <p class="footer-copy">© 2026 Koaus Community. All rights reserved.</p>
+  </footer>
+
+  <script>
+    // ── Sidebar / Theme ──
+    const hBtn = document.getElementById('hamburgerBtn');
+    const cBtn = document.getElementById('sidebarCloseBtn');
+    const sb   = document.getElementById('sidebar');
+    const ov   = document.getElementById('sidebarOverlay');
+    const openSb  = () => { sb.classList.add('open'); ov.classList.add('open'); document.body.style.overflow='hidden'; hBtn.setAttribute('aria-expanded','true'); };
+    const closeSb = () => { sb.classList.remove('open'); ov.classList.remove('open'); document.body.style.overflow=''; hBtn.setAttribute('aria-expanded','false'); };
+    hBtn.addEventListener('click', openSb);
+    cBtn.addEventListener('click', closeSb);
+    ov.addEventListener('click', closeSb);
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSb(); });
+    // 초기 상태: 모든 아코디언 강제 닫힘 (펼침 방지)
+    document.querySelectorAll('.accord-item, .accord-subgroup').forEach(it => it.classList.remove('open'));
+    // Depth 2 (대분류) 토글 — 클릭 시 해당 소분류 컨테이너만 열고/닫음 (소분류 링크는 그대로 라우팅)
+    document.querySelectorAll('.sub-toggle').forEach(t => t.addEventListener('click', () => t.closest('.accord-subgroup').classList.toggle('open')));
+    document.querySelectorAll('.accord-header').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const item = btn.closest('.accord-item');
+        const willOpen = !item.classList.contains('open');
+        // 한 번에 하나만 — 열려있는 다른 카테고리는 닫기
+        document.querySelectorAll('.accord-item.open').forEach(o => { if (o !== item) o.classList.remove('open'); });
+        item.classList.toggle('open', willOpen);
+      });
+    });
+    function applyTheme(t) {
+      if (t === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+      else document.documentElement.removeAttribute('data-theme');
+      localStorage.setItem('koaus-theme', t);
+    }
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    if (themeToggleBtn) themeToggleBtn.addEventListener('click', () => applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'));
+    applyTheme(localStorage.getItem('koaus-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+  </script>
+
+  <script type="module">
+    // ════════════════════════════════════════════════════════════════
+    //  KoAus 1:1 채팅 (2026-07) — 목록 + 대화방 (에어비앤비형 인앱 채팅)
+    //  · 방 생성은 게시글 상세의 "채팅 문의"(koaus-contact-actions.js) 가 담당,
+    //    이 페이지는 열람/전송/차단/신고 전용. chatId = {postId}_{inquirerUid}.
+    //  · 별명 정책: 익명 아님 — chat doc 의 닉 스냅샷으로 즉시 표시 후
+    //    profiles/{uid} (공개 최소 카드) 로 현재 별명 lazy 갱신. 별명이 바뀌어도
+    //    대화 기록은 uid 기준이라 그대로 유지.
+    //  · 빌링: 목록 = participants array-contains 구독 limit 20 (복합 인덱스),
+    //    방 = messages orderBy createdAt desc limit 50 구독,
+    //    profiles 조회는 6h LS 캐시. 전송 = writeBatch 2 write (메시지 + 요약).
+    //  · 차단: chats.blockedBy (본인 uid 만 증감 — rules 강제). 한쪽이라도
+    //    차단하면 전송 거부(rules), 읽음 처리·차단 해제만 가능.
+    //  · 신고: koaus-report.js 재사용 — board:'chat', postId=chatId.
+    // ════════════════════════════════════════════════════════════════
+    import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
+    import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
+    import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app-check.js';
+    import {
+      getFirestore, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc,
+      collection, query, where, orderBy, limit, getDocs, onSnapshot,
+      writeBatch, serverTimestamp, arrayUnion, arrayRemove,
+    } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
+
+    const firebaseConfig = {
+      apiKey:            'AIzaSyCamqnt0bNUD9uz1N5BbCuQjSkWLSpPqlU',
+      authDomain:        'koaus-f564c.firebaseapp.com',
+      projectId:         'koaus-f564c',
+      storageBucket:     'koaus-f564c.firebasestorage.app',
+      messagingSenderId: '663988594088',
+      appId:             '1:663988594088:web:ef30c2fd557407b00b299d',
+      measurementId:     'G-DERZ9MTKPL',
+    };
+    const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+
+    // ── App Check (reCAPTCHA v3) — 봇·외부 스크립트의 백엔드(인증/DB) 접근 차단 ──
+    const APP_CHECK_SITE_KEY = '6Ld1mAwtAAAAADURkCq0J6GOr3wFg9DQVOsxVG5v';
+    if (APP_CHECK_SITE_KEY && !APP_CHECK_SITE_KEY.startsWith('TODO')) {
+      initializeAppCheck(app, {
+        provider: new ReCaptchaV3Provider(APP_CHECK_SITE_KEY),
+        isTokenAutoRefreshEnabled: true,
+      });
+    }
+
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // ── 전역 브리지 — koaus-report.js(신고 모달) 등 classic 스크립트 소비용 ──
+    window.koausDb = db;
+    window.koausFs = { doc, getDoc, setDoc, addDoc, updateDoc, collection, serverTimestamp, query, where, getDocs, deleteDoc, limit };
+    // 로그인 게이트 — chat 에는 auth 모달이 없어 마이페이지로 보냄 (settings 패턴)
+    window.koausAuth = { user: null, openAuthModal: () => { try { location.href = 'mypage.html'; } catch (_) {} } };
+
+    const $ = id => document.getElementById(id);
+    const listView = $('chatListView'), roomView = $('chatRoomView'), loginReq = $('loginRequired');
+    const listBox = $('chatList'), listEmpty = $('chatListEmpty'), msgsBox = $('kcMsgs');
+    const composer = $('kcComposer'), input = $('kcInput'), sendBtn = $('kcSendBtn');
+    const blockedBar = $('kcBlockedBar'), blockBtn = $('kcBlockBtn'), reportBtn = $('kcReportBtn');
+
+    let ME = null;            // auth user
+    let chats = [];           // 목록 구독 캐시
+    let curChat = null;       // 열린 방 doc 데이터
+    let msgs = [];            // 방 메시지 (asc)
+    let listUnsub = null, msgsUnsub = null;
+
+    // 게시글 딥링크 — 보드 화이트리스트 (board 값 = 파일명, koaus-contact-actions._boardOf)
+    const BOARD_PAGES = ['accom', 'rent', 'jobs', 'auto', 'restaurants', 'salon', 'trades', 'gp', 'points', 'car-sale'];
+
+    const _login = () => { location.href = 'mypage.html'; };
+    if ($('chatLoginBtn')) $('chatLoginBtn').addEventListener('click', _login);
+    const tlb = document.getElementById('topbarLoginBtn');
+    if (tlb) tlb.addEventListener('click', () => { if (!window.koausAuth.user) _login(); });
+
+    function toast(msg) {
+      try {
+        const t = document.createElement('div');
+        t.textContent = msg;
+        t.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);bottom:calc(80px + env(safe-area-inset-bottom,0px));background:rgba(17,24,39,.94);color:#fff;padding:11px 18px;border-radius:22px;font-size:14px;font-weight:700;z-index:99999;box-shadow:0 6px 20px rgba(0,0,0,.25);max-width:86vw;text-align:center;pointer-events:none;opacity:0;transition:opacity .18s;';
+        document.body.appendChild(t);
+        requestAnimationFrame(() => { t.style.opacity = '1'; });
+        setTimeout(() => { t.style.opacity = '0'; setTimeout(() => { try { document.body.removeChild(t); } catch (_) {} }, 240); }, 1700);
+      } catch (_) {}
+    }
+
+    // ── profiles 공개 카드 조회 — 6h LS 캐시 (빌링 방어) + 메모리 캐시 ──
+    const PROF_LS = 'koaus-profiles-cache';
+    const PROF_TTL = 6 * 60 * 60 * 1000;
+    const profMem = new Map();
+    function profLsAll() { try { return JSON.parse(localStorage.getItem(PROF_LS) || '{}') || {}; } catch (_) { return {}; } }
+    async function getProfile(uid) {
+      if (!uid) return null;
+      if (profMem.has(uid)) return profMem.get(uid);
+      const all = profLsAll();
+      const hit = all[uid];
+      if (hit && Date.now() - (hit.at || 0) < PROF_TTL) { profMem.set(uid, hit); return hit; }
+      try {
+        const snap = await getDoc(doc(db, 'profiles', uid));
+        const d = snap.exists() ? snap.data() : {};
+        const p = { nickname: typeof d.nickname === 'string' ? d.nickname.slice(0, 30) : '', photoURL: typeof d.photoURL === 'string' ? d.photoURL : '', at: Date.now() };
+        profMem.set(uid, p);
+        try { const a = profLsAll(); a[uid] = p; const keys = Object.keys(a); if (keys.length > 60) delete a[keys[0]]; localStorage.setItem(PROF_LS, JSON.stringify(a)); } catch (_) {}
+        return p;
+      } catch (_) { return null; }
+    }
+
+    // ── 내 profiles 카드 self-heal — 닉/사진이 바뀌었을 때만 write (빌링 0 유지) ──
+    function syncMyProfile(user) {
+      try {
+        const nick = (localStorage.getItem('koaus-nickname') || (user.displayName || '').split(' ')[0] || (user.email || '').split('@')[0] || '').slice(0, 30);
+        const photo = localStorage.getItem('koaus-photo-url') || '';
+        const sig = user.uid + '|' + nick + '|' + photo;
+        if (localStorage.getItem('koaus-profile-synced') === sig) return;
+        const payload = { updatedAt: serverTimestamp() };
+        if (nick) payload.nickname = nick;
+        if (/^https:\/\//.test(photo)) payload.photoURL = photo.slice(0, 500);
+        setDoc(doc(db, 'profiles', user.uid), payload, { merge: true })
+          .then(() => { try { localStorage.setItem('koaus-profile-synced', sig); } catch (_) {} })
+          .catch(() => {});
+      } catch (_) {}
+    }
+
+    // ── 유틸 ──
+    function partnerOf(c) {
+      const iAmOwner = c.ownerUid === ME.uid;
+      return {
+        uid: iAmOwner ? c.inquirerUid : c.ownerUid,
+        nick: String((iAmOwner ? c.inquirerNick : c.ownerNick) || '사용자'),
+      };
+    }
+    function fmtTime(ts) {
+      try {
+        if (!ts || typeof ts.toDate !== 'function') return '';
+        const d = ts.toDate(), now = new Date();
+        const same = d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+        if (same) return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+        return (d.getMonth() + 1) + '/' + d.getDate();
+      } catch (_) { return ''; }
+    }
+    function setAva(el, nick, photoURL) {
+      el.textContent = '';
+      if (photoURL && window.koausUrlGuard && window.koausUrlGuard.isSafeHttp(photoURL)) {
+        const img = document.createElement('img');
+        img.src = photoURL; img.alt = '';
+        el.appendChild(img);
+      } else {
+        el.textContent = (nick[0] || '?').toUpperCase();
+      }
+    }
+    function postHref(c) {
+      if (BOARD_PAGES.indexOf(c.board) === -1 || !c.postId) return null;
+      return c.board + '.html?id=' + encodeURIComponent(c.postId);
+    }
+
+    // ── 안읽음 배지 → LS (탭바 koaus-tabbar.js 가 소비) ──
+    function updateUnreadLS() {
+      try {
+        const n = chats.filter(c => Array.isArray(c.unreadFor) && c.unreadFor.indexOf(ME.uid) !== -1).length;
+        localStorage.setItem('koaus-chat-unread', JSON.stringify({ n, at: Date.now() }));
+        document.querySelectorAll('.koaus-tabbar .kt-chat-dot').forEach(d => { d.style.display = n > 0 ? '' : 'none'; });
+      } catch (_) {}
+    }
+
+    // ── 목록 ──
+    function startList() {
+      if (listUnsub) { try { listUnsub(); } catch (_) {} }
+      const q = query(collection(db, 'chats'), where('participants', 'array-contains', ME.uid), orderBy('lastMsgAt', 'desc'), limit(20));
+      listUnsub = onSnapshot(q, snap => {
+        chats = snap.docs.map(s => Object.assign({ id: s.id }, s.data()));
+        renderList();
+        updateUnreadLS();
+        // 열린 방의 실시간 상태(차단/읽음) 동기화
+        if (curChat) {
+          const f = chats.find(x => x.id === curChat.id);
+          if (f) { curChat = f; renderRoomState(); }
+        }
+      }, err => { console.warn('[chat] 목록 구독 실패', err); });
+    }
+    function renderList() {
+      listBox.textContent = '';
+      listEmpty.hidden = chats.length > 0;
+      chats.forEach(c => {
+        const p = partnerOf(c);
+        const item = document.createElement('button');
+        item.type = 'button';
+        item.className = 'kc-item' + (Array.isArray(c.unreadFor) && c.unreadFor.indexOf(ME.uid) !== -1 ? ' kc-unread' : '');
+        const ava = document.createElement('div'); ava.className = 'kc-ava';
+        setAva(ava, p.nick, '');
+        const main = document.createElement('div'); main.className = 'kc-item-main';
+        const top = document.createElement('div'); top.className = 'kc-item-top';
+        const nickEl = document.createElement('span'); nickEl.className = 'kc-item-nick'; nickEl.textContent = p.nick;
+        const timeEl = document.createElement('span'); timeEl.className = 'kc-item-time'; timeEl.textContent = fmtTime(c.lastMsgAt);
+        top.appendChild(nickEl); top.appendChild(timeEl);
+        const postEl = document.createElement('div'); postEl.className = 'kc-item-post';
+        postEl.textContent = '📌 ' + String(c.postTitle || '게시글');
+        const last = document.createElement('div'); last.className = 'kc-item-last';
+        const msgEl = document.createElement('span'); msgEl.className = 'kc-item-msg';
+        msgEl.textContent = String(c.lastMsg || '대화를 시작해 보세요');
+        last.appendChild(msgEl);
+        if (Array.isArray(c.blockedBy) && c.blockedBy.length) {
+          const chip = document.createElement('span'); chip.className = 'kc-chip-blocked'; chip.textContent = '차단됨';
+          last.appendChild(chip);
+        } else if (item.className.indexOf('kc-unread') !== -1) {
+          const dot = document.createElement('span'); dot.className = 'kc-dot';
+          last.appendChild(dot);
+        }
+        main.appendChild(top); main.appendChild(postEl); main.appendChild(last);
+        item.appendChild(ava); item.appendChild(main);
+        item.addEventListener('click', () => openRoom(c.id, false));
+        listBox.appendChild(item);
+        // 현재 별명/사진 lazy 갱신 (profiles — 6h 캐시)
+        getProfile(p.uid).then(prof => {
+          if (!prof) return;
+          if (prof.nickname) nickEl.textContent = prof.nickname;
+          if (prof.photoURL) setAva(ava, prof.nickname || p.nick, prof.photoURL);
+        });
+      });
+    }
+
+    // ── 대화방 ──
+    async function openRoom(id, fromPop) {
+      let c = chats.find(x => x.id === id) || null;
+      if (!c) {
+        try {
+          const s = await getDoc(doc(db, 'chats', id));
+          if (s.exists()) c = Object.assign({ id: s.id }, s.data());
+        } catch (_) {}
+      }
+      if (!c || !ME || !Array.isArray(c.participants) || c.participants.indexOf(ME.uid) === -1) {
+        toast('채팅방을 찾을 수 없어요');
+        if (!fromPop) { try { history.replaceState(null, '', 'chat.html'); } catch (_) {} }
+        showList();
+        return;
+      }
+      curChat = c;
+      msgs = [];
+      msgsBox.textContent = '';
+      renderRoomHead();
+      renderRoomState();
+      listView.style.display = 'none';
+      roomView.style.display = '';
+      document.body.classList.add('kc-room-open');
+      if (!fromPop) { try { history.pushState({ kcRoom: id }, '', 'chat.html?id=' + encodeURIComponent(id)); } catch (_) {} }
+      markRead(c);
+      subMsgs(id);
+      try { if (typeof gtag === 'function') gtag('event', 'chat_room_open'); } catch (_) {}
+    }
+    function showList() {
+      if (msgsUnsub) { try { msgsUnsub(); } catch (_) {} msgsUnsub = null; }
+      curChat = null;
+      roomView.style.display = 'none';
+      document.body.classList.remove('kc-room-open');
+      if (ME) listView.style.display = '';
+    }
+    function renderRoomHead() {
+      const p = partnerOf(curChat);
+      $('kcRoomNick').textContent = p.nick;
+      setAva($('kcRoomAva'), p.nick, '');
+      const link = $('kcRoomPost');
+      const href = postHref(curChat);
+      if (href) {
+        link.hidden = false;
+        link.href = href;
+        link.textContent = '📌 ' + String(curChat.postTitle || '게시글 보기') + ' ›';
+      } else {
+        link.hidden = true;
+      }
+      getProfile(p.uid).then(prof => {
+        if (!prof || !curChat) return;
+        if (prof.nickname) $('kcRoomNick').textContent = prof.nickname;
+        setAva($('kcRoomAva'), prof.nickname || p.nick, prof.photoURL || '');
+      });
+    }
+    function renderRoomState() {
+      if (!curChat) return;
+      const bb = Array.isArray(curChat.blockedBy) ? curChat.blockedBy : [];
+      const iBlocked = bb.indexOf(ME.uid) !== -1;
+      const frozen = bb.length > 0;
+      blockBtn.textContent = iBlocked ? '차단 해제' : '차단';
+      composer.classList.toggle('kc-disabled', frozen);
+      sendBtn.disabled = frozen;
+      blockedBar.hidden = !frozen;
+      if (frozen) {
+        blockedBar.textContent = iBlocked ? '🚫 차단한 대화입니다 — 메시지를 보낼 수 없어요' : '🚫 상대방이 대화를 차단했어요';
+      }
+    }
+    function markRead(c) {
+      if (Array.isArray(c.unreadFor) && c.unreadFor.indexOf(ME.uid) !== -1) {
+        updateDoc(doc(db, 'chats', c.id), { unreadFor: arrayRemove(ME.uid) }).catch(() => {});
+      }
+    }
+    function subMsgs(id) {
+      if (msgsUnsub) { try { msgsUnsub(); } catch (_) {} }
+      const q = query(collection(db, 'chats', id, 'messages'), orderBy('createdAt', 'desc'), limit(50));
+      msgsUnsub = onSnapshot(q, snap => {
+        msgs = snap.docs.map(s => s.data()).reverse();
+        renderMsgs();
+        if (curChat) markRead(curChat);
+      }, err => { console.warn('[chat] 메시지 구독 실패', err); });
+    }
+    function renderMsgs() {
+      msgsBox.textContent = '';
+      msgs.forEach(m => {
+        const row = document.createElement('div');
+        row.className = 'kc-row ' + (m.senderUid === ME.uid ? 'me' : 'them');
+        const b = document.createElement('div'); b.className = 'kc-bubble';
+        b.textContent = String(m.text || '');
+        const t = document.createElement('div'); t.className = 'kc-msg-time';
+        t.textContent = fmtTime(m.createdAt);
+        row.appendChild(b); row.appendChild(t);
+        msgsBox.appendChild(row);
+      });
+      msgsBox.scrollTop = msgsBox.scrollHeight;
+    }
+
+    // ── 전송 — writeBatch(메시지 create + 요약 update) 원자 처리 ──
+    composer.addEventListener('submit', async e => {
+      e.preventDefault();
+      if (!ME || !curChat) return;
+      const text = (input.value || '').trim().slice(0, 1000);
+      if (!text) return;
+      if (Array.isArray(curChat.blockedBy) && curChat.blockedBy.length) { toast('차단된 대화입니다'); return; }
+      sendBtn.disabled = true;
+      try {
+        const other = partnerOf(curChat).uid;
+        const b = writeBatch(db);
+        b.set(doc(collection(db, 'chats', curChat.id, 'messages')), {
+          senderUid: ME.uid, text, createdAt: serverTimestamp(),
+        });
+        b.update(doc(db, 'chats', curChat.id), {
+          lastMsg: text.slice(0, 200), lastMsgAt: serverTimestamp(),
+          lastSenderUid: ME.uid, unreadFor: [other],
+        });
+        await b.commit();
+        input.value = '';
+        input.style.height = 'auto';
+        try { if (typeof gtag === 'function') gtag('event', 'chat_msg_send'); } catch (_) {}
+      } catch (err) {
+        console.warn('[chat] 전송 실패', err);
+        const denied = err && (err.code === 'permission-denied' || /permission/i.test(err.message || ''));
+        toast(denied ? '메시지를 보낼 수 없어요 (차단 또는 권한 없음)' : '전송 실패 — 잠시 후 다시 시도해 주세요');
+      } finally {
+        sendBtn.disabled = curChat && Array.isArray(curChat.blockedBy) && curChat.blockedBy.length > 0;
+        input.focus();
+      }
+    });
+    // 데스크탑 Enter 전송 (Shift+Enter 줄바꿈) / 자동 높이
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey && window.matchMedia('(min-width: 769px)').matches) {
+        e.preventDefault();
+        if (typeof composer.requestSubmit === 'function') composer.requestSubmit();
+        else composer.dispatchEvent(new Event('submit', { cancelable: true }));
+      }
+    });
+    input.addEventListener('input', () => {
+      input.style.height = 'auto';
+      input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+    });
+
+    // ── 차단 / 신고 ──
+    blockBtn.addEventListener('click', async () => {
+      if (!ME || !curChat) return;
+      const iBlocked = Array.isArray(curChat.blockedBy) && curChat.blockedBy.indexOf(ME.uid) !== -1;
+      if (!iBlocked && !confirm('이 사용자를 차단할까요?\n서로 메시지를 보낼 수 없게 됩니다. (차단 해제 가능)')) return;
+      blockBtn.disabled = true;
+      try {
+        await updateDoc(doc(db, 'chats', curChat.id), { blockedBy: iBlocked ? arrayRemove(ME.uid) : arrayUnion(ME.uid) });
+        toast(iBlocked ? '차단을 해제했어요' : '차단했어요');
+      } catch (err) {
+        console.warn('[chat] 차단 처리 실패', err);
+        toast('처리 실패 — 잠시 후 다시 시도해 주세요');
+      } finally { blockBtn.disabled = false; }
+    });
+    reportBtn.addEventListener('click', () => {
+      if (!curChat || !window.koausReport) return;
+      const p = partnerOf(curChat);
+      const excerpt = msgs.filter(m => m.senderUid !== ME.uid).slice(-3).map(m => String(m.text || '')).join(' / ').slice(0, 300);
+      window.koausReport.open({
+        postId: curChat.id, board: 'chat',
+        postTitle: ('[채팅] ' + p.nick + ' — ' + String(curChat.postTitle || '')).slice(0, 200),
+        postAuthorUid: p.uid,
+        postBodyExcerpt: excerpt,
+      });
+    });
+
+    // ── 뒤로가기 / 딥링크 (?id=) ──
+    $('kcBackBtn').addEventListener('click', () => { try { history.back(); } catch (_) { showList(); } });
+    window.addEventListener('popstate', () => {
+      const id = new URLSearchParams(location.search).get('id');
+      if (id && ME) openRoom(id, true);
+      else showList();
+    });
+    function openFromUrl() {
+      const id = new URLSearchParams(location.search).get('id');
+      if (!id) return;
+      try { history.replaceState(null, '', 'chat.html'); } catch (_) {}
+      openRoom(id, false);   // pushState ?id → 뒤로가기 = 목록
+    }
+
+    // ── Auth 게이트 ──
+    onAuthStateChanged(auth, user => {
+      window.koausAuth.user = user;
+      ME = user;
+      if (!user) {
+        if (listUnsub) { try { listUnsub(); } catch (_) {} listUnsub = null; }
+        showList();
+        listView.style.display = 'none';
+        loginReq.style.display = '';
+        if (tlb) tlb.textContent = '로그인';
+        return;
+      }
+      loginReq.style.display = 'none';
+      listView.style.display = '';
+      const nick = localStorage.getItem('koaus-nickname') || (user.displayName || '').split(' ')[0] || (user.email || '').split('@')[0] || '사용자';
+      if (tlb) tlb.textContent = nick;
+      syncMyProfile(user);
+      startList();
+      openFromUrl();
+    });
+  </script>
+</body>
+</html>
