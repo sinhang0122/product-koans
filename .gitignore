@@ -17,3 +17,6 @@ firebase-debug.*.log
 service-account-key.json
 *-firebase-adminsdk-*.json
 firebase-adminsdk*.json
+
+# FUSE 마운트 잔재(옛 복사본) — 추적 금지
+.fuse_hidden*
