@@ -854,7 +854,10 @@
     // ── Tabs ──
     const urlTab = new URLSearchParams(location.search).get('tab');
     const currentState = (new URLSearchParams(location.search).get('state') || '').toLowerCase();
-    let activeTab = urlTab === 'find' ? 'seeking' : 'hiring';  // post→hiring, find→seeking
+    // 2026-10: '구직'(seeking) 글 숨김 — 글은 일자리 내주는 쪽만 올림. 플래그만 true 로 바꾸면 복구
+    //   (기존 seeking 글·jobs_posts 데이터·rules 그대로, 목록은 postType 필터로 자연 제외).
+    const SEEKING_ENABLED = false;
+    let activeTab = (SEEKING_ENABLED && urlTab === 'find') ? 'seeking' : 'hiring';  // post→hiring, find→seeking
     let currentPage = 1;
     // 한 번에 20개씩만 렌더(페이지네이션). 향후 Firestore 전환 시:
     //   query(collection(db,'jobs_posts'), orderBy('id','desc'), limit(PER_PAGE))
@@ -862,7 +865,13 @@
     const PER_PAGE = 10;
     safeOn('tabHiring',  'click', () => switchTab('hiring'));
     safeOn('tabSeeking', 'click', () => switchTab('seeking'));
+    if (!SEEKING_ENABLED) {
+      const _tr = document.querySelector('.accom-main-tabs'); if (_tr) _tr.style.display = 'none';           // 구인/구직 탭 행 숨김
+      const _pt = document.querySelector('.write-posttype-tabs'); const _pf = _pt && _pt.closest('.write-field');
+      if (_pf) _pf.style.display = 'none';                                                                     // 글쓰기 '게시 유형' 선택 숨김
+    }
     function switchTab(tab) {
+      if (tab === 'seeking' && !SEEKING_ENABLED) return;   // 숨김 중 구직 탭 전환 차단
       activeTab = tab;
       currentPage = 1;
       document.getElementById('tabHiring').classList.toggle('active', tab === 'hiring');
@@ -1525,7 +1534,9 @@
           alert('글쓰기 폼을 불러오지 못했습니다. 페이지를 새로고침 후 다시 시도해 주세요.');
           return;
         }
-        const postType  = (radioType && radioType.value) || 'hiring';
+        const radioVal  = (radioType && radioType.value) || 'hiring';
+        // 구직 숨김 중엔 새 글은 항상 hiring — 단, 기존 구직 글 수정 시엔 유형 보존(구인으로 바뀌는 사고 방지)
+        const postType  = SEEKING_ENABLED ? radioVal : ((radioVal === 'seeking' && editingId) ? 'seeking' : 'hiring');
         const title     = elTitle.value.trim();
         const body      = elBody.value.trim();
         const contactRaw= elContact.value.trim();

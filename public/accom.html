@@ -1058,7 +1058,10 @@
     const currentState = (new URLSearchParams(location.search).get('state') || '').toLowerCase();
     const urlMode      = new URLSearchParams(location.search).get('mode');
     // URL ?mode=offer | seek(=find). 페이지 내 탭으로도 전환
-    let activeMode     = (urlMode === 'find' || urlMode === 'seek') ? 'find' : 'offer';
+    // 2026-10: '방 구하기'(find) 모드 숨김 — 글은 집 있는 사람만 올림. 플래그만 true 로 바꾸면 복구
+    //   (기존 find 글·accom_posts 데이터·rules 는 그대로, 목록은 mode 필터로 자연 제외).
+    const FIND_MODE_ENABLED = false;
+    let activeMode     = (FIND_MODE_ENABLED && (urlMode === 'find' || urlMode === 'seek')) ? 'find' : 'offer';
     let currentPage    = 1;
     // 한 번에 20개씩만 렌더(페이지네이션). 향후 Firestore 전환 시:
     //   query(collection(db,'accom_posts'), orderBy('id','desc'), limit(PER_PAGE))
@@ -1069,16 +1072,19 @@
     document.querySelectorAll('#modeTabs .accom-tab').forEach(btn => {
       btn.addEventListener('click', () => switchMode(btn.dataset.mode));
     });
+    if (!FIND_MODE_ENABLED) { const _mt = document.getElementById('modeTabs'); if (_mt) _mt.style.display = 'none'; }
 
     function updateBoardTitle() {
       const st = STATE_NAMES[currentState];
       const board = '쉐어';
-      document.getElementById('boardTitle').textContent = `🏠 ${st ? st + ' ' : ''}${board} ${MODE_LABELS[activeMode]}`;
-      document.getElementById('boardSubtitle').textContent = `${st ? st + ' · ' : ''}${board} ${MODE_LABELS[activeMode]} 게시판`;
+      const modeLabel = FIND_MODE_ENABLED ? ' ' + MODE_LABELS[activeMode] : '';   // 탭 숨김 중엔 '방 올리기' 표기 생략
+      document.getElementById('boardTitle').textContent = `🏠 ${st ? st + ' ' : ''}${board}${modeLabel}`;
+      document.getElementById('boardSubtitle').textContent = `${st ? st + ' · ' : ''}${board}${modeLabel} 게시판`;
     }
 
     function switchMode(mode) {
       if (mode !== 'offer' && mode !== 'find') return;
+      if (mode === 'find' && !FIND_MODE_ENABLED) return;   // 숨김 중 find 전환 차단
       activeMode = mode;
       currentPage = 1;
       areaBounds = null;  // 탭 전환 시 지역 검색 초기화
