@@ -205,6 +205,10 @@ const chatData = {
   unreadFor: [], blockedBy: [],
   createdAt: '2026-06-10T00:00:00Z',
 };
+// 내가 마지막으로 보낸 상태의 chat doc (수정·삭제 미리보기 교체 테스트용) — lastMsgAt 은 request.time 보다 과거
+const chatLastMine = Object.assign({}, chatData, {
+  lastMsg: '안녕하세요', lastMsgAt: '2026-06-09T23:00:00Z', lastSenderUid: 'testuser123', unreadFor: ['owner456xyz'],
+});
 // messages 표준 페이로드 + 부모 chat get 모킹 데이터 (mk getMock)
 const msgData = {
   senderUid: 'testuser123', text: '안녕하세요, 문의드립니다',
@@ -727,6 +731,39 @@ const cases = [
        path: 'chats/post123_testuser123', method: 'update', uid: 'testuser123',
        data: Object.assign({}, chatData, { hiddenFor: [] }),
        resourceData: Object.assign({}, chatData, { hiddenFor: ['owner456xyz'] }) }),
+  // ── 2026-10 내 마지막 메시지 수정·삭제 → 미리보기만 교체(lastMsgAt 유지, 알림·순서 변동 없음) + readAt ──
+  mk({ label: 'chats 내 마지막 메시지 삭제: lastMsg만 교체 + 상대 unreadFor 되돌림(lastMsgAt 유지) → 허용', expectation: 'ALLOW',
+       path: 'chats/post123_testuser123', method: 'update', uid: 'testuser123',
+       data: Object.assign({}, chatLastMine, { lastMsg: '삭제된 메시지입니다', unreadFor: [] }),
+       resourceData: chatLastMine }),
+  mk({ label: 'chats 내 마지막 메시지 수정: lastMsg만 교체(unreadFor 그대로) → 허용', expectation: 'ALLOW',
+       path: 'chats/post123_testuser123', method: 'update', uid: 'testuser123',
+       data: Object.assign({}, chatLastMine, { lastMsg: '수정한 내용' }),
+       resourceData: chatLastMine }),
+  mk({ label: 'chats 마지막 발신자가 상대인데 lastMsg 교체(lastMsgAt 없이) → 거부', expectation: 'DENY',
+       path: 'chats/post123_testuser123', method: 'update', uid: 'testuser123',
+       data: Object.assign({}, chatLastMine, { lastSenderUid: 'owner456xyz', lastMsg: '삭제된 메시지입니다' }),
+       resourceData: Object.assign({}, chatLastMine, { lastSenderUid: 'owner456xyz' }) }),
+  mk({ label: 'chats lastMsg 교체하며 unreadFor 늘리기(상대에게 읽지 않음 심기) → 거부', expectation: 'DENY',
+       path: 'chats/post123_testuser123', method: 'update', uid: 'testuser123',
+       data: Object.assign({}, chatLastMine, { lastMsg: '수정한 내용', unreadFor: ['owner456xyz'] }),
+       resourceData: Object.assign({}, chatLastMine, { unreadFor: [] }) }),
+  mk({ label: 'chats lastMsg 교체 + lastSenderUid 변조(lastMsgAt 없이) → 거부', expectation: 'DENY',
+       path: 'chats/post123_testuser123', method: 'update', uid: 'testuser123',
+       data: Object.assign({}, chatLastMine, { lastMsg: '수정한 내용', lastSenderUid: 'owner456xyz' }),
+       resourceData: chatLastMine }),
+  mk({ label: 'chats 읽음 처리 + readAt 본인 키 serverTimestamp → 허용', expectation: 'ALLOW',
+       path: 'chats/post123_testuser123', method: 'update', uid: 'testuser123',
+       data: Object.assign({}, chatData, { unreadFor: [], readAt: { testuser123: '2026-06-10T00:00:00Z' } }),
+       resourceData: Object.assign({}, chatData, { unreadFor: ['testuser123'] }) }),
+  mk({ label: 'chats readAt 에 상대 키 쓰기 → 거부', expectation: 'DENY',
+       path: 'chats/post123_testuser123', method: 'update', uid: 'testuser123',
+       data: Object.assign({}, chatData, { readAt: { owner456xyz: '2026-06-10T00:00:00Z' } }),
+       resourceData: chatData }),
+  mk({ label: 'chats readAt 본인 키 과거 시각(serverTimestamp 아님) → 거부', expectation: 'DENY',
+       path: 'chats/post123_testuser123', method: 'update', uid: 'testuser123',
+       data: Object.assign({}, chatData, { readAt: { testuser123: '2026-06-01T00:00:00Z' } }),
+       resourceData: chatData }),
   // profiles — 공개 최소 카드 (닉네임/사진만)
   mk({ label: 'profiles 본인 create(nickname+photoURL) → 허용', expectation: 'ALLOW',
        path: 'profiles/testuser123', method: 'create', uid: 'testuser123',

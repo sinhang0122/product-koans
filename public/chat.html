@@ -906,8 +906,27 @@
     }
     function markRead(c) {
       if (Array.isArray(c.unreadFor) && c.unreadFor.indexOf(ME.uid) !== -1) {
-        updateDoc(doc(db, 'chats', c.id), { unreadFor: arrayRemove(ME.uid) }).catch(() => {});
+        // readAt.{내 uid} = 읽음 처리 시각 — 상대가 자기 메시지를 삭제할 때 "내가 못 본 메시지가 더 있나" 판단에 씀(2026-10)
+        const upd = { unreadFor: arrayRemove(ME.uid) };
+        upd['readAt.' + ME.uid] = serverTimestamp();
+        updateDoc(doc(db, 'chats', c.id), upd).catch(() => {});
       }
+    }
+    // 삭제하려는 메시지(exceptId)를 빼고도, 상대가 아직 못 본 내 메시지가 남아 있는지(2026-10).
+    //   readAt[상대] 가 있으면 그 시각 이후의 내 메시지가 있는지로 판단, 없는 옛 방은 바로 앞 메시지가 내 것인지로 판단.
+    function otherHasUnseenMine(exceptId) {
+      const other = partnerOf(curChat).uid;
+      const ra = curChat.readAt && curChat.readAt[other];
+      const raMs = ra && typeof ra.toMillis === 'function' ? ra.toMillis() : null;
+      for (let i = msgs.length - 1; i >= 0; i--) {
+        const x = msgs[i];
+        if (x.id === exceptId || x.deleted) continue;
+        if (raMs == null) return x.senderUid === ME.uid;
+        if (x.senderUid !== ME.uid) continue;
+        const t = x.createdAt && typeof x.createdAt.toMillis === 'function' ? x.createdAt.toMillis() : Date.now();
+        return t > raMs;
+      }
+      return false;
     }
     function subMsgs(id) {
       if (msgsUnsub) { try { msgsUnsub(); } catch (_) {} }
@@ -1016,10 +1035,10 @@
       if (text === String(m.text || '')) { cancelEdit(); return; }
       try {
         await updateDoc(doc(db, 'chats', curChat.id, 'messages', m.id), { text, edited: true, editedAt: serverTimestamp() });
+        // 마지막 메시지였다면 목록 미리보기만 교체 — lastMsgAt 은 그대로(순서 변동·새 메시지 알림 없음)
         const isLast = msgs.length && msgs[msgs.length - 1].id === m.id;
-        const frozen = Array.isArray(curChat.blockedBy) && curChat.blockedBy.length > 0;
-        if (isLast && !frozen && curChat.lastSenderUid === ME.uid) {
-          updateDoc(doc(db, 'chats', curChat.id), { lastMsg: text.slice(0, 200), lastMsgAt: serverTimestamp(), lastSenderUid: ME.uid }).catch(() => {});
+        if (isLast && curChat.lastSenderUid === ME.uid) {
+          updateDoc(doc(db, 'chats', curChat.id), { lastMsg: text.slice(0, 200) }).catch(() => {});
         }
         cancelEdit();
       } catch (err) {
@@ -1035,11 +1054,16 @@
       if (!confirm('이 메시지를 삭제하시겠습니까?\n상대방에게도 "삭제된 메시지입니다"로 표시됩니다.')) return;
       try {
         await updateDoc(doc(db, 'chats', curChat.id, 'messages', m.id), { text: '', deleted: true, deletedAt: serverTimestamp() });
-        // 마지막 메시지였다면 목록 미리보기도 비움(차단 상태면 요약 update 가 거부되므로 생략)
+        // 마지막 메시지였다면 목록 미리보기만 비움 — lastMsgAt 은 그대로(순서 변동·새 메시지 알림 없음).
+        // 상대가 아직 안 읽었고 못 본 내 메시지가 이것뿐이면 '읽지 않음' 표시도 되돌림(1 → 0, 카톡과 동일).
         const isLast = msgs.length && msgs[msgs.length - 1].id === m.id;
-        const frozen = Array.isArray(curChat.blockedBy) && curChat.blockedBy.length > 0;
-        if (isLast && !frozen && curChat.lastSenderUid === ME.uid) {
-          updateDoc(doc(db, 'chats', curChat.id), { lastMsg: '삭제된 메시지입니다', lastMsgAt: serverTimestamp(), lastSenderUid: ME.uid }).catch(() => {});
+        if (isLast && curChat.lastSenderUid === ME.uid) {
+          const other = partnerOf(curChat).uid;
+          const upd = { lastMsg: '삭제된 메시지입니다' };
+          if (Array.isArray(curChat.unreadFor) && curChat.unreadFor.indexOf(other) !== -1 && !otherHasUnseenMine(m.id)) {
+            upd.unreadFor = arrayRemove(other);
+          }
+          updateDoc(doc(db, 'chats', curChat.id), upd).catch(() => {});
         }
       } catch (err) {
         console.warn('[chat] 메시지 삭제 실패', err);

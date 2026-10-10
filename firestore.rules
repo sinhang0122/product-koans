@@ -1067,7 +1067,7 @@ service cloud.firestore {
                        && notSuspended()
                        && request.auth.uid in resource.data.participants
                        && request.resource.data.diff(resource.data).affectedKeys()
-                            .hasOnly(['lastMsg', 'lastMsgAt', 'lastSenderUid', 'unreadFor', 'blockedBy', 'hiddenFor'])
+                            .hasOnly(['lastMsg', 'lastMsgAt', 'lastSenderUid', 'unreadFor', 'blockedBy', 'hiddenFor', 'readAt'])
                        // hiddenFor(2026-10 '채팅방 나가기') = 내 목록에서 숨긴 참여자 uid 목록 ⊆ participants.
                        //   · 평소엔 본인 uid 만 증감(blockedBy 와 같은 양방향 removeAll 가드)
                        //   · 메시지 전송(lastMsg 갱신) 시엔 전체 비우기([]) 허용 — 새 메시지가 오면 나간 쪽에도 방이 다시 보임(카톡 동작)
@@ -1080,12 +1080,25 @@ service cloud.firestore {
                              : (data().get('hiddenFor', []).removeAll(resource.data.get('hiddenFor', [])).hasOnly([request.auth.uid])
                                 && resource.data.get('hiddenFor', []).removeAll(data().get('hiddenFor', [])).hasOnly([request.auth.uid])))
                        // 메시지 요약 갱신은 미차단 상태 + 본인 발신 + serverTimestamp 강제
+                       //   예외(2026-10 수정·삭제): 마지막 메시지가 내 것일 때 미리보기(lastMsg)만 교체 —
+                       //   lastMsgAt 은 그대로(목록 순서 변동·새 메시지 알림 없음), unreadFor 는 줄이는 것만 허용
+                       //   (삭제 시 상대가 아직 안 읽었으면 '읽지 않음' 표시를 되돌림 — 카톡과 동일).
                        && (!request.resource.data.diff(resource.data).affectedKeys()
                               .hasAny(['lastMsg', 'lastMsgAt', 'lastSenderUid'])
                            || (resource.data.blockedBy.size() == 0
                                && data().lastSenderUid == request.auth.uid
                                && data().lastMsg is string && data().lastMsg.size() <= 200
-                               && data().lastMsgAt == request.time))
+                               && data().lastMsgAt == request.time)
+                           || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastMsg', 'unreadFor'])
+                               && resource.data.lastSenderUid == request.auth.uid
+                               && data().lastMsg is string && data().lastMsg.size() <= 200
+                               && resource.data.unreadFor.hasAll(data().unreadFor)))
+                       // readAt(2026-10) = { uid: 그 사람이 마지막으로 읽음 처리한 시각 } — 본인 키만, serverTimestamp 강제.
+                       //   삭제 시 "상대가 못 본 내 메시지가 더 남아 있나" 판단용(클라이언트). 다른 키는 건드릴 수 없음.
+                       && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['readAt'])
+                           || (data().readAt is map
+                               && data().readAt.diff(resource.data.get('readAt', {})).affectedKeys().hasOnly([request.auth.uid])
+                               && data().readAt[request.auth.uid] == request.time))
                        && data().unreadFor is list
                        && data().unreadFor.size() <= 2
                        && resource.data.participants.hasAll(data().unreadFor)
