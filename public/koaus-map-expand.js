@@ -5,7 +5,7 @@
 //  · 위치 비공개 글: 프라이버시 원(400m)만 표시 — 마커/스트릿뷰 숨김, 정확좌표 비노출
 //    (길찾기는 동네(suburb) 수준 목적지로만 제공). 공개 글: 정확 마커 + 길찾기·스트릿뷰.
 //  · FAB 는 ✕(우상단) 바로 아래 세로 스택, 글귀 없이 아이콘 1개씩(원형 44px) —
-//    길찾기 = 화살표(near_me SVG) / 스트릿뷰 = 👁. 좌하단 텍스트 필 배치는 폐기(2026-07 사용자 확정).
+//    길찾기 = 화살표(near_me SVG) / 스트릿뷰 = . 좌하단 텍스트 필 배치는 폐기(2026-07 사용자 확정).
 //  · gestureHandling:'greedy' — 원(또는 마커)은 그대로 둔 채 다른 지역으로 패닝/줌 가능
 //    (realestate.com.au 식 "원 유지 + 둘러보기").
 //  · 오버레이 DOM/CSS 는 helper 가 1회 주입 — 보드 HTML 수정 불필요.
@@ -46,7 +46,7 @@
         '<a class="koaus-mx-fab koaus-mx-dir" target="_blank" rel="noopener" aria-label="길찾기" title="길찾기">' +
           '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 3 3 10.53v.98l6.84 2.65L12.48 21h.98L21 3z"/></svg>' +
         '</a>' +
-        '<a class="koaus-mx-fab koaus-mx-sv" target="_blank" rel="noopener" aria-label="스트릿뷰" title="스트릿뷰">👁</a>' +
+        '<a class="koaus-mx-fab koaus-mx-sv" target="_blank" rel="noopener" aria-label="스트릿뷰" title="스트릿뷰"></a>' +
       '</div>';
     document.body.appendChild(overlay);
     canvasEl = overlay.querySelector('.koaus-mx-canvas');

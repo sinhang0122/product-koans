@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>상단 공지(마퀴) 관리 — KoAus(코어스)</title>
-  <!-- ⚠️ ADMIN_EMAILS 화이트리스트 4번째 사본 — firestore.rules / admin.html / admin-mark.js 와 동기화 유지 -->
+  <!-- ADMIN_EMAILS 화이트리스트 4번째 사본 — firestore.rules / admin.html / admin-mark.js 와 동기화 유지 -->
   <!-- admin.html 디클러터(1단계): 마퀴 공지 + 상단 노출 글 관리를 이 페이지로 분리(순수 이동). 인증 셸·App Check 동일 복제. -->
   <meta name="robots" content="noindex" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -470,7 +470,7 @@
             <input id="dashNoticeSponsor" name="sponsor" type="text" maxlength="60"
                    placeholder="예: KoAus · 데이브 정비소 · 시드니 한인협회"
                    class="w-full p-3 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent" />
-            <p class="mt-1.5 text-xs text-gray-500">마퀴 좌측 고정 라벨에 표시됩니다 (예: <code class="px-1 py-0.5 bg-gray-100 rounded text-gray-700">📢 KoAus</code>).</p>
+            <p class="mt-1.5 text-xs text-gray-500">마퀴 좌측 고정 라벨에 표시됩니다 (예: <code class="px-1 py-0.5 bg-gray-100 rounded text-gray-700">KoAus</code>).</p>
           </div>
 
           <!-- B) 우선순위 -->
@@ -490,7 +490,7 @@
             </label>
             <select id="dashNoticeState" name="state"
                     class="w-full p-3 border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent">
-              <option value="">🌏 전체 (All)</option>
+              <option value="">전체 (All)</option>
               <option value="nsw">NSW</option>
               <option value="vic">VIC</option>
               <option value="qld">QLD</option>
@@ -511,10 +511,10 @@
               </label>
               <select id="dashNoticeAction" name="action"
                       class="w-full p-3 border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent">
-                <option value="external">🔗 외부 링크 (새 탭)</option>
-                <option value="kakao">💬 카카오톡 오픈채팅</option>
+                <option value="external">외부 링크 (새 탭)</option>
+                <option value="kakao">카카오톡 오픈채팅</option>
                 <option value="internal">↗ 내부 페이지 이동</option>
-                <option value="none">❌ 클릭 비활성</option>
+                <option value="none">클릭 비활성</option>
               </select>
             </div>
             <div>
@@ -931,18 +931,18 @@
         };
         if (_noticeEditId) {
           await updateDoc(doc(db, 'notices', _noticeEditId), Object.assign({}, payload, { updatedAt: serverTimestamp() }));
-          flashNote(note, '✅ 공지 수정 완료', true);
+          flashNote(note, '공지 수정 완료', true);
           exitNoticeEditMode();
         } else {
           await addDoc(collection(db, 'notices'), Object.assign({}, payload, {
             createdAt: serverTimestamp(), uid: auth.currentUser.uid,
           }));
-          flashNote(note, '✅ 상단 공지 등록 완료', true);
+          flashNote(note, '상단 공지 등록 완료', true);
           _tnForm.reset();
         }
       } catch (err) {
         console.error('[admin] notices 저장 실패', err);
-        flashNote(note, '❌ 저장 실패: ' + (err.message || err), false);
+        flashNote(note, '저장 실패: ' + (err.message || err), false);
       } finally {
         if (btn) { btn.disabled = false; btn.textContent = _noticeEditId ? '공지 수정 저장' : '공지 등록'; }
       }
@@ -1025,7 +1025,7 @@
         body.className = 'flex-1 min-w-0';
         const top = document.createElement('p');
         top.className = 'text-sm font-semibold text-gray-900 truncate';
-        top.textContent = (d.sponsor || '').trim() || '📢 공지';
+        top.textContent = (d.sponsor || '').trim() || '공지';
         const mid = document.createElement('p');
         mid.className = 'text-sm text-gray-700 truncate';
         mid.textContent = d.text || '';
@@ -1077,7 +1077,7 @@
     }
 
     async function deleteNotice(row) {
-      const label = ((row.data.sponsor || '').trim() || '📢 공지') + ' — ' + (row.data.text || '').slice(0, 30);
+      const label = ((row.data.sponsor || '').trim() || '공지') + ' — ' + (row.data.text || '').slice(0, 30);
       if (!confirm('이 공지를 삭제할까요?\n\n' + label)) return;
       try {
         await deleteDoc(doc(db, 'notices', row.id));

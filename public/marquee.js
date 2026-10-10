@@ -1,6 +1,6 @@
 // ════════════════════════════════════════════════════════════════════
 //  KoAus · 전광판(Marquee) 공지사항 롤링 배너
-//  - 각 페이지 기존 <section class="notice-section">을 hydrate (새 DOM 생성 ❌)
+//  - 각 페이지 기존 <section class="notice-section">을 hydrate (새 DOM 생성 )
 //  - 데이터 출처: Firestore notices (admin.html ① 공지사항 등록)
 //  - 필드 매핑: text → 본문, link → 클릭 시 이동 URL (있으면 새 탭, 없으면 클릭 비활성)
 //  - 우 → 좌 끊임없는 흐름 (CSS @keyframes koaus-marquee)
@@ -87,8 +87,8 @@ function start() {
   function render() {
     const t = items[idx];
     if (!t) return;
-    // sponsor 라벨 — admin 등록 시 입력한 광고주/게시자명, 비어있으면 '📢 공지' 폴백
-    if ($sponsor) $sponsor.textContent = t.sponsor || '📢 공지';
+    // sponsor 라벨 — admin 등록 시 입력한 광고주/게시자명, 비어있으면 '공지' 폴백
+    if ($sponsor) $sponsor.textContent = t.sponsor || '공지';
     if ($content) $content.textContent = t.content || '';
     if ($arrow && $item) {
       if (t.linkUrl) {
@@ -183,7 +183,7 @@ function start() {
           .sort((a, b) => (_pri(a.data) - _pri(b.data)) || (_ts(b.data) - _ts(a.data)))
           .map(({ id, data }) => ({
             id,
-            sponsor: (data.sponsor || '').trim() || '📢 공지',
+            sponsor: (data.sponsor || '').trim() || '공지',
             content: data.text,
             linkUrl: (data.link || '').trim() || '',
           }));

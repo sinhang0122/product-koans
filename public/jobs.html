@@ -389,7 +389,7 @@
   </aside>
 
   <main class="page-container">
-    <section class="koaus-hero" data-koaus-hero-cat="jobs" aria-label="KoAus 배너"></section>
+    <section class="koaus-hero" hidden data-koaus-hero-cat="jobs" aria-label="KoAus 배너"></section>
 
     <section class="notice-section">
       <div class="notice-row" id="tickerRow">
@@ -416,7 +416,7 @@
 
     <div class="page-header">
       <div>
-        <h1 class="page-title">💼 구인구직</h1>
+        <h1 class="page-title">구인구직</h1>
         <p class="page-subtitle">호주 한인 구인구직 게시판 · 직종 / 경력 / 지역 정보를 함께 올려주세요</p>
       </div>
       <a href="index.html" class="page-back">← 홈으로</a>
@@ -452,7 +452,7 @@
               style="display:none;margin-left:8px;padding:4px 10px;font-size:11.5px;font-weight:700;
                      background:#fef3c7;color:#92400e;border:1px solid #fde68a;border-radius:999px;
                      cursor:pointer;white-space:nowrap;">
-        🌏 지역 제한 적용 중 — 전체 보기
+        지역 제한 적용 중 — 전체 보기
       </button>
       <div class="accom-ctrl-actions">
         <button class="board-write-btn board-write-btn--ghost" id="filterModalBtn">상세 필터</button>
@@ -470,7 +470,7 @@
     <div id="mapView" style="display:none;">
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap;">
         <button class="area-search-btn" id="areaSearchBtn">이 지역 잡 구하기</button>
-        <button class="area-search-btn" id="areaResetBtn" type="button" style="display:none;background:var(--bg-card);color:var(--text-primary);border:1px solid var(--border);">🌏 전체 지역 보기</button>
+        <button class="area-search-btn" id="areaResetBtn" type="button" style="display:none;background:var(--bg-card);color:var(--text-primary);border:1px solid var(--border);">전체 지역 보기</button>
       </div>
       <div id="jobsMap" style="width:100%;height:480px;border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;"></div>
     </div>
@@ -512,7 +512,7 @@
       <div class="filter-section">
         <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--text-primary);cursor:pointer;">
           <input type="checkbox" id="ffVisaEligible" style="width:18px;height:18px;cursor:pointer;flex-shrink:0;" />
-          <span>🌏 세컨/써드 비자 카운트 가능 잡만 보기</span>
+          <span>세컨/써드 비자 카운트 가능 잡만 보기</span>
         </label>
       </div>
       <div class="filter-section">
@@ -528,7 +528,7 @@
   <div class="write-overlay" id="writeOverlay">
     <div class="write-modal write-modal--tall">
       <div class="write-modal-header">
-        <div class="write-modal-title">✏️ 구인구직 글쓰기 <em>Write Job</em></div>
+        <div class="write-modal-title">구인구직 글쓰기 <em>Write Job</em></div>
         <span class="write-author-badge">작성자 : <b id="wAuthorName">-</b></span>
         <input type="hidden" id="wAuthor" value="" />
         <button class="write-modal-close" id="writeBtnClose" type="button" aria-label="닫기">✕</button>
@@ -536,10 +536,10 @@
 
       <!-- 작성 주의사항 안내 박스 — 다음 작업에서 본문 inject -->
       <div class="write-rules-box" role="note" aria-label="작성 주의사항">
-        <span class="wrb-icon" aria-hidden="true">⚠️</span>
+        <span class="wrb-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
         <div class="wrb-body">
           <strong class="wrb-title">작성 전 주의사항</strong>
-          <p>💡 호주 법정 최저임금 및 캐주얼 로딩 준수 여부를 확인하세요. 급여 형태(Tax/Cash)와 주급 지급일을 명시해야 하며, 타인의 텍스 파일 넘버(TFN) 도용 및 불법 알선 행위는 금지됩니다.</p>
+          <p>호주 법정 최저임금 및 캐주얼 로딩 준수 여부를 확인하세요. 급여 형태(Tax/Cash)와 주급 지급일을 명시해야 하며, 타인의 텍스 파일 넘버(TFN) 도용 및 불법 알선 행위는 금지됩니다.</p>
         </div>
       </div>
 
@@ -588,7 +588,7 @@
           <div class="write-field">
             <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--text-primary);cursor:pointer;">
               <input type="checkbox" id="wVisaEligible" style="width:18px;height:18px;cursor:pointer;flex-shrink:0;" />
-              <span>🌏 세컨/써드 비자 카운트 가능 <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(Working Holiday 417/462)</em></span>
+              <span>세컨/써드 비자 카운트 가능 <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(Working Holiday 417/462)</em></span>
             </label>
           </div>
         </div>
@@ -599,11 +599,11 @@
             <ul class="addr-suggest" id="wAddressSuggest"></ul>
           </div>
           <div class="write-field">
-            <label class="write-label" for="wPhone">📞 전화번호 Phone <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택 · 문자 문의 가능)</em></label>
+            <label class="write-label" for="wPhone">전화번호 Phone <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택 · 문자 문의 가능)</em></label>
             <input class="write-input" id="wPhone" type="tel" placeholder="04xx xxx xxx" maxlength="30" autocomplete="tel" />
           </div>
           <div class="write-field">
-            <label class="write-label" for="wKakao">💛 카톡 오픈채팅 링크 <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택)</em></label>
+            <label class="write-label" for="wKakao">카톡 오픈채팅 링크 <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택)</em></label>
             <input class="write-input" id="wKakao" type="url" placeholder="https://open.kakao.com/o/..." maxlength="500" />
           </div>
           <div class="write-field" style="display:none">
@@ -611,7 +611,7 @@
             <input class="write-input" id="wContact" type="text" placeholder="기타 연락 수단·시간대·메모 등 자유 입력" maxlength="100" />
           </div>
           <div class="write-field">
-            <label class="write-label" for="wContactEmail">✉️ 연락용 이메일 Email <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택 · 메일로 연락받기)</em></label>
+            <label class="write-label" for="wContactEmail">연락용 이메일 Email <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택 · 메일로 연락받기)</em></label>
             <input class="write-input" id="wContactEmail" type="email" placeholder="you@example.com" maxlength="200" autocomplete="email" />
           </div>
         </div>
@@ -623,7 +623,7 @@
       </div>
 
       <div class="caution-box" aria-label="주의사항 및 공지사항" style="grid-column:1/-1;">
-        <div class="caution-title">⚠ 주의사항 및 공지사항</div>
+        <div class="caution-title">주의사항 및 공지사항</div>
         <ol>
           <li>욕설, 혐오 발언 및 타인 비방 금지</li>
           <li>환전 및 담배 등 호주 내 불법·편법 거래 금지</li>
@@ -640,7 +640,7 @@
           <label class="privacy-toggle">
             <input type="checkbox" id="wChatAllowed" checked />
             <span class="privacy-toggle-text">
-              <strong>🗨️ 채팅 문의 허용</strong>
+              <strong>채팅 문의 허용</strong>
               <em>상세 페이지에 '채팅 문의' 버튼이 표시돼 KoAus 안에서 별명으로 대화할 수 있어요. (해제 시 채팅 버튼 미표시)</em>
             </span>
           </label>
@@ -674,11 +674,11 @@
         <div class="rea-hero-top">
           <button class="rea-ovl-btn" id="detailSaveBtn" type="button" aria-label="저장">☆</button>
           <div class="rea-share-wrap">
-            <button class="rea-ovl-btn" id="detailShareBtn" type="button" aria-label="공유하기">🔗</button>
+            <button class="rea-ovl-btn" id="detailShareBtn" type="button" aria-label="공유하기"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.1 0l3-3a5 5 0 0 0-7.1-7.1l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.1 0l-3 3a5 5 0 0 0 7.1 7.1l1.7-1.7"/></svg></button>
             <div class="detail-share-menu" id="detailShareMenu">
-              <button type="button" data-share="kakao">💬 카카오톡 공유</button>
-              <button type="button" data-share="facebook">📘 페이스북 공유</button>
-              <button type="button" data-share="copy">🔗 링크 복사</button>
+              <button type="button" data-share="kakao">카카오톡 공유</button>
+              <button type="button" data-share="facebook">페이스북 공유</button>
+              <button type="button" data-share="copy">링크 복사</button>
             </div>
           </div>
         </div>
@@ -715,9 +715,9 @@
           </div>
           <div class="rea-loc-btns">
             <a class="rea-loc-btn" id="detailDirBtn" target="_blank" rel="noopener noreferrer">
-              <span>📍 길찾기 <em>See travel times</em></span><span class="rea-loc-arrow">›</span></a>
+              <span>길찾기 <em>See travel times</em></span><span class="rea-loc-arrow">›</span></a>
             <a class="rea-loc-btn" id="detailSvBtn" target="_blank" rel="noopener noreferrer">
-              <span>🛣️ 스트릿뷰 <em>Street View</em></span><span class="rea-loc-arrow">›</span></a>
+              <span>스트릿뷰 <em>Street View</em></span><span class="rea-loc-arrow">›</span></a>
           </div>
         </div>
 
@@ -734,7 +734,7 @@
 
         <div class="rea-owner-actions" id="detailActions"></div>
 
-        <button class="rea-report" id="detailReportBtn" type="button">🚨 신고하기</button>
+        <button class="rea-report" id="detailReportBtn" type="button">신고하기</button>
       </div>
      </div><!-- /rea-scroll -->
 
@@ -924,7 +924,7 @@
       }
       // 빈 결과 안내 — visaEligible 필터 활성 시 별도 메시지
       const _visaActive = !!(activeFilter && activeFilter.visaEligible);
-      document.getElementById('boardCount').textContent = `총 ${all.length}건${_visaActive ? ' · 🌏 세컨/써드 필터 적용' : ''}`;
+      document.getElementById('boardCount').textContent = `총 ${all.length}건${_visaActive ? ' · 세컨/써드 필터 적용' : ''}`;
       const list  = document.getElementById('postList');
       const pager = document.getElementById('pagination');
       if (!all.length) {
@@ -933,7 +933,7 @@
         const _visaActive = !!(activeFilter && activeFilter.visaEligible);
         let msg;
         if (_visaActive) {
-          msg = '🌏 세컨/써드 비자 카운트 가능 글이 아직 없습니다.<br><small style="color:var(--text-muted);">필터를 해제하거나 다른 지역도 확인해 보세요.</small>';
+          msg = '세컨/써드 비자 카운트 가능 글이 아직 없습니다.<br><small style="color:var(--text-muted);">필터를 해제하거나 다른 지역도 확인해 보세요.</small>';
         } else if (_hasFilter) {
           msg = '조건에 맞는 글이 없습니다.<br><small style="color:var(--text-muted);">상세 필터를 초기화해 보세요.</small>';
         } else {
@@ -963,7 +963,7 @@
           <div class="accom-card-thumb">
             ${(Array.isArray(p.imageUrls) && p.imageUrls.length)
               ? `<img src="${escHtml(p.imageUrls[0])}" alt="${escHtml(p.title || '')}" loading="lazy" />`
-              : '<span style="font-size:26px;line-height:1;">💼</span>'}
+              : '<span style="font-size:26px;line-height:1;display:inline-flex;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg></span>'}
           </div>
           <div class="accom-card-info">
             <div class="accom-card-row1">
@@ -980,7 +980,7 @@
             </div>
             <div class="accom-card-row2">
               <div class="accom-card-price-wrap">${payText}</div>
-              ${addr ? `<div class="accom-card-sub">📍 ${escHtml(addr)}</div>` : ''}
+              ${addr ? `<div class="accom-card-sub">${escHtml(addr)}</div>` : ''}
             </div>
           </div>
         </div>`;
@@ -1125,7 +1125,7 @@
       // 3) 상태: '구인' / '구직' + 작성자
       const isFindMode = p.mode === 'find' || p.tab === 'find';
       document.getElementById('detailStatus').innerHTML =
-        `⚪ ${isFindMode ? '구직 (Seeking)' : '구인 (Hiring)'} ` +
+        `${isFindMode ? '구직 (Seeking)' : '구인 (Hiring)'} ` +
         `<span class="rea-dot">•</span> 작성자: <strong>${escHtml(authorLabel(p))}</strong>`;
 
       // 4) 가격 (Huge Bold) — 급여
@@ -1141,15 +1141,15 @@
       const addrText = document.getElementById('detailAddrText');
       const addrCopy = document.getElementById('detailAddrCopy');
       if (p.address) {
-        addrText.textContent = '📍 ' + p.address;
+        addrText.textContent = '' + p.address;
         addrCopy.style.display = '';
         addrCopy.onclick = () => copyAddress(p.address);
       } else { addrText.textContent = '주소 미등록'; addrCopy.style.display = 'none'; }
 
       // 6) 핵심 요약 칩 (고용형태 / 날짜)
       const sum = [];
-      if (p.empType) sum.push('🕒 ' + p.empType);
-      if (p.date)    sum.push('📅 ' + p.date + (p.time ? ' ' + p.time : ''));
+      if (p.empType) sum.push('' + p.empType);
+      if (p.date)    sum.push('' + p.date + (p.time ? ' ' + p.time : ''));
       document.getElementById('detailSummary').innerHTML =
         sum.map(s => `<span class="rea-chip">${escHtml(s)}</span>`).join('');
 
@@ -1183,18 +1183,18 @@
       const _isMineFlag    = (_rbac && _rbac.isAuthor) ? _rbac.isAuthor(p) : isMine(p);
       const _isAdminFlag   = (_rbac && _rbac.isAdmin)  ? _rbac.isAdmin()   : false;
       if (_isMineFlag) {
-        _btns.push('<button class="detail-action-btn detail-edit-btn" id="detailEditBtn">✏️ 수정</button>');
-        _btns.push('<button class="detail-action-btn detail-delete-btn" id="detailDeleteBtn">🗑 삭제</button>');
-        _btns.push('<button class="detail-action-btn detail-complete-btn" id="detailCompleteBtn">✅ 구인 마감</button>');
-        // 본인 글 일시 숨김 토글 — ⏸️ 일시 숨김 ↔ ▶️ 다시 노출
-        _btns.push('<button class="detail-action-btn detail-hide-btn" id="detailHideBtn">' + (p.isHidden ? '▶️ 다시 노출' : '⏸️ 일시 숨김') + '</button>');
+        _btns.push('<button class="detail-action-btn detail-edit-btn" id="detailEditBtn">수정</button>');
+        _btns.push('<button class="detail-action-btn detail-delete-btn" id="detailDeleteBtn">삭제</button>');
+        _btns.push('<button class="detail-action-btn detail-complete-btn" id="detailCompleteBtn">구인 마감</button>');
+        // 본인 글 일시 숨김 토글 — 일시 숨김 ↔ 다시 노출
+        _btns.push('<button class="detail-action-btn detail-hide-btn" id="detailHideBtn">' + (p.isHidden ? '다시 노출' : '일시 숨김') + '</button>');
       } else if (_isAdminFlag) {
         // 운영자 (타인 글) — 동일 일시 숨김 토글 (작성자 권한 우회) + 강제 삭제
-        _btns.push('<button class="detail-action-btn detail-hide-btn" id="detailHideBtn">' + (p.isHidden ? '▶️ 다시 노출' : '⏸️ 일시 숨김') + '</button>');
-        _btns.push('<button class="detail-action-btn detail-delete-btn" id="detailAdminDelBtn">🗑 강제 삭제</button>');
+        _btns.push('<button class="detail-action-btn detail-hide-btn" id="detailHideBtn">' + (p.isHidden ? '다시 노출' : '일시 숨김') + '</button>');
+        _btns.push('<button class="detail-action-btn detail-delete-btn" id="detailAdminDelBtn">강제 삭제</button>');
       }
       // 누구나: 공유·찜 (본문 액션바 통합 — hero-top 과 중복 노출)
-      _btns.push('<button class="detail-action-btn detail-share2-btn" id="detailShareBtn2">🔗 공유</button>');
+      _btns.push('<button class="detail-action-btn detail-share2-btn" id="detailShareBtn2">공유</button>');
       _btns.push('<button class="detail-action-btn detail-save2-btn" id="detailSaveBtn2">' + (isSaved(p.id) ? '★ 저장됨' : '☆ 찜하기') + '</button>');
       actEl.innerHTML = _btns.join('');
       actEl.style.display = 'flex';
@@ -1206,7 +1206,7 @@
         try {
           const fsId = p._fsDocId || p.fsDocId || p.id;   // 스냅샷이 _fsDocId 채움 — 옛 p.fsDocId 오타 → p.id 타임스탬프 폴백 회귀 교정
           if (_rbac && _rbac.markCompleted) await _rbac.markCompleted('jobs_posts', String(fsId));
-          alert('✅ 구인 마감 처리 완료');
+          alert('구인 마감 처리 완료');
           document.getElementById('detailOverlay').classList.remove('open');
           renderPosts();
         } catch (e) { alert('마감 실패: ' + (e.message || e)); }
@@ -1218,7 +1218,7 @@
           const fsId = p._fsDocId || p.fsDocId || p.id;   // 스냅샷이 _fsDocId 채움 — 옛 p.fsDocId 오타 → p.id 타임스탬프 폴백 회귀 교정
           // 본인 글 일시숨김은 author 모드(hiddenBy 미기록 → 운영자 자가잠금 방지). 타인 글(운영자)은 기존 동작 유지.
           if (_rbac && _rbac.toggleHidden) await _rbac.toggleHidden('jobs_posts', String(fsId), !!p.isHidden, _isMineFlag ? false : undefined);
-          alert(willHide ? '⏸️ 일시 숨김 처리 완료' : '▶️ 다시 노출 처리 완료');
+          alert(willHide ? '일시 숨김 처리 완료' : '다시 노출 처리 완료');
           document.getElementById('detailOverlay').classList.remove('open'); renderPosts();
         } catch (e) { alert('상태 변경 실패: ' + (e.message || e)); }
       };
@@ -1228,7 +1228,7 @@
           const fsId = p.fsDocId || p._fsDocId || p.id;
           await _rbac.forceDelete('jobs_posts', String(fsId));
           savePosts(loadPosts().filter(x => String(x.id) !== String(p.id)));
-          alert('🗑 강제 삭제 완료');
+          alert('강제 삭제 완료');
           document.getElementById('detailOverlay').classList.remove('open'); renderPosts();
         } catch (e) { alert('강제 삭제 실패: ' + (e.message || e)); }
       };
@@ -1242,8 +1242,8 @@
       if (p.contact) {
         const isLink = /^https?:\/\//i.test(p.contact);
         cbtn.disabled = false; cbtn.style.display = '';
-        if (isLink) { cbtn.textContent = '💬 카카오톡으로 연락하기'; cbtn.onclick = () => window.open(p.contact, '_blank', 'noopener'); }
-        else { cbtn.textContent = '📞 연락처 보기'; cbtn.onclick = () => copyText(p.contact, `연락처: ${p.contact}`); }
+        if (isLink) { cbtn.textContent = '카카오톡으로 연락하기'; cbtn.onclick = () => window.open(p.contact, '_blank', 'noopener'); }
+        else { cbtn.textContent = '연락처 보기'; cbtn.onclick = () => copyText(p.contact, `연락처: ${p.contact}`); }
       } else { cbtn.style.display = 'none'; cbtn.disabled = true; cbtn.onclick = null; }
 
       // 12) Location (지도) — accom 패턴: p.address 만 있어도 geocode fallback 으로 표시
@@ -1394,7 +1394,7 @@
 
     function setWriteMode(mode) {
       const isEdit = mode === 'edit';
-      document.querySelector('.write-modal-title').textContent = isEdit ? '✏️ 구인구직 글 수정' : '✏️ 구인구직 글쓰기';
+      document.querySelector('.write-modal-title').textContent = isEdit ? '구인구직 글 수정' : '구인구직 글쓰기';
       document.getElementById('writeBtnSubmit').textContent = isEdit ? '수정 완료' : '등록하기';
     }
     function fillAuthorBadge() {
@@ -1500,7 +1500,7 @@
         }
         submitPost();
       } catch (err) {
-        console.error('❌ 글쓰기 핸들러 크래시: ', err);
+        console.error('글쓰기 핸들러 크래시: ', err);
         alert('글 등록 처리 중 오류: ' + (err.message || err));
       }
     });
@@ -1530,7 +1530,7 @@
         const elAddress  = document.getElementById('wAddress');
         const radioType  = document.querySelector('input[name="wPostType"]:checked');
         if (!elTitle || !elBody || !elContact) {
-          console.error('❌ 글쓰기 폼 DOM 누락: wTitle/wBody/wContact 일부가 없습니다.');
+          console.error('글쓰기 폼 DOM 누락: wTitle/wBody/wContact 일부가 없습니다.');
           alert('글쓰기 폼을 불러오지 못했습니다. 페이지를 새로고침 후 다시 시도해 주세요.');
           return;
         }
@@ -1618,16 +1618,16 @@
           recordMyPost(post);
 
           // ── 5) Firestore 전송 (컬렉션: jobs_posts) ──
-          console.log('🚀 Firestore 전송 시도 데이터: ', post);
+          console.log('Firestore 전송 시도 데이터: ', post);
           if (window.koausJobs && window.koausJobs.write) {
             window.koausJobs.write(post)
-              .then(ref => console.log('✅ Firestore 저장 성공 docId =', ref && ref.id))
+              .then(ref => console.log('Firestore 저장 성공 docId =', ref && ref.id))
               .catch(error => {
-                console.error('❌ Firestore 전송 실패 원인: ', error);
+                console.error('Firestore 전송 실패 원인: ', error);
                 alert('서버 저장 실패\n코드: ' + (error.code || '-') + '\n메시지: ' + (error.message || error) + '\n\n글은 본인 기기에는 표시됩니다. Firestore 콘솔에서 규칙 배포 여부와 jobs_posts 컬렉션 권한을 확인해 주세요.');
               });
           } else {
-            console.error('❌ window.koausJobs 미초기화 — Firestore 모듈 로드 순서를 확인하세요');
+            console.error('window.koausJobs 미초기화 — Firestore 모듈 로드 순서를 확인하세요');
             alert('Firestore 연결이 아직 준비되지 않았습니다. 잠시 후 다시 시도해 주세요.');
           }
         }
@@ -1639,7 +1639,7 @@
         const _caReset = document.getElementById('wChatAllowed'); if (_caReset) _caReset.checked = true;   // 새 글 기본 ON
         switchTab(postType);
       } catch (error) {
-        console.error('❌ submitPost 예외: ', error);
+        console.error('submitPost 예외: ', error);
         alert('글 등록 중 오류가 발생했습니다.\n' + (error.message || error));
       }
     }
@@ -1662,7 +1662,7 @@
     window.addEventListener('koaus-jobs-updated', () => renderPosts());
 
     // ════════════════════════════════════════════════════════════════════
-    //  ⬇ accom.html 풀시스템 이식: Maps + Places Autocomplete + 필터 + 검색기록
+    //  accom.html 풀시스템 이식: Maps + Places Autocomplete + 필터 + 검색기록
     // ════════════════════════════════════════════════════════════════════
     const GOOGLE_MAPS_KEY = 'AIzaSyDwogQ55V0-JqZ-ZYRTpYgNZWOdp_-5vOQ';
     let mapScriptLoading = false, mapScriptLoaded = false, acService = null, geocoder = null;
@@ -1795,7 +1795,7 @@
             <div style="min-width:0;flex:1;">
               <div style="font-weight:800;font-size:13px;line-height:1.3;color:#000;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${esc(p.title)}</div>
               ${payTxt ? `<div style="font-size:13px;font-weight:800;color:#000;margin-top:3px;">${payTxt}</div>` : ''}
-              ${p.address ? `<div style="font-size:11px;color:#444;margin-top:3px;">📍 ${esc(p.address)}</div>` : ''}
+              ${p.address ? `<div style="font-size:11px;color:#444;margin-top:3px;">${esc(p.address)}</div>` : ''}
               <div style="font-size:10px;color:#666;margin-top:4px;">탭하여 상세 보기 →</div>
             </div>
           </div>`;
@@ -2387,7 +2387,7 @@
       write: async (post) => {
         const u = auth.currentUser;
         if (!u) {
-          console.error('❌ Firestore 전송 실패 원인: auth.currentUser 가 null — 로그인이 풀린 상태');
+          console.error('Firestore 전송 실패 원인: auth.currentUser 가 null — 로그인이 풀린 상태');
           throw Object.assign(new Error('로그인 필요'), { code: 'auth/not-signed-in' });
         }
         const payload = {
@@ -2396,11 +2396,11 @@
           authorUid:   u.uid,
           createdAt: serverTimestamp(),
         };
-        console.log('🚀 Firestore 전송 시도 데이터: ', payload, '| collection=jobs_posts | uid=', u.uid);
+        console.log('Firestore 전송 시도 데이터: ', payload, '| collection=jobs_posts | uid=', u.uid);
         try {
           // ── Step 1: 새 글 등록 — 반드시 먼저 성공해야 함 ──
           const ref = await addDoc(collection(db, 'jobs_posts'), payload);
-          console.log('✅ Firestore addDoc 성공 — docId =', ref.id);
+          console.log('Firestore addDoc 성공 — docId =', ref.id);
           // ── Step 2: 새 글 등록 100% 성공 확인 직후에만 과거 중복 글 삭제 (Rollback-safe) ──
           //   · 조건: 같은 uid + 같은 title + 같은 body (완전 동일)
           //   · 새 글 자기 자신(ref.id)은 제외
@@ -2426,7 +2426,7 @@
           return ref;
         } catch (error) {
           // 새 글 등록 자체가 실패한 경우 — 과거 글 절대 건드리지 않음 (Rollback)
-          console.error('❌ Firestore 전송 실패 원인: ', error);
+          console.error('Firestore 전송 실패 원인: ', error);
           throw error;
         }
       },

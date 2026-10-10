@@ -55,7 +55,7 @@
     el.className = 'koaus-net-toast';
     el.setAttribute('role', 'status');
     el.setAttribute('aria-live', 'polite');
-    el.innerHTML = '<span class="net-ico" aria-hidden="true">⚠</span><span class="net-msg"></span>';
+    el.innerHTML = '<span class="net-ico" aria-hidden="true"></span><span class="net-msg"></span>';
     document.body.appendChild(el);
     return el;
   }
@@ -66,7 +66,7 @@
     const el = ensureToast();
     el.classList.remove('koaus-net-toast--offline', 'koaus-net-toast--online');
     el.classList.add(kind === 'online' ? 'koaus-net-toast--online' : 'koaus-net-toast--offline');
-    el.querySelector('.net-ico').textContent = kind === 'online' ? '✓' : '⚠';
+    el.querySelector('.net-ico').textContent = kind === 'online' ? '✓' : '';
     el.querySelector('.net-msg').textContent = message;
     // force reflow → transition 적용
     void el.offsetWidth;

@@ -458,7 +458,7 @@
         <div class="space-y-3">
           <a href="admin-ads.html"
              class="block w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold py-3 px-6 rounded-lg shadow-sm transition-colors text-center">
-            🖼 배너 관리 열기 <span class="font-normal text-blue-100 text-sm">(전 페이지 · 유저 성향 주 기준 슬롯 교체)</span>
+            배너 관리 열기 <span class="font-normal text-blue-100 text-sm">(전 페이지 · 유저 성향 주 기준 슬롯 교체)</span>
           </a>
         </div>
       </section>
@@ -479,11 +479,11 @@
         <div class="space-y-3">
           <a href="admin-marquee.html"
              class="block w-full bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-bold py-3 px-6 rounded-lg shadow-sm transition-colors text-center">
-            📢 상단 공지(마퀴) 관리 열기
+            상단 공지(마퀴) 관리 열기
           </a>
           <a href="admin-pinned.html"
              class="block w-full bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-bold py-3 px-6 rounded-lg shadow-sm transition-colors text-center">
-            📌 상단 노출 글(핀공지) 관리 열기
+            상단 노출 글(핀공지) 관리 열기
           </a>
         </div>
       </section>
@@ -525,7 +525,7 @@
           <div class="pt-2">
             <button type="submit" id="dashTimingsSubmit"
                     class="w-full bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white font-bold py-3 px-6 rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 disabled:opacity-60">
-              💾 시간 저장
+              시간 저장
             </button>
             <p id="dashTimingsNote" class="mt-3 text-sm text-center" role="status" aria-live="polite"></p>
           </div>
@@ -538,7 +538,7 @@
            ══════════════════════════════════════════════════ -->
       <section class="admin-card bg-white rounded-xl shadow-sm border border-gray-200 p-7">
         <header class="flex items-center gap-3 pb-4 mb-6 border-b border-gray-200">
-          <div class="flex items-center justify-center w-10 h-10 bg-teal-600 rounded-lg flex-shrink-0 text-white text-lg">📋</div>
+          <div class="flex items-center justify-center w-10 h-10 bg-teal-600 rounded-lg flex-shrink-0 text-white text-lg"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg></div>
           <div>
             <h2 class="text-xl font-bold text-gray-900 leading-tight">가채점 정보 출처</h2>
             <p class="text-xs text-gray-500 mt-0.5">기술심사 가채점 페이지 상단의 "정보제공 · 확인일" 표시 (비우면 숨김)</p>
@@ -560,7 +560,7 @@
           <div class="pt-2">
             <button type="submit" id="dashPointsInfoSubmit"
                     class="w-full bg-teal-600 hover:bg-teal-700 active:bg-teal-800 text-white font-bold py-3 px-6 rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 disabled:opacity-60">
-              💾 정보 출처 저장
+              정보 출처 저장
             </button>
             <p id="dashPointsInfoNote" class="mt-3 text-sm text-center" role="status" aria-live="polite"></p>
           </div>
@@ -595,7 +595,7 @@
       <!-- ══════════════════════════════════════════════════
            카드 4-b · 영상 승인 (2026-07)
            videos 컬렉션 승인 큐 — pending 구독(승인/거부) + 게시 중(approved) 내리기
-           ⚠️ rules: videos list ≤20 (limitedList) — limit(20) 초과 구독은 전체 거부
+           rules: videos list ≤20 (limitedList) — limit(20) 초과 구독은 전체 거부
            ══════════════════════════════════════════════════ -->
       <section class="admin-card bg-white rounded-xl shadow-sm border border-gray-200 p-7">
         <header class="flex items-center gap-3 pb-4 mb-6 border-b border-gray-200">
@@ -611,12 +611,12 @@
           </div>
           <span class="ml-auto inline-flex items-center px-3 py-1 rounded-full bg-violet-50 text-violet-700 text-xs font-bold" id="dashVideosPendingCount">0건 대기</span>
         </header>
-        <h3 class="text-sm font-bold text-gray-900 mb-2">⏳ 승인 대기</h3>
+        <h3 class="text-sm font-bold text-gray-900 mb-2">승인 대기</h3>
         <div id="dashVideosPendingList" class="space-y-2 mb-6"
              style="max-height:440px;overflow-y:auto;font-size:13px;">
           <div class="text-sm text-gray-500 text-center py-8">로딩 중…</div>
         </div>
-        <h3 class="text-sm font-bold text-gray-900 mb-2">📺 게시 중 <span class="text-xs font-semibold text-gray-500" id="dashVideosLiveCount">(0건)</span></h3>
+        <h3 class="text-sm font-bold text-gray-900 mb-2">게시 중 <span class="text-xs font-semibold text-gray-500" id="dashVideosLiveCount">(0건)</span></h3>
         <div id="dashVideosLiveList" class="space-y-2"
              style="max-height:320px;overflow-y:auto;font-size:13px;">
           <div class="text-sm text-gray-500 text-center py-8">로딩 중…</div>
@@ -670,12 +670,12 @@
           <button type="button" id="dashSanctionRefresh"
                   style="padding:6px 14px;font-size:12px;font-weight:700;background:#92400e;color:#fff;border:none;border-radius:6px;cursor:pointer;">↻ 새로고침</button>
         </header>
-        <h3 class="text-sm font-bold text-gray-900 mb-2">🚫 정지 중 계정</h3>
+        <h3 class="text-sm font-bold text-gray-900 mb-2">정지 중 계정</h3>
         <div id="dashSuspendedList" class="space-y-2 mb-6"
              style="max-height:300px;overflow-y:auto;font-size:13px;">
           <div class="text-sm text-gray-500 text-center py-8">로딩 중…</div>
         </div>
-        <h3 class="text-sm font-bold text-gray-900 mb-2">📜 제재 이력 (최근 100건)</h3>
+        <h3 class="text-sm font-bold text-gray-900 mb-2">제재 이력 (최근 100건)</h3>
         <div id="dashModLogList" class="space-y-1"
              style="max-height:300px;overflow-y:auto;font-size:12.5px;">
           <div class="text-sm text-gray-500 text-center py-8">로딩 중…</div>
@@ -683,7 +683,7 @@
 
         <!-- 번호로 계정 찾기 → 정지 (카드7 _fcQueries/_fcRender/callSuspendUser 재사용) -->
         <div class="mt-6 pt-5 border-t border-gray-200">
-          <h3 class="text-sm font-bold text-gray-900 mb-2">📞 번호로 계정 찾기 → 정지</h3>
+          <h3 class="text-sm font-bold text-gray-900 mb-2">번호로 계정 찾기 → 정지</h3>
           <div class="flex gap-2 flex-wrap">
             <input id="susPhoneInput" type="text" placeholder="전화번호 전체 또는 일부(숫자)"
                    class="flex-1 p-2.5 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-400" />
@@ -699,11 +699,11 @@
       </section>
 
       <!-- ══════════════════════════════════════════════════
-           카드 7 · 🔎 사기 추적 · 글 조회 — 링크/ID 로 보관(소프트삭제) 글 끌어와 작성자·연락처 + 정지
+           카드 7 · 사기 추적 · 글 조회 — 링크/ID 로 보관(소프트삭제) 글 끌어와 작성자·연락처 + 정지
            ══════════════════════════════════════════════════ -->
       <section class="admin-card bg-white rounded-xl shadow-sm border border-gray-200 p-7">
         <header class="flex items-center gap-3 pb-4 mb-6 border-b border-gray-200">
-          <div class="flex items-center justify-center w-10 h-10 bg-red-600 rounded-lg flex-shrink-0 text-white text-lg">🔎</div>
+          <div class="flex items-center justify-center w-10 h-10 bg-red-600 rounded-lg flex-shrink-0 text-white text-lg"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="20" y1="20" x2="16.5" y2="16.5"/></svg></div>
           <div>
             <h2 class="text-xl font-bold text-gray-900 leading-tight">사기 추적 · 글 조회</h2>
             <p class="text-xs text-gray-500 mt-0.5">신고/피해자 링크로 보관(삭제) 글까지 끌어와 작성자·연락처 확인 + 계정 정지.</p>
@@ -741,11 +741,11 @@
            카드 8 · 문의 로그
            inquiry_logs onSnapshot (orderBy at desc, limit 200)
            연락 버튼(문자/카톡/메일/복사) 탭 집계 — "문의하기 눌렀는지" 확인
-           ⚠️ rules list ≤ 200 · 탭 시점만 기록(실제 발송/계약 성사 여부는 알 수 없음)
+           rules list ≤ 200 · 탭 시점만 기록(실제 발송/계약 성사 여부는 알 수 없음)
            ══════════════════════════════════════════════════ -->
       <section class="admin-card bg-white rounded-xl shadow-sm border border-gray-200 p-7">
         <header class="flex items-center gap-3 pb-4 mb-6 border-b border-gray-200">
-          <div class="flex items-center justify-center w-10 h-10 bg-indigo-600 rounded-lg flex-shrink-0 text-white text-lg">📨</div>
+          <div class="flex items-center justify-center w-10 h-10 bg-indigo-600 rounded-lg flex-shrink-0 text-white text-lg"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.5 5h13l3.5 7v6a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-6z"/></svg></div>
           <div>
             <h2 class="text-xl font-bold text-gray-900 leading-tight">문의 로그</h2>
             <p class="text-xs text-gray-500 mt-0.5">연락 버튼(문자·카톡·메일·소개글복사)을 누른 기록 · 누가 어떤 매물에 문의를 시도했는지 (버튼 탭 시점만 — 실제 발송·계약 성사 여부는 알 수 없음)</p>
@@ -753,7 +753,7 @@
           <span class="ml-auto inline-flex items-center px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-bold" id="dashInquiryCount">0건</span>
         </header>
         <div style="margin-bottom:10px;">
-          <input id="dashInquirySearch" type="text" placeholder="🔍 글 제목 · 닉네임 · 보드로 검색 (예: 시드니 쉐어 / 김OO)"
+          <input id="dashInquirySearch" type="text" placeholder="글 제목 · 닉네임 · 보드로 검색 (예: 시드니 쉐어 / 김OO)"
                  class="w-full p-2.5 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-400" autocomplete="off" />
         </div>
         <div id="dashInquiryList" class="space-y-2"
@@ -1101,12 +1101,12 @@
             heroDelaySec, marqueeDurationSec,
             updatedAt: serverTimestamp(), uid: auth.currentUser.uid,
           }, { merge: true });
-          flashNote(note, '✅ 시간 저장 완료 — 다음 페이지 로드부터 전 사이트 자동 적용', true);
+          flashNote(note, '시간 저장 완료 — 다음 페이지 로드부터 전 사이트 자동 적용', true);
         } catch (err) {
           console.error('[admin] timings 저장 실패', err);
-          flashNote(note, '❌ 저장 실패: ' + (err.message || err), false);
+          flashNote(note, '저장 실패: ' + (err.message || err), false);
         } finally {
-          if (btn) { btn.disabled = false; btn.textContent = '💾 시간 저장'; }
+          if (btn) { btn.disabled = false; btn.textContent = '시간 저장'; }
         }
       });
     }
@@ -1137,12 +1137,12 @@
             provider, reviewedDate,
             updatedAt: serverTimestamp(), uid: auth.currentUser.uid,
           }, { merge: true });
-          flashNote(note, '✅ 저장 완료 — 가채점 페이지에 반영', true);
+          flashNote(note, '저장 완료 — 가채점 페이지에 반영', true);
         } catch (err) {
           console.error('[admin] points_info 저장 실패', err);
-          flashNote(note, '❌ 저장 실패: ' + (err.message || err), false);
+          flashNote(note, '저장 실패: ' + (err.message || err), false);
         } finally {
-          if (btn) { btn.disabled = false; btn.textContent = '💾 정보 출처 저장'; }
+          if (btn) { btn.disabled = false; btn.textContent = '정보 출처 저장'; }
         }
       });
     }
@@ -1150,7 +1150,7 @@
     // ════════════════════════════════════════════════════════════════════════
     // 카드 4 · 신고 관리 (지시 6/7 + 제재 시스템 확장)
     //   · reports 컬렉션 onSnapshot 실시간 구독 (orderBy createdAt desc, limit 100)
-    //     ⚠️ rules 의 limitedList 는 ≤100 — 100 초과 쿼리는 전체 거부됨 (F-G 회귀 주의)
+    //     rules 의 limitedList 는 ≤100 — 100 초과 쿼리는 전체 거부됨 (F-G 회귀 주의)
     //   · 카테고리/신고자/대상글/스냅샷/사유/처리 액션 (삭제 / 해결 / 무시)
     //   · 글 보기 링크 + 작성자 정지/해제 (callable suspendUser/unsuspendUser)
     //   · firestore.rules: list isAdmin only ≤ 100, update/delete isAdmin
@@ -1161,18 +1161,18 @@
         .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
     }
     const CAT_LABEL = {
-      spam:          '🚫 스팸/홍보',
-      fraud:         '⚠️ 사기 의심',
-      inappropriate: '🚨 부적절',
-      other:         '✏️ 기타',
+      spam:          '스팸/홍보',
+      fraud:         '사기 의심',
+      inappropriate: '부적절',
+      other:         '기타',
     };
     function reportRowHtml(r) {
       const cat = CAT_LABEL[r.category] || r.category || '(미분류)';
       const created = r.createdAt && r.createdAt.toDate ? r.createdAt.toDate().toLocaleString('ko-KR') : '';
       const reporter = r.reporterEmail ? r.reporterEmail.split('@')[0] + '@…' : (r.reporterUid ? r.reporterUid.slice(0,6) + '…' : '익명');
-      const status = r.status === 'resolved' ? '<span style="color:#16a34a;font-weight:700;">✅ 해결</span>'
+      const status = r.status === 'resolved' ? '<span style="color:#16a34a;font-weight:700;">해결</span>'
                     : r.status === 'ignored' ? '<span style="color:#777;font-weight:700;">— 무시</span>'
-                    : '<span style="color:#dc2626;font-weight:800;">🔴 대기</span>';
+                    : '<span style="color:#dc2626;font-weight:800;">대기</span>';
       return '<div class="admin-report-row" style="display:flex;flex-direction:column;gap:6px;padding:10px 12px;border:1px solid #e5e7eb;border-radius:8px;background:#fafafa;">'
         + '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">'
         +   '<span style="font-weight:800;color:#dc2626;">' + escHtmlAdmin(cat) + '</span>'
@@ -1188,14 +1188,14 @@
         + '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:2px;flex-wrap:wrap;">'
         +   '<span>' + status + '</span>'
         +   '<span style="display:flex;gap:6px;flex-wrap:wrap;">'
-        +     (r.board && r.board !== 'unknown' ? '<a href="' + escHtmlAdmin(r.board) + '.html" target="_blank" rel="noopener" style="padding:4px 10px;font-size:11.5px;font-weight:700;background:#eff6ff;color:#1d4ed8;border:1px solid #93c5fd;border-radius:5px;text-decoration:none;">📄 글 보기</a>' : '')
+        +     (r.board && r.board !== 'unknown' ? '<a href="' + escHtmlAdmin(r.board) + '.html" target="_blank" rel="noopener" style="padding:4px 10px;font-size:11.5px;font-weight:700;background:#eff6ff;color:#1d4ed8;border:1px solid #93c5fd;border-radius:5px;text-decoration:none;">글 보기</a>' : '')
         +     (r.postAuthorUid
-                ? '<button class="admin-report-act" data-act="suspend" data-id="' + escHtmlAdmin(r._id) + '" data-uid="' + escHtmlAdmin(r.postAuthorUid) + '" style="padding:4px 10px;font-size:11.5px;font-weight:700;background:#fef3c7;color:#92400e;border:1px solid #fcd34d;border-radius:5px;cursor:pointer;">🚫 작성자 정지</button>'
-                  + '<button class="admin-report-act" data-act="unsuspend" data-id="' + escHtmlAdmin(r._id) + '" data-uid="' + escHtmlAdmin(r.postAuthorUid) + '" style="padding:4px 10px;font-size:11.5px;font-weight:700;background:#ecfdf5;color:#065f46;border:1px solid #6ee7b7;border-radius:5px;cursor:pointer;">♻️ 정지 해제</button>'
+                ? '<button class="admin-report-act" data-act="suspend" data-id="' + escHtmlAdmin(r._id) + '" data-uid="' + escHtmlAdmin(r.postAuthorUid) + '" style="padding:4px 10px;font-size:11.5px;font-weight:700;background:#fef3c7;color:#92400e;border:1px solid #fcd34d;border-radius:5px;cursor:pointer;">작성자 정지</button>'
+                  + '<button class="admin-report-act" data-act="unsuspend" data-id="' + escHtmlAdmin(r._id) + '" data-uid="' + escHtmlAdmin(r.postAuthorUid) + '" style="padding:4px 10px;font-size:11.5px;font-weight:700;background:#ecfdf5;color:#065f46;border:1px solid #6ee7b7;border-radius:5px;cursor:pointer;">정지 해제</button>'
                 : '<span style="padding:4px 10px;font-size:11.5px;color:#9ca3af;border:1px dashed #d1d5db;border-radius:5px;" title="옛 신고 — 작성자 uid 스냅샷 없음">정지 불가(uid 없음)</span>')
-        +     '<button class="admin-report-act" data-act="resolve" data-id="' + escHtmlAdmin(r._id) + '" style="padding:4px 10px;font-size:11.5px;font-weight:700;background:#dcfce7;color:#166534;border:1px solid #86efac;border-radius:5px;cursor:pointer;">✅ 해결</button>'
+        +     '<button class="admin-report-act" data-act="resolve" data-id="' + escHtmlAdmin(r._id) + '" style="padding:4px 10px;font-size:11.5px;font-weight:700;background:#dcfce7;color:#166534;border:1px solid #86efac;border-radius:5px;cursor:pointer;">해결</button>'
         +     '<button class="admin-report-act" data-act="ignore"  data-id="' + escHtmlAdmin(r._id) + '" style="padding:4px 10px;font-size:11.5px;font-weight:700;background:#f3f4f6;color:#374151;border:1px solid #d1d5db;border-radius:5px;cursor:pointer;">— 무시</button>'
-        +     '<button class="admin-report-act" data-act="delete"  data-id="' + escHtmlAdmin(r._id) + '" style="padding:4px 10px;font-size:11.5px;font-weight:700;background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;border-radius:5px;cursor:pointer;">🗑 영구 삭제</button>'
+        +     '<button class="admin-report-act" data-act="delete"  data-id="' + escHtmlAdmin(r._id) + '" style="padding:4px 10px;font-size:11.5px;font-weight:700;background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;border-radius:5px;cursor:pointer;">영구 삭제</button>'
         +   '</span>'
         + '</div>'
       + '</div>';
@@ -1241,7 +1241,7 @@
           if (reason === null) { btn.disabled = false; return; }
           const call = act === 'suspend' ? callSuspendUser : callUnsuspendUser;
           const res = await call({ uid, reason });
-          alert('✅ ' + label + ' 완료 — uid: ' + (res.data && res.data.uid || uid) + ' / status: ' + (res.data && res.data.status || ''));
+          alert('' + label + ' 완료 — uid: ' + (res.data && res.data.uid || uid) + ' / status: ' + (res.data && res.data.status || ''));
           btn.disabled = false;
           if (btn.dataset.id === 'sanction') loadSanctions();  // 제재 관리 카드 경유 시 목록 갱신
         } else if (act === 'delete') {
@@ -1261,7 +1261,7 @@
     //   · pending 구독: where status=='pending' + orderBy createdAt desc + limit(20)
     //     (firestore.indexes.json videos 복합 인덱스 사용 — reports 와 달리 where 포함)
     //   · approved 구독: 동일 형태 — 게시 중 목록 + 내리기
-    //   · ⚠️ rules limitedList ≤20 — limit 을 20 초과로 올리면 구독 전체 거부 (F-G 동종)
+    //   · rules limitedList ≤20 — limit 을 20 초과로 올리면 구독 전체 거부 (F-G 동종)
     //   · 승인 = updateDoc status:'approved' (rules update isAdmin 전용) · 거부/내리기 = deleteDoc
     // ════════════════════════════════════════════════════════════════════════
     function videoRowHtml(v, live) {
@@ -1277,16 +1277,16 @@
         +   '<div style="font-size:11.5px;color:#6b7280;">등록자 uid: ' + escHtmlAdmin((v.authorUid || '?').slice(0, 12)) + '… · ' + escHtmlAdmin(created) + '</div>'
         // 리다이렉트(CTA, 선택) — 승인 전 링크 검토 의무: 제목 + 목적지 URL 그대로 노출 (스팸/피싱 게이트)
         + ((v.ctaText && v.ctaUrl)
-            ? '<div style="font-size:11.5px;color:#7c3aed;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">🔗 리다이렉트: “'
+            ? '<div style="font-size:11.5px;color:#7c3aed;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">리다이렉트: “'
               + escHtmlAdmin(v.ctaText) + '” → <a href="' + escHtmlAdmin(v.ctaUrl) + '" target="_blank" rel="noopener noreferrer nofollow" style="color:#7c3aed;text-decoration:underline;">'
               + escHtmlAdmin(v.ctaUrl) + '</a></div>'
             : '')
         +   '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:2px;">'
         +     '<a href="' + escHtmlAdmin(watch) + '" target="_blank" rel="noopener" style="padding:4px 10px;font-size:11.5px;font-weight:700;background:#eff6ff;color:#1d4ed8;border:1px solid #93c5fd;border-radius:5px;text-decoration:none;">▶ 미리보기</a>'
         +     (live
-                ? '<button class="admin-video-act" data-act="unpublish" data-id="' + escHtmlAdmin(v._id) + '" style="padding:4px 10px;font-size:11.5px;font-weight:700;background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;border-radius:5px;cursor:pointer;">⬇ 내리기</button>'
-                : '<button class="admin-video-act" data-act="approve" data-id="' + escHtmlAdmin(v._id) + '" style="padding:4px 10px;font-size:11.5px;font-weight:700;background:#dcfce7;color:#166534;border:1px solid #86efac;border-radius:5px;cursor:pointer;">✅ 승인</button>'
-                  + '<button class="admin-video-act" data-act="reject" data-id="' + escHtmlAdmin(v._id) + '" style="padding:4px 10px;font-size:11.5px;font-weight:700;background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;border-radius:5px;cursor:pointer;">🗑 거부(삭제)</button>')
+                ? '<button class="admin-video-act" data-act="unpublish" data-id="' + escHtmlAdmin(v._id) + '" style="padding:4px 10px;font-size:11.5px;font-weight:700;background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;border-radius:5px;cursor:pointer;">내리기</button>'
+                : '<button class="admin-video-act" data-act="approve" data-id="' + escHtmlAdmin(v._id) + '" style="padding:4px 10px;font-size:11.5px;font-weight:700;background:#dcfce7;color:#166534;border:1px solid #86efac;border-radius:5px;cursor:pointer;">승인</button>'
+                  + '<button class="admin-video-act" data-act="reject" data-id="' + escHtmlAdmin(v._id) + '" style="padding:4px 10px;font-size:11.5px;font-weight:700;background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;border-radius:5px;cursor:pointer;">거부(삭제)</button>')
         +   '</div>'
         + '</div>'
       + '</div>';
@@ -1341,15 +1341,15 @@
     // ════════════════════════════════════════════════════════════════════════
     // 카드 8 · 문의 로그 — inquiry_logs onSnapshot (orderBy at desc, limit 200)
     //   · 연락 버튼(문자/카톡/메일/소개글복사) 탭 집계 → "문의하기 눌렀는지" 확인
-    //   · ⚠️ rules list ≤ 200 (초과 시 구독 전체 거부). 탭 시점만 — 발송/계약 여부 모름.
+    //   · rules list ≤ 200 (초과 시 구독 전체 거부). 탭 시점만 — 발송/계약 여부 모름.
     //   · 단일 필드 orderBy('at') → 자동 인덱스, 복합 인덱스 불필요.
     // ════════════════════════════════════════════════════════════════════════
     const INQ_METHOD = {
-      contact: '📞 문의하기',
-      sms:     '💬 문자',
-      kakao:   '💛 카톡',
-      mail:    '✉️ 메일',
-      copy:    '📋 소개글 복사',
+      contact: '문의하기',
+      sms:     '문자',
+      kakao:   '카톡',
+      mail:    '메일',
+      copy:    '소개글 복사',
     };
     let _inqAll = [];   // 최신 inquiry_logs 스냅샷 — 검색/그룹 재렌더용
     function _inqMs(r) { try { return (r.at && r.at.toDate) ? r.at.toDate().getTime() : 0; } catch (_) { return 0; } }
@@ -1377,7 +1377,7 @@
         +   '[' + escHtmlAdmin(board + st) + '] ' + escHtmlAdmin(title)
         +   ' <span style="background:#eef2ff;color:#4338ca;border-radius:999px;padding:1px 9px;font-size:11.5px;font-weight:800;">' + arr.length + '건</span>'
         + '</summary>'
-        + (link ? '<div style="padding:6px 12px 0;"><a href="' + link + '" target="_blank" rel="noopener" style="display:inline-block;padding:3px 9px;font-size:11px;font-weight:700;background:#eef2ff;color:#4338ca;border:1px solid #c7d2fe;border-radius:5px;text-decoration:none;">📄 매물 보기</a></div>' : '')
+        + (link ? '<div style="padding:6px 12px 0;"><a href="' + link + '" target="_blank" rel="noopener" style="display:inline-block;padding:3px 9px;font-size:11px;font-weight:700;background:#eef2ff;color:#4338ca;border:1px solid #c7d2fe;border-radius:5px;text-decoration:none;">매물 보기</a></div>' : '')
         + inner
         + '</details>';
     }
@@ -1460,8 +1460,8 @@
         + '<div style="font-size:12px;color:#6b7280;">작성자 uid: ' + escHtmlAdmin(p.uid || p.authorUid || '?')
         +   (p.hiddenAt ? ' · 숨김: ' + escHtmlAdmin(_tsToStr(p.hiddenAt)) : '') + ' · docId=' + escHtmlAdmin(id) + '</div>'
         + '<div style="display:flex;gap:6px;flex-wrap:wrap;">'
-        +   '<button class="admin-hidden-act" data-act="unhide" data-col="' + escHtmlAdmin(col) + '" data-id="' + escHtmlAdmin(id) + '" style="padding:4px 10px;font-size:11.5px;font-weight:700;background:#ecfdf5;color:#065f46;border:1px solid #6ee7b7;border-radius:5px;cursor:pointer;">▶️ 블라인드 해제</button>'
-        +   '<button class="admin-hidden-act" data-act="fdelete" data-col="' + escHtmlAdmin(col) + '" data-id="' + escHtmlAdmin(id) + '" style="padding:4px 10px;font-size:11.5px;font-weight:700;background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;border-radius:5px;cursor:pointer;">🗑 강제 삭제</button>'
+        +   '<button class="admin-hidden-act" data-act="unhide" data-col="' + escHtmlAdmin(col) + '" data-id="' + escHtmlAdmin(id) + '" style="padding:4px 10px;font-size:11.5px;font-weight:700;background:#ecfdf5;color:#065f46;border:1px solid #6ee7b7;border-radius:5px;cursor:pointer;">블라인드 해제</button>'
+        +   '<button class="admin-hidden-act" data-act="fdelete" data-col="' + escHtmlAdmin(col) + '" data-id="' + escHtmlAdmin(id) + '" style="padding:4px 10px;font-size:11.5px;font-weight:700;background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;border-radius:5px;cursor:pointer;">강제 삭제</button>'
         + '</div>'
         + '</div>';
     }
@@ -1495,11 +1495,11 @@
         if (act === 'unhide') {
           if (!confirm('이 글의 블라인드/숨김을 해제하시겠습니까? (퍼블릭 재노출)')) { btn.disabled = false; return; }
           await rbac.toggleHidden(col, id, true);   // currentHidden=true → 해제
-          alert('▶️ 해제 완료 — 퍼블릭 재노출');
+          alert('해제 완료 — 퍼블릭 재노출');
         } else if (act === 'fdelete') {
           if (!confirm('관리자 권한으로 이 글을 영구 삭제하시겠습니까? (사진·위치정보 포함 완전 삭제)')) { btn.disabled = false; return; }
           await rbac.forceDelete(col, id);
-          alert('🗑 강제 삭제 완료');
+          alert('강제 삭제 완료');
         }
         loadHiddenPosts();
       } catch (err) {
@@ -1547,7 +1547,7 @@
               + '</div>'
               + '<div style="font-size:12px;color:#6b7280;">정지 일시: ' + escHtmlAdmin(_tsToStr(u.suspendedAt) || '?')
               +   (latest && latest.reason ? ' · 사유: ' + escHtmlAdmin(latest.reason) : ' · 사유: (기록 없음)') + '</div>'
-              + '<div><button class="admin-report-act" data-act="unsuspend" data-id="sanction" data-uid="' + escHtmlAdmin(d.id) + '" style="padding:4px 10px;font-size:11.5px;font-weight:700;background:#ecfdf5;color:#065f46;border:1px solid #6ee7b7;border-radius:5px;cursor:pointer;">♻️ 정지 해제</button></div>'
+              + '<div><button class="admin-report-act" data-act="unsuspend" data-id="sanction" data-uid="' + escHtmlAdmin(d.id) + '" style="padding:4px 10px;font-size:11.5px;font-weight:700;background:#ecfdf5;color:#065f46;border:1px solid #6ee7b7;border-radius:5px;cursor:pointer;">정지 해제</button></div>'
               + '</div>';
           }).join('');
         }
@@ -1561,7 +1561,7 @@
         logEl.innerHTML = logs.map(l => {
           const isSus = l.action === 'suspend';
           return '<div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;padding:6px 10px;border-bottom:1px solid #f3f4f6;">'
-            + '<span style="font-weight:800;color:' + (isSus ? '#b91c1c' : '#065f46') + ';">' + (isSus ? '🚫 정지' : '♻️ 해제') + '</span>'
+            + '<span style="font-weight:800;color:' + (isSus ? '#b91c1c' : '#065f46') + ';">' + (isSus ? '정지' : '해제') + '</span>'
             + '<span style="color:#374151;">' + escHtmlAdmin(l.targetEmail || l.targetUid || '?') + '</span>'
             + (l.reason ? '<span style="color:#6b7280;">— ' + escHtmlAdmin(l.reason) + '</span>' : '')
             + '<span style="margin-left:auto;font-size:11px;color:#9ca3af;">' + escHtmlAdmin(_tsToStr(l.createdAt)) + ' · by ' + escHtmlAdmin(l.actorEmail || l.actorUid || '?') + '</span>'
@@ -1605,7 +1605,7 @@
       const result = document.getElementById('ftResult');
       result.textContent = '';
       const rows = [
-        ['상태', d.status === 'deleted' ? '🗑 삭제됨(보관)' : (d.status || '노출중')],
+        ['상태', d.status === 'deleted' ? '삭제됨(보관)' : (d.status || '노출중')],
         ['컬렉션 / ID', col + ' / ' + docId],
         ['작성자', d.author || ''],
         ['authorUid', d.uid || d.authorUid || ''],
@@ -1626,21 +1626,21 @@
       const uid = d.uid || d.authorUid || '';
       if (uid) {
         const sb = document.createElement('button');
-        sb.type = 'button'; sb.textContent = '🚫 이 작성자 계정 정지';
+        sb.type = 'button'; sb.textContent = '이 작성자 계정 정지';
         sb.className = 'mt-3 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg text-sm';
         sb.addEventListener('click', async () => {
           if (!confirm('작성자(uid: ' + uid + ') 계정을 정지하시겠습니까? (사기 신고 추적)')) return;
           sb.disabled = true;
-          try { const res = await callSuspendUser({ uid, reason: '사기 신고 추적' }); alert('✅ 정지 완료 — uid: ' + (res.data && res.data.uid || uid) + ' / ' + (res.data && res.data.status || '')); }
+          try { const res = await callSuspendUser({ uid, reason: '사기 신고 추적' }); alert('정지 완료 — uid: ' + (res.data && res.data.uid || uid) + ' / ' + (res.data && res.data.status || '')); }
           catch (e) { alert('정지 실패: ' + (e.message || e)); sb.disabled = false; }
         });
         result.appendChild(sb);
       }
-      // 🗑 강제 삭제 — 보드 UI 유무와 무관하게 운영자가 조회한 글(본인·친구 글 다)을 영구 삭제.
+      // 강제 삭제 — 보드 UI 유무와 무관하게 운영자가 조회한 글(본인·친구 글 다)을 영구 삭제.
       //   · col/docId 는 위 getDoc 조회에서 확보한 값 그대로 재사용.
       //   · admin.html 은 koausIsAdmin set + rules isAdmin(email==sinhang0122) 허용 → forceDelete 통과.
       const delBtn = document.createElement('button');
-      delBtn.type = 'button'; delBtn.textContent = '🗑 강제 삭제';
+      delBtn.type = 'button'; delBtn.textContent = '강제 삭제';
       delBtn.className = 'mt-3 ml-2 bg-gray-800 hover:bg-black text-white font-bold py-2 px-4 rounded-lg text-sm';
       delBtn.addEventListener('click', async () => {
         if (!confirm('이 글을 영구 삭제하시겠습니까? (되돌릴 수 없음)')) return;
@@ -1649,7 +1649,7 @@
         try {
           await window.koausRbac.forceDelete(col, docId);
           result.textContent = ''; result.classList.add('hidden');
-          document.getElementById('ftNote').textContent = '🗑 삭제 완료 — ' + col + ' / ' + docId;
+          document.getElementById('ftNote').textContent = '삭제 완료 — ' + col + ' / ' + docId;
         } catch (e) { alert('삭제 실패: ' + (e && (e.code || e.message) || e)); delBtn.disabled = false; }
       });
       result.appendChild(delBtn);
@@ -1703,7 +1703,7 @@
         const card = document.createElement('div');
         card.className = 'text-sm bg-gray-50 border border-gray-200 rounded-lg p-3 space-y-0.5 break-words';
         const rows = [
-          ['상태', d.status === 'deleted' ? '🗑 삭제됨(보관)' : '노출중'],
+          ['상태', d.status === 'deleted' ? '삭제됨(보관)' : '노출중'],
           ['작성자', d.author || ''],
           ['authorUid', d.uid || d.authorUid || ''],
           ['전화', d.phone || ''],
@@ -1723,12 +1723,12 @@
         const uid = d.uid || d.authorUid || '';
         if (uid) {
           const sb = document.createElement('button');
-          sb.type = 'button'; sb.textContent = '🚫 이 작성자 정지';
+          sb.type = 'button'; sb.textContent = '이 작성자 정지';
           sb.className = 'mt-2 bg-red-600 hover:bg-red-700 text-white font-bold py-1.5 px-3 rounded-lg text-xs';
           sb.addEventListener('click', async () => {
             if (!confirm('작성자(uid: ' + uid + ') 계정을 정지하시겠습니까? (사기 신고 추적)')) return;
             sb.disabled = true;
-            try { const res = await callSuspendUser({ uid, reason: '사기 신고 추적' }); alert('✅ 정지 완료 — uid: ' + (res.data && res.data.uid || uid) + ' / ' + (res.data && res.data.status || '')); }
+            try { const res = await callSuspendUser({ uid, reason: '사기 신고 추적' }); alert('정지 완료 — uid: ' + (res.data && res.data.uid || uid) + ' / ' + (res.data && res.data.status || '')); }
             catch (e) { alert('정지 실패: ' + (e.message || e)); sb.disabled = false; }
           });
           card.appendChild(sb);
@@ -1775,7 +1775,7 @@
           }
         } else {
           // 부분 포함 검색 — 컬렉션당 최근 1000건 읽어 클라에서 includes 필터(admin list 캡 우회).
-          //   ⚠️ 글 많아지면 읽기↑ 비용. 대규모 시 끝자리 인덱스(예: phoneSuffix 필드 + where) 방식으로 후속 전환 권장.
+          //   글 많아지면 읽기↑ 비용. 대규모 시 끝자리 인덱스(예: phoneSuffix 필드 + where) 방식으로 후속 전환 권장.
           for (const col of _FC_COLS) {
             try {
               const snap = await getDocs(query(collection(db, col), orderBy('createdAt', 'desc'), limit(1000)));

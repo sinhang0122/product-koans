@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>상단 노출 글 관리 — KoAus(코어스)</title>
-  <!-- ⚠️ ADMIN_EMAILS 화이트리스트 4번째 사본 — firestore.rules / admin.html / admin-mark.js 와 동기화 유지 -->
+  <!-- ADMIN_EMAILS 화이트리스트 4번째 사본 — firestore.rules / admin.html / admin-mark.js 와 동기화 유지 -->
   <!-- admin.html 디클러터(1단계): 마퀴 공지 + 상단 노출 글 관리를 이 페이지로 분리(순수 이동). 인증 셸·App Check 동일 복제. -->
   <meta name="robots" content="noindex" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -477,7 +477,7 @@
               </label>
               <select id="dashPinState" name="state" multiple size="6"
                       class="w-full p-3 border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent">
-                <option value="all">🌏 전 지역 (All)</option>
+                <option value="all">전 지역 (All)</option>
                 <option value="nsw">NSW</option>
                 <option value="vic">VIC</option>
                 <option value="qld">QLD</option>
@@ -487,7 +487,7 @@
                 <option value="act">ACT</option>
                 <option value="nt">NT</option>
               </select>
-              <p class="mt-1 text-xs text-gray-500">⌘/Ctrl + 클릭 다중 선택. 전 지역 선택 시 다른 항목 자동 무시.</p>
+              <p class="mt-1 text-xs text-gray-500">/Ctrl + 클릭 다중 선택. 전 지역 선택 시 다른 항목 자동 무시.</p>
             </div>
             <div>
               <label for="dashPinSection" class="block text-sm text-gray-700 font-semibold mb-2">
@@ -495,15 +495,15 @@
               </label>
               <select id="dashPinSection" name="section"
                       class="w-full p-3 border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent">
-                <option value="accom">🏠 Share (쉐어)</option>
-                <option value="rent">🏘 Rent (렌트)</option>
-                <option value="jobs">💼 Work (구인구직)</option>
-                <option value="auto">🚗 Auto (차량)</option>
-                <option value="restaurants">🍱 K-Food (식당)</option>
-                <option value="trades">🌿 일상 (Others)</option>
-                <option value="gp">🏥 GP (의료)</option>
-                <option value="salon">💇 미용실</option>
-                <option value="points">🛂 Visa (비자/유학)</option>
+                <option value="accom">Share (쉐어)</option>
+                <option value="rent">Rent (렌트)</option>
+                <option value="jobs">Work (구인구직)</option>
+                <option value="auto">Auto (차량)</option>
+                <option value="restaurants">K-Food (식당)</option>
+                <option value="trades">일상 (Others)</option>
+                <option value="gp">GP (의료)</option>
+                <option value="salon">미용실</option>
+                <option value="points">Visa (비자/유학)</option>
               </select>
             </div>
           </div>
@@ -960,7 +960,7 @@
             imageUrls = imageUrls.concat(urls);
           } catch (upErr) {
             console.error('[admin] 핀공지 사진 업로드 실패', upErr);
-            flashNote(note, '❌ 사진 업로드 실패: ' + (upErr.message || upErr), false);
+            flashNote(note, '사진 업로드 실패: ' + (upErr.message || upErr), false);
             if (btn) { btn.disabled = false; btn.textContent = '노출 등록'; }
             return;
           }
@@ -972,13 +972,13 @@
           address, phone, kakaoLink: kakao, contactEmail: email, imageUrls,
           updatedAt: serverTimestamp(), uid: auth.currentUser.uid,
         }, { merge: true });
-        flashNote(note, '✅ 핀공지 등록 완료', true);
+        flashNote(note, '핀공지 등록 완료', true);
         _pinForm.reset();
         _pinEditImages = [];
         const _imgNote = document.getElementById('dashPinImgEditNote'); if (_imgNote) _imgNote.textContent = '';
       } catch (err) {
         console.error('[admin] board_pinned_notices 저장 실패', err);
-        flashNote(note, '❌ 등록 실패: ' + (err.message || err), false);
+        flashNote(note, '등록 실패: ' + (err.message || err), false);
       } finally {
         if (btn) { btn.disabled = false; btn.textContent = '노출 등록'; }
       }
@@ -990,7 +990,7 @@
     //   · 삭제 = deleteDoc(doc(db,'board_pinned_notices', board)). onSnapshot 으로 목록 자동 갱신.
     const _plList  = document.getElementById('dashPinList');
     const _plCount = document.getElementById('dashPinCount');
-    const _PIN_BOARD_LABEL = { accom:'🏠 Share', rent:'🏘 Rent', jobs:'💼 Work', auto:'🚗 Auto', restaurants:'🍱 K-Food', trades:'🌿 일상', gp:'🏥 GP', salon:'💇 미용실', points:'🛂 Visa' };
+    const _PIN_BOARD_LABEL = { accom:'Share', rent:'Rent', jobs:'Work', auto:'Auto', restaurants:'K-Food', trades:'일상', gp:'GP', salon:'미용실', points:'Visa' };
     let _pinRows = [];
     // ── 주별 탭 (admin-ads 패턴) — regions 기반 필터 + 탭별 카운트 ──
     const PS_STATES = [['','전체'],['nsw','NSW'],['vic','VIC'],['qld','QLD'],['wa','WA'],['sa','SA'],['act','ACT'],['tas','TAS'],['nt','NT']];

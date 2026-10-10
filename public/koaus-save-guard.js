@@ -5,7 +5,7 @@
 //    capture-phase 위임으로 비로그인 클릭을 페이지 토글 핸들러 도달 전에 차단.
 //  · 대상: 목록 grid·지도 drawer 의 .bookmark-btn + 상세 모달 #detailSaveBtn / #detailSaveBtn2
 //  · 로그인 상태면 통과(기존 토글 정상). 비로그인이면 차단 + 로그인 모달.
-//  · ⚠️ 찜/저장류 신규 UI 는 반드시 이 게이트를 거치게 둘 것 (페이지별 자체 우회 금지).
+//  · 찜/저장류 신규 UI 는 반드시 이 게이트를 거치게 둘 것 (페이지별 자체 우회 금지).
 // ════════════════════════════════════════════════════════════════════
 (function () {
   if (typeof window === 'undefined' || window.__koausSaveGuard) return;

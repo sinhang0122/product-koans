@@ -420,7 +420,7 @@ function hbRenderGrid(){
     if (c.win){
       var d = c.win.d;
       html += '<div class="hb-cell filled"><div class="num"><span>슬롯 '+no+' — '+(d.house===true?'하우스 광고':'업로드 배너')+'</span>'
-        + (c.count > 1 ? '<span class="warnc">⚠ '+c.count+'개 겹침 · 우선순위 적용</span>' : '') + '</div>'
+        + (c.count > 1 ? '<span class="warnc">'+c.count+'개 겹침 · 우선순위 적용</span>' : '') + '</div>'
         + '<img src="'+esc(d.imageUrl||'')+'" alt="">'
         + '<div class="cap">'+esc(d.alt||'히어로 배너')
         + (c.win.fromAll && hbState !== 'all' ? ' <span style="color:var(--ink-soft)">(전 지역 배너)</span>' : '')

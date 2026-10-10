@@ -74,9 +74,8 @@
     { key: 'recent', label: '최근 본', icon: ICONS.clock,
       href: 'mypage.html?tab=recent',
       active: isMy && tab === 'recent' },
-    { key: 'video',  label: '영상',    icon: ICONS.video,
-      href: 'settings.html?video=1',   /* 영상 등록/관리 딥링크 (환경설정 영상 섹션) */
-      active: page === 'settings.html' },
+    /* 2026-10: '영상' 탭 제거(사용자 결정) — 홈 영상 레일과 환경설정의 영상 등록은 그대로.
+       복구하려면 { key:'video', label:'영상', icon:ICONS.video, href:'settings.html?video=1', active: page==='settings.html' } 를 되살리면 됨. */
     { key: 'chat',   label: '채팅',    icon: ICONS.chat,
       href: 'chat.html',   /* 1:1 인앱 채팅 (2026-07 출시) */
       active: page === 'chat.html' },

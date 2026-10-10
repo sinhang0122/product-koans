@@ -132,7 +132,7 @@ if (!window.__koausSessionInited) {
         host.id = 'koausSessionToast';
         host.setAttribute('role', 'status');
         host.setAttribute('aria-live', 'polite');
-        host.innerHTML = '<span aria-hidden="true">🔒</span><span class="msg"></span>';
+        host.innerHTML = '<span aria-hidden="true"></span><span class="msg"></span>';
         document.body.appendChild(host);
       }
       host.querySelector('.msg').textContent = message;

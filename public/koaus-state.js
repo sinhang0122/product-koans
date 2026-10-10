@@ -17,7 +17,7 @@
   var ABBR = { nsw: 'nsw', vic: 'vic', qld: 'qld', wa: 'wa', sa: 'sa', tas: 'tas', act: 'act', nt: 'nt' };
 
   // 대표 도시 폴백 — 명시 약어가 없는 자유입력 주소(jobs/auto/서비스 보드)용.
-  //   ⚠️ 모호한 교외명(Richmond 등 여러 주 중복)은 일부러 제외 — 오분류 방지.
+  //   모호한 교외명(Richmond 등 여러 주 중복)은 일부러 제외 — 오분류 방지.
   //   주도(主都) + 명백히 한 주에 귀속되는 대도시만 포함.
   var CITY = {
     'sydney': 'nsw', 'newcastle': 'nsw', 'wollongong': 'nsw', 'parramatta': 'nsw',
@@ -32,7 +32,7 @@
   };
 
   // 한글 주(state) 이름 → 약어. Google Places 한국어 로캘 주소("...퀸즐랜드 주...") 대응.
-  //   ⚠️ services 보드(맛집/미용/병원/기술자)·jobs 는 redactAddress 영문정규화를 안 거쳐
+  //   services 보드(맛집/미용/병원/기술자)·jobs 는 redactAddress 영문정규화를 안 거쳐
   //      한글 주소가 그대로 저장됨 → 여기서 직접 판별 (listing-privacy._KO_STATE 와 동기화).
   var KO_STATE = [
     ['오스트레일리아 수도 준주', 'act'], ['오스트레일리아 캐피털 준주', 'act'], ['수도 준주', 'act'],

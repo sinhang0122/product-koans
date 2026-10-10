@@ -5,7 +5,7 @@
 //  · 이메일 화이트리스트 ∪ Custom Claim {admin:true} 둘 중 하나만 통과해도 admin.
 //  · 인증 시 body 에 .is-admin 클래스 부여 → CSS .admin-only 규칙으로 자동 노출.
 //  · services 컬렉션 카드(restaurants/trades/gp/salon/auto/accom)에 동적으로
-//    [✅ 승인] [⏸ 보류] [🗑 즉시 삭제] 액션바 자동 주입 — 페이지 본체 수정 0.
+//    [승인] [보류] [즉시 삭제] 액션바 자동 주입 — 페이지 본체 수정 0.
 //  · admin.html 의 자체 가드와 충돌 없음 (admin-mark.js 는 보조 인프라).
 // ════════════════════════════════════════════════════════════════════
 import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
@@ -146,24 +146,24 @@ function lookupFsDocId(localId) {
 // ── 통합 정책 (지시 5/7) ──
 //   · 옛 hold(pending)/hide(hidden) 2개 액션 → 'hold' (일시 숨김) 하나로 통합.
 //   · DB: { isHidden:true, status:'hidden', hiddenAt:serverTimestamp(), hiddenBy:'admin' } 일관 적용.
-//     hiddenBy:'admin' = F-A 잠금 — 작성자가 마이페이지 ▶️ 로 재노출 불가 (rules adminBlindLock).
+//     hiddenBy:'admin' = F-A 잠금 — 작성자가 마이페이지 로 재노출 불가 (rules adminBlindLock).
 //   · 메인 리스트 fetch: where('status','==','approved') + 클라이언트 `!p.isHidden` 이중 안전망으로 즉시 제외.
-//   · 작성자가 마이페이지에서 ⏸️/▶️ 토글 가능 (firestore.rules statusAllowedForOwner 허용).
+//   · 작성자가 마이페이지에서 /토글 가능 (firestore.rules statusAllowedForOwner 허용).
 const DEFAULT_CONFIG = {
   collection: 'services',
   actions: {
-    approve: { status: 'approved', icon: '✅', title: '다시 노출 (일시 숨김 해제)', toast: '✅ 다시 노출 — 퍼블릭 표시', tsField: 'approvedAt', extra: { isHidden: false, hiddenBy: '' } },
-    hold:    { status: 'hidden',   icon: '⏸', title: '일시 숨김 (퍼블릭 제외)',  toast: '⏸ 일시 숨김 — 일반 리스트 제외', tsField: 'hiddenAt', extra: { isHidden: true, hiddenBy: 'admin' } },
-    delete:  { hard: true,         icon: '🗑', title: '영구 삭제',             toast: '🗑 영구 삭제 완료' },
+    approve: { status: 'approved', icon: '', title: '다시 노출 (일시 숨김 해제)', toast: '다시 노출 — 퍼블릭 표시', tsField: 'approvedAt', extra: { isHidden: false, hiddenBy: '' } },
+    hold:    { status: 'hidden',   icon: '', title: '일시 숨김 (퍼블릭 제외)',  toast: '일시 숨김 — 일반 리스트 제외', tsField: 'hiddenAt', extra: { isHidden: true, hiddenBy: 'admin' } },
+    delete:  { hard: true,         icon: '', title: '영구 삭제',             toast: '영구 삭제 완료' },
   },
 };
 const PAGE_CONFIG = {
   'jobs.html': {
     collection: 'jobs_posts',
     actions: {
-      approve: { status: 'closed', icon: '✅', title: '구인 마감하기',     toast: '✅ 구인 마감 처리 완료',    tsField: 'closedAt' },
-      hold:    { status: 'hidden', icon: '⏸', title: '일시 숨김 (퍼블릭 제외)', toast: '⏸ 공고 일시 숨김 처리', tsField: 'hiddenAt', extra: { isHidden: true, hiddenBy: 'admin' } },
-      delete:  { hard: true,       icon: '🗑', title: '공고 영구 삭제',   toast: '🗑 공고 영구 삭제 완료' },
+      approve: { status: 'closed', icon: '', title: '구인 마감하기',     toast: '구인 마감 처리 완료',    tsField: 'closedAt' },
+      hold:    { status: 'hidden', icon: '', title: '일시 숨김 (퍼블릭 제외)', toast: '공고 일시 숨김 처리', tsField: 'hiddenAt', extra: { isHidden: true, hiddenBy: 'admin' } },
+      delete:  { hard: true,       icon: '', title: '공고 영구 삭제',   toast: '공고 영구 삭제 완료' },
     },
   },
   'accom.html': { collection: 'accom_posts', actions: DEFAULT_CONFIG.actions },
@@ -426,19 +426,19 @@ window.addEventListener('koaus-services-updated', () => setTimeout(injectCardAct
 (function setupGlobalStateQuick() {
   // 주 앞에 붙는 기능 카드 — [href, code(라벨), name(설명)]
   const EXTRAS = [
-    ['care.html',       '🤝 Care', '호주 생활 케어 · 긴급 연락처'],
-    ['calculator.html', '💱 환율', 'AUD ↔ KRW 송금 앱 비교'],
+    ['care.html',       'Care', '호주 생활 케어 · 긴급 연락처'],
+    ['calculator.html', '환율', 'AUD ↔ KRW 송금 앱 비교'],
   ];
   // 지시 2/2: 대도시 한글 병기 — 신규 방문자 가독성 (호주 지리 미숙 사용자 친절 안내)
   const STATES = [
-    ['nsw','NSW','New South Wales','🦘','시드니'],
-    ['vic','VIC','Victoria','🌆','멜버른'],
-    ['qld','QLD','Queensland','🏖','브리즈번'],
-    ['wa', 'WA', 'Western Australia','🏜','퍼스'],
-    ['sa', 'SA', 'South Australia','🍇','애들레이드'],
-    ['tas','TAS','Tasmania','🍃','호바트'],
-    ['act','ACT','Australian Capital','🏛','캔버라'],
-    ['nt', 'NT', 'Northern Territory','🌵','다윈'],
+    ['nsw','NSW','New South Wales','','시드니'],
+    ['vic','VIC','Victoria','','멜버른'],
+    ['qld','QLD','Queensland','','브리즈번'],
+    ['wa', 'WA', 'Western Australia','','퍼스'],
+    ['sa', 'SA', 'South Australia','','애들레이드'],
+    ['tas','TAS','Tasmania','','호바트'],
+    ['act','ACT','Australian Capital','','캔버라'],
+    ['nt', 'NT', 'Northern Territory','','다윈'],
   ];
   const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   // 아코디언(접힘) 변형 스타일 — data-koaus-collapsible 인 섹션에만 적용(홈 전용)
@@ -485,7 +485,7 @@ window.addEventListener('koaus-services-updated', () => setTimeout(injectCardAct
       host.innerHTML =
         '<section class="state-section state-section--acc" aria-label="바로가기" data-open="0">' +
           '<button type="button" class="state-section-head state-acc-toggle" aria-expanded="false" aria-controls="stateQuickGrid">' +
-            '<span class="state-section-title">📍 바로가기</span>' +
+            '<span class="state-section-title">바로가기</span>' +
             '<span class="state-acc-caret" aria-hidden="true">▾</span>' +
           '</button>' +
           '<div class="state-grid" id="stateQuickGrid" hidden>' + extraCards + stateCards + '</div>' +
@@ -505,7 +505,7 @@ window.addEventListener('koaus-services-updated', () => setTimeout(injectCardAct
       host.innerHTML =
         '<section class="state-section" aria-label="바로가기">' +
           '<div class="state-section-head">' +
-            '<span class="state-section-title">📍 바로가기</span>' +
+            '<span class="state-section-title">바로가기</span>' +
           '</div>' +
           '<div class="state-grid">' + extraCards + stateCards + '</div>' +
         '</section>';

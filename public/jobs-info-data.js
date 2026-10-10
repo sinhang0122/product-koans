@@ -3,7 +3,7 @@
  * item: { slug: 'URL 딥링크용 고유 슬러그(?q=slug)', q: '질문', a: '답변 HTML' }
  * 콘텐츠 갱신은 이 파일만 수정하면 됨 (페이지 마크업 무변경).
  * 원문 관리: docs/jobs-info-content.md (콘텐츠 수정 시 원문 먼저 갱신).
- * ⚠️ 2026-07 최저임금·슈퍼 변경 — minimum-wage·super 항목 최종 확인일 갱신 필요. */
+ * 2026-07 최저임금·슈퍼 변경 — minimum-wage·super 항목 최종 확인일 갱신 필요. */
 window.KOAUS_JOBS_INFO = {
   common: {
     id: 'common',

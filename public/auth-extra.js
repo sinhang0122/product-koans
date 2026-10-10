@@ -137,7 +137,7 @@ function mountSignupExtra() {
       // (case-insensitive 유일성 — 'Alice'/'alice' 동시 점유 차단, mypage 동일 정책)
       const snap = await getDoc(doc(db, 'nicknames', nick.toLowerCase()));
       if (!snap.exists()) {
-        setNickMsg('✅ 사용 가능한 닉네임입니다.', 'ok');
+        setNickMsg('사용 가능한 닉네임입니다.', 'ok');
         _nickConfirmed = nick;
       } else {
         setNickMsg('이미 사용 중인 닉네임입니다. 다른 별명을 입력해 주세요.', 'err');
@@ -356,7 +356,7 @@ async function onResetPw() {
     // 검증 통과 → Firebase 공식 비밀번호 재설정 메일 자동 발송
     msg.textContent = '재설정 메일 전송 중…';
     await sendPasswordResetEmail(auth, email);
-    msg.innerHTML = '✅ 보안 질문/답변이 일치합니다.<br>가입한 이메일로 <strong>비밀번호 재설정 링크</strong>를 발송했습니다.<br><span style="font-size:11.5px;">메일함(스팸함 포함)을 확인하고 링크를 눌러 새 비밀번호를 설정해 주세요.</span>';
+    msg.innerHTML = '보안 질문/답변이 일치합니다.<br>가입한 이메일로 <strong>비밀번호 재설정 링크</strong>를 발송했습니다.<br><span style="font-size:11.5px;">메일함(스팸함 포함)을 확인하고 링크를 눌러 새 비밀번호를 설정해 주세요.</span>';
     msg.style.color = 'var(--green, #16a34a)';
   } catch (e) {
     const code = e && e.code || '';

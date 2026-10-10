@@ -14,22 +14,33 @@
   if (typeof window === 'undefined' || window.__koausHeroBannerInited) return;
   window.__koausHeroBannerInited = true;
 
+  // ── 2026-10 표시 스위치 + 렌더 규칙 ─────────────────────────────────────
+  //   HERO_ENABLED=false : 전 페이지 히어로 섹션 숨김(광고 재개 시 true). 마크업의 `hidden` 속성 +
+  //     style.css `.koaus-hero[hidden]` 가드와 한 세트 — 스크립트가 (배너 ≥1) 일 때만 hidden 해제.
+  //   렌더 규칙: 현재 주(또는 all) 매칭 배너 **개수만큼만** 슬라이드 생성. 0개 → 섹션 숨김,
+  //     1개 → 화살표·점 없음. 기본(초록/파랑) SLOTS 슬라이드로 빈 슬롯을 채우던 동작은 폐지
+  //     (QLD 배너 1개 올렸을 때 NSW 사용자에게 '배너 1 + 빈 기본 슬라이드' 가 뜨던 회귀의 원인).
+  const HERO_ENABLED = false;
+  const MAX_SLOTS = 4;   // admin 슬롯 번호 1~4 — 이제 '순서' 의미만 가짐
+  function hideHero(c) { try { c.hidden = true; c.style.display = 'none'; } catch (_) {} }
+  function showHero(c) { try { c.hidden = false; c.style.removeProperty('display'); } catch (_) {} }
+
   // ── 카테고리별 4개 슬라이드 데이터 (gradients 도 4개 — 시각적 다양성) ──
   //   · 로컬 애널리틱스 타겟팅 모듈이 이 데이터를 런타임에 덮어쓸 수 있음.
   const SLOTS = {
     accom: {
       gradients: ['hero-bg--home1', 'hero-bg--home2', 'hero-bg--edu2', 'hero-bg--legal3'],
       slides: [
-        { eyebrow: '🏠 쉐어 (Share)',     title: '한인 쉐어하우스 찾기, 지도 한 번에.', sub: '시드니·멜버른·브리즈번 — 매물 사진과 위치를 한눈에 비교',  cta: { href: '#postGrid', label: '매물 보기 →' } },
+        { eyebrow: '쉐어 (Share)',     title: '한인 쉐어하우스 찾기, 지도 한 번에.', sub: '시드니·멜버른·브리즈번 — 매물 사진과 위치를 한눈에 비교',  cta: { href: '#postGrid', label: '매물 보기 →' } },
         { eyebrow: '안전 거래 가이드',    title: '보증금·계약 사기 주의.',              sub: '직접 방문 + 단계별 결제 + 카카오 단톡 인증으로 안전하게',  cta: null },
         { eyebrow: '필터로 빠르게',       title: '방 형태·기간·성별·반려동물까지.',     sub: '내 조건에 맞는 매물만 골라 보세요',                          cta: null },
-        { eyebrow: '⭐ 저장 · ☑ 연락',    title: '관심 매물은 한 번에 관리.',           sub: '저장한 글·연락한 글은 마이페이지에서 모두 확인',             cta: null },
+        { eyebrow: '저장 · 연락',    title: '관심 매물은 한 번에 관리.',           sub: '저장한 글·연락한 글은 마이페이지에서 모두 확인',             cta: null },
       ],
     },
     rent: {
       gradients: ['hero-bg--home2', 'hero-bg--legal3', 'hero-bg--edu3', 'hero-bg--home1'],
       slides: [
-        { eyebrow: '🏘 렌트 (Rent)',       title: '호주 한인 렌트 매물.',                sub: '룸·하우스·아파트 — 침실·욕실·주차까지 필터 검색',           cta: { href: '#postGrid', label: '리스트 보기 →' } },
+        { eyebrow: '렌트 (Rent)',       title: '호주 한인 렌트 매물.',                sub: '룸·하우스·아파트 — 침실·욕실·주차까지 필터 검색',           cta: { href: '#postGrid', label: '리스트 보기 →' } },
         { eyebrow: '한인 매물 우선',       title: '한국어 가능 임대인 위주.',           sub: '계약서·등록비·전기·인터넷 안내까지 자세히 확인',             cta: null },
         { eyebrow: '예산·평수·옵션',       title: '월세 한도 + 가구 옵션으로 검색.',     sub: '주 단위 / 월 단위 임대료 환산까지 자동',                     cta: null },
         { eyebrow: '주변 인프라',          title: '교통·학교·마트까지 한눈에.',          sub: '지도로 매물 주변 환경 시뮬레이션',                            cta: null },
@@ -38,7 +49,7 @@
     jobs: {
       gradients: ['hero-bg--legal3', 'hero-bg--edu3', 'hero-bg--legal1', 'hero-bg--home3'],
       slides: [
-        { eyebrow: '💼 Work',               title: '한인 구인구직, 매일 새 글.',         sub: '워홀·학생·영주권자 — 시드니·멜번 전 지역 일자리',           cta: { href: '#postList', label: '일자리 보기 →' } },
+        { eyebrow: 'Work',               title: '한인 구인구직, 매일 새 글.',         sub: '워홀·학생·영주권자 — 시드니·멜번 전 지역 일자리',           cta: { href: '#postList', label: '일자리 보기 →' } },
         { eyebrow: 'Fair Work 가이드',     title: '최저 임금·세금·연차 확인.',          sub: '불법 구인 광고 신고 → 즉시 삭제. 안전한 근로 환경',          cta: null },
         { eyebrow: '구인 · 구직',           title: '직원 채용도 한 번에 등록.',          sub: '시급·근무 시간·자격 요건을 한 페이지에서',                    cta: null },
         { eyebrow: '지역 필터',             title: 'CBD·교외·로컬 단위 맞춤 매칭.',      sub: '집과 가까운 일자리만 모아 보기',                              cta: null },
@@ -47,7 +58,7 @@
     auto: {
       gradients: ['hero-bg--legal2', 'hero-bg--home1', 'hero-bg--legal3', 'hero-bg--edu3'],
       slides: [
-        { eyebrow: '🚗 Auto',               title: '한인 정비·견인·렌트카.',             sub: '24시간 출동·한국어 응대·합리적인 가격',                       cta: { href: '#postGrid', label: '서비스 보기 →' } },
+        { eyebrow: 'Auto',               title: '한인 정비·견인·렌트카.',             sub: '24시간 출동·한국어 응대·합리적인 가격',                       cta: { href: '#postGrid', label: '서비스 보기 →' } },
         { eyebrow: '정비소 · 견인',         title: '한인 정비소·견인 한 곳에서.',        sub: '견적 비교 · 긴급 견인 · 한국어 응대',                         cta: null },
         { eyebrow: '중고차 매물',           title: '개인·딜러 매물 한 곳에서.',          sub: '연식·주행거리·가격대로 빠르게 비교',                          cta: null },
         { eyebrow: '렌트카',                title: '단기·장기 렌트카 한인 업체.',         sub: '공항 인수·자차·보험까지 한국어로 안내',                       cta: null },
@@ -56,7 +67,7 @@
     trades: {
       gradients: ['hero-bg--legal1', 'hero-bg--legal2', 'hero-bg--home3', 'hero-bg--edu1'],
       slides: [
-        { eyebrow: '🔧 Skilled Trades',     title: '한인 기술자 — 전기·배관·페인팅·핸디맨.', sub: '출장비·경력·서비스 지역을 한 페이지에서 비교',             cta: { href: '#postGrid', label: '기술자 보기 →' } },
+        { eyebrow: 'Skilled Trades',     title: '한인 기술자 — 전기·배관·페인팅·핸디맨.', sub: '출장비·경력·서비스 지역을 한 페이지에서 비교',             cta: { href: '#postGrid', label: '기술자 보기 →' } },
         { eyebrow: '한국어 소통',           title: '한국어로 소통하는 기술자 찾기.',     sub: '분야별 모아 보기 → 바로 견적 문의',                           cta: null },
         { eyebrow: '견적 요청',             title: '한 번에 여러 업체 견적 비교.',       sub: '평일·주말·공휴일 출동 가능 여부 확인',                        cta: null },
         { eyebrow: '분야 필터',             title: '필요한 분야만 골라 보기.',            sub: '출장 지역 · 연락처를 한 페이지에서',                          cta: null },
@@ -65,7 +76,7 @@
     restaurants: {
       gradients: ['hero-bg--edu1', 'hero-bg--edu3', 'hero-bg--home2', 'hero-bg--legal3'],
       slides: [
-        { eyebrow: '🍱 K-Food', title: '등록된 K-Food, 지도와 함께.', sub: '한식·중식·치킨·BBQ·카페 — 가격대와 영업시간을 한눈에',     cta: { href: '#postGrid', label: '식당 보기 →' } },
+        { eyebrow: 'K-Food', title: '등록된 K-Food, 지도와 함께.', sub: '한식·중식·치킨·BBQ·카페 — 가격대와 영업시간을 한눈에',     cta: { href: '#postGrid', label: '식당 보기 →' } },
         { eyebrow: '편의시설 필터',         title: '주차·배달·포장·할랄 옵션까지.',      sub: '음식 종류 + 편의시설 + 영업 상태로 빠르게 검색',              cta: null },
         { eyebrow: '영업 시간',             title: '요일별 영업·휴무를 7일 표로.',       sub: '오늘 영업 중인 가게만 골라 보기',                             cta: null },
         { eyebrow: '사장님 직접 등록',      title: '한인 사장님이 직접 등록한 가게.',     sub: '메뉴 · 가격 · 영업시간 최신 정보',                            cta: null },
@@ -74,7 +85,7 @@
     salon: {
       gradients: ['hero-bg--edu1', 'hero-bg--legal3', 'hero-bg--home2', 'hero-bg--edu3'],
       slides: [
-        { eyebrow: '💇 한인 미용실',        title: '커트·펌·염색·매직 한 곳에서.',       sub: '한국 스타일 · 한국어 디자이너 · 가격 투명',                   cta: { href: '#postGrid', label: '미용실 보기 →' } },
+        { eyebrow: '한인 미용실',        title: '커트·펌·염색·매직 한 곳에서.',       sub: '한국 스타일 · 한국어 디자이너 · 가격 투명',                   cta: { href: '#postGrid', label: '미용실 보기 →' } },
         { eyebrow: '서비스 필터',           title: '커트·펌·염색·붙임머리까지.',         sub: '내가 원하는 서비스만 빠르게 검색',                            cta: null },
         { eyebrow: '커트 가격',             title: '디자이너별 커트 · 펌 가격 비교.',    sub: '학생 할인 · 주차 · 카드 결제 옵션도 확인',                    cta: null },
         { eyebrow: '지도 보기',             title: '내 주변 한인 미용실 찾기.',           sub: '지도에서 위치 · 연락처 바로 확인',                            cta: null },
@@ -83,7 +94,7 @@
     gp: {
       gradients: ['hero-bg--edu2', 'hero-bg--legal3', 'hero-bg--home1', 'hero-bg--edu3'],
       slides: [
-        { eyebrow: '🏥 Korean-Speaking GP', title: '한국어 가능 GP·치과·소아과.',         sub: '진료과 + 한국어 가능 여부 + Bulk Billing + 텔레헬스',         cta: { href: '#postGrid', label: 'GP 보기 →' } },
+        { eyebrow: 'Korean-Speaking GP', title: '한국어 가능 GP·치과·소아과.',         sub: '진료과 + 한국어 가능 여부 + Bulk Billing + 텔레헬스',         cta: { href: '#postGrid', label: 'GP 보기 →' } },
         { eyebrow: '워크인·예약',           title: '워크인 가능 클리닉도 한눈에.',        sub: '주말·저녁 진료 / 텔레헬스 / 한인 직원 보유 정보',             cta: null },
         { eyebrow: '진료시간 7일',          title: '요일별 진료 시간을 표로.',           sub: '오늘 진료 중인 의원만 골라 보기',                             cta: null },
         { eyebrow: 'Bulk Billing',          title: '메디케어 무료 진료 의원.',           sub: '한국어 진료 + Bulk Billing 옵션',                              cta: null },
@@ -92,16 +103,16 @@
     points: {
       gradients: ['hero-bg--legal1', 'hero-bg--legal3', 'hero-bg--edu2', 'hero-bg--edu3'],
       slides: [
-        { eyebrow: '🛡 Visa · 법무 · 유학', title: '비자 · 영주권 · 유학원 한 곳에서.',   sub: '한인 법무법인 + 유학원 추천 + 무료 기술심사 가채점',         cta: { href: '#legalSection', label: '법무법인 보기 →' } },
-        { eyebrow: '📊 기술심사 가채점',    title: '내 PR 점수, 미리 확인.',              sub: '나이·영어·학력·경력·NAATI·PY 자동 계산',                       cta: { href: '?cat=points', label: '가채점 시작 →' } },
-        { eyebrow: '🎓 유학원',              title: '한인 유학원 추천.',                   sub: '어학원 · TAFE · 대학 — 무료 입학 상담',                        cta: { href: '?cat=education', label: '유학원 보기 →' } },
-        { eyebrow: '⚖ 한인 법무법인',       title: '비자 · 영주권 · 가족 합류.',          sub: '한국어 가능 변호사 — 시드니 · 멜번 · 브리즈번',                cta: { href: '?cat=legal', label: '법무 상담 →' } },
+        { eyebrow: 'Visa · 법무 · 유학', title: '비자 · 영주권 · 유학원 한 곳에서.',   sub: '한인 법무법인 + 유학원 추천 + 무료 기술심사 가채점',         cta: { href: '#legalSection', label: '법무법인 보기 →' } },
+        { eyebrow: '기술심사 가채점',    title: '내 PR 점수, 미리 확인.',              sub: '나이·영어·학력·경력·NAATI·PY 자동 계산',                       cta: { href: '?cat=points', label: '가채점 시작 →' } },
+        { eyebrow: '유학원',              title: '한인 유학원 추천.',                   sub: '어학원 · TAFE · 대학 — 무료 입학 상담',                        cta: { href: '?cat=education', label: '유학원 보기 →' } },
+        { eyebrow: '한인 법무법인',       title: '비자 · 영주권 · 가족 합류.',          sub: '한국어 가능 변호사 — 시드니 · 멜번 · 브리즈번',                cta: { href: '?cat=legal', label: '법무 상담 →' } },
       ],
     },
     'car-sale': {
       gradients: ['hero-bg--legal2', 'hero-bg--home1', 'hero-bg--legal3', 'hero-bg--edu3'],
       slides: [
-        { eyebrow: '🚗 중고차 판매',        title: '한인 중고차 매물 한 곳에서.',         sub: '개인 · 딜러 매물 — 연식 · 주행 · 가격대 비교',                cta: { href: '#postGrid', label: '매물 보기 →' } },
+        { eyebrow: '중고차 판매',        title: '한인 중고차 매물 한 곳에서.',         sub: '개인 · 딜러 매물 — 연식 · 주행 · 가격대 비교',                cta: { href: '#postGrid', label: '매물 보기 →' } },
         { eyebrow: '꼼꼼한 확인',           title: '계약 전 차량 상태 직접 확인.',        sub: 'VIN · 정비 이력 · REGO 확인은 필수',                           cta: null },
         { eyebrow: '시세 비교',             title: '같은 모델 · 같은 연식 가격 한눈에.',  sub: 'CarsGuide · CarSales 가격 참고',                              cta: null },
         { eyebrow: '딜러 · 개인',           title: '딜러 · 개인 매물 함께 보기.',         sub: '판매 유형 필터로 원하는 매물만',                              cta: null },
@@ -110,8 +121,8 @@
     mypage: {
       gradients: ['hero-bg--home1', 'hero-bg--home3', 'hero-bg--legal3', 'hero-bg--edu2'],
       slides: [
-        { eyebrow: '👤 내 계정',             title: '내 글·저장 글·연락한 글 한 곳에서.', sub: 'KoAus 활동을 한눈에 관리 — 닉네임·테마·구독 설정까지',        cta: null },
-        { eyebrow: '안전한 거래',           title: '연락 완료 표시로 진행 상황 추적.',   sub: '쉐어·렌트 매물에 ☑ 표시 → 마이페이지에서 한 번에 확인',       cta: null },
+        { eyebrow: '내 계정',             title: '내 글·저장 글·연락한 글 한 곳에서.', sub: 'KoAus 활동을 한눈에 관리 — 닉네임·테마·구독 설정까지',        cta: null },
+        { eyebrow: '안전한 거래',           title: '연락 완료 표시로 진행 상황 추적.',   sub: '쉐어·렌트 매물에 표시 → 마이페이지에서 한 번에 확인',       cta: null },
         { eyebrow: '닉네임 · 사진',         title: '프로필 사진과 별명도 변경.',         sub: '3개월에 한 번 닉네임 변경 가능',                              cta: null },
         { eyebrow: '이름 공개 설정',        title: '이름(Name) 공개 ON/OFF.',            sub: '기본은 별명 노출 — 마이페이지에서 토글',                       cta: null },
       ],
@@ -130,31 +141,31 @@
     care: {
       gradients: ['hero-bg--edu2', 'hero-bg--home1'],
       slides: [
-        { eyebrow: '🤝 Care',     title: '긴급 연락처 · 영사관 · 상비약 정보.',        sub: '000 · 영사콜센터 · 한인 의료 정보를 한 페이지에', cta: null },
-        { eyebrow: '📢 KoAus',    title: '쉐어 · 구인 · 중고차 — 한인 게시판.',        sub: '호주 한인 커뮤니티 포털',                          cta: { href: 'index.html', label: '둘러보기 →' } },
+        { eyebrow: 'Care',     title: '긴급 연락처 · 영사관 · 상비약 정보.',        sub: '000 · 영사콜센터 · 한인 의료 정보를 한 페이지에', cta: null },
+        { eyebrow: 'KoAus',    title: '쉐어 · 구인 · 중고차 — 한인 게시판.',        sub: '호주 한인 커뮤니티 포털',                          cta: { href: 'index.html', label: '둘러보기 →' } },
       ],
     },
     powerball: {
       gradients: ['hero-bg--legal2', 'hero-bg--home3'],
       slides: [
-        { eyebrow: '🎱 Powerball', title: '호주 파워볼 당첨 번호 확인.',               sub: '최신 회차 결과를 한눈에',                          cta: null },
-        { eyebrow: '📢 KoAus',    title: '쉐어 · 구인 · 중고차 — 한인 게시판.',        sub: '호주 한인 커뮤니티 포털',                          cta: { href: 'index.html', label: '둘러보기 →' } },
+        { eyebrow: 'Powerball', title: '호주 파워볼 당첨 번호 확인.',               sub: '최신 회차 결과를 한눈에',                          cta: null },
+        { eyebrow: 'KoAus',    title: '쉐어 · 구인 · 중고차 — 한인 게시판.',        sub: '호주 한인 커뮤니티 포털',                          cta: { href: 'index.html', label: '둘러보기 →' } },
       ],
     },
     calculator: {
       gradients: ['hero-bg--edu1', 'hero-bg--legal3'],
       slides: [
-        { eyebrow: '💸 송금 비교', title: '환율 · 송금 수수료 한눈에 비교.',           sub: 'AUD ↔ KRW 송금 전 필수 체크',                      cta: null },
-        { eyebrow: '📢 KoAus',    title: '쉐어 · 구인 · 중고차 — 한인 게시판.',        sub: '호주 한인 커뮤니티 포털',                          cta: { href: 'index.html', label: '둘러보기 →' } },
+        { eyebrow: '송금 비교', title: '환율 · 송금 수수료 한눈에 비교.',           sub: 'AUD ↔ KRW 송금 전 필수 체크',                      cta: null },
+        { eyebrow: 'KoAus',    title: '쉐어 · 구인 · 중고차 — 한인 게시판.',        sub: '호주 한인 커뮤니티 포털',                          cta: { href: 'index.html', label: '둘러보기 →' } },
       ],
     },
     state: {
       gradients: ['hero-bg--home2', 'hero-bg--edu2', 'hero-bg--legal3', 'hero-bg--home1'],
       slides: [
-        { eyebrow: '🗺 주별 정보',       title: 'NSW · VIC · QLD — 주별 생활 정보 허브.', sub: '교통 · 의료 · 교육 정보를 주별로 한눈에',     cta: null },
-        { eyebrow: '🚆 교통 · 패스',     title: '주별 대중교통 · 교통카드 안내.',          sub: 'Opal · Myki · Go Card — 주별 정보 정리',      cta: null },
-        { eyebrow: '🏥 의료 · 메디케어', title: '주별 병원 · 메디케어 정보.',              sub: '한국어 가능 GP · 응급실 · 약국 안내',          cta: null },
-        { eyebrow: '📢 KoAus',          title: '쉐어 · 구인 · 중고차 — 한인 게시판.',      sub: '호주 한인 커뮤니티 포털',                      cta: { href: 'index.html', label: '둘러보기 →' } },
+        { eyebrow: '주별 정보',       title: 'NSW · VIC · QLD — 주별 생활 정보 허브.', sub: '교통 · 의료 · 교육 정보를 주별로 한눈에',     cta: null },
+        { eyebrow: '교통 · 패스',     title: '주별 대중교통 · 교통카드 안내.',          sub: 'Opal · Myki · Go Card — 주별 정보 정리',      cta: null },
+        { eyebrow: '의료 · 메디케어', title: '주별 병원 · 메디케어 정보.',              sub: '한국어 가능 GP · 응급실 · 약국 안내',          cta: null },
+        { eyebrow: 'KoAus',          title: '쉐어 · 구인 · 중고차 — 한인 게시판.',      sub: '호주 한인 커뮤니티 포털',                      cta: { href: 'index.html', label: '둘러보기 →' } },
       ],
     },
   };
@@ -376,12 +387,6 @@
 
   function render(container, banners) {
     const cat = container.getAttribute('data-koaus-hero-cat');
-    const data = SLOTS[cat];
-    if (!data) {
-      console.warn('[hero-banner] unknown category:', cat);
-      container.innerHTML = '';
-      return;
-    }
     if (container.__koausHeroRendered) return;
     container.__koausHeroRendered = true;
     container.classList.add('koaus-hero');
@@ -389,50 +394,28 @@
       container.classList.add('koaus-hero--strip');
     }
 
-    // ── admin 배너 슬롯 배정 — order N 배너가 기본 슬라이드 N번 자리만 교체 ──
-    const slotBanners = assignSlots(banners, data.slides.length);
-    const adminCount = slotBanners.filter(Boolean).length;
-
-    // ── 로컬 애널리틱스 — 14일 활동 기반 4 슬롯 지역 분배 ──
-    //   · allocateSlots 가 ['nsw','nsw','vic','sa'] 같은 4개 지역 배열 반환
-    //   · 각 슬라이드의 eyebrow 앞에 [지역] 태그 inject (실제 슬라이드 데이터는 SLOTS 유지)
-    //   · agent.md §1 — 로컬 애널리틱스 절대 훼손 X, hero-banner 의 SLOTS 데이터도 그대로
-    let slotStates = [];
-    try {
-      if (window.koausAnalytics && typeof window.koausAnalytics.allocateSlots === 'function') {
-        slotStates = window.koausAnalytics.allocateSlots(data.slides.length);
-      }
-    } catch (_) {}
-    // 데스크톱 + 모바일 동일 swiper — 모바일 단일카드 패턴 폐기
-    const slidesHtml = data.slides
-      .map((s, i) => {
-        // admin 배너가 배정된 슬롯은 교체, 나머지는 기본 슬라이드 유지
-        if (slotBanners[i]) return buildAdminSlide(slotBanners[i], i);
-        // 지역별 슬롯 분배 — slotStates[i] 가 있으면 eyebrow 에 지역 태그 prepend
-        const st = slotStates[i];
-        const stagged = st ? Object.assign({}, s, {
-          eyebrow: '📍 ' + (STATE_LABEL[st] || st.toUpperCase()) + ' · ' + s.eyebrow,
-        }) : s;
-        return buildSlide(stagged, data.gradients[i % data.gradients.length], i);
-      })
-      .join('');
-    // 디버깅 단서 — 일부 교체 'mixed' / 전체 교체 'admin'
-    if (adminCount) {
-      container.setAttribute('data-koaus-hero-source', adminCount === data.slides.length ? 'admin' : 'mixed');
+    // ── 2026-10: 매칭 배너 개수만큼만 — 슬롯 순서(1~4) 유지, 빈 슬롯은 건너뜀 ──
+    const slotBanners = assignSlots(banners, MAX_SLOTS).filter(Boolean);
+    if (!slotBanners.length) {            // 이 주에 보여줄 배너 없음 → 섹션 자체 숨김 (기본 슬라이드 채움 없음)
+      container.innerHTML = '';
+      container.__koausHeroRendered = false;   // 나중에 배너가 오면 다시 렌더 가능
+      hideHero(container);
+      return;
     }
-    // data-koaus-hero-region (분배 결과) — 별도 광고 모듈이 후속 덮어쓰기 가능 (확장 포인트)
-    container.setAttribute('data-koaus-hero-region', slotStates.join(','));
+    const slidesHtml = slotBanners.map((b, i) => buildAdminSlide(b, i)).join('');
+    const single = slotBanners.length === 1;   // 1장이면 화살표·점 없음
+    container.setAttribute('data-koaus-hero-source', 'admin');
+    container.setAttribute('data-koaus-hero-count', String(slotBanners.length));
     container.innerHTML = `
       <div class="koaus-hero-pc">
         <div class="swiper" data-koaus-hero-swiper="${escHtml(cat)}">
-          <div class="swiper-wrapper" data-koaus-hero-slots="${escHtml(cat)}" data-koaus-cap="${data.slides.length}">
+          <div class="swiper-wrapper" data-koaus-hero-slots="${escHtml(cat)}" data-koaus-cap="${MAX_SLOTS}">
             ${slidesHtml}
           </div>
-          <div class="swiper-pagination"></div>
-          <div class="swiper-button-prev"></div>
-          <div class="swiper-button-next"></div>
+          ${single ? '' : '<div class="swiper-pagination"></div><div class="swiper-button-prev"></div><div class="swiper-button-next"></div>'}
         </div>
       </div>`;
+    showHero(container);
     return container;
   }
 
@@ -543,6 +526,7 @@
     const containers = Array.from(document.querySelectorAll('[data-koaus-hero-cat]'))
       .filter(c => !c.closest('.notice-section'));
     if (!containers.length) return;
+    if (!HERO_ENABLED) { containers.forEach(hideHero); return; }   // 2026-10: 광고 재개 전까지 전체 숨김
 
     function paint(banners) {
       containers.forEach(c => render(c, banners));

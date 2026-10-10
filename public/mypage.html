@@ -47,7 +47,7 @@
   <script type="module" src="auth-extra.js"></script>
   <script type="module" src="koaus-phone-auth.js"></script>
   <style>
-    /* 마이페이지 슬림 개편 (2026-07) — ⚙️ 환경설정 진입 + 최근 본 영상 그리드 */
+    /* 마이페이지 슬림 개편 (2026-07) — 환경설정 진입 + 최근 본 영상 그리드 */
     .mp-settings-gear{flex:0 0 auto;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;
       color:var(--text-secondary,#374151);background:var(--bg-subtle,#f3f4f6);border:1px solid var(--border,#e5e7eb);text-decoration:none;}
     .mp-settings-gear:hover{background:var(--border,#e5e7eb);}
@@ -390,7 +390,7 @@
          상단 컴포넌트 ①②(히어로/마퀴) 의도적 생략 페이지 -->
     <div class="page-header">
       <div>
-        <h1 class="page-title">👤 마이페이지</h1>
+        <h1 class="page-title">마이페이지</h1>
         <p class="page-subtitle">내 활동 내역과 저장한 글을 확인하세요</p>
       </div>
       <div class="page-header-actions page-header-actions--col">
@@ -400,7 +400,7 @@
     </div>
 
     <section class="mypage-login-required" id="loginRequired" style="display:none;">
-      <div class="mypage-lr-icon">🔒</div>
+      <div class="mypage-lr-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
       <p class="mypage-lr-text">로그인 후 이용할 수 있습니다.</p>
       <button class="mypage-login-btn" id="mypageLoginBtn">로그인 / 회원가입</button>
     </section>
@@ -409,10 +409,10 @@
       <header class="mypage-account-header" style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;">
         <div>
           <h2 class="mypage-account-title">KoAus 계정</h2>
-          <p class="mypage-account-subtitle">닉네임 · 사진 · 인증 · 영상 · 계정 관리는 ⚙️ 환경설정에서</p>
+          <p class="mypage-account-subtitle">닉네임 · 사진 · 인증 · 영상 · 계정 관리는 환경설정에서</p>
         </div>
-        <!-- 우측 액션 2종: 💬 채팅(chat.html — 데스크탑 진입점, 모바일은 탭바와 병행)
-             + ⚙️ 환경설정(각자의 고유링크 ?uid= 는 로그인 후 onAuthStateChanged 가 세팅) -->
+        <!-- 우측 액션 2종: 채팅(chat.html — 데스크탑 진입점, 모바일은 탭바와 병행)
+             + 환경설정(각자의 고유링크 ?uid= 는 로그인 후 onAuthStateChanged 가 세팅) -->
         <div style="display:flex;align-items:center;gap:8px;flex:none;">
         <a class="mp-settings-gear" id="mpChatLink" href="chat.html" aria-label="채팅" title="채팅">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.4c0 3.98-4.03 7.2-9 7.2-1.02 0-2-.13-2.9-.38L4.3 19.7l1.02-3.1C4.07 15.3 3 13.44 3 11.4 3 7.42 7.03 4.2 12 4.2s9 3.22 9 7.2z"/></svg>
@@ -775,13 +775,13 @@
     const emptyMsg = { mine: '아직 작성한 글이 없습니다.', recent: '최근 본 글이 없습니다.', saved: '저장한 글이 없습니다.', videos: '최근 본 영상이 없습니다.' };
     // ── 본인 글 Firestore 직접 조회 (accom/rent/jobs) ──────────────────
     //   게시판 캐시는 approved 스냅샷으로 통째 덮어써서 숨김/블라인드 글이 증발 —
-    //   localStorage 만으로는 ▶️ 되살리기·운영자 블라인드 표기가 불가능하다.
+    //   localStorage 만으로는 되살리기·운영자 블라인드 표기가 불가능하다.
     //   where('uid'==본인) limit 20 × 3 (단일 필드 — 복합 인덱스 불필요, 클라 정렬).
     let _fsMine = [];
     let _fsMineLoaded = false;   // FS 조회 1회 완료 여부 — 완료 전엔 '글 없음' 대신 '불러오는 중'
     // ── 숨김 own-post 증발 방지: _fsMine 을 uid 키 LS 캐시로 시드/저장 ──
     //   board approved-snapshot 이 LS 보드캐시에서 숨김글을 evict + 초기 렌더가 FS 조회 전 실행 →
-    //   '내가 쓴 글'에서 숨김글이 사라져 ▶️ 다시 노출을 못 누르는 회귀(간헐: FS 조회 타이밍).
+    //   '내가 쓴 글'에서 숨김글이 사라져 다시 노출을 못 누르는 회귀(간헐: FS 조회 타이밍).
     //   직전 조회 결과(숨김글 포함)를 캐시로 즉시 렌더 → 해제 가능. 콜드 캐시만 FS 대기.
     const _FSMINE_CACHE = 'koaus-my-fsposts';
     function loadFsMineCache(uid) {
@@ -959,7 +959,7 @@
       el.innerHTML = items.map(p => {
         const meta = escHtml(p.author || '') + ' · ' + (p.date || '') + (p.time ? ' ' + p.time : '');
         // 글의 주(state)도 함께 — 없으면 목적지 목록이 통합(기본 NSW)으로 열리는 회귀 방지.
-        //   ⚠️ p.state 는 "주소가 진실" 모델에서 대개 비어 있음 → 주소 기반 effective(주소→주)로 도출.
+        //   p.state 는 "주소가 진실" 모델에서 대개 비어 있음 → 주소 기반 effective(주소→주)로 도출.
         //   (koaus-state.js 미로드 시에만 저장된 p.state 폴백)
         const _st = (window.koausState ? window.koausState.effective(p) : (p.state || ''));
         const postUrl = boardHref(p.board) + '?id=' + encodeURIComponent(p.fsDocId || p.id)
@@ -970,22 +970,22 @@
         if (mtab === 'mine') {
           const editUrl = boardHref(p.board) + '?state=' + encodeURIComponent(_st || '') + '&edit=' + encodeURIComponent(p.id);
           // 운영자 블라인드 (hiddenBy:'admin') — 작성자 자가 해제 불가 (rules adminBlindLock).
-          // ▶️ 토글 미노출 + 안내 표기. 일반 ⏸️ 자가 숨김만 토글 허용.
+          // 토글 미노출 + 안내 표기. 일반 자가 숨김만 토글 허용.
           //   단, 운영자(본인) 은 자기 글을 직접 관리할 수 있어야 하므로 잠금 제외 — 과거
           //   본인 글 일시숨김 시 hiddenBy:'admin' 이 잘못 찍혀 스스로 잠긴 글도 여기서
-          //   '▶️ 다시 노출' 로 복구된다(토글 핸들러가 모더레이터 모드로 hiddenBy 비움).
+          //   '다시 노출' 로 복구된다(토글 핸들러가 모더레이터 모드로 hiddenBy 비움).
           const _amAdmin    = !!(window.koausRbac && window.koausRbac.isAdmin && window.koausRbac.isAdmin());
           const adminBlind  = p.isHidden && p.hiddenBy === 'admin' && !_amAdmin;
-          const toggleLabel = p.isHidden ? '▶️ 다시 노출' : '⏸️ 일시 숨김';
+          const toggleLabel = p.isHidden ? '다시 노출' : '일시 숨김';
           const hiddenMark  = adminBlind
-            ? '<span class="mp-hidden-mark" style="color:#b91c1c;" title="운영 정책 위반으로 숨김 처리된 글입니다. 이의신청은 문의하기(Contact) 페이지를 이용해 주세요.">🚫 운영자에 의해 숨김 처리됨</span>'
-            : (p.isHidden ? '<span class="mp-hidden-mark" title="일시 숨김 상태">⏸️ 숨김</span>' : '');
+            ? '<span class="mp-hidden-mark" style="color:#b91c1c;" title="운영 정책 위반으로 숨김 처리된 글입니다. 이의신청은 문의하기(Contact) 페이지를 이용해 주세요.">운영자에 의해 숨김 처리됨</span>'
+            : (p.isHidden ? '<span class="mp-hidden-mark" title="일시 숨김 상태">숨김</span>' : '');
           return '<div class="mypage-item' + (p.isHidden ? ' mp-item-hidden' : '') + '">'
             + head + hiddenMark
             + '<span class="mypage-item-actions">'
             +   '<a class="mp-edit" href="' + editUrl + '">수정</a>'
             +   (adminBlind
-                  ? '<button class="mp-toggle-locked" type="button" style="color:#9ca3af;cursor:not-allowed;" title="운영자 숨김은 직접 해제할 수 없습니다.">🔒 해제 불가</button>'
+                  ? '<button class="mp-toggle-locked" type="button" style="color:#9ca3af;cursor:not-allowed;" title="운영자 숨김은 직접 해제할 수 없습니다.">해제 불가</button>'
                   : '<button class="mp-toggle" data-board="' + p.board + '" data-id="' + p.id + '" data-hidden="' + (p.isHidden ? '1' : '0') + '">' + toggleLabel + '</button>')
             +   '<button class="mp-dup" data-board="' + p.board + '" data-id="' + p.id + '">재업로드</button>'
             +   '<button class="mp-del" data-board="' + p.board + '" data-id="' + p.id + '" data-fsdocid="' + (p.fsDocId || p._fsDocId || '') + '">삭제</button>'
@@ -1007,7 +1007,7 @@
         e.preventDefault(); e.stopPropagation();
         alert('운영자에 의해 숨김 처리된 글은 직접 되살릴 수 없습니다.\n이의신청은 문의하기(Contact) 페이지를 이용해 주세요.');
       }));
-      // 일시 숨김 ⏸️/▶️ 토글 — localStorage 갱신 + (있으면) Firestore 동기화
+      // 일시 숨김 /토글 — localStorage 갱신 + (있으면) Firestore 동기화
       el.querySelectorAll('.mp-toggle').forEach(b => b.addEventListener('click', async e => {
         e.preventDefault(); e.stopPropagation();
         const board = b.dataset.board, id = b.dataset.id, willHide = b.dataset.hidden !== '1';
@@ -1139,7 +1139,7 @@
             }
           });
         } catch (_) {}
-        // ⚙️ 환경설정 — 각자의 고유링크(?uid=) 부여 (계정 관리는 settings.html 로 이동, 2026-07)
+        // 환경설정 — 각자의 고유링크(?uid=) 부여 (계정 관리는 settings.html 로 이동, 2026-07)
         const gear = document.getElementById('mpSettingsLink');
         if (gear) gear.href = 'settings.html?uid=' + encodeURIComponent(user.uid);
         document.getElementById('mpEmail').textContent = user.email || '';

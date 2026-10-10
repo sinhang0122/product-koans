@@ -21,23 +21,23 @@
 
   /* ── 현재 보드 타이틀 (헤더 1행 표기 — Map View 보유 8개 전부) ── */
   var PAGE_META = {
-    accom:       ['🏠', '쉐어'],
-    rent:        ['🔑', '렌트'],
-    jobs:        ['💼', '구인구직'],
-    auto:        ['🚗', '중고차판매'],
-    restaurants: ['🍽️', '맛집'],
-    salon:       ['💈', '뷰티'],
-    gp:          ['🏥', '병원'],
-    trades:      ['🔧', '기술자']
+    accom:       ['', '쉐어'],
+    rent:        ['', '렌트'],
+    jobs:        ['', '구인구직'],
+    auto:        ['', '중고차판매'],
+    restaurants: ['', '맛집'],
+    salon:       ['', '뷰티'],
+    gp:          ['', '병원'],
+    trades:      ['', '기술자']
   };
   /* ── 아코디언 항목 (섹션 이동) — Life = 맛집·뷰티·병원·기술자 통합 섹션(예정),
         출시 전 잠금: 진입 차단 + 준비 중 토스트 ── */
   var ITEMS = [
-    { id: 'accom', ico: '🏠', label: '쉐어' },
-    { id: 'rent',  ico: '🔑', label: '렌트' },
-    { id: 'jobs',  ico: '💼', label: '구인구직' },
-    { id: 'auto',  ico: '🚗', label: '중고차판매', extra: 'category=used' },
-    { id: null,    ico: '🌱', label: 'Life', sub: '맛집·뷰티·병원·기술자', locked: true }
+    { id: 'accom', ico: '', label: '쉐어' },
+    { id: 'rent',  ico: '', label: '렌트' },
+    { id: 'jobs',  ico: '', label: '구인구직' },
+    { id: 'auto',  ico: '', label: '중고차판매', extra: 'category=used' },
+    { id: null,    ico: '', label: 'Life', sub: '맛집·뷰티·병원·기술자', locked: true }
   ];
 
   var page = (location.pathname.split('/').pop() || '').replace(/\.html$/i, '').toLowerCase();

@@ -86,7 +86,7 @@ const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g,
               '<div class="rea-addr-row"><span class="rea-addr" id="pinnedDetailAddr"></span></div>' +
               '<div class="rea-loc-btns">' +
                 '<a class="rea-loc-btn" id="pinnedDetailDir" target="_blank" rel="noopener noreferrer">' +
-                  '<span>📍 길찾기 <em>Get Directions</em></span><span class="rea-loc-arrow">›</span></a>' +
+                  '<span>길찾기 <em>Get Directions</em></span><span class="rea-loc-arrow">›</span></a>' +
               '</div>' +
             '</div>' +
           '</div>' +
@@ -133,7 +133,7 @@ const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g,
     const addrSec = o.querySelector('#pinnedDetailAddrSec');
     const addr = (d.address || '').trim();
     if (addr) {
-      o.querySelector('#pinnedDetailAddr').textContent = '📍 ' + addr;
+      o.querySelector('#pinnedDetailAddr').textContent = '' + addr;
       o.querySelector('#pinnedDetailDir').href = 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(addr);
       addrSec.style.display = '';
     } else { addrSec.style.display = 'none'; }

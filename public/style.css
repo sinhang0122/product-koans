@@ -1318,6 +1318,31 @@ select.board-write-btn--ghost:focus { outline: none; border-color: var(--text-pr
 .koaus-hero-pc { display: block; }
 .koaus-hero-mobile { display: none !important; }  /* 단일카드 패턴 폐기 — 모바일도 PC swiper */
 .koaus-hero-pc[hidden] { display: none !important; }
+/* 2026-10: 히어로 섹션 자체 숨김 가드 — 마크업 hidden 속성이 위 .koaus-hero{display:block} 에 지지 않게.
+   hero-banner.js 가 (HERO_ENABLED && 배너 ≥1) 일 때만 hidden 을 해제한다. 이 가드를 지우면 빈 회색 18/7 박스가 다시 뜬다. */
+.koaus-hero[hidden] { display: none !important; }
+
+/* ── 2026-10 홈 진입 카드 (Living / Work 반반) ── index.html 전용. 히어로와 같은 1040px 캐논 폭. */
+.home-entry {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+  width: 100%; max-width: 1040px; margin: 8px auto 10px; box-sizing: border-box;
+}
+.home-entry-card {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  min-height: 96px; padding: 18px 12px; box-sizing: border-box;
+  border: 1px solid var(--border); border-radius: 16px; background: var(--bg-surface);
+  color: var(--text-primary); text-decoration: none;
+  transition: background-color .15s ease, border-color .15s ease;
+}
+.home-entry-card:hover, .home-entry-card:focus-visible { background: var(--bg-card); border-color: var(--border-focus); outline: none; }
+.home-entry-title { font-size: 20px; font-weight: 800; letter-spacing: -.01em; line-height: 1.2; }
+.home-entry-dot { display: inline-block; margin: 0 .3em; position: relative; top: -.08em; font-weight: 700; }  /* 가운뎃점을 글자 중앙 높이에 */
+.home-entry-sub { font-size: 12px; font-weight: 600; letter-spacing: .04em; color: var(--text-secondary); opacity: .72; }
+@media (max-width: 767px) {
+  .home-entry { gap: 10px; margin: 6px auto 8px; }
+  .home-entry-card { min-height: 84px; padding: 14px 8px; }
+  .home-entry-title { font-size: 18px; }
+}
 .koaus-hero-pc .swiper {
   width: 100%;
   aspect-ratio: 18 / 7;  /* 전 디바이스 고정 종횡비 (지시 3/3) — 모바일·데스크탑·풀스크린 동일 비율 */
@@ -2150,6 +2175,7 @@ select.write-input {
 .contact-action-btn[disabled] { opacity: 0.6; cursor: not-allowed; transform: none; }
 /* 아이콘 영역 — emoji 또는 inline SVG */
 .contact-action-btn .ca-ico { font-size: 15px; line-height: 1; flex-shrink: 0; }
+.contact-action-btn .ca-ico:empty { display: none; }   /* 2026-10 이모지 제거 후 빈 아이콘 칸은 자리 차지 안 함 */
 .contact-action-btn .ca-label { overflow: hidden; text-overflow: ellipsis; }
 
 /* ── Variants — 서비스별 브랜드 톤 ──

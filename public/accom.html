@@ -395,7 +395,7 @@
   </aside>
 
   <main class="page-container">
-    <section class="koaus-hero" data-koaus-hero-cat="accom" aria-label="KoAus 배너"></section>
+    <section class="koaus-hero" hidden data-koaus-hero-cat="accom" aria-label="KoAus 배너"></section>
 
     <section class="notice-section">
       <div class="notice-row" id="tickerRow">
@@ -422,7 +422,7 @@
 
     <div class="page-header">
       <div>
-        <h1 class="page-title" id="boardTitle">🏠 호주 쉐어하우스 게시판</h1>
+        <h1 class="page-title" id="boardTitle">호주 쉐어하우스 게시판</h1>
         <p class="page-subtitle" id="boardSubtitle">주(State) · 숙박 기간별 쉐어하우스 정보</p>
       </div>
       <a href="index.html" class="page-back">← 홈으로</a>
@@ -561,10 +561,10 @@
 
       <!-- 작성 주의사항 안내 박스 — 다음 작업에서 본문 inject -->
       <div class="write-rules-box" role="note" aria-label="작성 주의사항">
-        <span class="wrb-icon" aria-hidden="true">⚠️</span>
+        <span class="wrb-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
         <div class="wrb-body">
           <strong class="wrb-title">작성 전 주의사항</strong>
-          <p>💡 숙소 등록 시 보증금(Deposit), 방값(Rent), 노티스(Notice) 및 미니멈 스테이 기간을 명확히 기재해 주세요. 유저 간 피해 예방을 위해 입주 전 실물 인스펙션을 강력히 권장합니다.</p>
+          <p>숙소 등록 시 보증금(Deposit), 방값(Rent), 노티스(Notice) 및 미니멈 스테이 기간을 명확히 기재해 주세요. 유저 간 피해 예방을 위해 입주 전 실물 인스펙션을 강력히 권장합니다.</p>
         </div>
       </div>
 
@@ -586,17 +586,17 @@
             <label class="privacy-toggle">
               <input type="checkbox" id="wLocationPrivate" checked />
               <span class="privacy-toggle-text">
-                <strong>🔒 위치 비공개</strong>
+                <strong>위치 비공개</strong>
                 <em>지도엔 대략 위치(원)만 표시되고, 정확 주소·길찾기는 연락 시 직접 공유합니다. (해제 시 정확 위치 공개)</em>
               </span>
             </label>
           </div>
           <!-- 주소 공개/비공개 안내 아코디언 (위치 비공개 토글 바로 아래) -->
           <details class="write-field offer-only" style="border:1px solid var(--border);border-radius:10px;padding:10px 12px;background:var(--bg-card);">
-            <summary style="cursor:pointer;font-size:13px;font-weight:700;color:var(--accent);">🔒 주소 공개 vs 비공개 — 뭐가 다른가요?</summary>
+            <summary style="cursor:pointer;font-size:13px;font-weight:700;color:var(--accent);">주소 공개 vs 비공개 — 뭐가 다른가요?</summary>
             <div style="margin-top:8px;font-size:12.5px;line-height:1.65;color:var(--text-secondary);">
-              <p style="margin:0 0 6px;"><strong style="color:var(--text-primary);">🔒 비공개</strong> — 지도엔 대략적인 위치(원)만 표시돼요. 정확한 주소는 진짜 계약할 분에게만 직접 알려주면 되니, 가볍게 찔러보는 연락은 자연스럽게 걸러집니다.</p>
-              <p style="margin:0 0 6px;"><strong style="color:var(--text-primary);">📍 공개</strong> — 구글맵 길찾기·스트리트뷰가 연동돼 입주 희망자가 알아서 찾아와요. 방을 빨리 채우고 싶을 때 좋아요.</p>
+              <p style="margin:0 0 6px;"><strong style="color:var(--text-primary);">비공개</strong> — 지도엔 대략적인 위치(원)만 표시돼요. 정확한 주소는 진짜 계약할 분에게만 직접 알려주면 되니, 가볍게 찔러보는 연락은 자연스럽게 걸러집니다.</p>
+              <p style="margin:0 0 6px;"><strong style="color:var(--text-primary);">공개</strong> — 구글맵 길찾기·스트리트뷰가 연동돼 입주 희망자가 알아서 찾아와요. 방을 빨리 채우고 싶을 때 좋아요.</p>
               <p style="margin:0;">위 체크박스로 <strong style="color:var(--text-primary);">언제든 공개 ↔ 비공개</strong>를 바꿀 수 있어요.</p>
             </div>
           </details>
@@ -625,11 +625,11 @@
             </div>
           </div>
           <div class="write-field offer-only">
-            <label class="write-label" for="wPhone">📞 전화번호 Phone <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택 · 문자 문의 가능)</em></label>
+            <label class="write-label" for="wPhone">전화번호 Phone <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택 · 문자 문의 가능)</em></label>
             <input class="write-input" id="wPhone" type="tel" placeholder="04xx xxx xxx" maxlength="30" autocomplete="tel" />
           </div>
           <div class="write-field offer-only">
-            <label class="write-label" for="wKakao">💛 카톡 오픈채팅 링크 <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택)</em></label>
+            <label class="write-label" for="wKakao">카톡 오픈채팅 링크 <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택)</em></label>
             <input class="write-input" id="wKakao" type="url" placeholder="https://open.kakao.com/o/..." maxlength="500" />
           </div>
           <div class="write-field offer-only" style="display:none">
@@ -637,7 +637,7 @@
             <input class="write-input" id="wContact" type="text" placeholder="기타 연락 수단·시간대·메모 등 자유 입력" maxlength="200" />
           </div>
           <div class="write-field offer-only">
-            <label class="write-label" for="wContactEmail">✉️ 연락용 이메일 Email <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택 · 메일로 연락받기)</em></label>
+            <label class="write-label" for="wContactEmail">연락용 이메일 Email <em style="font-style:normal;font-size:11px;color:var(--text-muted);font-weight:500;">(선택 · 메일로 연락받기)</em></label>
             <input class="write-input" id="wContactEmail" type="email" placeholder="you@example.com" maxlength="200" autocomplete="email" />
           </div>
         </div>
@@ -673,9 +673,9 @@
             <span class="write-label">옵션 Options</span>
             <div class="write-opts">
               <label class="write-opt"><input type="checkbox" id="wParking"> 🅿 주차</label>
-              <label class="write-opt"><input type="checkbox" id="wPet"> 🐾 반려동물</label>
-              <label class="write-opt"><input type="checkbox" id="wKids"> 👶 아이</label>
-              <label class="write-opt"><input type="checkbox" id="wAirCon"> ❄ 에어컨</label>
+              <label class="write-opt"><input type="checkbox" id="wPet"> 반려동물</label>
+              <label class="write-opt"><input type="checkbox" id="wKids"> 아이</label>
+              <label class="write-opt"><input type="checkbox" id="wAirCon"> 에어컨</label>
             </div>
           </div>
           <div class="write-field write-field--grow">
@@ -700,7 +700,7 @@
       </div>
 
       <div class="caution-box" aria-label="주의사항 및 공지사항">
-        <div class="caution-title">⚠ 주의사항 및 공지사항</div>
+        <div class="caution-title">주의사항 및 공지사항</div>
         <ol>
           <li>욕설, 혐오 발언 및 타인 비방 금지</li>
           <li>환전 및 담배 등 호주 내 불법·편법 거래 금지</li>
@@ -716,7 +716,7 @@
         <label class="privacy-toggle">
           <input type="checkbox" id="wChatAllowed" checked />
           <span class="privacy-toggle-text">
-            <strong>🗨️ 채팅 문의 허용</strong>
+            <strong>채팅 문의 허용</strong>
             <em>상세 페이지에 '채팅 문의' 버튼이 표시돼 KoAus 안에서 별명으로 대화할 수 있어요. (해제 시 채팅 버튼 미표시)</em>
           </span>
         </label>
@@ -751,11 +751,11 @@
         <div class="rea-hero-top">
           <button class="rea-ovl-btn" id="detailSaveBtn" type="button" aria-label="저장">☆</button>
           <div class="rea-share-wrap">
-            <button class="rea-ovl-btn" id="detailShareBtn" type="button" aria-label="공유하기">🔗</button>
+            <button class="rea-ovl-btn" id="detailShareBtn" type="button" aria-label="공유하기"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.1 0l3-3a5 5 0 0 0-7.1-7.1l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.1 0l-3 3a5 5 0 0 0 7.1 7.1l1.7-1.7"/></svg></button>
             <div class="detail-share-menu" id="detailShareMenu">
-              <button type="button" data-share="kakao">💬 카카오톡 공유</button>
-              <button type="button" data-share="facebook">📘 페이스북 공유</button>
-              <button type="button" data-share="copy">🔗 링크 복사</button>
+              <button type="button" data-share="kakao">카카오톡 공유</button>
+              <button type="button" data-share="facebook">페이스북 공유</button>
+              <button type="button" data-share="copy">링크 복사</button>
             </div>
           </div>
         </div>
@@ -792,9 +792,9 @@
           </div>
           <div class="rea-loc-btns">
             <a class="rea-loc-btn" id="detailDirBtn" target="_blank" rel="noopener noreferrer">
-              <span>📍 길찾기 <em>See travel times</em></span><span class="rea-loc-arrow">›</span></a>
+              <span>길찾기 <em>See travel times</em></span><span class="rea-loc-arrow">›</span></a>
             <a class="rea-loc-btn" id="detailSvBtn" target="_blank" rel="noopener noreferrer">
-              <span>🛣️ 스트릿뷰 <em>Street View</em></span><span class="rea-loc-arrow">›</span></a>
+              <span>스트릿뷰 <em>Street View</em></span><span class="rea-loc-arrow">›</span></a>
           </div>
         </div>
 
@@ -811,7 +811,7 @@
 
         <div class="rea-owner-actions" id="detailActions"></div>
 
-        <button class="rea-report" id="detailReportBtn" type="button">🚨 신고하기</button>
+        <button class="rea-report" id="detailReportBtn" type="button">신고하기</button>
       </div>
      </div><!-- /rea-scroll -->
 
@@ -842,7 +842,7 @@
   <div class="report-overlay" id="reportOverlay">
     <div class="report-modal">
       <div class="report-header">
-        <span class="report-title">🚨 게시글 신고</span>
+        <span class="report-title">게시글 신고</span>
         <button class="report-close" id="reportClose" type="button">✕</button>
       </div>
       <p class="report-desc">신고 사유를 선택해 주세요. 접수된 내용은 운영팀이 검토합니다.</p>
@@ -1078,7 +1078,7 @@
       const st = STATE_NAMES[currentState];
       const board = '쉐어';
       const modeLabel = FIND_MODE_ENABLED ? ' ' + MODE_LABELS[activeMode] : '';   // 탭 숨김 중엔 '방 올리기' 표기 생략
-      document.getElementById('boardTitle').textContent = `🏠 ${st ? st + ' ' : ''}${board}${modeLabel}`;
+      document.getElementById('boardTitle').textContent = `${st ? st + ' ' : ''}${board}${modeLabel}`;
       document.getElementById('boardSubtitle').textContent = `${st ? st + ' · ' : ''}${board}${modeLabel} 게시판`;
     }
 
@@ -1478,7 +1478,7 @@
               const sf   = p.structured_formatting || {};
               const main = escHtml(sf.main_text || p.description);
               const sec  = sf.secondary_text ? `<span class="addr-sub">${escHtml(sf.secondary_text)}</span>` : '';
-              return `<li data-desc="${escHtml(p.description)}">📍 ${main} ${sec}</li>`;
+              return `<li data-desc="${escHtml(p.description)}">${main} ${sec}</li>`;
             }).join('');
             list.classList.add('show');
           });
@@ -1813,17 +1813,17 @@
     function filterTags(p) {
       const tags = [];
       const ptypes = Array.isArray(p.types) ? p.types : (p.type ? [p.type] : []);
-      ptypes.forEach(t => { if (TYPE_LABELS[t]) tags.push('📅 ' + TYPE_LABELS[t].ko); });
+      ptypes.forEach(t => { if (TYPE_LABELS[t]) tags.push('' + TYPE_LABELS[t].ko); });
       if (p.propType) tags.push(propTypeLabel(p.propType));
       const rooms = Array.isArray(p.roomTypes) ? p.roomTypes : (p.roomType ? [p.roomType] : []);
-      rooms.forEach(r => { if (ROOM_LABELS[r]) tags.push('🛏 ' + ROOM_LABELS[r]); });
-      if (p.gender && GENDER_LABELS[p.gender]) tags.push('👤 ' + GENDER_LABELS[p.gender]);
-      if (p.availableDate) tags.push('🗓 입주 ' + p.availableDate);
-      if (p.minStay && MINSTAY_LABELS[p.minStay]) tags.push('⏱ 미니멈 ' + MINSTAY_LABELS[p.minStay]);
+      rooms.forEach(r => { if (ROOM_LABELS[r]) tags.push('' + ROOM_LABELS[r]); });
+      if (p.gender && GENDER_LABELS[p.gender]) tags.push('' + GENDER_LABELS[p.gender]);
+      if (p.availableDate) tags.push('입주 ' + p.availableDate);
+      if (p.minStay && MINSTAY_LABELS[p.minStay]) tags.push('미니멈 ' + MINSTAY_LABELS[p.minStay]);
       if (p.parking)     tags.push('🅿 주차 가능');
-      if (p.petFriendly) tags.push('🐾 반려동물 가능');
-      if (p.kidsInHouse) tags.push('👶 아이 있는 집');
-      if (p.airCon)      tags.push('❄ 에어컨');
+      if (p.petFriendly) tags.push('반려동물 가능');
+      if (p.kidsInHouse) tags.push('아이 있는 집');
+      if (p.airCon)      tags.push('에어컨');
       return tags;
     }
     function loadPosts() {
@@ -2014,7 +2014,7 @@
       //   전체 주소는 공개 매물 상세 페이지에서만 노출(비공개 상세는 redact).
       const sub = isFind ? (p.body || '') : _subb;
       const mapPh = _subb
-        ? `<div class="koaus-map-ph"><span class="mp-pin" aria-hidden="true">📍</span><span class="mp-name">${escHtml(_subb)}</span></div>`
+        ? `<div class="koaus-map-ph"><span class="mp-pin" aria-hidden="true"><svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-.15em"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></span><span class="mp-name">${escHtml(_subb)}</span></div>`
         : '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>';
       return `
         <div class="accom-card${isMine(p) ? ' my-post-highlight' : ''}" data-id="${p.id}">
@@ -2040,7 +2040,7 @@
             <!-- Row 2: 가격(좌) + 위치(우, flex:1) -->
             <div class="accom-card-row2">
               ${priceHtml ? `<div class="accom-card-price-wrap">${priceHtml}</div>` : ''}
-              ${sub ? `<div class="accom-card-sub">${isFind ? '' : '📍 '}${escHtml(sub)}</div>` : ''}
+              ${sub ? `<div class="accom-card-sub">${isFind ? '' : ''}${escHtml(sub)}</div>` : ''}
             </div>
           </div>
         </div>`;
@@ -2191,7 +2191,7 @@
       document.getElementById('detailNavTitle').textContent = p.title;
       // 상태 + 입주 가능일
       document.getElementById('detailStatus').innerHTML =
-        `⚪ 쉐어 <span class="rea-dot">•</span> 입주 가능일: <strong>${escHtml(p.availableDate || '협의')}</strong>` +
+        `쉐어 <span class="rea-dot">•</span> 입주 가능일: <strong>${escHtml(p.availableDate || '협의')}</strong>` +
         ` <span class="rea-dot">•</span> 작성자: <strong>${authorLabel(p)}</strong>`;   // authorLabel 이미 escHtml — 이중 이스케이프 금지
       // 가격 (Huge Bold) — XSS 방어: p.price escape (firestore.rules optInt 와 이중 방어)
       document.getElementById('detailPrice').innerHTML = p.price
@@ -2205,7 +2205,7 @@
         const _shownAddr = (p.locationPrivate && window.koausListingPrivacy && window.koausListingPrivacy.redactAddress)
           ? (window.koausListingPrivacy.redactAddress(p.address) || p.address)
           : p.address;
-        addrText.textContent = '📍 ' + _shownAddr;
+        addrText.textContent = '' + _shownAddr;
         addrCopy.style.display = '';
         addrCopy.onclick = () => copyAddress(_shownAddr);
       } else { addrText.textContent = '주소 미등록'; addrCopy.style.display = 'none'; }
@@ -2213,11 +2213,11 @@
       // 핵심 요약 칩 (방형태 / 성별 / 숙박기간)
       const sum = [];
       const rooms = Array.isArray(p.roomTypes) ? p.roomTypes : (p.roomType ? [p.roomType] : []);
-      rooms.forEach(r => { if (ROOM_LABELS[r]) sum.push('🛏 ' + ROOM_LABELS[r]); });
-      if (p.gender && GENDER_LABELS[p.gender]) sum.push('👤 ' + GENDER_LABELS[p.gender]);
+      rooms.forEach(r => { if (ROOM_LABELS[r]) sum.push('' + ROOM_LABELS[r]); });
+      if (p.gender && GENDER_LABELS[p.gender]) sum.push('' + GENDER_LABELS[p.gender]);
       const durs = Array.isArray(p.types) ? p.types : (p.type ? [p.type] : []);
-      durs.forEach(t => { if (TYPE_LABELS[t]) sum.push('📅 ' + TYPE_LABELS[t].ko); });
-      if (p.minStay && MINSTAY_LABELS[p.minStay]) sum.push('⏱ 미니멈 ' + MINSTAY_LABELS[p.minStay]);
+      durs.forEach(t => { if (TYPE_LABELS[t]) sum.push('' + TYPE_LABELS[t].ko); });
+      if (p.minStay && MINSTAY_LABELS[p.minStay]) sum.push('미니멈 ' + MINSTAY_LABELS[p.minStay]);
       document.getElementById('detailSummary').innerHTML = sum.map(s => `<span class="rea-chip">${escHtml(s)}</span>`).join('');
 
       // Description (+ 더보기)
@@ -2259,7 +2259,7 @@
         actEl.style.display = 'flex';
       } else if (window.koausIsAdmin && p._fsDocId && window.koausRbac) {
         // 운영자 (타인 글): 블라인드 토글 + 강제 삭제 — 신고 큐 "글 보기" 동선 즉석 제재
-        actEl.innerHTML = `<button class="detail-delete-btn" id="detailAdminHideBtn">${p.isHidden ? '▶️ 블라인드 해제' : '⏸️ 블라인드'}</button><button class="detail-delete-btn" id="detailAdminDelBtn">🗑 강제 삭제</button>`;
+        actEl.innerHTML = `<button class="detail-delete-btn" id="detailAdminHideBtn">${p.isHidden ? '블라인드 해제' : '블라인드'}</button><button class="detail-delete-btn" id="detailAdminDelBtn">강제 삭제</button>`;
         document.getElementById('detailAdminHideBtn').onclick = async () => {
           const willHide = !p.isHidden;
           if (!confirm(willHide ? '이 글을 블라인드 처리하시겠습니까? (작성자 자가 해제 불가)' : '블라인드를 해제하시겠습니까?')) return;
@@ -2268,7 +2268,7 @@
             const arr = loadPosts(); const hit = arr.find(x => String(x.id) === String(p.id));
             if (hit) { hit.isHidden = willHide; hit.status = willHide ? 'hidden' : 'approved'; hit.hiddenBy = willHide ? 'admin' : ''; savePosts(arr); }
             p.isHidden = willHide;
-            alert(willHide ? '⏸️ 블라인드 처리 완료' : '▶️ 블라인드 해제 완료');
+            alert(willHide ? '블라인드 처리 완료' : '블라인드 해제 완료');
             document.getElementById('detailOverlay').classList.remove('open'); renderAll();
           } catch (e) { alert('블라인드 실패: ' + (e.message || e)); }
         };
@@ -2277,7 +2277,7 @@
           try {
             await window.koausRbac.forceDelete('accom_posts', String(p._fsDocId));
             savePosts(loadPosts().filter(x => String(x.id) !== String(p.id)));
-            alert('🗑 강제 삭제 완료');
+            alert('강제 삭제 완료');
             document.getElementById('detailOverlay').classList.remove('open'); renderAll();
           } catch (e) { alert('강제 삭제 실패: ' + (e.message || e)); }
         };
@@ -2291,8 +2291,8 @@
       if (p.contact) {
         const isLink = /^https?:\/\//i.test(p.contact);
         cbtn.disabled = false; cbtn.style.display = '';
-        if (isLink) { cbtn.textContent = '💬 카카오톡으로 연락하기'; cbtn.onclick = () => window.open(p.contact, '_blank', 'noopener'); }
-        else { cbtn.textContent = '📞 연락처 보기'; cbtn.onclick = () => copyText(p.contact, `연락처: ${p.contact}`); }
+        if (isLink) { cbtn.textContent = '카카오톡으로 연락하기'; cbtn.onclick = () => window.open(p.contact, '_blank', 'noopener'); }
+        else { cbtn.textContent = '연락처 보기'; cbtn.onclick = () => copyText(p.contact, `연락처: ${p.contact}`); }
       } else { cbtn.style.display = 'none'; cbtn.disabled = true; cbtn.onclick = null; }
 
       setupDetailLocation(p);

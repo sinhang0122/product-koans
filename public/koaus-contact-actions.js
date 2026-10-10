@@ -8,10 +8,10 @@
 //      window.koausContactActions && window.koausContactActions.render(post);
 //
 //  지원 필드 (post 데이터):
-//    · post.phone      → [📞 전화] (tel:)  + [💬 문자] (sms:)
-//    · post.kakaoLink  → [💛 카톡 오픈채팅] (target="_blank")
+//    · post.phone      → [전화] (tel:)  + [문자] (sms:)
+//    · post.kakaoLink  → [카톡 오픈채팅] (target="_blank")
 //    · post.uid|authorUid + post._fsDocId|fsDocId|id
-//                      → [🗨️ 채팅 문의] (KoAus 인앱 1:1 채팅 — order:0 풀폭 상단 행.
+//                      → [채팅 문의] (KoAus 인앱 1:1 채팅 — order:0 풀폭 상단 행.
 //                        본인 글·작성자 uid 없는 글엔 미노출. ensure-create 후 chat.html 이동)
 //
 //  주의:
@@ -57,7 +57,7 @@
   }
 
   // 주소 단축 — 끝의 주(state)·우편번호만 제거 (도로명/동네는 보존).
-  //   ⚠️ 이 함수 자체는 공개/비공개를 구분하지 않는다. 비공개 분기는 inquiryBody() 가 담당
+  //   이 함수 자체는 공개/비공개를 구분하지 않는다. 비공개 분기는 inquiryBody() 가 담당
   //      (비공개는 redactAddress 로 도로명을 먼저 제거한 뒤 이 함수로 동네만 남김).
   function shortAddr(raw) {
     var a = String(raw == null ? '' : raw).trim();
@@ -245,7 +245,7 @@
       chatHTML =
         '<button type="button" class="contact-action-btn contact-action-btn--chat" style="order:0;flex-basis:100%"' +
         ' aria-label="KoAus 채팅으로 문의">' +
-          '<span class="ca-ico" aria-hidden="true">🗨️</span>' +
+          '<span class="ca-ico" aria-hidden="true"></span>' +
           '<span class="ca-label">채팅 문의</span>' +
         '</button>';
     }
@@ -257,7 +257,7 @@
         '<a class="contact-action-btn contact-action-btn--sms" style="order:1"' +
         ' href="' + esc('sms:' + phone + '?&body=' + encodeURIComponent(inqBody)) + '"' +
         ' aria-label="문자로 문의">' +
-          '<span class="ca-ico" aria-hidden="true">💬</span>' +
+          '<span class="ca-ico" aria-hidden="true"></span>' +
           '<span class="ca-label">문자</span>' +
         '</a>';
     }
@@ -272,7 +272,7 @@
         ' href="' + esc(kakao) + '"' +
         ' target="_blank" rel="noopener noreferrer"' +
         ' aria-label="카카오톡 오픈채팅">' +
-          '<span class="ca-ico" aria-hidden="true">💛</span>' +
+          '<span class="ca-ico" aria-hidden="true"></span>' +
           '<span class="ca-label">오픈채팅</span>' +
         '</a>';
     }
@@ -284,7 +284,7 @@
         '<a class="contact-action-btn contact-action-btn--mail" style="order:4"' +
         ' href="' + esc('mailto:' + cmail + '?subject=' + encodeURIComponent('[KoAus] 매물 문의') + '&body=' + encodeURIComponent(inqBody)) + '"' +
         ' aria-label="이메일로 문의">' +
-          '<span class="ca-ico" aria-hidden="true">✉️</span>' +
+          '<span class="ca-ico" aria-hidden="true"></span>' +
           '<span class="ca-label">메일</span>' +
         '</a>';
     }
@@ -457,7 +457,7 @@
   //   · create-first 전략: setDoc 성공 → 이동. 거부(permission-denied) 는
   //     ① 방이 이미 존재(setDoc 이 update 취급 → affectedKeys 화이트리스트 밖이라 거부)
   //     ② 미인증(SMS)/정지 — getDoc 으로 구분 (존재+참여자면 get 허용 → 이동).
-  //     ⚠️ get-first 로 바꾸지 말 것 — 미존재 doc get 은 rules 가 거부해
+  //     get-first 로 바꾸지 말 것 — 미존재 doc get 은 rules 가 거부해
   //        '없음'과 '권한없음'을 클라가 구분 못 한다 (denied 확인 후 create 불가).
   //   · 비로그인은 위 capture 게이트가 먼저 차단 → 여기 도달 안 함.
   //   · inquiry_logs(method:'chat') 기록도 capture 게이트의 logInquiryClick 이 담당.

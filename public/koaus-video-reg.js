@@ -129,7 +129,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     regOverlay.className = 'kv-reg-overlay';
     regOverlay.innerHTML =
       '<div class="kv-reg" role="dialog" aria-label="영상 등록">' +
-        '<h3>🎬 영상 등록</h3>' +
+        '<h3>영상 등록</h3>' +
         '<p class="kv-reg-guide">유튜브 영상 링크를 붙여넣어 주세요.<br>' +
           '· <b>60초 이하 세로(쇼츠) 영상</b>만 승인돼요<br>' +
           '· 운영자 검토(승인) 후 홈에 게시됩니다</p>' +
@@ -285,7 +285,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       }).then(function () {
         ga('home_video_submit');
         closeRegModal();
-        alert('접수 완료! 운영자 검토(승인) 후 홈에 게시됩니다. 🎬\n아래 "내 등록 영상"에서 상태 확인·삭제할 수 있어요.');
+        alert('접수 완료! 운영자 검토(승인) 후 홈에 게시됩니다. \n아래 "내 등록 영상"에서 상태 확인·삭제할 수 있어요.');
       });
     }).catch(function (err) {
       var code = (err && err.code) || '';
@@ -314,7 +314,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     if (!me) { box.hidden = true; box.innerHTML = ''; return; }
     try {
       // rules: 본인(authorUid==uid) list 허용 + limitedList ≤20 — where 가 이를 정적으로 증명.
-      // ⚠️ videos(authorUid ASC, createdAt DESC) 복합 인덱스 필수 (누락 시 FAILED_PRECONDITION)
+      // videos(authorUid ASC, createdAt DESC) 복합 인덱스 필수 (누락 시 FAILED_PRECONDITION)
       var q = query(collection(db, 'videos'),
                     where('authorUid', '==', me.uid),
                     orderBy('createdAt', 'desc'),
@@ -353,7 +353,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
         '</div>');
     });
     if (!rows.length) { box.hidden = true; box.innerHTML = ''; return; }
-    box.innerHTML = '<div class="kv-my-head">🎬 내 등록 영상 (' + rows.length + ')</div>' + rows.join('');
+    box.innerHTML = '<div class="kv-my-head">내 등록 영상 (' + rows.length + ')</div>' + rows.join('');
     box.hidden = false;
   }
   function onDelClick(btn) {

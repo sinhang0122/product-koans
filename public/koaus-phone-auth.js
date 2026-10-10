@@ -43,7 +43,7 @@ function mountPhoneModal() {
     <div id="koausPhoneOverlay" class="report-overlay" role="dialog" aria-modal="true" style="z-index:9999;">
       <div class="report-modal report-card" style="max-width:380px;">
         <div class="koaus-extra-tabs" role="tablist" aria-label="휴대폰 인증">
-          <span class="koaus-extra-tab is-active" role="tab">📱 휴대폰 인증</span>
+          <span class="koaus-extra-tab is-active" role="tab">휴대폰 인증</span>
           <button type="button" class="report-close" id="koausPhoneClose" aria-label="닫기">✕</button>
         </div>
         <div class="report-body" id="koausPhoneBody">
@@ -57,8 +57,8 @@ function mountPhoneModal() {
               <label class="auth-label" for="koausPhoneInput">휴대폰 번호</label>
               <div style="display:flex;gap:8px;">
                 <select class="auth-input" id="koausPhoneCountry" style="flex:0 0 auto;width:auto;">
-                  <option value="au">🇦🇺 호주 (+61)</option>
-                  <option value="kr">🇰🇷 한국 (+82)</option>
+                  <option value="au">호주 (+61)</option>
+                  <option value="kr">한국 (+82)</option>
                 </select>
                 <input class="auth-input" id="koausPhoneInput" type="tel" autocomplete="tel" inputmode="tel" placeholder="호주 0412… / 한국 010…" maxlength="20" style="flex:1;" />
               </div>
@@ -140,7 +140,7 @@ function startMainTimer() {
       const vbtn = document.getElementById('koausPhoneVerifyBtn');
       if (inp)  { inp.disabled = true; inp.style.opacity = '0.5'; }
       if (vbtn) { vbtn.disabled = true; vbtn.style.opacity = '0.5'; }
-      setCodeMsg('⏰ 유효시간이 만료됐습니다. [재전송] 버튼으로 새 인증번호를 받아 주세요.', 'err');
+      setCodeMsg('유효시간이 만료됐습니다. [재전송] 버튼으로 새 인증번호를 받아 주세요.', 'err');
     }
   };
   tick();
@@ -201,7 +201,7 @@ async function resendCode() {
     const vbtn = document.getElementById('koausPhoneVerifyBtn');
     if (inp)  { inp.disabled = false; inp.style.opacity = '1'; inp.value = ''; }
     if (vbtn) { vbtn.disabled = false; vbtn.style.opacity = '1'; }
-    setCodeMsg('✅ 인증번호를 재전송했습니다. SMS 도착까지 30초~1분 소요됩니다.', 'ok');
+    setCodeMsg('인증번호를 재전송했습니다. SMS 도착까지 30초~1분 소요됩니다.', 'ok');
     // 메인 타이머 + 재전송 쿨다운 모두 리셋
     startMainTimer();
     startResendCooldown();
@@ -348,7 +348,7 @@ async function verifyCode() {
     // 폰③: 기존 번호가 있으면 교체(변경/재인증), 없으면 최초 연결. (④로 해제되면 phoneNumber=null → link 경로)
     if (u.phoneNumber) { await updatePhoneNumber(u, cred); }
     else { await linkWithCredential(u, cred); }
-    setCodeMsg('✅ 인증 완료', 'ok');
+    setCodeMsg('인증 완료', 'ok');
     _verified = true;
     setTimeout(() => {
       closePhoneModal();
@@ -379,7 +379,7 @@ async function handleRecycledPhone() {
     const release = httpsCallable(functions, 'releaseRecycledPhone');
     const res = await release({ phoneNumber: e164 });
     if (res && res.data && res.data.ok) {
-      setCodeMsg('✅ 이전 연결을 정리했습니다. 인증번호를 다시 보내드립니다…', 'ok');
+      setCodeMsg('이전 연결을 정리했습니다. 인증번호를 다시 보내드립니다…', 'ok');
       resendStartedAt = 0;     // 쿨다운 우회 — 즉시 재전송 허용(새 verificationId 발급, 이전 코드는 1회용)
       await resendCode();
     } else {

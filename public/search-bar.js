@@ -29,7 +29,7 @@
           '<option value="body">내용</option>' +
         '</select>' +
         '<input type="search" class="koaus-search-input" placeholder="키워드를 입력하세요" aria-label="검색어" />' +
-        '<button type="button" class="koaus-search-btn">🔍 검색</button>' +
+        '<button type="button" class="koaus-search-btn">검색</button>' +
         '<button type="button" class="koaus-search-clear" hidden aria-label="검색 해제">✕</button>' +
       '</div>';
     const sel = container.querySelector('.koaus-search-scope');

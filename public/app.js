@@ -189,7 +189,7 @@ if (_pwInput && _pwMsgEl) _pwInput.addEventListener('input', () => {
   const v = _pwInput.value;
   if (!v) { _pwMsgEl.textContent = ''; _pwMsgEl.style.color = 'var(--text-muted)'; return; }
   if (KOAUS_PW_REGEX.test(v)) {
-    _pwMsgEl.textContent = '✅ 사용 가능한 비밀번호입니다.';
+    _pwMsgEl.textContent = '사용 가능한 비밀번호입니다.';
     _pwMsgEl.style.color = '#16a34a';
   } else {
     _pwMsgEl.textContent = KOAUS_PW_RULE_MSG;
@@ -585,7 +585,7 @@ function renderCompare(from, to, amount, rate) {
         <span class="calc-compare-label">${x.name} <em>${x.feeText}</em></span>
         <span class="calc-compare-value">${fmt0(x.recv)} KRW</span></div>`;
     }).join('') +
-    (best ? `<div class="calc-compare-tip">💡 입력 금액 기준 <strong>${best.name}</strong>가 가장 많이 보냅니다</div>` : '');
+    (best ? `<div class="calc-compare-tip">입력 금액 기준 <strong>${best.name}</strong>가 가장 많이 보냅니다</div>` : '');
   compareEl.style.display = 'flex';
 }
 

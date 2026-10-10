@@ -26,10 +26,10 @@
   if (typeof window === 'undefined' || window.koausReport) return;
 
   const CATEGORIES = [
-    { value: 'spam',         label: '🚫 스팸 · 홍보성 콘텐츠' },
-    { value: 'fraud',        label: '⚠️ 사기 의심 (보증금/대금/허위)' },
-    { value: 'inappropriate',label: '🚨 부적절한 콘텐츠 (욕설/혐오/타인 비방)' },
-    { value: 'other',        label: '✏️ 기타 (직접 입력)' },
+    { value: 'spam',         label: '스팸 · 홍보성 콘텐츠' },
+    { value: 'fraud',        label: '사기 의심 (보증금/대금/허위)' },
+    { value: 'inappropriate',label: '부적절한 콘텐츠 (욕설/혐오/타인 비방)' },
+    { value: 'other',        label: '기타 (직접 입력)' },
   ];
   const STYLE_ID  = 'koaus-report-style';
   const HOST_ID   = 'koaus-report-host';
@@ -68,7 +68,7 @@
     host.innerHTML =
       '<div class="koaus-report-modal" role="dialog" aria-modal="true" aria-labelledby="koausReportTitle">' +
         '<div class="koaus-report-header">' +
-          '<span class="koaus-report-title" id="koausReportTitle">🚨 게시글 신고</span>' +
+          '<span class="koaus-report-title" id="koausReportTitle">게시글 신고</span>' +
           '<button class="koaus-report-close" type="button" aria-label="닫기">✕</button>' +
         '</div>' +
         '<p class="koaus-report-desc">신고 사유를 선택해 주세요. 접수된 내용은 운영팀이 검토 후 조치합니다.</p>' +
@@ -168,7 +168,7 @@
         status:          'pending',
         createdAt:       serverTimestamp(),
       });
-      note.textContent = '✅ 신고가 접수되었습니다. 운영팀 검토 후 조치합니다.';
+      note.textContent = '신고가 접수되었습니다. 운영팀 검토 후 조치합니다.';
       note.className = 'koaus-report-note is-ok';
       setTimeout(close, 1200);
     } catch (err) {
@@ -177,8 +177,8 @@
       // 로그인 유저의 permission-denied 는 사실상 중복 신고 케이스.
       const isDup = err && (err.code === 'permission-denied' || /permission/i.test(err.message || ''));
       note.textContent = isDup
-        ? 'ℹ️ 이미 신고하신 게시글입니다. 운영팀이 검토 중입니다.'
-        : '❌ 접수 실패: ' + (err && err.message ? err.message : err);
+        ? '이미 신고하신 게시글입니다. 운영팀이 검토 중입니다.'
+        : '접수 실패: ' + (err && err.message ? err.message : err);
       note.className = isDup ? 'koaus-report-note is-ok' : 'koaus-report-note is-error';
       btn.disabled = false; btn.textContent = '신고 접수';
     }
@@ -216,7 +216,7 @@
     var postTitle = titleEl ? (titleEl.textContent || '').trim() : '';
     // ── 신고 시점 스냅샷 (best-effort) — 원글 삭제 후에도 admin 큐에서 검토 가능 ──
     //   · 각 페이지 openDetail 이 window.currentDetailPost = p 로 노출 (2026-06 동기화).
-    //   · ⚠️ stale 방어: 노출된 post 의 id 가 '신고 대상 postId 와 일치할 때만' 사용 —
+    //   · stale 방어: 노출된 post 의 id 가 '신고 대상 postId 와 일치할 때만' 사용 —
     //     상세를 닫고 리스트의 다른 글 카드를 신고하면 직전 상세의 작성자가
     //     스냅샷에 박혀 admin 이 엉뚱한 계정을 정지할 수 있다. 불일치 시 공백('').
     var post = (window.currentDetailPost
@@ -236,9 +236,9 @@
     var postAuthorContact = '';
     if (post) {
       postAuthorContact = [
-        post.phone ? '📞 ' + post.phone : '',
-        post.contactEmail ? '✉️ ' + post.contactEmail : '',
-        post.kakaoLink ? '💬 ' + post.kakaoLink : '',
+        post.phone ? '' + post.phone : '',
+        post.contactEmail ? '' + post.contactEmail : '',
+        post.kakaoLink ? '' + post.kakaoLink : '',
         post.contact ? '기타: ' + post.contact : '',
       ].filter(Boolean).join(' · ').slice(0, 300);
     }

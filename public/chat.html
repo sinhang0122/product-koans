@@ -500,7 +500,7 @@
 
     <div class="page-header" id="chatPageHeader">
       <div>
-        <h1 class="page-title">💬 채팅</h1>
+        <h1 class="page-title">채팅</h1>
         <p class="page-subtitle">게시글 문의를 앱 안에서 별명으로 주고받으세요</p>
       </div>
       <div class="page-header-actions page-header-actions--col">
@@ -509,7 +509,7 @@
     </div>
 
     <section class="mypage-login-required" id="loginRequired" style="display:none;">
-      <div class="mypage-lr-icon">🔒</div>
+      <div class="mypage-lr-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
       <p class="mypage-lr-text">로그인 후 이용할 수 있습니다.</p>
       <button class="mypage-login-btn" id="chatLoginBtn">로그인하러 가기</button>
     </section>
@@ -518,7 +518,7 @@
     <section id="chatListView" style="display:none;">
       <div class="kc-empty" id="chatListEmpty" hidden>
         아직 채팅이 없어요.<br />
-        게시글 상세의 <b>💬 채팅 문의</b> 버튼으로 대화를 시작해 보세요.
+        게시글 상세의 <b>채팅 문의</b> 버튼으로 대화를 시작해 보세요.
       </div>
       <div class="kc-list" id="chatList"></div>
     </section>
@@ -789,7 +789,7 @@
         const timeEl = document.createElement('span'); timeEl.className = 'kc-item-time'; timeEl.textContent = fmtTime(c.lastMsgAt);
         top.appendChild(nickEl); top.appendChild(timeEl);
         const postEl = document.createElement('div'); postEl.className = 'kc-item-post';
-        postEl.textContent = '📌 ' + String(c.postTitle || '게시글');
+        postEl.textContent = '' + String(c.postTitle || '게시글');
         const last = document.createElement('div'); last.className = 'kc-item-last';
         const msgEl = document.createElement('span'); msgEl.className = 'kc-item-msg';
         msgEl.textContent = String(c.lastMsg || '대화를 시작해 보세요');
@@ -858,7 +858,7 @@
       if (href) {
         link.hidden = false;
         link.href = href;
-        link.textContent = '📌 ' + String(curChat.postTitle || '게시글 보기') + ' ›';
+        link.textContent = '' + String(curChat.postTitle || '게시글 보기') + ' ›';
       } else {
         link.hidden = true;
       }
@@ -878,7 +878,7 @@
       sendBtn.disabled = frozen;
       blockedBar.hidden = !frozen;
       if (frozen) {
-        blockedBar.textContent = iBlocked ? '🚫 차단한 대화입니다 — 메시지를 보낼 수 없어요' : '🚫 상대방이 대화를 차단했어요';
+        blockedBar.textContent = iBlocked ? '차단한 대화입니다 — 메시지를 보낼 수 없어요' : '상대방이 대화를 차단했어요';
       }
     }
     function markRead(c) {

@@ -283,7 +283,7 @@ async function selfUpdate(collection, docId, patch) {
 // 블라인드 토글 — isHidden:true/false + status='hidden'/'approved' 동시 갱신
 //   currentHidden 미전달 시 isHidden:true 강제
 //   · asModerator=true 일 때만 hiddenBy:'admin' 잠금 부여/해제 (F-A) — 작성자가 마이페이지
-//     ▶️ 로 운영자 블라인드를 자가 해제하지 못하도록 firestore.rules adminBlindLock 과 한 쌍.
+//     로 운영자 블라인드를 자가 해제하지 못하도록 firestore.rules adminBlindLock 과 한 쌍.
 //   · 작성자 일시숨김 경로(마이페이지·미니숨김·본인 글 detailHideBtn)는 hiddenBy 미기록 —
 //     ① rules 의 moderatorOnlyFields 가 작성자 update 에 hiddenBy 포함 시 거부, ②(중요)
 //     운영자 계정이 '본인' 글을 일시숨김할 때 isAdmin()=true 만으로 hiddenBy:'admin' 이

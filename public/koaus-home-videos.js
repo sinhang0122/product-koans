@@ -12,10 +12,10 @@
 //    · 등록은 환경설정 전용(settings.html · koaus-video-reg.js) — 홈 ＋ 버튼 폐지 (2026-07)
 //  - 썸네일: i.ytimg.com/vi/<id>/hqdefault.jpg (API 키 불필요)
 //  - 플레이어: 세로 scroll-snap 피드 · 활성 슬라이드만 iframe(이중 오디오 방지)
-//    · 우측 소형 액션: 🔇음소거 토글 / ⚙설정(배속·자막 — 화질은 유튜브 임베드가
+//    · 우측 소형 액션: 음소거 토글 / 설정(배속·자막 — 화질은 유튜브 임베드가
 //      수동 선택 미지원이라 '자동' 고지) / ↗유튜브
 //    · 하단: CTA "문구 ›" 링크(ctaText+ctaUrl, https 만) + 제목
-//    · 음소거 자동재생 + 🔊 언뮤트 · end=60 + ENDED → 자동 다음 스크롤
+//    · 음소거 자동재생 + 언뮤트 · end=60 + ENDED → 자동 다음 스크롤
 //    · 임베드 차단(101/150) 폴백 · 좌상단 ‹ 뒤로가기 / 닫기 ✕ / ESC / 시스템 뒤로가기(popstate)
 //  - 최근 본 영상(2026-07): 풀스크린 재생 시 LS 'koaus-recent-videos' 기록(dedupe·cap 30)
 //    → mypage '최근 본 영상' 탭이 읽음 · index.html?v=<id> 딥링크 → 플레이어 직행
@@ -33,7 +33,7 @@ import { getFirestore, collection, query, where, orderBy, limit, onSnapshot } fr
 
   // host 는 boot()(파일 최하단)에서 할당 — 부트를 모든 선언 이후에 실행해
   // var 호이스팅 미초기화 참조(LS_KEY/VIDEOS/rail 재초기화 덮어쓰기) 원천 차단.
-  // ⚠️ boot 호출부를 파일 상단으로 되돌리지 말 것 — init() 이 아직 undefined 인
+  // boot 호출부를 파일 상단으로 되돌리지 말 것 — init() 이 아직 undefined 인
   //    LS_KEY 로 캐시를 읽고, 이후 도달한 `var VIDEOS = []` 가 상태를 도로 wipe 한다.
   var host = null;
 
@@ -271,7 +271,7 @@ import { getFirestore, collection, query, where, orderBy, limit, onSnapshot } fr
     if (!VIDEOS.length) {
       tiles = '';
       for (var i = 0; i < 3; i++) {
-        tiles += '<div class="kv-tile kv-tile--soon" aria-hidden="true"><span>🎬<br>영상 준비 중</span></div>';
+        tiles += '<div class="kv-tile kv-tile--soon" aria-hidden="true"><span><br>영상 준비 중</span></div>';
       }
     } else {
       tiles = VIDEOS.map(function (v, i) {
@@ -284,8 +284,8 @@ import { getFirestore, collection, query, where, orderBy, limit, onSnapshot } fr
     }
     host.innerHTML =
       '<div class="kv-head">' +
-        '<span class="kv-title">🎬 영상</span>' +
-        '<span class="kv-hint">' + (VIDEOS.length ? '탭하면 전체화면' : '등록은 마이페이지 ⚙️에서') + '</span>' +
+        '<span class="kv-title">영상</span>' +
+        '<span class="kv-hint">' + (VIDEOS.length ? '탭하면 전체화면' : '등록은 마이페이지 에서') + '</span>' +
       '</div>' +
       '<div class="kv-rail">' + tiles + '</div>';
     rail = host.querySelector('.kv-rail');

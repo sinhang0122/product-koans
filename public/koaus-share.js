@@ -41,7 +41,7 @@
 
   function copyShareLink() {
     const url = shareUrl();
-    const ok = () => _toast('🔗 링크가 복사되었습니다');
+    const ok = () => _toast('링크가 복사되었습니다');
     const no = () => _toast('복사 실패 — 주소창 링크를 길게 눌러 복사해 주세요');
     try {
       if (navigator.clipboard && navigator.clipboard.writeText) {
