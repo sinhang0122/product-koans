@@ -6,6 +6,8 @@
 - **운영자 이메일:** `sinhang0122@gmail.com`, `koaus.official@gmail.com` (관리자 화이트리스트)
 - **GitHub:** `sinhang0122/product-koans`
 
+**먼저 읽을 문서:** `docs/plan-2026-10.md`(현재 개편 계획·결정 기록) · `docs/handoff-site-review-session.md`(2026-07~09 세션 맥락). `docs/old-sessions/` 는 이전 대화 export(로컬 전용, gitignore).
+
 ---
 
 ## 디렉토리 규칙 (반드시 준수)
