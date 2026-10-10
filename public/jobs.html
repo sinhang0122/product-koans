@@ -1740,6 +1740,12 @@
           geocoder.geocode({ address, componentRestrictions: { country: 'au' } }, (results, status) => {
             if (status === 'OK' && results && results[0]) {
               const loc = results[0].geometry.location;
+              // 2026-10 검색 기반 광고 타겟팅: 검색 동네의 주를 성향 점수에 적립 (accom/rent 와 동일, 반환값 불변)
+              try {
+                const comp = (results[0].address_components || []).find(c => (c.types || []).indexOf('administrative_area_level_1') !== -1);
+                const st = comp && String(comp.short_name || '').toLowerCase();
+                if (st && window.koausAnalytics && typeof window.koausAnalytics.recordAdScore === 'function') window.koausAnalytics.recordAdScore(st);
+              } catch (_) {}
               resolve({ lat: loc.lat(), lng: loc.lng() });
             } else reject(new Error('geocode_fail:' + status));
           });

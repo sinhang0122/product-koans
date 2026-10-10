@@ -671,7 +671,8 @@
     const listBox = $('chatList'), listEmpty = $('chatListEmpty'), msgsBox = $('kcMsgs');
     const composer = $('kcComposer'), input = $('kcInput'), sendBtn = $('kcSendBtn');
     const blockedBar = $('kcBlockedBar'), blockBtn = $('kcBlockBtn'), reportBtn = $('kcReportBtn'), leaveBtn = $('kcLeaveBtn');
-    const DELETE_WINDOW_MS = 5 * 60 * 1000;   // 본인 메시지 삭제 가능 창(rules 와 동일 5분)
+    const DELETE_WINDOW_MS = 5 * 60 * 1000;        // 본인 메시지 삭제 가능 창(rules 와 동일 5분)
+    const EDIT_WINDOW_MS   = 24 * 60 * 60 * 1000;   // 본인 메시지 수정 가능 창(rules 와 동일 24시간)
     function isHiddenForMe(c) { return Array.isArray(c.hiddenFor) && c.hiddenFor.indexOf(ME.uid) !== -1; }
 
     let ME = null;            // auth user
@@ -949,16 +950,15 @@
       + '<button type="button" data-act="cancel" class="kc-sheet-cancel">취소</button></div>';
     document.body.appendChild(sheetOvl);
     let sheetMsg = null;
-    function canModify(m) {
-      const createdMs = (m && m.createdAt && typeof m.createdAt.toMillis === 'function') ? m.createdAt.toMillis() : 0;
-      return !!(m && m.id && m.senderUid === ME.uid && m.deleted !== true && createdMs && (Date.now() - createdMs) < DELETE_WINDOW_MS);
-    }
+    function ageMs(m) { const c = (m && m.createdAt && typeof m.createdAt.toMillis === 'function') ? m.createdAt.toMillis() : 0; return c ? Date.now() - c : Infinity; }
+    function isOwnLive(m) { return !!(m && m.id && m.senderUid === ME.uid && m.deleted !== true); }
+    function canDelete(m) { return isOwnLive(m) && ageMs(m) < DELETE_WINDOW_MS; }
+    function canEdit(m)   { return isOwnLive(m) && ageMs(m) < EDIT_WINDOW_MS; }
     function openSheet(m) {
       sheetMsg = m;
       $('kcSheetPrev').textContent = String(m.text || '').slice(0, 80);
-      const own = canModify(m);
-      sheetOvl.querySelector('[data-act="edit"]').hidden = !own;
-      sheetOvl.querySelector('[data-act="delete"]').hidden = !own;
+      sheetOvl.querySelector('[data-act="edit"]').hidden = !canEdit(m);
+      sheetOvl.querySelector('[data-act="delete"]').hidden = !canDelete(m);
       sheetOvl.classList.add('open');
     }
     function closeSheet() { sheetOvl.classList.remove('open'); sheetMsg = null; }
@@ -1004,7 +1004,7 @@
     composer.parentNode.insertBefore(editBar, composer);
     $('kcEditCancel').addEventListener('click', () => cancelEdit());
     function startEdit(m) {
-      if (!canModify(m)) { toast('보낸 지 5분이 지난 메시지는 수정할 수 없습니다'); return; }
+      if (!canEdit(m)) { toast('보낸 지 24시간이 지난 메시지는 수정할 수 없습니다'); return; }
       editingMsg = m; editBar.classList.add('open');
       input.value = String(m.text || ''); input.focus();
       input.style.height = 'auto'; input.style.height = Math.min(input.scrollHeight, 120) + 'px';
@@ -1025,7 +1025,7 @@
       } catch (err) {
         console.warn('[chat] 메시지 수정 실패', err);
         const denied = err && (err.code === 'permission-denied' || /permission/i.test(err.message || ''));
-        toast(denied ? '보낸 지 5분이 지난 메시지는 수정할 수 없습니다' : '수정 실패 — 잠시 후 다시 시도해 주세요');
+        toast(denied ? '보낸 지 24시간이 지난 메시지는 수정할 수 없습니다' : '수정 실패 — 잠시 후 다시 시도해 주세요');
       }
     }
 

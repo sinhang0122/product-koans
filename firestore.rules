@@ -1100,9 +1100,9 @@ service cloud.firestore {
       // ── 채팅 메시지(messages) — 부모 chat doc 로 참여자·차단 검증 ──
       //   · create 비용: 부모 get 1 read (notSuspended 의 users get 과 별개 doc).
       //   · 전송 = writeBatch(메시지 addDoc + 부모 요약 update) — 차단 시 양쪽 다 거부.
-      //   · update 는 '본인 메시지 5분 내' 두 가지만(2026-10): ① 삭제 표시 text=''+deleted+deletedAt==request.time
-      //     ② 내용 수정 text(1~1000)+edited=true+editedAt==request.time ('수정됨' 표시 강제 — 말 바꾸기 분쟁 완화).
-      //     5분 뒤엔 둘 다 불가, 삭제된 메시지는 재변경 불가.
+      //   · update 는 본인 메시지에 두 가지만(2026-10): ① 삭제 표시(보낸 지 5분 내) text=''+deleted+deletedAt==request.time
+      //     ② 내용 수정(보낸 지 24시간 내) text(1~1000)+edited=true+editedAt==request.time ('수정됨' 표시 강제).
+      //     삭제된 메시지는 재변경 불가.
       //   · delete(문서 삭제)는 admin 만(불법 콘텐츠 제재).
       match /messages/{msgId} {
         allow create: if isVerifiedUser()
@@ -1123,15 +1123,16 @@ service cloud.firestore {
                                get(/databases/$(database)/documents/chats/$(chatId)).data.participants));
         allow update: if isSignedIn()
                          && resource.data.senderUid == request.auth.uid
-                         && request.time < resource.data.createdAt + duration.value(5, 'm')
                          && !(('deleted' in resource.data) && resource.data.deleted == true)
                          && (
-                              (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text', 'deleted', 'deletedAt'])
+                              (request.time < resource.data.createdAt + duration.value(5, 'm')
+                               && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text', 'deleted', 'deletedAt'])
                                && data().text == ''
                                && data().deleted == true
                                && data().deletedAt == request.time)
                               ||
-                              (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text', 'edited', 'editedAt'])
+                              (request.time < resource.data.createdAt + duration.value(24, 'h')
+                               && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text', 'edited', 'editedAt'])
                                && data().text is string && data().text.size() >= 1 && data().text.size() <= 1000
                                && data().edited == true
                                && data().editedAt == request.time)

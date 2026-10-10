@@ -1353,6 +1353,14 @@
           new google.maps.Geocoder().geocode({ address }, (results, status) => {
             if (status === 'OK' && results && results[0]) {
               const loc = results[0].geometry.location;
+              // 2026-10 검색 기반 광고 타겟팅: 검색한 동네의 주(administrative_area_level_1)를
+              //   성향 점수(koaus_state_scores)에 적립 → hero-banner.js 가 그 주 배너를 고른다.
+              //   (Sunnybank 검색 → QLD). 반환값은 그대로 — 지도/필터 동작엔 영향 없음.
+              try {
+                const comp = (results[0].address_components || []).find(c => (c.types || []).indexOf('administrative_area_level_1') !== -1);
+                const st = comp && String(comp.short_name || '').toLowerCase();
+                if (st && window.koausAnalytics && typeof window.koausAnalytics.recordAdScore === 'function') window.koausAnalytics.recordAdScore(st);
+              } catch (_) {}
               resolve({ lat: loc.lat(), lng: loc.lng() });
             } else {
               resolve(null);
