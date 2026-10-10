@@ -358,36 +358,55 @@ async function verifyCode() {
     console.warn('[phone-auth] verifyCode 실패', err);
     if (err && err.code === 'auth/invalid-verification-code') setCodeMsg('인증코드가 일치하지 않습니다.', 'err');
     else if (err && err.code === 'auth/code-expired') setCodeMsg('인증코드가 만료됐습니다. 재전송 해주세요.', 'err');
-    else if (err && (err.code === 'auth/credential-already-in-use' || err.code === 'auth/account-exists-with-different-credential')) handleRecycledPhone();   // 폰④ 재활용 번호 자동 해제+재연결
+    else if (err && (err.code === 'auth/credential-already-in-use' || err.code === 'auth/account-exists-with-different-credential')) handleRecycledPhone(err);   // 폰④ 재활용 번호 자동 해제+재연결
     else if (err && err.code === 'auth/requires-recent-login') setCodeMsg('보안을 위해 다시 로그인한 뒤 변경해 주세요.', 'err');   // 폰③ 번호 변경 reauth 필요
     else setCodeMsg('인증 실패: ' + ((err && err.message) || err), 'err');
   }
 }
 
-// ── 폰④ 재활용(재발급) 번호 처리 ──
+// ── 폰④ 재활용(재발급) 번호 처리 (2026-10 서버 검증판) ──
 //   credential-already-in-use = SMS 코드가 일치(번호 통제 증명)했으나 그 번호가 다른 계정(A)에 연결됨.
-//   releaseRecycledPhone 콜러블로 A 에서 해제 → 재전송(새 코드) → B 가 새 코드 입력 시 link 성공.
+//   이때 Firebase 가 에러에 실어 주는 서버 서명 증명(temporaryProof)을 그대로 콜러블에 넘기고,
+//   서버가 Identity Toolkit 에 직접 검증한 뒤에만 A 에서 해제 → B(현재 로그인)에 연결한다.
 //   ① 제약 유지: signInWithPhoneNumber/confirm 경로 부활 없음 — link 전용 흐름 그대로.
-async function handleRecycledPhone() {
+//   ② 예전처럼 번호 문자열만 보내는 호출은 서버가 거부한다(증명 없음) — 콘솔 직접 호출 구멍 차단.
+async function handleRecycledPhone(err) {
   const e164 = document.getElementById('koausPhoneEcho')?.textContent || '';
   if (!/^\+(61|82)[0-9]{8,11}$/.test(e164)) {     // 호주(+61)/한국(+82) E.164
     setCodeMsg('이미 다른 계정과 연결된 번호입니다. 구글 로그인 또는 카카오톡 문의로 진행해 주세요.', 'err');
     return;
   }
+  let proof = '';
+  try {
+    const cred = PhoneAuthProvider.credentialFromError(err);
+    const j = cred && typeof cred.toJSON === 'function' ? cred.toJSON() : null;
+    proof = (j && j.temporaryProof) || '';
+  } catch (_) {}
+  if (!proof) {
+    setCodeMsg('이미 다른 계정과 연결된 번호입니다. 인증번호를 다시 받아 시도해 주세요.', 'err');
+    return;
+  }
   setCodeMsg('이전 연결을 정리하는 중…', 'info');
   try {
     const release = httpsCallable(functions, 'releaseRecycledPhone');
-    const res = await release({ phoneNumber: e164 });
-    if (res && res.data && res.data.ok) {
-      setCodeMsg('이전 연결을 정리했습니다. 인증번호를 다시 보내드립니다…', 'ok');
-      resendStartedAt = 0;     // 쿨다운 우회 — 즉시 재전송 허용(새 verificationId 발급, 이전 코드는 1회용)
-      await resendCode();
+    const res = await release({ phoneNumber: e164, temporaryProof: proof });
+    if (res && res.data && res.data.ok && res.data.linked) {
+      // 서버(Admin SDK)가 번호를 붙였으므로 현재 유저 정보를 새로 읽어 phoneNumber 반영
+      try { await auth.currentUser.reload(); } catch (_) {}
+      try { await auth.currentUser.getIdToken(true); } catch (_) {}
+      setCodeMsg('인증 완료', 'ok');
+      _verified = true;
+      setTimeout(() => {
+        closePhoneModal();
+        if (typeof afterVerifiedCb === 'function') { try { afterVerifiedCb(); } catch (_) {} }
+      }, 400);
     } else {
       setCodeMsg('처리에 실패했습니다. 구글 로그인 또는 카카오톡 문의로 진행해 주세요.', 'err');
     }
   } catch (e) {
     console.warn('[phone-auth] releaseRecycledPhone 실패', e);
-    setCodeMsg('처리에 실패했습니다. 구글 로그인 또는 카카오톡 문의로 진행해 주세요.', 'err');
+    const m = (e && e.message && /[가-힣]/.test(e.message)) ? e.message : '처리에 실패했습니다. 구글 로그인 또는 카카오톡 문의로 진행해 주세요.';
+    setCodeMsg(m, 'err');
   }
 }
 

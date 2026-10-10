@@ -133,6 +133,10 @@
     .kc-row.me .kc-bubble   { background: var(--accent, #2563eb); color: var(--accent-text, #fff); border-bottom-right-radius: 6px; }
     .kc-row.them .kc-bubble { background: var(--bg-elevated, #eef0f3); color: var(--text-primary, #111); border-bottom-left-radius: 6px; }
     .kc-msg-time { font-size: 10.5px; color: var(--text-muted, #8e8e93); margin: 3px 4px 0; }
+    /* 2026-10 메시지 삭제 표시 + 5분 내 삭제 버튼 */
+    .kc-bubble.kc-deleted { background: transparent !important; color: var(--text-muted, #8e8e93) !important; border: 1px dashed var(--border, #d9d9d9); font-style: italic; }
+    .kc-msg-del { font-size: 10.5px; color: var(--text-muted, #8e8e93); background: none; border: 0; padding: 0 4px; margin: 3px 0 0; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; font-family: inherit; }
+    .kc-msg-del:hover { color: var(--text-primary, #111); }
     .kc-blocked-bar {
       flex: none; text-align: center; font-size: 13px; font-weight: 700;
       color: var(--text-muted, #8e8e93); background: var(--bg-elevated, #f3f4f6);
@@ -537,6 +541,7 @@
         <div class="kc-room-actions">
           <button type="button" class="kc-mini-btn" id="kcBlockBtn">차단</button>
           <button type="button" class="kc-mini-btn" id="kcReportBtn">신고</button>
+          <button type="button" class="kc-mini-btn" id="kcLeaveBtn">나가기</button>
         </div>
       </header>
       <div class="kc-msgs" id="kcMsgs" aria-live="polite"></div>
@@ -653,7 +658,9 @@
     const listView = $('chatListView'), roomView = $('chatRoomView'), loginReq = $('loginRequired');
     const listBox = $('chatList'), listEmpty = $('chatListEmpty'), msgsBox = $('kcMsgs');
     const composer = $('kcComposer'), input = $('kcInput'), sendBtn = $('kcSendBtn');
-    const blockedBar = $('kcBlockedBar'), blockBtn = $('kcBlockBtn'), reportBtn = $('kcReportBtn');
+    const blockedBar = $('kcBlockedBar'), blockBtn = $('kcBlockBtn'), reportBtn = $('kcReportBtn'), leaveBtn = $('kcLeaveBtn');
+    const DELETE_WINDOW_MS = 5 * 60 * 1000;   // 본인 메시지 삭제 가능 창(rules 와 동일 5분)
+    function isHiddenForMe(c) { return Array.isArray(c.hiddenFor) && c.hiddenFor.indexOf(ME.uid) !== -1; }
 
     let ME = null;            // auth user
     let chats = [];           // 목록 구독 캐시
@@ -763,7 +770,9 @@
       if (listUnsub) { try { listUnsub(); } catch (_) {} }
       const q = query(collection(db, 'chats'), where('participants', 'array-contains', ME.uid), orderBy('lastMsgAt', 'desc'), limit(20));
       listUnsub = onSnapshot(q, snap => {
-        chats = snap.docs.map(s => Object.assign({ id: s.id }, s.data()));
+        // 2026-10 '나가기' 한 방(hiddenFor 에 내 uid)은 목록에서 제외 — 상대가 새 메시지를 보내면
+        //   전송 update 가 hiddenFor 를 비우므로(rules 허용) 방이 다시 나타난다(카톡 동작).
+        chats = snap.docs.map(s => Object.assign({ id: s.id }, s.data())).filter(c => !isHiddenForMe(c));
         renderList();
         updateUnreadLS();
         // 열린 방의 실시간 상태(차단/읽음) 동기화
@@ -890,7 +899,7 @@
       if (msgsUnsub) { try { msgsUnsub(); } catch (_) {} }
       const q = query(collection(db, 'chats', id, 'messages'), orderBy('createdAt', 'desc'), limit(50));
       msgsUnsub = onSnapshot(q, snap => {
-        msgs = snap.docs.map(s => s.data()).reverse();
+        msgs = snap.docs.map(s => Object.assign({ id: s.id }, s.data())).reverse();
         renderMsgs();
         if (curChat) markRead(curChat);
       }, err => { console.warn('[chat] 메시지 구독 실패', err); });
@@ -901,14 +910,60 @@
         const row = document.createElement('div');
         row.className = 'kc-row ' + (m.senderUid === ME.uid ? 'me' : 'them');
         const b = document.createElement('div'); b.className = 'kc-bubble';
-        b.textContent = String(m.text || '');
+        if (m.deleted === true) {
+          b.classList.add('kc-deleted');
+          b.textContent = '삭제된 메시지입니다';
+        } else {
+          b.textContent = String(m.text || '');
+        }
         const t = document.createElement('div'); t.className = 'kc-msg-time';
         t.textContent = fmtTime(m.createdAt);
         row.appendChild(b); row.appendChild(t);
+        // 본인 메시지 · 삭제 안 됨 · 보낸 지 5분 이내 → '삭제' (rules 가 같은 조건으로 재검증)
+        const createdMs = (m.createdAt && typeof m.createdAt.toMillis === 'function') ? m.createdAt.toMillis() : 0;
+        if (m.senderUid === ME.uid && m.deleted !== true && m.id && createdMs && (Date.now() - createdMs) < DELETE_WINDOW_MS) {
+          const del = document.createElement('button');
+          del.type = 'button'; del.className = 'kc-msg-del'; del.textContent = '삭제';
+          del.addEventListener('click', () => deleteMsg(m));
+          row.appendChild(del);
+        }
         msgsBox.appendChild(row);
       });
       msgsBox.scrollTop = msgsBox.scrollHeight;
     }
+
+    // ── 2026-10 본인 메시지 삭제 표시(5분 내) — 내용은 비우고 양쪽에 '삭제된 메시지입니다' ──
+    async function deleteMsg(m) {
+      if (!ME || !curChat || !m || !m.id) return;
+      if (!confirm('이 메시지를 삭제하시겠습니까?\n상대방에게도 "삭제된 메시지입니다"로 표시됩니다.')) return;
+      try {
+        await updateDoc(doc(db, 'chats', curChat.id, 'messages', m.id), { text: '', deleted: true, deletedAt: serverTimestamp() });
+        // 마지막 메시지였다면 목록 미리보기도 비움(차단 상태면 요약 update 가 거부되므로 생략)
+        const isLast = msgs.length && msgs[msgs.length - 1].id === m.id;
+        const frozen = Array.isArray(curChat.blockedBy) && curChat.blockedBy.length > 0;
+        if (isLast && !frozen && curChat.lastSenderUid === ME.uid) {
+          updateDoc(doc(db, 'chats', curChat.id), { lastMsg: '삭제된 메시지입니다', lastMsgAt: serverTimestamp(), lastSenderUid: ME.uid }).catch(() => {});
+        }
+      } catch (err) {
+        console.warn('[chat] 메시지 삭제 실패', err);
+        const denied = err && (err.code === 'permission-denied' || /permission/i.test(err.message || ''));
+        toast(denied ? '보낸 지 5분이 지난 메시지는 삭제할 수 없습니다' : '삭제 실패 — 잠시 후 다시 시도해 주세요');
+      }
+    }
+    // ── 2026-10 채팅방 나가기 — 내 목록에서만 숨김(상대방은 그대로), 읽음 처리 동반 ──
+    leaveBtn.addEventListener('click', async () => {
+      if (!ME || !curChat) return;
+      if (!confirm('이 채팅방에서 나가시겠습니까?\n내 목록에서만 사라지며, 상대방이 새 메시지를 보내면 다시 표시됩니다.')) return;
+      leaveBtn.disabled = true;
+      try {
+        await updateDoc(doc(db, 'chats', curChat.id), { hiddenFor: arrayUnion(ME.uid), unreadFor: arrayRemove(ME.uid) });
+        toast('채팅방에서 나갔습니다');
+        try { history.back(); } catch (_) { showList(); }
+      } catch (err) {
+        console.warn('[chat] 나가기 실패', err);
+        toast('처리 실패 — 잠시 후 다시 시도해 주세요');
+      } finally { leaveBtn.disabled = false; }
+    });
 
     // ── 전송 — writeBatch(메시지 create + 요약 update) 원자 처리 ──
     composer.addEventListener('submit', async e => {
@@ -927,6 +982,7 @@
         b.update(doc(db, 'chats', curChat.id), {
           lastMsg: text.slice(0, 200), lastMsgAt: serverTimestamp(),
           lastSenderUid: ME.uid, unreadFor: [other],
+          hiddenFor: [],   // 2026-10 새 메시지 → 나갔던 쪽에도 방 재노출 (rules: 전송 시에만 전체 비우기 허용)
         });
         await b.commit();
         input.value = '';

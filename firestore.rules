@@ -1067,7 +1067,18 @@ service cloud.firestore {
                        && notSuspended()
                        && request.auth.uid in resource.data.participants
                        && request.resource.data.diff(resource.data).affectedKeys()
-                            .hasOnly(['lastMsg', 'lastMsgAt', 'lastSenderUid', 'unreadFor', 'blockedBy'])
+                            .hasOnly(['lastMsg', 'lastMsgAt', 'lastSenderUid', 'unreadFor', 'blockedBy', 'hiddenFor'])
+                       // hiddenFor(2026-10 '채팅방 나가기') = 내 목록에서 숨긴 참여자 uid 목록 ⊆ participants.
+                       //   · 평소엔 본인 uid 만 증감(blockedBy 와 같은 양방향 removeAll 가드)
+                       //   · 메시지 전송(lastMsg 갱신) 시엔 전체 비우기([]) 허용 — 새 메시지가 오면 나간 쪽에도 방이 다시 보임(카톡 동작)
+                       && data().get('hiddenFor', []) is list
+                       && data().get('hiddenFor', []).size() <= 2
+                       && resource.data.participants.hasAll(data().get('hiddenFor', []))
+                       && (request.resource.data.diff(resource.data).affectedKeys().hasAny(['lastMsg', 'lastMsgAt', 'lastSenderUid'])
+                             ? (data().get('hiddenFor', []).size() == 0
+                                || data().get('hiddenFor', []) == resource.data.get('hiddenFor', []))
+                             : (data().get('hiddenFor', []).removeAll(resource.data.get('hiddenFor', [])).hasOnly([request.auth.uid])
+                                && resource.data.get('hiddenFor', []).removeAll(data().get('hiddenFor', [])).hasOnly([request.auth.uid])))
                        // 메시지 요약 갱신은 미차단 상태 + 본인 발신 + serverTimestamp 강제
                        && (!request.resource.data.diff(resource.data).affectedKeys()
                               .hasAny(['lastMsg', 'lastMsgAt', 'lastSenderUid'])
@@ -1089,7 +1100,9 @@ service cloud.firestore {
       // ── 채팅 메시지(messages) — 부모 chat doc 로 참여자·차단 검증 ──
       //   · create 비용: 부모 get 1 read (notSuspended 의 users get 과 별개 doc).
       //   · 전송 = writeBatch(메시지 addDoc + 부모 요약 update) — 차단 시 양쪽 다 거부.
-      //   · update/delete 금지(기록 보존·위조 차단) — admin 만 delete(불법 콘텐츠 제재).
+      //   · update 는 '본인 메시지 5분 내 삭제 표시' 만 허용(2026-10): text='' + deleted=true + deletedAt=request.time.
+      //     수정(내용 변경)은 불가 — 면접 제안 등 대화에서 '말 바꾸기' 분쟁 방지. 한 번 삭제된 메시지는 재변경 불가.
+      //   · delete(문서 삭제)는 admin 만(불법 콘텐츠 제재).
       match /messages/{msgId} {
         allow create: if isVerifiedUser()
                          && notSuspended()
@@ -1107,7 +1120,14 @@ service cloud.firestore {
                        && (isAdmin()
                            || (isSignedIn() && request.auth.uid in
                                get(/databases/$(database)/documents/chats/$(chatId)).data.participants));
-        allow update: if false;
+        allow update: if isSignedIn()
+                         && resource.data.senderUid == request.auth.uid
+                         && request.time < resource.data.createdAt + duration.value(5, 'm')
+                         && !(('deleted' in resource.data) && resource.data.deleted == true)
+                         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text', 'deleted', 'deletedAt'])
+                         && data().text == ''
+                         && data().deleted == true
+                         && data().deletedAt == request.time;
         allow delete: if isAdmin();
       }
     }
