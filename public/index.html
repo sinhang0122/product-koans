@@ -397,31 +397,6 @@
     <!-- ── KoAus 히어로 배너 — hero-banner.js 가 렌더 (통합 배너 시스템, SLOTS.home) ── -->
     <section class="koaus-hero" hidden data-koaus-hero-cat="home" aria-label="KoAus 배너"></section>
 
-    <!-- 2026-10 홈 진입 카드 — Living / Work 반반. 사이드바(주별 구조)를 건드리지 않고 두는 임시 진입점,
-         추후 목업의 '방 구하기 / 일 구하기' 검색창으로 발전. 홈에만 존재 (상단 규격 ①②③ 사이의 홈 전용 예외). -->
-    <section class="home-entry" aria-label="게시판 바로가기">
-      <a class="home-entry-card" id="homeEntryLiving" href="accom.html">
-        <span class="home-entry-title">쉐어<span class="home-entry-dot" aria-hidden="true">·</span>렌트</span>
-        <span class="home-entry-sub">Living</span>
-      </a>
-      <a class="home-entry-card" id="homeEntryWork" href="jobs.html">
-        <span class="home-entry-title">구인구직</span>
-        <span class="home-entry-sub">Work</span>
-      </a>
-    </section>
-    <script>
-      // 현재 ?state= 를 진입 카드 링크에 그대로 전달 (사이드바·탭바와 동일 동작)
-      (function () {
-        try {
-          var st = new URLSearchParams(location.search).get('state');
-          if (!st || !/^[a-z]{2,3}$/.test(st)) return;
-          ['homeEntryLiving', 'homeEntryWork'].forEach(function (id) {
-            var a = document.getElementById(id);
-            if (a) a.href = a.getAttribute('href') + '?state=' + encodeURIComponent(st);
-          });
-        } catch (_) {}
-      })();
-    </script>
 
     <!-- 전광판(Marquee) · Firestore global_ticker — 좌측 [Notice|광고주] 고정 + 우측 [광고내용] 우→좌 흐름 (marquee.js) -->
     <section class="notice-section">

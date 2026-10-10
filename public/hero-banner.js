@@ -15,12 +15,13 @@
   window.__koausHeroBannerInited = true;
 
   // ── 2026-10 표시 스위치 + 렌더 규칙 ─────────────────────────────────────
-  //   HERO_ENABLED=false : 전 페이지 히어로 섹션 숨김(광고 재개 시 true). 마크업의 `hidden` 속성 +
-  //     style.css `.koaus-hero[hidden]` 가드와 한 세트 — 스크립트가 (배너 ≥1) 일 때만 hidden 해제.
+  //   표시 여부는 **관리자 배너 유무로 자동 결정**: 매칭 배너 0개 → 섹션 숨김, 1개 이상 → 표시.
+  //     마크업의 `hidden` 속성 + style.css `.koaus-hero[hidden]` 가드와 한 세트 — 스크립트가 (배너 ≥1) 일 때만 hidden 해제.
+  //     HERO_ENABLED 는 비상 스위치(false 면 배너가 있어도 전체 숨김).
   //   렌더 규칙: 현재 주(또는 all) 매칭 배너 **개수만큼만** 슬라이드 생성. 0개 → 섹션 숨김,
   //     1개 → 화살표·점 없음. 기본(초록/파랑) SLOTS 슬라이드로 빈 슬롯을 채우던 동작은 폐지
   //     (QLD 배너 1개 올렸을 때 NSW 사용자에게 '배너 1 + 빈 기본 슬라이드' 가 뜨던 회귀의 원인).
-  const HERO_ENABLED = false;
+  const HERO_ENABLED = true;    // 비상 스위치. 평소엔 '배너 0개 → 자동 숨김' 이라 관리자 페이지에서 배너만 올리면 다시 보인다
   const MAX_SLOTS = 4;   // admin 슬롯 번호 1~4 — 이제 '순서' 의미만 가짐
   function hideHero(c) { try { c.hidden = true; c.style.display = 'none'; } catch (_) {} }
   function showHero(c) { try { c.hidden = false; c.style.removeProperty('display'); } catch (_) {} }

@@ -120,12 +120,12 @@ npm run deploy:functions
 ## 작업 시 주의사항
 
 - **2026-10 개편 1단계(숨김 원칙):** 자세한 결정·순서는 `docs/plan-2026-10.md`. 핵심만:
-  - **히어로 배너는 전부 OFF** — `hero-banner.js` `HERO_ENABLED=false` + 15페이지 `<section class="koaus-hero" hidden …>` + style.css `.koaus-hero[hidden]{display:none!important}` 가드 3종이 한 세트. 광고 재개 시 플래그만 true. 렌더 규칙은 **주(또는 all) 매칭 배너 개수만큼만**(0=섹션 숨김, 1=화살표·점 없음) — 기본(초록/파랑) SLOTS 슬라이드로 빈 슬롯을 채우던 동작은 폐지(되돌리지 말 것: "QLD 배너 1 + 빈 기본 슬라이드" 회귀 원인).
-  - **홈 진입 카드** `index.html` `.home-entry`(쉐어·렌트 → accom / 구인구직 → jobs, `?state=` 전달) — 사이드바를 건드리지 않는 임시 진입점. 햄버거(주별 구조)·홈 교체·13페이지 메뉴 숨김은 **보류 중**.
+  - **히어로 배너는 배너 유무로 자동 표시** — 관리자 페이지에 배너가 0개면 섹션 숨김, 올리면 그 주(또는 전국) 사용자에게 표시. 15페이지 `<section class="koaus-hero" hidden …>` + style.css `.koaus-hero[hidden]{display:none!important}` 가드 + `hero-banner.js`(배너 ≥1 일 때만 hidden 해제, `HERO_ENABLED` 는 비상 스위치)가 한 세트. 렌더 규칙은 **주(또는 all) 매칭 배너 개수만큼만**(0=섹션 숨김, 1=화살표·점 없음) — 기본(초록/파랑) SLOTS 슬라이드로 빈 슬롯을 채우던 동작은 폐지(되돌리지 말 것: "QLD 배너 1 + 빈 기본 슬라이드" 회귀 원인).
+  - **홈 화면은 아직 손대지 않음**(사용자 확정). 햄버거(주별 구조)·홈 교체·13페이지 메뉴 숨김·홈 진입 카드 전부 **보류 중** — `.home-entry` CSS 만 style.css 에 준비돼 있음(마크업 없음).
   - **글쓰기 주체 제한**: accom '방 구하기' 탭(`FIND_MODE_ENABLED=false`), jobs '구직' 탭·게시 유형(`SEEKING_ENABLED=false`) 숨김. 데이터·rules 그대로, 옛 구직 글 수정 시 유형 보존.
   - **하단 탭바 '영상' 탭 제거**(`koaus-tabbar.js`). 홈 영상 레일·settings 영상 등록은 유지.
   - **이모지 전면 제거**(라이브 페이지·스크립트). 기능 기호 ★ ☆ ✕ ✓ ☰ ‹ › 만 유지, 지도 핀·잠금·공유·경고 등 아이콘은 inline SVG. 새 문구에 이모지를 넣지 말 것. 사이트 안내 문구는 "~다/~까" 합쇼체.
-  - **채팅**: 수정 없음 · 본인 메시지 **5분 내 삭제 표시**(rules: text=''+deleted+deletedAt==request.time, 발신자만, 1회) · **채팅방 나가기** `chats.hiddenFor`(본인만 증감, 메시지 전송 시 전체 비우기 허용 → 상대에게 방 재노출). 목록은 클라가 hiddenFor 필터. `rules-test.js` 케이스 10건 추가.
+  - **채팅**: 메시지 **길게 누르기(데스크탑 우클릭) 액션 시트** = 복사 · 공유 · 수정 · 삭제(수정·삭제는 본인 메시지 5분 내만). rules: 삭제 표시 text=''+deleted+deletedAt==request.time / 수정 text(1~1000)+edited=true+editedAt==request.time('수정됨' 표시 강제), 발신자만, 삭제 후 재변경 불가. 인라인 버튼 없음. · **채팅방 나가기** `chats.hiddenFor`(본인만 증감, 메시지 전송 시 전체 비우기 허용 → 상대에게 방 재노출). 목록은 클라가 hiddenFor 필터. `rules-test.js` 케이스 10건 추가.
   - **`releaseRecycledPhone` 서버 검증**: 번호 문자열만 받던 구멍 제거 — 클라가 `PhoneAuthProvider.credentialFromError` 의 `temporaryProof` 를 보내고, 함수가 Identity Toolkit 에 직접 검증 후 A 해제 + B 연결(Admin SDK). 호출자 24h 1회. 번호만 보내는 호출은 거부. 테스트는 실제 재발급 번호로만 가능.
 
 - **사이드바·헤더 일괄 변경:** 31개 페이지에 복제되어 있으므로(실측 2026-07 — `admin-ads`/`exchange` 제외) `cd public && for f in *.html; do perl -i -pe '...' "$f"; done` 패턴으로 처리. 빠진 페이지 없는지 grep 검증 필수. ⚠️ **메뉴 항목 추가/삭제 시 카운트 전·후 비교 의무** — `for t in 항목들; do grep -l "href=\"$t.html" *.html | wc -l; done` 로 페이지 수(공통 31 / 주별 항목 31×8) 확인. **항목을 "잉여"로 일괄 제거하면 라이브 페이지 동선이 통째로 끊긴다**(2026-06: `5e13fe6` menu 청소가 powerball·salon·trades·gp·state 진입점을 전부 날려 직접 URL로만 접근 가능했던 회귀 → 복구). 진입점 없는 라이브 페이지가 생기지 않게 추가/삭제 후 0-참조 페이지 grep 점검.
