@@ -231,11 +231,11 @@
 
   // ── 유저 성향 주 판정 — local-analytics.js 의 koaus_state_scores 를 읽기 전용 사용 ──
   //   · 점수 쓰기는 local-analytics.js recordAdScore 가 전 페이지에서 전담 (여기서 쓰지 말 것)
-  //   · 반감기·minScore 는 옛 koaus-ads.js OPTIONS 와 동일 값 유지 (21일 / 1.5)
+  //   · 반감기 21일은 옛 koaus-ads.js 와 동일. minScore 는 1.5 → 1 (2026-10-11): 동네 검색 1회(+1)로 바로 그 주 배너가 보이게
   //   · koaus_state_override(localStorage, JSON 문자열 예: "nsw") 로 강제 지정 — 디버그·실연용
   const TARGET_STATES = ['nsw', 'vic', 'qld', 'wa', 'sa', 'tas', 'act', 'nt'];
   const SCORE_HALF_LIFE_MS = 21 * 86400000;
-  const SCORE_MIN = 1.5;
+  const SCORE_MIN = 1;
   function dominantState() {
     try {
       const ov = JSON.parse(localStorage.getItem('koaus_state_override') || 'null');
