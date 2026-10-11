@@ -278,6 +278,9 @@
 
   // 페이지 진입 시 1회만 fetch — 결과 캐시 (다중 컨테이너 재사용)
   let _adminBannersPromise = null;
+  // 2026-10: "서버가 확정적으로 0개라고 답했는지" 표시. 실패/오프라인 캐시 응답([])과 구분해
+  //   확정 0개일 때만 LS 캐시를 비우고 히어로를 숨긴다(관리자가 배너를 전부 끄면 모든 기기에서 사라져야 함).
+  let _serverSaidEmpty = false;
   function fetchAdminBanners() {
     if (_adminBannersPromise) return _adminBannersPromise;
     _adminBannersPromise = (async () => {
@@ -313,6 +316,8 @@
         const result = snap.docs
           .map(d => ({ id: d.id, ...d.data() }))
           .filter(b => matchesTarget(b) && inPeriod(b));
+        // 서버 응답(오프라인 캐시 아님)인데 보여줄 배너가 0개 → 확정 0개
+        _serverSaidEmpty = !result.length && !(snap.metadata && snap.metadata.fromCache);
         // 빈 결과(렉·유휴 후 App Check 토큰 지연 등 일시적 가능)는 메모이제이션하지 않음 —
         //   다음 호출/재시도에서 실제 재조회해 정상 배너를 받도록 (기본 슬라이드 고정 방지).
         if (!result.length) _adminBannersPromise = null;
@@ -320,6 +325,7 @@
       } catch (e) {
         console.warn('[hero-banner] admin 배너 fetch 실패 — 재시도 가능', e);
         _adminBannersPromise = null;   // 실패도 메모 안 함 — run() 재시도 / 다음 진입 재조회
+        _serverSaidEmpty = false;      // 실패는 확정 아님 — 캐시 유지
         return [];
       }
     })();
@@ -573,10 +579,24 @@
     if (!Array.isArray(banners)) banners = [];
     // 렉/유휴 후 첫 조회가 App Check 토큰·콜드 네트워크로 빈 결과가 올 수 있음 → 1회 재시도.
     //   fetchAdminBanners 가 빈 결과의 메모를 비워두므로 재호출 시 실제 재조회된다.
-    if (!banners.length) {
+    if (!banners.length && !_serverSaidEmpty) {   // 확정 0개면 재시도 불필요
       await new Promise(r => setTimeout(r, 1500));
       try { banners = await fetchAdminBanners(); } catch (_) {}
       if (!Array.isArray(banners)) banners = [];
+    }
+    // ── 2026-10: 서버가 확정적으로 0개 → 캐시 비우고 히어로 숨김(캐시로 먼저 칠했어도 내림) ──
+    //   관리자가 배너를 전부 끄면(active=false·기간 만료·이 주 대상 아님) 예전 배너가 LS 캐시로
+    //   계속 보이던 문제 수정. 실패/오프라인([] 이지만 _serverSaidEmpty=false)은 아래 기존 동작대로 캐시 보존.
+    if (!banners.length && _serverSaidEmpty) {
+      try { localStorage.removeItem(HERO_CACHE); } catch (_) {}
+      containers.forEach(c => {
+        const sw = c.querySelector('.koaus-hero-pc .swiper');
+        if (sw && sw.__koausSwiper) { try { sw.__koausSwiper.destroy(true, true); } catch (_) {} }
+        c.innerHTML = '';
+        c.__koausHeroRendered = false;
+        hideHero(c);
+      });
+      return;
     }
     const fresh = JSON.stringify(banners);
     // 빈 결과일 땐 캐시를 "지우지 않는다" — 일시적 렉으로 [] 가 와도 직전 정상 배너 캐시를 보존해
