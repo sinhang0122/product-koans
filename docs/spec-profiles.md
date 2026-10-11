@@ -102,3 +102,16 @@ enum 파일 0.5일 → ① 프로필 모달+마이페이지 탭+rules/테스트 
 - ① 공개 카드의 사진·성별 기본값(제안: 사진 선택·기본 켜짐, 성별 선택)
 - §7 enum 목록 확정(도시·업종·나이대)
 - 희망 동네 입력: Places 자동완성(suburb 제한) 비용 — 세션당 몇 건이라 무시 가능 수준이나 확인
+
+## 11. 구현 메모 — ① 집 구해요 1차 구현 (2026-10-11, 설계서와 다른 점)
+- **사진 없음(사용자 확정)**: "얼굴이 선택에 영향을 주면 안 된다" → photoURL 필드 자체가 없음(rules hasOnly 에서 거부). 카드 아바타 = 이름 첫 글자. 단계는 8 → **7단계**.
+- **성별**: 선택 입력, 여성 전용 방(글 gender==='female') 집주인 화면에서만 필터. 빼고 싶으면 enum·rules·모달 칩 3곳.
+- **필드명**: 신분은 `residency`(whv/student/worker/pr/other) — `status` 는 구하는 상태(looking/found)에 씀. 방 종류·성별·거주 기간 코드는 accom 글쓰기 폼 기존 값과 동일(`master/second/single/living_share/sunroom`, `female/male`, `ultra_short/short/mid/long`).
+- **단계별 저장**: rules 가 firstName·suburbs 를 필수로 요구하므로 Firestore 쓰기는 마지막 단계 1회. 중간 이탈은 **기기 로컬 임시저장**(`koaus-seeker-draft-v1`, uid 일치 시 복원). 수정 모드는 임시저장 안 함.
+- **동네 입력**: Maps JS 미로드 — Geocoding REST(동네 단위, `components=country:AU`)로 locality·state·postcode·중심 좌표만 저장. 최대 3곳.
+- **lastActiveAt**: 모든 본인 쓰기에 serverTimestamp(rules 강제) + 마이페이지 '내 프로필' 탭 진입 시 하루 1회 갱신. 30일 일시정지 함수는 미구현(후속) — `pausedAt` 은 함수만 세팅, 본인은 deleteField(다시 켜기)만.
+- **집주인 화면**: 별도 페이지 대신 accom/rent 본인 글 상세의 "근처에서 구하는 사람 보기" 버튼 → `koaus-seekers-nearby.js` 모달. 반경 5/10/20/50(기본 10), '예산 맞음' 토글, 여성 전용 자동 필터. 글에 좌표가 없으면 주 전체.
+- **채팅 연결**: chats create 규칙 무변경 — `chatId={seekerUid}_{집주인uid}`, `postId=seekerUid`, `board='seeker'`, `postTitle='집 구해요 · 이름'`. lastMsgAt 은 넣지 않음(첫 메시지 전까지 상대 목록에 빈 방이 안 뜨는 게 의도).
+- **진입점**: accom/rent 컨트롤과 목록 사이 "집을 구하십니까? … 내 조건 등록 ›" → `mypage.html?tab=profile&profile=new`(로그인 확정 후 작성 모달 자동).
+- **파일**: `public/koaus-enums.js`(공유 enum) · `public/koaus-seeker-profile.js`(마이페이지 탭·모달) · `public/koaus-seekers-nearby.js`(집주인 모달) · mypage/accom/rent 스크립트 태그·버튼 · `firestore.rules` seeker_profiles · `firestore.indexes.json` 1건 · `rules-test.js` 24건.
+- **미구현(후속)**: 30일 일시정지 함수, 새 매물 이메일 알림 엔진(4단계), 추천 탭, ② 사업체 · ③ 일 구해요.

@@ -46,6 +46,8 @@
   <script type="module" src="koaus-rbac.js"></script>
   <script type="module" src="auth-extra.js"></script>
   <script type="module" src="koaus-phone-auth.js"></script>
+  <script src="koaus-enums.js" defer></script>
+  <script type="module" src="koaus-seeker-profile.js"></script>   <!-- 2026-10 2단계: '내 프로필' 탭(집 구해요) -->
   <style>
     /* 마이페이지 슬림 개편 (2026-07) — 환경설정 진입 + 최근 본 영상 그리드 */
     .mp-settings-gear{flex:0 0 auto;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;
@@ -439,6 +441,7 @@
     </section>
 
     <div class="mypage-tabs" id="mypageTabs" style="display:none;">
+      <button class="mypage-tab" data-mtab="profile">내 프로필</button>
       <button class="mypage-tab active" data-mtab="mine">내가 쓴 글</button>
       <button class="mypage-tab" data-mtab="saved">저장한 글</button>
       <button class="mypage-tab" data-mtab="recent">최근 본 글</button>
@@ -446,6 +449,8 @@
     </div>
 
     <div class="mypage-list" id="mypageList" style="display:none;"></div>
+    <!-- 2026-10 2단계: '내 프로필' 탭 패널 — koaus-seeker-profile.js 가 koaus:mypage-profile 이벤트로 렌더 -->
+    <div class="mypage-list" id="mpProfilePanel" style="display:none;"></div>
 
   </main>
 
@@ -934,8 +939,17 @@
       renderList();
     }
     function renderList() {
-      const items = dataFor(mtab);
+      // 2026-10: '내 프로필' 탭은 별도 패널(koaus-seeker-profile.js) — 목록 숨기고 모듈에 위임
       const el = document.getElementById('mypageList');
+      const pp = document.getElementById('mpProfilePanel');
+      if (mtab === 'profile') {
+        el.style.display = 'none';
+        if (pp) { pp.style.display = ''; document.dispatchEvent(new CustomEvent('koaus:mypage-profile', { detail: { panel: pp } })); }
+        return;
+      }
+      el.style.display = '';
+      if (pp) pp.style.display = 'none';
+      const items = dataFor(mtab);
       if (!items.length) {
         // 콜드 캐시(첫 기기)에서 FS 조회 완료 전엔 '글 없음' 대신 로딩 — 숨김글 증발 오인 방지
         const msg = (mtab === 'mine' && !_fsMineLoaded) ? '불러오는 중…' : emptyMsg[mtab];
@@ -1154,6 +1168,7 @@
       } else {
         _fsMine = []; _fsMineLoaded = true; saveFsMineCache('');   // 로그아웃 — 타 계정 글 노출 방지
         loginReq.style.display = ''; prof.style.display = 'none'; tabs.style.display = 'none'; list.style.display = 'none';
+        try { const pp = document.getElementById('mpProfilePanel'); if (pp) { pp.style.display = 'none'; pp.innerHTML = ''; } } catch (_) {}
         if (tlb) tlb.textContent = '로그인';
       }
     });

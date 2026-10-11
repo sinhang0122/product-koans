@@ -4896,3 +4896,10 @@ img, iframe, video, canvas, svg, table { max-width: 100%; }
 
 /* (2026-07) 옛 홈 12타일 cat-grid CSS 제거 — 카테고리 이동은 하단 탭바/바로가기가 담당,
    그 자리는 홈 영상 칸(#koausHomeVideos, koaus-home-videos.js 자체 주입 스타일)으로 대체. */
+
+/* ── 2026-10 2단계: 집 구해요 프로필 진입 행 (accom/rent — 컨트롤과 목록 사이) ── */
+.koaus-seeker-entry { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 10px 0 12px; padding: 11px 14px; border: 1px solid var(--border); border-radius: var(--r-lg); background: var(--bg-card); color: var(--text-primary); text-decoration: none; font-size: 13.5px; line-height: 1.5; }
+.koaus-seeker-entry:hover { border-color: var(--border-focus); }
+.koaus-seeker-entry .kse-text strong { font-weight: 700; margin-right: 4px; }
+.koaus-seeker-entry .kse-cta { flex: 0 0 auto; font-weight: 700; white-space: nowrap; }
+@media (max-width: 480px) { .koaus-seeker-entry { flex-direction: column; align-items: flex-start; gap: 6px; } }

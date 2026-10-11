@@ -65,6 +65,8 @@
   <script type="module" src="admin-mark.js"></script>
   <script type="module" src="koaus-rbac.js"></script>
   <script src="koaus-contact-actions.js" defer></script>
+  <script src="koaus-enums.js" defer></script>
+  <script type="module" src="koaus-seekers-nearby.js"></script>   <!-- 2026-10 2단계: 본인 글 상세 "근처에서 구하는 사람 보기" -->
   <script type="module" src="auth-extra.js"></script>
   <script type="module" src="koaus-phone-auth.js"></script>
 </head>
@@ -463,6 +465,12 @@
         <button class="board-write-btn" id="writeBtnOpen">+ 글쓰기</button>
       </div>
     </div>
+
+    <!-- 2026-10 2단계: 집 구해요 프로필 진입 — 조건 등록 → 근처 집주인에게 보이고 새 매물 알림 -->
+    <a class="koaus-seeker-entry" href="mypage.html?tab=profile&amp;profile=new">
+      <span class="kse-text"><strong>집을 구하십니까?</strong> 조건을 등록해 두면 근처 집주인이 먼저 연락하고, 맞는 방이 올라오면 이메일로 알려드립니다.</span>
+      <span class="kse-cta">내 조건 등록 ›</span>
+    </a>
 
     <!-- List View -->
     <div id="listView">
@@ -2261,9 +2269,11 @@
       // 본인 글: 수정/삭제
       const actEl = document.getElementById('detailActions');
       if (isMine(p)) {
-        actEl.innerHTML = `<button class="detail-edit-btn" id="detailEditBtn">수정하기</button><button class="detail-delete-btn" id="detailDeleteBtn">삭제하기</button>`;
+        actEl.innerHTML = `<button class="detail-edit-btn" id="detailEditBtn">수정하기</button><button class="detail-delete-btn" id="detailDeleteBtn">삭제하기</button><button class="detail-edit-btn" id="detailSeekersBtn">근처에서 구하는 사람 보기</button>`;
         document.getElementById('detailEditBtn').onclick   = () => openWriteModalForEdit(p);
         document.getElementById('detailDeleteBtn').onclick = () => deletePost(p.id);
+        // 2026-10 2단계: 글 올린 사람만 — 집 구해요 프로필(seeker_profiles) 근처 목록 모달(koaus-seekers-nearby.js)
+        document.getElementById('detailSeekersBtn').onclick = () => { if (window.koausSeekersNearby) window.koausSeekersNearby.open(p, 'accom'); else alert('잠시 후 다시 시도해 주십시오.'); };
         actEl.style.display = 'flex';
       } else if (window.koausIsAdmin && p._fsDocId && window.koausRbac) {
         // 운영자 (타인 글): 블라인드 토글 + 강제 삭제 — 신고 큐 "글 보기" 동선 즉석 제재
