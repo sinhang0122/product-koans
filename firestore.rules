@@ -1009,6 +1009,78 @@ service cloud.firestore {
       allow delete: if isAdmin() || (isSignedIn() && request.auth.uid == uid);
     }
 
+    // ── 집 구해요 프로필(seeker_profiles) — 2단계 (2026-10) ──
+    //   · 문서 ID = 본인 uid (1인 1프로필). 마이페이지에서만 작성·수정. 사진 없음(사용자 확정 — 얼굴이 선택에 영향 주면 안 됨).
+    //   · 공개 카드 = 집주인(글 올린 사람)이 "근처 구하는 사람 보기"에서 보는 것 — visible==true 인 프로필만.
+    //     list 쿼리: where('states','array-contains', 주) + where('visible','==',true) + orderBy('lastActiveAt','desc') + limit(≤20)
+    //     (복합 인덱스 seeker_profiles: states CONTAINS + visible + lastActiveAt DESC). 거리 필터는 클라이언트(동네 중심 좌표).
+    //   · 비공개: 이메일·알림 설정은 doc 에 있지만 카드엔 안 그림(클라). 정확 주소 없음 — 동네 중심 좌표만.
+    //   · lastActiveAt == request.time 강제(모든 본인 쓰기) → 30일 무활동 일시정지 함수 기준.
+    //     pausedAt 은 함수(Admin SDK)만 세팅, 본인은 지우기(deleteField)만 가능 — "다시 켜기".
+    //   · intro 에 연락처 유도 차단: 6자리 이상 연속 숫자·URL 거부(채팅으로만 연락).
+    function validSuburb(s) {
+      return s is map
+        && s.keys().hasOnly(['name', 'state', 'postcode', 'lat', 'lng'])
+        && s.name is string && s.name.size() >= 1 && s.name.size() <= 60
+        && s.state is string && s.state in ['qld', 'nsw', 'vic', 'wa', 'sa', 'tas', 'act', 'nt']
+        && (!('postcode' in s) || (s.postcode is string && s.postcode.size() <= 4))
+        && s.lat is number && s.lat >= -45 && s.lat <= -9
+        && s.lng is number && s.lng >= 110 && s.lng <= 155;
+    }
+    function validSeekerProfile() {
+      let d = data();
+      return d.keys().hasOnly([
+               'suburbs', 'states', 'budgetMin', 'budgetMax', 'moveIn', 'stay',
+               'roomTypes', 'bathroom', 'firstName', 'ageBand', 'gender', 'residency', 'smoker', 'pet',
+               'intro', 'visible', 'alerts', 'status', 'step', 'lastActiveAt', 'createdAt', 'updatedAt', 'pausedAt'
+             ])
+        && d.suburbs is list && d.suburbs.size() >= 1 && d.suburbs.size() <= 3
+        && validSuburb(d.suburbs[0])
+        && (d.suburbs.size() < 2 || validSuburb(d.suburbs[1]))
+        && (d.suburbs.size() < 3 || validSuburb(d.suburbs[2]))
+        && d.states is list && d.states.size() >= 1 && d.states.size() <= 3
+        && d.states.hasOnly(['qld', 'nsw', 'vic', 'wa', 'sa', 'tas', 'act', 'nt'])
+        && pOptInt(d, 'budgetMin', 0, 3000) && pOptInt(d, 'budgetMax', 0, 3000)
+        && (!('budgetMin' in d) || !('budgetMax' in d) || d.budgetMin <= d.budgetMax)
+        && (!('moveIn' in d) || (d.moveIn is string && d.moveIn.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}')))
+        && (!('stay' in d) || d.stay in ['ultra_short', 'short', 'mid', 'long'])
+        && pOptList(d, 'roomTypes', 5)
+        && (!('roomTypes' in d) || d.roomTypes.hasOnly(['master', 'second', 'single', 'living_share', 'sunroom']))
+        && (!('bathroom' in d) || d.bathroom in ['any', 'private'])
+        && pReqStr(d, 'firstName', 1, 20)
+        && (!('ageBand' in d) || d.ageBand in ['20e', '20m', '20l', '30e', '30l', '40p'])
+        && (!('gender' in d) || d.gender in ['female', 'male'])
+        && (!('residency' in d) || d.residency in ['whv', 'student', 'worker', 'pr', 'other'])
+        && pOptBool(d, 'smoker') && pOptBool(d, 'pet')
+        && pOptStr(d, 'intro', 300)
+        && (!('intro' in d) || !d.intro.matches('(?s).*([0-9][ .-]?){6,}.*'))
+        && (!('intro' in d) || !d.intro.matches('(?s).*(https?://|www[.]|[.]com|[.]au|[.]kr).*'))
+        && d.visible is bool
+        && (!('alerts' in d) || (d.alerts is map
+                                 && d.alerts.keys().hasOnly(['enabled', 'mode', 'email'])
+                                 && pOptBool(d.alerts, 'enabled')
+                                 && (!('mode' in d.alerts) || d.alerts.mode in ['instant', 'threshold5', 'daily', 'off'])
+                                 && pOptStr(d.alerts, 'email', 120)))
+        && (!('status' in d) || d.status in ['looking', 'found'])
+        && pOptInt(d, 'step', 0, 9)
+        && d.lastActiveAt == request.time
+        && d.updatedAt == request.time;
+    }
+    match /seeker_profiles/{uid} {
+      allow get:  if isSignedIn() && (request.auth.uid == uid || resource.data.visible == true || isAdmin());
+      allow list: if limitedList() && (isAdmin() || (isVerifiedUser() && resource.data.visible == true));
+      allow create: if isVerifiedUser() && notSuspended() && request.auth.uid == uid
+                       && validSeekerProfile()
+                       && data().createdAt == request.time
+                       && !('pausedAt' in data());
+      allow update: if isVerifiedUser() && notSuspended() && request.auth.uid == uid
+                       && validSeekerProfile()
+                       && data().createdAt == resource.data.createdAt
+                       // pausedAt 은 함수만 세팅 — 본인은 그대로 두거나(유지) 지우기(deleteField = 다시 켜기)만
+                       && (!('pausedAt' in data()) || data().pausedAt == resource.data.get('pausedAt', null));
+      allow delete: if isAdmin() || (isSignedIn() && request.auth.uid == uid);
+    }
+
     // ── 1:1 채팅(chats) — 상세페이지 "채팅 문의" (2026-07) ──
     //   · 문서 ID = {postId}_{inquirerUid} (reports 패턴) — 같은 글·같은 문의자는 항상 같은 방
     //     (중복 방 방지) + 임의 ID(addDoc) 차단. 문의자만 create (글쓴이 자신과의 채팅 금지).

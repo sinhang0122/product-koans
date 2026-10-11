@@ -88,6 +88,15 @@
         { "fieldPath": "participants", "arrayConfig": "CONTAINS" },
         { "fieldPath": "lastMsgAt", "order": "DESCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "seeker_profiles",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "states", "arrayConfig": "CONTAINS" },
+        { "fieldPath": "visible", "order": "ASCENDING" },
+        { "fieldPath": "lastActiveAt", "order": "DESCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []
