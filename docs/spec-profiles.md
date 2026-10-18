@@ -115,3 +115,10 @@ enum 파일 0.5일 → ① 프로필 모달+마이페이지 탭+rules/테스트 
 - **진입점**: accom/rent 컨트롤과 목록 사이 "집을 구하십니까? … 내 조건 등록 ›" → `mypage.html?tab=profile&profile=new`(로그인 확정 후 작성 모달 자동).
 - **파일**: `public/koaus-enums.js`(공유 enum) · `public/koaus-seeker-profile.js`(마이페이지 탭·모달) · `public/koaus-seekers-nearby.js`(집주인 모달) · mypage/accom/rent 스크립트 태그·버튼 · `firestore.rules` seeker_profiles · `firestore.indexes.json` 1건 · `rules-test.js` 24건.
 - **미구현(후속)**: 30일 일시정지 함수, 새 매물 이메일 알림 엔진(4단계), 추천 탭, ② 사업체 · ③ 일 구해요.
+
+## 12. 10-18 변경 메모 (①)
+- 실명 없음: `firstName` 폐기 → `nick`(사이트 닉네임 스냅샷, LS koaus-nickname → users.nickname). 카드 아바타 = 닉네임 첫 글자.
+- 공개/비공개 분리: `seeker_profiles`(공개: nick·gender·ageBand·suburbs·states·budget·moveIn·stay·roomTypes·bathroom·visible·status·step·시각) / `seeker_private`(본인만: residency·smoker·pet·intro·alerts). 저장은 writeBatch. 옛 문서는 migrateLegacy() 자동 이전.
+- 역할: users.roles{living,job} + koaus-role.js. 짧은 등록 openQuick(3단계·건너뛰기). 탭바 '프로필' = mypage?tab=people(koaus-seekers-nearby mountPage).
+- 숫자 표시(동네 N명·회원 N명) 안 함. 구한 사람은 '구했습니다'로 비공개(목록에서 빠짐).
+- 미구현: 알림 메일 함수(③ Resend), Job 일 구해요 프로필(②), 채팅에서 비공개 소개글 보내기.

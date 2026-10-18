@@ -11,6 +11,9 @@
        koausDb/koausFs 있을 때만 60s 스로틀 쿼리(unreadFor array-contains, limit 1
        = 최대 1 read)로 갱신. 브리지·로그인 없으면 LS 값만, 실패 전부 silent.
        chat.html 자체는 onSnapshot 실시간이라 이 폴링과 무관.
+   ─ 프로필 탭(2026-10 ①-3): LS koaus-roles-v1(koaus-role.js) 의 living==='owner'(방 올려요)일 때만
+     '최근 본'과 '채팅' 사이에 '프로필'(mypage.html?tab=people — 근처에서 집 구하는 사람 카드) 노출.
+     'koaus:roles-changed' 이벤트로 즉시 다시 그림. 집 구하는 사람·비로그인은 5탭 그대로.
    ─ 데스크탑(>768px) 미노출 · admin* 페이지에는 스크립트 미포함
    ─ z-index 900: 모달 오버레이(1000~)보다 아래 — 모달이 탭바를 덮는다.
    ═══════════════════════════════════════════════════════════════════ */
@@ -64,6 +67,20 @@
   var page = (location.pathname.split('/').pop() || 'index.html').toLowerCase() || 'index.html';
   var isMy = page === 'mypage.html';
 
+  ICONS.people = ico('<circle cx="9" cy="8.3" r="3.1"/><path d="M3.4 19.2c.8-2.9 3-4.4 5.6-4.4s4.8 1.5 5.6 4.4"/><circle cx="16.6" cy="9.4" r="2.5"/><path d="M15.2 14.3c2.6-.3 4.6 1 5.4 3.6"/>');
+  function rolesLS() {
+    try { var r = JSON.parse(localStorage.getItem('koaus-roles-v1') || 'null'); return r && typeof r === 'object' ? r : {}; } catch (_) { return {}; }
+  }
+  function buildTabs() {
+    var r = rolesLS();
+    var tabs = TABS.slice();
+    if (r.living === 'owner') {
+      tabs.splice(3, 0, { key: 'people', label: '프로필', icon: ICONS.people,
+        href: 'mypage.html?tab=people',
+        active: isMy && tab === 'people' });
+    }
+    return tabs;
+  }
   var TABS = [
     { key: 'home',   label: '홈',      icon: ICONS.home,
       href: 'index.html' + (st ? '?state=' + encodeURIComponent(st) : ''),
@@ -81,7 +98,7 @@
       active: page === 'chat.html' },
     { key: 'my',     label: '마이',    icon: ICONS.person,
       href: 'mypage.html',
-      active: isMy && tab !== 'saved' && tab !== 'recent' }
+      active: isMy && tab !== 'saved' && tab !== 'recent' && tab !== 'people' }
   ];
 
   /* ── 미니 토스트 (자급자족 — style.css 의존 없음) ── */
@@ -153,7 +170,9 @@
     bar.className = 'koaus-tabbar';
     bar.setAttribute('aria-label', '하단 메뉴');
 
-    TABS.forEach(function (t) {
+    function paintItems() {
+    bar.innerHTML = '';
+    buildTabs().forEach(function (t) {
       var el;
       if (t.href) {
         el = document.createElement('a');
@@ -184,6 +203,9 @@
       }
       bar.appendChild(el);
     });
+    }
+    paintItems();
+    document.addEventListener('koaus:roles-changed', function () { paintItems(); refreshUnread(); });
 
     document.body.appendChild(bar);
     document.body.classList.add('koaus-has-tabbar');

@@ -47,7 +47,9 @@
   <script type="module" src="auth-extra.js"></script>
   <script type="module" src="koaus-phone-auth.js"></script>
   <script src="koaus-enums.js" defer></script>
+  <script type="module" src="koaus-role.js"></script>   <!-- 2026-10 ①-2: Living/Job 역할 선택(로그인 뒤 한 번) -->
   <script type="module" src="koaus-seeker-profile.js"></script>   <!-- 2026-10 2단계: '내 프로필' 탭(집 구해요) -->
+  <script type="module" src="koaus-seekers-nearby.js"></script>   <!-- 2026-10 ①-3: '구하는 사람' 탭(페이지 모드) -->
   <style>
     /* 마이페이지 슬림 개편 (2026-07) — 환경설정 진입 + 최근 본 영상 그리드 */
     .mp-settings-gear{flex:0 0 auto;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;
@@ -442,6 +444,7 @@
 
     <div class="mypage-tabs" id="mypageTabs" style="display:none;">
       <button class="mypage-tab" data-mtab="profile">내 프로필</button>
+      <button class="mypage-tab" data-mtab="people" id="mpPeopleTab" hidden>구하는 사람</button>   <!-- 2026-10 ①-3: 역할이 '방 올려요'일 때만(koaus-role.js) -->
       <button class="mypage-tab active" data-mtab="mine">내가 쓴 글</button>
       <button class="mypage-tab" data-mtab="saved">저장한 글</button>
       <button class="mypage-tab" data-mtab="recent">최근 본 글</button>
@@ -451,6 +454,8 @@
     <div class="mypage-list" id="mypageList" style="display:none;"></div>
     <!-- 2026-10 2단계: '내 프로필' 탭 패널 — koaus-seeker-profile.js 가 koaus:mypage-profile 이벤트로 렌더 -->
     <div class="mypage-list" id="mpProfilePanel" style="display:none;"></div>
+    <!-- 2026-10 ①-3: '구하는 사람' 탭 패널(탭바 '프로필') — koaus-seekers-nearby.js mountPage. 역할 '방 올려요'만 -->
+    <div class="mypage-list" id="mpPeoplePanel" style="display:none;"></div>
 
   </main>
 
@@ -942,9 +947,24 @@
       // 2026-10: '내 프로필' 탭은 별도 패널(koaus-seeker-profile.js) — 목록 숨기고 모듈에 위임
       const el = document.getElementById('mypageList');
       const pp = document.getElementById('mpProfilePanel');
+      const pe = document.getElementById('mpPeoplePanel');
+      if (pe) pe.style.display = 'none';
       if (mtab === 'profile') {
         el.style.display = 'none';
         if (pp) { pp.style.display = ''; document.dispatchEvent(new CustomEvent('koaus:mypage-profile', { detail: { panel: pp } })); }
+        return;
+      }
+      if (mtab === 'people') {
+        // 2026-10 ①-3: 근처에서 집 구하는 사람(공개 카드) — 역할 '방 올려요'만, 아니면 안내
+        el.style.display = 'none'; if (pp) pp.style.display = 'none';
+        if (pe) {
+          pe.style.display = '';
+          if (!window.koausRole || !window.koausRole.ready()) { pe.innerHTML = '<div class="post-empty">불러오는 중…</div>'; return; }
+          const r = window.koausRole.get() || {};
+          if (r.living !== 'owner') pe.innerHTML = '<div class="post-empty">방을 올리는 분에게 보이는 탭입니다. "내 프로필" 탭에서 Living 역할을 "방 올려요"로 바꾸면 근처에서 집 구하는 분들을 볼 수 있습니다.</div>';
+          else if (window.koausSeekersNearby && window.koausSeekersNearby.mountPage) window.koausSeekersNearby.mountPage(pe);
+          else pe.innerHTML = '<div class="post-empty">불러오는 중…</div>';
+        }
         return;
       }
       el.style.display = '';
@@ -1096,6 +1116,8 @@
     })();
 
     document.getElementById('mypageLoginBtn').addEventListener('click', openAuthModal);
+    // 2026-10 ①-3: 역할이 늦게 확정되면(모듈 비동기) '구하는 사람' 탭을 다시 그림
+    document.addEventListener('koaus:roles-changed', () => { if (mtab === 'people') renderList(); });
 
     const tlb = document.getElementById('topbarLoginBtn');
     if (tlb) tlb.addEventListener('click', () => { if (!window.koausAuth.user) openAuthModal(); });
@@ -1169,6 +1191,7 @@
         _fsMine = []; _fsMineLoaded = true; saveFsMineCache('');   // 로그아웃 — 타 계정 글 노출 방지
         loginReq.style.display = ''; prof.style.display = 'none'; tabs.style.display = 'none'; list.style.display = 'none';
         try { const pp = document.getElementById('mpProfilePanel'); if (pp) { pp.style.display = 'none'; pp.innerHTML = ''; } } catch (_) {}
+        try { const pe = document.getElementById('mpPeoplePanel'); if (pe) { pe.style.display = 'none'; pe.innerHTML = ''; } } catch (_) {}
         if (tlb) tlb.textContent = '로그인';
       }
     });

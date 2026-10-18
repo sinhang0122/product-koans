@@ -578,7 +578,8 @@ service cloud.firestore {
                        && (!('introLiving' in request.resource.data)
                            || (request.resource.data.introLiving is string && request.resource.data.introLiving.size() <= 700))
                        && (!('introWork' in request.resource.data)
-                           || (request.resource.data.introWork is string && request.resource.data.introWork.size() <= 700));
+                           || (request.resource.data.introWork is string && request.resource.data.introWork.size() <= 700))
+                       && validUserRoles();
       allow update: if isAdmin()
                        || ( isSignedIn()
                             && request.auth.uid == uid
@@ -602,8 +603,19 @@ service cloud.firestore {
                                 || (request.resource.data.introLiving is string && request.resource.data.introLiving.size() <= 700))
                             && (!('introWork' in request.resource.data)
                                 || (request.resource.data.introWork is string && request.resource.data.introWork.size() <= 700))
+                            && validUserRoles()
                           );
       allow delete: if isAdmin() || (isSignedIn() && request.auth.uid == uid);
+    }
+    // Living/Job 역할(2026-10 ①-2): users.roles = { living: 'seeker'|'owner', job: 'seeker'|'employer' } — 둘 다 선택,
+    //   rolesAskedAt 은 "물어봤음" 표시(건너뛰기 포함). 입구에서 막지 않고 로그인 뒤 Living/Job 첫 진입 때 한 번 묻는다.
+    function validUserRoles() {
+      let d = request.resource.data;
+      return (!('roles' in d) || (d.roles is map
+                                  && d.roles.keys().hasOnly(['living', 'job'])
+                                  && (!('living' in d.roles) || d.roles.living in ['seeker', 'owner'])
+                                  && (!('job' in d.roles) || d.roles.job in ['seeker', 'employer'])))
+        && (!('rolesAskedAt' in d) || d.rolesAskedAt is timestamp);
     }
 
     // ── 닉네임 색인(중복 방지 + 아이디 찾기) ──
@@ -1014,7 +1026,10 @@ service cloud.firestore {
     //   · 공개 카드 = 집주인(글 올린 사람)이 "근처 구하는 사람 보기"에서 보는 것 — visible==true 인 프로필만.
     //     list 쿼리: where('states','array-contains', 주) + where('visible','==',true) + orderBy('lastActiveAt','desc') + limit(≤20)
     //     (복합 인덱스 seeker_profiles: states CONTAINS + visible + lastActiveAt DESC). 거리 필터는 클라이언트(동네 중심 좌표).
-    //   · 비공개: 이메일·알림 설정은 doc 에 있지만 카드엔 안 그림(클라). 정확 주소 없음 — 동네 중심 좌표만.
+    //   · 공개/비공개 분리(10-18 사용자 확정 "조건만 공개, 상세는 비공개"): 이 문서(seeker_profiles)에는 카드에
+    //     보이는 것만 — 닉네임(nick, 사이트 닉네임 스냅샷·실명 없음)·성별·연령대·동네·예산·입주·기간·방 형태·활동 시각.
+    //     소개글·체류 자격·흡연·반려동물·알림 이메일은 seeker_private/{uid}(본인만 read) — Firestore 는 칸 단위
+    //     숨김이 안 되므로 문서를 쪼갠다. 정확 주소 없음 — 동네 중심 좌표만.
     //   · lastActiveAt == request.time 강제(모든 본인 쓰기) → 30일 무활동 일시정지 함수 기준.
     //     pausedAt 은 함수(Admin SDK)만 세팅, 본인은 지우기(deleteField)만 가능 — "다시 켜기".
     //   · intro 에 연락처 유도 차단: 6자리 이상 연속 숫자·URL 거부(채팅으로만 연락).
@@ -1031,8 +1046,8 @@ service cloud.firestore {
       let d = data();
       return d.keys().hasOnly([
                'suburbs', 'states', 'budgetMin', 'budgetMax', 'moveIn', 'stay',
-               'roomTypes', 'bathroom', 'firstName', 'ageBand', 'gender', 'residency', 'smoker', 'pet',
-               'intro', 'visible', 'alerts', 'status', 'step', 'lastActiveAt', 'createdAt', 'updatedAt', 'pausedAt'
+               'roomTypes', 'bathroom', 'nick', 'ageBand', 'gender',
+               'visible', 'status', 'step', 'lastActiveAt', 'createdAt', 'updatedAt', 'pausedAt'
              ])
         && d.suburbs is list && d.suburbs.size() >= 1 && d.suburbs.size() <= 3
         && validSuburb(d.suburbs[0])
@@ -1047,20 +1062,11 @@ service cloud.firestore {
         && pOptList(d, 'roomTypes', 5)
         && (!('roomTypes' in d) || d.roomTypes.hasOnly(['master', 'second', 'single', 'living_share', 'sunroom']))
         && (!('bathroom' in d) || d.bathroom in ['any', 'private'])
-        && pReqStr(d, 'firstName', 1, 20)
+        && pReqStr(d, 'nick', 1, 30)
+        && !d.nick.matches('(?s).*([0-9][ .-]?){6,}.*')
         && (!('ageBand' in d) || d.ageBand in ['20e', '20m', '20l', '30e', '30l', '40p'])
         && (!('gender' in d) || d.gender in ['female', 'male'])
-        && (!('residency' in d) || d.residency in ['whv', 'student', 'worker', 'pr', 'other'])
-        && pOptBool(d, 'smoker') && pOptBool(d, 'pet')
-        && pOptStr(d, 'intro', 300)
-        && (!('intro' in d) || !d.intro.matches('(?s).*([0-9][ .-]?){6,}.*'))
-        && (!('intro' in d) || !d.intro.matches('(?s).*(https?://|www[.]|[.]com|[.]au|[.]kr).*'))
         && d.visible is bool
-        && (!('alerts' in d) || (d.alerts is map
-                                 && d.alerts.keys().hasOnly(['enabled', 'mode', 'email'])
-                                 && pOptBool(d.alerts, 'enabled')
-                                 && (!('mode' in d.alerts) || d.alerts.mode in ['instant', 'threshold5', 'daily', 'off'])
-                                 && pOptStr(d.alerts, 'email', 120)))
         && (!('status' in d) || d.status in ['looking', 'found'])
         && pOptInt(d, 'step', 0, 9)
         && d.lastActiveAt == request.time
@@ -1078,6 +1084,29 @@ service cloud.firestore {
                        && data().createdAt == resource.data.createdAt
                        // pausedAt 은 함수만 세팅 — 본인은 그대로 두거나(유지) 지우기(deleteField = 다시 켜기)만
                        && (!('pausedAt' in data()) || data().pausedAt == resource.data.get('pausedAt', null));
+      allow delete: if isAdmin() || (isSignedIn() && request.auth.uid == uid);
+    }
+    // ── 집 구해요 비공개 칸(seeker_private) — 본인만. 카드에는 안 나가고, 나중에 채팅에서 본인이 보내거나
+    //    알림 함수(Admin SDK)가 읽는다. intro 연락처·URL 차단은 그대로.
+    function validSeekerPrivate() {
+      let d = data();
+      return d.keys().hasOnly(['residency', 'smoker', 'pet', 'intro', 'alerts', 'updatedAt'])
+        && (!('residency' in d) || d.residency in ['whv', 'student', 'worker', 'pr', 'other'])
+        && pOptBool(d, 'smoker') && pOptBool(d, 'pet')
+        && pOptStr(d, 'intro', 300)
+        && (!('intro' in d) || !d.intro.matches('(?s).*([0-9][ .-]?){6,}.*'))
+        && (!('intro' in d) || !d.intro.matches('(?s).*(https?://|www[.]|[.]com|[.]au|[.]kr).*'))
+        && (!('alerts' in d) || (d.alerts is map
+                                 && d.alerts.keys().hasOnly(['enabled', 'mode', 'email'])
+                                 && pOptBool(d.alerts, 'enabled')
+                                 && (!('mode' in d.alerts) || d.alerts.mode in ['instant', 'threshold5', 'daily', 'off'])
+                                 && pOptStr(d.alerts, 'email', 120)))
+        && d.updatedAt == request.time;
+    }
+    match /seeker_private/{uid} {
+      allow get:  if isSignedIn() && (request.auth.uid == uid || isAdmin());
+      allow list: if isAdmin() && limitedList();
+      allow create, update: if isVerifiedUser() && notSuspended() && request.auth.uid == uid && validSeekerPrivate();
       allow delete: if isAdmin() || (isSignedIn() && request.auth.uid == uid);
     }
 

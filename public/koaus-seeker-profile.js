@@ -4,7 +4,11 @@
 //  - 흐름: 탭 열림(koaus:mypage-profile) → seeker_profiles/{uid} 1회 getDoc → 카드 렌더
 //          → '만들기/수정' → 7단계 모달(한 화면 한 질문, 단계마다 기기 로컬 임시저장)
 //          → 마지막 단계 '저장' 에서 setDoc 1회 (rules: 본인·hasOnly·길이캡·연락처 패턴 차단)
-//  - 사진 없음(사용자 확정 — 얼굴이 선택에 영향 주면 안 됨). 카드 아바타 = 이름 첫 글자.
+//  - 사진 없음(사용자 확정 — 얼굴이 선택에 영향 주면 안 됨). 실명 없음 — 사이트 닉네임 스냅샷(nick). 카드 아바타 = 닉네임 첫 글자.
+//  - 공개/비공개 분리(10-18): seeker_profiles/{uid} = 카드에 보이는 조건+닉네임·성별·연령대(집주인이 읽음),
+//    seeker_private/{uid} = 소개글·체류·흡연·반려동물·알림 이메일(본인만). 저장은 writeBatch 로 두 문서 한 번에.
+//    옛 단일 문서(firstName·intro·alerts 가 공개 문서에 있던 10-18 이전 저장분)는 본인이 탭을 열 때 자동으로 옮긴다.
+//  - 짧은 등록(quick, ①-2 역할 선택 뒤): 동네·예산·입주/기간 3단계만 묻고 저장, 단계마다 '건너뛰기'(나중에 마이페이지에서).
 //  - 동네 입력: Google Geocoding REST(동네 단위, 호주 한정) — Maps JS 미로드(마이페이지 경량 유지).
 //    저장은 동네 중심 좌표만(정확 주소 없음). 최대 3곳.
 //  - 공개 토글 / 상태(구하는 중·구했습니다) / 30일 일시정지 '다시 켜기' 는 카드에서 바로 updateDoc.
@@ -13,7 +17,7 @@
 // ════════════════════════════════════════════════════════════════════
 import './koaus-appcheck-init.js';
 import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
-import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteField, serverTimestamp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
+import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteField, serverTimestamp, writeBatch } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
 import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
 
 (function () {
@@ -33,9 +37,12 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
   const DRAFT_KEY = 'koaus-seeker-draft-v1';
   const MAX_SUBURBS = 3;
   const TOTAL_STEPS = 7;
+  const QUICK_STEPS = 3;                 // 짧은 등록: 동네 · 예산 · 입주/기간
+  const LEGACY_KEYS = ['firstName', 'residency', 'smoker', 'pet', 'intro', 'alerts'];   // 10-18 이전 공개 문서에 있던 비공개 칸
 
   let db = null, me = null;
-  let profile = null;        // seeker_profiles/{uid} 데이터 (null = 없음)
+  let profile = null;        // seeker_profiles/{uid} 데이터 (null = 없음) — 공개 칸
+  let priv = null;           // seeker_private/{uid} 데이터 (null = 없음) — 본인만
   let loadedFor = null;      // profile 을 읽어온 uid
   let panelEl = null;
 
@@ -44,7 +51,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     db = getFirestore(app);
     onAuthStateChanged(getAuth(app), u => {
       me = u;
-      if (!u) { profile = null; loadedFor = null; }
+      if (!u) { profile = null; priv = null; loadedFor = null; }
       if (panelEl && isPanelVisible()) refreshPanel();
     });
   } catch (e) { try { console.warn('[seeker-profile] init 실패:', e); } catch (_) {} }
@@ -105,7 +112,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       .ksp-chips{display:flex;flex-wrap:wrap;gap:8px}
       .ksp-opt{appearance:none;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);border-radius:999px;padding:8px 14px;font-size:14px;cursor:pointer;font-family:inherit}
       .ksp-opt[aria-pressed="true"]{background:var(--accent);color:var(--accent-text);border-color:var(--accent)}
-      .ksp-mfoot{display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--border)}
+      .ksp-mfoot{display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--border)}.ksp-mfoot .ksp-btn{flex:1 1 0}.ksp-mfoot .ksp-btn[data-ksp-nav=skip]{flex:0 0 auto}
       .ksp-mfoot .ksp-btn{flex:1}
       .ksp-sug{list-style:none;margin:0;padding:0;border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;display:none}
       .ksp-sug.show{display:block}
@@ -124,18 +131,59 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
   }
 
   // ── 데이터 읽기 ──
+  // 닉네임 스냅샷 — LS(koaus-nickname, app.js 가 로그인 시 users.nickname 과 동기화) → users/{uid}.nickname → displayName
+  async function getNick() {
+    let n = '';
+    try { n = (localStorage.getItem('koaus-nickname') || '').trim(); } catch (_) {}
+    if (!n && me && db) {
+      try { const u = await getDoc(doc(db, 'users', me.uid)); n = ((u.exists() && u.data().nickname) || '').trim(); } catch (_) {}
+    }
+    if (!n && me) n = (me.displayName || (me.email || '').split('@')[0] || '').trim();
+    return n.slice(0, 30);
+  }
+
   async function loadProfile(force) {
-    if (!me || !db) { profile = null; loadedFor = null; return null; }
+    if (!me || !db) { profile = null; priv = null; loadedFor = null; return null; }
     if (!force && loadedFor === me.uid) return profile;
     try {
-      const snap = await getDoc(doc(db, 'seeker_profiles', me.uid));
+      const [snap, psnap] = await Promise.all([getDoc(doc(db, 'seeker_profiles', me.uid)), getDoc(doc(db, 'seeker_private', me.uid))]);
       profile = snap.exists() ? snap.data() : null;
+      priv = psnap.exists() ? psnap.data() : null;
       loadedFor = me.uid;
+      await migrateLegacy();
     } catch (e) {
       console.warn('[seeker-profile] 조회 실패', e);
-      profile = null; loadedFor = null;
+      profile = null; priv = null; loadedFor = null;
     }
     return profile;
+  }
+
+  // 10-18 이전 단일 문서 → 공개/비공개 두 문서로 옮기기 (본인이 '내 프로필'을 열 때 1회, 조용히)
+  //   순서: 비공개 문서 먼저 쓰고(유실 방지) → 공개 문서에서 옛 칸 제거 + nick 추가. 실패해도 다음 방문에 재시도.
+  async function migrateLegacy() {
+    if (!profile || !me || !db) return;
+    const hasLegacy = LEGACY_KEYS.some(k => k in profile) || !profile.nick;
+    if (!hasLegacy) return;
+    try {
+      const nick = await getNick();
+      const pv = {};
+      if (profile.residency) pv.residency = profile.residency;
+      if (typeof profile.smoker === 'boolean') pv.smoker = profile.smoker;
+      if (typeof profile.pet === 'boolean') pv.pet = profile.pet;
+      if (profile.intro) pv.intro = String(profile.intro).slice(0, 300);
+      if (profile.alerts && typeof profile.alerts === 'object') pv.alerts = profile.alerts;
+      else if (!priv || !priv.alerts) pv.alerts = { enabled: true, mode: 'threshold5', email: (me.email || '').slice(0, 120) };
+      if (Object.keys(pv).length) {
+        pv.updatedAt = serverTimestamp();
+        await setDoc(doc(db, 'seeker_private', me.uid), pv, { merge: true });
+      }
+      const pub = { nick: nick || '회원', lastActiveAt: serverTimestamp(), updatedAt: serverTimestamp() };
+      LEGACY_KEYS.forEach(k => { if (k in profile) pub[k] = deleteField(); });
+      await updateDoc(doc(db, 'seeker_profiles', me.uid), pub);
+      const [snap, psnap] = await Promise.all([getDoc(doc(db, 'seeker_profiles', me.uid)), getDoc(doc(db, 'seeker_private', me.uid))]);
+      profile = snap.exists() ? snap.data() : null;
+      priv = psnap.exists() ? psnap.data() : null;
+    } catch (e) { console.warn('[seeker-profile] 공개/비공개 분리 이전 실패(다음에 재시도)', e); }
   }
 
   // 탭 진입 시 하루 1회 lastActiveAt 갱신(30일 일시정지 기준) — 조용히, 실패해도 무시
@@ -167,7 +215,8 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     if (loadedFor !== me.uid) panelEl.innerHTML = '<div class="post-empty">불러오는 중…</div>';
     await loadProfile(false);
     if (!panelEl) return;
-    panelEl.innerHTML = renderSeekerCard(profile);
+    panelEl.innerHTML = '<div id="kspRoles"></div>' + renderSeekerCard(profile);
+    try { if (window.koausRole && window.koausRole.renderSwitcher) window.koausRole.renderSwitcher(document.getElementById('kspRoles')); } catch (_) {}
     wireCard();
     touchActive();
   }
@@ -185,13 +234,15 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     const found = p.status === 'found';
     const vis = p.visible === true;
     const en = E();
-    const initial = (String(p.firstName || '?').trim()[0] || '?').toUpperCase();
+    const initial = (String(p.nick || '?').trim()[0] || '?').toUpperCase();
     const subs = (p.suburbs || []).map(suburbLabel).join(' · ');
     const budget = (p.budgetMin != null || p.budgetMax != null) ? ('주 $' + (p.budgetMin != null ? p.budgetMin : '') + (p.budgetMax != null ? ' ~ $' + p.budgetMax : '')) : '—';
     const stayL = en.label('stays', p.stay);
     const rooms = (p.roomTypes || []).map(c => en.label('roomTypes', c)).filter(Boolean).join(', ');
-    const alertMode = (p.alerts && p.alerts.mode) || 'off';
+    const al = (priv && priv.alerts) || null;
+    const alertMode = (al && al.mode) || 'off';
     const alertL = { instant: '새 매물마다', threshold5: '5건 이상 모이면', daily: '하루 한 번', off: '받지 않음' }[alertMode] || '받지 않음';
+    const who = [esc(p.nick || ''), p.gender ? esc(en.label('genders', p.gender)) : '', p.ageBand ? esc(en.label('ageBands', p.ageBand)) : ''].filter(Boolean).join(' · ');
     return `
       <div class="ksp-card" data-ksp-card="seeker">
         <div class="ksp-card-head">
@@ -199,6 +250,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
             <div class="ksp-avatar">${esc(initial)}</div>
             <div>
               <div class="ksp-title">집 구해요 프로필</div>
+              <div class="ksp-sub" style="margin:2px 0 0;">${who}</div>
               <div class="ksp-row" style="margin-top:4px;">
                 <span class="ksp-chip ${found ? '' : 'on'}">${found ? '구했습니다' : '구하는 중'}</span>
                 <span class="ksp-chip ${vis && !paused ? 'on' : ''}">${paused ? '일시정지' : (vis ? '공개 중' : '비공개')}</span>
@@ -213,8 +265,9 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
           <dt>예산</dt><dd>${esc(budget)}</dd>
           <dt>입주</dt><dd>${esc(p.moveIn || '—')}${stayL ? ' · ' + esc(stayL) : ''}</dd>
           <dt>방</dt><dd>${esc(rooms || '상관없음')}${p.bathroom === 'private' ? ' · 개인 욕실' : ''}</dd>
-          <dt>알림</dt><dd>${esc(alertL)}${p.alerts && p.alerts.email ? ' · ' + esc(p.alerts.email) : ''}</dd>
+          <dt>알림</dt><dd>${esc(alertL)}${al && al.email ? ' · ' + esc(al.email) : ''}</dd>
         </dl>
+        <div class="ksp-help" style="margin-top:-4px;">집주인에게는 닉네임·성별·나이대와 위 조건만 보입니다. 소개글·신분·흡연·반려동물·이메일은 본인만 봅니다.</div>
         <div class="ksp-row" style="justify-content:space-between;">
           <label class="ksp-switch"><input type="checkbox" data-ksp="visible" ${vis && !paused ? 'checked' : ''} ${found ? 'disabled' : ''}> 근처 집주인에게 공개</label>
           <div class="ksp-actions">
@@ -225,6 +278,13 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       </div>`;
   }
 
+  function rerenderCard() {
+    if (!panelEl) return;
+    const old = $('[data-ksp-card="seeker"]', panelEl);
+    if (old) { old.outerHTML = renderSeekerCard(profile); }
+    else { panelEl.insertAdjacentHTML('beforeend', renderSeekerCard(profile)); }
+    wireCard();
+  }
   function wireCard() {
     const card = $('[data-ksp-card="seeker"]', panelEl);
     if (!card) return;
@@ -253,8 +313,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     try {
       await updateDoc(doc(db, 'seeker_profiles', me.uid), Object.assign({ lastActiveAt: serverTimestamp(), updatedAt: serverTimestamp() }, fields));
       await loadProfile(true);
-      panelEl.innerHTML = renderSeekerCard(profile);
-      wireCard();
+      rerenderCard();
       if (okMsg) toast(okMsg);
       return true;
     } catch (e) {
@@ -265,13 +324,14 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
   }
 
   // ── 작성 모달 ──
-  let ovl = null, draft = null, step = 1, editing = false;
+  let ovl = null, draft = null, step = 1, editing = false, quick = false;
+  const totalSteps = () => (quick ? QUICK_STEPS : TOTAL_STEPS);
 
   function blankDraft() {
     return {
       suburbs: [], budgetMin: '', budgetMax: '', moveIn: todayStr(), stay: '',
       roomTypes: [], bathroom: 'any',
-      firstName: '', ageBand: '', gender: '', residency: '', smoker: null, pet: null,
+      nick: '', ageBand: '', gender: '', residency: '', smoker: null, pet: null,
       intro: '', visible: true, alertMode: 'threshold5', alertEmail: (me && me.email) || '',
     };
   }
@@ -282,17 +342,18 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     d.budgetMax = p.budgetMax != null ? String(p.budgetMax) : '';
     d.moveIn = p.moveIn || todayStr(); d.stay = p.stay || '';
     d.roomTypes = (p.roomTypes || []).slice(); d.bathroom = p.bathroom || 'any';
-    d.firstName = p.firstName || ''; d.ageBand = p.ageBand || ''; d.gender = p.gender || ''; d.residency = p.residency || '';
-    d.smoker = typeof p.smoker === 'boolean' ? p.smoker : null; d.pet = typeof p.pet === 'boolean' ? p.pet : null;
-    d.intro = p.intro || ''; d.visible = p.visible !== false;
-    d.alertMode = (p.alerts && p.alerts.mode) || 'threshold5';
-    d.alertEmail = (p.alerts && p.alerts.email) || (me && me.email) || '';
+    const q = priv || {};
+    d.nick = p.nick || ''; d.ageBand = p.ageBand || ''; d.gender = p.gender || ''; d.residency = q.residency || '';
+    d.smoker = typeof q.smoker === 'boolean' ? q.smoker : null; d.pet = typeof q.pet === 'boolean' ? q.pet : null;
+    d.intro = q.intro || ''; d.visible = p.visible !== false;
+    d.alertMode = (q.alerts && q.alerts.mode) || 'threshold5';
+    d.alertEmail = (q.alerts && q.alerts.email) || (me && me.email) || '';
     return d;
   }
   function loadDraft() {
     try {
       const raw = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null');
-      if (raw && raw.uid === (me && me.uid) && raw.draft) return { draft: Object.assign(blankDraft(), raw.draft), step: Math.min(Math.max(1, raw.step || 1), TOTAL_STEPS) };
+      if (raw && raw.uid === (me && me.uid) && raw.draft) return { draft: Object.assign(blankDraft(), raw.draft), step: Math.min(Math.max(1, raw.step || 1), totalSteps()) };
     } catch (_) {}
     return null;
   }
@@ -320,30 +381,35 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       const nav = e.target.closest('[data-ksp-nav]');
       if (!nav) { if (e.target === ovl) closeModal(); return; }
       if (nav.dataset.kspNav === 'close') closeModal();
+      if (nav.dataset.kspNav === 'skip') { closeModal(); toast('나중에 마이페이지 → 내 프로필에서 이어서 등록할 수 있습니다.'); }
       if (nav.dataset.kspNav === 'back') { if (step > 1) { collect(); step--; renderStep(); } else closeModal(); }
     });
     document.addEventListener('keydown', e => { if (e.key === 'Escape' && ovl.classList.contains('open')) closeModal(); });
   }
 
-  function openModal(existing) {
+  function openModal(existing, opts) {
     if (!me) { if (window.koausAuth && window.koausAuth.openAuthModal) window.koausAuth.openAuthModal(); return; }
     // 글쓰기와 같은 본인 확인 게이트(휴대폰 인증) — 통과 못 하면 인증 모달이 뜨고, 인증 후 다시 열림
-    if (window.koausRequireCanPost && !window.koausRequireCanPost(me, window.koausAuth && window.koausAuth.openAuthModal, () => openModal(existing))) return;
+    if (window.koausRequireCanPost && !window.koausRequireCanPost(me, window.koausAuth && window.koausAuth.openAuthModal, () => openModal(existing, opts))) return;
+    if (!E()) { toast('잠시 후 다시 시도해 주십시오.'); return; }
     mountModal();
     editing = !!existing;
+    quick = !!(opts && opts.quick) && !existing;
     if (existing) { draft = fromProfile(existing); step = 1; }
     else {
       const saved = loadDraft();
       draft = saved ? saved.draft : blankDraft();
-      step = saved ? saved.step : 1;
+      step = saved ? Math.min(saved.step, totalSteps()) : 1;
     }
+    ovl.classList.toggle('quick', quick);
     ovl.classList.add('open');
     document.body.style.overflow = 'hidden';
     renderStep();
+    if (!draft.nick) getNick().then(n => { if (draft) draft.nick = n; });
   }
   function closeModal() {
     if (!ovl) return;
-    if (step <= TOTAL_STEPS && !editing) { try { collect(); } catch (_) {} saveDraft(); }
+    if (step <= totalSteps() && !editing) { try { collect(); } catch (_) {} saveDraft(); }
     ovl.classList.remove('open');
     document.body.style.overflow = '';
   }
@@ -356,7 +422,6 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     switch (step) {
       case 2: draft.budgetMin = v('kspBudgetMin') || ''; draft.budgetMax = v('kspBudgetMax') || ''; break;
       case 3: draft.moveIn = v('kspMoveIn') || draft.moveIn; break;
-      case 5: draft.firstName = (v('kspFirstName') || '').trim(); break;
       case 6: draft.intro = (v('kspIntro') || '').trim(); break;
       case 7: draft.alertEmail = (v('kspAlertEmail') || '').trim(); break;
     }
@@ -369,9 +434,10 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
   function renderStep() {
     const en = E();
     const body = $('#kspBody', ovl), foot = $('#kspFoot', ovl);
-    $('#kspStepLabel', ovl).textContent = step <= TOTAL_STEPS ? (step + ' / ' + TOTAL_STEPS) : '';
-    $('#kspProg', ovl).style.width = Math.min(100, Math.round((step - 1) / TOTAL_STEPS * 100)) + '%';
-    $('[data-ksp-nav="back"]', ovl).style.visibility = step > 1 && step <= TOTAL_STEPS ? 'visible' : 'hidden';
+    const TS = totalSteps();
+    $('#kspStepLabel', ovl).textContent = step <= TS ? (step + ' / ' + TS + (quick ? ' · 짧은 등록' : '')) : '';
+    $('#kspProg', ovl).style.width = Math.min(100, Math.round((step - 1) / TS * 100)) + '%';
+    $('[data-ksp-nav="back"]', ovl).style.visibility = step > 1 && step <= TS ? 'visible' : 'hidden';
     let html = '', next = '다음';
     switch (step) {
       case 1:
@@ -408,6 +474,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
           <div class="ksp-label">거주 기간 <span class="req">(필수)</span></div>
           ${chipsHtml('stay', en.stays, draft.stay, false)}
           <div class="ksp-err" id="kspErr3"></div>`;
+        if (quick) next = '등록';
         break;
       case 4:
         html = `
@@ -421,25 +488,23 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       case 5:
         html = `
           <div class="ksp-q">본인에 대해 알려 주십시오.</div>
-          <div class="ksp-help">이름은 성을 빼고 적어 주십시오. 성별은 "여성만" 방을 올린 집주인의 필터에만 쓰이고, 나머지는 집주인이 조건을 보는 데 씁니다.</div>
-          <div class="ksp-label">이름 <span class="req">(필수)</span></div>
-          <input class="ksp-input" id="kspFirstName" type="text" maxlength="20" placeholder="예: 신행" value="${esc(draft.firstName)}">
+          <div class="ksp-help">집주인에게는 닉네임 <b>${esc(draft.nick || '')}</b>과 나이대·성별만 보입니다(실명·사진 없음). 아래 신분·흡연·반려동물은 본인만 보는 칸이라 적어 두면 나중에 채팅에서 보낼 때 씁니다.</div>
           <div class="ksp-label">나이대 <span class="req">(선택)</span></div>
           ${chipsHtml('ageBand', en.ageBands, draft.ageBand, false)}
           <div class="ksp-label">성별 <span class="req">(선택)</span></div>
           ${chipsHtml('gender', en.genders, draft.gender, false)}
-          <div class="ksp-label">신분 <span class="req">(선택)</span></div>
+          <div class="ksp-label">신분 <span class="req">(선택 · 본인만)</span></div>
           ${chipsHtml('residency', en.statuses, draft.residency, false)}
-          <div class="ksp-label">흡연 <span class="req">(선택)</span></div>
+          <div class="ksp-label">흡연 <span class="req">(선택 · 본인만)</span></div>
           ${boolChips('smoker', draft.smoker)}
-          <div class="ksp-label">반려동물 <span class="req">(선택)</span></div>
+          <div class="ksp-label">반려동물 <span class="req">(선택 · 본인만)</span></div>
           ${boolChips('pet', draft.pet)}
           <div class="ksp-err" id="kspErr5"></div>`;
         break;
       case 6:
         html = `
-          <div class="ksp-q">집주인에게 한마디 남기시겠습니까?</div>
-          <div class="ksp-help">생활 습관, 일하는 시간, 왜 이 동네인지 같은 내용이 도움이 됩니다. 전화번호·카톡 아이디·링크는 넣을 수 없습니다. 연락은 채팅으로 옵니다.</div>
+          <div class="ksp-q">나를 소개하는 글을 적어 두시겠습니까?</div>
+          <div class="ksp-help">카드에는 보이지 않고 본인만 봅니다. 집주인과 채팅이 시작되면 이 글을 보낼 수 있습니다. 생활 습관, 일하는 시간, 왜 이 동네인지 같은 내용이 도움이 됩니다. 전화번호·카톡 아이디·링크는 넣을 수 없습니다. 연락은 채팅으로 옵니다.</div>
           <div class="ksp-label">자기소개 <span class="req">(선택, 300자)</span></div>
           <textarea class="ksp-textarea" id="kspIntro" maxlength="300" placeholder="예: 평일 낮에 일하고 집에서는 조용히 지냅니다. 요리는 가끔 합니다.">${esc(draft.intro)}</textarea>
           <div class="ksp-err" id="kspErr6"></div>`;
@@ -453,7 +518,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
           ${chipsHtml('alertMode', [{ code: 'instant', label: '새 매물마다' }, { code: 'threshold5', label: '5건 이상 모이면' }, { code: 'daily', label: '하루 한 번' }, { code: 'off', label: '받지 않음' }], draft.alertMode, false)}
           <div class="ksp-label">알림 받을 이메일 <span class="req">(필수)</span></div>
           <input class="ksp-input" id="kspAlertEmail" type="email" maxlength="120" value="${esc(draft.alertEmail)}" placeholder="로그인 이메일">
-          <div class="ksp-help">로그인 이메일이 기본입니다. 자주 쓰는 다른 주소로 바꿀 수 있습니다.</div>
+          <div class="ksp-help">로그인 이메일이 기본입니다. 자주 쓰는 다른 주소로 바꿀 수 있습니다. 이메일은 집주인에게 보이지 않습니다.</div>
           <div class="ksp-err" id="kspErr7"></div>`;
         next = editing ? '저장' : '완료';
         break;
@@ -461,7 +526,8 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
         const st = draft.suburbs[0] && draft.suburbs[0].state;
         html = `
           <div class="ksp-done">
-            <div class="ksp-q">${editing ? '저장했습니다.' : '프로필을 만들었습니다.'}</div>
+            <div class="ksp-q">${editing ? '저장했습니다.' : (quick ? '조건을 등록했습니다.' : '프로필을 만들었습니다.')}</div>
+            ${quick ? '<div class="ksp-help">방 종류·나이대·성별·알림 설정은 마이페이지 → 내 프로필에서 언제든 채울 수 있습니다. 새 매물 알림은 로그인 이메일로, 5건 이상 모이면 보냅니다.</div>' : ''}
             <div class="ksp-help">${draft.visible ? '희망 동네 근처에 방을 올린 집주인에게 지금부터 내 조건이 보입니다.' : '비공개로 저장했습니다. 알림 메일만 받습니다.'} 연락이 오면 채팅 탭에 표시됩니다.</div>
             <a class="ksp-btn primary" href="accom.html${st ? '?state=' + esc(st) : ''}">조건에 맞는 방 보러 가기</a>
           </div>`;
@@ -469,7 +535,9 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       }
     }
     body.innerHTML = html;
-    foot.innerHTML = next ? `<button type="button" class="ksp-btn primary" id="kspNext">${next}</button>` : `<button type="button" class="ksp-btn" data-ksp-nav="close">닫기</button>`;
+    foot.innerHTML = next
+      ? ((quick && !editing ? '<button type="button" class="ksp-btn" data-ksp-nav="skip">건너뛰기</button>' : '') + `<button type="button" class="ksp-btn primary" id="kspNext">${next}</button>`)
+      : `<button type="button" class="ksp-btn" data-ksp-nav="close">닫기</button>`;
     wireStep();
     const first = body.querySelector('input:not([type=checkbox]),textarea');
     if (first && step !== 3) { try { first.focus({ preventScroll: true }); } catch (_) {} }
@@ -587,10 +655,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
         if (!/^\d{4}-\d{2}-\d{2}$/.test(draft.moveIn)) return set('입주 희망일을 골라 주십시오.');
         if (!draft.stay) return set('거주 기간을 골라 주십시오.');
         return set('');
-      case 5:
-        if (!draft.firstName || draft.firstName.length > 20) return set('이름을 적어 주십시오. (20자 이내)');
-        if (CONTACT_RE.test(draft.firstName)) return set('이름에는 연락처를 넣을 수 없습니다.');
-        return set('');
+      case 5: return set('');
       case 6:
         if (draft.intro.length > 300) return set('300자 이내로 적어 주십시오.');
         if (CONTACT_RE.test(draft.intro)) return set('전화번호·카톡 아이디·링크는 넣을 수 없습니다. 연락은 채팅으로 옵니다.');
@@ -607,11 +672,11 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     collect();
     if (step === 7) { const vis = $('#kspVisible', ovl); draft.visible = !!(vis && vis.checked); }
     if (!validate()) return;
-    if (step < TOTAL_STEPS) { step++; if (!editing) saveDraft(); renderStep(); return; }
+    if (step < totalSteps()) { step++; if (!editing) saveDraft(); renderStep(); return; }
     await save();
   }
 
-  function buildDoc() {
+  function buildDocs(nick) {
     const d = {
       suburbs: draft.suburbs.slice(0, MAX_SUBURBS).map(s => {
         const o = { name: s.name, state: s.state, lat: Number(s.lat), lng: Number(s.lng) };
@@ -621,11 +686,10 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       states: Array.from(new Set(draft.suburbs.map(s => s.state))).slice(0, 3),
       budgetMin: Math.round(Number(draft.budgetMin)), budgetMax: Math.round(Number(draft.budgetMax)),
       moveIn: draft.moveIn, stay: draft.stay,
-      firstName: draft.firstName,
+      nick: nick,
       visible: !!draft.visible,
-      alerts: { enabled: draft.alertMode !== 'off', mode: draft.alertMode, email: draft.alertEmail.slice(0, 120) },
       status: (profile && profile.status === 'found' && editing) ? 'found' : 'looking',
-      step: TOTAL_STEPS,
+      step: quick ? QUICK_STEPS : TOTAL_STEPS,
       lastActiveAt: serverTimestamp(), updatedAt: serverTimestamp(),
       createdAt: (editing && profile && profile.createdAt) ? profile.createdAt : serverTimestamp(),
     };
@@ -633,25 +697,40 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     if (draft.bathroom === 'private') d.bathroom = 'private';
     if (draft.ageBand) d.ageBand = draft.ageBand;
     if (draft.gender) d.gender = draft.gender;
-    if (draft.residency) d.residency = draft.residency;
-    if (typeof draft.smoker === 'boolean') d.smoker = draft.smoker;
-    if (typeof draft.pet === 'boolean') d.pet = draft.pet;
-    if (draft.intro) d.intro = draft.intro.slice(0, 300);
-    return d;
+    // 비공개 문서(본인만) — 짧은 등록은 알림 기본값(5건 모이면 · 로그인 이메일)만
+    const p = {
+      alerts: quick
+        ? { enabled: true, mode: 'threshold5', email: String((me && me.email) || '').slice(0, 120) }
+        : { enabled: draft.alertMode !== 'off', mode: draft.alertMode, email: draft.alertEmail.slice(0, 120) },
+      updatedAt: serverTimestamp(),
+    };
+    if (!quick) {
+      if (draft.residency) p.residency = draft.residency;
+      if (typeof draft.smoker === 'boolean') p.smoker = draft.smoker;
+      if (typeof draft.pet === 'boolean') p.pet = draft.pet;
+      if (draft.intro) p.intro = draft.intro.slice(0, 300);
+    }
+    return { pub: d, priv: p };
   }
   async function save() {
     const btn = $('#kspNext', ovl); if (btn) { btn.disabled = true; btn.textContent = '저장 중…'; }
     try {
-      await setDoc(doc(db, 'seeker_profiles', me.uid), buildDoc());   // 전체 교체 — pausedAt 은 빠지므로 수정 = 다시 켜기
+      const nick = draft.nick || (await getNick()) || '회원';
+      const docs = buildDocs(nick);
+      const batch = writeBatch(db);
+      batch.set(doc(db, 'seeker_profiles', me.uid), docs.pub);                      // 전체 교체 — pausedAt 은 빠지므로 수정 = 다시 켜기
+      batch.set(doc(db, 'seeker_private', me.uid), docs.priv, { merge: !!quick });  // 짧은 등록은 기존 비공개 칸 보존
+      await batch.commit();
       clearDraft();
       await loadProfile(true);
-      if (panelEl) { panelEl.innerHTML = renderSeekerCard(profile); wireCard(); }
-      step = TOTAL_STEPS + 1; renderStep();
+      if (panelEl) rerenderCard();
+      step = totalSteps() + 1; renderStep();
     } catch (e) {
       console.warn('[seeker-profile] 저장 실패', e);
       const denied = e && (e.code === 'permission-denied' || /permission/i.test(e.message || ''));
-      $('#kspErr7', ovl).textContent = denied ? '저장할 수 없는 내용이 있습니다. 자기소개에 연락처·링크가 없는지, 휴대폰 인증이 되어 있는지 확인해 주십시오.' : '저장하지 못했습니다. 잠시 후 다시 시도해 주십시오.';
-      if (btn) { btn.disabled = false; btn.textContent = editing ? '저장' : '완료'; }
+      const errEl = $('#kspErr' + step, ovl) || $('#kspErr7', ovl);
+      if (errEl) errEl.textContent = denied ? '저장할 수 없는 내용이 있습니다. 자기소개에 연락처·링크가 없는지, 휴대폰 인증이 되어 있는지 확인해 주십시오.' : '저장하지 못했습니다. 잠시 후 다시 시도해 주십시오.';
+      if (btn) { btn.disabled = false; btn.textContent = editing ? '저장' : (quick ? '등록' : '완료'); }
     }
   }
 
@@ -665,12 +744,19 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
   document.addEventListener('koaus:mypage-profile', () => {
     try {
       const q = new URLSearchParams(location.search);
-      if (q.get('profile') === 'new' && me && !window.__kspAutoOpened) {
+      const want = q.get('profile');
+      if ((want === 'new' || want === 'quick') && me && !window.__kspAutoOpened) {
         window.__kspAutoOpened = true;
-        loadProfile(false).then(p => openModal(p || null));
+        loadProfile(false).then(p => openModal(p || null, { quick: want === 'quick' }));
       }
     } catch (_) {}
   });
 
-  window.koausSeekerProfile = { refresh: refreshPanel, open: () => openModal(profile) };
+  window.koausSeekerProfile = {
+    refresh: refreshPanel,
+    open: () => openModal(profile),
+    // 짧은 등록(①-2 역할 선택 뒤): 기존 프로필이 있으면 수정 모달, 없으면 3단계 + 건너뛰기
+    openQuick: () => loadProfile(false).then(p => openModal(p || null, { quick: true })),
+    has: () => loadProfile(false).then(p => !!p),
+  };
 })();
