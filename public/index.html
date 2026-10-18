@@ -443,34 +443,32 @@
         </a>
       </div>
 
-      <div class="home-acc" role="list">
-        <div class="home-acc-item" data-acc="care" role="listitem">
-          <button class="home-acc-head" type="button" aria-expanded="false" aria-controls="homeAccCare">
-            <span class="home-acc-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.6s-7.4-4.6-7.4-10.2A4.1 4.1 0 0 1 12 8.1a4.1 4.1 0 0 1 7.4 2.3c0 5.6-7.4 10.2-7.4 10.2z"/><path d="M12 10.6v4.2M9.9 12.7h4.2"/></svg></span>
-            <span class="home-acc-text">
-              <span class="home-acc-title">Care <em>+ 무료 통역 서비스</em></span>
-              <span class="home-acc-meta">긴급 000 · 한국어 통역 131 450 · 대사관 · 상비약</span>
+      <div class="home-acc">
+        <div class="home-acc-heads">
+          <button class="home-acc-head" type="button" data-acc="care" aria-expanded="false" aria-controls="homeAccCare">
+            <span class="home-acc-top">
+              <span class="home-acc-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.6s-7.4-4.6-7.4-10.2A4.1 4.1 0 0 1 12 8.1a4.1 4.1 0 0 1 7.4 2.3c0 5.6-7.4 10.2-7.4 10.2z"/><path d="M12 10.6v4.2M9.9 12.7h4.2"/></svg></span>
+              <svg class="home-acc-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
             </span>
-            <svg class="home-acc-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+            <span class="home-acc-title">Care <em>+ 무료 통역 서비스</em></span>
+            <span class="home-acc-meta">긴급 000 · 통역 131 450<span class="home-acc-meta-more"> · 대사관 · 상비약</span></span>
           </button>
-          <div class="home-acc-body" id="homeAccCare" hidden>
-            <iframe class="home-acc-frame" data-src="care.html?embed=1" title="Care · 긴급 연락처 · 무료 통역 · 상비약" loading="lazy" scrolling="no"></iframe>
-            <div class="home-acc-foot"><a class="home-acc-open" href="care.html">전체 페이지로 보기 →</a></div>
-          </div>
+          <button class="home-acc-head" type="button" data-acc="fx" aria-expanded="false" aria-controls="homeAccFx">
+            <span class="home-acc-top">
+              <span class="home-acc-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h13l-3-3M20 17H7l3 3"/><path d="M12 10.2v3.6M10.4 11.1h2.5a.9.9 0 0 1 0 1.8h-1.8a.9.9 0 0 0 0 1.8h2.5"/></svg></span>
+              <svg class="home-acc-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+            </span>
+            <span class="home-acc-title">환율 계산기 <em>송금 앱 비교</em></span>
+            <span class="home-acc-meta" id="homeFxRate">AUD → KRW 확인 중…</span>
+          </button>
         </div>
-        <div class="home-acc-item" data-acc="fx" role="listitem">
-          <button class="home-acc-head" type="button" aria-expanded="false" aria-controls="homeAccFx">
-            <span class="home-acc-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h13l-3-3M20 17H7l3 3"/><path d="M12 10.2v3.6M10.4 11.1h2.5a.9.9 0 0 1 0 1.8h-1.8a.9.9 0 0 0 0 1.8h2.5"/></svg></span>
-            <span class="home-acc-text">
-              <span class="home-acc-title">환율 계산기 <em>송금 앱 비교</em></span>
-              <span class="home-acc-meta" id="homeFxRate">AUD → KRW 환율 확인 중…</span>
-            </span>
-            <svg class="home-acc-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
-          </button>
-          <div class="home-acc-body" id="homeAccFx" hidden>
-            <iframe class="home-acc-frame" data-src="calculator.html?embed=1" title="환율 계산기 · 송금 앱 비교" loading="lazy" scrolling="no"></iframe>
-            <div class="home-acc-foot"><a class="home-acc-open" href="calculator.html">전체 페이지로 보기 →</a></div>
-          </div>
+        <div class="home-acc-panel" id="homeAccCare" data-acc="care" hidden>
+          <iframe class="home-acc-frame" data-src="care.html?embed=1" title="Care · 긴급 연락처 · 무료 통역 · 상비약" loading="lazy" scrolling="no"></iframe>
+          <div class="home-acc-foot"><a class="home-acc-open" href="care.html">전체 페이지로 보기 →</a></div>
+        </div>
+        <div class="home-acc-panel" id="homeAccFx" data-acc="fx" hidden>
+          <iframe class="home-acc-frame" data-src="calculator.html?embed=1" title="환율 계산기 · 송금 앱 비교" loading="lazy" scrolling="no"></iframe>
+          <div class="home-acc-foot"><a class="home-acc-open" href="calculator.html">전체 페이지로 보기 →</a></div>
         </div>
       </div>
     </section>

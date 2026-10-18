@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    KoAus 홈 진입부 (2026-10 홈 개편) — index.html #homeEntry 전용
    ─ 타일 2개(Living · 구인구직)는 순수 링크. 이 파일은 아래 드롭다운만 다룬다.
-   ─ Care+무료 통역 / 환율 계산기 드롭다운:
+   ─ Care+무료 통역 / 환율 계산기 드롭다운(머리 두 개가 반반 나란히, 패널은 그 아래 전체 폭):
        · 하나만 열림(하나를 펼치면 다른 하나는 접힘)
        · 처음 펼칠 때 iframe src 세팅(care.html?embed=1 · calculator.html?embed=1 — 같은 출처,
          CSP frame-src 'self'). 접어도 다시 로드하지 않는다.
@@ -19,43 +19,50 @@
   var root = document.getElementById('homeEntry');
   if (!root) return;
 
-  var items = Array.prototype.slice.call(root.querySelectorAll('.home-acc-item'));
-  function headOf(item)  { return item.querySelector('.home-acc-head'); }
-  function bodyOf(item)  { return item.querySelector('.home-acc-body'); }
-  function frameOf(item) { return item.querySelector('iframe.home-acc-frame'); }
+  /* 드롭다운 = 머리(.home-acc-head, 반반 나란히) + 패널(.home-acc-panel, 전체 폭, 머리 줄 아래) */
+  var heads  = Array.prototype.slice.call(root.querySelectorAll('.home-acc-head[data-acc]'));
+  var panels = Array.prototype.slice.call(root.querySelectorAll('.home-acc-panel[data-acc]'));
+  function keyOf(el)   { return el.getAttribute('data-acc'); }
+  function panelOf(key){ return panels.filter(function (p) { return keyOf(p) === key; })[0] || null; }
+  function headOf(key) { return heads.filter(function (h) { return keyOf(h) === key; })[0] || null; }
+  function frameOf(p)  { return p ? p.querySelector('iframe.home-acc-frame') : null; }
 
   function ping(frame) {
     try { frame.contentWindow && frame.contentWindow.postMessage({ type: 'koaus-embed-ping' }, location.origin); } catch (e) {}
   }
-  function show(item) {
-    if (item.classList.contains('open')) return;
-    item.classList.add('open');
-    bodyOf(item).hidden = false;
-    headOf(item).setAttribute('aria-expanded', 'true');
-    var f = frameOf(item);
+  function isOpen(key) { var h = headOf(key); return !!(h && h.classList.contains('open')); }
+  function show(key) {
+    var h = headOf(key), p = panelOf(key);
+    if (!h || !p || h.classList.contains('open')) return;
+    h.classList.add('open');
+    h.setAttribute('aria-expanded', 'true');
+    p.hidden = false;
+    var f = frameOf(p);
     if (f) {
       if (!f.getAttribute('src')) f.setAttribute('src', f.getAttribute('data-src'));
       else ping(f);
     }
   }
-  function hide(item) {
-    if (!item.classList.contains('open')) return;
-    item.classList.remove('open');
-    bodyOf(item).hidden = true;
-    headOf(item).setAttribute('aria-expanded', 'false');
+  function hide(key) {
+    var h = headOf(key), p = panelOf(key);
+    if (!h || !p || !h.classList.contains('open')) return;
+    h.classList.remove('open');
+    h.setAttribute('aria-expanded', 'false');
+    p.hidden = true;
   }
-  function open(item, scroll) {
-    items.forEach(function (i) { if (i !== item) hide(i); });
-    show(item);
+  function open(key, scroll) {
+    heads.forEach(function (h) { if (keyOf(h) !== key) hide(keyOf(h)); });
+    show(key);
     if (scroll) {
-      try { item.scrollIntoView({ block: 'start', behavior: 'smooth' }); } catch (e) {}
+      var h = headOf(key);
+      try { h && h.scrollIntoView({ block: 'start', behavior: 'smooth' }); } catch (e) {}
     }
   }
 
-  items.forEach(function (item) {
-    headOf(item).addEventListener('click', function () {
-      if (item.classList.contains('open')) hide(item);
-      else open(item, false);
+  heads.forEach(function (h) {
+    h.addEventListener('click', function () {
+      var key = keyOf(h);
+      if (isOpen(key)) hide(key); else open(key, false);
     });
   });
 
@@ -64,11 +71,10 @@
     if (e.origin !== location.origin) return;
     var d = e.data;
     if (!d || d.type !== 'koaus-embed-height' || !(d.height > 0)) return;
-    items.forEach(function (item) {
-      var f = frameOf(item);
+    panels.forEach(function (p) {
+      var f = frameOf(p);
       if (f && f.contentWindow === e.source) {
-        var h = Math.max(240, Math.ceil(d.height) + 4);
-        f.style.height = h + 'px';
+        f.style.height = Math.max(240, Math.ceil(d.height) + 4) + 'px';
       }
     });
   });
@@ -83,8 +89,7 @@
     } catch (e) {}
     if (key === 'calculator' || key === 'exchange') key = 'fx';
     if (key !== 'care' && key !== 'fx') return;
-    var item = root.querySelector('.home-acc-item[data-acc="' + key + '"]');
-    if (item) setTimeout(function () { open(item, true); }, 60);
+    if (headOf(key)) setTimeout(function () { open(key, true); }, 60);
   }
   deepLink();
   window.addEventListener('hashchange', deepLink);
@@ -98,7 +103,13 @@
       if (!(r > 0)) return;
       var txt = '1 AUD ≈ ' + r.toLocaleString('ko-KR', { maximumFractionDigits: 1 }) + '원';
       var ageMin = at ? Math.round((Date.now() - at) / 60000) : 0;
-      fxEl.textContent = txt + (ageMin >= 2 ? ' · ' + ageMin + '분 전 기준' : ' · 실시간 매매기준율');
+      // 모바일(좁은 머리)에서는 기준 시각 부분(.home-acc-meta-more)을 CSS 로 숨긴다
+      fxEl.textContent = '';
+      fxEl.appendChild(document.createTextNode(txt));
+      var more = document.createElement('span');
+      more.className = 'home-acc-meta-more';
+      more.textContent = ageMin >= 2 ? ' · ' + ageMin + '분 전 기준' : ' · 실시간 매매기준율';
+      fxEl.appendChild(more);
       fxEl.classList.add('is-live');
     }
     var cached = null;

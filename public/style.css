@@ -4929,12 +4929,12 @@ html.koaus-embed .page-back { display: none !important; }
 
 /* ── 홈 진입부 ── */
 body.koaus-home-v2 #sectionShortcuts { display: none !important; }
-.home-entry { display: flex; flex-direction: column; gap: 14px; width: 100%; max-width: 1040px; margin: 4px auto 6px; box-sizing: border-box; }
-.home-entry-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.home-entry { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 1040px; margin: 4px auto 2px; box-sizing: border-box; }
+.home-entry-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .home-tile {
   position: relative; display: flex; flex-direction: column;
-  min-height: 172px; padding: 18px 18px 16px;
-  border-radius: 18px; text-decoration: none;
+  padding: 14px 16px 14px;
+  border-radius: 16px; text-decoration: none;
   border: 1.5px solid var(--text-primary);
   transition: transform .14s ease, box-shadow .14s ease;
   -webkit-tap-highlight-color: transparent;
@@ -4943,49 +4943,69 @@ body.koaus-home-v2 #sectionShortcuts { display: none !important; }
 .home-tile:active { transform: translateY(0); }
 .home-tile--living { background: var(--bg-base); color: var(--text-primary); }
 .home-tile--work   { background: var(--text-primary); color: var(--bg-base); }
-.home-tile-kicker { font-size: 12.5px; font-weight: 700; letter-spacing: .02em; opacity: .72; }
-.home-tile-title  { margin-top: auto; font-size: clamp(26px, 6vw, 36px); font-weight: 900; line-height: 1.05; letter-spacing: -.02em; }
-.home-tile-sub    { margin-top: 5px; font-size: 13.5px; font-weight: 600; opacity: .8; }
+.home-tile-kicker { font-size: 12.5px; font-weight: 700; letter-spacing: .02em; opacity: .72; padding-right: 44px; }
+.home-tile-title  { margin-top: 14px; font-size: clamp(26px, 6vw, 34px); font-weight: 900; line-height: 1.05; letter-spacing: -.02em; }
+.home-tile-sub    { margin-top: 4px; font-size: 13.5px; font-weight: 600; opacity: .8; }
+/* 바로가기 화살표 — 타일과 같은 둥근 사각형(상단바 햄버거 버튼 크기) */
 .home-tile-arrow {
-  position: absolute; top: 14px; right: 14px; width: 32px; height: 32px; border-radius: 50%;
+  position: absolute; top: 12px; right: 12px; width: 36px; height: 36px; border-radius: 10px;
   display: flex; align-items: center; justify-content: center;
-  border: 1.5px solid currentColor; opacity: .85;
+  border: 1.5px solid currentColor; opacity: .9;
 }
-.home-tile-arrow svg { width: 16px; height: 16px; }
+.home-tile-arrow svg { width: 17px; height: 17px; }
 
-.home-acc { display: flex; flex-direction: column; gap: 10px; }
-.home-acc-item { border: 1px solid var(--border); border-radius: 16px; background: var(--bg-base); overflow: hidden; }
+/* Care / 환율 — 머리 두 개 반반, 열린 쪽 패널이 아래 전체 폭 */
+.home-acc { display: flex; flex-direction: column; gap: 8px; }
+.home-acc-heads { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .home-acc-head {
-  width: 100%; display: flex; align-items: center; gap: 12px;
-  padding: 15px 16px; background: none; border: 0; cursor: pointer; text-align: left;
-  color: var(--text-primary); font-family: var(--font);
-  -webkit-tap-highlight-color: transparent;
+  display: flex; flex-direction: column; gap: 6px; min-width: 0;
+  padding: 12px 14px 12px; border: 1px solid var(--border); border-radius: 16px;
+  background: var(--bg-base); color: var(--text-primary); font-family: var(--font);
+  cursor: pointer; text-align: left; -webkit-tap-highlight-color: transparent;
+  transition: background .14s ease, color .14s ease, border-color .14s ease;
 }
-.home-acc-head:hover { background: rgba(127,127,127,.06); }
-.home-acc-ico { flex: 0 0 auto; width: 36px; height: 36px; border-radius: 11px; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; }
-.home-acc-ico svg { width: 20px; height: 20px; }
-.home-acc-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.home-acc-head:hover { border-color: var(--text-primary); }
+.home-acc-head.open { background: var(--text-primary); color: var(--bg-base); border-color: var(--text-primary); }
+.home-acc-top { display: flex; align-items: center; justify-content: space-between; }
+.home-acc-ico { flex: 0 0 auto; width: 32px; height: 32px; border-radius: 10px; border: 1.5px solid currentColor; display: flex; align-items: center; justify-content: center; opacity: .9; }
+.home-acc-ico svg { width: 18px; height: 18px; }
+.home-acc-arrow { flex: 0 0 auto; transition: transform .22s ease; opacity: .8; }
+.home-acc-head.open .home-acc-arrow { transform: rotate(180deg); }
 .home-acc-title { font-size: 17px; font-weight: 800; line-height: 1.2; letter-spacing: -.01em; }
 .home-acc-title em { font-style: normal; font-weight: 600; font-size: 13px; opacity: .7; margin-left: 5px; }
 .home-acc-meta { font-size: 12.5px; font-weight: 600; opacity: .68; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .home-acc-meta.is-live { opacity: 1; font-weight: 700; }
-.home-acc-arrow { margin-left: auto; flex: 0 0 auto; transition: transform .22s ease; }
-.home-acc-item.open .home-acc-arrow { transform: rotate(180deg); }
-.home-acc-body { border-top: 1px solid var(--border); }
-.home-acc-body[hidden] { display: none; }
+.home-acc-panel { border: 1px solid var(--border); border-radius: 16px; background: var(--bg-base); overflow: hidden; }
+.home-acc-panel[hidden] { display: none; }
 .home-acc-frame { display: block; width: 100%; border: 0; height: 480px; min-height: 240px; background: var(--bg-base); transition: height .18s ease; }
 .home-acc-foot { display: flex; justify-content: flex-end; padding: 8px 14px 11px; border-top: 1px solid var(--border-subtle, var(--border)); }
 .home-acc-open { font-size: 13px; font-weight: 700; color: var(--text-primary); text-decoration: none; }
 .home-acc-open:hover { text-decoration: underline; }
+@media (min-width: 481px) {
+  /* 넓은 화면: 머리를 가로형(아이콘 · 제목/메타 · 화살표)으로 낮게 */
+  .home-acc-head { display: grid; grid-template-columns: auto 1fr auto; grid-template-areas: "ico title arrow" "ico meta arrow"; column-gap: 12px; row-gap: 2px; align-items: center; padding: 11px 14px; }
+  .home-acc-top { display: contents; }
+  .home-acc-ico { grid-area: ico; width: 36px; height: 36px; }
+  .home-acc-arrow { grid-area: arrow; }
+  .home-acc-title { grid-area: title; align-self: end; }
+  .home-acc-meta { grid-area: meta; align-self: start; }
+}
 @media (max-width: 480px) {
-  .home-entry { gap: 10px; }
+  .home-acc-meta-more { display: none; }
+  .home-entry { gap: 8px; }
   .home-entry-tiles { gap: 8px; }
-  .home-tile { min-height: 150px; padding: 14px 14px 13px; border-radius: 16px; }
-  .home-tile-kicker { font-size: 11.5px; }
-  .home-tile-sub { font-size: 12.5px; }
-  .home-tile-arrow { width: 28px; height: 28px; top: 11px; right: 11px; }
-  .home-acc-head { padding: 13px 13px; gap: 10px; }
-  .home-acc-title { font-size: 16px; }
-  .home-acc-title em { display: block; margin-left: 0; font-size: 12px; }
-  .home-acc-meta { font-size: 12px; }
+  .home-tile { padding: 12px 12px 12px; border-radius: 14px; }
+  .home-tile-kicker { font-size: 11.5px; padding-right: 38px; }
+  .home-tile-title { margin-top: 10px; }
+  .home-tile-sub { font-size: 12px; }
+  .home-tile-arrow { width: 32px; height: 32px; top: 10px; right: 10px; border-radius: 9px; }
+  .home-tile-arrow svg { width: 15px; height: 15px; }
+  .home-acc-heads { gap: 8px; }
+  .home-acc-head { padding: 10px 11px 11px; border-radius: 14px; gap: 5px; }
+  .home-acc-ico { width: 28px; height: 28px; border-radius: 8px; }
+  .home-acc-ico svg { width: 16px; height: 16px; }
+  .home-acc-title { font-size: 15.5px; }
+  .home-acc-title em { display: block; margin-left: 0; font-size: 11.5px; }
+  .home-acc-meta { font-size: 11.5px; }
+  .home-acc-panel { border-radius: 14px; }
 }
