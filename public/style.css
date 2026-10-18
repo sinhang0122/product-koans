@@ -4954,26 +4954,27 @@ body.koaus-home-v2 #sectionShortcuts { display: none !important; }
 }
 .home-tile-arrow svg { width: 17px; height: 17px; }
 
-/* Care / 환율 — 머리 두 개 반반, 열린 쪽 패널이 아래 전체 폭 */
+/* Care / 환율 — 머리 두 개 반반(가로형: 아이콘 · 제목/메타 · 화살표, 높이는 1줄 머리와 동일), 열린 쪽 패널이 아래 전체 폭 */
 .home-acc { display: flex; flex-direction: column; gap: 8px; }
 .home-acc-heads { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .home-acc-head {
-  display: flex; flex-direction: column; gap: 6px; min-width: 0;
-  padding: 12px 14px 12px; border: 1px solid var(--border); border-radius: 16px;
+  display: grid; grid-template-columns: auto 1fr auto; grid-template-areas: "ico title arrow" "ico meta arrow";
+  column-gap: 12px; row-gap: 2px; align-items: center; min-width: 0;
+  padding: 12px 14px; border: 1px solid var(--border); border-radius: 16px;
   background: var(--bg-base); color: var(--text-primary); font-family: var(--font);
   cursor: pointer; text-align: left; -webkit-tap-highlight-color: transparent;
   transition: background .14s ease, color .14s ease, border-color .14s ease;
 }
 .home-acc-head:hover { border-color: var(--text-primary); }
 .home-acc-head.open { background: var(--text-primary); color: var(--bg-base); border-color: var(--text-primary); }
-.home-acc-top { display: flex; align-items: center; justify-content: space-between; }
-.home-acc-ico { flex: 0 0 auto; width: 32px; height: 32px; border-radius: 10px; border: 1.5px solid currentColor; display: flex; align-items: center; justify-content: center; opacity: .9; }
-.home-acc-ico svg { width: 18px; height: 18px; }
-.home-acc-arrow { flex: 0 0 auto; transition: transform .22s ease; opacity: .8; }
+.home-acc-top { display: contents; }
+.home-acc-ico { grid-area: ico; width: 36px; height: 36px; border-radius: 10px; border: 1.5px solid currentColor; display: flex; align-items: center; justify-content: center; opacity: .9; }
+.home-acc-ico svg { width: 19px; height: 19px; }
+.home-acc-arrow { grid-area: arrow; transition: transform .22s ease; opacity: .8; }
 .home-acc-head.open .home-acc-arrow { transform: rotate(180deg); }
-.home-acc-title { font-size: 17px; font-weight: 800; line-height: 1.2; letter-spacing: -.01em; }
+.home-acc-title { grid-area: title; align-self: end; min-width: 0; font-size: 17px; font-weight: 800; line-height: 1.2; letter-spacing: -.01em; }
 .home-acc-title em { font-style: normal; font-weight: 600; font-size: 13px; opacity: .7; margin-left: 5px; }
-.home-acc-meta { font-size: 12.5px; font-weight: 600; opacity: .68; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.home-acc-meta { grid-area: meta; align-self: start; min-width: 0; font-size: 12.5px; font-weight: 600; opacity: .68; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .home-acc-meta.is-live { opacity: 1; font-weight: 700; }
 .home-acc-panel { border: 1px solid var(--border); border-radius: 16px; background: var(--bg-base); overflow: hidden; }
 .home-acc-panel[hidden] { display: none; }
@@ -4981,15 +4982,7 @@ body.koaus-home-v2 #sectionShortcuts { display: none !important; }
 .home-acc-foot { display: flex; justify-content: flex-end; padding: 8px 14px 11px; border-top: 1px solid var(--border-subtle, var(--border)); }
 .home-acc-open { font-size: 13px; font-weight: 700; color: var(--text-primary); text-decoration: none; }
 .home-acc-open:hover { text-decoration: underline; }
-@media (min-width: 481px) {
-  /* 넓은 화면: 머리를 가로형(아이콘 · 제목/메타 · 화살표)으로 낮게 */
-  .home-acc-head { display: grid; grid-template-columns: auto 1fr auto; grid-template-areas: "ico title arrow" "ico meta arrow"; column-gap: 12px; row-gap: 2px; align-items: center; padding: 11px 14px; }
-  .home-acc-top { display: contents; }
-  .home-acc-ico { grid-area: ico; width: 36px; height: 36px; }
-  .home-acc-arrow { grid-area: arrow; }
-  .home-acc-title { grid-area: title; align-self: end; }
-  .home-acc-meta { grid-area: meta; align-self: start; }
-}
+.home-acc-head .hm-s { display: none; }   /* 모바일 전용 짧은 문구 */
 @media (max-width: 480px) {
   .home-acc-meta-more { display: none; }
   .home-entry { gap: 8px; }
@@ -5001,11 +4994,14 @@ body.koaus-home-v2 #sectionShortcuts { display: none !important; }
   .home-tile-arrow { width: 32px; height: 32px; top: 10px; right: 10px; border-radius: 9px; }
   .home-tile-arrow svg { width: 15px; height: 15px; }
   .home-acc-heads { gap: 8px; }
-  .home-acc-head { padding: 10px 11px 11px; border-radius: 14px; gap: 5px; }
-  .home-acc-ico { width: 28px; height: 28px; border-radius: 8px; }
-  .home-acc-ico svg { width: 16px; height: 16px; }
+  /* 모바일: 머리가 반 폭이라 아이콘 칸을 빼고 글자만(짧은 문구 .hm-s) — 높이는 그대로 */
+  .home-acc-head { padding: 11px 10px 11px 13px; border-radius: 14px; grid-template-columns: 1fr auto; grid-template-areas: "title arrow" "meta arrow"; column-gap: 8px; row-gap: 1px; }
+  .home-acc-ico { display: none; }
+  .home-acc-head .hm-l { display: none; }
+  .home-acc-head .hm-s { display: inline; }
+  .home-acc-arrow { width: 16px; height: 16px; }
   .home-acc-title { font-size: 15.5px; }
-  .home-acc-title em { display: block; margin-left: 0; font-size: 11.5px; }
+  .home-acc-title em { display: block; margin-left: 0; font-size: 11.5px; line-height: 1.3; }
   .home-acc-meta { font-size: 11.5px; }
   .home-acc-panel { border-radius: 14px; }
 }
