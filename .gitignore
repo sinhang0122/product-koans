@@ -23,3 +23,6 @@ firebase-adminsdk*.json
 
 # 이전 코워크 세션 export (개인 대화 — 커밋 금지)
 docs/old-sessions/
+
+# Cowork 세션 산출물(보고서·스냅샷) — 커밋 금지
+Claude outputs/

@@ -473,6 +473,8 @@ let _signedOutBypass = false;  // 강제 signOut 시 onAuthStateChanged 재발�
 onAuthStateChanged(auth, async (user) => {
   if (!user) { _phoneEnforced = ''; _phoneEnforcing = false; return; }
   if (window.koausCanPost(user)) { _phoneEnforced = user.uid; return; }
+  // 2026-10 홈 임베드(iframe ?embed=1): 강제 모달은 부모 페이지(index.html)가 띄운다 — 중복 방지
+  if (document.documentElement.classList.contains('koaus-embed')) return;
   if (_phoneEnforced === user.uid || _phoneEnforcing) return;
   _phoneEnforcing = true;
   // 살짝 지연 — 페이지별 로그인 모달 close 애니메이션 끝나기를 기다림

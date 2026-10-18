@@ -66,7 +66,7 @@
   <script type="module" src="auth-extra.js"></script>
   <script type="module" src="koaus-phone-auth.js"></script>
 </head>
-<body>
+<body class="koaus-home-v2"><!-- koaus-home-v2: 2026-10 홈 개편(타일+드롭다운). 클래스 제거 시 옛 바로가기(#sectionShortcuts) 복귀 -->
 
   <div class="topbar" id="topbar">
     <a class="topbar-brand" href="index.html">
@@ -394,10 +394,6 @@
 
   <main class="home-main">
 
-    <!-- ── KoAus 히어로 배너 — hero-banner.js 가 렌더 (통합 배너 시스템, SLOTS.home) ── -->
-    <section class="koaus-hero" hidden data-koaus-hero-cat="home" aria-label="KoAus 배너"></section>
-
-
     <!-- 전광판(Marquee) · Firestore global_ticker — 좌측 [Notice|광고주] 고정 + 우측 [광고내용] 우→좌 흐름 (marquee.js) -->
     <section class="notice-section">
       <div class="notice-row" id="tickerRow">
@@ -418,6 +414,63 @@
         <div class="ticker-nav-group">
           <button type="button" class="ticker-nav" id="tickerPrev" aria-label="이전 배너">‹</button>
           <button type="button" class="ticker-nav" id="tickerNext" aria-label="다음 배너">›</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── KoAus 히어로 배너 — hero-banner.js 가 렌더 (통합 배너 시스템, SLOTS.home)
+         · 2026-10 개편: 전광판 아래로 이동. 등록된 배너 0개면 hidden 유지(자동 숨김) ── -->
+    <section class="koaus-hero" hidden data-koaus-hero-cat="home" aria-label="KoAus 배너"></section>
+
+    <!-- ── 홈 진입부 (2026-10 개편) — koaus-home-entry.js
+         · 한 홈에서 두 앱으로: Living(집 구하기 = accom/rent) · 구인구직(jobs)
+         · Care+무료 통역 / 환율 계산기 = 기존 care.html · calculator.html 을 그대로
+           ?embed=1 iframe 으로 펼침(하나만 열림, 처음 펼칠 때 로드, 높이는 자식이 postMessage)
+         · 옛 바로가기(#sectionShortcuts)는 body.koaus-home-v2 로 숨김만 — admin-mark.js 는 그대로 빌드 ── -->
+    <section id="homeEntry" class="home-entry" aria-label="바로가기">
+      <div class="home-entry-tiles">
+        <a class="home-tile home-tile--living" href="accom.html" data-entry="living">
+          <span class="home-tile-kicker">쉐어 · 렌트</span>
+          <span class="home-tile-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+          <span class="home-tile-title">Living</span>
+          <span class="home-tile-sub">집 구하기 · 방 올리기</span>
+        </a>
+        <a class="home-tile home-tile--work" href="jobs.html" data-entry="jobs">
+          <span class="home-tile-kicker">일자리 · 사람</span>
+          <span class="home-tile-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+          <span class="home-tile-title">구인구직</span>
+          <span class="home-tile-sub">일 구하기 · 사람 구하기</span>
+        </a>
+      </div>
+
+      <div class="home-acc" role="list">
+        <div class="home-acc-item" data-acc="care" role="listitem">
+          <button class="home-acc-head" type="button" aria-expanded="false" aria-controls="homeAccCare">
+            <span class="home-acc-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.6s-7.4-4.6-7.4-10.2A4.1 4.1 0 0 1 12 8.1a4.1 4.1 0 0 1 7.4 2.3c0 5.6-7.4 10.2-7.4 10.2z"/><path d="M12 10.6v4.2M9.9 12.7h4.2"/></svg></span>
+            <span class="home-acc-text">
+              <span class="home-acc-title">Care <em>+ 무료 통역 서비스</em></span>
+              <span class="home-acc-meta">긴급 000 · 한국어 통역 131 450 · 대사관 · 상비약</span>
+            </span>
+            <svg class="home-acc-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="home-acc-body" id="homeAccCare" hidden>
+            <iframe class="home-acc-frame" data-src="care.html?embed=1" title="Care · 긴급 연락처 · 무료 통역 · 상비약" loading="lazy" scrolling="no"></iframe>
+            <div class="home-acc-foot"><a class="home-acc-open" href="care.html">전체 페이지로 보기 →</a></div>
+          </div>
+        </div>
+        <div class="home-acc-item" data-acc="fx" role="listitem">
+          <button class="home-acc-head" type="button" aria-expanded="false" aria-controls="homeAccFx">
+            <span class="home-acc-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h13l-3-3M20 17H7l3 3"/><path d="M12 10.2v3.6M10.4 11.1h2.5a.9.9 0 0 1 0 1.8h-1.8a.9.9 0 0 0 0 1.8h2.5"/></svg></span>
+            <span class="home-acc-text">
+              <span class="home-acc-title">환율 계산기 <em>송금 앱 비교</em></span>
+              <span class="home-acc-meta" id="homeFxRate">AUD → KRW 환율 확인 중…</span>
+            </span>
+            <svg class="home-acc-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="home-acc-body" id="homeAccFx" hidden>
+            <iframe class="home-acc-frame" data-src="calculator.html?embed=1" title="환율 계산기 · 송금 앱 비교" loading="lazy" scrolling="no"></iframe>
+            <div class="home-acc-foot"><a class="home-acc-open" href="calculator.html">전체 페이지로 보기 →</a></div>
+          </div>
         </div>
       </div>
     </section>
@@ -681,6 +734,8 @@
   <script src="hero-banner.js" defer></script>
 
   <script src="koaus-tabbar.js" defer></script>
+  <script src="koaus-menu.js" defer></script>
+  <script src="koaus-home-entry.js" defer></script>
   <script type="module" src="koaus-home-videos.js"></script>
 </body>
 </html>

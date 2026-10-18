@@ -63,6 +63,8 @@ function targetState() {
 }
 
 function start() {
+  // 2026-10 홈 임베드(iframe ?embed=1): 전광판은 부모 페이지가 담당 — fetch·애니메이션 생략
+  if (document.documentElement.classList.contains('koaus-embed')) return;
   const $row     = document.getElementById('tickerRow');
   const $track   = document.getElementById('tickerTrack');
   const $item    = document.getElementById('tickerItem');

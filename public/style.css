@@ -1322,8 +1322,9 @@ select.board-write-btn--ghost:focus { outline: none; border-color: var(--text-pr
    hero-banner.js 가 (HERO_ENABLED && 배너 ≥1) 일 때만 hidden 을 해제한다. 이 가드를 지우면 빈 회색 18/7 박스가 다시 뜬다. */
 .koaus-hero[hidden] { display: none !important; }
 
-/* ── 2026-10 홈 진입 카드 (Living / Work 반반) ── index.html 전용. 히어로와 같은 1040px 캐논 폭. */
-.home-entry {
+/* ── 2026-10 홈 진입 카드 1차 초안(미사용·마크업 없음) — 10-18 실제 홈 개편은 파일 끝 `.home-entry`(타일+드롭다운) 블록.
+   충돌 방지를 위해 초안 셀렉터는 `.home-entry-v0` 로 이름만 바꿔 보관. */
+.home-entry-v0 {
   display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
   width: 100%; max-width: 1040px; margin: 8px auto 10px; box-sizing: border-box;
 }
@@ -1339,7 +1340,7 @@ select.board-write-btn--ghost:focus { outline: none; border-color: var(--text-pr
 .home-entry-dot { display: inline-block; margin: 0 .3em; position: relative; top: -.08em; font-weight: 700; }  /* 가운뎃점을 글자 중앙 높이에 */
 .home-entry-sub { font-size: 12px; font-weight: 600; letter-spacing: .04em; color: var(--text-secondary); opacity: .72; }
 @media (max-width: 767px) {
-  .home-entry { gap: 10px; margin: 6px auto 8px; }
+  .home-entry-v0 { gap: 10px; margin: 6px auto 8px; }
   .home-entry-card { min-height: 84px; padding: 14px 8px; }
   .home-entry-title { font-size: 18px; }
 }
@@ -4903,3 +4904,88 @@ img, iframe, video, canvas, svg, table { max-width: 100%; }
 .koaus-seeker-entry .kse-text strong { font-weight: 700; margin-right: 4px; }
 .koaus-seeker-entry .kse-cta { flex: 0 0 auto; font-weight: 700; white-space: nowrap; }
 @media (max-width: 480px) { .koaus-seeker-entry { flex-direction: column; align-items: flex-start; gap: 6px; } }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   2026-10 홈 개편 1단계
+   ① 임베드 모드 — care.html · calculator.html 이 홈 드롭다운 iframe(?embed=1) 안에 있을 때
+      koaus-embed.js 가 <html class="koaus-embed"> 를 붙인다. 페이지 크롬만 숨기고 본문은 그대로.
+   ② 홈 진입부(#homeEntry) — Living / 구인구직 타일 2개 + Care·환율 드롭다운(하나만 열림)
+   ③ 옛 바로가기(#sectionShortcuts)·옛 주별 메뉴는 삭제하지 않고 숨김(body.koaus-home-v2)
+   ═══════════════════════════════════════════════════════════════════════ */
+html.koaus-embed .topbar,
+html.koaus-embed .sidebar,
+html.koaus-embed .sidebar-overlay,
+html.koaus-embed .koaus-hero,
+html.koaus-embed .notice-section,
+html.koaus-embed .page-header,
+html.koaus-embed .site-footer-v2,
+html.koaus-embed .koaus-tabbar,
+html.koaus-embed .koaus-ad-slot { display: none !important; }
+html.koaus-embed body,
+html.koaus-embed body.koaus-has-tabbar { padding-top: 0 !important; padding-bottom: 0 !important; min-height: 0 !important; }
+html.koaus-embed .page-container { padding: 6px 12px 14px; gap: 10px; min-height: 0; }
+html.koaus-embed .page-container > *:first-child { margin-top: 0; }
+html.koaus-embed .page-back { display: none !important; }
+
+/* ── 홈 진입부 ── */
+body.koaus-home-v2 #sectionShortcuts { display: none !important; }
+.home-entry { display: flex; flex-direction: column; gap: 14px; width: 100%; max-width: 1040px; margin: 4px auto 6px; box-sizing: border-box; }
+.home-entry-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.home-tile {
+  position: relative; display: flex; flex-direction: column;
+  min-height: 172px; padding: 18px 18px 16px;
+  border-radius: 18px; text-decoration: none;
+  border: 1.5px solid var(--text-primary);
+  transition: transform .14s ease, box-shadow .14s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.home-tile:hover { transform: translateY(-2px); box-shadow: 0 10px 26px rgba(0,0,0,.12); }
+.home-tile:active { transform: translateY(0); }
+.home-tile--living { background: var(--bg-base); color: var(--text-primary); }
+.home-tile--work   { background: var(--text-primary); color: var(--bg-base); }
+.home-tile-kicker { font-size: 12.5px; font-weight: 700; letter-spacing: .02em; opacity: .72; }
+.home-tile-title  { margin-top: auto; font-size: clamp(26px, 6vw, 36px); font-weight: 900; line-height: 1.05; letter-spacing: -.02em; }
+.home-tile-sub    { margin-top: 5px; font-size: 13.5px; font-weight: 600; opacity: .8; }
+.home-tile-arrow {
+  position: absolute; top: 14px; right: 14px; width: 32px; height: 32px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  border: 1.5px solid currentColor; opacity: .85;
+}
+.home-tile-arrow svg { width: 16px; height: 16px; }
+
+.home-acc { display: flex; flex-direction: column; gap: 10px; }
+.home-acc-item { border: 1px solid var(--border); border-radius: 16px; background: var(--bg-base); overflow: hidden; }
+.home-acc-head {
+  width: 100%; display: flex; align-items: center; gap: 12px;
+  padding: 15px 16px; background: none; border: 0; cursor: pointer; text-align: left;
+  color: var(--text-primary); font-family: var(--font);
+  -webkit-tap-highlight-color: transparent;
+}
+.home-acc-head:hover { background: rgba(127,127,127,.06); }
+.home-acc-ico { flex: 0 0 auto; width: 36px; height: 36px; border-radius: 11px; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; }
+.home-acc-ico svg { width: 20px; height: 20px; }
+.home-acc-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.home-acc-title { font-size: 17px; font-weight: 800; line-height: 1.2; letter-spacing: -.01em; }
+.home-acc-title em { font-style: normal; font-weight: 600; font-size: 13px; opacity: .7; margin-left: 5px; }
+.home-acc-meta { font-size: 12.5px; font-weight: 600; opacity: .68; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.home-acc-meta.is-live { opacity: 1; font-weight: 700; }
+.home-acc-arrow { margin-left: auto; flex: 0 0 auto; transition: transform .22s ease; }
+.home-acc-item.open .home-acc-arrow { transform: rotate(180deg); }
+.home-acc-body { border-top: 1px solid var(--border); }
+.home-acc-body[hidden] { display: none; }
+.home-acc-frame { display: block; width: 100%; border: 0; height: 480px; min-height: 240px; background: var(--bg-base); transition: height .18s ease; }
+.home-acc-foot { display: flex; justify-content: flex-end; padding: 8px 14px 11px; border-top: 1px solid var(--border-subtle, var(--border)); }
+.home-acc-open { font-size: 13px; font-weight: 700; color: var(--text-primary); text-decoration: none; }
+.home-acc-open:hover { text-decoration: underline; }
+@media (max-width: 480px) {
+  .home-entry { gap: 10px; }
+  .home-entry-tiles { gap: 8px; }
+  .home-tile { min-height: 150px; padding: 14px 14px 13px; border-radius: 16px; }
+  .home-tile-kicker { font-size: 11.5px; }
+  .home-tile-sub { font-size: 12.5px; }
+  .home-tile-arrow { width: 28px; height: 28px; top: 11px; right: 11px; }
+  .home-acc-head { padding: 13px 13px; gap: 10px; }
+  .home-acc-title { font-size: 16px; }
+  .home-acc-title em { display: block; margin-left: 0; font-size: 12px; }
+  .home-acc-meta { font-size: 12px; }
+}

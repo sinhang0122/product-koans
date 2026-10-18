@@ -164,6 +164,9 @@ if (!window.__koausSessionInited) {
 
     function resetTimer() {
       if (!isLoggedIn || isLoggingOut) return;
+      // 2026-10 홈 임베드(iframe ?embed=1): iframe 안에서는 활동이 거의 없어 1시간 뒤 부모와 무관하게
+      // 로그아웃·index 이동이 일어난다 → 임베드에서는 타이머를 켜지 않는다(부모 페이지가 담당)
+      if (document.documentElement.classList.contains('koaus-embed')) return;
       if (timerId) clearTimeout(timerId);
       timerId = setTimeout(performAutoLogout, INACTIVITY_MS);
     }

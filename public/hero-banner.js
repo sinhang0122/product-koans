@@ -132,7 +132,7 @@
     home: {
       gradients: ['hero-bg--home1', 'hero-bg--home2', 'hero-bg--home3', 'hero-bg--legal3'],
       slides: [
-        { href: '#sectionShortcuts',        eyebrow: 'KoAus · Korea ↔ Australia', title: '호주 한인 생활의 모든 것, 한 곳에서.', sub: '쉐어·렌트·구인구직·정비·식당·법무·유학 — 한인 커뮤니티 포털', cta: { label: '서비스 둘러보기 →' } },
+        { href: '#homeEntry',               eyebrow: 'KoAus · Korea ↔ Australia', title: '호주 한인 생활의 모든 것, 한 곳에서.', sub: '쉐어·렌트·구인구직·정비·식당·법무·유학 — 한인 커뮤니티 포털', cta: { label: '서비스 둘러보기 →' } },
         { href: 'accom.html',               eyebrow: '실시간 매물 · 지도 보기',   title: '쉐어·렌트, 위치까지 한눈에.',          sub: '시드니·멜버른·브리즈번 — 한인 매물을 지도와 사진으로 확인하세요', cta: { label: '쉐어 보러가기 →' } },
         { href: 'about.html',               eyebrow: 'KoAus',                     title: '미래는 호주에서, 추억은 한국에서.',     sub: '둘 다 KoAus에서.',                                            cta: { label: 'KoAus 소개 보기 →' } },
         { href: 'points.html?cat=visa-edu', eyebrow: 'Visa · 법무 · 유학',        title: '호주 정착부터 비자까지 한 페이지.',     sub: '법무법인·유학원 추천 + 기술심사 가채점 도구 무료 제공',        cta: { label: '상담 시작 →' } },
@@ -533,6 +533,8 @@
     const containers = Array.from(document.querySelectorAll('[data-koaus-hero-cat]'))
       .filter(c => !c.closest('.notice-section'));
     if (!containers.length) return;
+    // 2026-10 홈 임베드(care/calculator ?embed=1 iframe): 배너는 부모 페이지가 보여주므로 fetch 생략
+    if (document.documentElement.classList.contains('koaus-embed')) { containers.forEach(hideHero); return; }
     if (!HERO_ENABLED) { containers.forEach(hideHero); return; }   // 2026-10: 광고 재개 전까지 전체 숨김
 
     function paint(banners) {
