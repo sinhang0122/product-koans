@@ -3410,6 +3410,8 @@ body.is-admin .admin-only.admin-only--block { display: block !important; }
 .accom-card-find { font-size: 14px; font-weight: 800; color: var(--text-secondary); }
 .accom-card-title2 { font-size: 13px; font-weight: 700; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .accom-card-sub { font-size: 12px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* 2026-10 전국 통합: 가격 아래 주(State) 코드만 */
+.accom-card-state { font-size: 11.5px; font-weight: 800; letter-spacing: .06em; color: var(--text-muted); margin-top: 2px; line-height: 1.2; }
 .accom-card-chips { display: flex; gap: 5px; overflow: hidden; white-space: nowrap; margin-top: 1px; }
 .accom-card-chips .accom-tag { flex-shrink: 0; }
 /* ── Auto: 4 카테고리 탭 + 컴팩트 카드 텍스트 ── */

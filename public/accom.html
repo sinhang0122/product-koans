@@ -470,7 +470,7 @@
 
     <!-- 2026-10 2단계: 집 구해요 프로필 진입 — 조건 등록 → 근처 집주인에게 보이고 새 매물 알림 -->
     <a class="koaus-seeker-entry" href="mypage.html?tab=profile&amp;profile=quick" data-seeker-entry onclick="if(window.koausSeekerProfile&&window.koausSeekerProfile.openQuick){event.preventDefault();window.koausSeekerProfile.openQuick();}">
-      <span class="kse-text"><strong>집을 구하십니까?</strong> 조건 등록 후, 조건에 맞는 방이 올라오면 이메일로 알려드리고 근처 집주인에게 내 조건이 보입니다. (실명·사진 없음, 닉네임만)</span>
+      <span class="kse-text"><strong>더욱 편리하게 집을 찾으세요.</strong> 프로필 설정하시면 원하시는 지역에 올라올 때 이에 맞게 이메일로 알려드립니다.</span>
       <span class="kse-cta">내 조건 등록 ›</span>
     </a>
 
@@ -2019,6 +2019,8 @@
 
     // ── 통일 list view 카드 빌더 (목록 grid + 지도 drawer 공용) ──
     //   · #5 Map drawer 가 동일 카드 규격을 재사용 → koausMapDrawer({ buildCard: buildAccomListCard })
+    // 2026-10 전국 통합 목록: 카드에는 가격 아래 '주(NSW·QLD…)'만 — 동네명은 숨김(CARD_SHOW_SUBURB=true 로 복귀). 주소 비공개 설정은 그대로.
+    const CARD_SHOW_SUBURB = false;
     function buildAccomListCard(p) {
       const saved  = isSaved(p.id);
       const isFind = (p.mode || 'offer') === 'find';
@@ -2057,8 +2059,8 @@
             </div>
             <!-- Row 2: 가격(좌) + 위치(우, flex:1) -->
             <div class="accom-card-row2">
-              ${priceHtml ? `<div class="accom-card-price-wrap">${priceHtml}</div>` : ''}
-              ${sub ? `<div class="accom-card-sub">${isFind ? '' : ''}${escHtml(sub)}</div>` : ''}
+              ${priceHtml ? `<div class="accom-card-price-wrap">${priceHtml}${(() => { const st = String((window.koausState && window.koausState.effective(p)) || p.state || '').toUpperCase(); return st ? `<div class="accom-card-state">${escHtml(st)}</div>` : ''; })()}</div>` : ''}
+              ${(CARD_SHOW_SUBURB && sub) ? `<div class="accom-card-sub">${escHtml(sub)}</div>` : ''}
             </div>
           </div>
         </div>`;

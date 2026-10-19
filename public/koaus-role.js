@@ -99,7 +99,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
           row.setAttribute('href', 'mypage.html?tab=profile&profile=quick');
           row.onclick = e => { if (window.koausSeekerProfile && window.koausSeekerProfile.openQuick) { e.preventDefault(); window.koausSeekerProfile.openQuick(); } };
           const t = row.querySelector('.kse-text'), c = row.querySelector('.kse-cta');
-          if (t) t.innerHTML = '<strong>집을 구하십니까?</strong> 조건 등록 후, 조건에 맞는 방이 올라오면 이메일로 알려드리고 근처 집주인에게 내 조건이 보입니다. (실명·사진 없음, 닉네임만)';
+          if (t) t.innerHTML = '<strong>더욱 편리하게 집을 찾으세요.</strong> 프로필 설정하시면 원하시는 지역에 올라올 때 이에 맞게 이메일로 알려드립니다.';
           if (c) c.textContent = '내 조건 등록 ›';
           row.dataset.seekerEntry = '';
         }
@@ -157,9 +157,6 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       .kr-seg button{appearance:none;border:0;background:none;color:var(--text-primary);padding:7px 13px;font-size:13px;font-family:inherit;cursor:pointer}
       .kr-seg button.on{background:var(--text-primary);color:var(--bg-base)}
       .kr-switch-help{font-size:12px;opacity:.65;line-height:1.45}
-      /* 역할 미설정 안내 — 목록 우측 상단(상세 필터 옆). 정할 때까지 계속 보임 */
-      .kr-prompt{appearance:none;border:1px solid var(--text-primary);background:var(--bg-base);color:var(--text-primary);border-radius:999px;padding:7px 12px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;white-space:nowrap}
-      .kr-prompt:hover{background:var(--text-primary);color:var(--bg-base)}
       /* 창이 뜨기 전 잠깐(0.5초) 돌아가는 원 */
       .kr-wait{display:flex;flex-direction:column;align-items:center;gap:12px;color:#fff;font-family:var(--font);font-size:14px;font-weight:600}
       .kr-spin{width:38px;height:38px;border-radius:50%;border:3px solid rgba(255,255,255,.3);border-top-color:#fff;animation:kr-rot .8s linear infinite}
@@ -175,7 +172,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     document.body.appendChild(ovl);
   }
   function close() { if (ovl) { ovl.classList.remove('open'); document.body.style.overflow = ''; } }
-  // '나중에 정하기' = 자동으로 다시 띄우지 않음(기한 없음). 대신 목록 우측 상단 '역할 정하기' 버튼이 정할 때까지 남는다.
+  // '나중에 정하기' = 자동으로 다시 띄우지 않음(기한 없음). 바꾸는 곳은 마이페이지 → 내 프로필의 역할 박스뿐.
   function snooze(app) { try { localStorage.setItem('koaus-role-asked-' + app + '-' + (me ? me.uid : ''), '1'); } catch (_) {} }
   function snoozed(app) { try { return localStorage.getItem('koaus-role-asked-' + app + '-' + (me ? me.uid : '')) === '1'; } catch (_) { return false; } }
 
@@ -235,20 +232,9 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     }, 500);
   }
 
-  // 역할이 없는 동안 목록 우측 상단(상세 필터 옆)에 '역할 정하기' 버튼 — 누르면 창
+  // '나중에 정하기' 뒤에는 자동으로 다시 묻지 않고, 역할은 마이페이지 → 내 프로필에서만 바꾼다(10-19 사용자 확정).
   function applyPrompt() {
-    const app = pageApp(); if (!app) return;
-    const host = document.querySelector('.accom-ctrl-actions');
-    if (!host) return;
-    let btn = host.querySelector('.kr-prompt');
-    const need = !!(me && loadedFor === me.uid && roles && !roles[app]);
-    if (!need) { if (btn) btn.remove(); return; }
-    if (!btn) {
-      btn = document.createElement('button'); btn.type = 'button'; btn.className = 'kr-prompt';
-      btn.textContent = app === 'living' ? '집 찾기·올리기 정하기 ›' : '일자리 찾기·올리기 정하기 ›';
-      btn.addEventListener('click', () => ask(app, code => afterChoice(app, code)));
-      host.insertBefore(btn, host.firstChild);
-    }
+    const old = document.querySelector('.accom-ctrl-actions .kr-prompt'); if (old) old.remove();
   }
 
   // ── 마이페이지: 역할 바꾸기 ──

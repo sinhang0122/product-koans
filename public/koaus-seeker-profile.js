@@ -37,7 +37,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
   const DRAFT_KEY = 'koaus-seeker-draft-v1';
   const MAX_SUBURBS = 5;   // 10-19: 3 → 5 — 여러 동네(예: 선샤인코스트 + 골드코스트) 집주인에게 동시에 보이게. 8은 rules 표현식 한도 초과
   const TOTAL_STEPS = 7;
-  const QUICK_STEPS = 3;                 // 짧은 등록: 동네 · 예산 · 입주/기간
+  const QUICK_STEPS = 4;                 // 짧은 등록: 동네 · 예산 · 입주/기간 · 미리보기+공개(활성화)
   const LEGACY_KEYS = ['firstName', 'residency', 'smoker', 'pet', 'intro', 'alerts'];   // 10-18 이전 공개 문서에 있던 비공개 칸
 
   let db = null, me = null;
@@ -126,6 +126,10 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       .ksp-err{font-size:12.5px;color:var(--red)}
       .ksp-done{text-align:center;display:flex;flex-direction:column;gap:12px;align-items:center;padding:12px 0}
       .ksp-done .ksp-q{font-size:20px}
+      .ksp-preview{border:1px solid var(--border);border-radius:var(--r-lg);background:var(--bg-card);padding:14px;display:flex;flex-direction:column;gap:10px}
+      .ksp-preview-top{display:flex;align-items:center;gap:10px}
+      .ksp-preview-name{font-weight:700;font-size:15px}
+      .ksp-preview-meta{font-size:12.5px;color:var(--text-muted)}
     `;
     document.head.appendChild(st);
   }
@@ -361,6 +365,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
   function clearDraft() { try { localStorage.removeItem(DRAFT_KEY); } catch (_) {} }
 
   function mountModal() {
+    injectCss();   // accom/rent(패널 없이 모달만 여는 페이지)에서도 스타일 보장 — 10-19 버그 수정('내 조건 등록' 눌러도 안 보이던 원인)
     if (ovl) return;
     ovl = document.createElement('div');
     ovl.className = 'ksp-ovl';
@@ -431,6 +436,30 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     items.map(it => `<button type="button" class="ksp-opt" data-val="${esc(it.code)}" aria-pressed="${(multi ? selected.indexOf(it.code) !== -1 : selected === it.code) ? 'true' : 'false'}">${esc(it.label)}</button>`).join('') + '</div>';
   const boolChips = (name, val) => chipsHtml(name, [{ code: 'no', label: '아니오' }, { code: 'yes', label: '예' }], val === true ? 'yes' : (val === false ? 'no' : ''), false);
 
+  // 집주인에게 보이는 그대로의 미리보기(공개 칸만) — 짧은 등록 마지막 단계·전체 등록 7단계 상단
+  function previewCardHtml() {
+    const en = E();
+    const nick = draft.nick || '닉네임';
+    const tags = [];
+    if (draft.gender) tags.push(en.label('genders', draft.gender));
+    if (draft.ageBand) tags.push(en.label('ageBands', draft.ageBand));
+    const subs = draft.suburbs.map(x => esc(x.name) + ' ' + esc(String(x.state || '').toUpperCase())).join(' · ');
+    const budget = (draft.budgetMin !== '' || draft.budgetMax !== '') ? ('주 $' + esc(draft.budgetMin || 0) + (draft.budgetMax !== '' ? ' ~ $' + esc(draft.budgetMax) : '')) : '—';
+    const stayL = en.label('stays', draft.stay);
+    const rooms = (draft.roomTypes || []).map(c => en.label('roomTypes', c)).filter(Boolean).join(', ');
+    return `
+      <div class="ksp-preview">
+        <div class="ksp-preview-top"><div class="ksp-avatar">${esc((nick[0] || '?').toUpperCase())}</div>
+          <div><div class="ksp-preview-name">${esc(nick)}</div><div class="ksp-preview-meta">${tags.length ? esc(tags.join(' · ')) : '오늘 활동'}</div></div></div>
+        <dl class="ksp-summary">
+          <dt>동네</dt><dd>${subs || '—'}</dd>
+          <dt>예산</dt><dd>${budget}</dd>
+          <dt>입주</dt><dd>${esc(draft.moveIn || '—')}${stayL ? ' · ' + esc(stayL) : ''}</dd>
+          <dt>방</dt><dd>${esc(rooms || '상관없음')}${draft.bathroom === 'private' ? ' · 개인 욕실' : ''}</dd>
+        </dl>
+      </div>`;
+  }
+
   function renderStep() {
     const en = E();
     const body = $('#kspBody', ovl), foot = $('#kspFoot', ovl);
@@ -439,7 +468,17 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     $('#kspProg', ovl).style.width = Math.min(100, Math.round((step - 1) / TS * 100)) + '%';
     $('[data-ksp-nav="back"]', ovl).style.visibility = step > 1 && step <= TS ? 'visible' : 'hidden';
     let html = '', next = '다음';
-    switch (step) {
+    if (quick && step === QUICK_STEPS) {
+      // 짧은 등록 마지막: 근처 집주인에게 보이는 모습 + 활성화
+      html = `
+          <div class="ksp-q">근처에 집을 올리시는 분께 간단한 내 조건이 보입니다.</div>
+          <div class="ksp-help">아래가 집주인이 보는 카드입니다. 닉네임과 조건만 보이고, 이메일·소개글은 보이지 않습니다. 연락은 채팅으로만 옵니다.</div>
+          ${previewCardHtml()}
+          <label class="ksp-switch"><input type="checkbox" id="kspVisible" ${draft.visible ? 'checked' : ''}> 내 조건 활성화 (근처 집주인에게 공개)</label>
+          <div class="ksp-help">끄면 카드는 숨기고 새 매물 알림만 받습니다. 마이페이지 → 내 프로필에서 언제든 바꿀 수 있습니다.</div>
+          <div class="ksp-err" id="kspErr${QUICK_STEPS}"></div>`;
+      next = '등록';
+    } else switch (step) {
       case 1:
         html = `
           <div class="ksp-q">찾으시는 동네</div>
@@ -471,7 +510,6 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
           <div class="ksp-label">거주 기간 <span class="req">(필수)</span></div>
           ${chipsHtml('stay', en.stays, draft.stay, false)}
           <div class="ksp-err" id="kspErr3"></div>`;
-        if (quick) next = '등록';
         break;
       case 4:
         html = `
@@ -509,7 +547,9 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       case 7:
         html = `
           <div class="ksp-q">공개와 알림을 정해 주십시오.</div>
-          <label class="ksp-switch"><input type="checkbox" id="kspVisible" ${draft.visible ? 'checked' : ''}> 내 조건을 근처 집주인에게 공개</label>
+          <div class="ksp-help">근처에 집을 올리시는 분께 간단한 내 조건이 이렇게 보입니다.</div>
+          ${previewCardHtml()}
+          <label class="ksp-switch"><input type="checkbox" id="kspVisible" ${draft.visible ? 'checked' : ''}> 내 조건 활성화 (근처 집주인에게 공개)</label>
           <div class="ksp-help">공개하면 희망 동네 근처에 방을 올린 집주인이 내 카드를 보고 채팅으로 연락할 수 있습니다. 끄면 알림만 받습니다. 30일 동안 활동이 없으면 자동으로 일시정지됩니다.</div>
           <div class="ksp-label">새 매물 알림 <span class="req">(필수)</span></div>
           ${chipsHtml('alertMode', [{ code: 'instant', label: '새 매물마다' }, { code: 'threshold5', label: '5건 이상 모이면' }, { code: 'daily', label: '하루 한 번' }, { code: 'off', label: '받지 않음' }], draft.alertMode, false)}
@@ -662,7 +702,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
   }
   async function onNext() {
     collect();
-    if (step === 7) { const vis = $('#kspVisible', ovl); draft.visible = !!(vis && vis.checked); }
+    if (step === totalSteps()) { const vis = $('#kspVisible', ovl); if (vis) draft.visible = !!vis.checked; }
     if (!validate()) return;
     if (step < totalSteps()) { step++; if (!editing) saveDraft(); renderStep(); return; }
     await save();
