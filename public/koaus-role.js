@@ -86,6 +86,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     try { const t = document.getElementById('mpPeopleTab'); if (t) t.hidden = !owner; } catch (_) {}
     try { const h = document.getElementById('kspRoles'); if (h && me) renderSwitcher(h); } catch (_) {}
     try { applyPrompt(); } catch (_) {}
+    try { applyWriteGate(); } catch (_) {}
     try {
       const row = document.querySelector('[data-seeker-entry]');
       if (row) {
@@ -232,6 +233,16 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     }, 500);
   }
 
+  // 10-19 사용자 확정: 역할이 '찾기'(seeker)인 사람에게는 글쓰기 버튼을 숨긴다 — Living 은 집·방 찾기, Job 은 일자리 찾기.
+  //   역할을 안 정했거나 '올리기'면 그대로 보임. 숨김만(삭제 아님) — 역할을 바꾸면 즉시 복귀. 데이터·rules 는 그대로.
+  function applyWriteGate() {
+    const app = pageApp(); if (!app) return;
+    const btn = document.getElementById('writeBtnOpen'); if (!btn) return;
+    const r = (me && loadedFor === me.uid && roles) ? roles : null;
+    const hide = !!(r && r[app] === 'seeker');
+    btn.style.display = hide ? 'none' : '';   // hidden 속성은 .board-write-btn 의 display 에 밀리므로 inline display 로
+    btn.setAttribute('aria-hidden', hide ? 'true' : 'false');
+  }
   // '나중에 정하기' 뒤에는 자동으로 다시 묻지 않고, 역할은 마이페이지 → 내 프로필에서만 바꾼다(10-19 사용자 확정).
   function applyPrompt() {
     const old = document.querySelector('.accom-ctrl-actions .kr-prompt'); if (old) old.remove();

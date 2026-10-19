@@ -615,7 +615,12 @@ service cloud.firestore {
                                   && d.roles.keys().hasOnly(['living', 'job'])
                                   && (!('living' in d.roles) || d.roles.living in ['seeker', 'owner'])
                                   && (!('job' in d.roles) || d.roles.job in ['seeker', 'employer'])))
-        && (!('rolesAskedAt' in d) || d.rolesAskedAt is timestamp);
+        && (!('rolesAskedAt' in d) || d.rolesAskedAt is timestamp)
+        // 채팅 알림 메일 설정(2026-10 ③): notify = { mode: instant|10m|30m|1h|2h|5h|daily|off, dailyAt: 'hh:mm'(daily 때) }
+        && (!('notify' in d) || (d.notify is map
+                                 && d.notify.keys().hasOnly(['mode', 'dailyAt'])
+                                 && (!('mode' in d.notify) || d.notify.mode in ['instant', '10m', '30m', '1h', '2h', '5h', 'daily', 'off'])
+                                 && (!('dailyAt' in d.notify) || (d.notify.dailyAt is string && d.notify.dailyAt.matches('([01][0-9]|2[0-3]):[0-5][0-9]')))));
     }
 
     // ── 닉네임 색인(중복 방지 + 아이디 찾기) ──
