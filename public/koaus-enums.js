@@ -47,6 +47,7 @@
     { code: 'short',       label: '2주~1달' },
     { code: 'mid',         label: '1~2달' },
     { code: 'long',        label: '2달 이상' },
+    { code: 'tbd',         label: '상의 후 결정' },
   ];
 
   const ageBands = [

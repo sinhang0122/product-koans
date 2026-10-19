@@ -35,7 +35,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
   };
   const GEOCODE_KEY = 'AIzaSyDwogQ55V0-JqZ-ZYRTpYgNZWOdp_-5vOQ';   // accom/rent/jobs 와 동일 공개 키(리퍼러 제한)
   const DRAFT_KEY = 'koaus-seeker-draft-v1';
-  const MAX_SUBURBS = 3;
+  const MAX_SUBURBS = 8;   // 10-19: 3 → 8 — 여러 동네(예: 선샤인코스트 + 골드코스트) 집주인에게 동시에 보이게
   const TOTAL_STEPS = 7;
   const QUICK_STEPS = 3;                 // 짧은 등록: 동네 · 예산 · 입주/기간
   const LEGACY_KEYS = ['firstName', 'residency', 'smoker', 'pet', 'intro', 'alerts'];   // 10-18 이전 공개 문서에 있던 비공개 칸
@@ -329,7 +329,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
 
   function blankDraft() {
     return {
-      suburbs: [], budgetMin: '', budgetMax: '', moveIn: todayStr(), stay: '',
+      suburbs: [], budgetMin: '0', budgetMax: '', moveIn: todayStr(), stay: '',
       roomTypes: [], bathroom: 'any',
       nick: '', ageBand: '', gender: '', residency: '', smoker: null, pet: null,
       intro: '', visible: true, alertMode: 'threshold5', alertEmail: (me && me.email) || '',
@@ -338,7 +338,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
   function fromProfile(p) {
     const d = blankDraft();
     d.suburbs = (p.suburbs || []).slice(0, MAX_SUBURBS).map(s => ({ name: s.name, state: s.state, postcode: s.postcode || '', lat: s.lat, lng: s.lng }));
-    d.budgetMin = p.budgetMin != null ? String(p.budgetMin) : '';
+    d.budgetMin = p.budgetMin != null ? String(p.budgetMin) : '0';
     d.budgetMax = p.budgetMax != null ? String(p.budgetMax) : '';
     d.moveIn = p.moveIn || todayStr(); d.stay = p.stay || '';
     d.roomTypes = (p.roomTypes || []).slice(); d.bathroom = p.bathroom || 'any';
@@ -442,9 +442,9 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     switch (step) {
       case 1:
         html = `
-          <div class="ksp-q">어디서 구하십니까?</div>
-          <div class="ksp-help">동네(suburb) 이름이나 우편번호로 찾아 추가하십시오. 최대 ${MAX_SUBURBS}곳까지 됩니다. 집주인에게는 동네 이름만 보입니다.</div>
-          <div class="ksp-label">희망 동네 <span class="req">(필수)</span></div>
+          <div class="ksp-q">찾으시는 동네</div>
+          <div class="ksp-help">동네 이름이나 우편번호로 찾아 추가하십시오. 여러 곳을 넣으면 그 동네마다 방을 올린 집주인에게 보입니다(${MAX_SUBURBS}곳까지).</div>
+          <div class="ksp-label">찾으시는 동네 <span class="req">(필수, 1곳 이상)</span></div>
           <input class="ksp-input" id="kspSuburbQ" type="text" placeholder="예: Sunnybank, 4109" autocomplete="off" inputmode="search">
           <ul class="ksp-sug" id="kspSuburbSug"></ul>
           <div class="ksp-sel" id="kspSuburbSel"></div>
@@ -452,7 +452,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
         break;
       case 2:
         html = `
-          <div class="ksp-q">주당 예산은 얼마입니까?</div>
+          <div class="ksp-q">주당 예산 설정</div>
           <div class="ksp-help">빌 포함 기준으로 적어 주십시오. 집주인 방 가격이 이 범위에 들어오면 추천됩니다.</div>
           <div class="ksp-label">주당 예산(AUD) <span class="req">(필수)</span></div>
           <div class="ksp-budget">
@@ -460,14 +460,11 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
             <span>~</span>
             <input class="ksp-input" id="kspBudgetMax" type="number" inputmode="numeric" min="0" max="3000" step="10" placeholder="최대" value="${esc(draft.budgetMax)}">
           </div>
-          <div class="ksp-chips" data-budget-preset>
-            ${[[100, 180], [180, 230], [230, 280], [280, 350], [350, 500]].map(r => `<button type="button" class="ksp-opt" data-min="${r[0]}" data-max="${r[1]}">$${r[0]}~${r[1]}</button>`).join('')}
-          </div>
           <div class="ksp-err" id="kspErr2"></div>`;
         break;
       case 3:
         html = `
-          <div class="ksp-q">언제부터, 얼마나 사십니까?</div>
+          <div class="ksp-q">입주 희망일과 거주 기간</div>
           <div class="ksp-label">입주 희망일 <span class="req">(필수)</span></div>
           <input class="ksp-input" id="kspMoveIn" type="date" value="${esc(draft.moveIn)}" min="${todayStr()}">
           <div class="ksp-chips"><button type="button" class="ksp-opt" data-asap>최대한 빨리</button></div>
@@ -567,11 +564,6 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     const next = $('#kspNext', ovl);
     if (next) next.addEventListener('click', onNext);
     if (step === 1) wireSuburb(body);
-    if (step === 2) {
-      body.querySelectorAll('[data-budget-preset] .ksp-opt').forEach(b => b.addEventListener('click', () => {
-        $('#kspBudgetMin', body).value = b.dataset.min; $('#kspBudgetMax', body).value = b.dataset.max;
-      }));
-    }
     if (step === 3) {
       const asap = $('[data-asap]', body);
       if (asap) asap.addEventListener('click', () => { $('#kspMoveIn', body).value = todayStr(); });
@@ -601,7 +593,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     sug.addEventListener('click', e => {
       const li = e.target.closest('li[data-i]'); if (!li) return;
       const h = sug.__hits && sug.__hits[Number(li.dataset.i)]; if (!h) return;
-      if (draft.suburbs.length >= MAX_SUBURBS) { $('#kspErr1', body).textContent = '동네는 ' + MAX_SUBURBS + '곳까지 고를 수 있습니다.'; hide(); return; }
+      if (draft.suburbs.length >= MAX_SUBURBS) { $('#kspErr1', body).textContent = '동네는 ' + MAX_SUBURBS + '곳까지 넣을 수 있습니다.'; hide(); return; }
       if (!draft.suburbs.some(s => s.name === h.name && s.state === h.state)) draft.suburbs.push(h);
       q.value = ''; hide(); $('#kspErr1', body).textContent = ''; renderSuburbSel();
     });
@@ -683,7 +675,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
         if (s.postcode) o.postcode = String(s.postcode).slice(0, 4);
         return o;
       }),
-      states: Array.from(new Set(draft.suburbs.map(s => s.state))).slice(0, 3),
+      states: Array.from(new Set(draft.suburbs.map(s => s.state))).slice(0, 8),
       budgetMin: Math.round(Number(draft.budgetMin)), budgetMax: Math.round(Number(draft.budgetMax)),
       moveIn: draft.moveIn, stay: draft.stay,
       nick: nick,

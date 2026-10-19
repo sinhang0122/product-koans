@@ -1049,16 +1049,21 @@ service cloud.firestore {
                'roomTypes', 'bathroom', 'nick', 'ageBand', 'gender',
                'visible', 'status', 'step', 'lastActiveAt', 'createdAt', 'updatedAt', 'pausedAt'
              ])
-        && d.suburbs is list && d.suburbs.size() >= 1 && d.suburbs.size() <= 3
+        && d.suburbs is list && d.suburbs.size() >= 1 && d.suburbs.size() <= 8   // 10-19: 3 → 8 (여러 동네에 동시에 노출, 사용자 요청)
         && validSuburb(d.suburbs[0])
         && (d.suburbs.size() < 2 || validSuburb(d.suburbs[1]))
         && (d.suburbs.size() < 3 || validSuburb(d.suburbs[2]))
-        && d.states is list && d.states.size() >= 1 && d.states.size() <= 3
+        && (d.suburbs.size() < 4 || validSuburb(d.suburbs[3]))
+        && (d.suburbs.size() < 5 || validSuburb(d.suburbs[4]))
+        && (d.suburbs.size() < 6 || validSuburb(d.suburbs[5]))
+        && (d.suburbs.size() < 7 || validSuburb(d.suburbs[6]))
+        && (d.suburbs.size() < 8 || validSuburb(d.suburbs[7]))
+        && d.states is list && d.states.size() >= 1 && d.states.size() <= 8
         && d.states.hasOnly(['qld', 'nsw', 'vic', 'wa', 'sa', 'tas', 'act', 'nt'])
         && pOptInt(d, 'budgetMin', 0, 3000) && pOptInt(d, 'budgetMax', 0, 3000)
         && (!('budgetMin' in d) || !('budgetMax' in d) || d.budgetMin <= d.budgetMax)
         && (!('moveIn' in d) || (d.moveIn is string && d.moveIn.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}')))
-        && (!('stay' in d) || d.stay in ['ultra_short', 'short', 'mid', 'long'])
+        && (!('stay' in d) || d.stay in ['ultra_short', 'short', 'mid', 'long', 'tbd'])
         && pOptList(d, 'roomTypes', 5)
         && (!('roomTypes' in d) || d.roomTypes.hasOnly(['master', 'second', 'single', 'living_share', 'sunroom']))
         && (!('bathroom' in d) || d.bathroom in ['any', 'private'])

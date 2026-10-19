@@ -30,22 +30,22 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     measurementId: 'G-DERZ9MTKPL',
   };
   const LS_KEY = 'koaus-roles-v1';
-  const ASK_SNOOZE_MS = 7 * 86400000;
+  // 문구는 사용자 확정(10-19, 크몽식 해요체 — 이 창만 예외)
   const APPS = {
     living: {
-      title: 'Living에서\n무엇을 시작해 보시겠습니까?',
-      note: '계정 하나로 집 구하기와 방 올리기 모두 할 수 있습니다. 마이페이지에서 언제든 바꿉니다.',
+      title: 'Living에서\n무엇을 시작해 보고 싶으세요?',
+      note: '계정 하나로 모두 활동할 수 있어요.',
       options: [
-        { code: 'seeker', label: '집 구하고 있어요', desc: '쉐어·렌트 방이 필요합니다.\n조건을 등록하면 근처 집주인이 먼저 연락합니다.', art: 'seek' },
-        { code: 'owner',  label: '방 올릴래요',     desc: '방·집을 내놓습니다.\n근처에서 집 구하는 분들을 볼 수 있습니다.', art: 'host' },
+        { code: 'seeker', label: '집·방을 찾고 있어요',   desc: '내게 필요한 곳을 찾아보세요.', art: 'seek' },
+        { code: 'owner',  label: '집·방을 올리고 있어요', desc: '가지고 있거나 렌트 중인 곳을 올려 주세요.', art: 'host' },
       ],
     },
     job: {
-      title: 'Job에서\n무엇을 시작해 보시겠습니까?',
-      note: '계정 하나로 일 구하기와 사람 구하기 모두 할 수 있습니다. 마이페이지에서 언제든 바꿉니다.',
+      title: 'Job에서\n무엇을 시작해 보고 싶으세요?',
+      note: '계정 하나로 모두 활동할 수 있어요.',
       options: [
-        { code: 'seeker',   label: '일 구하고 있어요', desc: '일자리가 필요합니다.\n일 구해요 프로필은 다음 업데이트에서 열립니다.', art: 'work' },
-        { code: 'employer', label: '사람 구할래요',   desc: '직원을 뽑습니다(사장님).\n일 구하는 분들 보기는 다음 업데이트에서 열립니다.', art: 'hire' },
+        { code: 'seeker',   label: '일자리를 찾고 있어요',   desc: '내게 필요한 일자리를 찾아 보세요.', art: 'work' },
+        { code: 'employer', label: '일자리를 올리고 있어요', desc: '일을 맡길 사람을 구해보세요.', art: 'hire' },
       ],
     },
   };
@@ -56,7 +56,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     work: '<svg viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="60" cy="60" r="50" fill="var(--kr-art,#f1f3f5)" stroke="none"/><rect x="32" y="48" width="56" height="38" rx="6"/><path d="M48 48v-6a6 6 0 0 1 6-6h12a6 6 0 0 1 6 6v6"/><path d="M32 64h56"/><path d="M60 60v10"/></svg>',
     hire: '<svg viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="60" cy="60" r="50" fill="var(--kr-art,#f1f3f5)" stroke="none"/><circle cx="48" cy="48" r="10"/><path d="M28 84c3-11 10-17 20-17s17 6 20 17"/><circle cx="76" cy="52" r="8"/><path d="M70 72c3-6 8-9 14-9 7 0 12 4 14 11"/><path d="M90 36v10M85 41h10"/></svg>',
   };
-  const LABEL = { living: { seeker: '집 구해요', owner: '방 올려요' }, job: { seeker: '일 구해요', employer: '사람 구해요' } };
+  const LABEL = { living: { seeker: '집·방 찾기', owner: '집·방 올리기' }, job: { seeker: '일자리 찾기', employer: '일자리 올리기' } };
 
   let db = null, me = null, roles = null, loadedFor = null, ovl = null;
   const $ = (s, r) => (r || document).querySelector(s);
@@ -85,6 +85,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     const owner = !!(me && roles && roles.living === 'owner');
     try { const t = document.getElementById('mpPeopleTab'); if (t) t.hidden = !owner; } catch (_) {}
     try { const h = document.getElementById('kspRoles'); if (h && me) renderSwitcher(h); } catch (_) {}
+    try { applyPrompt(); } catch (_) {}
     try {
       const row = document.querySelector('[data-seeker-entry]');
       if (row) {
@@ -138,7 +139,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       .kr-title{font-size:30px;font-weight:900;letter-spacing:-.02em;line-height:1.3;white-space:pre-line}
       .kr-opts{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:30px 0 16px;text-align:left}
       .kr-opt{appearance:none;display:flex;flex-direction:column;align-items:flex-start;text-align:left;border:1.5px solid var(--border);background:var(--bg-card);color:var(--text-primary);border-radius:18px;padding:30px 26px 26px;cursor:pointer;font-family:inherit;transition:border-color .12s,background .12s,transform .12s}
-      .kr-opt:hover{border-color:var(--text-primary);background:var(--bg-base);transform:translateY(-2px)}
+      .kr-opt:hover,.kr-opt:focus-visible{border-color:var(--text-primary);background:var(--bg-base);transform:translateY(-2px);outline:none}
       .kr-opt.on{border-color:var(--text-primary);background:var(--bg-base);box-shadow:0 0 0 1.5px var(--text-primary)}
       .kr-art{width:132px;height:132px;align-self:center;margin-bottom:22px;opacity:.95}
       .kr-art svg{width:100%;height:100%;display:block}
@@ -155,7 +156,10 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       .kr-seg{display:inline-flex;border:1px solid var(--border);border-radius:999px;overflow:hidden}
       .kr-seg button{appearance:none;border:0;background:none;color:var(--text-primary);padding:7px 13px;font-size:13px;font-family:inherit;cursor:pointer}
       .kr-seg button.on{background:var(--text-primary);color:var(--bg-base)}
-      .kr-switch-help{font-size:12px;opacity:.65;line-height:1.45}`;
+      .kr-switch-help{font-size:12px;opacity:.65;line-height:1.45}
+      /* 역할 미설정 안내 — 목록 우측 상단(상세 필터 옆). 정할 때까지 계속 보임 */
+      .kr-prompt{appearance:none;border:1px solid var(--text-primary);background:var(--bg-base);color:var(--text-primary);border-radius:999px;padding:7px 12px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;white-space:nowrap}
+      .kr-prompt:hover{background:var(--text-primary);color:var(--bg-base)}`;
     document.head.appendChild(st);
   }
 
@@ -167,8 +171,9 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     document.body.appendChild(ovl);
   }
   function close() { if (ovl) { ovl.classList.remove('open'); document.body.style.overflow = ''; } }
-  function snooze(app) { try { localStorage.setItem('koaus-role-asked-' + app, String(Date.now())); } catch (_) {} }
-  function snoozed(app) { try { const t = Number(localStorage.getItem('koaus-role-asked-' + app) || 0); return t && Date.now() - t < ASK_SNOOZE_MS; } catch (_) { return false; } }
+  // '나중에 정하기' = 자동으로 다시 띄우지 않음(기한 없음). 대신 목록 우측 상단 '역할 정하기' 버튼이 정할 때까지 남는다.
+  function snooze(app) { try { localStorage.setItem('koaus-role-asked-' + app + '-' + (me ? me.uid : ''), '1'); } catch (_) {} }
+  function snoozed(app) { try { return localStorage.getItem('koaus-role-asked-' + app + '-' + (me ? me.uid : '')) === '1'; } catch (_) { return false; } }
 
   function ask(app, onDone) {
     const cfg = APPS[app]; if (!cfg) return;
@@ -213,7 +218,24 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     if (snoozed(app)) return;
     const r = await load(false);
     if (!r || r[app]) return;
-    setTimeout(() => { if (me && !$('.ksp-ovl.open') && !$('.auth-overlay.open')) ask(app, code => afterChoice(app, code)); }, 1400);
+    // 0.5초: 로그인 창·휴대폰 인증 창이 닫히는 애니메이션과 겹치지 않을 만큼만
+    setTimeout(() => { if (me && !$('.ksp-ovl.open') && !$('.auth-overlay.open')) ask(app, code => afterChoice(app, code)); }, 500);
+  }
+
+  // 역할이 없는 동안 목록 우측 상단(상세 필터 옆)에 '역할 정하기' 버튼 — 누르면 창
+  function applyPrompt() {
+    const app = pageApp(); if (!app) return;
+    const host = document.querySelector('.accom-ctrl-actions');
+    if (!host) return;
+    let btn = host.querySelector('.kr-prompt');
+    const need = !!(me && loadedFor === me.uid && roles && !roles[app]);
+    if (!need) { if (btn) btn.remove(); return; }
+    if (!btn) {
+      btn = document.createElement('button'); btn.type = 'button'; btn.className = 'kr-prompt';
+      btn.textContent = app === 'living' ? '집 찾기·올리기 정하기 ›' : '일자리 찾기·올리기 정하기 ›';
+      btn.addEventListener('click', () => ask(app, code => afterChoice(app, code)));
+      host.insertBefore(btn, host.firstChild);
+    }
   }
 
   // ── 마이페이지: 역할 바꾸기 ──
@@ -226,7 +248,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       <div class="kr-switch">
         <div class="kr-switch-row"><b>Living</b>${seg('living', ['seeker', 'owner'])}</div>
         <div class="kr-switch-row"><b>Job</b>${seg('job', ['seeker', 'employer'])}</div>
-        <div class="kr-switch-help">역할은 언제든 바꿀 수 있습니다. "방 올려요"·"사람 구해요"를 고르면 탭바에 "프로필" 탭이 생기고, "집 구해요"는 아래 조건 카드가 근처 집주인에게 보입니다.</div>
+        <div class="kr-switch-help">언제든 바꿀 수 있습니다. "집·방 올리기"를 고르면 탭바에 "프로필" 탭이 생기고, "집·방 찾기"는 아래 조건 카드가 근처 집주인에게 보입니다.</div>
       </div>`;
     host.onclick = async e => {
       const b = e.target.closest('.kr-seg button'); if (!b) return;
