@@ -35,7 +35,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
   };
   const GEOCODE_KEY = 'AIzaSyDwogQ55V0-JqZ-ZYRTpYgNZWOdp_-5vOQ';   // accom/rent/jobs 와 동일 공개 키(리퍼러 제한)
   const DRAFT_KEY = 'koaus-seeker-draft-v1';
-  const MAX_SUBURBS = 8;   // 10-19: 3 → 8 — 여러 동네(예: 선샤인코스트 + 골드코스트) 집주인에게 동시에 보이게
+  const MAX_SUBURBS = 5;   // 10-19: 3 → 5 — 여러 동네(예: 선샤인코스트 + 골드코스트) 집주인에게 동시에 보이게. 8은 rules 표현식 한도 초과
   const TOTAL_STEPS = 7;
   const QUICK_STEPS = 3;                 // 짧은 등록: 동네 · 예산 · 입주/기간
   const LEGACY_KEYS = ['firstName', 'residency', 'smoker', 'pet', 'intro', 'alerts'];   // 10-18 이전 공개 문서에 있던 비공개 칸
@@ -675,7 +675,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
         if (s.postcode) o.postcode = String(s.postcode).slice(0, 4);
         return o;
       }),
-      states: Array.from(new Set(draft.suburbs.map(s => s.state))).slice(0, 8),
+      states: Array.from(new Set(draft.suburbs.map(s => s.state))).slice(0, 5),
       budgetMin: Math.round(Number(draft.budgetMin)), budgetMax: Math.round(Number(draft.budgetMax)),
       moveIn: draft.moveIn, stay: draft.stay,
       nick: nick,
