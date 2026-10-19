@@ -28,7 +28,7 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
     appId: '1:663988594088:web:ef30c2fd557407b00b299d',
     measurementId: 'G-DERZ9MTKPL',
   };
-  const RADII = [5, 10, 20, 50];
+  const RADII = [3, 5, 10, 20];   // 10-19: 기본 5km(동네 2~3개 묶음), 3km = 바로 옆 동네, 20km = 외곽·지방
   let db = null;
   try { db = getFirestore(getApps().length ? getApp() : initializeApp(firebaseConfig)); } catch (e) { try { console.warn('[seekers-nearby] init 실패', e); } catch (_) {} }
 
@@ -120,7 +120,7 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
     if (!user) { toast('로그인 후 이용할 수 있습니다.'); return; }
     if (!db) { toast('잠시 후 다시 시도해 주십시오.'); return; }
     mount();
-    post = p; board = b || 'accom'; radius = 10; budgetOnly = false; all = null;
+    post = p; board = b || 'accom'; radius = 5; budgetOnly = false; all = null;
     const st = postState(p);
     const en = E();
     $('#ksnSub', ovl).textContent = '이 방 근처에서 집을 구하는 사람입니다. 연락은 채팅으로만 됩니다.' + (p.gender === 'female' ? ' 여성 전용 방이라 여성 프로필만 보입니다.' : '') + (!postCoords(p) ? ' 이 글에는 위치가 없어 ' + (en && en.state(st) ? en.state(st).label : st.toUpperCase()) + ' 전체를 보여드립니다.' : '');
@@ -411,7 +411,7 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
     if (!user) { host.innerHTML = '<div class="post-empty">로그인 후 이용할 수 있습니다.</div>'; return; }
     if (!db || !E()) { host.innerHTML = '<div class="post-empty">불러오는 중…</div>'; setTimeout(() => mountPage(host), 600); return; }
     const saved = loadCenter();
-    pg = { host, center: null, radius: (saved && RADII.includes(saved.radius)) ? saved.radius : 10, femaleOnly: false, price: 0, budgetOnly: false, all: null, myPosts: [] };
+    pg = { host, center: null, radius: (saved && RADII.includes(saved.radius)) ? saved.radius : 5, femaleOnly: false, price: 0, budgetOnly: false, all: null, myPosts: [] };
     renderPage();
     pg.myPosts = await loadMyPosts(user.uid);
     if (saved && saved.lat && saved.lng && saved.state) setCenter(saved);

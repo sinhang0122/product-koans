@@ -99,7 +99,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
           row.setAttribute('href', 'mypage.html?tab=profile&profile=quick');
           row.onclick = e => { if (window.koausSeekerProfile && window.koausSeekerProfile.openQuick) { e.preventDefault(); window.koausSeekerProfile.openQuick(); } };
           const t = row.querySelector('.kse-text'), c = row.querySelector('.kse-cta');
-          if (t) t.innerHTML = '<strong>더욱 편리하게 집을 찾으세요.</strong> 프로필 설정하시면 원하시는 지역에 올라올 때 이에 맞게 이메일로 알려드립니다.';
+          if (t) t.innerHTML = '<strong>더욱 편리하게 집을 찾으세요.</strong> 프로필 설정하시면 원하시는 지역에 글이 올라올 때 이에 맞게 이메일로 알려드립니다.';
           if (c) c.textContent = '내 조건 등록 ›';
           row.dataset.seekerEntry = '';
         }
