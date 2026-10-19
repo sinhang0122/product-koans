@@ -33,21 +33,28 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
   const ASK_SNOOZE_MS = 7 * 86400000;
   const APPS = {
     living: {
-      title: 'Living에서 무엇을 하십니까?',
-      sub: '한 번만 여쭙습니다. 마이페이지 → 내 프로필에서 언제든 바꿀 수 있습니다.',
+      title: 'Living에서\n무엇을 시작해 보시겠습니까?',
+      note: '계정 하나로 집 구하기와 방 올리기 모두 할 수 있습니다. 마이페이지에서 언제든 바꿉니다.',
       options: [
-        { code: 'seeker', label: '집 구해요', desc: '쉐어·렌트 방을 찾고 있습니다. 조건을 등록하면 근처 집주인이 먼저 연락하고, 맞는 방이 올라오면 알려드립니다.' },
-        { code: 'owner',  label: '방 올려요', desc: '방·집을 내놓습니다. 글을 올리면 근처에서 집 구하는 분들을 "프로필" 탭에서 볼 수 있습니다.' },
+        { code: 'seeker', label: '집 구하고 있어요', desc: '쉐어·렌트 방이 필요합니다.\n조건을 등록하면 근처 집주인이 먼저 연락합니다.', art: 'seek' },
+        { code: 'owner',  label: '방 올릴래요',     desc: '방·집을 내놓습니다.\n근처에서 집 구하는 분들을 볼 수 있습니다.', art: 'host' },
       ],
     },
     job: {
-      title: 'Job에서 무엇을 하십니까?',
-      sub: '한 번만 여쭙습니다. 마이페이지 → 내 프로필에서 언제든 바꿀 수 있습니다.',
+      title: 'Job에서\n무엇을 시작해 보시겠습니까?',
+      note: '계정 하나로 일 구하기와 사람 구하기 모두 할 수 있습니다. 마이페이지에서 언제든 바꿉니다.',
       options: [
-        { code: 'seeker',   label: '일 구해요',   desc: '일자리를 찾고 있습니다. 일 구해요 프로필(경력 추가)은 다음 업데이트에서 열립니다.' },
-        { code: 'employer', label: '사람 구해요', desc: '직원을 뽑습니다(사장님). 일 구하는 분들 보기는 다음 업데이트에서 열립니다.' },
+        { code: 'seeker',   label: '일 구하고 있어요', desc: '일자리가 필요합니다.\n일 구해요 프로필은 다음 업데이트에서 열립니다.', art: 'work' },
+        { code: 'employer', label: '사람 구할래요',   desc: '직원을 뽑습니다(사장님).\n일 구하는 분들 보기는 다음 업데이트에서 열립니다.', art: 'hire' },
       ],
     },
+  };
+  // 그림 — 이모지 없이 inline SVG(선 아이콘). 크몽식 큰 카드의 일러스트 자리.
+  const ART = {
+    seek: '<svg viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="60" cy="60" r="50" fill="var(--kr-art,#f1f3f5)" stroke="none"/><path d="M30 60 60 34l30 26"/><path d="M38 54v30h44V54"/><path d="M54 84V66h12v18"/><circle cx="86" cy="42" r="10"/><path d="m93 49 9 9"/></svg>',
+    host: '<svg viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="60" cy="60" r="50" fill="var(--kr-art,#f1f3f5)" stroke="none"/><path d="M28 62 58 36l30 26"/><path d="M36 56v30h44V56"/><circle cx="84" cy="80" r="9"/><path d="M84 71v-6M84 95v-6M75 80h-6M99 80h-6"/><path d="M58 86V70h-8"/></svg>',
+    work: '<svg viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="60" cy="60" r="50" fill="var(--kr-art,#f1f3f5)" stroke="none"/><rect x="32" y="48" width="56" height="38" rx="6"/><path d="M48 48v-6a6 6 0 0 1 6-6h12a6 6 0 0 1 6 6v6"/><path d="M32 64h56"/><path d="M60 60v10"/></svg>',
+    hire: '<svg viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="60" cy="60" r="50" fill="var(--kr-art,#f1f3f5)" stroke="none"/><circle cx="48" cy="48" r="10"/><path d="M28 84c3-11 10-17 20-17s17 6 20 17"/><circle cx="76" cy="52" r="8"/><path d="M70 72c3-6 8-9 14-9 7 0 12 4 14 11"/><path d="M90 36v10M85 41h10"/></svg>',
   };
   const LABEL = { living: { seeker: '집 구해요', owner: '방 올려요' }, job: { seeker: '일 구해요', employer: '사람 구해요' } };
 
@@ -124,20 +131,23 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     if ($('#koaus-role-style')) return;
     const st = document.createElement('style'); st.id = 'koaus-role-style';
     st.textContent = `
-      .kr-ovl{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9100;display:none;align-items:center;justify-content:center;padding:16px}
+      .kr-ovl{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9100;display:none;align-items:center;justify-content:center;padding:16px;--kr-art:#eef1f4}
+      :root[data-theme=dark] .kr-ovl{--kr-art:#1c1c1c}
       .kr-ovl.open{display:flex}
-      .kr-box{width:100%;max-width:440px;background:var(--bg-base);color:var(--text-primary);border:1px solid var(--border);border-radius:18px;padding:22px 20px 16px;box-shadow:0 24px 64px rgba(0,0,0,.2);font-family:var(--font)}
-      .kr-title{font-size:20px;font-weight:900;letter-spacing:-.02em;line-height:1.25}
-      .kr-sub{font-size:13px;opacity:.72;margin-top:6px;line-height:1.5}
-      .kr-opts{display:grid;gap:10px;margin-top:16px}
-      .kr-opt{appearance:none;text-align:left;border:1.5px solid var(--border);background:var(--bg-base);color:var(--text-primary);border-radius:14px;padding:14px 14px;cursor:pointer;font-family:inherit;transition:border-color .12s,background .12s}
-      .kr-opt:hover{border-color:var(--text-primary)}
-      .kr-opt.on{background:var(--text-primary);color:var(--bg-base);border-color:var(--text-primary)}
-      .kr-opt b{display:block;font-size:17px;font-weight:800;letter-spacing:-.01em}
-      .kr-opt span{display:block;font-size:12.5px;opacity:.75;margin-top:4px;line-height:1.45}
-      .kr-foot{display:flex;justify-content:flex-end;margin-top:12px}
-      .kr-later{appearance:none;background:none;border:0;color:var(--text-primary);opacity:.6;font-size:13px;cursor:pointer;font-family:inherit;padding:8px 6px;text-decoration:underline}
-      @media(max-width:768px){.kr-ovl{padding:0;align-items:stretch}.kr-box{max-width:none;border-radius:0;border:0;display:flex;flex-direction:column;justify-content:center;padding:28px 22px calc(28px + env(safe-area-inset-bottom,0px))}.kr-title{font-size:24px}.kr-opt{padding:18px 16px}.kr-opt b{font-size:19px}}
+      .kr-box{width:100%;max-width:820px;background:var(--bg-base);color:var(--text-primary);border:1px solid var(--border);border-radius:22px;padding:40px 36px 28px;box-shadow:0 24px 64px rgba(0,0,0,.2);font-family:var(--font);text-align:center}
+      .kr-title{font-size:30px;font-weight:900;letter-spacing:-.02em;line-height:1.3;white-space:pre-line}
+      .kr-opts{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:30px 0 16px;text-align:left}
+      .kr-opt{appearance:none;display:flex;flex-direction:column;align-items:flex-start;text-align:left;border:1.5px solid var(--border);background:var(--bg-card);color:var(--text-primary);border-radius:18px;padding:30px 26px 26px;cursor:pointer;font-family:inherit;transition:border-color .12s,background .12s,transform .12s}
+      .kr-opt:hover{border-color:var(--text-primary);background:var(--bg-base);transform:translateY(-2px)}
+      .kr-opt.on{border-color:var(--text-primary);background:var(--bg-base);box-shadow:0 0 0 1.5px var(--text-primary)}
+      .kr-art{width:132px;height:132px;align-self:center;margin-bottom:22px;opacity:.95}
+      .kr-art svg{width:100%;height:100%;display:block}
+      .kr-opt b{display:block;font-size:22px;font-weight:800;letter-spacing:-.02em;line-height:1.25}
+      .kr-opt span{display:block;font-size:15px;opacity:.72;margin-top:10px;line-height:1.55;white-space:pre-line}
+      .kr-note{font-size:14px;font-weight:600;padding:14px 16px;border-radius:12px;background:var(--bg-card);line-height:1.5}
+      .kr-foot{display:flex;justify-content:center;margin-top:10px}
+      .kr-later{appearance:none;background:none;border:0;color:var(--text-primary);opacity:.55;font-size:13.5px;cursor:pointer;font-family:inherit;padding:8px 10px;text-decoration:underline}
+      @media(max-width:768px){.kr-ovl{padding:0;align-items:stretch}.kr-box{max-width:none;border-radius:0;border:0;display:flex;flex-direction:column;justify-content:center;padding:28px 20px calc(24px + env(safe-area-inset-bottom,0px));overflow:auto}.kr-title{font-size:24px}.kr-opts{grid-template-columns:1fr;gap:12px;margin:22px 0 12px}.kr-opt{display:grid;grid-template-columns:72px 1fr;column-gap:14px;row-gap:2px;align-items:center;padding:16px 16px}.kr-art{grid-row:1 / 3;width:72px;height:72px;margin:0}.kr-opt b{font-size:19px}.kr-opt span{font-size:13.5px;margin-top:4px}.kr-note{font-size:13px}}
       /* 마이페이지 역할 바꾸기 */
       .kr-switch{display:flex;flex-direction:column;gap:8px;margin:0 0 12px;padding:12px 14px;border:1px solid var(--border);border-radius:14px;background:var(--bg-base)}
       .kr-switch-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
@@ -166,9 +176,9 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     ovl.innerHTML = `
       <div class="kr-box">
         <div class="kr-title">${esc(cfg.title)}</div>
-        <div class="kr-sub">${esc(cfg.sub)}</div>
-        <div class="kr-opts">${cfg.options.map(o => `<button type="button" class="kr-opt" data-code="${esc(o.code)}"><b>${esc(o.label)}</b><span>${esc(o.desc)}</span></button>`).join('')}</div>
-        <div class="kr-foot"><button type="button" class="kr-later" data-later>나중에</button></div>
+        <div class="kr-opts">${cfg.options.map(o => `<button type="button" class="kr-opt" data-code="${esc(o.code)}"><span class="kr-art" aria-hidden="true">${ART[o.art] || ''}</span><b>${esc(o.label)}</b><span>${esc(o.desc)}</span></button>`).join('')}</div>
+        <div class="kr-note">${esc(cfg.note)}</div>
+        <div class="kr-foot"><button type="button" class="kr-later" data-later>나중에 정하기</button></div>
       </div>`;
     ovl.onclick = async e => {
       const later = e.target.closest('[data-later]');
