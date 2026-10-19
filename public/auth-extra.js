@@ -70,7 +70,8 @@ function mountSignupExtra() {
   // 이름(실명) 필드 폐기 — 별명(닉네임) + 보안 Q/A 만 유지
   // 닉네임 옆 [중복확인] 버튼 — Firestore users 컬렉션 중복 비동기 체크
   const html = `
-    <div class="auth-field">
+    <!-- 10-19: 크몽식 — 닉네임은 가입 때 자동으로 정하고(중복 없음) 가입 뒤 환경설정에서 바꾼다. 입력칸은 숨김(NICK_INPUT_HIDDEN=false 로 복귀) -->
+    <div class="auth-field" id="authSignupNickField">
       <label class="auth-label" for="authSignupNick">닉네임 (Nickname) <span style="color:var(--red,#dc2626);font-weight:800;">[필수]</span></label>
       <div style="display:flex;gap:8px;align-items:stretch;">
         <input class="auth-input" id="authSignupNick" type="text" autocomplete="nickname"
@@ -80,6 +81,7 @@ function mountSignupExtra() {
       </div>
       <p class="koaus-extra-msg" id="authSignupNickMsg" style="font-size:12px;color:var(--text-muted);margin:6px 0 0;min-height:16px;"></p>
     </div>
+    <p class="koaus-extra-msg" id="authSignupNickAuto" style="font-size:12.5px;color:var(--text-muted);margin:-4px 0 10px;line-height:1.5;">닉네임은 자동으로 정해집니다. 가입 뒤 환경설정에서 언제든 바꿀 수 있습니다.</p>
     <div class="auth-field">
       <label class="auth-label" for="authSignupSecQ">보안 질문 (Security Question) <span style="color:var(--red,#dc2626);font-weight:800;">[필수]</span></label>
       <select class="auth-input" id="authSignupSecQ">
@@ -107,25 +109,37 @@ function mountSignupExtra() {
     sel.addEventListener('change', toggleCustomQ);
   }
   form.__koausExtraMounted = true;
+  const NICK_INPUT_HIDDEN = true;   // 10-19 크몽식 자동 닉네임. false 면 옛 입력칸+중복확인으로 복귀
+  try {
+    const nf = document.getElementById('authSignupNickField'), na = document.getElementById('authSignupNickAuto');
+    if (nf) nf.hidden = NICK_INPUT_HIDDEN;
+    if (na) na.hidden = !NICK_INPUT_HIDDEN;
+  } catch (_) {}
 
   // ── 닉네임 자동 제안(10-19) ──
   const NICK_ADJ = ['조용한', '성실한', '따뜻한', '부지런한', '명랑한', '차분한', '든든한', '씩씩한', '상냥한', '느긋한', '다정한', '유쾌한'];
   const NICK_NOUN = ['캥거루', '코알라', '웜뱃', '쿼카', '에뮤', '펭귄', '왈라비', '앵무새', '바다거북', '돌고래', '유칼립', '파도'];
   const makeNick = () => NICK_ADJ[Math.floor(Math.random() * NICK_ADJ.length)] + NICK_NOUN[Math.floor(Math.random() * NICK_NOUN.length)] + String(10 + Math.floor(Math.random() * 90));
-  async function autoSuggestNick() {
-    const inp = document.getElementById('authSignupNick');
-    if (!inp || inp.value.trim()) return;
-    for (let i = 0; i < 4; i++) {
-      const cand = makeNick();
-      try {
-        const snap = await getDoc(doc(db, 'nicknames', cand.toLowerCase()));
-        if (snap.exists()) continue;
-        if (inp.value.trim()) return;   // 그 사이 사용자가 직접 입력
-        inp.value = cand; _nickConfirmed = cand;
-        setNickMsg('자동으로 만든 닉네임입니다. 그대로 쓰거나 바꿔 주세요. (나중에 환경설정에서 변경 가능)', 'ok');
-        return;
-      } catch (_) { return; }
-    }
+  let _autoNickPromise = null;
+  function autoSuggestNick() {
+    if (_autoNickPromise) return _autoNickPromise;
+    _autoNickPromise = (async () => {
+      const inp = document.getElementById('authSignupNick');
+      if (!inp) return false;
+      if (inp.value.trim() && _nickConfirmed === inp.value.trim()) return true;
+      for (let i = 0; i < 6; i++) {
+        const cand = makeNick();
+        try {
+          const snap = await getDoc(doc(db, 'nicknames', cand.toLowerCase()));
+          if (snap.exists()) continue;
+          inp.value = cand; _nickConfirmed = cand;
+          if (!inp.closest('[hidden]')) setNickMsg('자동으로 만든 닉네임입니다. 그대로 쓰거나 바꿔 주세요. (나중에 환경설정에서 변경 가능)', 'ok');
+          return true;
+        } catch (_) { break; }
+      }
+      return false;
+    })().finally(() => { _autoNickPromise = null; });
+    return _autoNickPromise;
   }
 
   // ── 닉네임 [중복확인] 핸들러 — Firestore users 컬렉션 nickname 필드 매칭 ──
@@ -171,6 +185,7 @@ function mountSignupExtra() {
       nickCheckBtn.disabled = false; nickCheckBtn.textContent = '중복확인';
     }
   });
+  const NICK_INPUT_HIDDEN_RT = () => { const nf = document.getElementById('authSignupNickField'); return !!(nf && nf.hidden); };
   // 10-19: 크몽처럼 닉네임 자동 제안 — 비어 있으면 '형용사+동물+두 자리'를 채우고 중복확인까지 자동.
   //   그대로 써도 되고 바꿔도 됨(나중에 환경설정에서 변경). 가입 폼이 실제로 화면에 보일 때 1회만(페이지마다 read 1건 낭비 방지).
   try {
@@ -186,6 +201,19 @@ function mountSignupExtra() {
   const btn = document.getElementById('authSignupSubmit');
   if (btn && !btn.__koausExtraHook) {
     btn.addEventListener('click', e => {
+      // 10-19: 자동 닉네임이 아직 안 정해졌으면(빠른 제출) 만들고 나서 다시 제출
+      const nickNow = document.getElementById('authSignupNick')?.value.trim() || '';
+      if ((!nickNow || _nickConfirmed !== nickNow) && NICK_INPUT_HIDDEN_RT()) {
+        e.stopImmediatePropagation(); e.preventDefault();
+        if (btn.__koausNickRetrying) return;
+        btn.__koausNickRetrying = true;
+        autoSuggestNick().then(ok => {
+          btn.__koausNickRetrying = false;
+          if (ok) btn.click();
+          else { const errEl = document.getElementById('authSignupError'); if (errEl) errEl.textContent = '닉네임을 만들지 못했습니다. 잠시 후 다시 시도해 주세요.'; }
+        });
+        return;
+      }
       const nick    = document.getElementById('authSignupNick')?.value.trim() || '';
       const secQRaw = document.getElementById('authSignupSecQ')?.value || '';
       const secQCustom = document.getElementById('authSignupSecQCustom')?.value.trim() || '';
