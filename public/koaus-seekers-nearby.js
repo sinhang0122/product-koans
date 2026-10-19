@@ -158,7 +158,7 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
     const femaleOnly = post.gender === 'female';
     const list = all.filter(it => {
       if (femaleOnly && it.p.gender !== 'female') return false;
-      if (hasCoords && (it.km == null || it.km > radius)) return false;
+      if (hasCoords && (it.km == null || it.km > Math.max(radius, Number(it.p.radiusKm) || 0))) return false;   // 양방향: 집주인 반경 또는 구하는 사람 반경 중 큰 쪽
       if (budgetOnly && price && !(it.p.budgetMin <= price && price <= it.p.budgetMax)) return false;
       return true;
     }).sort((a, b) => (a.km == null || b.km == null) ? 0 : a.km - b.km);
@@ -191,7 +191,7 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
         </div>
         ${tags.length ? `<div class="ksn-tags">${tags.map(t => `<span class="ksn-tag">${esc(t)}</span>`).join('')}${budgetOk ? '<span class="ksn-tag ok">예산 맞음</span>' : ''}</div>` : (budgetOk ? '<div class="ksn-tags"><span class="ksn-tag ok">예산 맞음</span></div>' : '')}
         <dl class="ksn-grid">
-          <dt>동네</dt><dd>${subs || '—'}</dd>
+          <dt>동네</dt><dd>${subs || '—'}${p.radiusKm ? ' · 반경 ' + esc(p.radiusKm) + 'km' : ''}</dd>
           <dt>예산</dt><dd>주 $${esc(p.budgetMin)} ~ $${esc(p.budgetMax)}</dd>
           <dt>입주</dt><dd>${esc(p.moveIn || '—')}${p.stay ? ' · ' + esc(en.label('stays', p.stay)) : ''}</dd>
           <dt>방</dt><dd>${esc(rooms || '상관없음')}${p.bathroom === 'private' ? ' · 개인 욕실' : ''}</dd>
@@ -327,7 +327,7 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
     else {
       const list = pg.all.filter(it => {
         if (pg.femaleOnly && it.p.gender !== 'female') return false;
-        if (it.km == null || it.km > pg.radius) return false;
+        if (it.km == null || it.km > Math.max(pg.radius, Number(it.p.radiusKm) || 0)) return false;   // 양방향
         if (pg.budgetOnly && pg.price && !(it.p.budgetMin <= pg.price && pg.price <= it.p.budgetMax)) return false;
         return true;
       }).sort((a, b) => a.km - b.km);

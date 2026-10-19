@@ -1046,7 +1046,7 @@ service cloud.firestore {
     function validSeekerProfile() {
       let d = data();
       return d.keys().hasOnly([
-               'suburbs', 'states', 'budgetMin', 'budgetMax', 'moveIn', 'stay',
+               'suburbs', 'states', 'radiusKm', 'budgetMin', 'budgetMax', 'moveIn', 'stay',
                'roomTypes', 'bathroom', 'nick', 'ageBand', 'gender',
                'visible', 'status', 'step', 'lastActiveAt', 'createdAt', 'updatedAt', 'pausedAt'
              ])
@@ -1058,6 +1058,7 @@ service cloud.firestore {
         && (d.suburbs.size() < 5 || validSuburb(d.suburbs[4]))
         && d.states is list && d.states.size() >= 1 && d.states.size() <= 5
         && d.states.hasOnly(['qld', 'nsw', 'vic', 'wa', 'sa', 'tas', 'act', 'nt'])
+        && pOptInt(d, 'radiusKm', 1, 50)   // 10-19: 구하는 사람 쪽 반경(3/5/10/20) — 집주인 반경과 큰 쪽으로 매칭
         && pOptInt(d, 'budgetMin', 0, 3000) && pOptInt(d, 'budgetMax', 0, 3000)
         && (!('budgetMin' in d) || !('budgetMax' in d) || d.budgetMin <= d.budgetMax)
         && (!('moveIn' in d) || (d.moveIn is string && d.moveIn.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}')))

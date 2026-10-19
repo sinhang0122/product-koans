@@ -71,7 +71,7 @@ function mountSignupExtra() {
   // 닉네임 옆 [중복확인] 버튼 — Firestore users 컬렉션 중복 비동기 체크
   const html = `
     <div class="auth-field">
-      <label class="auth-label" for="authSignupNick">별명 (Nickname) <span style="color:var(--red,#dc2626);font-weight:800;">[필수]</span></label>
+      <label class="auth-label" for="authSignupNick">닉네임 (Nickname) <span style="color:var(--red,#dc2626);font-weight:800;">[필수]</span></label>
       <div style="display:flex;gap:8px;align-items:stretch;">
         <input class="auth-input" id="authSignupNick" type="text" autocomplete="nickname"
                placeholder="3~12자 한글·영문·숫자" maxlength="30" style="flex:1;min-width:0;" />
@@ -108,7 +108,27 @@ function mountSignupExtra() {
   }
   form.__koausExtraMounted = true;
 
-  // ── 별명 [중복확인] 핸들러 — Firestore users 컬렉션 nickname 필드 매칭 ──
+  // ── 닉네임 자동 제안(10-19) ──
+  const NICK_ADJ = ['조용한', '성실한', '따뜻한', '부지런한', '명랑한', '차분한', '든든한', '씩씩한', '상냥한', '느긋한', '다정한', '유쾌한'];
+  const NICK_NOUN = ['캥거루', '코알라', '웜뱃', '쿼카', '에뮤', '펭귄', '왈라비', '앵무새', '바다거북', '돌고래', '유칼립', '파도'];
+  const makeNick = () => NICK_ADJ[Math.floor(Math.random() * NICK_ADJ.length)] + NICK_NOUN[Math.floor(Math.random() * NICK_NOUN.length)] + String(10 + Math.floor(Math.random() * 90));
+  async function autoSuggestNick() {
+    const inp = document.getElementById('authSignupNick');
+    if (!inp || inp.value.trim()) return;
+    for (let i = 0; i < 4; i++) {
+      const cand = makeNick();
+      try {
+        const snap = await getDoc(doc(db, 'nicknames', cand.toLowerCase()));
+        if (snap.exists()) continue;
+        if (inp.value.trim()) return;   // 그 사이 사용자가 직접 입력
+        inp.value = cand; _nickConfirmed = cand;
+        setNickMsg('자동으로 만든 닉네임입니다. 그대로 쓰거나 바꿔 주세요. (나중에 환경설정에서 변경 가능)', 'ok');
+        return;
+      } catch (_) { return; }
+    }
+  }
+
+  // ── 닉네임 [중복확인] 핸들러 — Firestore users 컬렉션 nickname 필드 매칭 ──
   let _nickConfirmed = '';   // 확인 완료된 닉네임 (회원가입 시점에 매칭 확인)
   const setNickMsg = (text, kind) => {
     const el = document.getElementById('authSignupNickMsg');
@@ -140,7 +160,7 @@ function mountSignupExtra() {
         setNickMsg('사용 가능한 닉네임입니다.', 'ok');
         _nickConfirmed = nick;
       } else {
-        setNickMsg('이미 사용 중인 닉네임입니다. 다른 별명을 입력해 주세요.', 'err');
+        setNickMsg('이미 사용 중인 닉네임입니다. 다른 닉네임을 입력해 주세요.', 'err');
         _nickConfirmed = '';
       }
     } catch (e) {
@@ -151,6 +171,16 @@ function mountSignupExtra() {
       nickCheckBtn.disabled = false; nickCheckBtn.textContent = '중복확인';
     }
   });
+  // 10-19: 크몽처럼 닉네임 자동 제안 — 비어 있으면 '형용사+동물+두 자리'를 채우고 중복확인까지 자동.
+  //   그대로 써도 되고 바꿔도 됨(나중에 환경설정에서 변경). 가입 폼이 실제로 화면에 보일 때 1회만(페이지마다 read 1건 낭비 방지).
+  try {
+    let _suggested = false;
+    const fire = () => { if (_suggested) return; _suggested = true; try { autoSuggestNick(); } catch (_) {} };
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)) { io.disconnect(); fire(); } });
+      io.observe(form);
+    } else form.addEventListener('focusin', fire, { once: true });
+  } catch (_) {}
 
   // 회원가입 직전 신규 필드 검증 + 임시 저장 (capture phase — 페이지 본체 listener 전 실행)
   const btn = document.getElementById('authSignupSubmit');
@@ -164,7 +194,7 @@ function mountSignupExtra() {
       // "직접 입력" 선택 시 customQ 필수 — 그 외엔 select값 그대로 질문 텍스트로 사용
       const secQ = (secQRaw === SEC_Q_CUSTOM) ? secQCustom : secQRaw;
       if (!nick || !secA) {
-        if (errEl) errEl.textContent = '별명과 보안 답변을 모두 입력해 주세요.';
+        if (errEl) errEl.textContent = '닉네임과 보안 답변을 모두 입력해 주세요.';
         e.stopImmediatePropagation(); e.preventDefault(); return;
       }
       if (secQRaw === SEC_Q_CUSTOM && (!secQCustom || secQCustom.length < 2)) {
@@ -174,11 +204,11 @@ function mountSignupExtra() {
         return;
       }
       if (!/^[a-zA-Z0-9가-힣]{3,12}$/.test(nick)) {
-        if (errEl) errEl.textContent = '별명은 3~12자 한글·영문·숫자만 가능합니다.';
+        if (errEl) errEl.textContent = '닉네임은 3~12자 한글·영문·숫자만 가능합니다.';
         e.stopImmediatePropagation(); e.preventDefault(); return;
       }
       if (_nickConfirmed !== nick) {
-        if (errEl) errEl.textContent = '별명 [중복확인]을 먼저 진행해 주세요.';
+        if (errEl) errEl.textContent = '닉네임 [중복확인]을 먼저 진행해 주세요.';
         e.stopImmediatePropagation(); e.preventDefault();
         try { nickCheckBtn.click(); } catch (_) {}
         return;

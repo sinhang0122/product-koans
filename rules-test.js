@@ -215,7 +215,7 @@ const seekerData = {
   states: ['qld'],
   budgetMin: 150, budgetMax: 250, moveIn: '2026-07-01', stay: 'long',
   roomTypes: ['single', 'master'], bathroom: 'any',
-  nick: '신행', ageBand: '20m', gender: 'male',
+  nick: '신행', ageBand: '20m', gender: 'male', radiusKm: 5,
   visible: true, status: 'looking', step: 7,
   lastActiveAt: '2026-06-10T00:00:00Z', createdAt: '2026-06-10T00:00:00Z', updatedAt: '2026-06-10T00:00:00Z',
 };
@@ -814,6 +814,9 @@ const cases = [
   mk({ label: 'seeker_profiles suburbs 5개 + stay 상의 후 결정(tbd) → 허용 (표현식 한도 회귀 감시)', expectation: 'ALLOW',
        path: 'seeker_profiles/testuser123', method: 'create', uid: 'testuser123',
        data: Object.assign({}, seekerData, { suburbs: Array(5).fill(seekerData.suburbs[0]), stay: 'tbd' }) }),
+  mk({ label: 'seeker_profiles radiusKm 100 → 거부 (1~50)', expectation: 'DENY',
+       path: 'seeker_profiles/testuser123', method: 'create', uid: 'testuser123',
+       data: Object.assign({}, seekerData, { radiusKm: 100 }) }),
   mk({ label: 'seeker_profiles suburb 주 코드 틀림(xx) → 거부', expectation: 'DENY',
        path: 'seeker_profiles/testuser123', method: 'create', uid: 'testuser123',
        data: Object.assign({}, seekerData, { suburbs: [Object.assign({}, seekerData.suburbs[0], { state: 'xx' })] }) }),

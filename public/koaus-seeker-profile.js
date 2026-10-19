@@ -8,7 +8,8 @@
 //  - 공개/비공개 분리(10-18): seeker_profiles/{uid} = 카드에 보이는 조건+닉네임·성별·연령대(집주인이 읽음),
 //    seeker_private/{uid} = 소개글·체류·흡연·반려동물·알림 이메일(본인만). 저장은 writeBatch 로 두 문서 한 번에.
 //    옛 단일 문서(firstName·intro·alerts 가 공개 문서에 있던 10-18 이전 저장분)는 본인이 탭을 열 때 자동으로 옮긴다.
-//  - 짧은 등록(quick, ①-2 역할 선택 뒤): 동네·예산·입주/기간 3단계만 묻고 저장, 단계마다 '건너뛰기'(나중에 마이페이지에서).
+//  - 짧은 등록(quick, ①-2 역할 선택 뒤): 동네(+반경)·예산·입주/기간 3단계 → 바로 프로필 생성(건너뛰기 없음, 10-19 확정).
+//    끝 화면 = 집주인이 보는 카드 미리보기 + 활성화 스위치 + '프로필 더 채우기'(전체 모달 4단계부터). 닉네임은 계정 닉네임 자동.
 //  - 동네 입력: Google Geocoding REST(동네 단위, 호주 한정) — Maps JS 미로드(마이페이지 경량 유지).
 //    저장은 동네 중심 좌표만(정확 주소 없음). 최대 3곳.
 //  - 공개 토글 / 상태(구하는 중·구했습니다) / 30일 일시정지 '다시 켜기' 는 카드에서 바로 updateDoc.
@@ -37,7 +38,8 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
   const DRAFT_KEY = 'koaus-seeker-draft-v1';
   const MAX_SUBURBS = 5;   // 10-19: 3 → 5 — 여러 동네(예: 선샤인코스트 + 골드코스트) 집주인에게 동시에 보이게. 8은 rules 표현식 한도 초과
   const TOTAL_STEPS = 7;
-  const QUICK_STEPS = 4;                 // 짧은 등록: 동네 · 예산 · 입주/기간 · 미리보기+공개(활성화)
+  const QUICK_STEPS = 3;                 // 짧은 등록: 동네 · 예산 · 입주/기간 → 바로 등록(끝 화면에 미리보기·활성화·더 채우기)
+  const RADII = [3, 5, 10, 20];          // 구하는 사람 쪽 반경(동네 기준 km) — 집주인 쪽 반경과 합쳐서(둘 중 큰 쪽) 매칭
   const LEGACY_KEYS = ['firstName', 'residency', 'smoker', 'pet', 'intro', 'alerts'];   // 10-18 이전 공개 문서에 있던 비공개 칸
 
   let db = null, me = null;
@@ -265,13 +267,13 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
         </div>
         ${paused ? `<div class="ksp-banner"><span>30일 동안 활동이 없어 일시정지되었습니다. 계속 구하고 계시면 다시 켜 주십시오.</span><button type="button" class="ksp-btn small primary" data-ksp="resume">다시 켜기</button></div>` : ''}
         <dl class="ksp-summary">
-          <dt>동네</dt><dd>${subs || '—'}</dd>
+          <dt>동네</dt><dd>${subs || '—'}${p.radiusKm ? ' · 반경 ' + esc(p.radiusKm) + 'km' : ''}</dd>
           <dt>예산</dt><dd>${esc(budget)}</dd>
           <dt>입주</dt><dd>${esc(p.moveIn || '—')}${stayL ? ' · ' + esc(stayL) : ''}</dd>
           <dt>방</dt><dd>${esc(rooms || '상관없음')}${p.bathroom === 'private' ? ' · 개인 욕실' : ''}</dd>
           <dt>알림</dt><dd>${esc(alertL)}${al && al.email ? ' · ' + esc(al.email) : ''}</dd>
         </dl>
-        <div class="ksp-help" style="margin-top:-4px;">집주인에게는 닉네임·성별·나이대와 위 조건만 보입니다. 소개글·신분·흡연·반려동물·이메일은 본인만 봅니다.</div>
+        <div class="ksp-help" style="margin-top:-4px;">집주인에게는 닉네임·성별·나이대와 위 조건만 보입니다. 소개글·신분·흡연·반려동물·이메일은 본인만 봅니다. 닉네임은 <a href="settings.html" style="color:inherit;text-decoration:underline;">환경설정</a>에서 바꿀 수 있습니다.</div>
         <div class="ksp-row" style="justify-content:space-between;">
           <label class="ksp-switch"><input type="checkbox" data-ksp="visible" ${vis && !paused ? 'checked' : ''} ${found ? 'disabled' : ''}> 근처 집주인에게 공개</label>
           <div class="ksp-actions">
@@ -333,7 +335,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
 
   function blankDraft() {
     return {
-      suburbs: [], budgetMin: '0', budgetMax: '', moveIn: todayStr(), stay: '',
+      suburbs: [], radiusKm: 5, budgetMin: '0', budgetMax: '', moveIn: todayStr(), stay: '',
       roomTypes: [], bathroom: 'any',
       nick: '', ageBand: '', gender: '', residency: '', smoker: null, pet: null,
       intro: '', visible: true, alertMode: 'threshold5', alertEmail: (me && me.email) || '',
@@ -342,6 +344,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
   function fromProfile(p) {
     const d = blankDraft();
     d.suburbs = (p.suburbs || []).slice(0, MAX_SUBURBS).map(s => ({ name: s.name, state: s.state, postcode: s.postcode || '', lat: s.lat, lng: s.lng }));
+    d.radiusKm = RADII.includes(Number(p.radiusKm)) ? Number(p.radiusKm) : 5;
     d.budgetMin = p.budgetMin != null ? String(p.budgetMin) : '0';
     d.budgetMax = p.budgetMax != null ? String(p.budgetMax) : '';
     d.moveIn = p.moveIn || todayStr(); d.stay = p.stay || '';
@@ -386,7 +389,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       const nav = e.target.closest('[data-ksp-nav]');
       if (!nav) { if (e.target === ovl) closeModal(); return; }
       if (nav.dataset.kspNav === 'close') closeModal();
-      if (nav.dataset.kspNav === 'skip') { closeModal(); toast('나중에 마이페이지 → 내 프로필에서 이어서 등록할 수 있습니다.'); }
+      if (nav.dataset.kspNav === 'more') { const p = profile; closeModal(); setTimeout(() => openModal(p, { startStep: 4 }), 60); }
       if (nav.dataset.kspNav === 'back') { if (step > 1) { collect(); step--; renderStep(); } else closeModal(); }
     });
     document.addEventListener('keydown', e => { if (e.key === 'Escape' && ovl.classList.contains('open')) closeModal(); });
@@ -400,7 +403,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     mountModal();
     editing = !!existing;
     quick = !!(opts && opts.quick) && !existing;
-    if (existing) { draft = fromProfile(existing); step = 1; }
+    if (existing) { draft = fromProfile(existing); step = (opts && opts.startStep) ? Math.min(Math.max(1, opts.startStep), TOTAL_STEPS) : 1; }
     else {
       const saved = loadDraft();
       draft = saved ? saved.draft : blankDraft();
@@ -452,7 +455,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
         <div class="ksp-preview-top"><div class="ksp-avatar">${esc((nick[0] || '?').toUpperCase())}</div>
           <div><div class="ksp-preview-name">${esc(nick)}</div><div class="ksp-preview-meta">${tags.length ? esc(tags.join(' · ')) : '오늘 활동'}</div></div></div>
         <dl class="ksp-summary">
-          <dt>동네</dt><dd>${subs || '—'}</dd>
+          <dt>동네</dt><dd>${subs || '—'}${draft.radiusKm ? ' · 반경 ' + esc(draft.radiusKm) + 'km' : ''}</dd>
           <dt>예산</dt><dd>${budget}</dd>
           <dt>입주</dt><dd>${esc(draft.moveIn || '—')}${stayL ? ' · ' + esc(stayL) : ''}</dd>
           <dt>방</dt><dd>${esc(rooms || '상관없음')}${draft.bathroom === 'private' ? ' · 개인 욕실' : ''}</dd>
@@ -468,17 +471,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     $('#kspProg', ovl).style.width = Math.min(100, Math.round((step - 1) / TS * 100)) + '%';
     $('[data-ksp-nav="back"]', ovl).style.visibility = step > 1 && step <= TS ? 'visible' : 'hidden';
     let html = '', next = '다음';
-    if (quick && step === QUICK_STEPS) {
-      // 짧은 등록 마지막: 근처 집주인에게 보이는 모습 + 활성화
-      html = `
-          <div class="ksp-q">근처에 집을 올리시는 분께 간단한 내 조건이 보입니다.</div>
-          <div class="ksp-help">아래가 집주인이 보는 카드입니다. 닉네임과 조건만 보이고, 이메일·소개글은 보이지 않습니다. 연락은 채팅으로만 옵니다.</div>
-          ${previewCardHtml()}
-          <label class="ksp-switch"><input type="checkbox" id="kspVisible" ${draft.visible ? 'checked' : ''}> 내 조건 활성화 (근처 집주인에게 공개)</label>
-          <div class="ksp-help">끄면 카드는 숨기고 새 매물 알림만 받습니다. 마이페이지 → 내 프로필에서 언제든 바꿀 수 있습니다.</div>
-          <div class="ksp-err" id="kspErr${QUICK_STEPS}"></div>`;
-      next = '등록';
-    } else switch (step) {
+    switch (step) {
       case 1:
         html = `
           <div class="ksp-q">찾으시는 동네</div>
@@ -487,6 +480,9 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
           <input class="ksp-input" id="kspSuburbQ" type="text" placeholder="예: Sunnybank, 4109" autocomplete="off" inputmode="search">
           <ul class="ksp-sug" id="kspSuburbSug"></ul>
           <div class="ksp-sel" id="kspSuburbSel"></div>
+          <div class="ksp-label">동네 기준 반경 <span class="req">(필수)</span></div>
+          <div class="ksp-help">고른 동네에서 이 거리 안에 방을 올린 집주인에게 내 조건이 보입니다. 집주인이 보는 범위를 더 넓게 잡으면 그만큼 더 보입니다.</div>
+          ${chipsHtml('radiusKm', RADII.map(r => ({ code: String(r), label: r + 'km' })), String(draft.radiusKm || 5), false)}
           <div class="ksp-err" id="kspErr1"></div>`;
         break;
       case 2:
@@ -509,7 +505,9 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
           <div class="ksp-chips"><button type="button" class="ksp-opt" data-asap>최대한 빨리</button></div>
           <div class="ksp-label">거주 기간 <span class="req">(필수)</span></div>
           ${chipsHtml('stay', en.stays, draft.stay, false)}
+          ${quick ? '<div class="ksp-help">등록하면 바로 프로필이 만들어집니다. 나이대·방 종류 같은 나머지는 추후 프로필 설정에서 변경·추가할 수 있습니다.</div>' : ''}
           <div class="ksp-err" id="kspErr3"></div>`;
+        if (quick) next = '등록';
         break;
       case 4:
         html = `
@@ -561,10 +559,25 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
         break;
       default: {
         const st = draft.suburbs[0] && draft.suburbs[0].state;
+        if (quick && !editing) {
+          html = `
+          <div class="ksp-done" style="align-items:stretch;text-align:left;">
+            <div class="ksp-q">프로필이 만들어졌습니다.</div>
+            <div class="ksp-help">근처에 집을 올리시는 분께 간단한 내 조건이 이렇게 보입니다. 닉네임과 조건만 보이고 이메일·소개글은 보이지 않습니다. 연락은 채팅으로만 옵니다.</div>
+            ${previewCardHtml()}
+            <label class="ksp-switch"><input type="checkbox" id="kspVisibleDone" ${profile && profile.visible !== false ? 'checked' : ''}> 내 조건 활성화 (근처 집주인에게 공개)</label>
+            <div class="ksp-help">추후 프로필 설정에서 변경 가능합니다. 새 매물 알림은 로그인 이메일로, 5건 이상 모이면 보냅니다.</div>
+            <div class="ksp-actions" style="justify-content:flex-end;">
+              <button type="button" class="ksp-btn" data-ksp-nav="more">프로필 더 채우기</button>
+              <a class="ksp-btn primary" href="accom.html${st ? '?state=' + esc(st) : ''}">조건에 맞는 방 보러 가기</a>
+            </div>
+          </div>`;
+          next = '';
+          break;
+        }
         html = `
           <div class="ksp-done">
-            <div class="ksp-q">${editing ? '저장했습니다.' : (quick ? '조건을 등록했습니다.' : '프로필을 만들었습니다.')}</div>
-            ${quick ? '<div class="ksp-help">방 종류·나이대·성별·알림 설정은 마이페이지 → 내 프로필에서 언제든 채울 수 있습니다. 새 매물 알림은 로그인 이메일로, 5건 이상 모이면 보냅니다.</div>' : ''}
+            <div class="ksp-q">${editing ? '저장했습니다.' : '프로필을 만들었습니다.'}</div>
             <div class="ksp-help">${draft.visible ? '희망 동네 근처에 방을 올린 집주인에게 지금부터 내 조건이 보입니다.' : '비공개로 저장했습니다. 알림 메일만 받습니다.'} 연락이 오면 채팅 탭에 표시됩니다.</div>
             <a class="ksp-btn primary" href="accom.html${st ? '?state=' + esc(st) : ''}">조건에 맞는 방 보러 가기</a>
           </div>`;
@@ -572,8 +585,17 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       }
     }
     body.innerHTML = html;
+    const doneSw = $('#kspVisibleDone', body);
+    if (doneSw) doneSw.addEventListener('change', async () => {
+      const on = doneSw.checked;
+      try {
+        await updateDoc(doc(db, 'seeker_profiles', me.uid), { visible: on, lastActiveAt: serverTimestamp(), updatedAt: serverTimestamp() });
+        await loadProfile(true); if (panelEl) rerenderCard();
+        toast(on ? '활성화했습니다. 근처 집주인에게 보입니다.' : '비활성화했습니다. 알림만 받습니다.');
+      } catch (e) { doneSw.checked = !on; toast('변경하지 못했습니다. 잠시 후 다시 시도해 주십시오.'); }
+    });
     foot.innerHTML = next
-      ? ((quick && !editing ? '<button type="button" class="ksp-btn" data-ksp-nav="skip">건너뛰기</button>' : '') + `<button type="button" class="ksp-btn primary" id="kspNext">${next}</button>`)
+      ? `<button type="button" class="ksp-btn primary" id="kspNext">${next}</button>`
       : `<button type="button" class="ksp-btn" data-ksp-nav="close">닫기</button>`;
     wireStep();
     const first = body.querySelector('input:not([type=checkbox]),textarea');
@@ -595,6 +617,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
           b.setAttribute('aria-pressed', i === -1 ? 'true' : 'false');
         } else {
           if (name === 'smoker' || name === 'pet') draft[name] = (val === 'yes');
+          else if (name === 'radiusKm') draft.radiusKm = Number(val);
           else draft[name] = (draft[name] === val && name !== 'alertMode' && name !== 'bathroom' && name !== 'stay') ? '' : val;
           group.querySelectorAll('.ksp-opt').forEach(x => x.setAttribute('aria-pressed', x === b && (draft[name] !== '' && draft[name] !== null) ? 'true' : 'false'));
           if (draft[name] === '' || draft[name] === null) b.setAttribute('aria-pressed', 'false');
@@ -716,6 +739,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
         return o;
       }),
       states: Array.from(new Set(draft.suburbs.map(s => s.state))).slice(0, 5),
+      radiusKm: RADII.includes(Number(draft.radiusKm)) ? Number(draft.radiusKm) : 5,
       budgetMin: Math.round(Number(draft.budgetMin)), budgetMax: Math.round(Number(draft.budgetMax)),
       moveIn: draft.moveIn, stay: draft.stay,
       nick: nick,
@@ -787,7 +811,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
   window.koausSeekerProfile = {
     refresh: refreshPanel,
     open: () => openModal(profile),
-    // 짧은 등록(①-2 역할 선택 뒤): 기존 프로필이 있으면 수정 모달, 없으면 3단계 + 건너뛰기
+    // 짧은 등록(①-2 역할 선택 뒤): 기존 프로필이 있으면 수정 모달, 없으면 3단계 → 바로 생성
     openQuick: () => loadProfile(false).then(p => openModal(p || null, { quick: true })),
     has: () => loadProfile(false).then(p => !!p),
   };
