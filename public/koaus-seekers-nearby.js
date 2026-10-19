@@ -260,8 +260,9 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
       .ksn-sug li:hover{background:var(--bg-card)}
       .ksn-now{font-size:13px;font-weight:700}
       .ksn-now small{font-weight:500;opacity:.7;margin-left:6px}
-      .ksn-page-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-      @media(min-width:900px){.ksn-page-grid{grid-template-columns:1fr 1fr 1fr}}
+      .ksn-page-grid{display:grid;grid-template-columns:1fr;gap:10px}   /* 10-19: 휴대폰 1열(가독성), 넓으면 2~3열 */
+      @media(min-width:640px){.ksn-page-grid{grid-template-columns:1fr 1fr}}
+      @media(min-width:960px){.ksn-page-grid{grid-template-columns:1fr 1fr 1fr}}
       .ksn-page-grid .ksn-card{padding:12px}
       .ksn-page-grid .ksn-grid{grid-template-columns:auto 1fr;font-size:12.5px}
       .ksn-price{display:inline-flex;align-items:center;gap:6px;font-size:13px}
