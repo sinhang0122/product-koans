@@ -37,7 +37,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       note: '계정 하나로 모두 활동할 수 있어요.',
       options: [
         { code: 'seeker', label: '집·방을 찾고 있어요',   desc: '내게 필요한 곳을 찾아보세요.', art: 'seek' },
-        { code: 'owner',  label: '집·방을 올리고 있어요', desc: '가지고 있거나 렌트 중인 곳을 올려 주세요.', art: 'host' },
+        { code: 'owner',  label: '집·방을 올리고 있어요', desc: '가지고 있는 곳이나 렌트 중인 곳을 올려 주세요.', art: 'host' },
       ],
     },
     job: {
@@ -159,7 +159,11 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       .kr-switch-help{font-size:12px;opacity:.65;line-height:1.45}
       /* 역할 미설정 안내 — 목록 우측 상단(상세 필터 옆). 정할 때까지 계속 보임 */
       .kr-prompt{appearance:none;border:1px solid var(--text-primary);background:var(--bg-base);color:var(--text-primary);border-radius:999px;padding:7px 12px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;white-space:nowrap}
-      .kr-prompt:hover{background:var(--text-primary);color:var(--bg-base)}`;
+      .kr-prompt:hover{background:var(--text-primary);color:var(--bg-base)}
+      /* 창이 뜨기 전 잠깐(0.5초) 돌아가는 원 */
+      .kr-wait{display:flex;flex-direction:column;align-items:center;gap:12px;color:#fff;font-family:var(--font);font-size:14px;font-weight:600}
+      .kr-spin{width:38px;height:38px;border-radius:50%;border:3px solid rgba(255,255,255,.3);border-top-color:#fff;animation:kr-rot .8s linear infinite}
+      @keyframes kr-rot{to{transform:rotate(360deg)}}`;
     document.head.appendChild(st);
   }
 
@@ -218,8 +222,17 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     if (snoozed(app)) return;
     const r = await load(false);
     if (!r || r[app]) return;
-    // 0.5초: 로그인 창·휴대폰 인증 창이 닫히는 애니메이션과 겹치지 않을 만큼만
-    setTimeout(() => { if (me && !$('.ksp-ovl.open') && !$('.auth-overlay.open')) ask(app, code => afterChoice(app, code)); }, 500);
+    // 0.5초: 로그인 창·휴대폰 인증 창이 닫히는 애니메이션과 겹치지 않을 만큼만 — 그동안 돌아가는 원 표시
+    if ($('.ksp-ovl.open') || $('.auth-overlay.open')) return;
+    mount();
+    ovl.innerHTML = '<div class="kr-wait"><div class="kr-spin" aria-hidden="true"></div><div>불러오는 중…</div></div>';
+    ovl.onclick = null;
+    ovl.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => {
+      if (me && !$('.ksp-ovl.open') && !$('.auth-overlay.open')) ask(app, code => afterChoice(app, code));
+      else close();
+    }, 500);
   }
 
   // 역할이 없는 동안 목록 우측 상단(상세 필터 옆)에 '역할 정하기' 버튼 — 누르면 창
