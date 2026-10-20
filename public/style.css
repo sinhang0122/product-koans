@@ -4296,6 +4296,13 @@ body.is-admin .admin-only.admin-only--block { display: block !important; }
 }
 .mypage-account-group-title { font-size: 15px; font-weight: 800; color: var(--text-primary); letter-spacing: -0.01em; }
 .mypage-account-group .mypage-account-row { padding-left: 0; padding-right: 0; }
+/* 환경설정 프로필 설정 시트(10-20) — 모바일 하단, 640px↑ 중앙 */
+.mp-sheet-ovl { position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 9000; display: flex; align-items: flex-end; justify-content: center; }
+.mp-sheet-ovl[hidden] { display: none; }
+.mp-sheet { width: 100%; max-width: 560px; max-height: 92vh; overflow: auto; background: var(--bg-base); border-radius: 18px 18px 0 0; padding: 0 16px 16px; box-sizing: border-box; }
+.mp-sheet-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px 0 10px; border-bottom: 1px solid var(--border); font-size: 16px; position: sticky; top: 0; background: var(--bg-base); }
+.mp-sheet-body .mypage-account-row:last-child { border-bottom: 0; }
+@media (min-width: 640px) { .mp-sheet-ovl { align-items: center; } .mp-sheet { border-radius: 18px; } }
 .mypage-profile-info { flex: 1; min-width: 0; }
 .mypage-name-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
 .mypage-name { font-size: 18px; font-weight: 800; color: var(--text-primary); }

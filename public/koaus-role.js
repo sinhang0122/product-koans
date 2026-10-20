@@ -152,6 +152,8 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       @media(max-width:768px){.kr-ovl{padding:0;align-items:stretch}.kr-box{max-width:none;border-radius:0;border:0;display:flex;flex-direction:column;justify-content:center;padding:28px 20px calc(24px + env(safe-area-inset-bottom,0px));overflow:auto}.kr-title{font-size:24px}.kr-opts{grid-template-columns:1fr;gap:12px;margin:22px 0 12px}.kr-opt{display:grid;grid-template-columns:72px 1fr;column-gap:14px;row-gap:2px;align-items:center;padding:16px 16px}.kr-art{grid-row:1 / 3;width:72px;height:72px;margin:0}.kr-opt b{font-size:19px}.kr-opt span{font-size:13.5px;margin-top:4px}.kr-note{font-size:13px}}
       /* 마이페이지 역할 바꾸기 */
       .kr-switch{display:flex;flex-direction:column;gap:8px;margin:0 0 12px;padding:12px 14px;border:1px solid var(--border);border-radius:14px;background:var(--bg-base)}
+      .kr-switch-title{font-size:14px;font-weight:800;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+      .kr-switch-title span{font-size:12px;font-weight:400;opacity:.65}
       .kr-switch-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
       .kr-switch-row b{font-size:13.5px;min-width:52px}
       .kr-seg{display:inline-flex;border:1px solid var(--border);border-radius:999px;overflow:hidden}
@@ -256,9 +258,10 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     const seg = (app, codes) => `<span class="kr-seg" data-app="${app}">${codes.map(c => `<button type="button" data-code="${c}" class="${r[app] === c ? 'on' : ''}">${esc(LABEL[app][c])}</button>`).join('')}</span>`;
     host.innerHTML = `
       <div class="kr-switch">
+        <div class="kr-switch-title">내 역할 <span>Living과 Job은 따로 정하고, 언제든 바꿀 수 있습니다.</span></div>
         <div class="kr-switch-row"><b>Living</b>${seg('living', ['seeker', 'owner'])}</div>
         <div class="kr-switch-row"><b>Job</b>${seg('job', ['seeker', 'employer'])}</div>
-        <div class="kr-switch-help">언제든 바꿀 수 있습니다. "집·방 올리기"를 고르면 탭바에 "프로필" 탭이 생기고, "집·방 찾기"는 아래 조건 카드가 근처 집주인에게 보입니다.</div>
+        <div class="kr-switch-help">방을 올리시려면 Living을 "집·방 올리기"로 바꾸십시오 — 글쓰기 버튼과 탭바 "프로필" 탭이 생깁니다. "집·방 찾기"는 아래 내 조건이 근처 집주인에게 보입니다.</div>
       </div>`;
     host.onclick = async e => {
       const b = e.target.closest('.kr-seg button'); if (!b) return;

@@ -435,55 +435,74 @@
         <button class="mypage-edit-btn" id="mpPhoneBtn">휴대폰 인증</button>
       </div>
 
-      <!-- 5) 프로필 설정 묶음 (10-20) — Living / Job 로 나눔.
-           · Living: 조건·공개 여부는 마이페이지 '내 프로필'(seeker_profiles) — 여기서는 링크 + 문의 자기소개(문자·오픈채팅 프리필)만.
-           · Job: 구인구직 문의 자기소개(추후 경력·가능 시간대 등 항목 추가 — 5묶음).
-           자기소개 저장 위치는 그대로 users/{uid}.introLiving·introWork (본인만 read) + LS 캐시 'koaus-my-intro-living'/'koaus-my-intro-work'.
-           옛 introText 는 Living 폴백(읽기 전용). 각 700자. koaus-contact-actions.js 가 보드별로 읽어 문의 본문에 넣음(변경 없음). -->
-      <div class="mypage-account-group" id="mpLivingGroup">
-        <div class="mypage-account-group-head">
-          <div>
-            <div class="mypage-account-group-title">Living 프로필 설정</div>
-            <div class="mypage-account-row-desc">집·방 찾기 — 동네·예산·입주일 등 내 조건과 공개 여부는 마이페이지 내 프로필에서 설정합니다.</div>
-          </div>
-          <a class="mypage-edit-btn" href="mypage.html?tab=profile" style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;">내 프로필 →</a>
+      <!-- 5) 프로필 설정 (10-20) — Living / Job 행. 누르면 시트(모바일 하단·데스크탑 중앙)가 열리고 그 안에 문의 자기소개.
+           · Living 시트: 조건·공개 여부·역할은 마이페이지 '내 프로필'로 가는 링크 + 쉐어·렌트 문의 자기소개.
+           · Job 시트: 구인구직 문의 자기소개(경력·가능 시간대 등은 5묶음에서 추가).
+           자기소개 저장 위치·프리필은 그대로: users/{uid}.introLiving·introWork (본인만 read) + LS 'koaus-my-intro-living'/'koaus-my-intro-work',
+           옛 introText 는 Living 폴백(읽기 전용), 각 700자, koaus-contact-actions.js 가 보드별로 읽어 문의 본문에 넣음(변경 없음). -->
+      <div class="mypage-account-row">
+        <div class="mypage-account-row-info">
+          <div class="mypage-account-row-label">Living 프로필 설정</div>
+          <div class="mypage-account-row-desc">집·방 찾기 조건과 공개 여부 · 역할 · 쉐어·렌트 문의 자기소개</div>
         </div>
-        <div class="mypage-account-row" id="mpIntroLivingRow" style="flex-direction:column;align-items:stretch;gap:8px;border-bottom:0;">
-          <div class="mypage-account-row-info" style="width:100%;">
-            <div class="mypage-account-row-label">문의 자기소개 (쉐어·렌트 문의용)</div>
-            <div class="mypage-account-row-desc" style="line-height:1.5;">
-              쉐어·렌트 글에 문자·오픈채팅으로 문의할 때 자동으로 들어가는 소개입니다. 상대방에게 보여줘도 괜찮은 내용만 적어 주십시오.
-              TFN, 주민번호 등 민감정보는 적지 마십시오.
+        <button class="mypage-edit-btn" type="button" data-mp-sheet="mpLivingSheet">설정</button>
+      </div>
+      <div class="mypage-account-row">
+        <div class="mypage-account-row-info">
+          <div class="mypage-account-row-label">Job 프로필 설정</div>
+          <div class="mypage-account-row-desc">구인구직 문의 자기소개 · 경력·가능 시간대 등은 추후 추가</div>
+        </div>
+        <button class="mypage-edit-btn" type="button" data-mp-sheet="mpJobSheet">설정</button>
+      </div>
+
+      <div class="mp-sheet-ovl" id="mpLivingSheet" hidden>
+        <div class="mp-sheet" role="dialog" aria-modal="true" aria-label="Living 프로필 설정">
+          <div class="mp-sheet-head"><b>Living 프로필 설정</b><button type="button" class="mypage-photo-btn" data-mp-sheet-close>닫기</button></div>
+          <div class="mp-sheet-body">
+            <div class="mypage-account-row">
+              <div class="mypage-account-row-info">
+                <div class="mypage-account-row-label">내 조건 · 공개 여부 · 역할</div>
+                <div class="mypage-account-row-desc">동네·예산·입주일과 집주인에게 공개할지, 역할(집·방 찾기 / 올리기)은 마이페이지 내 프로필에서 바꿉니다.</div>
+              </div>
+              <a class="mypage-edit-btn" href="mypage.html?tab=profile" style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;">내 프로필 →</a>
             </div>
-          </div>
-          <textarea id="mpIntroLivingText" maxlength="700" rows="5" placeholder="예) 안녕하세요. 워홀 중인 20대입니다. 비흡연이고 반려동물은 없습니다. 입주 가능 시기는…"
-                    style="width:100%;box-sizing:border-box;resize:vertical;min-height:96px;padding:12px;border:1.5px solid var(--border,#d1d5db);border-radius:10px;font-size:15px;line-height:1.5;font-family:inherit;"></textarea>
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
-            <span id="mpIntroLivingCount" style="font-size:12px;color:var(--muted,#6b7280);">0/700</span>
-            <button class="mypage-edit-btn" id="mpIntroLivingSaveBtn" type="button">저장</button>
+            <div class="mypage-account-row" id="mpIntroLivingRow" style="flex-direction:column;align-items:stretch;gap:8px;border-bottom:0;">
+              <div class="mypage-account-row-info" style="width:100%;">
+                <div class="mypage-account-row-label">문의 자기소개 (쉐어·렌트 문의용)</div>
+                <div class="mypage-account-row-desc" style="line-height:1.5;">
+                  쉐어·렌트 글에 문자·오픈채팅으로 문의할 때 자동으로 들어가는 소개입니다. 상대방에게 보여줘도 괜찮은 내용만 적어 주십시오.
+                  TFN, 주민번호 등 민감정보는 적지 마십시오.
+                </div>
+              </div>
+              <textarea id="mpIntroLivingText" maxlength="700" rows="5" placeholder="예) 안녕하세요. 워홀 중인 20대입니다. 비흡연이고 반려동물은 없습니다. 입주 가능 시기는…"
+                        style="width:100%;box-sizing:border-box;resize:vertical;min-height:96px;padding:12px;border:1.5px solid var(--border,#d1d5db);border-radius:10px;font-size:15px;line-height:1.5;font-family:inherit;"></textarea>
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+                <span id="mpIntroLivingCount" style="font-size:12px;color:var(--muted,#6b7280);">0/700</span>
+                <button class="mypage-edit-btn" id="mpIntroLivingSaveBtn" type="button">저장</button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-      <div class="mypage-account-group" id="mpJobGroup">
-        <div class="mypage-account-group-head">
-          <div>
-            <div class="mypage-account-group-title">Job 프로필 설정</div>
-            <div class="mypage-account-row-desc">구인구직 — 문의에 쓰는 자기소개입니다. 경력·가능 시간대 같은 항목은 추후 추가됩니다.</div>
-          </div>
-        </div>
-        <div class="mypage-account-row" id="mpIntroWorkRow" style="flex-direction:column;align-items:stretch;gap:8px;border-bottom:0;">
-          <div class="mypage-account-row-info" style="width:100%;">
-            <div class="mypage-account-row-label">문의 자기소개 (구인구직 문의용)</div>
-            <div class="mypage-account-row-desc" style="line-height:1.5;">
-              구인구직 글에 문자·오픈채팅으로 문의할 때 자동으로 들어가는 소개입니다. 경력·가능 시간대 등 일자리용 소개만 적어 주십시오.
-              TFN, 주민번호 등 민감정보는 적지 마십시오.
+      <div class="mp-sheet-ovl" id="mpJobSheet" hidden>
+        <div class="mp-sheet" role="dialog" aria-modal="true" aria-label="Job 프로필 설정">
+          <div class="mp-sheet-head"><b>Job 프로필 설정</b><button type="button" class="mypage-photo-btn" data-mp-sheet-close>닫기</button></div>
+          <div class="mp-sheet-body">
+            <div class="mypage-account-row" id="mpIntroWorkRow" style="flex-direction:column;align-items:stretch;gap:8px;border-bottom:0;">
+              <div class="mypage-account-row-info" style="width:100%;">
+                <div class="mypage-account-row-label">문의 자기소개 (구인구직 문의용)</div>
+                <div class="mypage-account-row-desc" style="line-height:1.5;">
+                  구인구직 글에 문자·오픈채팅으로 문의할 때 자동으로 들어가는 소개입니다. 경력·가능 시간대 등 일자리용 소개만 적어 주십시오.
+                  TFN, 주민번호 등 민감정보는 적지 마십시오.
+                </div>
+              </div>
+              <textarea id="mpIntroWorkText" maxlength="700" rows="5" placeholder="예) 안녕하세요. 시드니 거주 중이고 주방 경력 2년입니다. 평일 오전 가능하고, 커피 자격증(RSA)…"
+                        style="width:100%;box-sizing:border-box;resize:vertical;min-height:96px;padding:12px;border:1.5px solid var(--border,#d1d5db);border-radius:10px;font-size:15px;line-height:1.5;font-family:inherit;"></textarea>
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+                <span id="mpIntroWorkCount" style="font-size:12px;color:var(--muted,#6b7280);">0/700</span>
+                <button class="mypage-edit-btn" id="mpIntroWorkSaveBtn" type="button">저장</button>
+              </div>
             </div>
-          </div>
-          <textarea id="mpIntroWorkText" maxlength="700" rows="5" placeholder="예) 안녕하세요. 시드니 거주 중이고 주방 경력 2년입니다. 평일 오전 가능하고, 커피 자격증(RSA)…"
-                    style="width:100%;box-sizing:border-box;resize:vertical;min-height:96px;padding:12px;border:1.5px solid var(--border,#d1d5db);border-radius:10px;font-size:15px;line-height:1.5;font-family:inherit;"></textarea>
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
-            <span id="mpIntroWorkCount" style="font-size:12px;color:var(--muted,#6b7280);">0/700</span>
-            <button class="mypage-edit-btn" id="mpIntroWorkSaveBtn" type="button">저장</button>
           </div>
         </div>
       </div>
@@ -1008,5 +1027,17 @@
   </script>
   <script src="koaus-menu.js" defer></script>
   <script src="koaus-scroll-lock.js" defer></script>
+  <script>
+    // 환경설정 프로필 설정 시트(10-20): [data-mp-sheet=id] 열기 / [data-mp-sheet-close]·바깥·Esc 닫기. 배경 스크롤은 koaus-scroll-lock.js 가 잠금.
+    (function () {
+      function open(id) { var o = document.getElementById(id); if (!o) return; o.hidden = false; document.body.style.overflow = 'hidden'; var f = o.querySelector('textarea,input,button'); if (f) { try { f.focus({ preventScroll: true }); } catch (_) {} } }
+      function closeAll() { var any = false; document.querySelectorAll('.mp-sheet-ovl:not([hidden])').forEach(function (o) { o.hidden = true; any = true; }); if (any) document.body.style.overflow = ''; }
+      document.addEventListener('click', function (e) {
+        var b = e.target.closest('[data-mp-sheet]'); if (b) { e.preventDefault(); open(b.getAttribute('data-mp-sheet')); return; }
+        if (e.target.closest('[data-mp-sheet-close]') || e.target.classList.contains('mp-sheet-ovl')) closeAll();
+      });
+      document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeAll(); });
+    })();
+  </script>
 </body>
 </html>

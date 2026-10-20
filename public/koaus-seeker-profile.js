@@ -709,7 +709,8 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
         html = `
           <div class="ksp-done">
             <div class="ksp-q">${editing ? '저장했습니다.' : '프로필을 만들었습니다.'}</div>
-            <div class="ksp-help">${draft.visible ? '희망 동네 근처에 방을 올린 집주인에게 지금부터 내 조건이 보입니다.' : '비공개로 저장했습니다. 알림 메일만 받습니다.'} 연락이 오면 채팅 탭에 표시됩니다.</div>
+            <div class="ksp-help">${draft.visible ? '희망 동네 근처에 방을 올린 집주인에게 지금부터 내 조건이 이렇게 보입니다.' : '비공개로 저장했습니다. 알림 메일만 받습니다.'} 연락이 오면 채팅 탭에 표시됩니다.</div>
+            <div style="text-align:left;width:100%;">${previewCardHtml()}</div>
             <a class="ksp-btn primary" href="accom.html${st ? '?state=' + esc(st) : ''}">조건에 맞는 방 보러 가기</a>
           </div>`;
         next = '';
