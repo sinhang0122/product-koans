@@ -181,6 +181,35 @@
     .kc-composer button:disabled { opacity: .5; cursor: default; }
     .kc-composer.kc-disabled textarea { opacity: .55; pointer-events: none; }
 
+    /* 10-20: 프로필 사진·이니셜 아바타 사이트 전체 폐지 — 목록·대화방 머리 모두 숨김(요소는 둠) */
+    .kc-ava { display: none !important; }
+    .kc-item.active { background: var(--bg-elevated, #f3f4f6); }
+
+    /* 데스크톱(769px↑, 10-20 크몽식) — 왼쪽 목록 | 오른쪽 대화를 한 화면에 나란히. 모바일은 종전처럼 목록 ↔ 대화 전환 */
+    @media (min-width: 769px) {
+      .kc-split {
+        display: grid; grid-template-columns: 320px minmax(0, 1fr);
+        border: 1px solid var(--border, #e0e0e0); border-radius: 16px; overflow: hidden;
+        height: calc(100dvh - 250px); min-height: 480px; background: var(--bg-card, #fff); margin-top: 16px;
+      }
+      body:not(.kc-auth) .kc-split { display: none; }
+      body.kc-auth .kc-split #chatListView { display: block !important; overflow-y: auto; border-right: 1px solid var(--border, #e0e0e0); background: var(--bg-base, #fff); }
+      .kc-split .kc-list { gap: 0; }
+      .kc-split .kc-item { border: 0; border-bottom: 1px solid var(--border-subtle, #eee); border-radius: 0; padding: 14px 16px; }
+      .kc-split .kc-item { background: transparent; }
+      .kc-split .kc-item:hover, .kc-split .kc-item.active { background: var(--bg-card, #f4f4f4); }
+      .kc-split .kc-empty { border: 0; border-radius: 0; }
+      .kc-split #chatRoomView { border: 0; border-radius: 0; height: 100%; min-height: 0; }
+      .kc-split .kc-back { display: none; }
+      .kc-pane-empty { display: none; }
+      body.kc-auth:not(.kc-room-open) .kc-split .kc-pane-empty {
+        display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+        color: var(--text-muted, #8e8e93); font-size: 14.5px; text-align: center; padding: 24px; line-height: 1.6; background: var(--bg-base, #fff);
+      }
+      .kc-pane-empty b { color: var(--text-secondary, #4b5563); font-size: 15.5px; }
+    }
+    @media (max-width: 768px) { .kc-pane-empty { display: none; } }
+
     /* 모바일 — 대화방 열림 시 페이지 제목 숨김 + 높이 최적화 (탭바 60px 고려) */
     @media (max-width: 768px) {
       body.kc-room-open .page-header, body.kc-room-open #chatPageHeader { display: none; }
@@ -519,7 +548,7 @@
     <div class="page-header" id="chatPageHeader">
       <div>
         <h1 class="page-title">채팅</h1>
-        <p class="page-subtitle">게시글 문의를 앱 안에서 별명으로 주고받으세요</p>
+        <p class="page-subtitle">게시글 문의를 앱 안에서 닉네임으로 주고받으세요</p>
       </div>
       <div class="page-header-actions page-header-actions--col">
         <a href="mypage.html" class="page-back">← 마이페이지</a>
@@ -532,6 +561,8 @@
       <button class="mypage-login-btn" id="chatLoginBtn">로그인하러 가기</button>
     </section>
 
+    <!-- 10-20: 데스크톱은 목록|대화 분할(.kc-split, CSS 769px↑), 모바일은 그대로 전환 -->
+    <div class="kc-split" id="kcSplit">
     <!-- 채팅 목록 -->
     <section id="chatListView" style="display:none;">
       <div class="kc-empty" id="chatListEmpty" hidden>
@@ -565,6 +596,8 @@
         <button type="submit" id="kcSendBtn">전송</button>
       </form>
     </section>
+    <div class="kc-pane-empty" id="kcPaneEmpty" aria-hidden="true"><b>왼쪽 목록에서 대화를 고르십시오.</b><span>게시글 상세의 채팅 문의 버튼으로 새 대화를 시작할 수 있습니다.</span></div>
+    </div>
 
   </main>
 
@@ -805,6 +838,8 @@
         const item = document.createElement('button');
         item.type = 'button';
         item.className = 'kc-item' + (Array.isArray(c.unreadFor) && c.unreadFor.indexOf(ME.uid) !== -1 ? ' kc-unread' : '');
+        item.dataset.id = c.id;
+        if (curChat && curChat.id === c.id) item.classList.add('active');   // 데스크톱 분할에서 열린 방 표시
         const ava = document.createElement('div'); ava.className = 'kc-ava';
         setAva(ava, p.nick, '');
         const main = document.createElement('div'); main.className = 'kc-item-main';
@@ -857,6 +892,7 @@
       curChat = c;
       msgs = [];
       msgsBox.textContent = '';
+      try { listBox.querySelectorAll('.kc-item').forEach(el => el.classList.toggle('active', el.dataset.id === c.id)); } catch (_) {}
       renderRoomHead();
       renderRoomState();
       listView.style.display = 'none';
@@ -872,6 +908,7 @@
       curChat = null;
       roomView.style.display = 'none';
       document.body.classList.remove('kc-room-open');
+      try { listBox.querySelectorAll('.kc-item.active').forEach(el => el.classList.remove('active')); } catch (_) {}
       if (ME) listView.style.display = '';
     }
     function renderRoomHead() {
@@ -1178,6 +1215,7 @@
     onAuthStateChanged(auth, user => {
       window.koausAuth.user = user;
       ME = user;
+      document.body.classList.toggle('kc-auth', !!user);   // 데스크톱 분할 표시 조건
       if (!user) {
         if (listUnsub) { try { listUnsub(); } catch (_) {} listUnsub = null; }
         showList();

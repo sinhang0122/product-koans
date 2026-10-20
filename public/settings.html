@@ -369,7 +369,7 @@
     <div class="page-header">
       <div>
         <h1 class="page-title">환경설정</h1>
-        <p class="page-subtitle">닉네임 · 사진 · 인증 · 영상 · 계정을 관리하세요</p>
+        <p class="page-subtitle">닉네임 · 인증 · 프로필 · 영상 · 계정을 관리하세요</p>
       </div>
       <div class="page-header-actions page-header-actions--col">
         <a href="mypage.html" class="page-back">← 마이페이지</a>
@@ -385,7 +385,7 @@
     <section class="mypage-account" id="profileSection" style="display:none;">
       <header class="mypage-account-header">
         <h2 class="mypage-account-title">KoAus 계정</h2>
-        <p class="mypage-account-subtitle">프로필 사진과 이름·닉네임을 관리합니다.</p>
+        <p class="mypage-account-subtitle">닉네임·휴대폰 인증·프로필을 관리합니다.</p>
       </header>
 
       <!-- 1) 프로필 카드: 아바타 + 이름 + 이메일 -->
@@ -417,8 +417,8 @@
       <p class="auth-error" id="mpNickError"></p>
       <p class="mypage-nick-note">닉네임은 한 번 변경하면 3개월 동안 다시 변경할 수 없습니다.</p>
 
-      <!-- 3) 사진 교체 행 -->
-      <div class="mypage-account-row">
+      <!-- 3) 사진 교체 행 — 10-20 숨김(사이트 전체 프로필 사진 폐지: 아바타·업로드 없음. 저장된 사진 데이터는 당분간 유지, 문제 없으면 2주 뒤 삭제) -->
+      <div class="mypage-account-row" id="mpPhotoRow" hidden style="display:none;">
         <div class="mypage-account-row-info">
           <div class="mypage-account-row-label">프로필 사진 (Photo)</div>
           <div class="mypage-account-row-desc">정사각 권장 · 자동 압축 후 업로드</div>
@@ -435,37 +435,56 @@
         <button class="mypage-edit-btn" id="mpPhoneBtn">휴대폰 인증</button>
       </div>
 
-      <!-- 5) 자기소개서 (Self-intro) — Living/Work 분리 (2026-07). 문의 프리필에 보드별 자동 삽입:
-           Living → 쉐어·렌트(accom/rent) / Work → 구인구직(jobs). users/{uid}.introLiving·introWork (본인만 read)
-           + LS 캐시 'koaus-my-intro-living'/'koaus-my-intro-work'. 옛 introText 는 Living 폴백(읽기 전용). 각 700자 -->
-      <div class="mypage-account-row" id="mpIntroLivingRow" style="flex-direction:column;align-items:stretch;gap:8px;">
-        <div class="mypage-account-row-info" style="width:100%;">
-          <div class="mypage-account-row-label">자기소개서 — Living (쉐어·렌트 문의용)</div>
-          <div class="mypage-account-row-desc" style="line-height:1.5;">
-            쉐어·렌트 문의(문자·오픈채팅)에 자동으로 들어가는 소개예요. 상대방에게 보여줘도 괜찮은 내용만 적어주세요.
-            TFN, 주민번호 등 민감정보는 적지 마세요.
+      <!-- 5) 프로필 설정 묶음 (10-20) — Living / Job 로 나눔.
+           · Living: 조건·공개 여부는 마이페이지 '내 프로필'(seeker_profiles) — 여기서는 링크 + 문의 자기소개(문자·오픈채팅 프리필)만.
+           · Job: 구인구직 문의 자기소개(추후 경력·가능 시간대 등 항목 추가 — 5묶음).
+           자기소개 저장 위치는 그대로 users/{uid}.introLiving·introWork (본인만 read) + LS 캐시 'koaus-my-intro-living'/'koaus-my-intro-work'.
+           옛 introText 는 Living 폴백(읽기 전용). 각 700자. koaus-contact-actions.js 가 보드별로 읽어 문의 본문에 넣음(변경 없음). -->
+      <div class="mypage-account-group" id="mpLivingGroup">
+        <div class="mypage-account-group-head">
+          <div>
+            <div class="mypage-account-group-title">Living 프로필 설정</div>
+            <div class="mypage-account-row-desc">집·방 찾기 — 동네·예산·입주일 등 내 조건과 공개 여부는 마이페이지 내 프로필에서 설정합니다.</div>
           </div>
+          <a class="mypage-edit-btn" href="mypage.html?tab=profile" style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;">내 프로필 →</a>
         </div>
-        <textarea id="mpIntroLivingText" maxlength="700" rows="5" placeholder="예) 안녕하세요! 워홀 중인 28세입니다. 비흡연·반려동물 없음, 깔끔한 편이에요. 입주 가능 시기는…"
-                  style="width:100%;box-sizing:border-box;resize:vertical;min-height:96px;padding:12px;border:1.5px solid var(--border,#d1d5db);border-radius:10px;font-size:15px;line-height:1.5;font-family:inherit;"></textarea>
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
-          <span id="mpIntroLivingCount" style="font-size:12px;color:var(--muted,#6b7280);">0/700</span>
-          <button class="mypage-edit-btn" id="mpIntroLivingSaveBtn" type="button">저장</button>
+        <div class="mypage-account-row" id="mpIntroLivingRow" style="flex-direction:column;align-items:stretch;gap:8px;border-bottom:0;">
+          <div class="mypage-account-row-info" style="width:100%;">
+            <div class="mypage-account-row-label">문의 자기소개 (쉐어·렌트 문의용)</div>
+            <div class="mypage-account-row-desc" style="line-height:1.5;">
+              쉐어·렌트 글에 문자·오픈채팅으로 문의할 때 자동으로 들어가는 소개입니다. 상대방에게 보여줘도 괜찮은 내용만 적어 주십시오.
+              TFN, 주민번호 등 민감정보는 적지 마십시오.
+            </div>
+          </div>
+          <textarea id="mpIntroLivingText" maxlength="700" rows="5" placeholder="예) 안녕하세요. 워홀 중인 20대입니다. 비흡연이고 반려동물은 없습니다. 입주 가능 시기는…"
+                    style="width:100%;box-sizing:border-box;resize:vertical;min-height:96px;padding:12px;border:1.5px solid var(--border,#d1d5db);border-radius:10px;font-size:15px;line-height:1.5;font-family:inherit;"></textarea>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+            <span id="mpIntroLivingCount" style="font-size:12px;color:var(--muted,#6b7280);">0/700</span>
+            <button class="mypage-edit-btn" id="mpIntroLivingSaveBtn" type="button">저장</button>
+          </div>
         </div>
       </div>
-      <div class="mypage-account-row" id="mpIntroWorkRow" style="flex-direction:column;align-items:stretch;gap:8px;">
-        <div class="mypage-account-row-info" style="width:100%;">
-          <div class="mypage-account-row-label">자기소개서 — Job (구인구직 문의용)</div>
-          <div class="mypage-account-row-desc" style="line-height:1.5;">
-            구인구직 문의(문자·오픈채팅)에 자동으로 들어가는 소개예요. 경력·가능 시간대 등 일자리용 소개만 적어주세요.
-            TFN, 주민번호 등 민감정보는 적지 마세요.
+      <div class="mypage-account-group" id="mpJobGroup">
+        <div class="mypage-account-group-head">
+          <div>
+            <div class="mypage-account-group-title">Job 프로필 설정</div>
+            <div class="mypage-account-row-desc">구인구직 — 문의에 쓰는 자기소개입니다. 경력·가능 시간대 같은 항목은 추후 추가됩니다.</div>
           </div>
         </div>
-        <textarea id="mpIntroWorkText" maxlength="700" rows="5" placeholder="예) 안녕하세요! 시드니 거주 중이고 주방 경력 2년입니다. 평일 오전 가능하고, 커피 자격증(RSA)…"
-                  style="width:100%;box-sizing:border-box;resize:vertical;min-height:96px;padding:12px;border:1.5px solid var(--border,#d1d5db);border-radius:10px;font-size:15px;line-height:1.5;font-family:inherit;"></textarea>
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
-          <span id="mpIntroWorkCount" style="font-size:12px;color:var(--muted,#6b7280);">0/700</span>
-          <button class="mypage-edit-btn" id="mpIntroWorkSaveBtn" type="button">저장</button>
+        <div class="mypage-account-row" id="mpIntroWorkRow" style="flex-direction:column;align-items:stretch;gap:8px;border-bottom:0;">
+          <div class="mypage-account-row-info" style="width:100%;">
+            <div class="mypage-account-row-label">문의 자기소개 (구인구직 문의용)</div>
+            <div class="mypage-account-row-desc" style="line-height:1.5;">
+              구인구직 글에 문자·오픈채팅으로 문의할 때 자동으로 들어가는 소개입니다. 경력·가능 시간대 등 일자리용 소개만 적어 주십시오.
+              TFN, 주민번호 등 민감정보는 적지 마십시오.
+            </div>
+          </div>
+          <textarea id="mpIntroWorkText" maxlength="700" rows="5" placeholder="예) 안녕하세요. 시드니 거주 중이고 주방 경력 2년입니다. 평일 오전 가능하고, 커피 자격증(RSA)…"
+                    style="width:100%;box-sizing:border-box;resize:vertical;min-height:96px;padding:12px;border:1.5px solid var(--border,#d1d5db);border-radius:10px;font-size:15px;line-height:1.5;font-family:inherit;"></textarea>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+            <span id="mpIntroWorkCount" style="font-size:12px;color:var(--muted,#6b7280);">0/700</span>
+            <button class="mypage-edit-btn" id="mpIntroWorkSaveBtn" type="button">저장</button>
+          </div>
         </div>
       </div>
 
@@ -767,7 +786,8 @@
         if (!u || !db) return;
         let nick = '', photo = '';
         try { nick = (localStorage.getItem('koaus-nickname') || '').trim().slice(0, 30); } catch (_) {}
-        try { photo = (localStorage.getItem('koaus-photo-url') || '').trim(); } catch (_) {}
+        // 10-20: 프로필 사진 폐지 — photoURL 은 더 보내지 않음(채팅도 아바타 없음). 기존 값은 서버에 남아 있어도 화면에 안 씀.
+        photo = '';
         if (!/^https:\/\//.test(photo) || photo.length > 500) photo = '';
         if (!nick && !photo) return;
         const sig = u.uid + '|' + nick + '|' + photo;

@@ -4,7 +4,10 @@
 //  - 흐름: 탭 열림(koaus:mypage-profile) → seeker_profiles/{uid} 1회 getDoc → 카드 렌더
 //          → '만들기/수정' → 7단계 모달(한 화면 한 질문, 단계마다 기기 로컬 임시저장)
 //          → 마지막 단계 '저장' 에서 setDoc 1회 (rules: 본인·hasOnly·길이캡·연락처 패턴 차단)
-//  - 사진 없음(사용자 확정 — 얼굴이 선택에 영향 주면 안 됨). 실명 없음 — 사이트 닉네임 스냅샷(nick). 카드 아바타 = 닉네임 첫 글자.
+//  - 사진 없음(사용자 확정 — 얼굴이 선택에 영향 주면 안 됨). 실명 없음 — 사이트 닉네임 스냅샷(nick). 아바타(이니셜 원)도 없음(10-20).
+//  - 내 프로필 화면(10-20, 인스타 편집 화면 식): 큰 닉네임(+닉네임 변경) → [프로필 편집][집주인이 보는 카드] → 활성화 스위치
+//    → '프로필 완성하기' 퍼센트(필수 3단계=60%, 선택 4묶음 각 +10%, 가로 카드 → 해당 단계로) → 내 조건 행·본인만 행(각 '편집' = 그 단계에서 바로 저장)
+//    → [구했습니다][프로필 삭제](두 문서 모두 삭제).
 //  - 공개/비공개 분리(10-18): seeker_profiles/{uid} = 카드에 보이는 조건+닉네임·성별·연령대(집주인이 읽음),
 //    seeker_private/{uid} = 소개글·체류·흡연·반려동물·알림 이메일(본인만). 저장은 writeBatch 로 두 문서 한 번에.
 //    옛 단일 문서(firstName·intro·alerts 가 공개 문서에 있던 10-18 이전 저장분)는 본인이 탭을 열 때 자동으로 옮긴다.
@@ -132,6 +135,41 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       .ksp-preview-top{display:flex;align-items:center;gap:10px}
       .ksp-preview-name{font-weight:700;font-size:15px}
       .ksp-preview-meta{font-size:12.5px;color:var(--text-muted)}
+      .ksp-preview-sent{font-size:14px;line-height:1.55}
+      /* 내 프로필(인스타 편집 화면 식, 10-20): 큰 닉네임 → 두 버튼 → 활성화 → 완성하기 카드 → 항목 행(편집) */
+      .ksp-prof{gap:14px;padding:18px 16px}
+      .ksp-prof-head{display:flex;flex-direction:column;gap:4px}
+      .ksp-prof-nick{font-size:22px;font-weight:800;letter-spacing:-.02em;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+      .ksp-prof-nick .ksp-link{font-size:12.5px;font-weight:500}
+      .ksp-prof-meta{font-size:13.5px;color:var(--text-secondary)}
+      .ksp-prof-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+      .ksp-prof-btns .ksp-btn{font-weight:700;background:var(--bg-elevated);border-color:transparent;padding:10px 12px}
+      .ksp-prof-switch{justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg-surface)}
+      .ksp-link{appearance:none;border:0;background:none;color:var(--accent);font-size:13px;cursor:pointer;font-family:inherit;padding:4px 0;text-decoration:none;white-space:nowrap}
+      .ksp-link:hover{text-decoration:underline}
+      .ksp-complete{border:1px solid var(--border);border-radius:var(--r-lg);padding:12px;display:flex;flex-direction:column;gap:8px;background:var(--bg-surface)}
+      .ksp-complete-head{display:flex;justify-content:space-between;align-items:baseline;font-size:14px}
+      .ksp-complete-head span{color:var(--text-muted);font-size:13px}
+      .ksp-bar{height:6px;border-radius:999px;background:var(--border);overflow:hidden}
+      .ksp-bar > i{display:block;height:100%;background:var(--accent);transition:width .25s}
+      .ksp-todo{display:flex;gap:8px;overflow-x:auto;padding:2px 0 4px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+      .ksp-todo::-webkit-scrollbar{display:none}
+      .ksp-todo-card{flex:0 0 136px;appearance:none;border:1px solid var(--border);background:var(--bg-card);color:var(--text-primary);border-radius:var(--r-md);padding:10px;text-align:left;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;gap:4px}
+      .ksp-todo-card:hover{border-color:var(--border-focus)}
+      .ksp-todo-pct{font-size:12px;color:var(--green);font-weight:700}
+      .ksp-todo-label{font-size:13.5px;font-weight:700;line-height:1.3}
+      .ksp-todo-add{font-size:12.5px;color:var(--accent);margin-top:2px}
+      .ksp-sec{display:flex;flex-direction:column}
+      .ksp-sec-title{font-size:12.5px;color:var(--text-muted);padding:6px 0 2px;display:flex;justify-content:space-between;gap:8px}
+      .ksp-prow{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--border-subtle)}
+      .ksp-sec-title + .ksp-prow{border-top:0}
+      .ksp-prow-main{flex:1;min-width:0}
+      .ksp-prow-k{font-size:12px;color:var(--text-muted);display:flex;gap:6px;align-items:baseline}
+      .ksp-own{font-size:10.5px;border:1px solid var(--border);border-radius:6px;padding:0 5px;color:var(--text-muted)}
+      .ksp-prow-v{font-size:14.5px;margin-top:2px;line-height:1.45;word-break:keep-all}
+      .ksp-prow-v.empty{color:var(--text-muted)}
+      .ksp-prof-foot{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;padding-top:4px;border-top:1px solid var(--border)}
+      .ksp-btn.danger{color:var(--red);border-color:var(--border)}
     `;
     document.head.appendChild(st);
   }
@@ -227,6 +265,42 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     touchActive();
   }
 
+  // ── 프로필 완성도(10-20, 틴더 식) — 필수 3단계(동네·예산·입주)=60%, 선택 4묶음 각 +10% ──
+  const TODO = [
+    { label: '방 종류 · 욕실',        step: 4, done: (p) => !!((p.roomTypes && p.roomTypes.length) || p.bathroom === 'private') },
+    { label: '나이대 · 성별',         step: 5, done: (p) => !!(p.ageBand && p.gender) },
+    { label: '신분 · 흡연 · 반려동물', step: 5, done: (p, q) => !!(q && (q.residency || typeof q.smoker === 'boolean' || typeof q.pet === 'boolean')) },
+    { label: '소개글',                step: 6, done: (p, q) => !!(q && q.intro) },
+  ];
+  function completeness(p, q) {
+    const todo = TODO.filter(t => !t.done(p, q));
+    return { pct: 100 - todo.length * 10, todo };
+  }
+  const moveInLabel = s => {
+    if (!s) return '';
+    const d = new Date(s + 'T00:00:00'), today = new Date(); today.setHours(0, 0, 0, 0);
+    return (isNaN(d) || d <= today) ? '최대한 빨리' : (d.getMonth() + 1) + '월 ' + d.getDate() + '일부터';
+  };
+  const budgetLabel = (min, max) => {
+    const a = min != null && min !== '' ? Number(min) : null, b = max != null && max !== '' ? Number(max) : null;
+    if (b == null && a == null) return '';
+    if (b == null) return '주 $' + a + ' 이상';
+    return a ? '주 $' + a + ' ~ $' + b : '주 $' + b + '까지';
+  };
+  // 집주인이 보는 한 문장(koaus-seekers-nearby.js conditionSentence 와 같은 형태)
+  function sentenceOf(d, en) {
+    const subs = (d.suburbs || []).map(x => x.name).filter(Boolean).slice(0, 3).join(' · ');
+    const when = moveInLabel(d.moveIn);
+    const stay = d.stay === 'tbd' ? '기간은 상의 후 결정' : (en.label('stays', d.stay) || '');
+    const budget = budgetLabel(d.budgetMin, d.budgetMax);
+    const parts = [];
+    if (subs) parts.push(subs + '에서');
+    if (when) parts.push(when);
+    if (stay) parts.push(stay);
+    if (budget) parts.push(budget);
+    return parts.length ? parts.join(', ').replace(/에서, /, '에서 ') + ' 방을 찾습니다.' : '조건을 등록한 분입니다.';
+  }
+
   function renderSeekerCard(p) {
     if (!p) {
       return `
@@ -240,46 +314,67 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     const found = p.status === 'found';
     const vis = p.visible === true;
     const en = E();
-    const initial = (String(p.nick || '?').trim()[0] || '?').toUpperCase();
+    const q = priv || {};
     const subs = (p.suburbs || []).map(suburbLabel).join(' · ');
-    const budget = (p.budgetMin != null || p.budgetMax != null) ? ('주 $' + (p.budgetMin != null ? p.budgetMin : '') + (p.budgetMax != null ? ' ~ $' + p.budgetMax : '')) : '—';
-    const stayL = en.label('stays', p.stay);
+    const budget = budgetLabel(p.budgetMin, p.budgetMax);
+    const stayL = p.stay === 'tbd' ? '상의 후 결정' : (en.label('stays', p.stay) || '');
     const rooms = (p.roomTypes || []).map(c => en.label('roomTypes', c)).filter(Boolean).join(', ');
-    const al = (priv && priv.alerts) || null;
+    const al = q.alerts || null;
     const alertMode = (al && al.mode) || 'off';
     const alertL = { instant: '새 매물마다', threshold5: '5건 이상 모이면', daily: '하루 한 번', off: '받지 않음' }[alertMode] || '받지 않음';
-    const who = [esc(p.nick || ''), p.gender ? esc(en.label('genders', p.gender)) : '', p.ageBand ? esc(en.label('ageBands', p.ageBand)) : ''].filter(Boolean).join(' · ');
+    const meta = [p.gender ? en.label('genders', p.gender) : '', p.ageBand ? en.label('ageBands', p.ageBand) : ''].filter(Boolean).join(' · ');
+    const stateChip = found ? '구했습니다' : (paused ? '일시정지' : (vis ? '공개 중' : '비공개'));
+    const c = completeness(p, q);
+    const privL = [
+      q.residency ? en.label('statuses', q.residency) : '',
+      typeof q.smoker === 'boolean' ? (q.smoker ? '흡연' : '비흡연') : '',
+      typeof q.pet === 'boolean' ? (q.pet ? '반려동물 있음' : '반려동물 없음') : '',
+    ].filter(Boolean).join(' · ');
+    const row = (k, v, step, own) => `
+          <div class="ksp-prow">
+            <div class="ksp-prow-main"><div class="ksp-prow-k">${k}${own ? '<span class="ksp-own">본인만</span>' : ''}</div><div class="ksp-prow-v${v ? '' : ' empty'}">${v || '미등록'}</div></div>
+            <button type="button" class="ksp-link" data-ksp="step" data-step="${step}">편집</button>
+          </div>`;
     return `
-      <div class="ksp-card" data-ksp-card="seeker">
-        <div class="ksp-card-head">
-          <div style="display:flex;align-items:center;gap:10px;">
-            <div class="ksp-avatar">${esc(initial)}</div>
-            <div>
-              <div class="ksp-title">집 구해요 프로필</div>
-              <div class="ksp-sub" style="margin:2px 0 0;">${who}</div>
-              <div class="ksp-row" style="margin-top:4px;">
-                <span class="ksp-chip ${found ? '' : 'on'}">${found ? '구했습니다' : '구하는 중'}</span>
-                <span class="ksp-chip ${vis && !paused ? 'on' : ''}">${paused ? '일시정지' : (vis ? '공개 중' : '비공개')}</span>
-                <span class="ksp-chip">${esc(tsLabel(p.updatedAt) || '')} 수정</span>
-              </div>
-            </div>
+      <div class="ksp-card ksp-prof" data-ksp-card="seeker">
+        <div class="ksp-prof-head">
+          <div class="ksp-prof-nick"><span>${esc(p.nick || '회원')}</span><a class="ksp-link" href="settings.html">닉네임 변경</a></div>
+          <div class="ksp-prof-meta">${meta ? esc(meta) : '나이대·성별 미등록'}</div>
+          <div class="ksp-row" style="margin-top:4px;">
+            <span class="ksp-chip ${(!found && !paused && vis) ? 'on' : ''}">${stateChip}</span>
+            <span class="ksp-chip">${esc(tsLabel(p.updatedAt) || '')} 수정</span>
           </div>
         </div>
+        <div class="ksp-prof-btns">
+          <button type="button" class="ksp-btn" data-ksp="edit">프로필 편집</button>
+          <button type="button" class="ksp-btn" data-ksp="preview">집주인이 보는 카드</button>
+        </div>
         ${paused ? `<div class="ksp-banner"><span>30일 동안 활동이 없어 일시정지되었습니다. 계속 구하고 계시면 다시 켜 주십시오.</span><button type="button" class="ksp-btn small primary" data-ksp="resume">다시 켜기</button></div>` : ''}
-        <dl class="ksp-summary">
-          <dt>동네</dt><dd>${subs || '—'}${p.radiusKm ? ' · 반경 ' + esc(p.radiusKm) + 'km' : ''}</dd>
-          <dt>예산</dt><dd>${esc(budget)}</dd>
-          <dt>입주</dt><dd>${esc(p.moveIn || '—')}${stayL ? ' · ' + esc(stayL) : ''}</dd>
-          <dt>방</dt><dd>${esc(rooms || '상관없음')}${p.bathroom === 'private' ? ' · 개인 욕실' : ''}</dd>
-          <dt>알림</dt><dd>${esc(alertL)}${al && al.email ? ' · ' + esc(al.email) : ''}</dd>
-        </dl>
-        <div class="ksp-help" style="margin-top:-4px;">집주인에게는 닉네임·성별·나이대와 위 조건만 보입니다. 소개글·신분·흡연·반려동물·이메일은 본인만 봅니다. 닉네임은 <a href="settings.html" style="color:inherit;text-decoration:underline;">환경설정</a>에서 바꿀 수 있습니다.</div>
-        <div class="ksp-row" style="justify-content:space-between;">
-          <label class="ksp-switch"><input type="checkbox" data-ksp="visible" ${vis && !paused ? 'checked' : ''} ${found ? 'disabled' : ''}> 근처 집주인에게 공개</label>
-          <div class="ksp-actions">
-            <button type="button" class="ksp-btn small" data-ksp="status">${found ? '다시 구합니다' : '구했습니다'}</button>
-            <button type="button" class="ksp-btn small primary" data-ksp="edit">수정</button>
-          </div>
+        <label class="ksp-switch ksp-prof-switch"><span>내 조건 활성화 (근처 집주인에게 공개)</span><input type="checkbox" data-ksp="visible" ${vis && !paused ? 'checked' : ''} ${found ? 'disabled' : ''}></label>
+        ${c.todo.length ? `
+        <div class="ksp-complete">
+          <div class="ksp-complete-head"><b>프로필 완성하기</b><span>${c.pct}%</span></div>
+          <div class="ksp-bar"><i style="width:${c.pct}%"></i></div>
+          <div class="ksp-todo">${c.todo.map(t => `<button type="button" class="ksp-todo-card" data-ksp="step" data-step="${t.step}"><span class="ksp-todo-pct">+10%</span><span class="ksp-todo-label">${esc(t.label)}</span><span class="ksp-todo-add">추가하기</span></button>`).join('')}</div>
+        </div>` : `
+        <div class="ksp-complete"><div class="ksp-complete-head"><b>프로필 100% 완성</b><span>100%</span></div><div class="ksp-bar"><i style="width:100%"></i></div></div>`}
+        <div class="ksp-sec">
+          <div class="ksp-sec-title"><span>내 조건</span><span>집주인에게 보입니다</span></div>
+          ${row('동네 · 반경', subs ? subs + (p.radiusKm ? ' · 반경 ' + esc(p.radiusKm) + 'km' : '') : '', 1)}
+          ${row('주당 예산', esc(budget), 2)}
+          ${row('입주 · 거주 기간', [esc(moveInLabel(p.moveIn)), esc(stayL)].filter(Boolean).join(' · '), 3)}
+          ${row('방 종류 · 욕실', [esc(rooms), p.bathroom === 'private' ? '개인 욕실' : ''].filter(Boolean).join(' · '), 4)}
+          ${row('나이대 · 성별', esc(meta), 5)}
+        </div>
+        <div class="ksp-sec">
+          <div class="ksp-sec-title"><span>본인만 보는 정보</span><span>집주인에게 보이지 않습니다</span></div>
+          ${row('신분 · 흡연 · 반려동물', esc(privL), 5, true)}
+          ${row('소개글', esc(q.intro || ''), 6, true)}
+          ${row('새 매물 알림', esc(alertL) + (al && al.email ? ' · ' + esc(al.email) : ''), 7, true)}
+        </div>
+        <div class="ksp-prof-foot">
+          <button type="button" class="ksp-btn" data-ksp="status">${found ? '다시 구합니다' : '구했습니다'}</button>
+          <button type="button" class="ksp-btn danger" data-ksp="delete">프로필 삭제</button>
         </div>
       </div>`;
   }
@@ -299,6 +394,9 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       if (!b) return;
       const act = b.dataset.ksp;
       if (act === 'create' || act === 'edit') { openModal(act === 'edit' ? profile : null); return; }
+      if (act === 'step') { openModal(profile, { startStep: Number(b.dataset.step) || 1 }); return; }
+      if (act === 'preview') { openPreview(); return; }
+      if (act === 'delete') { await deleteProfile(); return; }
       if (act === 'resume') { await patch({ visible: true, pausedAt: deleteField() }, '다시 켰습니다. 근처 집주인에게 다시 보입니다.'); return; }
       if (act === 'status') {
         const found = profile && profile.status === 'found';
@@ -329,8 +427,27 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     }
   }
 
+  // 프로필 삭제 — 공개·비공개 두 문서 모두(rules: 본인 delete 허용). 되돌릴 수 없으므로 확인 1회.
+  async function deleteProfile() {
+    if (!me || !db || !profile) return;
+    if (!confirm('프로필을 삭제하시겠습니까? 조건·소개글·알림 설정이 모두 지워지고 되돌릴 수 없습니다.')) return;
+    try {
+      const batch = writeBatch(db);
+      batch.delete(doc(db, 'seeker_profiles', me.uid));
+      batch.delete(doc(db, 'seeker_private', me.uid));
+      await batch.commit();
+      clearDraft();
+      profile = null; priv = null;
+      rerenderCard();
+      toast('프로필을 삭제했습니다.');
+    } catch (e) {
+      console.warn('[seeker-profile] 삭제 실패', e);
+      toast('삭제하지 못했습니다. 잠시 후 다시 시도해 주십시오.');
+    }
+  }
+
   // ── 작성 모달 ──
-  let ovl = null, draft = null, step = 1, editing = false, quick = false;
+  let ovl = null, draft = null, step = 1, editing = false, quick = false, single = false;   // single: 항목 행 '편집'/완성하기 카드로 연 수정(그 단계에서 바로 저장)
   const totalSteps = () => (quick ? QUICK_STEPS : TOTAL_STEPS);
 
   function blankDraft() {
@@ -403,6 +520,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     mountModal();
     editing = !!existing;
     quick = !!(opts && opts.quick) && !existing;
+    single = !!(existing && opts && opts.startStep);
     if (existing) { draft = fromProfile(existing); step = (opts && opts.startStep) ? Math.min(Math.max(1, opts.startStep), TOTAL_STEPS) : 1; }
     else {
       const saved = loadDraft();
@@ -420,6 +538,19 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     if (step <= totalSteps() && !editing) { try { collect(); } catch (_) {} saveDraft(); }
     ovl.classList.remove('open');
     document.body.style.overflow = '';
+  }
+  // 집주인이 보는 카드 그대로(공개 칸만) — 내 프로필 '집주인이 보는 카드' 버튼
+  function openPreview() {
+    if (!profile || !E()) return;
+    mountModal();
+    draft = fromProfile(profile); editing = true; quick = false; single = false; step = TOTAL_STEPS + 1;   // 끝 화면 취급(닫을 때 임시저장 안 함)
+    ovl.classList.remove('quick'); ovl.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    $('#kspStepLabel', ovl).textContent = '집주인이 보는 카드';
+    $('#kspProg', ovl).style.width = '100%';
+    $('[data-ksp-nav="back"]', ovl).style.visibility = 'hidden';
+    $('#kspBody', ovl).innerHTML = '<div class="ksp-help">근처에 집을 올리시는 분께 내 조건이 이렇게 보입니다. 닉네임·성별·나이대와 조건만 보이고 이메일·소개글·신분은 보이지 않습니다. 연락은 채팅으로만 옵니다.</div>' + previewCardHtml();
+    $('#kspFoot', ovl).innerHTML = '<button type="button" class="ksp-btn" data-ksp-nav="close">닫기</button>';
   }
 
   // 현재 화면의 입력값을 draft 에 반영
@@ -447,17 +578,17 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     if (draft.gender) tags.push(en.label('genders', draft.gender));
     if (draft.ageBand) tags.push(en.label('ageBands', draft.ageBand));
     const subs = draft.suburbs.map(x => esc(x.name) + ' ' + esc(String(x.state || '').toUpperCase())).join(' · ');
-    const budget = (draft.budgetMin !== '' || draft.budgetMax !== '') ? ('주 $' + esc(draft.budgetMin || 0) + (draft.budgetMax !== '' ? ' ~ $' + esc(draft.budgetMax) : '')) : '—';
-    const stayL = en.label('stays', draft.stay);
+    const budget = budgetLabel(draft.budgetMin, draft.budgetMax);
+    const stayL = draft.stay === 'tbd' ? '상의 후 결정' : (en.label('stays', draft.stay) || '');
     const rooms = (draft.roomTypes || []).map(c => en.label('roomTypes', c)).filter(Boolean).join(', ');
     return `
       <div class="ksp-preview">
-        <div class="ksp-preview-top"><div class="ksp-avatar">${esc((nick[0] || '?').toUpperCase())}</div>
-          <div><div class="ksp-preview-name">${esc(nick)}</div><div class="ksp-preview-meta">${tags.length ? esc(tags.join(' · ')) : '오늘 활동'}</div></div></div>
+        <div><div class="ksp-preview-name">${esc(nick)}</div><div class="ksp-preview-meta">${tags.length ? esc(tags.join(' · ')) : '오늘 활동'}</div></div>
+        <div class="ksp-preview-sent">${esc(sentenceOf(draft, en))}</div>
         <dl class="ksp-summary">
           <dt>동네</dt><dd>${subs || '—'}${draft.radiusKm ? ' · 반경 ' + esc(draft.radiusKm) + 'km' : ''}</dd>
-          <dt>예산</dt><dd>${budget}</dd>
-          <dt>입주</dt><dd>${esc(draft.moveIn || '—')}${stayL ? ' · ' + esc(stayL) : ''}</dd>
+          <dt>예산</dt><dd>${esc(budget || '—')}</dd>
+          <dt>입주</dt><dd>${esc(moveInLabel(draft.moveIn) || '—')}${stayL ? ' · ' + esc(stayL) : ''}</dd>
           <dt>방</dt><dd>${esc(rooms || '상관없음')}${draft.bathroom === 'private' ? ' · 개인 욕실' : ''}</dd>
         </dl>
       </div>`;
@@ -467,7 +598,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     const en = E();
     const body = $('#kspBody', ovl), foot = $('#kspFoot', ovl);
     const TS = totalSteps();
-    $('#kspStepLabel', ovl).textContent = step <= TS ? (step + ' / ' + TS + (quick ? ' · 짧은 등록' : '')) : '';
+    $('#kspStepLabel', ovl).textContent = step <= TS ? (single ? '프로필 수정' : (step + ' / ' + TS + (quick ? ' · 짧은 등록' : ''))) : '';
     $('#kspProg', ovl).style.width = Math.min(100, Math.round((step - 1) / TS * 100)) + '%';
     $('[data-ksp-nav="back"]', ovl).style.visibility = step > 1 && step <= TS ? 'visible' : 'hidden';
     let html = '', next = '다음';
@@ -584,6 +715,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
         next = '';
       }
     }
+    if (single && step <= TS) next = '저장';
     body.innerHTML = html;
     const doneSw = $('#kspVisibleDone', body);
     if (doneSw) doneSw.addEventListener('change', async () => {
@@ -727,6 +859,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     collect();
     if (step === totalSteps()) { const vis = $('#kspVisible', ovl); if (vis) draft.visible = !!vis.checked; }
     if (!validate()) return;
+    if (single) { await save(); return; }
     if (step < totalSteps()) { step++; if (!editing) saveDraft(); renderStep(); return; }
     await save();
   }
@@ -786,7 +919,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       const denied = e && (e.code === 'permission-denied' || /permission/i.test(e.message || ''));
       const errEl = $('#kspErr' + step, ovl) || $('#kspErr7', ovl);
       if (errEl) errEl.textContent = denied ? '저장할 수 없는 내용이 있습니다. 자기소개에 연락처·링크가 없는지, 휴대폰 인증이 되어 있는지 확인해 주십시오.' : '저장하지 못했습니다. 잠시 후 다시 시도해 주십시오.';
-      if (btn) { btn.disabled = false; btn.textContent = editing ? '저장' : (quick ? '등록' : '완료'); }
+      if (btn) { btn.disabled = false; btn.textContent = (editing || single) ? '저장' : (quick ? '등록' : '완료'); }
     }
   }
 
