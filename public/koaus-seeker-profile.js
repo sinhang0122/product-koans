@@ -86,17 +86,23 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       .ksp-summary dt{color:var(--text-muted)}
       .ksp-summary dd{margin:0}
       .ksp-avatar{width:40px;height:40px;border-radius:50%;background:var(--accent);color:var(--accent-text);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:17px;flex:0 0 auto}
-      .ksp-btn{appearance:none;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);border-radius:var(--r-md);padding:9px 14px;font-size:14px;cursor:pointer;font-family:inherit}
+      .ksp-btn{appearance:none;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);border-radius:var(--r-md);padding:9px 14px;font-size:14px;cursor:pointer;font-family:inherit;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;line-height:1.3}
+      a.ksp-btn:hover{text-decoration:none}
       .ksp-btn.primary{background:var(--accent);color:var(--accent-text);border-color:var(--accent)}
       .ksp-btn.small{padding:6px 10px;font-size:12.5px}
       .ksp-btn:disabled{opacity:.5;cursor:default}
       .ksp-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
       .ksp-banner{border:1px solid var(--gold-border);background:var(--gold-bg);border-radius:var(--r-md);padding:10px 12px;font-size:13px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
-      .ksp-switch{display:inline-flex;align-items:center;gap:8px;font-size:13.5px;cursor:pointer}
-      .ksp-switch input{width:38px;height:22px;appearance:none;background:var(--border);border-radius:999px;position:relative;cursor:pointer;transition:background .15s}
-      .ksp-switch input:checked{background:var(--green)}
-      .ksp-switch input::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .15s}
-      .ksp-switch input:checked::after{left:19px}
+      /* 활성화 스위치 — 아이폰식(10-20 사용자 확정): 끄면 왼쪽·회색, 켜면 오른쪽·초록 */
+      .ksp-switch{display:inline-flex;align-items:center;gap:10px;font-size:14px;cursor:pointer;user-select:none}
+      .ksp-switch input{flex:0 0 auto;width:50px;height:30px;margin:0;appearance:none;-webkit-appearance:none;background:#d6d6db;border-radius:999px;position:relative;cursor:pointer;transition:background .2s;outline:none}
+      :root[data-theme=dark] .ksp-switch input{background:#3a3a3f}
+      .ksp-switch input:checked{background:#34c759}
+      .ksp-switch input::after{content:"";position:absolute;top:2px;left:2px;width:26px;height:26px;border-radius:50%;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,.25);transition:left .2s}
+      .ksp-switch input:checked::after{left:22px}
+      .ksp-switch input:focus-visible{box-shadow:0 0 0 3px rgba(52,199,89,.35)}
+      .ksp-switch-txt{display:flex;flex-direction:column;gap:2px;min-width:0}
+      .ksp-switch-txt small{font-size:12px;color:var(--text-muted)}
       /* 모달 */
       .ksp-ovl{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9000;display:none;align-items:flex-end;justify-content:center}
       .ksp-ovl.open{display:flex}
@@ -105,6 +111,8 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       .ksp-mhead{display:flex;align-items:center;gap:10px;padding:14px 16px 10px;border-bottom:1px solid var(--border)}
       .ksp-mhead .ksp-step{font-size:12.5px;color:var(--text-muted);flex:1}
       .ksp-prog{height:3px;background:var(--border)}
+      .ksp-ovl.done .ksp-prog{display:none}
+      .ksp-mfoot:empty{display:none}
       .ksp-prog > i{display:block;height:100%;background:var(--accent);transition:width .2s}
       .ksp-mbody{padding:18px 16px;overflow:auto;flex:1;display:flex;flex-direction:column;gap:14px}
       .ksp-q{font-size:18px;font-weight:700;line-height:1.35}
@@ -129,13 +137,20 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       .ksp-budget{display:flex;align-items:center;gap:8px}
       .ksp-budget .ksp-input{text-align:center}
       .ksp-err{font-size:12.5px;color:var(--red)}
-      .ksp-done{text-align:center;display:flex;flex-direction:column;gap:12px;align-items:center;padding:12px 0}
-      .ksp-done .ksp-q{font-size:20px}
-      .ksp-preview{border:1px solid var(--border);border-radius:var(--r-lg);background:var(--bg-card);padding:14px;display:flex;flex-direction:column;gap:10px}
+      /* 끝 화면(저장·등록 완료) — 10-20 정돈: 왼쪽 정렬, 여백 넉넉히, 카드 → 활성화 스위치 → 버튼 세로 */
+      .ksp-done{text-align:left;display:flex;flex-direction:column;gap:14px;align-items:stretch;padding:4px 0 2px}
+      .ksp-done .ksp-q{font-size:22px;letter-spacing:-.02em}
+      .ksp-done .ksp-help{font-size:14px;line-height:1.65}
+      .ksp-done-actions{display:flex;flex-direction:column;gap:8px;margin-top:2px}
+      .ksp-done-actions .ksp-btn{width:100%;padding:13px 14px;font-size:15px;font-weight:700;border-radius:12px}
+      .ksp-done .ksp-prof-switch{margin:0}
+      .ksp-preview{border:1px solid var(--border);border-radius:16px;background:var(--bg-base);padding:18px 18px 16px;display:flex;flex-direction:column;gap:12px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
       .ksp-preview-top{display:flex;align-items:center;gap:10px}
-      .ksp-preview-name{font-weight:700;font-size:15px}
-      .ksp-preview-meta{font-size:12.5px;color:var(--text-muted)}
-      .ksp-preview-sent{font-size:14px;line-height:1.55}
+      .ksp-preview-name{font-weight:800;font-size:17px;letter-spacing:-.01em}
+      .ksp-preview-meta{font-size:13px;color:var(--text-muted);margin-top:2px}
+      .ksp-preview-sent{font-size:15.5px;line-height:1.6;word-break:keep-all}
+      .ksp-preview .ksp-summary{font-size:14px;gap:6px 14px;padding-top:12px;border-top:1px solid var(--border-subtle)}
+      .ksp-preview .ksp-summary dt{font-size:13px}
       /* 내 프로필(인스타 편집 화면 식, 10-20): 큰 닉네임 → 두 버튼 → 활성화 → 완성하기 카드 → 항목 행(편집) */
       .ksp-prof{gap:14px;padding:18px 16px}
       .ksp-prof-head{display:flex;flex-direction:column;gap:4px}
@@ -350,7 +365,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
           <button type="button" class="ksp-btn" data-ksp="preview">집주인이 보는 카드</button>
         </div>
         ${paused ? `<div class="ksp-banner"><span>30일 동안 활동이 없어 일시정지되었습니다. 계속 구하고 계시면 다시 켜 주십시오.</span><button type="button" class="ksp-btn small primary" data-ksp="resume">다시 켜기</button></div>` : ''}
-        <label class="ksp-switch ksp-prof-switch"><span>내 조건 활성화 (근처 집주인에게 공개)</span><input type="checkbox" data-ksp="visible" ${vis && !paused ? 'checked' : ''} ${found ? 'disabled' : ''}></label>
+        <label class="ksp-switch ksp-prof-switch"><span class="ksp-switch-txt"><span>내 조건 활성화</span><small>${found ? '구했습니다 상태에서는 공개되지 않습니다' : (vis && !paused ? '근처 집주인에게 보입니다' : '꺼져 있습니다 — 알림만 받습니다')}</small></span><input type="checkbox" data-ksp="visible" ${vis && !paused ? 'checked' : ''} ${found ? 'disabled' : ''}></label>
         ${c.todo.length ? `
         <div class="ksp-complete">
           <div class="ksp-complete-head"><b>프로필 완성하기</b><span>${c.pct}%</span></div>
@@ -544,13 +559,13 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     if (!profile || !E()) return;
     mountModal();
     draft = fromProfile(profile); editing = true; quick = false; single = false; step = TOTAL_STEPS + 1;   // 끝 화면 취급(닫을 때 임시저장 안 함)
-    ovl.classList.remove('quick'); ovl.classList.add('open');
+    ovl.classList.remove('quick'); ovl.classList.add('open', 'done');
     document.body.style.overflow = 'hidden';
     $('#kspStepLabel', ovl).textContent = '집주인이 보는 카드';
     $('#kspProg', ovl).style.width = '100%';
     $('[data-ksp-nav="back"]', ovl).style.visibility = 'hidden';
     $('#kspBody', ovl).innerHTML = '<div class="ksp-help">근처에 집을 올리시는 분께 내 조건이 이렇게 보입니다. 닉네임·성별·나이대와 조건만 보이고 이메일·소개글·신분은 보이지 않습니다. 연락은 채팅으로만 옵니다.</div>' + previewCardHtml();
-    $('#kspFoot', ovl).innerHTML = '<button type="button" class="ksp-btn" data-ksp-nav="close">닫기</button>';
+    $('#kspFoot', ovl).innerHTML = '';
   }
 
   // 현재 화면의 입력값을 draft 에 반영
@@ -583,7 +598,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     const rooms = (draft.roomTypes || []).map(c => en.label('roomTypes', c)).filter(Boolean).join(', ');
     return `
       <div class="ksp-preview">
-        <div><div class="ksp-preview-name">${esc(nick)}</div><div class="ksp-preview-meta">${tags.length ? esc(tags.join(' · ')) : '오늘 활동'}</div></div>
+        <div class="ksp-preview-top"><div><div class="ksp-preview-name">${esc(nick)}</div><div class="ksp-preview-meta">${tags.length ? esc(tags.join(' · ')) : '오늘 활동'}</div></div></div>
         <div class="ksp-preview-sent">${esc(sentenceOf(draft, en))}</div>
         <dl class="ksp-summary">
           <dt>동네</dt><dd>${subs || '—'}${draft.radiusKm ? ' · 반경 ' + esc(draft.radiusKm) + 'km' : ''}</dd>
@@ -600,9 +615,11 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     const TS = totalSteps();
     $('#kspStepLabel', ovl).textContent = step <= TS ? (single ? '프로필 수정' : (step + ' / ' + TS + (quick ? ' · 짧은 등록' : ''))) : '';
     $('#kspProg', ovl).style.width = Math.min(100, Math.round((step - 1) / TS * 100)) + '%';
+    ovl.classList.toggle('done', step > TS);   // 끝 화면: 진행 막대·아래 닫기 버튼 없음(머리의 닫기만)
     $('[data-ksp-nav="back"]', ovl).style.visibility = step > 1 && step <= TS ? 'visible' : 'hidden';
     let html = '', next = '다음';
-    switch (step) {
+    // 끝 화면은 step = TS+1 — 짧은 등록(TS=3)은 4가 '방 종류' 단계와 겹치므로 0으로 보내 default(끝 화면)로 (10-20 버그 수정)
+    switch (step > TS ? 0 : step) {
       case 1:
         html = `
           <div class="ksp-q">찾으시는 동네</div>
@@ -691,27 +708,32 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       default: {
         const st = draft.suburbs[0] && draft.suburbs[0].state;
         if (quick && !editing) {
+          const on = !!(profile && profile.visible !== false);
           html = `
-          <div class="ksp-done" style="align-items:stretch;text-align:left;">
+          <div class="ksp-done">
             <div class="ksp-q">프로필이 만들어졌습니다.</div>
-            <div class="ksp-help">근처에 집을 올리시는 분께 간단한 내 조건이 이렇게 보입니다. 닉네임과 조건만 보이고 이메일·소개글은 보이지 않습니다. 연락은 채팅으로만 옵니다.</div>
+            <div class="ksp-help">근처에 집을 올리시는 분께 내 조건이 이렇게 보입니다. 닉네임과 조건만 보이고 이메일·소개글은 보이지 않습니다. 연락은 채팅으로만 옵니다.</div>
             ${previewCardHtml()}
-            <label class="ksp-switch"><input type="checkbox" id="kspVisibleDone" ${profile && profile.visible !== false ? 'checked' : ''}> 내 조건 활성화 (근처 집주인에게 공개)</label>
+            <label class="ksp-switch ksp-prof-switch"><span class="ksp-switch-txt"><span>내 조건 활성화</span><small>${on ? '근처 집주인에게 보입니다' : '꺼져 있습니다 — 알림만 받습니다'}</small></span><input type="checkbox" id="kspVisibleDone" ${on ? 'checked' : ''}></label>
             <div class="ksp-help">추후 프로필 설정에서 변경 가능합니다. 새 매물 알림은 로그인 이메일로, 5건 이상 모이면 보냅니다.</div>
-            <div class="ksp-actions" style="justify-content:flex-end;">
-              <button type="button" class="ksp-btn" data-ksp-nav="more">프로필 더 채우기</button>
+            <div class="ksp-done-actions">
               <a class="ksp-btn primary" href="accom.html${st ? '?state=' + esc(st) : ''}">조건에 맞는 방 보러 가기</a>
+              <button type="button" class="ksp-btn" data-ksp-nav="more">프로필 더 채우기</button>
             </div>
           </div>`;
           next = '';
           break;
         }
+        const on = !!(profile && profile.visible !== false);
         html = `
           <div class="ksp-done">
             <div class="ksp-q">${editing ? '저장했습니다.' : '프로필을 만들었습니다.'}</div>
-            <div class="ksp-help">${draft.visible ? '희망 동네 근처에 방을 올린 집주인에게 지금부터 내 조건이 이렇게 보입니다.' : '비공개로 저장했습니다. 알림 메일만 받습니다.'} 연락이 오면 채팅 탭에 표시됩니다.</div>
-            <div style="text-align:left;width:100%;">${previewCardHtml()}</div>
-            <a class="ksp-btn primary" href="accom.html${st ? '?state=' + esc(st) : ''}">조건에 맞는 방 보러 가기</a>
+            <div class="ksp-help">${on ? '희망 동네 근처에 방을 올린 집주인에게 내 조건이 이렇게 보입니다.' : '지금은 꺼져 있어 집주인에게 보이지 않습니다. 알림 메일만 받습니다.'} 연락이 오면 채팅 탭에 표시됩니다.</div>
+            ${previewCardHtml()}
+            <label class="ksp-switch ksp-prof-switch"><span class="ksp-switch-txt"><span>내 조건 활성화</span><small>${on ? '근처 집주인에게 보입니다' : '꺼져 있습니다 — 알림만 받습니다'}</small></span><input type="checkbox" id="kspVisibleDone" ${on ? 'checked' : ''}></label>
+            <div class="ksp-done-actions">
+              <a class="ksp-btn primary" href="accom.html${st ? '?state=' + esc(st) : ''}">조건에 맞는 방 보러 가기</a>
+            </div>
           </div>`;
         next = '';
       }
@@ -724,12 +746,11 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       try {
         await updateDoc(doc(db, 'seeker_profiles', me.uid), { visible: on, lastActiveAt: serverTimestamp(), updatedAt: serverTimestamp() });
         await loadProfile(true); if (panelEl) rerenderCard();
+        try { const sm = doneSw.closest('.ksp-switch').querySelector('small'); if (sm) sm.textContent = on ? '근처 집주인에게 보입니다' : '꺼져 있습니다 — 알림만 받습니다'; } catch (_) {}
         toast(on ? '활성화했습니다. 근처 집주인에게 보입니다.' : '비활성화했습니다. 알림만 받습니다.');
       } catch (e) { doneSw.checked = !on; toast('변경하지 못했습니다. 잠시 후 다시 시도해 주십시오.'); }
     });
-    foot.innerHTML = next
-      ? `<button type="button" class="ksp-btn primary" id="kspNext">${next}</button>`
-      : `<button type="button" class="ksp-btn" data-ksp-nav="close">닫기</button>`;
+    foot.innerHTML = next ? `<button type="button" class="ksp-btn primary" id="kspNext">${next}</button>` : '';
     wireStep();
     const first = body.querySelector('input:not([type=checkbox]),textarea');
     if (first && step !== 3) { try { first.focus({ preventScroll: true }); } catch (_) {} }

@@ -11,7 +11,7 @@
        koausDb/koausFs 있을 때만 60s 스로틀 쿼리(unreadFor array-contains, limit 1
        = 최대 1 read)로 갱신. 브리지·로그인 없으면 LS 값만, 실패 전부 silent.
        chat.html 자체는 onSnapshot 실시간이라 이 폴링과 무관.
-   ─ 프로필 탭(2026-10 ①-3): LS koaus-roles-v1(koaus-role.js) 의 living==='owner'(방 올려요)일 때만
+   ─ 프로필 탭(2026-10 ①-3): LS koaus-roles-v1(koaus-role.js) 의 living==='owner'|'both'(집·방 올리기)일 때만
      '최근 본'과 '채팅' 사이에 '프로필'(mypage.html?tab=people — 근처에서 집 구하는 사람 카드) 노출.
      'koaus:roles-changed' 이벤트로 즉시 다시 그림. 집 구하는 사람·비로그인은 5탭 그대로.
    ─ 데스크탑(>768px) 미노출 · admin* 페이지에는 스크립트 미포함
@@ -74,7 +74,7 @@
   function buildTabs() {
     var r = rolesLS();
     var tabs = TABS.slice();
-    if (r.living === 'owner') {
+    if (r.living === 'owner' || r.living === 'both') {   // 10-20: 둘 다('both')도 올리기
       tabs.splice(3, 0, { key: 'people', label: '프로필', icon: ICONS.people,
         href: 'mypage.html?tab=people',
         active: isMy && tab === 'people' });

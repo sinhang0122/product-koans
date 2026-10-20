@@ -2,8 +2,10 @@
 //  KoAus · Living / Job 역할 선택 (2026-10 ①-2)
 //  - 입구에서 막지 않는다(비로그인은 그냥 둘러봄). 로그인한 회원이 Living(accom/rent) 또는 Job(jobs)에
 //    들어왔을 때 그 앱의 역할이 아직 없으면 한 번 묻는다: Living = 집 구해요 / 방 올려요, Job = 일 구해요 / 사람 구해요.
-//    데스크탑은 작은 창, 모바일(≤768px)은 화면 전체. '나중에'를 누르면 7일 동안 다시 묻지 않는다.
-//  - 저장: users/{uid}.roles = { living: 'seeker'|'owner', job: 'seeker'|'employer' } (rules validUserRoles).
+//    데스크탑은 작은 창, 모바일(≤768px)은 화면 전체. **반드시 하나를 고른다(10-20 사용자 확정): '나중에' 없음, 바깥·Esc 로 못 닫음.**
+//  - 저장: users/{uid}.roles = { living: 'seeker'|'owner'|'both', job: 'seeker'|'employer'|'both' } (rules validUserRoles).
+//    묻는 창은 하나만 고르고, 마이페이지 '내 역할' 박스에서는 둘 다 켤 수 있다('both') — 단 하나는 남겨야 함(둘 다 끄기 불가).
+//    글쓰기 버튼은 '올리기'(owner/employer/both)에게만 보인다 — 역할 없음·'찾기'만이면 숨김(UI 게이트, 10-20).
 //    LS 'koaus-roles-v1' = { uid, living, job } 캐시 → koaus-tabbar.js 가 '프로필' 탭 노출 판단에 즉시 사용.
 //    바뀌면 document 에 'koaus:roles-changed' 이벤트.
 //  - Living '집 구해요' 선택 직후 → 짧은 조건 등록(koaus-seeker-profile.js openQuick: 동네·예산·입주 3단계, 건너뛰기 가능).
@@ -57,6 +59,9 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     hire: '<svg viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="60" cy="60" r="50" fill="var(--kr-art,#f1f3f5)" stroke="none"/><circle cx="48" cy="48" r="10"/><path d="M28 84c3-11 10-17 20-17s17 6 20 17"/><circle cx="76" cy="52" r="8"/><path d="M70 72c3-6 8-9 14-9 7 0 12 4 14 11"/><path d="M90 36v10M85 41h10"/></svg>',
   };
   const LABEL = { living: { seeker: '집·방 찾기', owner: '집·방 올리기' }, job: { seeker: '일자리 찾기', employer: '일자리 올리기' } };
+  const POST_ROLE = { living: 'owner', job: 'employer' };   // 글을 올릴 수 있는 역할
+  // 역할 보유 여부 — 'both' 는 둘 다
+  const has = (r, app, code) => !!(r && r[app] && (r[app] === code || r[app] === 'both'));
 
   let db = null, me = null, roles = null, loadedFor = null, ovl = null;
   const $ = (s, r) => (r || document).querySelector(s);
@@ -82,7 +87,8 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
   }
   // 역할에 따라 페이지 요소 토글 — 마이페이지 '구하는 사람' 탭, accom/rent 상단 안내 줄
   function applyUi() {
-    const owner = !!(me && roles && roles.living === 'owner');
+    const owner = !!(me && has(roles, 'living', 'owner'));           // 올리기(둘 다 포함) → 구하는 사람 탭
+    const ownerOnly = !!(me && roles && roles.living === 'owner');     // 올리기만 → accom/rent 상단 줄을 '구하는 사람 보기'로
     try { const t = document.getElementById('mpPeopleTab'); if (t) t.hidden = !owner; } catch (_) {}
     try { const h = document.getElementById('kspRoles'); if (h && me) renderSwitcher(h); } catch (_) {}
     try { applyPrompt(); } catch (_) {}
@@ -90,7 +96,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     try {
       const row = document.querySelector('[data-seeker-entry]');
       if (row) {
-        if (owner) {
+        if (ownerOnly) {
           row.setAttribute('href', 'mypage.html?tab=people'); row.removeAttribute('onclick'); row.onclick = null;
           const t = row.querySelector('.kse-text'), c = row.querySelector('.kse-cta');
           if (t) t.innerHTML = '<strong>방을 올리셨습니까?</strong> 이 근처에서 집을 구하는 분들의 조건 카드를 보고 먼저 채팅할 수 있습니다.';
@@ -146,7 +152,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       .kr-art svg{width:100%;height:100%;display:block}
       .kr-opt b{display:block;font-size:22px;font-weight:800;letter-spacing:-.02em;line-height:1.25}
       .kr-opt span{display:block;font-size:15px;opacity:.72;margin-top:10px;line-height:1.55;white-space:pre-line}
-      .kr-note{font-size:14px;font-weight:600;padding:14px 16px;border-radius:12px;background:var(--bg-card);line-height:1.5}
+      .kr-note{font-size:14px;font-weight:600;padding:14px 16px;border-radius:12px;background:var(--bg-card);line-height:1.6}
       .kr-foot{display:flex;justify-content:center;margin-top:10px}
       .kr-later{appearance:none;background:none;border:0;color:var(--text-primary);opacity:.55;font-size:13.5px;cursor:pointer;font-family:inherit;padding:8px 10px;text-decoration:underline}
       @media(max-width:768px){.kr-ovl{padding:0;align-items:stretch}.kr-box{max-width:none;border-radius:0;border:0;display:flex;flex-direction:column;justify-content:center;padding:28px 20px calc(24px + env(safe-area-inset-bottom,0px));overflow:auto}.kr-title{font-size:24px}.kr-opts{grid-template-columns:1fr;gap:12px;margin:22px 0 12px}.kr-opt{display:grid;grid-template-columns:72px 1fr;column-gap:14px;row-gap:2px;align-items:center;padding:16px 16px}.kr-art{grid-row:1 / 3;width:72px;height:72px;margin:0}.kr-opt b{font-size:19px}.kr-opt span{font-size:13.5px;margin-top:4px}.kr-note{font-size:13px}}
@@ -175,7 +181,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     document.body.appendChild(ovl);
   }
   function close() { if (ovl) { ovl.classList.remove('open'); document.body.style.overflow = ''; } }
-  // '나중에 정하기' = 자동으로 다시 띄우지 않음(기한 없음). 바꾸는 곳은 마이페이지 → 내 프로필의 역할 박스뿐.
+  // (10-20) '나중에 정하기' 폐지 — 아래 snooze 는 고른 기록용으로만 남김. 바꾸는 곳은 마이페이지 → 내 프로필의 '내 역할' 박스.
   function snooze(app) { try { localStorage.setItem('koaus-role-asked-' + app + '-' + (me ? me.uid : ''), '1'); } catch (_) {} }
   function snoozed(app) { try { return localStorage.getItem('koaus-role-asked-' + app + '-' + (me ? me.uid : '')) === '1'; } catch (_) { return false; } }
 
@@ -186,12 +192,9 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       <div class="kr-box">
         <div class="kr-title">${esc(cfg.title)}</div>
         <div class="kr-opts">${cfg.options.map(o => `<button type="button" class="kr-opt" data-code="${esc(o.code)}"><span class="kr-art" aria-hidden="true">${ART[o.art] || ''}</span><b>${esc(o.label)}</b><span>${esc(o.desc)}</span></button>`).join('')}</div>
-        <div class="kr-note">${esc(cfg.note)}</div>
-        <div class="kr-foot"><button type="button" class="kr-later" data-later>나중에 정하기</button></div>
+        <div class="kr-note">${esc(cfg.note)} 하나를 골라야 계속할 수 있어요. 둘 다 하시는 분은 마이페이지 내 역할에서 둘 다 켤 수 있어요.</div>
       </div>`;
     ovl.onclick = async e => {
-      const later = e.target.closest('[data-later]');
-      if (later) { snooze(app); close(); return; }
       const opt = e.target.closest('.kr-opt'); if (!opt) return;
       ovl.querySelectorAll('.kr-opt').forEach(b => { b.classList.toggle('on', b === opt); b.disabled = true; });
       const ok = await set(app, opt.dataset.code);
@@ -219,8 +222,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
   async function maybeAsk() {
     const app = pageApp(); if (!app || !me) return;
     if (window.koausCanPost && !window.koausCanPost(me)) return;   // 휴대폰 인증 모달이 먼저 — 겹치지 않게
-    if (snoozed(app)) return;
-    const r = await load(false);
+    const r = await load(false);   // 10-20: 예전 '나중에' 기록(snoozed)은 무시 — 역할이 없으면 반드시 묻는다
     if (!r || r[app]) return;
     // 0.5초: 로그인 창·휴대폰 인증 창이 닫히는 애니메이션과 겹치지 않을 만큼만 — 그동안 돌아가는 원 표시
     if ($('.ksp-ovl.open') || $('.auth-overlay.open')) return;
@@ -235,13 +237,14 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     }, 500);
   }
 
-  // 10-19 사용자 확정: 역할이 '찾기'(seeker)인 사람에게는 글쓰기 버튼을 숨긴다 — Living 은 집·방 찾기, Job 은 일자리 찾기.
-  //   역할을 안 정했거나 '올리기'면 그대로 보임. 숨김만(삭제 아님) — 역할을 바꾸면 즉시 복귀. 데이터·rules 는 그대로.
+  // 10-20 사용자 확정: 글쓰기 버튼은 '올리기'(집·방 올리기 / 일자리 올리기, 둘 다 포함)에게만. 역할 없음·'찾기'만이면 숨김(UI 게이트).
+  //   숨김만(삭제 아님) — 역할을 바꾸면 즉시 복귀. rules 는 그대로(글 create 는 휴대폰 인증 게이트).
   function applyWriteGate() {
     const app = pageApp(); if (!app) return;
     const btn = document.getElementById('writeBtnOpen'); if (!btn) return;
+    // 10-20: 로그인했으면 '올리기'(owner/employer/both)에게만 보임. 역할 아직 안 읽음·없음·'찾기'만 → 숨김. 비로그인은 보임(누르면 로그인 창).
     const r = (me && loadedFor === me.uid && roles) ? roles : null;
-    const hide = !!(r && r[app] === 'seeker');
+    const hide = !!me && !has(r, app, POST_ROLE[app]);
     btn.style.display = hide ? 'none' : '';   // hidden 속성은 .board-write-btn 의 display 에 밀리므로 inline display 로
     btn.setAttribute('aria-hidden', hide ? 'true' : 'false');
   }
@@ -255,22 +258,32 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     if (!host) return;
     injectCss();
     const r = roles || {};
-    const seg = (app, codes) => `<span class="kr-seg" data-app="${app}">${codes.map(c => `<button type="button" data-code="${c}" class="${r[app] === c ? 'on' : ''}">${esc(LABEL[app][c])}</button>`).join('')}</span>`;
+    const seg = (app, codes) => `<span class="kr-seg" data-app="${app}">${codes.map(c => `<button type="button" data-code="${c}" class="${has(r, app, c) ? 'on' : ''}" aria-pressed="${has(r, app, c) ? 'true' : 'false'}">${esc(LABEL[app][c])}</button>`).join('')}</span>`;
     host.innerHTML = `
       <div class="kr-switch">
-        <div class="kr-switch-title">내 역할 <span>Living과 Job은 따로 정하고, 언제든 바꿀 수 있습니다.</span></div>
+        <div class="kr-switch-title">내 역할 <span>둘 다 켤 수 있고 언제든 바꿀 수 있습니다. 하나는 남겨야 합니다.</span></div>
         <div class="kr-switch-row"><b>Living</b>${seg('living', ['seeker', 'owner'])}</div>
         <div class="kr-switch-row"><b>Job</b>${seg('job', ['seeker', 'employer'])}</div>
-        <div class="kr-switch-help">방을 올리시려면 Living을 "집·방 올리기"로 바꾸십시오 — 글쓰기 버튼과 탭바 "프로필" 탭이 생깁니다. "집·방 찾기"는 아래 내 조건이 근처 집주인에게 보입니다.</div>
+        <div class="kr-switch-help">"집·방 올리기"·"일자리 올리기"를 켜면 글쓰기 버튼이 생깁니다(집·방 올리기는 탭바 "프로필" 탭도). "집·방 찾기"는 아래 내 조건이 근처 집주인에게 보입니다.</div>
       </div>`;
     host.onclick = async e => {
       const b = e.target.closest('.kr-seg button'); if (!b) return;
       const app = b.closest('.kr-seg').dataset.app, code = b.dataset.code;
-      if ((roles || {})[app] === code) return;
+      const codes = app === 'living' ? ['seeker', 'owner'] : ['seeker', 'employer'];
+      const cur = roles || {};
+      const on = codes.filter(c => has(cur, app, c));
+      let next;
+      if (on.indexOf(code) !== -1) {
+        if (on.length === 1) { toast('역할은 하나 이상 켜 두어야 합니다.'); return; }
+        next = on.filter(c => c !== code)[0];
+      } else {
+        next = on.length ? 'both' : code;
+      }
+      if (cur[app] === next) return;
       b.closest('.kr-seg').querySelectorAll('button').forEach(x => x.disabled = true);
-      const ok = await set(app, code);
+      const ok = await set(app, next);
       renderSwitcher(host);
-      if (ok) { toast('저장했습니다.'); if (app === 'living' && code === 'seeker' && window.koausSeekerProfile) window.koausSeekerProfile.has().then(h => { if (!h) window.koausSeekerProfile.openQuick(); }); }
+      if (ok) { toast('저장했습니다.'); if (app === 'living' && code === 'seeker' && next !== 'owner' && window.koausSeekerProfile) window.koausSeekerProfile.has().then(h => { if (!h) window.koausSeekerProfile.openQuick(); }); }
     };
   }
 
@@ -292,5 +305,6 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     ask: app => ask(app, code => afterChoice(app, code)),
     renderSwitcher: renderSwitcher,
     label: (app, code) => (LABEL[app] && LABEL[app][code]) || '',
+    has: (app, code) => has(roles || readCache() || {}, app, code),
   };
 })();

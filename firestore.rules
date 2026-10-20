@@ -613,8 +613,8 @@ service cloud.firestore {
       let d = request.resource.data;
       return (!('roles' in d) || (d.roles is map
                                   && d.roles.keys().hasOnly(['living', 'job'])
-                                  && (!('living' in d.roles) || d.roles.living in ['seeker', 'owner'])
-                                  && (!('job' in d.roles) || d.roles.job in ['seeker', 'employer'])))
+                                  && (!('living' in d.roles) || d.roles.living in ['seeker', 'owner', 'both'])
+                                  && (!('job' in d.roles) || d.roles.job in ['seeker', 'employer', 'both'])))   // both = 둘 다(10-20, 내 역할 박스)
         && (!('rolesAskedAt' in d) || d.rolesAskedAt is timestamp)
         // 채팅 알림 메일 설정(2026-10 ③): notify = { mode: instant|10m|30m|1h|2h|5h|daily|off, dailyAt: 'hh:mm'(daily 때) }
         && (!('notify' in d) || (d.notify is map

@@ -37,6 +37,9 @@
   <script src="local-analytics.js" defer></script>
   <script src="koaus-url-guard.js" defer></script>
   <script type="module" src="koaus-phone-auth.js"></script>
+  <script src="koaus-enums.js" defer></script>
+  <script type="module" src="koaus-role.js"></script>   <!-- 10-20: 환경설정 Living/Job 프로필 시트의 내 역할 박스 -->
+  <script type="module" src="koaus-seeker-profile.js"></script>   <!-- 10-20: Living 프로필 시트 = 마이페이지 내 프로필과 같은 화면 -->
   <script type="module" src="koaus-video-reg.js"></script>
 </head>
 <body>
@@ -443,14 +446,14 @@
       <div class="mypage-account-row">
         <div class="mypage-account-row-info">
           <div class="mypage-account-row-label">Living 프로필 설정</div>
-          <div class="mypage-account-row-desc">집·방 찾기 조건과 공개 여부 · 역할 · 쉐어·렌트 문의 자기소개</div>
+          <div class="mypage-account-row-desc">내 역할 · 집·방 찾기 조건과 공개 여부 · 쉐어·렌트 문의 자기소개</div>
         </div>
         <button class="mypage-edit-btn" type="button" data-mp-sheet="mpLivingSheet">설정</button>
       </div>
       <div class="mypage-account-row">
         <div class="mypage-account-row-info">
           <div class="mypage-account-row-label">Job 프로필 설정</div>
-          <div class="mypage-account-row-desc">구인구직 문의 자기소개 · 경력·가능 시간대 등은 추후 추가</div>
+          <div class="mypage-account-row-desc">내 역할 · 구인구직 문의 자기소개 (경력 등은 추후 추가)</div>
         </div>
         <button class="mypage-edit-btn" type="button" data-mp-sheet="mpJobSheet">설정</button>
       </div>
@@ -459,21 +462,14 @@
         <div class="mp-sheet" role="dialog" aria-modal="true" aria-label="Living 프로필 설정">
           <div class="mp-sheet-head"><b>Living 프로필 설정</b><button type="button" class="mypage-photo-btn" data-mp-sheet-close>닫기</button></div>
           <div class="mp-sheet-body">
-            <div class="mypage-account-row">
-              <div class="mypage-account-row-info">
-                <div class="mypage-account-row-label">내 조건 · 공개 여부 · 역할</div>
-                <div class="mypage-account-row-desc">동네·예산·입주일과 집주인에게 공개할지, 역할(집·방 찾기 / 올리기)은 마이페이지 내 프로필에서 바꿉니다.</div>
-              </div>
-              <a class="mypage-edit-btn" href="mypage.html?tab=profile" style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;">내 프로필 →</a>
+            <!-- koaus-seeker-profile.js 가 koaus:mypage-profile 이벤트로 렌더: 내 역할 박스 + 인스타식 프로필(완성도·행별 편집) — 마이페이지 내 프로필과 같은 화면 -->
+            <div id="mpProfilePanel" class="mp-sheet-panel"><div class="post-empty">불러오는 중…</div></div>
+            <div class="mp-prow" id="mpIntroLivingRow">
+              <div class="mp-prow-main"><div class="mp-prow-k">문의 자기소개 <span class="mp-own">문자·오픈채팅용</span></div><div class="mp-prow-v empty" id="mpIntroLivingPreview">미등록</div></div>
+              <button type="button" class="mp-link" data-mp-expand="mpIntroLivingEdit">편집</button>
             </div>
-            <div class="mypage-account-row" id="mpIntroLivingRow" style="flex-direction:column;align-items:stretch;gap:8px;border-bottom:0;">
-              <div class="mypage-account-row-info" style="width:100%;">
-                <div class="mypage-account-row-label">문의 자기소개 (쉐어·렌트 문의용)</div>
-                <div class="mypage-account-row-desc" style="line-height:1.5;">
-                  쉐어·렌트 글에 문자·오픈채팅으로 문의할 때 자동으로 들어가는 소개입니다. 상대방에게 보여줘도 괜찮은 내용만 적어 주십시오.
-                  TFN, 주민번호 등 민감정보는 적지 마십시오.
-                </div>
-              </div>
+            <div class="mp-prow-edit" id="mpIntroLivingEdit" hidden>
+              <div class="mypage-account-row-desc" style="line-height:1.5;">쉐어·렌트 글에 문자·오픈채팅으로 문의할 때 자동으로 들어가는 소개입니다. 상대방에게 보여줘도 괜찮은 내용만 적어 주십시오. TFN, 주민번호 등 민감정보는 적지 마십시오.</div>
               <textarea id="mpIntroLivingText" maxlength="700" rows="5" placeholder="예) 안녕하세요. 워홀 중인 20대입니다. 비흡연이고 반려동물은 없습니다. 입주 가능 시기는…"
                         style="width:100%;box-sizing:border-box;resize:vertical;min-height:96px;padding:12px;border:1.5px solid var(--border,#d1d5db);border-radius:10px;font-size:15px;line-height:1.5;font-family:inherit;"></textarea>
               <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
@@ -488,14 +484,14 @@
         <div class="mp-sheet" role="dialog" aria-modal="true" aria-label="Job 프로필 설정">
           <div class="mp-sheet-head"><b>Job 프로필 설정</b><button type="button" class="mypage-photo-btn" data-mp-sheet-close>닫기</button></div>
           <div class="mp-sheet-body">
-            <div class="mypage-account-row" id="mpIntroWorkRow" style="flex-direction:column;align-items:stretch;gap:8px;border-bottom:0;">
-              <div class="mypage-account-row-info" style="width:100%;">
-                <div class="mypage-account-row-label">문의 자기소개 (구인구직 문의용)</div>
-                <div class="mypage-account-row-desc" style="line-height:1.5;">
-                  구인구직 글에 문자·오픈채팅으로 문의할 때 자동으로 들어가는 소개입니다. 경력·가능 시간대 등 일자리용 소개만 적어 주십시오.
-                  TFN, 주민번호 등 민감정보는 적지 마십시오.
-                </div>
-              </div>
+            <div id="mpJobRoles" class="mp-sheet-panel"></div>   <!-- koausRole.renderSwitcher — 내 역할 박스(Living·Job) -->
+            <div class="mp-sec-title"><span>Job 프로필</span><span>경력·가능 시간대 등은 추후 추가</span></div>
+            <div class="mp-prow" id="mpIntroWorkRow">
+              <div class="mp-prow-main"><div class="mp-prow-k">문의 자기소개 <span class="mp-own">문자·오픈채팅용</span></div><div class="mp-prow-v empty" id="mpIntroWorkPreview">미등록</div></div>
+              <button type="button" class="mp-link" data-mp-expand="mpIntroWorkEdit">편집</button>
+            </div>
+            <div class="mp-prow-edit" id="mpIntroWorkEdit" hidden>
+              <div class="mypage-account-row-desc" style="line-height:1.5;">구인구직 글에 문자·오픈채팅으로 문의할 때 자동으로 들어가는 소개입니다. 경력·가능 시간대 등 일자리용 소개만 적어 주십시오. TFN, 주민번호 등 민감정보는 적지 마십시오.</div>
               <textarea id="mpIntroWorkText" maxlength="700" rows="5" placeholder="예) 안녕하세요. 시드니 거주 중이고 주방 경력 2년입니다. 평일 오전 가능하고, 커피 자격증(RSA)…"
                         style="width:100%;box-sizing:border-box;resize:vertical;min-height:96px;padding:12px;border:1.5px solid var(--border,#d1d5db);border-radius:10px;font-size:15px;line-height:1.5;font-family:inherit;"></textarea>
               <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
@@ -1030,10 +1026,36 @@
   <script>
     // 환경설정 프로필 설정 시트(10-20): [data-mp-sheet=id] 열기 / [data-mp-sheet-close]·바깥·Esc 닫기. 배경 스크롤은 koaus-scroll-lock.js 가 잠금.
     (function () {
-      function open(id) { var o = document.getElementById(id); if (!o) return; o.hidden = false; document.body.style.overflow = 'hidden'; var f = o.querySelector('textarea,input,button'); if (f) { try { f.focus({ preventScroll: true }); } catch (_) {} } }
+      function syncPreview(id) {
+        var ta = document.getElementById(id + 'Text'), pv = document.getElementById(id + 'Preview'); if (!ta || !pv) return;
+        var v = (ta.value || '').trim();
+        pv.textContent = v ? (v.length > 90 ? v.slice(0, 90) + '…' : v) : '미등록';
+        pv.classList.toggle('empty', !v);
+      }
+      function open(id) {
+        var o = document.getElementById(id); if (!o) return;
+        o.hidden = false; document.body.style.overflow = 'hidden';
+        try { o.querySelector('.mp-sheet').scrollTop = 0; } catch (_) {}
+        if (id === 'mpLivingSheet') {
+          syncPreview('mpIntroLiving');
+          try { document.dispatchEvent(new CustomEvent('koaus:mypage-profile', { detail: { panel: document.getElementById('mpProfilePanel') } })); } catch (_) {}
+        }
+        if (id === 'mpJobSheet') {
+          syncPreview('mpIntroWork');
+          try { if (window.koausRole && window.koausRole.renderSwitcher) window.koausRole.renderSwitcher(document.getElementById('mpJobRoles')); } catch (_) {}
+        }
+      }
+      document.addEventListener('koaus:roles-changed', function () {
+        try { var h = document.getElementById('mpJobRoles'); if (h && h.offsetParent !== null && window.koausRole) window.koausRole.renderSwitcher(h); } catch (_) {}
+      });
+      ['mpIntroLiving', 'mpIntroWork'].forEach(function (id) {
+        var ta = document.getElementById(id + 'Text'); if (ta) ta.addEventListener('input', function () { syncPreview(id); });
+      });
       function closeAll() { var any = false; document.querySelectorAll('.mp-sheet-ovl:not([hidden])').forEach(function (o) { o.hidden = true; any = true; }); if (any) document.body.style.overflow = ''; }
       document.addEventListener('click', function (e) {
         var b = e.target.closest('[data-mp-sheet]'); if (b) { e.preventDefault(); open(b.getAttribute('data-mp-sheet')); return; }
+        var x = e.target.closest('[data-mp-expand]');
+        if (x) { var blk = document.getElementById(x.getAttribute('data-mp-expand')); if (blk) { blk.hidden = !blk.hidden; x.textContent = blk.hidden ? '편집' : '접기'; if (!blk.hidden) { var t = blk.querySelector('textarea'); if (t) { try { t.focus({ preventScroll: true }); } catch (_) {} } } } return; }
         if (e.target.closest('[data-mp-sheet-close]') || e.target.classList.contains('mp-sheet-ovl')) closeAll();
       });
       document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeAll(); });
