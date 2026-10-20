@@ -5,7 +5,7 @@
 //    데스크탑은 작은 창, 모바일(≤768px)은 화면 전체. **반드시 하나를 고른다(10-20 사용자 확정): '나중에' 없음, 바깥·Esc 로 못 닫음.**
 //  - 저장: users/{uid}.roles = { living: 'seeker'|'owner'|'both', job: 'seeker'|'employer'|'both' } (rules validUserRoles).
 //    묻는 창은 하나만 고르고, 마이페이지 '내 역할' 박스에서는 둘 다 켤 수 있다('both') — 단 하나는 남겨야 함(둘 다 끄기 불가).
-//    글쓰기 버튼은 '올리기'(owner/employer/both)에게만 보인다 — 역할 없음·'찾기'만이면 숨김(UI 게이트, 10-20).
+//    글쓰기 버튼은 '올리기'(owner/employer/both)에게만 보인다 — 비로그인·역할 없음·'찾기'만이면 숨김(UI 게이트, 10-20). 문구는 사용자 확정분 그대로(임의 수정 금지).
 //    LS 'koaus-roles-v1' = { uid, living, job } 캐시 → koaus-tabbar.js 가 '프로필' 탭 노출 판단에 즉시 사용.
 //    바뀌면 document 에 'koaus:roles-changed' 이벤트.
 //  - Living '집 구해요' 선택 직후 → 짧은 조건 등록(koaus-seeker-profile.js openQuick: 동네·예산·입주 3단계, 건너뛰기 가능).
@@ -192,7 +192,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       <div class="kr-box">
         <div class="kr-title">${esc(cfg.title)}</div>
         <div class="kr-opts">${cfg.options.map(o => `<button type="button" class="kr-opt" data-code="${esc(o.code)}"><span class="kr-art" aria-hidden="true">${ART[o.art] || ''}</span><b>${esc(o.label)}</b><span>${esc(o.desc)}</span></button>`).join('')}</div>
-        <div class="kr-note">${esc(cfg.note)} 하나를 골라야 계속할 수 있어요. 둘 다 하시는 분은 마이페이지 내 역할에서 둘 다 켤 수 있어요.</div>
+        <div class="kr-note">${esc(cfg.note)}</div>
       </div>`;
     ovl.onclick = async e => {
       const opt = e.target.closest('.kr-opt'); if (!opt) return;
@@ -242,9 +242,9 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
   function applyWriteGate() {
     const app = pageApp(); if (!app) return;
     const btn = document.getElementById('writeBtnOpen'); if (!btn) return;
-    // 10-20: 로그인했으면 '올리기'(owner/employer/both)에게만 보임. 역할 아직 안 읽음·없음·'찾기'만 → 숨김. 비로그인은 보임(누르면 로그인 창).
+    // 10-20: '올리기'(owner/employer/both)에게만 보임. 비로그인·역할 아직 안 읽음·없음·'찾기'만 → 숨김(비로그인은 둘러보기만, 사용자 확정).
     const r = (me && loadedFor === me.uid && roles) ? roles : null;
-    const hide = !!me && !has(r, app, POST_ROLE[app]);
+    const hide = !has(r, app, POST_ROLE[app]);
     btn.style.display = hide ? 'none' : '';   // hidden 속성은 .board-write-btn 의 display 에 밀리므로 inline display 로
     btn.setAttribute('aria-hidden', hide ? 'true' : 'false');
   }
