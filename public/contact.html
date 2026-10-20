@@ -414,7 +414,7 @@
 
     <form class="contact-form" id="contactForm" action="https://formspree.io/f/xojbbypv" method="POST" novalidate>
       <input type="hidden" name="_subject" id="contactSubject" value="[KoAus 문의] 홈페이지에서 새로운 문의가 접수되었습니다.">
-      <input type="hidden" name="_inquiry_type" id="contactInquiryType" value="general">
+      <input type="hidden" name="inquiry_code" id="contactInquiryType" value="general">   <!-- 10-20: 밑줄(_)로 시작하는 이름(_inquiry_type)은 Formspree 예약어 형식이라 바꿈. select(inquiry_type)와 겹치지 않게 inquiry_code -->
       <!-- 지시 10/10 — 문의 종류 select (제목 위) — 선택 시 hidden _inquiry_type / _subject 동기화 -->
       <div class="contact-field">
         <label class="contact-label" for="cInquiryType">문의 종류</label>
@@ -589,8 +589,12 @@
           // 재제출 대비 토큰 필드 비움 (1회용)
           tokenField.value = '';
         } else {
-          note.textContent = '전송 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.';
+          // 10-20: Formspree 가 돌려준 이유를 그대로 보여 준다(한도 초과·폼 비활성·필드 오류 구분용)
+          let why = '';
+          try { const j = await res.json(); why = (j && Array.isArray(j.errors) && j.errors.map(x => x.message || x.code).filter(Boolean).join(' / ')) || (j && j.error) || ''; } catch (_) {}
+          note.textContent = '전송 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.' + (why ? ' (' + res.status + ': ' + why + ')' : ' (' + res.status + ')');
           note.className = 'contact-note contact-note--err';
+          try { console.warn('[contact] formspree 응답', res.status, why); } catch (_) {}
         }
       } catch (err) {
         note.textContent = '네트워크 오류로 전송에 실패했습니다.';

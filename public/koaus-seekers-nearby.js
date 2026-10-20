@@ -88,6 +88,9 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
       .ksn-lnk{appearance:none;border:0;background:none;color:var(--text-primary);font-size:14px;cursor:pointer;font-family:inherit;padding:4px 0}
       .ksn-lnk.muted{color:var(--text-muted)}
       .ksn-detail-body{overflow:auto;flex:1}
+      .ksn-pageovl{z-index:9040}
+      .ksn-pageovl .ksn-detail-box{max-width:640px}
+      .ksn-page-host{padding:12px 14px 20px}
       .ksn-detail-hero{padding:20px 16px 14px}
       .ksn-detail-nick{font-size:24px;font-weight:800;letter-spacing:-.02em}
       .ksn-detail-meta{font-size:14px;color:var(--text-muted);margin-top:4px}
@@ -291,7 +294,8 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
     det.classList.add('open');
     document.body.style.overflow = 'hidden';
   }
-  function closeDetail() { if (!det) return; det.classList.remove('open'); if (!(ovl && ovl.classList.contains('open'))) document.body.style.overflow = ''; }
+  let pageOvl = null;   // 집주인용 사람 목록 오버레이(아래 openPage)
+  function closeDetail() { if (!det) return; det.classList.remove('open'); if (!(ovl && ovl.classList.contains('open')) && !(pageOvl && pageOvl.classList.contains('open'))) document.body.style.overflow = ''; }
   function reportSeeker() {
     const it = (pg && pg.all || all || []).find(x => x.uid === detUid); if (!it) return;
     if (!window.koausDb && db) { try { window.koausDb = db; window.koausFs = { doc, setDoc, getDoc, serverTimestamp, collection, query, where, getDocs, limit }; } catch (_) {} }
@@ -563,5 +567,41 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
     else renderPage();
   }
 
-  window.koausSeekersNearby = { open, close, mountPage, openDetail };
+  // ── (10-20) 집주인용 '프로필' 버튼: 목록 페이지 위에 전체 화면(데스크탑은 가운데 창)으로 사람 목록 — 마이페이지 탭 대신 ──
+  function openPage() {
+    const user = window.koausAuth && window.koausAuth.user;
+    if (!user) { if (window.koausAuth && window.koausAuth.openAuthModal) window.koausAuth.openAuthModal(); return; }
+    injectCss(); injectPageCss();
+    if (!pageOvl) {
+      pageOvl = document.createElement('div');
+      pageOvl.className = 'ksn-detail ksn-pageovl';
+      pageOvl.setAttribute('role', 'dialog'); pageOvl.setAttribute('aria-modal', 'true');
+      pageOvl.innerHTML = '<div class="ksn-detail-box"><div class="ksn-detail-bar"><b>근처에서 집 구하는 분</b><button type="button" class="ksn-lnk" data-ksn-page-close>닫기</button></div><div class="ksn-detail-body"><div class="ksn-page-host" id="ksnPageHost"></div></div></div>';
+      document.body.appendChild(pageOvl);
+      pageOvl.addEventListener('click', e => { if (e.target.closest('[data-ksn-page-close]') || e.target === pageOvl) closePage(); });
+      document.addEventListener('keydown', e => { if (e.key === 'Escape' && pageOvl.classList.contains('open') && !document.querySelector('.ksn-detail.open:not(.ksn-pageovl)')) closePage(); });
+    }
+    pageOvl.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    mountPage(document.getElementById('ksnPageHost'));
+  }
+  function closePage() {
+    if (!pageOvl) return;
+    pageOvl.classList.remove('open');
+    if (!document.querySelector('.ksn-detail.open')) document.body.style.overflow = '';
+    try { if (new URLSearchParams(location.search).get('people') === '1') history.replaceState(null, '', location.pathname + (location.search.replace(/[?&]people=1/, '').replace(/^&/, '?') || '')); } catch (_) {}
+  }
+  // ?people=1 딥링크(탭바 '프로필' 탭) — 로그인 확정 뒤 한 번
+  (function autoOpen() {
+    try { if (new URLSearchParams(location.search).get('people') !== '1') return; } catch (_) { return; }
+    const t0 = Date.now();
+    const tick = () => {
+      const user = window.koausAuth && window.koausAuth.user;
+      if (user && db && E()) { openPage(); return; }
+      if (Date.now() - t0 < 8000) setTimeout(tick, 250);
+    };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(tick, 300)); else setTimeout(tick, 300);
+  })();
+
+  window.koausSeekersNearby = { open, close, mountPage, openDetail, openPage, closePage };
 })();

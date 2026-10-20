@@ -88,9 +88,10 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
   }
   // 역할에 따라 페이지 요소 토글 — 마이페이지 '구하는 사람' 탭, accom/rent 상단 안내 줄
   function applyUi() {
-    const owner = !!(me && has(roles, 'living', 'owner'));           // 올리기(둘 다 포함) → 구하는 사람 탭
+    const owner = !!(me && has(roles, 'living', 'owner'));           // 올리기(둘 다 포함)
     const ownerOnly = !!(me && roles && roles.living === 'owner');     // 올리기만 → accom/rent 상단 줄을 '구하는 사람 보기'로
-    try { const t = document.getElementById('mpPeopleTab'); if (t) t.hidden = !owner; } catch (_) {}
+    try { const t = document.getElementById('mpPeopleTab'); if (t) t.hidden = true; } catch (_) {}   // 10-20: 마이페이지 '구하는 사람' 탭 폐지 — Living/Job 목록 페이지의 '프로필' 버튼으로
+    try { applyToolbar(); } catch (_) {}
     try { const h = document.getElementById('kspRoles'); if (h && me) renderSwitcher(h); } catch (_) {}
     try { applyPrompt(); } catch (_) {}
     try { applyWriteGate(); } catch (_) {}
@@ -98,7 +99,8 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       const row = document.querySelector('[data-seeker-entry]');
       if (row) {
         if (ownerOnly) {
-          row.setAttribute('href', 'mypage.html?tab=people'); row.removeAttribute('onclick'); row.onclick = null;
+          row.setAttribute('href', location.pathname.split('/').pop() + '?people=1'); row.removeAttribute('onclick');
+          row.onclick = e => { if (window.koausSeekersNearby && window.koausSeekersNearby.openPage) { e.preventDefault(); window.koausSeekersNearby.openPage(); } };
           const t = row.querySelector('.kse-text'), c = row.querySelector('.kse-cta');
           if (t) t.innerHTML = '<strong>방을 올리셨습니까?</strong> 이 근처에서 집을 구하는 분들의 조건 카드를 보고 먼저 채팅할 수 있습니다.';
           if (c) c.textContent = '구하는 사람 보기 ›';
@@ -253,6 +255,42 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       if (h || !me || $('.ksp-ovl.open') || $('.auth-overlay.open')) return;
       withSpinner(() => window.koausSeekerProfile.openQuick());
     }
+  }
+
+  // (10-20) 목록 도구줄: '올리기'에게는 상세 필터 대신 [프로필](근처에서 구하는 사람) 버튼, '찾기'에게는 상세 필터만, 둘 다면 둘 다.
+  //   비로그인·역할 없음 = 상세 필터만(기본). Job 의 프로필(일 구해요 카드)은 5묶음에서 — 지금은 준비 중 안내.
+  function applyToolbar() {
+    const app = pageApp(); if (!app) return;
+    const bar = document.querySelector('.accom-ctrl-actions'); if (!bar) return;
+    const fb = document.getElementById('filterModalBtn');
+    let pb = document.getElementById('peopleBtnOpen');
+    if (!pb) {
+      pb = document.createElement('button');
+      pb.type = 'button'; pb.id = 'peopleBtnOpen'; pb.className = 'board-write-btn board-write-btn--ghost';
+      pb.textContent = app === 'living' ? '프로필' : '프로필';
+      pb.title = app === 'living' ? '근처에서 집 구하는 분' : '일자리 찾는 분';
+      pb.addEventListener('click', () => {
+        if (app === 'living') { if (window.koausSeekersNearby && window.koausSeekersNearby.openPage) window.koausSeekersNearby.openPage(); else location.href = 'accom.html?people=1'; }
+        else notice('일자리 찾는 분들의 프로필(일 구해요 카드)은 준비 중입니다. 열리면 이 버튼에서 바로 볼 수 있습니다. 지금은 글을 올리면 지원자가 채팅으로 연락합니다.');
+      });
+      const wb = document.getElementById('writeBtnOpen');
+      if (wb) bar.insertBefore(pb, wb); else bar.appendChild(pb);
+    }
+    const r = (me && loadedFor === me.uid && roles) ? roles : null;
+    const poster = has(r, app, POST_ROLE[app]);
+    const seeker = has(r, app, 'seeker');
+    const showPeople = poster;
+    const showFilter = !poster || seeker;   // 올리기만이면 상세 필터 숨김, 둘 다·찾기·역할 없음·비로그인은 보임
+    pb.style.display = showPeople ? '' : 'none';
+    if (fb) fb.style.display = showFilter ? '' : 'none';
+  }
+  // 작은 안내 창(준비 중) — 역할 창과 같은 틀
+  function notice(msg) {
+    mount();
+    ovl.innerHTML = `<div class="kr-box" style="max-width:460px;padding:28px 24px 22px;"><div class="kr-note" style="text-align:left;font-weight:500;">${esc(msg)}</div><div class="kr-foot" style="margin-top:14px;"><button type="button" class="board-write-btn board-write-btn--ghost" data-kr-ok>닫기</button></div></div>`;
+    ovl.onclick = e => { if (e.target.closest('[data-kr-ok]') || e.target === ovl) close(); };
+    ovl.classList.add('open');
+    document.body.style.overflow = 'hidden';
   }
 
   // 10-20 사용자 확정: 글쓰기 버튼은 '올리기'(집·방 올리기 / 일자리 올리기, 둘 다 포함)에게만. 역할 없음·'찾기'만이면 숨김(UI 게이트).
