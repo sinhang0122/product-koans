@@ -39,6 +39,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
   };
   const GEOCODE_KEY = 'AIzaSyDwogQ55V0-JqZ-ZYRTpYgNZWOdp_-5vOQ';   // accom/rent/jobs 와 동일 공개 키(리퍼러 제한)
   const DRAFT_KEY = 'koaus-seeker-draft-v1';
+  const HAS_KEY = 'koaus-seeker-has-v1';     // {uid, has} — accom/rent 진입 때 koaus-role.js 가 '프로필 없음' 판단에 먼저 씀(읽기 절약)
   const MAX_SUBURBS = 5;   // 10-19: 3 → 5 — 여러 동네(예: 선샤인코스트 + 골드코스트) 집주인에게 동시에 보이게. 8은 rules 표현식 한도 초과
   const TOTAL_STEPS = 7;
   const QUICK_STEPS = 3;                 // 짧은 등록: 동네 · 예산 · 입주/기간 → 바로 등록(끝 화면에 미리보기·활성화·더 채우기)
@@ -58,6 +59,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       me = u;
       if (!u) { profile = null; priv = null; loadedFor = null; }
       if (panelEl && isPanelVisible()) refreshPanel();
+      try { applyEntryRow(); } catch (_) {}
     });
   } catch (e) { try { console.warn('[seeker-profile] init 실패:', e); } catch (_) {} }
 
@@ -210,6 +212,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       priv = psnap.exists() ? psnap.data() : null;
       loadedFor = me.uid;
       await migrateLegacy();
+      try { localStorage.setItem(HAS_KEY, JSON.stringify({ uid: me.uid, has: !!profile })); } catch (_) {}
     } catch (e) {
       console.warn('[seeker-profile] 조회 실패', e);
       profile = null; priv = null; loadedFor = null;
@@ -453,6 +456,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       await batch.commit();
       clearDraft();
       profile = null; priv = null;
+      try { localStorage.setItem(HAS_KEY, JSON.stringify({ uid: me.uid, has: false })); } catch (_) {}
       rerenderCard();
       toast('프로필을 삭제했습니다.');
     } catch (e) {
@@ -521,7 +525,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       const nav = e.target.closest('[data-ksp-nav]');
       if (!nav) { if (e.target === ovl) closeModal(); return; }
       if (nav.dataset.kspNav === 'close') closeModal();
-      if (nav.dataset.kspNav === 'more') { const p = profile; closeModal(); setTimeout(() => openModal(p, { startStep: 4 }), 60); }
+      if (nav.dataset.kspNav === 'more') { const p = profile; closeModal(); setTimeout(() => openModal(p, { startStep: 4, flow: true }), 60); }
       if (nav.dataset.kspNav === 'back') { if (step > 1) { collect(); step--; renderStep(); } else closeModal(); }
     });
     document.addEventListener('keydown', e => { if (e.key === 'Escape' && ovl.classList.contains('open')) closeModal(); });
@@ -535,7 +539,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     mountModal();
     editing = !!existing;
     quick = !!(opts && opts.quick) && !existing;
-    single = !!(existing && opts && opts.startStep);
+    single = !!(existing && opts && opts.startStep && !opts.flow);   // flow: 4단계부터 끝까지 이어서(상세 조건 추가)
     if (existing) { draft = fromProfile(existing); step = (opts && opts.startStep) ? Math.min(Math.max(1, opts.startStep), TOTAL_STEPS) : 1; }
     else {
       const saved = loadDraft();
@@ -625,7 +629,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
           <div class="ksp-q">찾으시는 동네</div>
           <div class="ksp-help">동네 이름이나 우편번호로 찾아 추가하십시오. 여러 곳을 넣으면 그 동네마다 방을 올린 집주인에게 보입니다(${MAX_SUBURBS}곳까지).</div>
           <div class="ksp-label">찾으시는 동네 <span class="req">(필수, 1곳 이상)</span></div>
-          <input class="ksp-input" id="kspSuburbQ" type="text" placeholder="예: Sunnybank, 4109" autocomplete="off" inputmode="search">
+          <input class="ksp-input" id="kspSuburbQ" type="text" placeholder="예: Brisbane City, 4000" autocomplete="off" inputmode="search">
           <ul class="ksp-sug" id="kspSuburbSug"></ul>
           <div class="ksp-sel" id="kspSuburbSel"></div>
           <div class="ksp-label">동네 기준 반경 <span class="req">(필수)</span></div>
@@ -780,7 +784,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     });
     const next = $('#kspNext', ovl);
     if (next) next.addEventListener('click', onNext);
-    if (step === 1) wireSuburb(body);
+    if (step === 1) { wireSuburb(body); loadMapsJs(); }
     if (step === 3) {
       const asap = $('[data-asap]', body);
       if (asap) asap.addEventListener('click', () => { $('#kspMoveIn', body).value = todayStr(); });
@@ -821,28 +825,71 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     sel.innerHTML = draft.suburbs.map((s, i) => `<span class="ksp-chip on">${suburbLabel(s)} <button type="button" data-rm="${i}" aria-label="빼기">×</button></span>`).join('');
     sel.querySelectorAll('[data-rm]').forEach(b => b.addEventListener('click', () => { draft.suburbs.splice(Number(b.dataset.rm), 1); renderSuburbSel(); }));
   }
+  // Maps JS 로드(지오코더만, 라이브러리 없음). accom/rent 처럼 페이지가 이미 로드 중이면 그 스크립트를 기다린다(이중 로드 금지).
+  let mapsReady = null;
+  function loadMapsJs() {
+    if (window.google && window.google.maps && window.google.maps.Geocoder) return Promise.resolve(true);
+    if (mapsReady) return mapsReady;
+    mapsReady = new Promise(resolve => {
+      const existing = document.querySelector('script[src*="maps.googleapis.com/maps/api/js"]');
+      const t0 = Date.now();
+      const poll = () => {
+        if (window.google && window.google.maps && window.google.maps.Geocoder) return resolve(true);
+        if (Date.now() - t0 > 10000) return resolve(false);
+        setTimeout(poll, 150);
+      };
+      if (existing) { poll(); return; }
+      const cb = '__kspMapsReady';
+      window[cb] = () => { resolve(true); };
+      const sc = document.createElement('script');
+      sc.src = 'https://maps.googleapis.com/maps/api/js?key=' + GEOCODE_KEY + '&loading=async&callback=' + cb;
+      sc.async = true;
+      sc.onerror = () => resolve(false);
+      document.head.appendChild(sc);
+      setTimeout(() => resolve(!!(window.google && window.google.maps && window.google.maps.Geocoder)), 10000);
+    });
+    return mapsReady;
+  }
+  function pickSuburbs(results) {
+    const out = [], seen = new Set();
+    (results || []).forEach(r => {
+      const comps = r.address_components || [];
+      const find = t => comps.find(c => (c.types || []).indexOf(t) !== -1);
+      const loc = find('locality') || find('sublocality') || find('postal_town');
+      const st = find('administrative_area_level_1');
+      const pc = find('postal_code');
+      const geo = r.geometry && r.geometry.location;
+      if (!loc || !st || !geo) return;
+      const state = String(st.short_name || '').toLowerCase();
+      if (!E().state(state)) return;
+      const key = loc.long_name + '|' + state;
+      if (seen.has(key)) return; seen.add(key);
+      const lat = typeof geo.lat === 'function' ? geo.lat() : Number(geo.lat);
+      const lng = typeof geo.lng === 'function' ? geo.lng() : Number(geo.lng);
+      out.push({ name: String(loc.long_name).slice(0, 60), state, postcode: pc ? String(pc.long_name).slice(0, 4) : '', lat: Number(lat), lng: Number(lng) });
+    });
+    return out.slice(0, 5);
+  }
   async function geocodeSuburb(text) {
+    // ① Maps JS Geocoder — 사이트 공개 키는 HTTP 리퍼러 제한이라 REST Geocoding 은 REQUEST_DENIED 가 난다(10-20 확인). accom/rent 의 geocode() 와 같은 경로.
+    try {
+      if (await loadMapsJs()) {
+        const results = await new Promise(resolve => {
+          try {
+            new window.google.maps.Geocoder().geocode({ address: text, componentRestrictions: { country: 'AU' }, region: 'au' }, (res, status) => resolve(status === 'OK' && Array.isArray(res) ? res : []));
+          } catch (_) { resolve([]); }
+        });
+        return pickSuburbs(results);
+      }
+    } catch (e) { console.warn('[seeker-profile] Maps JS geocode 실패, REST 폴백', e); }
+    // ② REST 폴백(키에 리퍼러 제한이 없을 때만 동작)
     try {
       const url = 'https://maps.googleapis.com/maps/api/geocode/json?address=' + encodeURIComponent(text) + '&components=country:AU&language=en&key=' + GEOCODE_KEY;
       const res = await fetch(url);
       const j = await res.json();
       if (!j || !Array.isArray(j.results)) return [];
-      const out = [], seen = new Set();
-      j.results.forEach(r => {
-        const comps = r.address_components || [];
-        const find = t => comps.find(c => (c.types || []).indexOf(t) !== -1);
-        const loc = find('locality') || find('sublocality') || find('postal_town');
-        const st = find('administrative_area_level_1');
-        const pc = find('postal_code');
-        const geo = r.geometry && r.geometry.location;
-        if (!loc || !st || !geo) return;
-        const state = String(st.short_name || '').toLowerCase();
-        if (!E().state(state)) return;
-        const key = loc.long_name + '|' + state;
-        if (seen.has(key)) return; seen.add(key);
-        out.push({ name: String(loc.long_name).slice(0, 60), state, postcode: pc ? String(pc.long_name).slice(0, 4) : '', lat: Number(geo.lat), lng: Number(geo.lng) });
-      });
-      return out.slice(0, 5);
+      if (j.status && j.status !== 'OK' && j.status !== 'ZERO_RESULTS') console.warn('[seeker-profile] REST geocode:', j.status, j.error_message || '');
+      return pickSuburbs(j.results);
     } catch (e) { console.warn('[seeker-profile] geocode 실패', e); return []; }
   }
 
@@ -963,11 +1010,34 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     } catch (_) {}
   });
 
+  // accom/rent '내 조건 등록' 줄(10-20): 프로필이 이미 있으면 '상세 조건 추가'(방 종류·나이대·소개글·알림, 4단계~)로 바꿔 보인다.
+  function applyEntryRow() {
+    try {
+      const row = document.querySelector('[data-seeker-entry]');
+      if (!row || row.dataset.seekerEntry === 'owner') return;
+      let hasP = !!profile;
+      if (!hasP && !loadedFor) { const c = JSON.parse(localStorage.getItem(HAS_KEY) || 'null'); hasP = !!(c && me && c.uid === me.uid && c.has === true); }
+      const t = row.querySelector('.kse-text'), c = row.querySelector('.kse-cta');
+      if (hasP) {
+        if (t) t.innerHTML = '<strong>내 조건이 등록되어 있습니다.</strong> 방 종류·나이대·소개글 같은 상세 조건을 더 채우시면 집주인에게 더 잘 보입니다.';
+        if (c) c.textContent = '상세 조건 추가 ›';
+        row.dataset.seekerEntry = 'more';
+      } else if (row.dataset.seekerEntry === 'more') {
+        if (t) t.innerHTML = '<strong>더욱 편리하게 집을 찾으세요.</strong> 프로필 설정하시면 원하시는 지역에 글이 올라올 때 이에 맞게 이메일로 알려드립니다.';
+        if (c) c.textContent = '내 조건 등록 ›';
+        row.dataset.seekerEntry = '';
+      }
+    } catch (_) {}
+  }
+  document.addEventListener('koaus:roles-changed', applyEntryRow);
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', applyEntryRow); else applyEntryRow();
+
   window.koausSeekerProfile = {
     refresh: refreshPanel,
     open: () => openModal(profile),
-    // 짧은 등록(①-2 역할 선택 뒤): 기존 프로필이 있으면 수정 모달, 없으면 3단계 → 바로 생성
-    openQuick: () => loadProfile(false).then(p => openModal(p || null, { quick: true })),
-    has: () => loadProfile(false).then(p => !!p),
+    // 짧은 등록(①-2 역할 선택 뒤·accom/rent 진입 줄): 프로필이 없으면 3단계 → 바로 생성, 이미 있으면 상세 조건(4단계~끝) 흐름(10-20)
+    openQuick: () => loadProfile(false).then(p => (p ? openModal(p, { startStep: 4, flow: true }) : openModal(null, { quick: true }))),
+    openMore: () => loadProfile(false).then(p => (p ? openModal(p, { startStep: 4, flow: true }) : openModal(null, { quick: true }))),
+    has: () => loadProfile(false).then(p => { applyEntryRow(); return !!p; }),
   };
 })();

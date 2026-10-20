@@ -8,7 +8,8 @@
 //    글쓰기 버튼은 '올리기'(owner/employer/both)에게만 보인다 — 비로그인·역할 없음·'찾기'만이면 숨김(UI 게이트, 10-20). 문구는 사용자 확정분 그대로(임의 수정 금지).
 //    LS 'koaus-roles-v1' = { uid, living, job } 캐시 → koaus-tabbar.js 가 '프로필' 탭 노출 판단에 즉시 사용.
 //    바뀌면 document 에 'koaus:roles-changed' 이벤트.
-//  - Living '집 구해요' 선택 직후 → 짧은 조건 등록(koaus-seeker-profile.js openQuick: 동네·예산·입주 3단계, 건너뛰기 가능).
+//  - Living '집 구해요' 선택 직후 → 짧은 조건 등록(koaus-seeker-profile.js openQuick: 동네·예산·입주 3단계, 건너뛰기 없음).
+//    (10-20) 이미 '찾기' 역할인데 조건 프로필이 없으면 accom/rent 에 들어올 때마다 짧은 등록을 다시 띄움(닫기는 가능, LS koaus-seeker-has-v1 로 읽기 절약).
 //    '방 올려요' → 탭바에 '프로필' 탭(근처에서 집 구하는 사람). Job 쪽 프로필은 ②에서 — 지금은 역할만 저장.
 //  - 마이페이지 '내 프로필' 탭 위에 역할 바꾸기(renderSwitcher) — 나중에 쉐어생 → 쉐어 구하는 사람이 되는 경우.
 //  - 페이지: <script type="module" src="koaus-role.js"></script> (accom · rent · jobs · mypage)
@@ -218,23 +219,40 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     if (app === 'job') toast('저장했습니다. ' + (code === 'seeker' ? '일 구해요 프로필은 다음 업데이트에서 열립니다.' : '일 구하는 분들 보기는 다음 업데이트에서 열립니다.'));
   }
 
-  // 페이지 진입 시 — 로그인·인증 확정 뒤, 역할 없으면 한 번
-  async function maybeAsk() {
-    const app = pageApp(); if (!app || !me) return;
-    if (window.koausCanPost && !window.koausCanPost(me)) return;   // 휴대폰 인증 모달이 먼저 — 겹치지 않게
-    const r = await load(false);   // 10-20: 예전 '나중에' 기록(snoozed)은 무시 — 역할이 없으면 반드시 묻는다
-    if (!r || r[app]) return;
-    // 0.5초: 로그인 창·휴대폰 인증 창이 닫히는 애니메이션과 겹치지 않을 만큼만 — 그동안 돌아가는 원 표시
-    if ($('.ksp-ovl.open') || $('.auth-overlay.open')) return;
+  // 0.5초 돌아가는 원 → fn. 로그인 창·휴대폰 인증 창이 닫히는 애니메이션과 겹치지 않을 만큼만.
+  function withSpinner(fn) {
     mount();
     ovl.innerHTML = '<div class="kr-wait"><div class="kr-spin" aria-hidden="true"></div><div>불러오는 중…</div></div>';
     ovl.onclick = null;
     ovl.classList.add('open');
     document.body.style.overflow = 'hidden';
     setTimeout(() => {
-      if (me && !$('.ksp-ovl.open') && !$('.auth-overlay.open')) ask(app, code => afterChoice(app, code));
-      else close();
+      close();
+      if (me && !$('.ksp-ovl.open') && !$('.auth-overlay.open')) fn();
     }, 500);
+  }
+  // 조건 프로필 보유 여부 LS 캐시(koaus-seeker-profile.js 가 읽을 때마다 기록) — true 면 서버 확인 생략
+  function seekerHasCached() {
+    try { const c = JSON.parse(localStorage.getItem('koaus-seeker-has-v1') || 'null'); return !!(c && me && c.uid === me.uid && c.has === true); } catch (_) { return false; }
+  }
+
+  // 페이지 진입 시 — 로그인·인증 확정 뒤:
+  //   ① 역할 없음 → 역할 창(필수 선택)
+  //   ② (10-20) Living 에서 '집·방 찾기'(둘 다 포함)인데 조건 프로필이 없으면 → 짧은 등록 3단계를 바로 띄움.
+  //      닫을 수는 있고(둘러보기 가능), 등록될 때까지 들어올 때마다 다시 뜸. 중간에 닫은 입력은 기기에 임시저장돼 이어짐.
+  async function maybeAsk() {
+    const app = pageApp(); if (!app || !me) return;
+    if (window.koausCanPost && !window.koausCanPost(me)) return;   // 휴대폰 인증 모달이 먼저 — 겹치지 않게
+    const r = await load(false);   // 예전 '나중에' 기록(snoozed)은 무시 — 역할이 없으면 반드시 묻는다
+    if (!me || $('.ksp-ovl.open') || $('.auth-overlay.open')) return;
+    if (!r || !r[app]) { withSpinner(() => ask(app, code => afterChoice(app, code))); return; }
+    if (app === 'living' && has(r, 'living', 'seeker') && window.koausSeekerProfile && window.koausSeekerProfile.has) {
+      if (seekerHasCached()) return;
+      let h = true;
+      try { h = await window.koausSeekerProfile.has(); } catch (_) { return; }
+      if (h || !me || $('.ksp-ovl.open') || $('.auth-overlay.open')) return;
+      withSpinner(() => window.koausSeekerProfile.openQuick());
+    }
   }
 
   // 10-20 사용자 확정: 글쓰기 버튼은 '올리기'(집·방 올리기 / 일자리 올리기, 둘 다 포함)에게만. 역할 없음·'찾기'만이면 숨김(UI 게이트).
