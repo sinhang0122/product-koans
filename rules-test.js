@@ -219,13 +219,15 @@ const seekerData = {
   visible: true, status: 'looking', step: 7,
   lastActiveAt: '2026-06-10T00:00:00Z', createdAt: '2026-06-10T00:00:00Z', updatedAt: '2026-06-10T00:00:00Z',
 };
+// ※ 테스트 API 주의(11-04): 문자열 '20s'·'30s' 는 요청 JSON 변환에서 프로토버프 Duration("20s")으로 읽혀 규칙의 문자열 비교가 거짓이 된다.
+//   실제 클라이언트는 문자열로 저장하므로 규칙은 문제 없음. 테스트 데이터는 '40p' 를 쓴다.
 const jobData = {
   industries: ['food', 'retail'],
   suburbs: [{ name: 'Sunnybank', state: 'qld', postcode: '4109', lat: -27.57, lng: 153.06 }],
   states: ['qld'], radiusKm: 5,
   workTypes: ['casual'], startDate: '2026-11-10', payMin: 28, visa: 'whv2',
   licenses: ['rsa'], hasCar: true, experience: '식당 주방 1년',
-  nick: '신행', ageBand: '20s', gender: 'male',
+  nick: '신행', ageBand: '40p', gender: 'male',
   visible: true, status: 'looking', step: 3,
   lastActiveAt: '2026-06-10T00:00:00Z', createdAt: '2026-06-10T00:00:00Z', updatedAt: '2026-06-10T00:00:00Z',
 };
@@ -917,9 +919,9 @@ const cases = [
        path: 'users/testuser123', method: 'update', uid: 'testuser123',
        data:         { email: 'e@e.com', nickname: 'n', roles: { living: 'seeker', job: 'employer' }, rolesAskedAt: '2026-06-10T00:00:00Z' },
        resourceData: { email: 'e@e.com', nickname: 'n' } }),
-  mk({ label: 'seeker_profiles ageBand 20s(11-04 새 코드) → 허용', expectation: 'ALLOW',
+  mk({ label: 'seeker_profiles ageBand 40p(11-04 새 코드; 20s/30s 는 테스트 API 가 Duration 으로 읽어 테스트 불가) → 허용', expectation: 'ALLOW',
        path: 'seeker_profiles/testuser123', method: 'create', uid: 'testuser123',
-       data: Object.assign({}, seekerData, { ageBand: '20s' }) }),
+       data: Object.assign({}, seekerData, { ageBand: '40p' }) }),
   mk({ label: 'seeker_profiles ageBand 50p(없는 코드) → 거부', expectation: 'DENY',
        path: 'seeker_profiles/testuser123', method: 'create', uid: 'testuser123',
        data: Object.assign({}, seekerData, { ageBand: '50p' }) }),
@@ -1025,21 +1027,28 @@ for (const c of cases) {
 
 (async () => {
   const token = await getToken();
-  const res = await fetch(`https://firebaserules.googleapis.com/v1/projects/${PROJECT}:test`, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      source: { files: [{ name: 'firestore.rules', content: RULES }] },
-      testSuite: { testCases: cases.map(({ _label, ...c }) => c) },
-    }),
-  });
-  const json = await res.json();
-  if (!res.ok || !json.testResults) {
-    console.error('HTTP', res.status, JSON.stringify(json, null, 2));
-    process.exit(1);
+  // 테스트 API 는 요청당 케이스 수 한도(약 250)가 있어 100건씩 나눠 보낸다(11-04, 264건부터 "Request has too many test cases")
+  const CHUNK = 100;
+  const results = [];
+  for (let off = 0; off < cases.length; off += CHUNK) {
+    const part = cases.slice(off, off + CHUNK);
+    const res = await fetch(`https://firebaserules.googleapis.com/v1/projects/${PROJECT}:test`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        source: { files: [{ name: 'firestore.rules', content: RULES }] },
+        testSuite: { testCases: part.map(({ _label, ...c }) => c) },
+      }),
+    });
+    const json = await res.json();
+    if (!res.ok || !json.testResults) {
+      console.error('HTTP', res.status, `(케이스 ${off + 1}~${off + part.length})`, JSON.stringify(json, null, 2));
+      process.exit(1);
+    }
+    results.push(...json.testResults);
   }
   let fail = 0;
-  json.testResults.forEach((r, i) => {
+  results.forEach((r, i) => {
     const ok = r.state === 'SUCCESS';
     if (!ok) fail++;
     console.log(`${ok ? 'PASS' : 'FAIL'}  [${cases[i].expectation}] ${cases[i]._label}`);
