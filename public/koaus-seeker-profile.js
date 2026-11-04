@@ -157,7 +157,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     } catch (_) { return ''; }
   };
   const regionKo = name => { try { const r = (window.koausGeo && window.koausGeo.REGIONS || []).find(z => z.name === name); return r ? r.ko : name; } catch (_) { return name; } };
-  const suburbLabel = s => (s && s.km) ? (esc(regionKo(s.name)) + ' 전체 <span class="ksp-dim">' + esc(s.km) + 'km</span>') : (esc(s.name) + ' ' + esc(String(s.state || '').toUpperCase()));
+  const suburbLabel = s => (s && (s.km || s.all)) ? (esc(regionKo(s.name)) + ' 전체' + (s.km ? ' <span class="ksp-dim">' + esc(s.km) + 'km</span>' : '')) : (esc(s.name) + ' ' + esc(String(s.state || '').toUpperCase()));
 
   async function refreshPanel() {
     if (!panelEl) return;
@@ -197,7 +197,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
   };
   // 집주인이 보는 한 문장(koaus-seekers-nearby.js conditionSentence 와 같은 형태)
   function sentenceOf(d, en) {
-    const subs = (d.suburbs || []).map(x => x.km ? regionKo(x.name) + ' 전체' : x.name).filter(Boolean).slice(0, 3).join(' · ');
+    const subs = (d.suburbs || []).map(x => (x.km || x.all) ? regionKo(x.name) + ' 전체' : x.name).filter(Boolean).slice(0, 3).join(' · ');
     const when = moveInLabel(d.moveIn);
     const stay = d.stay === 'tbd' ? '기간은 상의 후 결정' : (en.label('stays', d.stay) || '');
     const budget = budgetLabel(d.budgetMin, d.budgetMax);
@@ -271,7 +271,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
         <div class="ksp-complete"><div class="ksp-complete-head"><b>프로필 100% 완성</b><span>100%</span></div><div class="ksp-bar"><i style="width:100%"></i></div></div>`}
         <div class="ksp-sec">
           <div class="ksp-sec-title"><span>내 조건</span><span>집주인에게 보입니다</span></div>
-          ${row('동네 · 반경', subs ? subs + (p.radiusKm ? ' · 반경 ' + esc(p.radiusKm) + 'km' : '') : '', 1)}
+          ${row('동네 · 반경', subs ? subs + (p.radiusKm && (p.suburbs || []).some(x => !(x.km || x.all)) ? ' · 반경 ' + esc(p.radiusKm) + 'km' : '') : '', 1)}
           ${row('주당 예산', esc(budget), 2)}
           ${row('입주 · 거주 기간', [esc(moveInLabel(p.moveIn)), esc(stayL)].filter(Boolean).join(' · '), 3)}
           ${row('방 종류 · 욕실', [esc(rooms), p.bathroom === 'private' ? '개인 욕실' : ''].filter(Boolean).join(' · '), 4)}
@@ -373,7 +373,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
   }
   function fromProfile(p) {
     const d = blankDraft();
-    d.suburbs = (p.suburbs || []).slice(0, MAX_SUBURBS).map(s => ({ name: s.name, state: s.state, postcode: s.postcode || '', lat: s.lat, lng: s.lng, km: s.km || 0 }));
+    d.suburbs = (p.suburbs || []).slice(0, MAX_SUBURBS).map(s => ({ name: s.name, state: s.state, postcode: s.postcode || '', lat: s.lat, lng: s.lng, km: s.km || 0, all: !!s.all }));
     d.radiusKm = RADII.includes(Number(p.radiusKm)) ? Number(p.radiusKm) : 5;
     d.budgetMin = p.budgetMin != null ? String(p.budgetMin) : '0';
     d.budgetMax = p.budgetMax != null ? String(p.budgetMax) : '';
@@ -417,13 +417,16 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     document.body.appendChild(ovl);
     ovl.addEventListener('click', e => {
       const nav = e.target.closest('[data-ksp-nav]');
-      if (!nav) { if (e.target === ovl) closeModal(); return; }
-      if (nav.dataset.kspNav === 'close') closeModal();
+      if (!nav) { if (e.target === ovl && !locked()) closeModal(); return; }
+      if (nav.dataset.kspNav === 'close') { if (!locked()) closeModal(); }
       if (nav.dataset.kspNav === 'more') { const p = profile; closeModal(); setTimeout(() => openModal(p, { startStep: 4, flow: true }), 60); }
-      if (nav.dataset.kspNav === 'back') { if (step > 1) { collect(); step--; renderStep(); } else closeModal(); }
+      if (nav.dataset.kspNav === 'back') { if (step > 1) { collect(); step--; renderStep(); } else if (!locked()) closeModal(); }
     });
-    document.addEventListener('keydown', e => { if (e.key === 'Escape' && ovl.classList.contains('open')) closeModal(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && ovl.classList.contains('open') && !locked()) closeModal(); });
   }
+  // 짧은 등록(11-04b): 끝 화면 전까지는 닫을 수 없다 — 역할 고르면 무조건 하고 넘어가게(사용자 결정). 새로고침해도 임시저장(draft)으로 이어진다.
+  let unlocked = false;   // 저장 실패로 잠금을 푼 상태
+  function locked() { return quick && !unlocked && step <= totalSteps(); }
 
   function openModal(existing, opts) {
     if (!me) { if (window.koausAuth && window.koausAuth.openAuthModal) window.koausAuth.openAuthModal(); return; }
@@ -432,7 +435,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     if (!E()) { toast('잠시 후 다시 시도해 주십시오.'); return; }
     mountModal();
     editing = !!existing;
-    quick = !!(opts && opts.quick) && !existing;
+    quick = !!(opts && opts.quick) && !existing; unlocked = false;
     single = !!(existing && opts && opts.startStep && !opts.flow);   // flow: 4단계부터 끝까지 이어서(상세 조건 추가)
     if (existing) { draft = fromProfile(existing); step = (opts && opts.startStep) ? Math.min(Math.max(1, opts.startStep), TOTAL_STEPS) : 1; }
     else {
@@ -463,7 +466,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     document.body.style.overflow = 'hidden';
     $('#kspStepLabel', ovl).textContent = '집주인이 보는 카드';
     $('#kspProg', ovl).style.width = '100%';
-    $('[data-ksp-nav="back"]', ovl).style.visibility = 'hidden';
+    $('[data-ksp-nav="back"]', ovl).style.visibility = 'hidden'; $('[data-ksp-nav="close"]', ovl).style.visibility = 'visible';
     $('#kspBody', ovl).innerHTML = '<div class="ksp-help">근처에 집을 올리시는 분께 내 조건이 이렇게 보입니다. 닉네임·성별·나이대와 조건만 보이고 이메일·소개글·신분은 보이지 않습니다. 연락은 채팅으로만 옵니다.</div>' + previewCardHtml();
     $('#kspFoot', ovl).innerHTML = '';
   }
@@ -500,7 +503,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
         <div class="ksp-preview-top"><div><div class="ksp-preview-name">${esc(nick)}</div><div class="ksp-preview-meta">${tags.length ? esc(tags.join(' · ')) : '오늘 활동'}</div></div></div>
         <div class="ksp-preview-sent">${esc(sentenceOf(draft, en))}</div>
         <dl class="ksp-summary">
-          <dt>동네</dt><dd>${subs || '—'}${draft.radiusKm ? ' · 반경 ' + esc(draft.radiusKm) + 'km' : ''}</dd>
+          <dt>동네</dt><dd>${subs || '—'}${draft.radiusKm && draft.suburbs.some(x => !(x.km || x.all)) ? ' · 반경 ' + esc(draft.radiusKm) + 'km' : ''}</dd>
           <dt>예산</dt><dd>${esc(budget || '—')}</dd>
           <dt>입주</dt><dd>${esc(moveInLabel(draft.moveIn) || '—')}${stayL ? ' · ' + esc(stayL) : ''}</dd>
           <dt>방</dt><dd>${esc(rooms || '상관없음')}${draft.bathroom === 'private' ? ' · 개인 욕실' : ''}</dd>
@@ -516,6 +519,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     $('#kspProg', ovl).style.width = Math.min(100, Math.round((step - 1) / TS * 100)) + '%';
     ovl.classList.toggle('done', step > TS);   // 끝 화면: 진행 막대·아래 닫기 버튼 없음(머리의 닫기만)
     $('[data-ksp-nav="back"]', ovl).style.visibility = step > 1 && step <= TS ? 'visible' : 'hidden';
+    $('[data-ksp-nav="close"]', ovl).style.visibility = (quick && !unlocked && step <= TS) ? 'hidden' : 'visible';   // 짧은 등록은 끝까지(11-04b)
     let html = '', next = '다음';
     // 끝 화면은 step = TS+1 — 짧은 등록(TS=3)은 4가 '방 종류' 단계와 겹치므로 0으로 보내 default(끝 화면)로 (10-20 버그 수정)
     switch (step > TS ? 0 : step) {
@@ -723,26 +727,29 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     const list = (window.koausGeo && window.koausGeo.REGIONS) || [];
     const st = (draft.suburbs[0] && draft.suburbs[0].state) || '';
     const ordered = st ? list.filter(r => r.state === st).concat(list.filter(r => r.state !== st)) : list;
-    return `<div class="ksp-chips" id="kspRegionChips">${ordered.map(r => `<button type="button" class="ksp-opt" data-region="${esc(r.code)}" aria-pressed="${draft.suburbs.some(x => x.km && x.name === r.name) ? 'true' : 'false'}">${esc(r.ko)}</button>`).join('')}</div>`;
+    const states = (window.koausGeo && window.koausGeo.STATE_REGIONS) || [];
+    const sOrdered = st ? states.filter(r => r.state === st).concat(states.filter(r => r.state !== st)) : states;
+    return `<div class="ksp-chips" id="kspRegionChips">${ordered.map(r => `<button type="button" class="ksp-opt" data-region="${esc(r.code)}" aria-pressed="${draft.suburbs.some(x => x.km && x.name === r.name) ? 'true' : 'false'}">${esc(r.ko)}</button>`).join('')}</div>
+          <div class="ksp-label">또는 주 전체로 고르기 <span class="ksp-dim">(같은 주면 거리와 상관없이 보입니다)</span></div>
+          <div class="ksp-chips" id="kspStateChips">${sOrdered.map(r => `<button type="button" class="ksp-opt" data-region="${esc(r.code)}" aria-pressed="${draft.suburbs.some(x => x.all && x.state === r.state) ? 'true' : 'false'}">${esc(r.ko)}</button>`).join('')}</div>`;
   }
   function wireRegionChips(body) {
-    const box = $('#kspRegionChips', body); if (!box) return;
-    box.addEventListener('click', e => {
+    body.querySelectorAll('#kspRegionChips, #kspStateChips').forEach(box => box.addEventListener('click', e => {
       const b = e.target.closest('[data-region]'); if (!b) return;
       const it = window.koausGeo && window.koausGeo.regionItem(b.dataset.region); if (!it) return;
-      const i = draft.suburbs.findIndex(x => x.km && x.name === it.name && x.state === it.state);
+      const i = draft.suburbs.findIndex(x => (x.km || x.all) && x.name === it.name && x.state === it.state);
       if (i !== -1) { draft.suburbs.splice(i, 1); b.setAttribute('aria-pressed', 'false'); }
       else {
         if (draft.suburbs.length >= MAX_SUBURBS) { $('#kspErr1', body).textContent = '동네·지역은 ' + MAX_SUBURBS + '곳까지 넣을 수 있습니다.'; return; }
         draft.suburbs.push(it); b.setAttribute('aria-pressed', 'true'); $('#kspErr1', body).textContent = '';
       }
       renderSuburbSel();
-    });
+    }));
   }
   function renderSuburbSel() {
     const sel = $('#kspSuburbSel', ovl); if (!sel) return;
     sel.innerHTML = draft.suburbs.map((s, i) => `<span class="ksp-chip on">${suburbLabel(s)} <button type="button" data-rm="${i}" aria-label="빼기">×</button></span>`).join('');
-    sel.querySelectorAll('[data-rm]').forEach(b => b.addEventListener('click', () => { draft.suburbs.splice(Number(b.dataset.rm), 1); renderSuburbSel(); try { ovl.querySelectorAll('#kspRegionChips [data-region]').forEach(c => { const it = window.koausGeo.regionItem(c.dataset.region); c.setAttribute('aria-pressed', it && draft.suburbs.some(x => x.km && x.name === it.name) ? 'true' : 'false'); }); } catch (_) {} }));
+    sel.querySelectorAll('[data-rm]').forEach(b => b.addEventListener('click', () => { draft.suburbs.splice(Number(b.dataset.rm), 1); renderSuburbSel(); try { ovl.querySelectorAll('#kspRegionChips [data-region], #kspStateChips [data-region]').forEach(c => { const it = window.koausGeo.regionItem(c.dataset.region); c.setAttribute('aria-pressed', it && draft.suburbs.some(x => (x.km || x.all) && x.name === it.name && x.state === it.state) ? 'true' : 'false'); }); } catch (_) {} }));
   }
   // 동네 검색 — koaus-geo.js(window.koausGeo) 공통: Maps JS Geocoder, 한글·영문, 우편번호(4자리)는 속한 동네 전부(11-04)
   async function geocodeSuburb(text) {
@@ -793,6 +800,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
         const o = { name: s.name, state: s.state, lat: Number(s.lat), lng: Number(s.lng) };
         if (s.postcode) o.postcode = String(s.postcode).slice(0, 4);
         if (s.km) o.km = Math.min(60, Math.max(1, Math.round(Number(s.km))));   // 큰 지역(도시권) 반경
+        if (s.all) o.all = true;   // 주 전체(11-04b)
         return o;
       }),
       states: Array.from(new Set(draft.suburbs.map(s => s.state))).slice(0, 5),
@@ -828,7 +836,8 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
   async function save() {
     const btn = $('#kspNext', ovl); if (btn) { btn.disabled = true; btn.textContent = '저장 중…'; }
     try {
-      const nick = draft.nick || (await getNick()) || '회원';
+      let nick = draft.nick || (await getNick()) || '회원';
+      if (/([0-9][ .-]?){6,}|https?:|www[.]/i.test(nick)) nick = '회원';   // 규칙이 막는 닉(숫자 6자리 이상·링크)은 '회원'으로 — 짧은 등록이 영영 막히지 않게(11-04b)
       const docs = buildDocs(nick);
       const batch = writeBatch(db);
       batch.set(doc(db, 'seeker_profiles', me.uid), docs.pub);                      // 전체 교체 — pausedAt 은 빠지므로 수정 = 다시 켜기
@@ -843,7 +852,8 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       console.warn('[seeker-profile] 저장 실패', e);
       const denied = e && (e.code === 'permission-denied' || /permission/i.test(e.message || ''));
       const errEl = $('#kspErr' + step, ovl) || $('#kspErr6', ovl);
-      if (errEl) errEl.textContent = denied ? '저장할 수 없는 내용이 있습니다. 자기소개에 연락처·링크가 없는지, 휴대폰 인증이 되어 있는지 확인해 주십시오.' : '저장하지 못했습니다. 잠시 후 다시 시도해 주십시오.';
+      if (errEl) errEl.textContent = denied ? (quick ? '저장할 수 없는 내용이 있습니다. 휴대폰 인증이 되어 있는지 확인해 주십시오. 계속 안 되면 닫고 마이페이지에서 다시 시도해 주십시오.' : '저장할 수 없는 내용이 있습니다. 자기소개에 연락처·링크가 없는지, 휴대폰 인증이 되어 있는지 확인해 주십시오.') : '저장하지 못했습니다. 잠시 후 다시 시도해 주십시오.';
+      if (quick) { unlocked = true; try { $('[data-ksp-nav="close"]', ovl).style.visibility = 'visible'; } catch (_) {} }   // 짧은 등록 잠금은 저장 실패 시 풀어 준다(갇히지 않게, 11-04b)
       if (btn) { btn.disabled = false; btn.textContent = (editing || single) ? '저장' : (quick ? '등록' : '완료'); }
     }
   }

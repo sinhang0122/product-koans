@@ -6,6 +6,7 @@
 //  - 우편번호(4자리)는 그 우편번호에 속한 동네 전부를 보여 준다(postcode_localities) — 4127 → Springwood·Daisy Hill… .
 //    우편번호로 고른 동네는 좌표가 우편번호 중심이라 refine() 으로 동네 좌표를 한 번 더 받는다.
 //  - 공개 API: window.koausGeo = { suburbs(text) → Promise<[{name,state,postcode,lat,lng,approx?}]>, refine(s) → Promise<s>, ready() }
+//  - 큰 지역: REGIONS(도시권, km 반경) · STATE_REGIONS(주 전체, all:true — 같은 주면 거리 무관). regionItem(code) 로 suburbs 항목을 만든다(11-04).
 // ═══════════════════════════════════════════════════════════════════
 (function () {
   'use strict';
@@ -24,7 +25,7 @@
       if (document.querySelector('script[src*="maps.googleapis.com/maps/api/js"]')) { poll(); return; }
       window.__koausGeoReady = function () { resolve(true); };
       var sc = document.createElement('script');
-      sc.src = 'https://maps.googleapis.com/maps/api/js?key=' + KEY + '&loading=async&language=en&callback=__koausGeoReady';
+      sc.src = 'https://maps.googleapis.com/maps/api/js?key=' + KEY + '&libraries=places&loading=async&callback=__koausGeoReady';   // 11-04b: places 포함(accom/rent/jobs 지도가 뒤에 열려도 두 번 안 불러오게), 언어는 요청마다 en
       sc.async = true;
       sc.onerror = function () { resolve(false); };
       document.head.appendChild(sc);
@@ -100,11 +101,30 @@
     { code: 'hobart',         name: 'Hobart',         ko: '호바트',       state: 'tas', lat: -42.8821, lng: 147.3272, km: 20 },
     { code: 'darwin',         name: 'Darwin',         ko: '다윈',         state: 'nt',  lat: -12.4634, lng: 130.8456, km: 20 }
   ];
+  // 주 전체(11-04b) — "QLD 전체"처럼 주 단위로 고르기. 거리 대신 '같은 주'면 매칭(all: true). lat/lng 는 주도 좌표(정렬·지도 첫 화면용).
+  var STATE_REGIONS = [
+    { code: 'qld_all', name: 'QLD', ko: 'QLD 전체', state: 'qld', lat: -27.4698, lng: 153.0251, all: true },
+    { code: 'nsw_all', name: 'NSW', ko: 'NSW 전체', state: 'nsw', lat: -33.8688, lng: 151.2093, all: true },
+    { code: 'vic_all', name: 'VIC', ko: 'VIC 전체', state: 'vic', lat: -37.8136, lng: 144.9631, all: true },
+    { code: 'wa_all',  name: 'WA',  ko: 'WA 전체',  state: 'wa',  lat: -31.9523, lng: 115.8613, all: true },
+    { code: 'sa_all',  name: 'SA',  ko: 'SA 전체',  state: 'sa',  lat: -34.9285, lng: 138.6007, all: true },
+    { code: 'act_all', name: 'ACT', ko: 'ACT 전체', state: 'act', lat: -35.2809, lng: 149.1300, all: true },
+    { code: 'tas_all', name: 'TAS', ko: 'TAS 전체', state: 'tas', lat: -42.8821, lng: 147.3272, all: true },
+    { code: 'nt_all',  name: 'NT',  ko: 'NT 전체',  state: 'nt',  lat: -12.4634, lng: 130.8456, all: true }
+  ];
   function regions(state) { return state ? REGIONS.filter(function (r) { return r.state === state; }) : REGIONS.slice(); }
-  function regionItem(code) { var r = REGIONS.find(function (x) { return x.code === code; }); return r ? { name: r.name, state: r.state, postcode: '', lat: r.lat, lng: r.lng, km: r.km } : null; }
+  function stateRegions() { return STATE_REGIONS.slice(); }
+  function regionItem(code) {
+    var r = REGIONS.find(function (x) { return x.code === code; });
+    if (r) return { name: r.name, state: r.state, postcode: '', lat: r.lat, lng: r.lng, km: r.km };
+    var s = STATE_REGIONS.find(function (x) { return x.code === code; });
+    return s ? { name: s.name, state: s.state, postcode: '', lat: s.lat, lng: s.lng, all: true } : null;
+  }
+  // 큰 지역(도시권 km 또는 주 전체 all)인지
+  function isRegion(s) { return !!(s && (s.km || s.all)); }
   // 프로필의 기준 위치(첫 동네) — 지도 첫 화면용. 프로필 모듈이 저장, accom/rent/jobs 지도가 읽음(주 지정 없을 때만)
   var CENTER_KEY = 'koaus-profile-center-v1';
-  function saveProfileCenter(s) { try { if (s && typeof s.lat === 'number' && s.state) localStorage.setItem(CENTER_KEY, JSON.stringify({ state: s.state, lat: s.lat, lng: s.lng, name: s.name || '', km: s.km || 0 })); } catch (_) {} }
+  function saveProfileCenter(s) { try { if (s && typeof s.lat === 'number' && s.state) localStorage.setItem(CENTER_KEY, JSON.stringify({ state: s.state, lat: s.lat, lng: s.lng, name: s.name || '', km: s.km || 0, all: !!s.all })); } catch (_) {} }
   function profileCenter() { try { var c = JSON.parse(localStorage.getItem(CENTER_KEY) || 'null'); return c && typeof c.lat === 'number' ? c : null; } catch (_) { return null; } }
-  window.koausGeo = { suburbs: suburbs, refine: refine, ready: ready, regions: regions, regionItem: regionItem, REGIONS: REGIONS, saveProfileCenter: saveProfileCenter, profileCenter: profileCenter };
+  window.koausGeo = { suburbs: suburbs, refine: refine, ready: ready, regions: regions, stateRegions: stateRegions, regionItem: regionItem, isRegion: isRegion, REGIONS: REGIONS, STATE_REGIONS: STATE_REGIONS, saveProfileCenter: saveProfileCenter, profileCenter: profileCenter };
 })();

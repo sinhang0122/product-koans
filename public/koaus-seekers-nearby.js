@@ -174,8 +174,8 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
       const pc = postCoords(p);
       all = snap.docs.filter(d => d.id !== me).map(d => {
         const x = d.data() || {};
-        const r = pc ? reachOf(x, pc) : { km: null, reach: 0 };
-        return { uid: d.id, p: x, km: r.km, reach: r.reach };
+        const r = pc ? reachOf(x, Object.assign({ state: st }, pc)) : { km: null, reach: 0 };   // 주 전체 매칭에 글의 주가 필요(11-04b)
+        return { uid: d.id, p: x, km: r.km, reach: r.reach, wide: r.wide };
       });
     } catch (e) {
       console.warn('[seekers-nearby] 조회 실패', e);
@@ -214,7 +214,7 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
     const meta = [];
     if (p.gender) meta.push(en.label('genders', p.gender));
     if (p.ageBand) meta.push(en.label('ageBands', p.ageBand));
-    if (it.km != null) meta.push(it.km < 1 ? '1km 이내' : '약 ' + Math.round(it.km) + 'km');
+    if (it.wide) meta.push('주 전체'); else if (it.km != null) meta.push(it.km < 1 ? '1km 이내' : '약 ' + Math.round(it.km) + 'km');
     const saved = isSavedSeeker(it.uid);
     return `
       <button type="button" class="ksn-row" data-ksn-open="${esc(it.uid)}">
@@ -246,7 +246,7 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
   function toggleSavedSeeker(uid) { const a = savedSeekers(); const i = a.indexOf(uid); if (i === -1) a.push(uid); else a.splice(i, 1); try { localStorage.setItem(SAVED_KEY, JSON.stringify(a.slice(-200))); } catch (_) {} return i === -1; }
 
   // 찾는 조건 한 문장 — 카드·프로필 페이지·미리보기 공용 문구
-  const subName = x => (x && x.km ? (regionKo(x.name) + ' 전체') : (x && x.name) || '');
+  const subName = x => (x && (x.km || x.all) ? (regionKo(x.name) + ' 전체') : (x && x.name) || '');
   function regionKo(name) { try { const r = (window.koausGeo && window.koausGeo.REGIONS || []).find(z => z.name === name); return r ? r.ko : name; } catch (_) { return name; } }
   function conditionSentence(p, en) {
     const subs = (p.suburbs || []).map(subName).filter(Boolean).slice(0, 3).join(' · ');
@@ -290,8 +290,8 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
     if (p.gender) meta.push(en.label('genders', p.gender));
     if (p.ageBand) meta.push(en.label('ageBands', p.ageBand));
     const act = tsAgo(p.lastActiveAt); if (act) meta.push(act);
-    if (it.km != null) meta.push(it.km < 1 ? '1km 이내' : '약 ' + Math.round(it.km) + 'km');
-    const subs = (p.suburbs || []).map(x => x.km ? esc(regionKo(x.name)) + ' 전체 ' + esc(x.km) + 'km' : esc(x.name) + ' ' + esc(String(x.state || '').toUpperCase())).join(' · ');
+    if (it.wide) meta.push('주 전체'); else if (it.km != null) meta.push(it.km < 1 ? '1km 이내' : '약 ' + Math.round(it.km) + 'km');
+    const subs = (p.suburbs || []).map(x => (x.km || x.all) ? esc(regionKo(x.name)) + ' 전체' + (x.km ? ' ' + esc(x.km) + 'km' : '') : esc(x.name) + ' ' + esc(String(x.state || '').toUpperCase())).join(' · ');
     const rooms = (p.roomTypes || []).map(c => en.label('roomTypes', c)).filter(Boolean).join(', ');
     const price = Number(ctx && ctx.price) || 0;
     const fit = [];
@@ -306,7 +306,7 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
           <div class="ksn-detail-hero"><div class="ksn-detail-nick">${esc(nick)}</div><div class="ksn-detail-meta">${esc(meta.join(' · '))}</div></div>
           <div class="ksn-sec"><h4>찾는 조건</h4><div class="ksn-line">${esc(conditionSentence(p, en))}</div></div>
           <div class="ksn-sec"><h4>자세히</h4><dl class="ksn-rows">
-            <dt>동네</dt><dd>${subs || '—'}${p.radiusKm ? ' (반경 ' + esc(p.radiusKm) + 'km)' : ''}</dd>
+            <dt>동네</dt><dd>${subs || '—'}${p.radiusKm && (p.suburbs || []).some(x => !(x.km || x.all)) ? ' (반경 ' + esc(p.radiusKm) + 'km)' : ''}</dd>
             <dt>예산</dt><dd>주 $${esc(p.budgetMin != null ? p.budgetMin : 0)}${p.budgetMax != null ? ' ~ $' + esc(p.budgetMax) : ' 이상'}</dd>
             <dt>입주</dt><dd>${esc(p.moveIn || '—')}${p.stay ? ' · ' + esc(en.label('stays', p.stay)) : ''}</dd>
             <dt>방</dt><dd>${esc(rooms || '상관없음')}${p.bathroom === 'private' ? ' · 개인 욕실' : ''}</dd>
@@ -472,21 +472,26 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
     return out.slice(0, 5);
   }
   // 구하는 사람 쪽 '닿는 반경' — 가장 가까운 동네 기준. '브리즈번 전체'처럼 큰 지역은 그 지역 km(11-04)
+  //   함수(functions/index.js onNewListing)와 같은 규칙(11-04b): 동네마다 '그 사람 반경 또는 큰 지역 km' 안이면 맞음, 주 전체(all)는 같은 주면 맞음.
+  //   km = 가장 가까운 동네까지 거리, reach = 어느 동네든 맞으면 km 이상(필터 it.km <= max(내 반경, reach) 통과), 아니면 그 사람 반경.
   function reachOf(x, center) {
-    let km = null, reach = Number(x.radiusKm) || 0;
+    let km = null, reach = Number(x.radiusKm) || 0, wide = false, hit = false;
     (Array.isArray(x.suburbs) ? x.suburbs : []).forEach(s => {
+      if (s.all && s.state && center && s.state === center.state) wide = true;
       if (typeof s.lat !== 'number' || typeof s.lng !== 'number') return;
       const k = kmBetween(center, s);
-      if (km == null || k < km) { km = k; reach = Math.max(Number(x.radiusKm) || 0, Number(s.km) || 0); }
+      if (km == null || k < km) km = k;
+      if (k <= Math.max(Number(x.radiusKm) || 0, Number(s.km) || 0)) hit = true;
     });
-    return { km, reach };
+    if ((wide || hit) && km != null) reach = Math.max(reach, km);
+    return { km, reach, wide };
   }
   async function fetchFor(center, meUid) {
     const snap = await getDocs(query(collection(db, 'seeker_profiles'), where('states', 'array-contains', center.state), where('visible', '==', true), orderBy('lastActiveAt', 'desc'), limit(20)));
     return snap.docs.filter(d => d.id !== meUid).map(d => {
       const x = d.data() || {};
       const r = reachOf(x, center);
-      return { uid: d.id, p: x, km: r.km, reach: r.reach };
+      return { uid: d.id, p: x, km: r.km, reach: r.reach, wide: r.wide };
     });
   }
 

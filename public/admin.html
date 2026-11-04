@@ -1456,7 +1456,7 @@
       const p = r.p, st = skState(p);
       const stL = { looking: '구하는 중', found: '구했습니다', paused: '일시정지', hidden: '비공개' }[st];
       const stC = { looking: '#dcfce7;color:#166534', found: '#e5e7eb;color:#374151', paused: '#fef3c7;color:#92400e', hidden: '#fee2e2;color:#991b1b' }[st];
-      const subs = (p.suburbs || []).map(x => escHtmlAdmin(x.name) + ' ' + escHtmlAdmin(String(x.state || '').toUpperCase())).join(' · ');
+      const subs = (p.suburbs || []).map(x => (x.km || x.all) ? escHtmlAdmin(x.name) + ' 전체' + (x.km ? ' ' + escHtmlAdmin(x.km) + 'km' : '') : escHtmlAdmin(x.name) + ' ' + escHtmlAdmin(String(x.state || '').toUpperCase())).join(' · ');
       const who = [p.gender === 'female' ? '여' : (p.gender === 'male' ? '남' : ''), _skAge[p.ageBand] || ''].filter(Boolean).join(' · ');
       return '<details data-sk="' + escHtmlAdmin(r.id) + '" style="border:1px solid #e5e7eb;border-radius:8px;background:#fafafa;overflow:hidden;">'
         + '<summary style="cursor:pointer;padding:10px 12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">'

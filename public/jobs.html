@@ -1673,6 +1673,9 @@
     function loadMapScript() {
       if (mapScriptLoaded || mapScriptLoading) return;
       mapScriptLoading = true;
+      // 11-04b: koaus-geo.js(프로필 동네 검색)가 Maps 를 먼저 불러왔으면 두 번 넣지 않는다(중복 로드는 Google 이 막음) — 준비되는 대로 initMapJobs
+      if (window.google && window.google.maps && window.google.maps.places) { window.initMapJobs(); return; }
+      if (document.querySelector('script[src*="maps.googleapis.com/maps/api/js"]')) { const t0 = Date.now(); (function w() { if (window.google && window.google.maps && window.google.maps.places) { window.initMapJobs(); return; } if (Date.now() - t0 < 15000) setTimeout(w, 150); else mapScriptLoading = false; })(); return; }
       const s = document.createElement('script');
       s.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_KEY}&libraries=places&callback=initMapJobs`;
       s.async = true; s.defer = true;
@@ -1774,7 +1777,7 @@
       const el = document.getElementById('jobsMap');
       if (!el) return;
       const urlState = currentState;
-      const profileView = (function () { try { if (urlState) return null; const c = JSON.parse(localStorage.getItem('koaus-profile-center-v1') || 'null'); return (c && typeof c.lat === 'number') ? { center: { lat: c.lat, lng: c.lng }, zoom: c.km ? 10 : 12 } : null; } catch (_) { return null; } })();   // 11-04: 프로필 첫 동네 기준
+      const profileView = (function () { try { if (urlState) return null; const c = JSON.parse(localStorage.getItem('koaus-profile-center-v1') || 'null'); if (!(c && typeof c.lat === 'number')) return null; if (c.all && STATE_VIEWS[c.state]) return { center: STATE_VIEWS[c.state].center, zoom: 9 }; return { center: { lat: c.lat, lng: c.lng }, zoom: c.km ? 10 : 12 }; } catch (_) { return null; } })();   // 11-04: 프로필 첫 동네 기준
       const view = STATE_VIEWS[currentState] || profileView || AUS_VIEW;
       jobsMap = new google.maps.Map(el, { gestureHandling: 'greedy', center: view.center, zoom: view.zoom, mapTypeControl: false, streetViewControl: false });
       mapReady = true;

@@ -2854,7 +2854,7 @@
     const AUS_VIEW        = { center: { lat: -25.2744, lng: 133.7751 }, zoom: 4 };  // 전국
     const urlState        = (new URLSearchParams(location.search).get('state') || '').toLowerCase();
     // 11-04: 주 미지정이면 내 프로필(집·일 구해요)의 첫 동네를 지도 첫 화면으로(LS koaus-profile-center-v1, koaus-geo.js 가 기록). 없으면 종전처럼 시드니.
-    const profileView     = (function () { try { if (urlState) return null; const c = JSON.parse(localStorage.getItem('koaus-profile-center-v1') || 'null'); return (c && typeof c.lat === 'number') ? { center: { lat: c.lat, lng: c.lng }, zoom: c.km ? 10 : 12 } : null; } catch (_) { return null; } })();
+    const profileView     = (function () { try { if (urlState) return null; const c = JSON.parse(localStorage.getItem('koaus-profile-center-v1') || 'null'); if (!(c && typeof c.lat === 'number')) return null; if (c.all && STATE_VIEWS[c.state]) return { center: STATE_VIEWS[c.state].center, zoom: 9 }; return { center: { lat: c.lat, lng: c.lng }, zoom: c.km ? 10 : 12 }; } catch (_) { return null; } })();
     const activeStateView = STATE_VIEWS[urlState] || profileView || STATE_VIEWS.nsw;
 
 
@@ -2901,6 +2901,9 @@
         initAddressAutocomplete();  // Places 로드 완료 → 주소/지역 자동완성 연결
         applyPendingCenter();       // 지역 검색이 맵 로딩보다 먼저였다면 지금 이동
       };
+      // 11-04b: koaus-geo.js(프로필 동네 검색)가 Maps 를 먼저 불러왔으면 두 번 넣지 않는다(중복 로드는 Google 이 막음) — 준비되는 대로 initMap
+      if (window.google && window.google.maps && window.google.maps.places) { window.initMap(); return; }
+      if (document.querySelector('script[src*="maps.googleapis.com/maps/api/js"]')) { const t0 = Date.now(); (function w() { if (window.google && window.google.maps && window.google.maps.places) { window.initMap(); return; } if (Date.now() - t0 < 15000) setTimeout(w, 150); else mapLoading = false; })(); return; }
       const script   = document.createElement('script');
       script.src     = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_KEY}&libraries=places&loading=async&callback=initMap`;
       script.async   = true;

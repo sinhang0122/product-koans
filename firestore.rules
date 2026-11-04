@@ -1043,9 +1043,11 @@ service cloud.firestore {
     //   틀려도 본인 카드의 거리 계산만 어긋난다. 동네 수 상한은 5(사용자 요청 8 → 한도 때문에 5).
     function validSuburb(s) {
       return s is map
-        && s.keys().hasOnly(['name', 'state', 'postcode', 'lat', 'lng', 'km'])   // km(11-04): '브리즈번 전체'처럼 큰 지역을 고른 경우 그 지역 반경
+        && s.keys().hasOnly(['name', 'state', 'postcode', 'lat', 'lng', 'km', 'all'])   // km(11-04): '브리즈번 전체'처럼 큰 지역을 고른 경우 그 지역 반경 · all(11-04b): 'QLD 전체'(같은 주면 거리 무관)
         && s.name is string && s.name.size() <= 60
+        && !s.name.matches('(?s).*([0-9][ .-]?){6,}.*')   // 11-04b: 동네 이름 칸으로 전화번호를 공개 카드에 싣지 못하게
         && (!('km' in s) || (s.km is int && s.km >= 1 && s.km <= 60))
+        && (!('all' in s) || s.all == true)
         && s.state in ['qld', 'nsw', 'vic', 'wa', 'sa', 'tas', 'act', 'nt']
         && s.lat is number && s.lng is number;
     }

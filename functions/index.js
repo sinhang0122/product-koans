@@ -295,12 +295,13 @@ async function onNewListing(event, board) {
     const s = d.data() || {}; const uid = d.id;
     if (uid === (p.uid || p.authorUid)) continue;
     if (s.pausedAt || s.status === 'found') continue;
-    let km = null, hit = false;
+    let km = null, hit = false, near = false;   // near: 거리로 맞음(주 전체로만 맞으면 km 표시 안 함, 11-04b)
     const radius = Number(s.radiusKm) || 5;
     (Array.isArray(s.suburbs) ? s.suburbs : []).forEach(x => {
+      if (x.all === true && String(x.state || '').toLowerCase() === st) hit = true;   // 11-04b: '주 전체'는 같은 주면 거리 무관
       if (typeof x.lat !== 'number' || typeof x.lng !== 'number') return;
       const k = kmBetween({ lat, lng }, x); if (km == null || k < km) km = k;
-      if (k <= Math.max(radius, Number(x.km) || 0)) hit = true;   // 11-04: '브리즈번 전체'처럼 큰 지역은 그 지역 반경(x.km)으로
+      if (k <= Math.max(radius, Number(x.km) || 0)) { hit = true; near = true; }   // 11-04: '브리즈번 전체'처럼 큰 지역은 그 지역 반경(x.km)으로
     });
     if (km == null || !hit) continue;
     if (price && (s.budgetMin != null || s.budgetMax != null)) {
@@ -308,11 +309,11 @@ async function onNewListing(event, board) {
       if (s.budgetMax != null && price > Number(s.budgetMax)) continue;
     }
     const al = await seekerAlert(uid); if (!al) continue;
-    const item = { postId, board, title, price, suburb, km: Math.round(km * 10) / 10, link, at: Date.now() };
+    const item = { postId, board, title, price, suburb, km: near ? Math.round(km * 10) / 10 : null, link, at: Date.now() };
     if (al.mode === 'instant') {
       await enqueue({ to: al.email, uid, kind: 'listing', subject: `[KoAus] 조건에 맞는 방이 올라왔습니다 — ${title}`,
         html: wrapHtml('조건에 맞는 방이 올라왔습니다', listingItemsHtml([item]), uid, 'listing'),
-        text: `${title} · 주 $${price} · ${suburb} · 약 ${item.km}km\n${link}` });
+        text: `${title} · 주 $${price} · ${suburb}${item.km != null ? ' · 약 ' + item.km + 'km' : ''}\n${link}` });
     } else {
       // threshold5 / daily → mail_digest/{uid}
       const ref = db().doc(`mail_digest/${uid}`);
