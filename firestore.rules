@@ -1043,8 +1043,9 @@ service cloud.firestore {
     //   틀려도 본인 카드의 거리 계산만 어긋난다. 동네 수 상한은 5(사용자 요청 8 → 한도 때문에 5).
     function validSuburb(s) {
       return s is map
-        && s.keys().hasOnly(['name', 'state', 'postcode', 'lat', 'lng'])
+        && s.keys().hasOnly(['name', 'state', 'postcode', 'lat', 'lng', 'km'])   // km(11-04): '브리즈번 전체'처럼 큰 지역을 고른 경우 그 지역 반경
         && s.name is string && s.name.size() <= 60
+        && (!('km' in s) || (s.km is int && s.km >= 1 && s.km <= 60))
         && s.state in ['qld', 'nsw', 'vic', 'wa', 'sa', 'tas', 'act', 'nt']
         && s.lat is number && s.lng is number;
     }
@@ -1129,7 +1130,7 @@ service cloud.firestore {
                'visible', 'status', 'step', 'lastActiveAt', 'createdAt', 'updatedAt', 'pausedAt'
              ])
         && d.industries is list && d.industries.size() >= 1 && d.industries.size() <= 5
-        && d.industries.hasOnly(['food', 'factory', 'clean', 'office', 'beauty', 'drive', 'retail', 'other'])
+        && d.industries.hasOnly(['food', 'farm', 'factory', 'trade', 'clean', 'office', 'beauty', 'drive', 'retail', 'other'])   // 11-04: farm·trade 추가
         && d.suburbs is list && d.suburbs.size() >= 1 && d.suburbs.size() <= 5
         && validSuburb(d.suburbs[0])
         && (d.suburbs.size() < 2 || validSuburb(d.suburbs[1]))

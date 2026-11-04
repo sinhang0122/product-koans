@@ -101,6 +101,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       loadedFor = me.uid;
       await migrateLegacy();
       try { localStorage.setItem(HAS_KEY, JSON.stringify({ uid: me.uid, has: !!profile })); } catch (_) {}
+      try { if (profile && profile.suburbs && profile.suburbs[0] && window.koausGeo) window.koausGeo.saveProfileCenter(profile.suburbs[0]); } catch (_) {}
     } catch (e) {
       console.warn('[seeker-profile] 조회 실패', e);
       profile = null; priv = null; loadedFor = null;
@@ -155,7 +156,8 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       return d <= 0 ? '오늘' : d + '일 전';
     } catch (_) { return ''; }
   };
-  const suburbLabel = s => esc(s.name) + ' ' + esc(String(s.state || '').toUpperCase());
+  const regionKo = name => { try { const r = (window.koausGeo && window.koausGeo.REGIONS || []).find(z => z.name === name); return r ? r.ko : name; } catch (_) { return name; } };
+  const suburbLabel = s => (s && s.km) ? (esc(regionKo(s.name)) + ' 전체 <span class="ksp-dim">' + esc(s.km) + 'km</span>') : (esc(s.name) + ' ' + esc(String(s.state || '').toUpperCase()));
 
   async function refreshPanel() {
     if (!panelEl) return;
@@ -195,7 +197,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
   };
   // 집주인이 보는 한 문장(koaus-seekers-nearby.js conditionSentence 와 같은 형태)
   function sentenceOf(d, en) {
-    const subs = (d.suburbs || []).map(x => x.name).filter(Boolean).slice(0, 3).join(' · ');
+    const subs = (d.suburbs || []).map(x => x.km ? regionKo(x.name) + ' 전체' : x.name).filter(Boolean).slice(0, 3).join(' · ');
     const when = moveInLabel(d.moveIn);
     const stay = d.stay === 'tbd' ? '기간은 상의 후 결정' : (en.label('stays', d.stay) || '');
     const budget = budgetLabel(d.budgetMin, d.budgetMax);
@@ -371,7 +373,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
   }
   function fromProfile(p) {
     const d = blankDraft();
-    d.suburbs = (p.suburbs || []).slice(0, MAX_SUBURBS).map(s => ({ name: s.name, state: s.state, postcode: s.postcode || '', lat: s.lat, lng: s.lng }));
+    d.suburbs = (p.suburbs || []).slice(0, MAX_SUBURBS).map(s => ({ name: s.name, state: s.state, postcode: s.postcode || '', lat: s.lat, lng: s.lng, km: s.km || 0 }));
     d.radiusKm = RADII.includes(Number(p.radiusKm)) ? Number(p.radiusKm) : 5;
     d.budgetMin = p.budgetMin != null ? String(p.budgetMin) : '0';
     d.budgetMax = p.budgetMax != null ? String(p.budgetMax) : '';
@@ -489,7 +491,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     const tags = [];
     if (draft.gender) tags.push(en.label('genders', draft.gender));
     if (draft.ageBand) tags.push(en.label('ageBands', draft.ageBand));
-    const subs = draft.suburbs.map(x => esc(x.name) + ' ' + esc(String(x.state || '').toUpperCase())).join(' · ');
+    const subs = draft.suburbs.map(suburbLabel).join(' · ');
     const budget = budgetLabel(draft.budgetMin, draft.budgetMax);
     const stayL = draft.stay === 'tbd' ? '상의 후 결정' : (en.label('stays', draft.stay) || '');
     const rooms = (draft.roomTypes || []).map(c => en.label('roomTypes', c)).filter(Boolean).join(', ');
@@ -525,6 +527,8 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
           <input class="ksp-input" id="kspSuburbQ" type="text" placeholder="예: Brisbane City, 4000" autocomplete="off" inputmode="search">
           <ul class="ksp-sug" id="kspSuburbSug"></ul>
           <div class="ksp-sel" id="kspSuburbSel"></div>
+          <div class="ksp-label">또는 크게 고르기 <span class="req">(도시권 전체)</span></div>
+          ${regionChipsHtml()}
           <div class="ksp-label">동네 기준 반경 <span class="req">(필수)</span></div>
           <div class="ksp-help">고른 동네에서 이 거리 안에 방을 올린 집주인에게 내 조건이 보입니다. 집주인이 보는 범위를 더 넓게 잡으면 그만큼 더 보입니다.</div>
           ${chipsHtml('radiusKm', RADII.map(r => ({ code: String(r), label: r + 'km' })), String(draft.radiusKm || 5), false)}
@@ -675,7 +679,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     });
     const next = $('#kspNext', ovl);
     if (next) next.addEventListener('click', onNext);
-    if (step === 1) { wireSuburb(body); try { if (window.koausGeo) window.koausGeo.ready(); } catch (_) {} }
+    if (step === 1) { wireSuburb(body); wireRegionChips(body); try { if (window.koausGeo) window.koausGeo.ready(); } catch (_) {} }
     if (step === 3) {
       const asap = $('[data-asap]', body);
       if (asap) asap.addEventListener('click', () => { $('#kspMoveIn', body).value = openedDay || todayStr(); });
@@ -714,10 +718,31 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     });
     document.addEventListener('click', e => { if (!e.target.closest('#kspSuburbSug') && e.target !== q) hide(); });
   }
+  // 큰 지역(도시권) 칩 — koaus-geo.js REGIONS. 고르면 suburbs 에 {name,state,lat,lng,km} 로 들어가 그 지역 반경으로 매칭
+  function regionChipsHtml() {
+    const list = (window.koausGeo && window.koausGeo.REGIONS) || [];
+    const st = (draft.suburbs[0] && draft.suburbs[0].state) || '';
+    const ordered = st ? list.filter(r => r.state === st).concat(list.filter(r => r.state !== st)) : list;
+    return `<div class="ksp-chips" id="kspRegionChips">${ordered.map(r => `<button type="button" class="ksp-opt" data-region="${esc(r.code)}" aria-pressed="${draft.suburbs.some(x => x.km && x.name === r.name) ? 'true' : 'false'}">${esc(r.ko)}</button>`).join('')}</div>`;
+  }
+  function wireRegionChips(body) {
+    const box = $('#kspRegionChips', body); if (!box) return;
+    box.addEventListener('click', e => {
+      const b = e.target.closest('[data-region]'); if (!b) return;
+      const it = window.koausGeo && window.koausGeo.regionItem(b.dataset.region); if (!it) return;
+      const i = draft.suburbs.findIndex(x => x.km && x.name === it.name && x.state === it.state);
+      if (i !== -1) { draft.suburbs.splice(i, 1); b.setAttribute('aria-pressed', 'false'); }
+      else {
+        if (draft.suburbs.length >= MAX_SUBURBS) { $('#kspErr1', body).textContent = '동네·지역은 ' + MAX_SUBURBS + '곳까지 넣을 수 있습니다.'; return; }
+        draft.suburbs.push(it); b.setAttribute('aria-pressed', 'true'); $('#kspErr1', body).textContent = '';
+      }
+      renderSuburbSel();
+    });
+  }
   function renderSuburbSel() {
     const sel = $('#kspSuburbSel', ovl); if (!sel) return;
     sel.innerHTML = draft.suburbs.map((s, i) => `<span class="ksp-chip on">${suburbLabel(s)} <button type="button" data-rm="${i}" aria-label="빼기">×</button></span>`).join('');
-    sel.querySelectorAll('[data-rm]').forEach(b => b.addEventListener('click', () => { draft.suburbs.splice(Number(b.dataset.rm), 1); renderSuburbSel(); }));
+    sel.querySelectorAll('[data-rm]').forEach(b => b.addEventListener('click', () => { draft.suburbs.splice(Number(b.dataset.rm), 1); renderSuburbSel(); try { ovl.querySelectorAll('#kspRegionChips [data-region]').forEach(c => { const it = window.koausGeo.regionItem(c.dataset.region); c.setAttribute('aria-pressed', it && draft.suburbs.some(x => x.km && x.name === it.name) ? 'true' : 'false'); }); } catch (_) {} }));
   }
   // 동네 검색 — koaus-geo.js(window.koausGeo) 공통: Maps JS Geocoder, 한글·영문, 우편번호(4자리)는 속한 동네 전부(11-04)
   async function geocodeSuburb(text) {
@@ -767,6 +792,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       suburbs: draft.suburbs.slice(0, MAX_SUBURBS).map(s => {
         const o = { name: s.name, state: s.state, lat: Number(s.lat), lng: Number(s.lng) };
         if (s.postcode) o.postcode = String(s.postcode).slice(0, 4);
+        if (s.km) o.km = Math.min(60, Math.max(1, Math.round(Number(s.km))));   // 큰 지역(도시권) 반경
         return o;
       }),
       states: Array.from(new Set(draft.suburbs.map(s => s.state))).slice(0, 5),
@@ -809,6 +835,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       batch.set(doc(db, 'seeker_private', me.uid), docs.priv, { merge: !!quick });  // 짧은 등록은 기존 비공개 칸 보존
       await batch.commit();
       clearDraft();
+      try { if (window.koausGeo && docs.pub.suburbs[0]) window.koausGeo.saveProfileCenter(docs.pub.suburbs[0]); } catch (_) {}   // 지도 첫 화면 기준
       await loadProfile(true);
       if (panelEl) rerenderCard();
       step = totalSteps() + 1; renderStep();

@@ -295,10 +295,14 @@ async function onNewListing(event, board) {
     const s = d.data() || {}; const uid = d.id;
     if (uid === (p.uid || p.authorUid)) continue;
     if (s.pausedAt || s.status === 'found') continue;
-    let km = null;
-    (Array.isArray(s.suburbs) ? s.suburbs : []).forEach(x => { if (typeof x.lat === 'number' && typeof x.lng === 'number') { const k = kmBetween({ lat, lng }, x); if (km == null || k < km) km = k; } });
+    let km = null, hit = false;
     const radius = Number(s.radiusKm) || 5;
-    if (km == null || km > radius) continue;
+    (Array.isArray(s.suburbs) ? s.suburbs : []).forEach(x => {
+      if (typeof x.lat !== 'number' || typeof x.lng !== 'number') return;
+      const k = kmBetween({ lat, lng }, x); if (km == null || k < km) km = k;
+      if (k <= Math.max(radius, Number(x.km) || 0)) hit = true;   // 11-04: '브리즈번 전체'처럼 큰 지역은 그 지역 반경(x.km)으로
+    });
+    if (km == null || !hit) continue;
     if (price && (s.budgetMin != null || s.budgetMax != null)) {
       if (s.budgetMin != null && price < Number(s.budgetMin)) continue;
       if (s.budgetMax != null && price > Number(s.budgetMax)) continue;

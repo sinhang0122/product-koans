@@ -84,14 +84,17 @@
   ];
 
   // 업종 — 구인 글·일 구해요·사업체 프로필 공통
+  // 11-04: 한인 일자리에 맞게 라벨 정리 + farm(농장)·trade(트레이드·건설) 추가. 옛 코드는 그대로 두고 라벨만 바꿈(글 필터 호환).
   const industries = [
-    { code: 'food',    label: '식당·카페' },
-    { code: 'factory', label: '공장·농장' },
-    { code: 'clean',   label: '청소·건설' },
+    { code: 'food',    label: '카페·식당' },
+    { code: 'farm',    label: '농장' },
+    { code: 'factory', label: '공장(육가공·패킹)' },
+    { code: 'trade',   label: '트레이드·건설' },
+    { code: 'clean',   label: '청소' },
+    { code: 'retail',  label: '마트·판매' },
+    { code: 'drive',   label: '운전·배달' },
     { code: 'office',  label: '사무·서비스' },
     { code: 'beauty',  label: '뷰티' },
-    { code: 'drive',   label: '운전·배달' },
-    { code: 'retail',  label: '마트·판매' },
     { code: 'other',   label: '기타' },
   ];
 

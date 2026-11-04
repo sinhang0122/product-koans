@@ -82,5 +82,29 @@
     var hit = pick(res).find(function (x) { return x.name.toLowerCase() === s.name.toLowerCase() && x.state === s.state && !x.approx; });
     return hit ? { name: hit.name, state: hit.state, postcode: hit.postcode || s.postcode || '', lat: hit.lat, lng: hit.lng, approx: false } : s;
   }
-  window.koausGeo = { suburbs: suburbs, refine: refine, ready: ready };
+  // 큰 지역(도시권) 한 번에 고르기(11-04) — 동네 대신 "브리즈번 전체"처럼. km 은 그 지역의 반경(프로필 radiusKm 대신 이 값으로 매칭)
+  var REGIONS = [
+    { code: 'brisbane',       name: 'Brisbane',       ko: '브리즈번',     state: 'qld', lat: -27.4698, lng: 153.0251, km: 25 },
+    { code: 'gold_coast',     name: 'Gold Coast',     ko: '골드코스트',   state: 'qld', lat: -28.0167, lng: 153.4000, km: 20 },
+    { code: 'sunshine_coast', name: 'Sunshine Coast', ko: '선샤인코스트', state: 'qld', lat: -26.6500, lng: 153.0667, km: 25 },
+    { code: 'toowoomba',      name: 'Toowoomba',      ko: '투움바',       state: 'qld', lat: -27.5598, lng: 151.9507, km: 15 },
+    { code: 'cairns',         name: 'Cairns',         ko: '케언즈',       state: 'qld', lat: -16.9186, lng: 145.7781, km: 20 },
+    { code: 'townsville',     name: 'Townsville',     ko: '타운즈빌',     state: 'qld', lat: -19.2590, lng: 146.8169, km: 20 },
+    { code: 'sydney',         name: 'Sydney',         ko: '시드니',       state: 'nsw', lat: -33.8688, lng: 151.2093, km: 30 },
+    { code: 'newcastle',      name: 'Newcastle',      ko: '뉴캐슬',       state: 'nsw', lat: -32.9283, lng: 151.7817, km: 20 },
+    { code: 'wollongong',     name: 'Wollongong',     ko: '울런공',       state: 'nsw', lat: -34.4278, lng: 150.8931, km: 20 },
+    { code: 'melbourne',      name: 'Melbourne',      ko: '멜번',         state: 'vic', lat: -37.8136, lng: 144.9631, km: 30 },
+    { code: 'perth',          name: 'Perth',          ko: '퍼스',         state: 'wa',  lat: -31.9523, lng: 115.8613, km: 30 },
+    { code: 'adelaide',       name: 'Adelaide',       ko: '애들레이드',   state: 'sa',  lat: -34.9285, lng: 138.6007, km: 25 },
+    { code: 'canberra',       name: 'Canberra',       ko: '캔버라',       state: 'act', lat: -35.2809, lng: 149.1300, km: 20 },
+    { code: 'hobart',         name: 'Hobart',         ko: '호바트',       state: 'tas', lat: -42.8821, lng: 147.3272, km: 20 },
+    { code: 'darwin',         name: 'Darwin',         ko: '다윈',         state: 'nt',  lat: -12.4634, lng: 130.8456, km: 20 }
+  ];
+  function regions(state) { return state ? REGIONS.filter(function (r) { return r.state === state; }) : REGIONS.slice(); }
+  function regionItem(code) { var r = REGIONS.find(function (x) { return x.code === code; }); return r ? { name: r.name, state: r.state, postcode: '', lat: r.lat, lng: r.lng, km: r.km } : null; }
+  // 프로필의 기준 위치(첫 동네) — 지도 첫 화면용. 프로필 모듈이 저장, accom/rent/jobs 지도가 읽음(주 지정 없을 때만)
+  var CENTER_KEY = 'koaus-profile-center-v1';
+  function saveProfileCenter(s) { try { if (s && typeof s.lat === 'number' && s.state) localStorage.setItem(CENTER_KEY, JSON.stringify({ state: s.state, lat: s.lat, lng: s.lng, name: s.name || '', km: s.km || 0 })); } catch (_) {} }
+  function profileCenter() { try { var c = JSON.parse(localStorage.getItem(CENTER_KEY) || 'null'); return c && typeof c.lat === 'number' ? c : null; } catch (_) { return null; } }
+  window.koausGeo = { suburbs: suburbs, refine: refine, ready: ready, regions: regions, regionItem: regionItem, REGIONS: REGIONS, saveProfileCenter: saveProfileCenter, profileCenter: profileCenter };
 })();

@@ -1773,7 +1773,9 @@
       mapScriptLoaded = true; mapScriptLoading = false;
       const el = document.getElementById('jobsMap');
       if (!el) return;
-      const view = STATE_VIEWS[currentState] || AUS_VIEW;
+      const urlState = currentState;
+      const profileView = (function () { try { if (urlState) return null; const c = JSON.parse(localStorage.getItem('koaus-profile-center-v1') || 'null'); return (c && typeof c.lat === 'number') ? { center: { lat: c.lat, lng: c.lng }, zoom: c.km ? 10 : 12 } : null; } catch (_) { return null; } })();   // 11-04: 프로필 첫 동네 기준
+      const view = STATE_VIEWS[currentState] || profileView || AUS_VIEW;
       jobsMap = new google.maps.Map(el, { gestureHandling: 'greedy', center: view.center, zoom: view.zoom, mapTypeControl: false, streetViewControl: false });
       mapReady = true;
       updateMapMarkers();

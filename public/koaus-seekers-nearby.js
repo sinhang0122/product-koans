@@ -13,7 +13,7 @@
 // ════════════════════════════════════════════════════════════════════
 import './koaus-appcheck-init.js';
 import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
-import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, setDoc, getDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
+import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, setDoc, getDoc, serverTimestamp, writeBatch } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
 
 (function () {
   'use strict';
@@ -103,6 +103,11 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
       .ksn-rows dt{color:var(--text-muted)} .ksn-rows dd{margin:0;font-weight:600}
       .ksn-note{font-size:12.5px;color:var(--text-muted);line-height:1.5;padding:12px 16px;border-top:1px solid var(--border)}
       .ksn-detail-foot{display:flex;gap:8px;padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--border);background:var(--bg-base)}
+      .ksn-compose{display:flex;flex-direction:column;gap:8px;padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--border);background:var(--bg-base)}
+      .ksn-compose textarea{width:100%;box-sizing:border-box;border:1px solid var(--border);background:var(--bg-input);color:var(--text-primary);border-radius:12px;padding:11px 12px;font-size:15px;font-family:inherit;resize:none;min-height:64px;line-height:1.45}
+      .ksn-compose textarea:focus{outline:none;border-color:var(--border-focus)}
+      .ksn-compose-row{display:flex;gap:8px}
+      .ksn-sent-line a{color:inherit;font-weight:700}
       .ksn-btn.big{padding:13px 16px;font-size:15px;font-weight:800;border-radius:12px;flex:1}
       .ksn-btn.big.ghost{flex:0 0 auto;background:var(--bg-base);color:var(--text-primary);border-color:var(--text-primary)}
     `;
@@ -169,11 +174,8 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
       const pc = postCoords(p);
       all = snap.docs.filter(d => d.id !== me).map(d => {
         const x = d.data() || {};
-        let km = null;
-        if (pc && Array.isArray(x.suburbs)) {
-          x.suburbs.forEach(s => { if (typeof s.lat === 'number' && typeof s.lng === 'number') { const k = kmBetween(pc, s); if (km == null || k < km) km = k; } });
-        }
-        return { uid: d.id, p: x, km };
+        const r = pc ? reachOf(x, pc) : { km: null, reach: 0 };
+        return { uid: d.id, p: x, km: r.km, reach: r.reach };
       });
     } catch (e) {
       console.warn('[seekers-nearby] 조회 실패', e);
@@ -194,7 +196,7 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
     const femaleOnly = post.gender === 'female';
     const list = all.filter(it => {
       if (femaleOnly && it.p.gender !== 'female') return false;
-      if (hasCoords && (it.km == null || it.km > Math.max(radius, Number(it.p.radiusKm) || 0))) return false;   // 양방향: 집주인 반경 또는 구하는 사람 반경 중 큰 쪽
+      if (hasCoords && (it.km == null || it.km > Math.max(radius, it.reach || 0))) return false;   // 양방향: 집주인 반경 또는 구하는 사람 반경(큰 지역이면 그 지역 km) 중 큰 쪽
       if (budgetOnly && price && !(it.p.budgetMin <= price && price <= it.p.budgetMax)) return false;
       return true;
     }).sort((a, b) => (a.km == null || b.km == null) ? 0 : a.km - b.km);
@@ -244,8 +246,10 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
   function toggleSavedSeeker(uid) { const a = savedSeekers(); const i = a.indexOf(uid); if (i === -1) a.push(uid); else a.splice(i, 1); try { localStorage.setItem(SAVED_KEY, JSON.stringify(a.slice(-200))); } catch (_) {} return i === -1; }
 
   // 찾는 조건 한 문장 — 카드·프로필 페이지·미리보기 공용 문구
+  const subName = x => (x && x.km ? (regionKo(x.name) + ' 전체') : (x && x.name) || '');
+  function regionKo(name) { try { const r = (window.koausGeo && window.koausGeo.REGIONS || []).find(z => z.name === name); return r ? r.ko : name; } catch (_) { return name; } }
   function conditionSentence(p, en) {
-    const subs = (p.suburbs || []).map(x => x.name).filter(Boolean).slice(0, 3).join(' · ');
+    const subs = (p.suburbs || []).map(subName).filter(Boolean).slice(0, 3).join(' · ');
     let when = '';
     if (p.moveIn) {
       const d = new Date(p.moveIn + 'T00:00:00'); const today = new Date(); today.setHours(0, 0, 0, 0);
@@ -265,6 +269,7 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
   // ── 프로필 페이지(상세) — 목록·모달 공용. 휴대폰 전체 화면, 데스크탑 가운데 ──
   let det = null, detUid = null;
   function openDetail(it, ctx) {
+    injectCss();
     const en = E(); if (!it || !en) return;
     const p = it.p; detUid = it.uid;
     if (!det) {
@@ -275,7 +280,8 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
         if (e.target.closest('[data-ksn-detail="report"]')) { reportSeeker(); return; }
         const sv = e.target.closest('[data-ksn-detail="save"]');
         if (sv) { const on = toggleSavedSeeker(detUid); sv.textContent = on ? '저장됨' : '저장'; sv.setAttribute('aria-pressed', on ? 'true' : 'false'); refreshLists(); return; }
-        const c = e.target.closest('[data-ksn-chat]'); if (c) startChat(c.dataset.ksnChat, c);
+        const c = e.target.closest('[data-ksn-chat]'); if (c) { startChat(c.dataset.ksnChat, c); return; }
+        const sd = e.target.closest('[data-ksn-send]'); if (sd) { const ta = det.querySelector('#ksnMsg'); sendFromProfile(sd.dataset.ksnSend, ta ? ta.value : '', sd); }
       });
       document.addEventListener('keydown', e => { if (e.key === 'Escape' && det.classList.contains('open')) closeDetail(); });
     }
@@ -285,12 +291,12 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
     if (p.ageBand) meta.push(en.label('ageBands', p.ageBand));
     const act = tsAgo(p.lastActiveAt); if (act) meta.push(act);
     if (it.km != null) meta.push(it.km < 1 ? '1km 이내' : '약 ' + Math.round(it.km) + 'km');
-    const subs = (p.suburbs || []).map(x => esc(x.name) + ' ' + esc(String(x.state || '').toUpperCase())).join(' · ');
+    const subs = (p.suburbs || []).map(x => x.km ? esc(regionKo(x.name)) + ' 전체 ' + esc(x.km) + 'km' : esc(x.name) + ' ' + esc(String(x.state || '').toUpperCase())).join(' · ');
     const rooms = (p.roomTypes || []).map(c => en.label('roomTypes', c)).filter(Boolean).join(', ');
     const price = Number(ctx && ctx.price) || 0;
     const fit = [];
     if (price) fit.push(price >= (p.budgetMin || 0) && price <= (p.budgetMax != null ? p.budgetMax : 1e9) ? '<span class="ksn-tag ok">예산 맞음</span>' : '<span class="ksn-tag">예산 밖</span>');
-    if (it.km != null) fit.push(it.km <= Math.max(Number(ctx && ctx.radius) || 0, Number(p.radiusKm) || 0) ? '<span class="ksn-tag ok">반경 안</span>' : '<span class="ksn-tag">반경 밖</span>');
+    if (it.km != null) fit.push(it.km <= Math.max(Number(ctx && ctx.radius) || 0, it.reach || Number(p.radiusKm) || 0) ? '<span class="ksn-tag ok">반경 안</span>' : '<span class="ksn-tag">반경 밖</span>');
     if (p.moveIn) { const d = new Date(p.moveIn + 'T00:00:00'); const days = Math.ceil((d - new Date()) / 86400000); fit.push(`<span class="ksn-tag">${days <= 0 ? '입주 지금 바로' : '입주일 ' + days + '일 뒤'}</span>`); }
     const saved = isSavedSeeker(it.uid);
     det.innerHTML = `
@@ -308,14 +314,17 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
           ${fit.length ? `<div class="ksn-sec"><h4>내 방과 맞는지</h4><div class="ksn-tags">${fit.join('')}</div></div>` : ''}
           <div class="ksn-note">소개글·신분·흡연·반려동물은 본인만 보는 칸입니다. 채팅이 시작되면 이 분이 직접 보낼 수 있습니다. 연락은 채팅으로만 됩니다.</div>
         </div>
-        <div class="ksn-sent-line" id="ksnSentLine" ${isContacted(it.uid) ? '' : 'hidden'}>메시지를 보냈습니다. 채팅에서 이어서 대화할 수 있습니다.</div>
-        <div class="ksn-detail-foot"><button type="button" class="ksn-btn primary big" data-ksn-chat="${esc(it.uid)}" id="ksnChatBtn">${isContacted(it.uid) ? '채팅 열기' : '채팅으로 연락'}</button><button type="button" class="ksn-btn big ghost" data-ksn-detail="save" aria-pressed="${saved ? 'true' : 'false'}">${saved ? '저장됨' : '저장'}</button></div>
+        <div class="ksn-sent-line" id="ksnSentLine" ${isContacted(it.uid) ? '' : 'hidden'}>메시지를 보냈습니다. <a href="chat.html?id=${esc(it.uid + '_' + ((window.koausAuth && window.koausAuth.user && window.koausAuth.user.uid) || ''))}">채팅에서 보기 ›</a></div>
+        <div class="ksn-compose" id="ksnCompose">
+          <textarea id="ksnMsg" rows="2" maxlength="1000" placeholder="메시지를 적어 주십시오">${isContacted(it.uid) ? '' : '안녕하세요. 찾으시는 조건에 맞는 방이 있어 연락드립니다.'}</textarea>
+          <div class="ksn-compose-row"><button type="button" class="ksn-btn big ghost" data-ksn-detail="save" aria-pressed="${saved ? 'true' : 'false'}">${saved ? '저장됨' : '저장'}</button><button type="button" class="ksn-btn primary big" data-ksn-send="${esc(it.uid)}" id="ksnSendBtn">메시지 보내기</button></div>
+        </div>
       </div>`;
     det.classList.add('open');
     document.body.style.overflow = 'hidden';
     // 서버 확인(1회) — 다른 기기에서 보낸 메시지도 반영
     checkContacted(it.uid).then(on => {
-      try { if (detUid !== it.uid) return; const l = det.querySelector('#ksnSentLine'), b = det.querySelector('#ksnChatBtn'); if (l) l.hidden = !on; if (b) b.textContent = on ? '채팅 열기' : '채팅으로 연락'; } catch (_) {}
+      try { if (detUid !== it.uid) return; const l = det.querySelector('#ksnSentLine'), ta = det.querySelector('#ksnMsg'); if (l) l.hidden = !on; if (on && ta && /^안녕하세요\. 찾으시는 조건에/.test(ta.value)) ta.value = ''; } catch (_) {}
     });
   }
   let pageOvl = null;   // 집주인용 사람 목록 오버레이(아래 openPage)
@@ -328,6 +337,44 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
   }
   function refreshLists() { try { if (pg && pg.host) renderPage(); } catch (_) {} try { if (ovl && ovl.classList.contains('open')) render(); } catch (_) {} }
 
+  async function ensureChat(seekerUid, user) {
+    const it = (pg && pg.all || all || []).find(x => x.uid === seekerUid);
+    const chatId = seekerUid + '_' + user.uid;
+    const payload = {
+      postId: seekerUid, board: 'seeker', ownerUid: seekerUid, inquirerUid: user.uid, participants: [seekerUid, user.uid],
+      unreadFor: [], blockedBy: [], createdAt: serverTimestamp(),
+      postTitle: ('집 구해요 · ' + ((it && (it.p.nick || it.p.firstName)) || '')).slice(0, 200),
+    };
+    const oNick = String((it && (it.p.nick || it.p.firstName)) || '').trim().slice(0, 60); if (oNick) payload.ownerNick = oNick;
+    let iNick = ''; try { iNick = (localStorage.getItem('koaus-nickname') || user.displayName || '').trim().slice(0, 60); } catch (_) {} if (iNick) payload.inquirerNick = iNick;
+    try { await setDoc(doc(db, 'chats', chatId), payload); return chatId; }
+    catch (_) { const snap = await getDoc(doc(db, 'chats', chatId)); if (snap && snap.exists()) return chatId; throw new Error('deny'); }
+  }
+  async function sendFromProfile(seekerUid, text, btn) {
+    const user = window.koausAuth && window.koausAuth.user;
+    if (!user || busy) return;
+    if (seekerUid === user.uid) { toast('본인 프로필입니다.'); return; }
+    const msg = String(text || '').trim().slice(0, 1000);
+    if (!msg) { toast('메시지를 적어 주십시오.'); return; }
+    busy = true; if (btn) { btn.disabled = true; btn.textContent = '보내는 중…'; }
+    const done = () => { busy = false; try { if (btn) { btn.disabled = false; btn.textContent = '메시지 보내기'; } } catch (_) {} };
+    try {
+      const chatId = await ensureChat(seekerUid, user);
+      const b = writeBatch(db);
+      b.set(doc(collection(db, 'chats', chatId, 'messages')), { senderUid: user.uid, text: msg, createdAt: serverTimestamp() });
+      b.update(doc(db, 'chats', chatId), { lastMsg: msg.slice(0, 200), lastMsgAt: serverTimestamp(), lastSenderUid: user.uid, unreadFor: [seekerUid], hiddenFor: [] });
+      await b.commit();
+      markContacted(seekerUid, true);
+      done();
+      try { const ta = det.querySelector('#ksnMsg'); if (ta) ta.value = ''; const l = det.querySelector('#ksnSentLine'); if (l) l.hidden = false; } catch (_) {}
+      toast('메시지를 보냈습니다.');
+      refreshLists();
+    } catch (e) {
+      done();
+      const denied = e && (e.message === 'deny' || e.code === 'permission-denied' || /permission/i.test(e.message || ''));
+      alert(denied ? '메시지를 보낼 수 없습니다. 휴대폰(SMS) 본인 인증을 완료했는지, 차단된 상대가 아닌지 확인해 주십시오.' : '보내지 못했습니다. 잠시 후 다시 시도해 주십시오.');
+    }
+  }
   async function startChat(seekerUid, btn) {
     const user = window.koausAuth && window.koausAuth.user;
     if (!user || busy) return;
@@ -424,13 +471,22 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
     }
     return out.slice(0, 5);
   }
+  // 구하는 사람 쪽 '닿는 반경' — 가장 가까운 동네 기준. '브리즈번 전체'처럼 큰 지역은 그 지역 km(11-04)
+  function reachOf(x, center) {
+    let km = null, reach = Number(x.radiusKm) || 0;
+    (Array.isArray(x.suburbs) ? x.suburbs : []).forEach(s => {
+      if (typeof s.lat !== 'number' || typeof s.lng !== 'number') return;
+      const k = kmBetween(center, s);
+      if (km == null || k < km) { km = k; reach = Math.max(Number(x.radiusKm) || 0, Number(s.km) || 0); }
+    });
+    return { km, reach };
+  }
   async function fetchFor(center, meUid) {
     const snap = await getDocs(query(collection(db, 'seeker_profiles'), where('states', 'array-contains', center.state), where('visible', '==', true), orderBy('lastActiveAt', 'desc'), limit(20)));
     return snap.docs.filter(d => d.id !== meUid).map(d => {
       const x = d.data() || {};
-      let km = null;
-      (Array.isArray(x.suburbs) ? x.suburbs : []).forEach(s => { if (typeof s.lat === 'number' && typeof s.lng === 'number') { const k = kmBetween(center, s); if (km == null || k < km) km = k; } });
-      return { uid: d.id, p: x, km };
+      const r = reachOf(x, center);
+      return { uid: d.id, p: x, km: r.km, reach: r.reach };
     });
   }
 
@@ -439,7 +495,7 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
   function filtered() {
     const list = (pg.all || []).filter(it => {
       if (pg.gender !== 'all' && it.p.gender !== pg.gender) return false;
-      if (it.km == null || it.km > Math.max(pg.radius, Number(it.p.radiusKm) || 0)) return false;   // 양방향
+      if (it.km == null || it.km > Math.max(pg.radius, it.reach || 0)) return false;   // 양방향(큰 지역 km 포함)
       if (pg.budgetOnly && pg.price && !((it.p.budgetMin || 0) <= pg.price && pg.price <= (it.p.budgetMax != null ? it.p.budgetMax : 1e9))) return false;
       if (pg.savedOnly && !isSavedSeeker(it.uid)) return false;
       return true;
