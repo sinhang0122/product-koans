@@ -77,6 +77,8 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
       .ksn-row-main{display:flex;flex-direction:column;gap:3px;min-width:0}
       .ksn-row-nick{font-size:17px;font-weight:800;letter-spacing:-.01em}
       .ksn-row-meta{font-size:13px;color:var(--text-muted)}
+      .ksn-sent{display:inline-block;font-size:11px;font-weight:600;color:var(--text-muted);border:1px solid var(--border);border-radius:6px;padding:0 6px;margin-left:6px;vertical-align:middle}
+      .ksn-sent-line{font-size:13px;color:var(--text-muted);padding:0 16px 10px}
       .ksn-row-arr{color:var(--text-muted);font-size:18px;flex:0 0 auto}
       /* 프로필 페이지 */
       .ksn-detail{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9050;display:none;align-items:stretch;justify-content:center}
@@ -214,9 +216,26 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
     const saved = isSavedSeeker(it.uid);
     return `
       <button type="button" class="ksn-row" data-ksn-open="${esc(it.uid)}">
-        <span class="ksn-row-main"><span class="ksn-row-nick">${esc(nick)}</span><span class="ksn-row-meta">${esc(meta.join(' · ') || '조건 등록')}${saved ? ' · 저장됨' : ''}</span></span>
+        <span class="ksn-row-main"><span class="ksn-row-nick">${esc(nick)}${isContacted(it.uid) ? ' <span class="ksn-sent">메시지 보냄</span>' : ''}</span><span class="ksn-row-meta">${esc(meta.join(' · ') || '조건 등록')}${saved ? ' · 저장됨' : ''}</span></span>
         <span class="ksn-row-arr" aria-hidden="true">›</span>
       </button>`;
+  }
+  // 메시지 보낸 사람(11-04) — 기기 LS {내uid: {상대uid: 시각}} + 상세 열 때 chats/{상대_나} 존재 확인
+  const CONTACTED_KEY = 'koaus-contacted-seekers-v1';
+  function contactedMap() { try { const m = JSON.parse(localStorage.getItem(CONTACTED_KEY) || '{}'); const u = window.koausAuth && window.koausAuth.user; return (u && m && typeof m === 'object' && m[u.uid] && typeof m[u.uid] === 'object') ? m[u.uid] : {}; } catch (_) { return {}; } }
+  function isContacted(uid) { return !!contactedMap()[uid]; }
+  function markContacted(uid, on) {
+    try {
+      const u = window.koausAuth && window.koausAuth.user; if (!u) return;
+      const all = JSON.parse(localStorage.getItem(CONTACTED_KEY) || '{}') || {};
+      const mine = (all[u.uid] && typeof all[u.uid] === 'object') ? all[u.uid] : {};
+      if (on) mine[uid] = Date.now(); else delete mine[uid];
+      all[u.uid] = mine; localStorage.setItem(CONTACTED_KEY, JSON.stringify(all));
+    } catch (_) {}
+  }
+  async function checkContacted(uid) {
+    const u = window.koausAuth && window.koausAuth.user; if (!u || !db || uid === u.uid) return false;
+    try { const snap = await getDoc(doc(db, 'chats', uid + '_' + u.uid)); const on = !!(snap && snap.exists()); markContacted(uid, on); return on; } catch (_) { return isContacted(uid); }
   }
   // 저장(관심) — 기기 LS. 목록 필터 '저장한 분만'
   const SAVED_KEY = 'koaus-saved-seekers-v1';
@@ -289,10 +308,15 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
           ${fit.length ? `<div class="ksn-sec"><h4>내 방과 맞는지</h4><div class="ksn-tags">${fit.join('')}</div></div>` : ''}
           <div class="ksn-note">소개글·신분·흡연·반려동물은 본인만 보는 칸입니다. 채팅이 시작되면 이 분이 직접 보낼 수 있습니다. 연락은 채팅으로만 됩니다.</div>
         </div>
-        <div class="ksn-detail-foot"><button type="button" class="ksn-btn primary big" data-ksn-chat="${esc(it.uid)}">채팅으로 연락</button><button type="button" class="ksn-btn big ghost" data-ksn-detail="save" aria-pressed="${saved ? 'true' : 'false'}">${saved ? '저장됨' : '저장'}</button></div>
+        <div class="ksn-sent-line" id="ksnSentLine" ${isContacted(it.uid) ? '' : 'hidden'}>메시지를 보냈습니다. 채팅에서 이어서 대화할 수 있습니다.</div>
+        <div class="ksn-detail-foot"><button type="button" class="ksn-btn primary big" data-ksn-chat="${esc(it.uid)}" id="ksnChatBtn">${isContacted(it.uid) ? '채팅 열기' : '채팅으로 연락'}</button><button type="button" class="ksn-btn big ghost" data-ksn-detail="save" aria-pressed="${saved ? 'true' : 'false'}">${saved ? '저장됨' : '저장'}</button></div>
       </div>`;
     det.classList.add('open');
     document.body.style.overflow = 'hidden';
+    // 서버 확인(1회) — 다른 기기에서 보낸 메시지도 반영
+    checkContacted(it.uid).then(on => {
+      try { if (detUid !== it.uid) return; const l = det.querySelector('#ksnSentLine'), b = det.querySelector('#ksnChatBtn'); if (l) l.hidden = !on; if (b) b.textContent = on ? '채팅 열기' : '채팅으로 연락'; } catch (_) {}
+    });
   }
   let pageOvl = null;   // 집주인용 사람 목록 오버레이(아래 openPage)
   function closeDetail() { if (!det) return; det.classList.remove('open'); if (!(ovl && ovl.classList.contains('open')) && !(pageOvl && pageOvl.classList.contains('open'))) document.body.style.overflow = ''; }
@@ -329,12 +353,13 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
     const denyMsg = '채팅을 시작할 수 없습니다. 휴대폰(SMS) 본인 인증을 완료했는지 확인해 주십시오.';
     try {
       await setDoc(doc(db, 'chats', chatId), payload);
+      markContacted(seekerUid, true);
       done(); goRoom();
     } catch (_) {
       try {
         const snap = await getDoc(doc(db, 'chats', chatId));
         done();
-        if (snap && snap.exists()) goRoom(); else alert(denyMsg);
+        if (snap && snap.exists()) { markContacted(seekerUid, true); goRoom(); } else alert(denyMsg);
       } catch (__) { done(); alert(denyMsg); }
     }
   }
@@ -379,22 +404,10 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
   function loadCenter() { try { return JSON.parse(localStorage.getItem(CENTER_KEY) || 'null'); } catch (_) { return null; } }
   function saveCenter() { try { localStorage.setItem(CENTER_KEY, JSON.stringify({ center: pg.center, radius: pg.radius, sort: pg.sort, gender: pg.gender, price: pg.price })); } catch (_) {} }
 
+  // 동네 검색 — koaus-geo.js 공통(Maps JS, 한글·영문·우편번호). 11-04: REST(한글 language=ko) → 공통으로 통일
   async function geocodeSuburb(text) {
-    const url = 'https://maps.googleapis.com/maps/api/geocode/json?address=' + encodeURIComponent(text) + '&components=country:AU&language=ko&key=' + GEOCODE_KEY;
-    const res = await fetch(url); const j = await res.json();
-    const out = [];
-    (j.results || []).forEach(r => {
-      const comps = r.address_components || [];
-      const get = t => comps.find(x => (x.types || []).includes(t)) || null;
-      const loc = get('locality') || get('sublocality') || get('postal_town');
-      const st = get('administrative_area_level_1');
-      if (!loc || !st || !r.geometry || !r.geometry.location) return;
-      const code = String(st.short_name || '').toLowerCase();
-      if (!['qld', 'nsw', 'vic', 'wa', 'sa', 'tas', 'act', 'nt'].includes(code)) return;
-      out.push({ name: loc.long_name, state: code, lat: r.geometry.location.lat, lng: r.geometry.location.lng });
-    });
-    const seen = new Set();
-    return out.filter(o => { const k = o.name + '|' + o.state; if (seen.has(k)) return false; seen.add(k); return true; }).slice(0, 6);
+    if (!window.koausGeo) { console.warn('[seekers-nearby] koaus-geo.js 가 없습니다'); return []; }
+    try { return (await window.koausGeo.suburbs(text)).slice(0, 8); } catch (e) { console.warn('[seekers-nearby] geocode 실패', e); return []; }
   }
   async function loadMyPosts(uid) {
     const out = [];
@@ -521,15 +534,16 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
       sugTimer2 = setTimeout(async () => {
         try {
           const list = await geocodeSuburb(t); if (seq !== sugSeq2) return;
-          sug.innerHTML = list.length ? list.map((o, i) => `<li data-i="${i}">${esc(o.name)} ${esc(o.state.toUpperCase())}</li>`).join('') : '<li>찾지 못했습니다</li>';
+          sug.innerHTML = list.length ? list.map((o, i) => `<li data-i="${i}">${esc(o.name)} ${esc(o.state.toUpperCase())}${o.postcode ? ' ' + esc(o.postcode) : ''}</li>`).join('') : '<li>찾지 못했습니다</li>';
           sug.classList.add('on'); sug._list = list;
         } catch (_) {}
       }, 320);
     });
-    sug.addEventListener('click', e => {
+    sug.addEventListener('click', async e => {
       const li = e.target.closest('li[data-i]'); if (!li || !sug._list) return;
-      const o = sug._list[Number(li.dataset.i)];
-      draft.center = { name: o.name, state: o.state, lat: o.lat, lng: o.lng }; draft.price = 0;
+      let o = sug._list[Number(li.dataset.i)];
+      if (o.approx && window.koausGeo) { try { o = await window.koausGeo.refine(o); } catch (_) {} }   // 우편번호로 고른 동네 → 동네 좌표
+      draft.center = { name: o.name, state: o.state, lat: Number(o.lat), lng: Number(o.lng) }; draft.price = 0;
       q.value = o.name + ' ' + o.state.toUpperCase(); sug.classList.remove('on');
       box.querySelectorAll('[data-my]').forEach(b => b.setAttribute('aria-pressed', 'false'));
     });

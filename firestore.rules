@@ -1073,7 +1073,7 @@ service cloud.firestore {
         && (!('bathroom' in d) || d.bathroom in ['any', 'private'])
         && pReqStr(d, 'nick', 1, 30)
         && !d.nick.matches('(?s).*([0-9][ .-]?){6,}.*')
-        && (!('ageBand' in d) || d.ageBand in ['20e', '20m', '20l', '30e', '30l', '40p'])
+        && (!('ageBand' in d) || d.ageBand in ['20s', '30s', '40p', '20e', '20m', '20l', '30e', '30l'])   // 11-04: 20대/30대/40대 이상(새 코드) + 예전 세분 코드 유지
         && (!('gender' in d) || d.gender in ['female', 'male'])
         && d.visible is bool
         && (!('status' in d) || d.status in ['looking', 'found'])
@@ -1116,6 +1116,78 @@ service cloud.firestore {
       allow get:  if isSignedIn() && (request.auth.uid == uid || isAdmin());
       allow list: if isAdmin() && limitedList();
       allow create, update: if isVerifiedUser() && notSuspended() && request.auth.uid == uid && validSeekerPrivate();
+      allow delete: if isAdmin() || (isSignedIn() && request.auth.uid == uid);
+    }
+
+    // ── 일 구해요 프로필(job_profiles / job_private) — 2단계 ② (11-04). 집 구해요와 같은 틀:
+    //    공개 문서는 사장님(인증 회원)이 visible==true 만 읽고, 비공개(알림 이메일)는 본인만. 쓰기는 본인만.
+    function validJobProfile() {
+      let d = data();
+      return d.keys().hasOnly([
+               'industries', 'suburbs', 'states', 'radiusKm', 'workTypes', 'startDate', 'payMin', 'visa',
+               'licenses', 'hasCar', 'experience', 'ageBand', 'gender', 'homeSuburb', 'nick',
+               'visible', 'status', 'step', 'lastActiveAt', 'createdAt', 'updatedAt', 'pausedAt'
+             ])
+        && d.industries is list && d.industries.size() >= 1 && d.industries.size() <= 5
+        && d.industries.hasOnly(['food', 'factory', 'clean', 'office', 'beauty', 'drive', 'retail', 'other'])
+        && d.suburbs is list && d.suburbs.size() >= 1 && d.suburbs.size() <= 5
+        && validSuburb(d.suburbs[0])
+        && (d.suburbs.size() < 2 || validSuburb(d.suburbs[1]))
+        && (d.suburbs.size() < 3 || validSuburb(d.suburbs[2]))
+        && (d.suburbs.size() < 4 || validSuburb(d.suburbs[3]))
+        && (d.suburbs.size() < 5 || validSuburb(d.suburbs[4]))
+        && d.states is list && d.states.size() >= 1 && d.states.size() <= 5
+        && d.states.hasOnly(['qld', 'nsw', 'vic', 'wa', 'sa', 'tas', 'act', 'nt'])
+        && pOptInt(d, 'radiusKm', 1, 50)
+        && d.workTypes is list && d.workTypes.size() >= 1 && d.workTypes.size() <= 3
+        && d.workTypes.hasOnly(['casual', 'part', 'full'])
+        && d.startDate is string && d.startDate.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}')
+        && pOptInt(d, 'payMin', 0, 200)
+        && d.visa in ['whv1', 'whv2', 'whv3', 'student', 'pr', 'citizen', 'other']
+        && pOptList(d, 'licenses', 8)
+        && (!('licenses' in d) || d.licenses.hasOnly(['rsa', 'whitecard', 'forklift', 'barista', 'foodsafety', 'driver', 'firstaid', 'other']))
+        && pOptBool(d, 'hasCar')
+        && pOptStr(d, 'experience', 120)
+        && (!('experience' in d) || !d.experience.matches('(?s).*([0-9][ .-]?){6,}.*'))
+        && (!('experience' in d) || !d.experience.matches('(?s).*(https?://|www[.]|[.]com|[.]au|[.]kr).*'))
+        && (!('ageBand' in d) || d.ageBand in ['20s', '30s', '40p', '20e', '20m', '20l', '30e', '30l'])
+        && (!('gender' in d) || d.gender in ['female', 'male'])
+        && (!('homeSuburb' in d) || validSuburb(d.homeSuburb))
+        && pReqStr(d, 'nick', 1, 30)
+        && !d.nick.matches('(?s).*([0-9][ .-]?){6,}.*')
+        && d.visible is bool
+        && (!('status' in d) || d.status in ['looking', 'found'])
+        && pOptInt(d, 'step', 0, 9)
+        && d.lastActiveAt == request.time
+        && d.updatedAt == request.time;
+    }
+    match /job_profiles/{uid} {
+      allow get:  if isSignedIn() && (request.auth.uid == uid || resource.data.visible == true || isAdmin());
+      allow list: if limitedList() && (isAdmin() || (isVerifiedUser() && resource.data.visible == true));
+      allow create: if isVerifiedUser() && notSuspended() && request.auth.uid == uid
+                       && validJobProfile()
+                       && data().createdAt == request.time
+                       && !('pausedAt' in data());
+      allow update: if isVerifiedUser() && notSuspended() && request.auth.uid == uid
+                       && validJobProfile()
+                       && data().createdAt == resource.data.createdAt
+                       && (!('pausedAt' in data()) || data().pausedAt == resource.data.get('pausedAt', null));
+      allow delete: if isAdmin() || (isSignedIn() && request.auth.uid == uid);
+    }
+    function validJobPrivate() {
+      let d = data();
+      return d.keys().hasOnly(['alerts', 'updatedAt'])
+        && (!('alerts' in d) || (d.alerts is map
+                                 && d.alerts.keys().hasOnly(['enabled', 'mode', 'email'])
+                                 && pOptBool(d.alerts, 'enabled')
+                                 && (!('mode' in d.alerts) || d.alerts.mode in ['instant', 'threshold5', 'daily', 'off'])
+                                 && pOptStr(d.alerts, 'email', 120)))
+        && d.updatedAt == request.time;
+    }
+    match /job_private/{uid} {
+      allow get:  if isSignedIn() && (request.auth.uid == uid || isAdmin());
+      allow list: if isAdmin() && limitedList();
+      allow create, update: if isVerifiedUser() && notSuspended() && request.auth.uid == uid && validJobPrivate();
       allow delete: if isAdmin() || (isSignedIn() && request.auth.uid == uid);
     }
 

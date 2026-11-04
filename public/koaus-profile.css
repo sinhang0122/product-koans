@@ -1,0 +1,116 @@
+/* ═══════════════════════════════════════════════════════════════════
+   KoAus · 프로필 공통 스타일(11-04) — koaus-seeker-profile.js(집 구해요)·koaus-job-profile.js(일 구해요)가 같이 쓴다.
+   두 모듈의 injectCss() 가 이 파일을 <link> 로 한 번만 붙인다(페이지에 직접 넣지 않아도 됨). 클래스는 .ksp-* 그대로.
+   ═══════════════════════════════════════════════════════════════════ */
+.ksp-card{border:1px solid var(--border);border-radius:var(--r-lg);background:var(--bg-card);padding:16px;display:flex;flex-direction:column;gap:10px}
+.ksp-card-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.ksp-title{font-weight:700;font-size:15px}
+.ksp-sub{font-size:13px;color:var(--text-muted);line-height:1.55}
+.ksp-chip{display:inline-flex;align-items:center;gap:4px;font-size:12px;padding:3px 9px;border-radius:999px;border:1px solid var(--border);background:var(--bg-surface)}
+.ksp-chip.on{background:var(--accent);color:var(--accent-text);border-color:var(--accent)}
+.ksp-chip.warn{border-color:var(--gold-border);background:var(--gold-bg);color:var(--gold-light)}
+.ksp-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.ksp-summary{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:13.5px}
+.ksp-summary dt{color:var(--text-muted)}
+.ksp-summary dd{margin:0}
+.ksp-avatar{width:40px;height:40px;border-radius:50%;background:var(--accent);color:var(--accent-text);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:17px;flex:0 0 auto}
+.ksp-btn{appearance:none;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);border-radius:var(--r-md);padding:9px 14px;font-size:14px;cursor:pointer;font-family:inherit;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;line-height:1.3}
+a.ksp-btn:hover{text-decoration:none}
+.ksp-btn.primary{background:var(--accent);color:var(--accent-text);border-color:var(--accent)}
+.ksp-btn.small{padding:6px 10px;font-size:12.5px}
+.ksp-btn:disabled{opacity:.5;cursor:default}
+.ksp-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.ksp-banner{border:1px solid var(--gold-border);background:var(--gold-bg);border-radius:var(--r-md);padding:10px 12px;font-size:13px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+/* 활성화 스위치 — 아이폰식(10-20 사용자 확정): 끄면 왼쪽·회색, 켜면 오른쪽·초록 */
+.ksp-switch{display:inline-flex;align-items:center;gap:10px;font-size:14px;cursor:pointer;user-select:none}
+.ksp-switch input{flex:0 0 auto;width:50px;height:30px;margin:0;appearance:none;-webkit-appearance:none;background:#d6d6db;border-radius:999px;position:relative;cursor:pointer;transition:background .2s;outline:none}
+:root[data-theme=dark] .ksp-switch input{background:#3a3a3f}
+.ksp-switch input:checked{background:#34c759}
+.ksp-switch input::after{content:"";position:absolute;top:2px;left:2px;width:26px;height:26px;border-radius:50%;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,.25);transition:left .2s}
+.ksp-switch input:checked::after{left:22px}
+.ksp-switch input:focus-visible{box-shadow:0 0 0 3px rgba(52,199,89,.35)}
+.ksp-switch-txt{display:flex;flex-direction:column;gap:2px;min-width:0}
+.ksp-switch-txt small{font-size:12px;color:var(--text-muted)}
+/* 모달 */
+.ksp-ovl{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9000;display:none;align-items:flex-end;justify-content:center}
+.ksp-ovl.open{display:flex}
+.ksp-modal{width:100%;max-width:520px;background:var(--bg-base);border-radius:var(--r-xl) var(--r-xl) 0 0;max-height:92vh;display:flex;flex-direction:column;overflow:hidden}
+@media(min-width:640px){.ksp-ovl{align-items:center}.ksp-modal{border-radius:var(--r-xl)}}
+.ksp-mhead{display:flex;align-items:center;gap:10px;padding:14px 16px 10px;border-bottom:1px solid var(--border)}
+.ksp-mhead .ksp-step{font-size:12.5px;color:var(--text-muted);flex:1}
+.ksp-prog{height:3px;background:var(--border)}
+.ksp-ovl.done .ksp-prog{display:none}
+.ksp-mfoot:empty{display:none}
+.ksp-prog > i{display:block;height:100%;background:var(--accent);transition:width .2s}
+.ksp-mbody{padding:18px 16px;overflow:auto;flex:1;display:flex;flex-direction:column;gap:14px}
+.ksp-q{font-size:18px;font-weight:700;line-height:1.35}
+.ksp-help{font-size:12.5px;color:var(--text-muted);line-height:1.5}
+.ksp-label{font-size:13px;color:var(--text-secondary);display:flex;gap:6px;align-items:baseline}
+.ksp-label .req{font-size:12px;color:var(--text-muted)}
+.ksp-input,.ksp-textarea{width:100%;box-sizing:border-box;border:1px solid var(--border);background:var(--bg-input);color:var(--text-primary);border-radius:var(--r-md);padding:11px 12px;font-size:15px;font-family:inherit}
+.ksp-input:focus,.ksp-textarea:focus{outline:none;border-color:var(--border-focus)}
+.ksp-textarea{min-height:120px;resize:vertical}
+.ksp-chips{display:flex;flex-wrap:wrap;gap:8px}
+.ksp-opt{appearance:none;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);border-radius:999px;padding:8px 14px;font-size:14px;cursor:pointer;font-family:inherit}
+.ksp-opt[aria-pressed="true"]{background:var(--accent);color:var(--accent-text);border-color:var(--accent)}
+.ksp-mfoot{display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--border)}.ksp-mfoot .ksp-btn{flex:1 1 0}.ksp-mfoot .ksp-btn[data-ksp-nav=skip]{flex:0 0 auto}
+.ksp-mfoot .ksp-btn{flex:1}
+.ksp-sug{list-style:none;margin:0;padding:0;border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;display:none}
+.ksp-sug.show{display:block}
+.ksp-sug li{padding:10px 12px;font-size:14px;cursor:pointer;border-top:1px solid var(--border-subtle)}
+.ksp-sug li:first-child{border-top:0}
+.ksp-sug li:hover{background:var(--bg-elevated)}
+.ksp-sel{display:flex;flex-wrap:wrap;gap:6px}
+.ksp-sel .ksp-chip button{appearance:none;border:0;background:transparent;color:inherit;cursor:pointer;font-size:14px;line-height:1;padding:0 0 0 2px}
+.ksp-budget{display:flex;align-items:center;gap:8px}
+.ksp-budget .ksp-input{text-align:center}
+.ksp-err{font-size:12.5px;color:var(--red)}
+/* 끝 화면(저장·등록 완료) — 10-20 정돈: 왼쪽 정렬, 여백 넉넉히, 카드 → 활성화 스위치 → 버튼 세로 */
+.ksp-done{text-align:left;display:flex;flex-direction:column;gap:14px;align-items:stretch;padding:4px 0 2px}
+.ksp-done .ksp-q{font-size:22px;letter-spacing:-.02em}
+.ksp-done .ksp-help{font-size:14px;line-height:1.65}
+.ksp-done-actions{display:flex;flex-direction:column;gap:8px;margin-top:2px}
+.ksp-done-actions .ksp-btn{width:100%;padding:13px 14px;font-size:15px;font-weight:700;border-radius:12px}
+.ksp-done .ksp-prof-switch{margin:0}
+.ksp-preview{border:1px solid var(--border);border-radius:16px;background:var(--bg-base);padding:18px 18px 16px;display:flex;flex-direction:column;gap:12px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.ksp-preview-top{display:flex;align-items:center;gap:10px}
+.ksp-preview-name{font-weight:800;font-size:17px;letter-spacing:-.01em}
+.ksp-preview-meta{font-size:13px;color:var(--text-muted);margin-top:2px}
+.ksp-preview-sent{font-size:15.5px;line-height:1.6;word-break:keep-all}
+.ksp-preview .ksp-summary{font-size:14px;gap:6px 14px;padding-top:12px;border-top:1px solid var(--border-subtle)}
+.ksp-preview .ksp-summary dt{font-size:13px}
+/* 내 프로필(인스타 편집 화면 식, 10-20): 큰 닉네임 → 두 버튼 → 활성화 → 완성하기 카드 → 항목 행(편집) */
+.ksp-prof{gap:14px;padding:18px 16px}
+.ksp-prof-head{display:flex;flex-direction:column;gap:4px}
+.ksp-prof-nick{font-size:22px;font-weight:800;letter-spacing:-.02em;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.ksp-prof-nick .ksp-link{font-size:12.5px;font-weight:500}
+.ksp-prof-meta{font-size:13.5px;color:var(--text-secondary)}
+.ksp-prof-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ksp-prof-btns .ksp-btn{font-weight:700;background:var(--bg-elevated);border-color:transparent;padding:10px 12px}
+.ksp-prof-btns .ksp-btn.primary{background:var(--accent);color:var(--accent-text);border-color:var(--accent)}
+.ksp-prof-switch{justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg-surface)}
+.ksp-link{appearance:none;border:0;background:none;color:var(--accent);font-size:13px;cursor:pointer;font-family:inherit;padding:4px 0;text-decoration:none;white-space:nowrap}
+.ksp-link:hover{text-decoration:underline}
+.ksp-complete{border:1px solid var(--border);border-radius:var(--r-lg);padding:12px;display:flex;flex-direction:column;gap:8px;background:var(--bg-surface)}
+.ksp-complete-head{display:flex;justify-content:space-between;align-items:baseline;font-size:14px}
+.ksp-complete-head span{color:var(--text-muted);font-size:13px}
+.ksp-bar{height:6px;border-radius:999px;background:var(--border);overflow:hidden}
+.ksp-bar > i{display:block;height:100%;background:var(--accent);transition:width .25s}
+.ksp-todo{display:flex;gap:8px;overflow-x:auto;padding:2px 0 4px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.ksp-todo::-webkit-scrollbar{display:none}
+.ksp-todo-card{flex:0 0 136px;appearance:none;border:1px solid var(--border);background:var(--bg-card);color:var(--text-primary);border-radius:var(--r-md);padding:10px;text-align:left;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;gap:4px}
+.ksp-todo-card:hover{border-color:var(--border-focus)}
+.ksp-todo-pct{font-size:12px;color:var(--green);font-weight:700}
+.ksp-todo-label{font-size:13.5px;font-weight:700;line-height:1.3}
+.ksp-todo-add{font-size:12.5px;color:var(--accent);margin-top:2px}
+.ksp-sec{display:flex;flex-direction:column}
+.ksp-sec-title{font-size:12.5px;color:var(--text-muted);padding:6px 0 2px;display:flex;justify-content:space-between;gap:8px}
+.ksp-prow{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--border-subtle)}
+.ksp-sec-title + .ksp-prow{border-top:0}
+.ksp-prow-main{flex:1;min-width:0}
+.ksp-prow-k{font-size:12px;color:var(--text-muted);display:flex;gap:6px;align-items:baseline}
+.ksp-own{font-size:10.5px;border:1px solid var(--border);border-radius:6px;padding:0 5px;color:var(--text-muted)}
+.ksp-prow-v{font-size:14.5px;margin-top:2px;line-height:1.45;word-break:keep-all}
+.ksp-prow-v.empty{color:var(--text-muted)}
+.ksp-prof-foot{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;padding-top:4px;border-top:1px solid var(--border)}
+.ksp-btn.danger{color:var(--red);border-color:var(--border)}

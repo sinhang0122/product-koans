@@ -40,6 +40,8 @@
   <script src="koaus-enums.js" defer></script>
   <script type="module" src="koaus-role.js"></script>   <!-- 10-20: 환경설정 Living/Job 프로필 시트의 내 역할 박스 -->
   <script type="module" src="koaus-seeker-profile.js"></script>   <!-- 10-20: Living 프로필 시트 = 마이페이지 내 프로필과 같은 화면 -->
+  <script src="koaus-geo.js" defer></script>   <!-- 11-04: 동네 검색 공통(Maps JS, 한글·영문·우편번호) -->
+  <script type="module" src="koaus-job-profile.js"></script>   <!-- 11-04 ②: 일 구해요 프로필 + 사장님용 근처 목록 -->
   <script type="module" src="koaus-video-reg.js"></script>
 </head>
 <body>
@@ -485,6 +487,7 @@
           <div class="mp-sheet-head"><b>Job 프로필 설정</b><button type="button" class="mypage-photo-btn" data-mp-sheet-close>닫기</button></div>
           <div class="mp-sheet-body">
             <div id="mpJobRoles" class="mp-sheet-panel"></div>   <!-- koausRole.renderSwitcher — 내 역할 박스(Living·Job) -->
+            <div id="mpJobProfilePanel" class="mp-sheet-panel"></div>   <!-- 11-04: koaus-job-profile.js 가 koaus:job-profile-panel 이벤트로 Job 프로필 카드 렌더 -->
             <div class="mp-sec-title"><span>Job 프로필</span><span>경력·가능 시간대 등은 추후 추가</span></div>
             <div class="mp-prow" id="mpIntroWorkRow">
               <div class="mp-prow-main"><div class="mp-prow-k">문의 자기소개 <span class="mp-own">문자·오픈채팅용</span></div><div class="mp-prow-v empty" id="mpIntroWorkPreview">미등록</div></div>
@@ -1043,6 +1046,7 @@
         if (id === 'mpJobSheet') {
           syncPreview('mpIntroWork');
           try { if (window.koausRole && window.koausRole.renderSwitcher) window.koausRole.renderSwitcher(document.getElementById('mpJobRoles')); } catch (_) {}
+          try { document.dispatchEvent(new CustomEvent('koaus:job-profile-panel', { detail: { panel: document.getElementById('mpJobProfilePanel') } })); } catch (_) {}
         }
       }
       document.addEventListener('koaus:roles-changed', function () {

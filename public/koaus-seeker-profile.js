@@ -2,7 +2,7 @@
 //  KoAus · 집 구해요 프로필 (seeker_profiles) — 2단계 ① (2026-10)
 //  - 마이페이지 '내 프로필' 탭 전용 ES module (mypage.html 이 로드). 작성·수정은 여기서만.
 //  - 흐름: 탭 열림(koaus:mypage-profile) → seeker_profiles/{uid} 1회 getDoc → 카드 렌더
-//          → '만들기/수정' → 7단계 모달(한 화면 한 질문, 단계마다 기기 로컬 임시저장)
+//          → '만들기/수정' → 6단계 모달(한 화면 한 질문, 단계마다 기기 로컬 임시저장; 11-04 소개글 단계 제외)
 //          → 마지막 단계 '저장' 에서 setDoc 1회 (rules: 본인·hasOnly·길이캡·연락처 패턴 차단)
 //  - 사진 없음(사용자 확정 — 얼굴이 선택에 영향 주면 안 됨). 실명 없음 — 사이트 닉네임 스냅샷(nick). 아바타(이니셜 원)도 없음(10-20).
 //  - 내 프로필 화면(10-20, 인스타 편집 화면 식): 큰 닉네임(+닉네임 변경) → [프로필 편집][집주인이 보는 카드] → 활성화 스위치
@@ -41,7 +41,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
   const DRAFT_KEY = 'koaus-seeker-draft-v1';
   const HAS_KEY = 'koaus-seeker-has-v1';     // {uid, has} — accom/rent 진입 때 koaus-role.js 가 '프로필 없음' 판단에 먼저 씀(읽기 절약)
   const MAX_SUBURBS = 5;   // 10-19: 3 → 5 — 여러 동네(예: 선샤인코스트 + 골드코스트) 집주인에게 동시에 보이게. 8은 rules 표현식 한도 초과
-  const TOTAL_STEPS = 7;
+  const TOTAL_STEPS = 6;                 // 11-04: 7→6 — 소개글 단계 제외(소개글은 환경설정 '문의 자기소개'로만, 저장된 값은 숨김 유지)
   const QUICK_STEPS = 3;                 // 짧은 등록: 동네 · 예산 · 입주/기간 → 바로 등록(끝 화면에 미리보기·활성화·더 채우기)
   const RADII = [3, 5, 10, 20];          // 구하는 사람 쪽 반경(동네 기준 km) — 집주인 쪽 반경과 합쳐서(둘 중 큰 쪽) 매칭
   const LEGACY_KEYS = ['firstName', 'residency', 'smoker', 'pet', 'intro', 'alerts'];   // 10-18 이전 공개 문서에 있던 비공개 칸
@@ -72,123 +72,11 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
 
   // ── 스타일(자체 주입 — 사이트 변수 사용, 다크 테마 자동) ──
   function injectCss() {
+    // 11-04: 스타일은 koaus-profile.css 공통(일 구해요 모듈과 공유) — 없으면 <link> 한 번만
     if (document.getElementById('kspStyle')) return;
-    const st = document.createElement('style');
-    st.id = 'kspStyle';
-    st.textContent = `
-      .ksp-card{border:1px solid var(--border);border-radius:var(--r-lg);background:var(--bg-card);padding:16px;display:flex;flex-direction:column;gap:10px}
-      .ksp-card-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
-      .ksp-title{font-weight:700;font-size:15px}
-      .ksp-sub{font-size:13px;color:var(--text-muted);line-height:1.55}
-      .ksp-chip{display:inline-flex;align-items:center;gap:4px;font-size:12px;padding:3px 9px;border-radius:999px;border:1px solid var(--border);background:var(--bg-surface)}
-      .ksp-chip.on{background:var(--accent);color:var(--accent-text);border-color:var(--accent)}
-      .ksp-chip.warn{border-color:var(--gold-border);background:var(--gold-bg);color:var(--gold-light)}
-      .ksp-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
-      .ksp-summary{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:13.5px}
-      .ksp-summary dt{color:var(--text-muted)}
-      .ksp-summary dd{margin:0}
-      .ksp-avatar{width:40px;height:40px;border-radius:50%;background:var(--accent);color:var(--accent-text);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:17px;flex:0 0 auto}
-      .ksp-btn{appearance:none;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);border-radius:var(--r-md);padding:9px 14px;font-size:14px;cursor:pointer;font-family:inherit;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;line-height:1.3}
-      a.ksp-btn:hover{text-decoration:none}
-      .ksp-btn.primary{background:var(--accent);color:var(--accent-text);border-color:var(--accent)}
-      .ksp-btn.small{padding:6px 10px;font-size:12.5px}
-      .ksp-btn:disabled{opacity:.5;cursor:default}
-      .ksp-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
-      .ksp-banner{border:1px solid var(--gold-border);background:var(--gold-bg);border-radius:var(--r-md);padding:10px 12px;font-size:13px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
-      /* 활성화 스위치 — 아이폰식(10-20 사용자 확정): 끄면 왼쪽·회색, 켜면 오른쪽·초록 */
-      .ksp-switch{display:inline-flex;align-items:center;gap:10px;font-size:14px;cursor:pointer;user-select:none}
-      .ksp-switch input{flex:0 0 auto;width:50px;height:30px;margin:0;appearance:none;-webkit-appearance:none;background:#d6d6db;border-radius:999px;position:relative;cursor:pointer;transition:background .2s;outline:none}
-      :root[data-theme=dark] .ksp-switch input{background:#3a3a3f}
-      .ksp-switch input:checked{background:#34c759}
-      .ksp-switch input::after{content:"";position:absolute;top:2px;left:2px;width:26px;height:26px;border-radius:50%;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,.25);transition:left .2s}
-      .ksp-switch input:checked::after{left:22px}
-      .ksp-switch input:focus-visible{box-shadow:0 0 0 3px rgba(52,199,89,.35)}
-      .ksp-switch-txt{display:flex;flex-direction:column;gap:2px;min-width:0}
-      .ksp-switch-txt small{font-size:12px;color:var(--text-muted)}
-      /* 모달 */
-      .ksp-ovl{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9000;display:none;align-items:flex-end;justify-content:center}
-      .ksp-ovl.open{display:flex}
-      .ksp-modal{width:100%;max-width:520px;background:var(--bg-base);border-radius:var(--r-xl) var(--r-xl) 0 0;max-height:92vh;display:flex;flex-direction:column;overflow:hidden}
-      @media(min-width:640px){.ksp-ovl{align-items:center}.ksp-modal{border-radius:var(--r-xl)}}
-      .ksp-mhead{display:flex;align-items:center;gap:10px;padding:14px 16px 10px;border-bottom:1px solid var(--border)}
-      .ksp-mhead .ksp-step{font-size:12.5px;color:var(--text-muted);flex:1}
-      .ksp-prog{height:3px;background:var(--border)}
-      .ksp-ovl.done .ksp-prog{display:none}
-      .ksp-mfoot:empty{display:none}
-      .ksp-prog > i{display:block;height:100%;background:var(--accent);transition:width .2s}
-      .ksp-mbody{padding:18px 16px;overflow:auto;flex:1;display:flex;flex-direction:column;gap:14px}
-      .ksp-q{font-size:18px;font-weight:700;line-height:1.35}
-      .ksp-help{font-size:12.5px;color:var(--text-muted);line-height:1.5}
-      .ksp-label{font-size:13px;color:var(--text-secondary);display:flex;gap:6px;align-items:baseline}
-      .ksp-label .req{font-size:12px;color:var(--text-muted)}
-      .ksp-input,.ksp-textarea{width:100%;box-sizing:border-box;border:1px solid var(--border);background:var(--bg-input);color:var(--text-primary);border-radius:var(--r-md);padding:11px 12px;font-size:15px;font-family:inherit}
-      .ksp-input:focus,.ksp-textarea:focus{outline:none;border-color:var(--border-focus)}
-      .ksp-textarea{min-height:120px;resize:vertical}
-      .ksp-chips{display:flex;flex-wrap:wrap;gap:8px}
-      .ksp-opt{appearance:none;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);border-radius:999px;padding:8px 14px;font-size:14px;cursor:pointer;font-family:inherit}
-      .ksp-opt[aria-pressed="true"]{background:var(--accent);color:var(--accent-text);border-color:var(--accent)}
-      .ksp-mfoot{display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--border)}.ksp-mfoot .ksp-btn{flex:1 1 0}.ksp-mfoot .ksp-btn[data-ksp-nav=skip]{flex:0 0 auto}
-      .ksp-mfoot .ksp-btn{flex:1}
-      .ksp-sug{list-style:none;margin:0;padding:0;border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;display:none}
-      .ksp-sug.show{display:block}
-      .ksp-sug li{padding:10px 12px;font-size:14px;cursor:pointer;border-top:1px solid var(--border-subtle)}
-      .ksp-sug li:first-child{border-top:0}
-      .ksp-sug li:hover{background:var(--bg-elevated)}
-      .ksp-sel{display:flex;flex-wrap:wrap;gap:6px}
-      .ksp-sel .ksp-chip button{appearance:none;border:0;background:transparent;color:inherit;cursor:pointer;font-size:14px;line-height:1;padding:0 0 0 2px}
-      .ksp-budget{display:flex;align-items:center;gap:8px}
-      .ksp-budget .ksp-input{text-align:center}
-      .ksp-err{font-size:12.5px;color:var(--red)}
-      /* 끝 화면(저장·등록 완료) — 10-20 정돈: 왼쪽 정렬, 여백 넉넉히, 카드 → 활성화 스위치 → 버튼 세로 */
-      .ksp-done{text-align:left;display:flex;flex-direction:column;gap:14px;align-items:stretch;padding:4px 0 2px}
-      .ksp-done .ksp-q{font-size:22px;letter-spacing:-.02em}
-      .ksp-done .ksp-help{font-size:14px;line-height:1.65}
-      .ksp-done-actions{display:flex;flex-direction:column;gap:8px;margin-top:2px}
-      .ksp-done-actions .ksp-btn{width:100%;padding:13px 14px;font-size:15px;font-weight:700;border-radius:12px}
-      .ksp-done .ksp-prof-switch{margin:0}
-      .ksp-preview{border:1px solid var(--border);border-radius:16px;background:var(--bg-base);padding:18px 18px 16px;display:flex;flex-direction:column;gap:12px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
-      .ksp-preview-top{display:flex;align-items:center;gap:10px}
-      .ksp-preview-name{font-weight:800;font-size:17px;letter-spacing:-.01em}
-      .ksp-preview-meta{font-size:13px;color:var(--text-muted);margin-top:2px}
-      .ksp-preview-sent{font-size:15.5px;line-height:1.6;word-break:keep-all}
-      .ksp-preview .ksp-summary{font-size:14px;gap:6px 14px;padding-top:12px;border-top:1px solid var(--border-subtle)}
-      .ksp-preview .ksp-summary dt{font-size:13px}
-      /* 내 프로필(인스타 편집 화면 식, 10-20): 큰 닉네임 → 두 버튼 → 활성화 → 완성하기 카드 → 항목 행(편집) */
-      .ksp-prof{gap:14px;padding:18px 16px}
-      .ksp-prof-head{display:flex;flex-direction:column;gap:4px}
-      .ksp-prof-nick{font-size:22px;font-weight:800;letter-spacing:-.02em;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
-      .ksp-prof-nick .ksp-link{font-size:12.5px;font-weight:500}
-      .ksp-prof-meta{font-size:13.5px;color:var(--text-secondary)}
-      .ksp-prof-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-      .ksp-prof-btns .ksp-btn{font-weight:700;background:var(--bg-elevated);border-color:transparent;padding:10px 12px}
-      .ksp-prof-switch{justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg-surface)}
-      .ksp-link{appearance:none;border:0;background:none;color:var(--accent);font-size:13px;cursor:pointer;font-family:inherit;padding:4px 0;text-decoration:none;white-space:nowrap}
-      .ksp-link:hover{text-decoration:underline}
-      .ksp-complete{border:1px solid var(--border);border-radius:var(--r-lg);padding:12px;display:flex;flex-direction:column;gap:8px;background:var(--bg-surface)}
-      .ksp-complete-head{display:flex;justify-content:space-between;align-items:baseline;font-size:14px}
-      .ksp-complete-head span{color:var(--text-muted);font-size:13px}
-      .ksp-bar{height:6px;border-radius:999px;background:var(--border);overflow:hidden}
-      .ksp-bar > i{display:block;height:100%;background:var(--accent);transition:width .25s}
-      .ksp-todo{display:flex;gap:8px;overflow-x:auto;padding:2px 0 4px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
-      .ksp-todo::-webkit-scrollbar{display:none}
-      .ksp-todo-card{flex:0 0 136px;appearance:none;border:1px solid var(--border);background:var(--bg-card);color:var(--text-primary);border-radius:var(--r-md);padding:10px;text-align:left;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;gap:4px}
-      .ksp-todo-card:hover{border-color:var(--border-focus)}
-      .ksp-todo-pct{font-size:12px;color:var(--green);font-weight:700}
-      .ksp-todo-label{font-size:13.5px;font-weight:700;line-height:1.3}
-      .ksp-todo-add{font-size:12.5px;color:var(--accent);margin-top:2px}
-      .ksp-sec{display:flex;flex-direction:column}
-      .ksp-sec-title{font-size:12.5px;color:var(--text-muted);padding:6px 0 2px;display:flex;justify-content:space-between;gap:8px}
-      .ksp-prow{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--border-subtle)}
-      .ksp-sec-title + .ksp-prow{border-top:0}
-      .ksp-prow-main{flex:1;min-width:0}
-      .ksp-prow-k{font-size:12px;color:var(--text-muted);display:flex;gap:6px;align-items:baseline}
-      .ksp-own{font-size:10.5px;border:1px solid var(--border);border-radius:6px;padding:0 5px;color:var(--text-muted)}
-      .ksp-prow-v{font-size:14.5px;margin-top:2px;line-height:1.45;word-break:keep-all}
-      .ksp-prow-v.empty{color:var(--text-muted)}
-      .ksp-prof-foot{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;padding-top:4px;border-top:1px solid var(--border)}
-      .ksp-btn.danger{color:var(--red);border-color:var(--border)}
-    `;
-    document.head.appendChild(st);
+    const ln = document.createElement('link');
+    ln.id = 'kspStyle'; ln.rel = 'stylesheet'; ln.href = 'koaus-profile.css';
+    document.head.appendChild(ln);
   }
 
   // ── 데이터 읽기 ──
@@ -277,18 +165,18 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     if (loadedFor !== me.uid) panelEl.innerHTML = '<div class="post-empty">불러오는 중…</div>';
     await loadProfile(false);
     if (!panelEl) return;
-    panelEl.innerHTML = '<div id="kspRoles"></div>' + renderSeekerCard(profile);
+    panelEl.innerHTML = '<div id="kspRoles"></div>' + renderSeekerCard(profile) + '<div id="kjpHost"></div>';   // kjpHost: 일 구해요 카드 자리(koaus-job-profile.js)
     try { if (window.koausRole && window.koausRole.renderSwitcher) window.koausRole.renderSwitcher(document.getElementById('kspRoles')); } catch (_) {}
     wireCard();
     touchActive();
+    try { document.dispatchEvent(new CustomEvent('koaus:seeker-panel-rendered', { detail: { panel: panelEl, host: document.getElementById('kjpHost') } })); } catch (_) {}
   }
 
-  // ── 프로필 완성도(10-20, 틴더 식) — 필수 3단계(동네·예산·입주)=60%, 선택 4묶음 각 +10% ──
+  // ── 프로필 완성도(10-20, 틴더 식) — 필수 3단계(동네·예산·입주)=70%, 선택 3묶음 각 +10%(11-04: 소개글 제외) ──
   const TODO = [
     { label: '방 종류 · 욕실',        step: 4, done: (p) => !!((p.roomTypes && p.roomTypes.length) || p.bathroom === 'private') },
     { label: '나이대 · 성별',         step: 5, done: (p) => !!(p.ageBand && p.gender) },
     { label: '신분 · 흡연 · 반려동물', step: 5, done: (p, q) => !!(q && (q.residency || typeof q.smoker === 'boolean' || typeof q.pet === 'boolean')) },
-    { label: '소개글',                step: 6, done: (p, q) => !!(q && q.intro) },
   ];
   function completeness(p, q) {
     const todo = TODO.filter(t => !t.done(p, q));
@@ -323,9 +211,12 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     if (!p) {
       return `
         <div class="ksp-card" data-ksp-card="seeker">
-          <div class="ksp-card-head"><div class="ksp-title">집 구해요 프로필</div></div>
-          <div class="ksp-sub">원하는 동네·예산·입주일을 등록하면 그 근처에 방을 올린 집주인에게 내 조건이 보이고, 조건에 맞는 방이 올라오면 이메일로 알려드립니다. 연락은 채팅으로만 옵니다. 사진은 받지 않습니다.</div>
-          <div class="ksp-actions"><button type="button" class="ksp-btn primary" data-ksp="create">프로필 만들기</button></div>
+          <div class="ksp-title" style="font-size:17px;">프로필을 활성화해 더욱 편리하게 구해 보십시오.</div>
+          <div class="ksp-sub">동네·예산·입주일을 등록하면 그 근처에 방을 올린 집주인에게 내 조건이 보이고, 조건에 맞는 방이 올라오면 이메일로 알려드립니다. 연락은 채팅으로만 옵니다. 사진은 받지 않습니다.</div>
+          <div class="ksp-prof-btns" style="grid-template-columns:1fr;">
+            <button type="button" class="ksp-btn primary" data-ksp="create">Living 프로필 만들기</button>
+            <button type="button" class="ksp-btn" data-ksp="job">Job 프로필 만들기</button>
+          </div>
         </div>`;
     }
     const paused = !!p.pausedAt;
@@ -387,8 +278,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
         <div class="ksp-sec">
           <div class="ksp-sec-title"><span>본인만 보는 정보</span><span>집주인에게 보이지 않습니다</span></div>
           ${row('신분 · 흡연 · 반려동물', esc(privL), 5, true)}
-          ${row('소개글', esc(q.intro || ''), 6, true)}
-          ${row('새 매물 알림', esc(alertL) + (al && al.email ? ' · ' + esc(al.email) : ''), 7, true)}
+          ${row('새 매물 알림', esc(alertL) + (al && al.email ? ' · ' + esc(al.email) : ''), 6, true)}
         </div>
         <div class="ksp-prof-foot">
           <button type="button" class="ksp-btn" data-ksp="status">${found ? '다시 구합니다' : '구했습니다'}</button>
@@ -413,6 +303,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       const act = b.dataset.ksp;
       if (act === 'create' || act === 'edit') { openModal(act === 'edit' ? profile : null); return; }
       if (act === 'step') { openModal(profile, { startStep: Number(b.dataset.step) || 1 }); return; }
+      if (act === 'job') { if (window.koausJobProfile && window.koausJobProfile.openQuick) window.koausJobProfile.openQuick(); else toast('Job 프로필은 곧 열립니다.'); return; }
       if (act === 'preview') { openPreview(); return; }
       if (act === 'delete') { await deleteProfile(); return; }
       if (act === 'resume') { await patch({ visible: true, pausedAt: deleteField() }, '다시 켰습니다. 근처 집주인에게 다시 보입니다.'); return; }
@@ -466,7 +357,8 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
   }
 
   // ── 작성 모달 ──
-  let ovl = null, draft = null, step = 1, editing = false, quick = false, single = false;   // single: 항목 행 '편집'/완성하기 카드로 연 수정(그 단계에서 바로 저장)
+  let ovl = null, draft = null, step = 1, editing = false, quick = false, single = false;
+  let openedDay = '';   // 11-04: 모달을 연 날(YYYY-MM-DD) — 입주 희망일 최소값. 열어 둔 채 자정이 지나도 그대로, 닫았다 다시 열면 새 날짜   // single: 항목 행 '편집'/완성하기 카드로 연 수정(그 단계에서 바로 저장)
   const totalSteps = () => (quick ? QUICK_STEPS : TOTAL_STEPS);
 
   function blankDraft() {
@@ -546,6 +438,8 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       draft = saved ? saved.draft : blankDraft();
       step = saved ? Math.min(saved.step, totalSteps()) : 1;
     }
+    openedDay = todayStr();
+    if (!draft.moveIn || draft.moveIn < openedDay) draft.moveIn = openedDay;   // 임시저장에 남은 지난 날짜는 오늘로
     ovl.classList.toggle('quick', quick);
     ovl.classList.add('open');
     document.body.style.overflow = 'hidden';
@@ -580,8 +474,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     switch (step) {
       case 2: draft.budgetMin = v('kspBudgetMin') || ''; draft.budgetMax = v('kspBudgetMax') || ''; break;
       case 3: draft.moveIn = v('kspMoveIn') || draft.moveIn; break;
-      case 6: draft.intro = (v('kspIntro') || '').trim(); break;
-      case 7: draft.alertEmail = (v('kspAlertEmail') || '').trim(); break;
+      case 6: draft.alertEmail = (v('kspAlertEmail') || '').trim(); break;
     }
   }
 
@@ -653,7 +546,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
         html = `
           <div class="ksp-q">입주 희망일과 거주 기간</div>
           <div class="ksp-label">입주 희망일 <span class="req">(필수)</span></div>
-          <input class="ksp-input" id="kspMoveIn" type="date" value="${esc(draft.moveIn)}" min="${todayStr()}">
+          <input class="ksp-input" id="kspMoveIn" type="date" value="${esc(draft.moveIn < openedDay ? openedDay : draft.moveIn)}" min="${openedDay}">
           <div class="ksp-chips"><button type="button" class="ksp-opt" data-asap>최대한 빨리</button></div>
           <div class="ksp-label">거주 기간 <span class="req">(필수)</span></div>
           ${chipsHtml('stay', en.stays, draft.stay, false)}
@@ -666,7 +559,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
           <div class="ksp-q">어떤 방을 찾으십니까?</div>
           <div class="ksp-help">고르지 않으면 상관없음으로 저장됩니다.</div>
           <div class="ksp-label">방 종류 <span class="req">(선택, 여러 개)</span></div>
-          ${chipsHtml('roomTypes', en.roomTypes, draft.roomTypes, true)}
+          ${chipsHtml('roomTypes', [{ code: 'any', label: '상관없음' }].concat(en.roomTypes), draft.roomTypes.length ? draft.roomTypes : ['any'], true)}
           <div class="ksp-label">욕실 <span class="req">(선택)</span></div>
           ${chipsHtml('bathroom', [{ code: 'any', label: '상관없음' }, { code: 'private', label: '개인 욕실' }], draft.bathroom, false)}`;
         break;
@@ -688,14 +581,6 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
         break;
       case 6:
         html = `
-          <div class="ksp-q">나를 소개하는 글을 적어 두시겠습니까?</div>
-          <div class="ksp-help">카드에는 보이지 않고 본인만 봅니다. 집주인과 채팅이 시작되면 이 글을 보낼 수 있습니다. 생활 습관, 일하는 시간, 왜 이 동네인지 같은 내용이 도움이 됩니다. 전화번호·카톡 아이디·링크는 넣을 수 없습니다. 연락은 채팅으로 옵니다.</div>
-          <div class="ksp-label">자기소개 <span class="req">(선택, 300자)</span></div>
-          <textarea class="ksp-textarea" id="kspIntro" maxlength="300" placeholder="예: 평일 낮에 일하고 집에서는 조용히 지냅니다. 요리는 가끔 합니다.">${esc(draft.intro)}</textarea>
-          <div class="ksp-err" id="kspErr6"></div>`;
-        break;
-      case 7:
-        html = `
           <div class="ksp-q">공개와 알림을 정해 주십시오.</div>
           <div class="ksp-help">근처에 집을 올리시는 분께 간단한 내 조건이 이렇게 보입니다.</div>
           ${previewCardHtml()}
@@ -706,7 +591,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
           <div class="ksp-label">알림 받을 이메일 <span class="req">(필수)</span></div>
           <input class="ksp-input" id="kspAlertEmail" type="email" maxlength="120" value="${esc(draft.alertEmail)}" placeholder="로그인 이메일">
           <div class="ksp-help">로그인 이메일이 기본입니다. 자주 쓰는 다른 주소로 바꿀 수 있습니다. 이메일은 집주인에게 보이지 않습니다.</div>
-          <div class="ksp-err" id="kspErr7"></div>`;
+          <div class="ksp-err" id="kspErr6"></div>`;
         next = editing ? '저장' : '완료';
         break;
       default: {
@@ -756,7 +641,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     });
     foot.innerHTML = next ? `<button type="button" class="ksp-btn primary" id="kspNext">${next}</button>` : '';
     wireStep();
-    const first = body.querySelector('input:not([type=checkbox]),textarea');
+    const first = step === 2 ? body.querySelector('#kspBudgetMax') : body.querySelector('input:not([type=checkbox]),textarea');   // 11-04: 예산은 최대 칸부터(최소는 0 기본)
     if (first && step !== 3) { try { first.focus({ preventScroll: true }); } catch (_) {} }
   }
 
@@ -769,10 +654,16 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
         const name = group.dataset.chips, multi = group.dataset.multi === '1', val = b.dataset.val;
         if (multi) {
           const arr = Array.isArray(draft[name]) ? draft[name] : [];
+          if (val === 'any') {   // 11-04: '상관없음' = 전부 해제
+            draft[name] = [];
+            group.querySelectorAll('.ksp-opt').forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
+            return;
+          }
           const i = arr.indexOf(val);
           if (i === -1) arr.push(val); else arr.splice(i, 1);
           draft[name] = arr;
           b.setAttribute('aria-pressed', i === -1 ? 'true' : 'false');
+          const anyBtn = group.querySelector('.ksp-opt[data-val="any"]'); if (anyBtn) anyBtn.setAttribute('aria-pressed', arr.length ? 'false' : 'true');
         } else {
           if (name === 'smoker' || name === 'pet') draft[name] = (val === 'yes');
           else if (name === 'radiusKm') draft.radiusKm = Number(val);
@@ -784,10 +675,10 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     });
     const next = $('#kspNext', ovl);
     if (next) next.addEventListener('click', onNext);
-    if (step === 1) { wireSuburb(body); loadMapsJs(); }
+    if (step === 1) { wireSuburb(body); try { if (window.koausGeo) window.koausGeo.ready(); } catch (_) {} }
     if (step === 3) {
       const asap = $('[data-asap]', body);
-      if (asap) asap.addEventListener('click', () => { $('#kspMoveIn', body).value = todayStr(); });
+      if (asap) asap.addEventListener('click', () => { $('#kspMoveIn', body).value = openedDay || todayStr(); });
     }
   }
 
@@ -811,12 +702,15 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       }, 350);
     });
     q.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); const li = sug.querySelector('li[data-i]'); if (li) li.click(); } if (e.key === 'Escape') hide(); });
-    sug.addEventListener('click', e => {
+    sug.addEventListener('click', async e => {
       const li = e.target.closest('li[data-i]'); if (!li) return;
-      const h = sug.__hits && sug.__hits[Number(li.dataset.i)]; if (!h) return;
+      let h = sug.__hits && sug.__hits[Number(li.dataset.i)]; if (!h) return;
       if (draft.suburbs.length >= MAX_SUBURBS) { $('#kspErr1', body).textContent = '동네는 ' + MAX_SUBURBS + '곳까지 넣을 수 있습니다.'; hide(); return; }
-      if (!draft.suburbs.some(s => s.name === h.name && s.state === h.state)) draft.suburbs.push(h);
-      q.value = ''; hide(); $('#kspErr1', body).textContent = ''; renderSuburbSel();
+      q.value = ''; hide(); $('#kspErr1', body).textContent = '';
+      if (h.approx && window.koausGeo) { try { h = await window.koausGeo.refine(h); } catch (_) {} }   // 우편번호로 고른 동네 → 동네 좌표
+      const item = { name: h.name, state: h.state, postcode: h.postcode || '', lat: Number(h.lat), lng: Number(h.lng) };
+      if (!draft.suburbs.some(s => s.name === item.name && s.state === item.state)) draft.suburbs.push(item);
+      renderSuburbSel();
     });
     document.addEventListener('click', e => { if (!e.target.closest('#kspSuburbSug') && e.target !== q) hide(); });
   }
@@ -825,72 +719,10 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     sel.innerHTML = draft.suburbs.map((s, i) => `<span class="ksp-chip on">${suburbLabel(s)} <button type="button" data-rm="${i}" aria-label="빼기">×</button></span>`).join('');
     sel.querySelectorAll('[data-rm]').forEach(b => b.addEventListener('click', () => { draft.suburbs.splice(Number(b.dataset.rm), 1); renderSuburbSel(); }));
   }
-  // Maps JS 로드(지오코더만, 라이브러리 없음). accom/rent 처럼 페이지가 이미 로드 중이면 그 스크립트를 기다린다(이중 로드 금지).
-  let mapsReady = null;
-  function loadMapsJs() {
-    if (window.google && window.google.maps && window.google.maps.Geocoder) return Promise.resolve(true);
-    if (mapsReady) return mapsReady;
-    mapsReady = new Promise(resolve => {
-      const existing = document.querySelector('script[src*="maps.googleapis.com/maps/api/js"]');
-      const t0 = Date.now();
-      const poll = () => {
-        if (window.google && window.google.maps && window.google.maps.Geocoder) return resolve(true);
-        if (Date.now() - t0 > 10000) return resolve(false);
-        setTimeout(poll, 150);
-      };
-      if (existing) { poll(); return; }
-      const cb = '__kspMapsReady';
-      window[cb] = () => { resolve(true); };
-      const sc = document.createElement('script');
-      sc.src = 'https://maps.googleapis.com/maps/api/js?key=' + GEOCODE_KEY + '&loading=async&callback=' + cb;
-      sc.async = true;
-      sc.onerror = () => resolve(false);
-      document.head.appendChild(sc);
-      setTimeout(() => resolve(!!(window.google && window.google.maps && window.google.maps.Geocoder)), 10000);
-    });
-    return mapsReady;
-  }
-  function pickSuburbs(results) {
-    const out = [], seen = new Set();
-    (results || []).forEach(r => {
-      const comps = r.address_components || [];
-      const find = t => comps.find(c => (c.types || []).indexOf(t) !== -1);
-      const loc = find('locality') || find('sublocality') || find('postal_town');
-      const st = find('administrative_area_level_1');
-      const pc = find('postal_code');
-      const geo = r.geometry && r.geometry.location;
-      if (!loc || !st || !geo) return;
-      const state = String(st.short_name || '').toLowerCase();
-      if (!E().state(state)) return;
-      const key = loc.long_name + '|' + state;
-      if (seen.has(key)) return; seen.add(key);
-      const lat = typeof geo.lat === 'function' ? geo.lat() : Number(geo.lat);
-      const lng = typeof geo.lng === 'function' ? geo.lng() : Number(geo.lng);
-      out.push({ name: String(loc.long_name).slice(0, 60), state, postcode: pc ? String(pc.long_name).slice(0, 4) : '', lat: Number(lat), lng: Number(lng) });
-    });
-    return out.slice(0, 5);
-  }
+  // 동네 검색 — koaus-geo.js(window.koausGeo) 공통: Maps JS Geocoder, 한글·영문, 우편번호(4자리)는 속한 동네 전부(11-04)
   async function geocodeSuburb(text) {
-    // ① Maps JS Geocoder — 사이트 공개 키는 HTTP 리퍼러 제한이라 REST Geocoding 은 REQUEST_DENIED 가 난다(10-20 확인). accom/rent 의 geocode() 와 같은 경로.
-    try {
-      if (await loadMapsJs()) {
-        const results = await new Promise(resolve => {
-          try {
-            new window.google.maps.Geocoder().geocode({ address: text, componentRestrictions: { country: 'AU' }, region: 'au' }, (res, status) => resolve(status === 'OK' && Array.isArray(res) ? res : []));
-          } catch (_) { resolve([]); }
-        });
-        return pickSuburbs(results);
-      }
-    } catch (e) { console.warn('[seeker-profile] Maps JS geocode 실패, REST 폴백', e); }
-    // ② REST 폴백(키에 리퍼러 제한이 없을 때만 동작)
-    try {
-      const url = 'https://maps.googleapis.com/maps/api/geocode/json?address=' + encodeURIComponent(text) + '&components=country:AU&language=en&key=' + GEOCODE_KEY;
-      const res = await fetch(url);
-      const j = await res.json();
-      if (!j || !Array.isArray(j.results)) return [];
-      if (j.status && j.status !== 'OK' && j.status !== 'ZERO_RESULTS') console.warn('[seeker-profile] REST geocode:', j.status, j.error_message || '');
-      return pickSuburbs(j.results);
-    } catch (e) { console.warn('[seeker-profile] geocode 실패', e); return []; }
+    if (!window.koausGeo) { console.warn('[seeker-profile] koaus-geo.js 가 없습니다'); return []; }
+    try { return await window.koausGeo.suburbs(text); } catch (e) { console.warn('[seeker-profile] geocode 실패', e); return []; }
   }
 
   // ── 검증·다음 ──
@@ -909,14 +741,11 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       }
       case 3:
         if (!/^\d{4}-\d{2}-\d{2}$/.test(draft.moveIn)) return set('입주 희망일을 골라 주십시오.');
+        if (openedDay && draft.moveIn < openedDay) return set('입주 희망일은 오늘 이후로 골라 주십시오.');
         if (!draft.stay) return set('거주 기간을 골라 주십시오.');
         return set('');
       case 5: return set('');
       case 6:
-        if (draft.intro.length > 300) return set('300자 이내로 적어 주십시오.');
-        if (CONTACT_RE.test(draft.intro)) return set('전화번호·카톡 아이디·링크는 넣을 수 없습니다. 연락은 채팅으로 옵니다.');
-        return set('');
-      case 7:
         if (!draft.alertMode) return set('알림 방식을 골라 주십시오.');
         if (draft.alertMode !== 'off' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(draft.alertEmail)) return set('알림 받을 이메일을 확인해 주십시오.');
         if (draft.alertEmail.length > 120) return set('이메일이 너무 깁니다.');
@@ -966,7 +795,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       if (draft.residency) p.residency = draft.residency;
       if (typeof draft.smoker === 'boolean') p.smoker = draft.smoker;
       if (typeof draft.pet === 'boolean') p.pet = draft.pet;
-      if (draft.intro) p.intro = draft.intro.slice(0, 300);
+      if (priv && priv.intro) p.intro = String(priv.intro).slice(0, 300);   // 11-04: 소개글 입력 단계 없음 — 저장된 값만 그대로 유지(숨김)
     }
     return { pub: d, priv: p };
   }
@@ -986,7 +815,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     } catch (e) {
       console.warn('[seeker-profile] 저장 실패', e);
       const denied = e && (e.code === 'permission-denied' || /permission/i.test(e.message || ''));
-      const errEl = $('#kspErr' + step, ovl) || $('#kspErr7', ovl);
+      const errEl = $('#kspErr' + step, ovl) || $('#kspErr6', ovl);
       if (errEl) errEl.textContent = denied ? '저장할 수 없는 내용이 있습니다. 자기소개에 연락처·링크가 없는지, 휴대폰 인증이 되어 있는지 확인해 주십시오.' : '저장하지 못했습니다. 잠시 후 다시 시도해 주십시오.';
       if (btn) { btn.disabled = false; btn.textContent = (editing || single) ? '저장' : (quick ? '등록' : '완료'); }
     }

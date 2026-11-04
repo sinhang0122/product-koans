@@ -219,6 +219,16 @@ const seekerData = {
   visible: true, status: 'looking', step: 7,
   lastActiveAt: '2026-06-10T00:00:00Z', createdAt: '2026-06-10T00:00:00Z', updatedAt: '2026-06-10T00:00:00Z',
 };
+const jobData = {
+  industries: ['food', 'retail'],
+  suburbs: [{ name: 'Sunnybank', state: 'qld', postcode: '4109', lat: -27.57, lng: 153.06 }],
+  states: ['qld'], radiusKm: 5,
+  workTypes: ['casual'], startDate: '2026-11-10', payMin: 28, visa: 'whv2',
+  licenses: ['rsa'], hasCar: true, experience: '식당 주방 1년',
+  nick: '신행', ageBand: '20s', gender: 'male',
+  visible: true, status: 'looking', step: 3,
+  lastActiveAt: '2026-06-10T00:00:00Z', createdAt: '2026-06-10T00:00:00Z', updatedAt: '2026-06-10T00:00:00Z',
+};
 const seekerExisting = Object.assign({}, seekerData, { createdAt: '2026-06-01T00:00:00Z', lastActiveAt: '2026-06-01T00:00:00Z', updatedAt: '2026-06-01T00:00:00Z' });
 // 집 구해요 비공개 칸(seeker_private) — 본인만 (10-18 공개/비공개 분리)
 const seekerPrivData = {
@@ -907,6 +917,31 @@ const cases = [
        path: 'users/testuser123', method: 'update', uid: 'testuser123',
        data:         { email: 'e@e.com', nickname: 'n', roles: { living: 'seeker', job: 'employer' }, rolesAskedAt: '2026-06-10T00:00:00Z' },
        resourceData: { email: 'e@e.com', nickname: 'n' } }),
+  mk({ label: 'seeker_profiles ageBand 20s(11-04 새 코드) → 허용', expectation: 'ALLOW',
+       path: 'seeker_profiles/testuser123', method: 'create', uid: 'testuser123',
+       data: Object.assign({}, seekerData, { ageBand: '20s' }) }),
+  mk({ label: 'seeker_profiles ageBand 50p(없는 코드) → 거부', expectation: 'DENY',
+       path: 'seeker_profiles/testuser123', method: 'create', uid: 'testuser123',
+       data: Object.assign({}, seekerData, { ageBand: '50p' }) }),
+  // job_profiles / job_private — 일 구해요 프로필 (11-04 ②)
+  mk({ label: 'job_profiles 본인 create(인증 회원) → 허용', expectation: 'ALLOW',
+       path: 'job_profiles/testuser123', method: 'create', uid: 'testuser123', data: jobData }),
+  mk({ label: 'job_profiles 업종에 없는 값(mining) → 거부', expectation: 'DENY',
+       path: 'job_profiles/testuser123', method: 'create', uid: 'testuser123', data: Object.assign({}, jobData, { industries: ['mining'] }) }),
+  mk({ label: 'job_profiles 비자 없음 → 거부', expectation: 'DENY',
+       path: 'job_profiles/testuser123', method: 'create', uid: 'testuser123', data: (() => { const d = Object.assign({}, jobData); delete d.visa; return d; })() }),
+  mk({ label: 'job_profiles 경력에 전화번호 → 거부', expectation: 'DENY',
+       path: 'job_profiles/testuser123', method: 'create', uid: 'testuser123', data: Object.assign({}, jobData, { experience: '주방 1년 0412 345 678' }) }),
+  mk({ label: 'job_profiles 타인 글 create → 거부', expectation: 'DENY',
+       path: 'job_profiles/testuser123', method: 'create', uid: 'owner456xyz', data: jobData }),
+  mk({ label: 'job_profiles 인증 회원 get(visible) → 허용', expectation: 'ALLOW',
+       path: 'job_profiles/testuser123', method: 'get', uid: 'owner456xyz', resourceData: jobData }),
+  mk({ label: 'job_private 본인 create(alerts) → 허용', expectation: 'ALLOW',
+       path: 'job_private/testuser123', method: 'create', uid: 'testuser123',
+       data: { alerts: { enabled: true, mode: 'threshold5', email: 'e@e.com' }, updatedAt: '2026-06-10T00:00:00Z' } }),
+  mk({ label: 'job_private 타인 get → 거부', expectation: 'DENY',
+       path: 'job_private/testuser123', method: 'get', uid: 'owner456xyz',
+       resourceData: { alerts: { enabled: true, mode: 'threshold5', email: 'e@e.com' }, updatedAt: '2026-06-10T00:00:00Z' } }),
   mk({ label: 'users 본인 update roles{living:both, job:both} → 허용 (10-20 둘 다)', expectation: 'ALLOW',
        path: 'users/testuser123', method: 'update', uid: 'testuser123',
        data:         { email: 'e@e.com', nickname: 'n', roles: { living: 'both', job: 'both' }, rolesAskedAt: '2026-06-10T00:00:00Z' },

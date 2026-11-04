@@ -90,6 +90,34 @@
     sidebar.classList.add('koaus-menu-flat');
   }
 
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', build);
-  else build();
+  // ── 상단바 채팅 버튼(11-04 사용자 확정): [가] [달] [채팅] [햄버거] — 프로필(사람 아이콘) 버튼 자리에 채팅. 프로필은 햄버거 안에 있음.
+  //    기존 #topbarMyBtn 은 숨김만(삭제 아님). 배지는 chat.html·탭바가 기록하는 LS koaus-chat-unread {n}.
+  function chatButton() {
+    var my = document.getElementById('topbarMyBtn');
+    if (!my || document.getElementById('topbarChatBtn')) return;
+    if (currentFile() === 'chat.html') { my.style.display = 'none'; return; }
+    var a = document.createElement('a');
+    a.className = 'topbar-my-btn topbar-chat-btn';
+    a.id = 'topbarChatBtn'; a.href = 'chat.html'; a.setAttribute('aria-label', '채팅'); a.title = '채팅';
+    a.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-8.9 8.4 8.6 8.6 0 0 1-3.6-.8L3 21l1.9-4.6A8.3 8.3 0 0 1 3.6 11.5 8.4 8.4 0 0 1 12.1 3a8.4 8.4 0 0 1 8.9 8.5z"/></svg><span class="topbar-chat-badge" id="topbarChatBadge" hidden></span>';
+    my.parentNode.insertBefore(a, my);
+    my.style.display = 'none';
+    var st = document.createElement('style');
+    st.textContent = '.topbar-chat-btn{position:relative}.topbar-chat-badge{position:absolute;top:-5px;right:-5px;min-width:17px;height:17px;padding:0 4px;border-radius:999px;background:var(--red,#ef4444);color:#fff;font-size:10.5px;font-weight:800;line-height:17px;text-align:center}.topbar-chat-badge[hidden]{display:none}';
+    document.head.appendChild(st);
+    var paint = function () {
+      try {
+        var b = document.getElementById('topbarChatBadge'); if (!b) return;
+        var u = JSON.parse(localStorage.getItem('koaus-chat-unread') || 'null');
+        var n = u && Number(u.n) || 0;
+        b.textContent = n > 99 ? '99+' : String(n); b.hidden = !(n > 0);
+      } catch (_) {}
+    };
+    paint();
+    window.addEventListener('storage', function (e) { if (!e || e.key === 'koaus-chat-unread') paint(); });
+    setInterval(paint, 30000);
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { build(); chatButton(); });
+  else { build(); chatButton(); }
 })();

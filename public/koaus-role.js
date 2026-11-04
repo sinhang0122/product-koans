@@ -218,7 +218,8 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       return;
     }
     if (app === 'living' && code === 'owner') { toast('저장했습니다. 방을 올리면 근처에서 집 구하는 분들을 아래 "프로필" 탭에서 볼 수 있습니다.'); return; }
-    if (app === 'job') toast('저장했습니다. ' + (code === 'seeker' ? '일 구해요 프로필은 다음 업데이트에서 열립니다.' : '일 구하는 분들 보기는 다음 업데이트에서 열립니다.'));
+    if (app === 'job' && code === 'seeker') { if (window.koausJobProfile && window.koausJobProfile.openQuick) { window.koausJobProfile.openQuick(); return; } location.href = 'mypage.html?tab=profile'; return; }
+    if (app === 'job') toast('저장했습니다. 일자리를 올리면 근처에서 일 구하는 분들을 도구줄 "프로필" 버튼에서 볼 수 있습니다.');
   }
 
   // 0.5초 돌아가는 원 → fn. 로그인 창·휴대폰 인증 창이 닫히는 애니메이션과 겹치지 않을 만큼만.
@@ -234,8 +235,8 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     }, 500);
   }
   // 조건 프로필 보유 여부 LS 캐시(koaus-seeker-profile.js 가 읽을 때마다 기록) — true 면 서버 확인 생략
-  function seekerHasCached() {
-    try { const c = JSON.parse(localStorage.getItem('koaus-seeker-has-v1') || 'null'); return !!(c && me && c.uid === me.uid && c.has === true); } catch (_) { return false; }
+  function seekerHasCached(key) {
+    try { const c = JSON.parse(localStorage.getItem(key || 'koaus-seeker-has-v1') || 'null'); return !!(c && me && c.uid === me.uid && c.has === true); } catch (_) { return false; }
   }
 
   // 페이지 진입 시 — 로그인·인증 확정 뒤:
@@ -249,16 +250,24 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     if (!me || $('.ksp-ovl.open') || $('.auth-overlay.open')) return;
     if (!r || !r[app]) { withSpinner(() => ask(app, code => afterChoice(app, code))); return; }
     if (app === 'living' && has(r, 'living', 'seeker') && window.koausSeekerProfile && window.koausSeekerProfile.has) {
-      if (seekerHasCached()) return;
+      if (seekerHasCached('koaus-seeker-has-v1')) return;
       let h = true;
       try { h = await window.koausSeekerProfile.has(); } catch (_) { return; }
       if (h || !me || $('.ksp-ovl.open') || $('.auth-overlay.open')) return;
       withSpinner(() => window.koausSeekerProfile.openQuick());
     }
+    // (11-04) Job 도 같은 규칙: '일자리 찾기'인데 일 구해요 프로필이 없으면 짧은 등록 3단계
+    if (app === 'job' && has(r, 'job', 'seeker') && window.koausJobProfile && window.koausJobProfile.has) {
+      if (seekerHasCached('koaus-job-has-v1')) return;
+      let h = true;
+      try { h = await window.koausJobProfile.has(); } catch (_) { return; }
+      if (h || !me || $('.ksp-ovl.open') || $('.auth-overlay.open')) return;
+      withSpinner(() => window.koausJobProfile.openQuick());
+    }
   }
 
   // (10-20) 목록 도구줄: '올리기'에게는 상세 필터 대신 [프로필](근처에서 구하는 사람) 버튼, '찾기'에게는 상세 필터만, 둘 다면 둘 다.
-  //   비로그인·역할 없음 = 상세 필터만(기본). Job 의 프로필(일 구해요 카드)은 5묶음에서 — 지금은 준비 중 안내.
+  //   비로그인·역할 없음 = 상세 필터만(기본). Job 의 프로필 = koaus-job-profile.js openPage()(11-04).
   function applyToolbar() {
     const app = pageApp(); if (!app) return;
     const bar = document.querySelector('.accom-ctrl-actions'); if (!bar) return;
@@ -271,7 +280,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       pb.title = app === 'living' ? '근처에서 집 구하는 분' : '일자리 찾는 분';
       pb.addEventListener('click', () => {
         if (app === 'living') { if (window.koausSeekersNearby && window.koausSeekersNearby.openPage) window.koausSeekersNearby.openPage(); else location.href = 'accom.html?people=1'; }
-        else notice('일자리 찾는 분들의 프로필(일 구해요 카드)은 준비 중입니다. 열리면 이 버튼에서 바로 볼 수 있습니다. 지금은 글을 올리면 지원자가 채팅으로 연락합니다.');
+        else { if (window.koausJobProfile && window.koausJobProfile.openPage) window.koausJobProfile.openPage(); else notice('일 구하는 분들의 프로필을 불러오지 못했습니다. 페이지를 새로고침해 주십시오.'); }
       });
       const wb = document.getElementById('writeBtnOpen');
       if (wb) bar.insertBefore(pb, wb); else bar.appendChild(pb);

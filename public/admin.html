@@ -435,7 +435,12 @@
           · 카드 1: 히어로 배너 슬라이더 (이번 지시 1/3)
           · 카드 2~: 다음 지시(2/3, 3/3)에서 추가 예정
          ════════════════════════════════════════════════════════════════════ -->
-    <div class="max-w-7xl mx-auto p-6 bg-gray-50 grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 items-start">
+    <!-- 11-04: 홈 Living/Job 타일처럼 섹션 타일 → 누르면 그 카드만(긴 스크롤 대신). JS 가 카드 제목으로 자동 생성 -->
+    <div class="max-w-7xl mx-auto px-6 pt-6 bg-gray-50" id="adminTilesWrap">
+      <div class="admin-tiles" id="adminTiles" role="list"></div>
+      <div class="admin-tiles-bar" id="adminTilesBar" hidden><button type="button" class="page-back" id="adminTilesBack">← 관리 목록</button><span class="admin-tiles-cur" id="adminTilesCur"></span></div>
+    </div>
+    <div class="max-w-7xl mx-auto p-6 bg-gray-50 grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 items-start" id="adminCards">
 
       <!-- ══════════════════════════════════════════════════
            카드 1 · 배너 관리 — admin-ads.html 로 통합 이전
@@ -762,6 +767,33 @@
         </div>
       </section>
 
+      <!-- ══════════════════════════════════════════════════
+           카드 11 · 프로필 등록자 (11-04) — seeker_profiles(집 구해요) 누가 등록했는지. 이메일은 seeker_private(관리자만)에서 펼칠 때 1회
+           ══════════════════════════════════════════════════ -->
+      <section class="admin-card bg-white rounded-xl shadow-sm border border-gray-200 p-7">
+        <header class="flex items-center gap-3 pb-4 mb-6 border-b border-gray-200">
+          <div class="flex items-center justify-center w-10 h-10 bg-emerald-600 rounded-lg flex-shrink-0 text-white text-lg"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.8-3 3-4.6 5.5-4.6s4.7 1.6 5.5 4.6"/><circle cx="17" cy="9.5" r="2.5"/><path d="M15.5 14.4c2.6-.3 4.6 1 5.4 3.6"/></svg></div>
+          <div>
+            <h2 class="text-xl font-bold text-gray-900 leading-tight">프로필 등록자</h2>
+            <p class="text-xs text-gray-500 mt-0.5">집 구해요 프로필(seeker_profiles) 등록 현황 · 최근 등록 순 · 닉네임·동네·예산·입주·상태. 행을 펼치면 알림 이메일(관리자만)</p>
+          </div>
+          <span class="ml-auto inline-flex items-center px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold" id="dashSeekerCount">0명</span>
+        </header>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+          <select id="dashSeekerState" class="p-2 border border-gray-300 rounded-lg text-sm text-gray-900" style="width:auto;">
+            <option value="">전체 주</option><option value="qld">QLD</option><option value="nsw">NSW</option><option value="vic">VIC</option><option value="wa">WA</option><option value="sa">SA</option><option value="tas">TAS</option><option value="act">ACT</option><option value="nt">NT</option>
+          </select>
+          <select id="dashSeekerStatus" class="p-2 border border-gray-300 rounded-lg text-sm text-gray-900" style="width:auto;">
+            <option value="">전체 상태</option><option value="looking">구하는 중</option><option value="found">구했습니다</option><option value="paused">일시정지</option><option value="hidden">비공개</option>
+          </select>
+          <input id="dashSeekerSearch" type="text" placeholder="닉네임 · 동네 검색" class="p-2 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-400" style="flex:1;min-width:160px;" autocomplete="off" />
+        </div>
+        <div id="dashSeekerList" class="space-y-2" style="max-height:520px;overflow-y:auto;font-size:13px;">
+          <div class="text-sm text-gray-500 text-center py-8">로딩 중…</div>
+        </div>
+        <div style="margin-top:10px;text-align:center;"><button type="button" class="page-back" id="dashSeekerMore" hidden>더 보기</button></div>
+      </section>
+
     </div><!-- /.admin-dashboard -->
 
   </main>
@@ -827,7 +859,7 @@
     import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
     import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, setPersistence, indexedDBLocalPersistence, browserLocalPersistence, inMemoryPersistence } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
     import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app-check.js';
-    import { getFirestore, collection, addDoc, deleteDoc, doc, getDoc, getDocs, setDoc, updateDoc, onSnapshot, query, where, orderBy, limit, serverTimestamp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
+    import { getFirestore, collection, addDoc, deleteDoc, doc, getDoc, getDocs, setDoc, updateDoc, onSnapshot, query, where, orderBy, limit, startAfter, serverTimestamp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
     import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-functions.js';
 
     const firebaseConfig = {
@@ -1414,6 +1446,93 @@
         .sort((a, b) => Math.max.apply(null, b.map(_inqMs)) - Math.max.apply(null, a.map(_inqMs)));
       listEl.innerHTML = ordered.map(inquiryGroupHtml).join('');
     }
+    // ── 프로필 등록자(11-04) — seeker_profiles 최근 등록 순 20명씩, 펼치면 seeker_private 1회 get(이메일·신분·흡연·반려) ──
+    let _skAll = [], _skCursor = null, _skDone = false, _skLoading = false;
+    const _skTs = v => { try { const ms = v && typeof v.toMillis === 'function' ? v.toMillis() : 0; if (!ms) return '—'; const d = new Date(ms); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); } catch (_) { return '—'; } };
+    const _skAge = { '20s': '20대', '30s': '30대', '40p': '40대+', '20e': '20대', '20m': '20대', '20l': '20대', '30e': '30대', '30l': '30대' };
+    const _skStay = { ultra_short: '초단기', short: '단기', mid: '1~6달', long: '장기', tbd: '상의 후' };
+    function skState(p) { return p.status === 'found' ? 'found' : (p.pausedAt ? 'paused' : (p.visible === true ? 'looking' : 'hidden')); }
+    function skRowHtml(r) {
+      const p = r.p, st = skState(p);
+      const stL = { looking: '구하는 중', found: '구했습니다', paused: '일시정지', hidden: '비공개' }[st];
+      const stC = { looking: '#dcfce7;color:#166534', found: '#e5e7eb;color:#374151', paused: '#fef3c7;color:#92400e', hidden: '#fee2e2;color:#991b1b' }[st];
+      const subs = (p.suburbs || []).map(x => escHtmlAdmin(x.name) + ' ' + escHtmlAdmin(String(x.state || '').toUpperCase())).join(' · ');
+      const who = [p.gender === 'female' ? '여' : (p.gender === 'male' ? '남' : ''), _skAge[p.ageBand] || ''].filter(Boolean).join(' · ');
+      return '<details data-sk="' + escHtmlAdmin(r.id) + '" style="border:1px solid #e5e7eb;border-radius:8px;background:#fafafa;overflow:hidden;">'
+        + '<summary style="cursor:pointer;padding:10px 12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">'
+        +   '<b style="color:#111827;">' + escHtmlAdmin(p.nick || '회원') + '</b>'
+        +   (who ? '<span style="color:#6b7280;">' + escHtmlAdmin(who) + '</span>' : '')
+        +   '<span style="background:' + stC + ';border-radius:999px;padding:1px 9px;font-size:11.5px;font-weight:800;">' + stL + '</span>'
+        +   '<span style="margin-left:auto;color:#6b7280;font-size:12px;">등록 ' + _skTs(p.createdAt) + ' · 활동 ' + _skTs(p.lastActiveAt) + '</span>'
+        + '</summary>'
+        + '<div style="padding:4px 12px 12px;display:grid;grid-template-columns:auto 1fr;gap:4px 12px;color:#374151;">'
+        +   '<span style="color:#6b7280;">동네</span><span>' + (subs || '—') + (p.radiusKm ? ' (반경 ' + escHtmlAdmin(p.radiusKm) + 'km)' : '') + '</span>'
+        +   '<span style="color:#6b7280;">예산</span><span>주 $' + escHtmlAdmin(p.budgetMin != null ? p.budgetMin : 0) + (p.budgetMax != null ? ' ~ $' + escHtmlAdmin(p.budgetMax) : '') + '</span>'
+        +   '<span style="color:#6b7280;">입주</span><span>' + escHtmlAdmin(p.moveIn || '—') + (p.stay ? ' · ' + (_skStay[p.stay] || escHtmlAdmin(p.stay)) : '') + '</span>'
+        +   '<span style="color:#6b7280;">방</span><span>' + escHtmlAdmin((p.roomTypes || []).join(', ') || '상관없음') + (p.bathroom === 'private' ? ' · 개인 욕실' : '') + '</span>'
+        +   '<span style="color:#6b7280;">UID</span><span style="font-family:monospace;font-size:12px;">' + escHtmlAdmin(r.id) + '</span>'
+        +   '<span style="color:#6b7280;">본인만</span><span class="sk-priv" style="color:#6b7280;">펼치면 불러옵니다…</span>'
+        + '</div></details>';
+    }
+    function renderSeekerList() {
+      const listEl = document.getElementById('dashSeekerList'); if (!listEl) return;
+      const stSel = (document.getElementById('dashSeekerState') || {}).value || '';
+      const stat  = (document.getElementById('dashSeekerStatus') || {}).value || '';
+      const term  = ((document.getElementById('dashSeekerSearch') || {}).value || '').trim().toLowerCase();
+      let rows = _skAll;
+      if (stSel) rows = rows.filter(r => (r.p.states || []).indexOf(stSel) !== -1);
+      if (stat)  rows = rows.filter(r => skState(r.p) === stat);
+      if (term)  rows = rows.filter(r => String(r.p.nick || '').toLowerCase().indexOf(term) >= 0 || (r.p.suburbs || []).some(x => String(x.name || '').toLowerCase().indexOf(term) >= 0));
+      const cnt = document.getElementById('dashSeekerCount'); if (cnt) cnt.textContent = rows.length + '명' + (_skDone ? '' : '+');
+      listEl.innerHTML = rows.length ? rows.map(skRowHtml).join('') : '<div class="text-sm text-gray-500 text-center py-8">등록된 프로필이 없습니다.</div>';
+      const more = document.getElementById('dashSeekerMore'); if (more) more.hidden = _skDone;
+    }
+    async function loadSeekerProfiles(more) {
+      const listEl = document.getElementById('dashSeekerList'); if (!listEl || _skLoading) return;
+      _skLoading = true;
+      try {
+        const parts = [collection(db, 'seeker_profiles'), orderBy('createdAt', 'desc')];
+        if (more && _skCursor) parts.push(startAfter(_skCursor));
+        parts.push(limit(20));
+        const snap = await getDocs(query.apply(null, parts));
+        const rows = snap.docs.map(d => ({ id: d.id, p: d.data() }));
+        _skAll = more ? _skAll.concat(rows) : rows;
+        _skCursor = snap.docs.length ? snap.docs[snap.docs.length - 1] : _skCursor;
+        _skDone = snap.docs.length < 20;
+        renderSeekerList();
+      } catch (e) {
+        console.error('[admin] seeker_profiles 조회 실패', e);
+        listEl.innerHTML = '<div class="text-sm text-red-600 text-center py-8">조회 실패: ' + escHtmlAdmin(e.message || e) + '</div>';
+      } finally { _skLoading = false; }
+    }
+    function startSeekerProfiles() {
+      const listEl = document.getElementById('dashSeekerList'); if (!listEl) return;
+      ['dashSeekerState', 'dashSeekerStatus'].forEach(id => { const el = document.getElementById(id); if (el && !el._skBound) { el._skBound = true; el.addEventListener('change', renderSeekerList); } });
+      const se = document.getElementById('dashSeekerSearch'); if (se && !se._skBound) { se._skBound = true; se.addEventListener('input', renderSeekerList); }
+      const more = document.getElementById('dashSeekerMore'); if (more && !more._skBound) { more._skBound = true; more.addEventListener('click', () => loadSeekerProfiles(true)); }
+      if (!listEl._skBound) {
+        listEl._skBound = true;
+        listEl.addEventListener('toggle', async e => {
+          const det = e.target; if (!det || !det.open || !det.dataset || !det.dataset.sk) return;
+          const slot = det.querySelector('.sk-priv'); if (!slot || slot._loaded) return;
+          slot._loaded = true; slot.textContent = '불러오는 중…';
+          try {
+            const ps = await getDoc(doc(db, 'seeker_private', det.dataset.sk));
+            const q = ps.exists() ? ps.data() : {};
+            const al = q.alerts || {};
+            const bits = [
+              al.email ? '알림 이메일 ' + escHtmlAdmin(al.email) + ' (' + escHtmlAdmin(al.mode || '—') + (al.enabled === false ? ', 꺼짐' : '') + ')' : '알림 이메일 없음',
+              q.residency ? '신분 ' + escHtmlAdmin(q.residency) : '',
+              typeof q.smoker === 'boolean' ? (q.smoker ? '흡연' : '비흡연') : '',
+              typeof q.pet === 'boolean' ? (q.pet ? '반려동물 있음' : '반려동물 없음') : '',
+            ].filter(Boolean);
+            slot.innerHTML = bits.join(' · ');
+            slot.style.color = '#374151';
+          } catch (err) { slot.textContent = '불러오지 못했습니다: ' + (err.message || err); }
+        }, true);
+      }
+      loadSeekerProfiles(false);
+    }
     function startInquirySubscription() {
       const listEl   = document.getElementById('dashInquiryList');
       const searchEl = document.getElementById('dashInquirySearch');
@@ -1813,8 +1932,46 @@
         loadHiddenPosts();
         loadSanctions();
         startInquirySubscription();
+        startSeekerProfiles();
       }
     };
+  </script>
+  <!-- 11-04: 섹션 타일 네비게이션(홈 Living/Job 타일 규격) — 카드 제목으로 타일 생성, 누르면 그 카드만 보임, #sec-N 딥링크 -->
+  <script>
+    (function () {
+      var wrap = document.getElementById('adminTilesWrap'), tiles = document.getElementById('adminTiles'), bar = document.getElementById('adminTilesBar');
+      var cards = document.getElementById('adminCards');
+      if (!wrap || !tiles || !bar || !cards) return;
+      var st = document.createElement('style');
+      st.textContent = '.admin-tiles{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}@media(min-width:720px){.admin-tiles{grid-template-columns:repeat(3,1fr)}}@media(min-width:1100px){.admin-tiles{grid-template-columns:repeat(4,1fr)}}'
+        + '.admin-tile{position:relative;display:flex;flex-direction:column;padding:14px 16px;border-radius:16px;border:1.5px solid var(--text-primary,#111);background:var(--bg-base,#fff);color:var(--text-primary,#111);text-decoration:none;cursor:pointer;text-align:left;font-family:inherit;min-height:92px;transition:transform .14s ease,box-shadow .14s ease}'
+        + '.admin-tile:hover{transform:translateY(-2px);box-shadow:0 10px 26px rgba(0,0,0,.12)}.admin-tile:nth-child(odd){background:var(--text-primary,#111);color:var(--bg-base,#fff)}'
+        + '.admin-tile-kicker{font-size:12px;font-weight:700;opacity:.72;padding-right:40px}.admin-tile-title{margin-top:10px;font-size:19px;font-weight:900;line-height:1.1;letter-spacing:-.02em}'
+        + '.admin-tile-arrow{position:absolute;top:12px;right:12px;width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;border:1.5px solid currentColor;opacity:.9}'
+        + '.admin-tiles-bar{display:flex;align-items:center;gap:12px;padding:4px 0 0}.admin-tiles-cur{font-weight:800;font-size:15px}.admin-tiles[hidden],.admin-tiles-bar[hidden]{display:none}'
+        + 'body.admin-tiles-on #adminCards{display:block}body.admin-tiles-on #adminCards > .admin-card{display:none}body.admin-tiles-on #adminCards > .admin-card.admin-card-on{display:block;max-width:980px;margin:0 auto}'
+        + 'body.admin-tiles-on.admin-tiles-home #adminCards{display:none}';
+      document.head.appendChild(st);
+      var list = Array.prototype.slice.call(cards.querySelectorAll(':scope > .admin-card'));
+      var titleOf = function (c) { var h = c.querySelector('h2'); if (!h) return '섹션'; var t = (h.childNodes[0] && h.childNodes[0].textContent || h.textContent || '').trim(); return t || '섹션'; };
+      var subOf = function (c) { var p = c.querySelector('header p'); return p ? (p.textContent || '').trim().slice(0, 40) : ''; };
+      tiles.innerHTML = list.map(function (c, i) {
+        return '<button type="button" class="admin-tile" data-sec="' + (i + 1) + '" role="listitem"><span class="admin-tile-kicker">' + (i + 1) + '</span><span class="admin-tile-title">' + titleOf(c).replace(/</g, '&lt;') + '</span>'
+          + '<span class="admin-tile-arrow" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></span></button>';
+      }).join('');
+      document.body.classList.add('admin-tiles-on', 'admin-tiles-home');
+      function show(n) {
+        list.forEach(function (c, i) { c.classList.toggle('admin-card-on', i + 1 === n); });
+        var on = n >= 1 && n <= list.length;
+        document.body.classList.toggle('admin-tiles-home', !on);
+        tiles.hidden = on; bar.hidden = !on;
+        if (on) { document.getElementById('adminTilesCur').textContent = titleOf(list[n - 1]); try { history.replaceState(null, '', '#sec-' + n); } catch (_) {} window.scrollTo({ top: wrap.offsetTop - 8, behavior: 'smooth' }); }
+        else { try { history.replaceState(null, '', location.pathname + location.search); } catch (_) {} }
+      }
+      tiles.addEventListener('click', function (e) { var b = e.target.closest('[data-sec]'); if (b) show(Number(b.dataset.sec)); });
+      document.getElementById('adminTilesBack').addEventListener('click', function () { show(0); });
+      var m = /#sec-(\d+)/.exec(location.hash || ''); if (m) show(Number(m[1]));
+    })();
   </script>
 
   <!-- 관리자 대시보드 플로팅 버튼 — admin.html 진입 시 우하단 고정 -->

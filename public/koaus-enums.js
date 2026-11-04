@@ -50,14 +50,13 @@
     { code: 'tbd',         label: '상의 후 결정' },
   ];
 
+  // 11-04 사용자 확정: 20대 / 30대 / 40대 이상 세 칸. 예전 세분 코드(20e·20m·20l·30e·30l)는 저장된 값 표시용으로만 남김(선택지에 안 나옴, rules 는 계속 허용).
   const ageBands = [
-    { code: '20e', label: '20대 초반' },
-    { code: '20m', label: '20대 중반' },
-    { code: '20l', label: '20대 후반' },
-    { code: '30e', label: '30대 초반' },
-    { code: '30l', label: '30대 후반' },
+    { code: '20s', label: '20대' },
+    { code: '30s', label: '30대' },
     { code: '40p', label: '40대 이상' },
   ];
+  const ageBandsLegacy = { '20e': '20대', '20m': '20대', '20l': '20대', '30e': '30대', '30l': '30대' };
 
   // 성별 — accom 글의 gender(male/female/any)와 같은 코드. 프로필은 선택 입력, 여성 전용 방 필터에만 쓴다.
   const genders = [
@@ -102,7 +101,9 @@
   function codes(kind) { return list(kind).map(x => x.code); }
   function label(kind, code) {
     const hit = list(kind).find(x => x.code === code);
-    return hit ? hit.label : '';
+    if (hit) return hit.label;
+    if (kind === 'ageBands' && ageBandsLegacy[code]) return ageBandsLegacy[code];
+    return '';
   }
   function state(code) { return states.find(s => s.code === String(code || '').toLowerCase()) || null; }
   function isCode(kind, code) { return codes(kind).indexOf(code) !== -1; }
