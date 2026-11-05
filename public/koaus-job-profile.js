@@ -28,7 +28,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
   };
   const DRAFT_KEY = 'koaus-job-draft-v1';
   const HAS_KEY = 'koaus-job-has-v1';        // {uid, has} — jobs 진입 때 koaus-role.js 가 '프로필 없음' 판단에 먼저 씀
-  const MAX_SUBURBS = 5, MAX_INDUSTRIES = 5;
+  const MAX_SUBURBS = 4, MAX_INDUSTRIES = 5;   // 11-05: 동네 5 → 4 (규칙 표현식 한도 — 사는 곳·경력 검사가 더 있음)
   const TOTAL_STEPS = 6, QUICK_STEPS = 3;
   const RADII = [3, 5, 10, 20];
   const WORK_TYPES = [{ code: 'casual', label: '캐주얼' }, { code: 'part', label: '파트타임' }, { code: 'full', label: '풀타임' }];

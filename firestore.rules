@@ -1051,6 +1051,14 @@ service cloud.firestore {
         && s.state in ['qld', 'nsw', 'vic', 'wa', 'sa', 'tas', 'act', 'nt']
         && s.lat is number && s.lng is number;
     }
+    // 사는 곳(homeSuburb, 11-05): 동네 하나뿐이라 km·all·정규식 없이 가볍게 — 표현식 1,000개 한도 때문에(validSuburb 6번은 넘침)
+    function validHomeSuburb(s) {
+      return s is map
+        && s.keys().hasOnly(['name', 'state', 'postcode', 'lat', 'lng'])
+        && s.name is string && s.name.size() <= 60
+        && s.state in ['qld', 'nsw', 'vic', 'wa', 'sa', 'tas', 'act', 'nt']
+        && s.lat is number && s.lng is number;
+    }
     function validSeekerProfile() {
       let d = data();
       return d.keys().hasOnly([
@@ -1133,12 +1141,11 @@ service cloud.firestore {
              ])
         && d.industries is list && d.industries.size() >= 1 && d.industries.size() <= 5
         && d.industries.hasOnly(['food', 'farm', 'factory', 'trade', 'clean', 'office', 'beauty', 'drive', 'retail', 'other'])   // 11-04: farm·trade 추가
-        && d.suburbs is list && d.suburbs.size() >= 1 && d.suburbs.size() <= 5
+        && d.suburbs is list && d.suburbs.size() >= 1 && d.suburbs.size() <= 4   // 11-05: 5 → 4 (사는 곳 + 정규식 3개가 더 있어 표현식 1,000개 한도)
         && validSuburb(d.suburbs[0])
         && (d.suburbs.size() < 2 || validSuburb(d.suburbs[1]))
         && (d.suburbs.size() < 3 || validSuburb(d.suburbs[2]))
         && (d.suburbs.size() < 4 || validSuburb(d.suburbs[3]))
-        && (d.suburbs.size() < 5 || validSuburb(d.suburbs[4]))
         && d.states is list && d.states.size() >= 1 && d.states.size() <= 5
         && d.states.hasOnly(['qld', 'nsw', 'vic', 'wa', 'sa', 'tas', 'act', 'nt'])
         && pOptInt(d, 'radiusKm', 1, 50)
@@ -1151,11 +1158,10 @@ service cloud.firestore {
         && (!('licenses' in d) || d.licenses.hasOnly(['rsa', 'whitecard', 'forklift', 'barista', 'foodsafety', 'driver', 'firstaid', 'other']))
         && pOptBool(d, 'hasCar')
         && pOptStr(d, 'experience', 120)
-        && (!('experience' in d) || !d.experience.matches('(?s).*([0-9][ .-]?){6,}.*'))
-        && (!('experience' in d) || !d.experience.matches('(?s).*(https?://|www[.]|[.]com|[.]au|[.]kr).*'))
+        && (!('experience' in d) || !d.experience.matches('(?s).*(([0-9][ .-]?){6,}|https?://|www[.]|[.]com|[.]au|[.]kr).*'))   // 11-05: 정규식 2개 → 1개(표현식 한도)
         && (!('ageBand' in d) || d.ageBand in ['20s', '30s', '40p', '20e', '20m', '20l', '30e', '30l'])
         && (!('gender' in d) || d.gender in ['female', 'male'])
-        && (!('homeSuburb' in d) || validSuburb(d.homeSuburb))
+        && (!('homeSuburb' in d) || validHomeSuburb(d.homeSuburb))
         && pReqStr(d, 'nick', 1, 30)
         && !d.nick.matches('(?s).*([0-9][ .-]?){6,}.*')
         && d.visible is bool
@@ -1337,6 +1343,35 @@ service cloud.firestore {
                             );
         allow delete: if isAdmin();
       }
+    }
+
+    // ── 외부 한인 사이트 글(11-05) — 서버 함수(functions-ext)만 쓴다. 공개 읽기는 visible 만, 목록은 200건 이하 ──
+    //   ext_sources: 사이트 스위치. 관리자는 enabled·note·updatedAt 만 바꿀 수 있고(나머지 칸은 함수가 씀) 지우지는 못한다.
+    //   stats/public: 숫자판(홈·목록 상단). geo_cache: 함수 전용.
+    match /ext_posts/{id} {
+      allow get:  if resource.data.visible == true;
+      allow list: if request.query.limit <= 200 && resource.data.visible == true;
+      allow write: if false;
+    }
+    match /ext_private/{id} {
+      allow get: if isSignedIn();        // 전화번호(full 모드) — 로그인 회원만, 목록 조회 불가
+      allow list, write: if false;
+    }
+    match /ext_sources/{id} {
+      allow read: if true;
+      allow create: if isAdmin() && request.resource.data.keys().hasOnly(['enabled', 'mode', 'note', 'updatedAt']) && request.resource.data.enabled is bool
+                       && (!('mode' in request.resource.data) || request.resource.data.mode in ['full', 'link']);
+      allow update: if isAdmin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['enabled', 'mode', 'note', 'updatedAt'])
+                       && (!('enabled' in request.resource.data) || request.resource.data.enabled is bool)
+                       && (!('mode' in request.resource.data) || request.resource.data.mode in ['full', 'link']);
+      allow delete: if false;
+    }
+    match /stats/{id} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /geo_cache/{id} {
+      allow read, write: if false;
     }
 
     // ── 그 외 모든 경로: 기본 거부 ──

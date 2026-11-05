@@ -62,6 +62,7 @@
   <script type="module" src="auth-extra.js"></script>
   <script type="module" src="koaus-phone-auth.js"></script>
   <script type="module" src="koaus-role.js"></script>   <!-- 2026-10 ①-2: Living/Job 역할 선택(로그인 뒤 한 번) -->
+  <script type="module" src="koaus-ext.js"></script>   <!-- 11-05: 다른 한인 사이트 글(출처 표시·원문 이동) -->
   <script src="koaus-enums.js" defer></script>   <!-- 11-04: 값 목록(업종·비자 등) — 일 구해요 프로필 -->
   <script src="koaus-geo.js" defer></script>   <!-- 11-04: 동네 검색 공통(Maps JS, 한글·영문·우편번호) -->
   <script type="module" src="koaus-job-profile.js"></script>   <!-- 11-04 ②: 일 구해요 프로필 + 사장님용 근처 목록 -->
@@ -947,7 +948,7 @@
         pager.innerHTML = '';
         return;
       }
-      const sorted = all.slice().sort((a, b) => b.id - a.id);  // 최신 글 위로
+      const sorted = all.slice().sort((a, b) => (Number(b._ts) || Number(b.id) || 0) - (Number(a._ts) || Number(a.id) || 0));  // 최신 글 위로(11-05: 외부 글은 _ts 로 섞임)
       const totalPages = Math.max(1, Math.ceil(sorted.length / PER_PAGE));
       if (currentPage > totalPages) currentPage = totalPages;
       const start = (currentPage - 1) * PER_PAGE;
@@ -957,6 +958,7 @@
       //   · 카드 = 제목(좌+액션) / 시급(좌) · 위치(우, 서버브 단위) 2줄 고정.
       //   · 고용형태·비자자격·작성일·작성자 표시는 카드에서 제거 → 상세 모달에서 노출.
       list.innerHTML = pageItems.map((p, i) => {
+        if (p && p.ext && window.koausExt) return window.koausExt.cardHtml(p, { board: 'jobs' });   // 11-05: 외부 글은 출처 카드
         const saved = isSaved(p.id);
         const payText = p.payAmount
           ? `<span class="accom-price">$${escHtml(p.payAmount)}<small>/${escHtml(p.payUnit || '시간')}</small></span>`
@@ -993,6 +995,7 @@
       list.querySelectorAll('.accom-card[data-id]').forEach(row => row.addEventListener('click', e => {
         // 카드 내부의 bookmark/mini 액션 클릭은 카드 클릭으로 흡수 X
         if (e.target.closest('.bookmark-btn, .mini-btn')) return;
+        if (row.dataset.ext) { if (window.koausExt) window.koausExt.open(row.dataset.id); else window.location.href = row.dataset.out; return; }   // 11-05: 외부 글은 상세창(full) 또는 원문(link)
         openDetail(row.dataset.id);
       }));
       list.querySelectorAll('.mini-edit').forEach(btn => btn.addEventListener('click', e => {
@@ -1082,6 +1085,7 @@
     function openDetail(id) {
       const posts = loadPosts();
       let p = posts.find(x => String(x.id) === String(id));
+      if (p && p.ext) { if (window.koausExt) window.koausExt.go(p); return; }   // 11-05: 외부 글은 상세 대신 원문
       // 딥링크 getDoc 폴백 주입분(캐시 밖 글) — 메모리 렌더 소스 (LS 캐시 미조작)
       if (!p && window.__koausDeepLinkPost) {
         const dp = window.__koausDeepLinkPost;
@@ -2469,6 +2473,9 @@
         return { ...data, id: id || Date.now(), date, time, _fsDocId: d.id, _ts: ts };
       };
 
+      // 11-05: 외부 글이 들어오면 다시 합친다
+      window.__koausExt_jobs = (window.koausExt && window.koausExt.last && window.koausExt.last.jobs) || [];
+      window.addEventListener('koaus:ext-posts', e => { if (e.detail && e.detail.board === 'jobs') { window.__koausExt_jobs = e.detail.posts || []; _jobsMergeAndPersist(); } });
       function _jobsMergeAndPersist() {
         // Firestore 글: _fsDocId dedupe(실시간 우선) 후 최신순
         const seen = new Set();
@@ -2478,9 +2485,9 @@
         }).sort((a, b) => (b._ts || 0) - (a._ts || 0));
         let cur = []; try { cur = JSON.parse(localStorage.getItem(STORE) || '[]'); } catch {}
         // 1) 기존에 미러된 fs 항목 제거 / 2) 로컬 항목 중 Firestore에 같은 id로 들어온 것 제거 (중복 카드 방지)
-        const localOnly = cur.filter(p => !p._fsDocId);
+        const localOnly = cur.filter(p => !p._fsDocId && !p.ext);   // 11-05: 외부 글은 아래서 다시 넣는다
         const fsIds = new Set(fsAll.map(x => String(x.id)));
-        const merged = localOnly.filter(p => !fsIds.has(String(p.id))).concat(fsAll);
+        const merged = localOnly.filter(p => !fsIds.has(String(p.id))).concat(fsAll).concat(window.__koausExt_jobs || []);   // 11-05: 외부 한인 사이트 구인 글
         localStorage.setItem(STORE, JSON.stringify(merged));
         window.dispatchEvent(new Event('koaus-jobs-updated'));
       }

@@ -72,6 +72,7 @@
   <script type="module" src="koaus-seeker-profile.js"></script>   <!-- 2026-10 ①-2: "집 구해요" 선택 직후 짧은 조건 등록(3단계·건너뛰기) -->
   <script src="koaus-geo.js" defer></script>   <!-- 11-04: 동네 검색 공통(Maps JS, 한글·영문·우편번호) -->
   <script type="module" src="koaus-role.js"></script>   <!-- 2026-10 ①-2: Living/Job 역할 선택(로그인 뒤 한 번) -->
+  <script type="module" src="koaus-ext.js"></script>   <!-- 11-05: 다른 한인 사이트 글(출처 표시·원문 이동) -->
 </head>
 <body>
 
@@ -2023,6 +2024,7 @@
     // 2026-10 전국 통합 목록: 카드에는 가격 아래 '주(NSW·QLD…)'만 — 동네명은 숨김(CARD_SHOW_SUBURB=true 로 복귀). 주소 비공개 설정은 그대로.
     const CARD_SHOW_SUBURB = false;
     function buildAccomListCard(p) {
+      if (p && p.ext && window.koausExt) return window.koausExt.cardHtml(p, { board: 'accom' });   // 11-05: 외부 글은 출처 카드
       const saved  = isSaved(p.id);
       const isFind = (p.mode || 'offer') === 'find';
       const priceHtml = isFind
@@ -2072,7 +2074,7 @@
     function wireCardActions(root) {
       if (!root) return;
       root.querySelectorAll('.accom-card').forEach(card => {
-        card.addEventListener('click', () => openDetail(card.dataset.id));
+        card.addEventListener('click', () => { if (card.dataset.ext) { if (window.koausExt) window.koausExt.open(card.dataset.id); else window.location.href = card.dataset.out; return; } openDetail(card.dataset.id); });   // 11-05: 외부 글은 상세창(full) 또는 원문(link)
       });
       root.querySelectorAll('.bookmark-btn').forEach(btn => btn.addEventListener('click', e => {
         e.stopPropagation();
@@ -2170,6 +2172,7 @@
       const posts = loadPosts();
       const p = posts.find(x => String(x.id) === String(id));
       if (!p) return;
+      if (p.ext) { if (window.koausExt) window.koausExt.go(p); return; }   // 11-05: 외부 글은 상세 대신 원문
       currentDetailPost = p;
       window.currentDetailPost = p; // koaus-report.js 신고 스냅샷용 노출 (id 일치 시에만 소비)
 
@@ -3311,6 +3314,9 @@
       let _accomCursorDoc = null; // 다음 커서 (QueryDocumentSnapshot)
       window.koausOlderState = { hasMore: false, loading: false };
 
+      // 11-05: 외부 글이 들어오면 다시 합친다(처음 값은 이미 받아 둔 것)
+      window.__koausExt_accom = (window.koausExt && window.koausExt.last && window.koausExt.last.accom) || [];
+      window.addEventListener('koaus:ext-posts', e => { if (e.detail && e.detail.board === 'accom') { window.__koausExt_accom = e.detail.posts || []; _accomMergeAndPersist(); } });
       function _accomMergeAndPersist() {
         // admin 글 먼저(기존 표시 순서 유지) + 사용자 글은 _fsDocId dedupe(실시간 우선) 후 최신순
         const seen = new Set();
@@ -3318,7 +3324,8 @@
           if (!p || !p._fsDocId || seen.has(p._fsDocId)) return false;
           seen.add(p._fsDocId); return true;
         }).sort((a, b) => (b._ts || 0) - (a._ts || 0));
-        const merged = [..._accomAdminCache, ...users];
+        const ext = window.__koausExt_accom || [];   // 11-05: 외부 한인 사이트 글(koaus-ext.js) — 시간순으로 섞는다
+        const merged = [..._accomAdminCache, ...users.concat(ext).sort((a, b) => (b._ts || 0) - (a._ts || 0))];
         try { localStorage.setItem(STORE, JSON.stringify(merged)); } catch (_) {}
         try { window.dispatchEvent(new Event('koaus-services-updated')); } catch (_) {}
       }

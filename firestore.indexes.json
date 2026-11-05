@@ -207,6 +207,64 @@
           "order": "DESCENDING"
         }
       ]
+    },
+    {
+      "collectionGroup": "ext_posts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "board",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "visible",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "postedAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "ext_posts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "board",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "visible",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "postedAt",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "ext_posts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "board",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "state",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "visible",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "postedAt",
+          "order": "DESCENDING"
+        }
+      ]
     }
   ],
   "fieldOverrides": []

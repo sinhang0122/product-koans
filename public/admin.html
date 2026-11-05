@@ -794,6 +794,21 @@
         <div style="margin-top:10px;text-align:center;"><button type="button" class="page-back" id="dashSeekerMore" hidden>더 보기</button></div>
       </section>
 
+      <!-- 11-05: 외부 한인 사이트 글 — 스위치·지금 수집·숨김·전부 삭제 (functions-ext extAdmin · ext_sources) -->
+      <section class="admin-card bg-white rounded-xl shadow-sm border border-gray-200 p-7">
+        <header class="flex items-center gap-3 pb-4 mb-6 border-b border-gray-200">
+          <div class="flex items-center justify-center w-10 h-10 bg-amber-500 rounded-lg flex-shrink-0 text-white text-lg">↗</div>
+          <div>
+            <h2 class="text-xl font-bold text-gray-900 leading-tight">외부 사이트 글</h2>
+            <p class="text-xs text-gray-500 mt-0.5">다른 한인 사이트 글 수집(제목·가격·동네·날짜·원문 링크만). 사이트마다 켜고 끌 수 있고, 경고·삭제 요청이 오면 끄고 [전부 삭제]. 30분마다 새 글, 2시간마다 14일치 전체 확인(원문에서 지워지면 같이 숨김).</p>
+          </div>
+          <span class="ml-auto inline-flex items-center px-3 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-bold" id="extTotal">0건</span>
+        </header>
+        <div id="extSourceList" class="space-y-2" style="font-size:13px;"><div class="text-sm text-gray-500 text-center py-8">로딩 중…</div></div>
+        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;"><button type="button" class="page-back" id="extStatsBtn">숫자판 새로고침(stats/public)</button></div>
+        <div id="extLog" class="text-xs text-gray-500" style="margin-top:10px;white-space:pre-wrap;max-height:220px;overflow:auto;"></div>
+      </section>
+
     </div><!-- /.admin-dashboard -->
 
   </main>
@@ -1533,6 +1548,57 @@
       }
       loadSeekerProfiles(false);
     }
+
+    // ── 11-05 외부 사이트 글 — 스위치(ext_sources.enabled, 규칙: 관리자만 enabled·note·updatedAt) · 지금 수집/숨김/전부 삭제(extAdmin 호출) ──
+    const EXT_SITES = [['sunbrisbane', '선브리즈번'], ['qvision', '퀸비전'], ['melbhanul', '멜번하늘'], ['hojunara', '호주나라'], ['hojubada', '호주바다']];
+    const callExtAdmin = httpsCallable(fns, 'extAdmin');
+    async function renderExtSources() {
+      const box = document.getElementById('extSourceList'); if (!box) return;
+      const docs = {};
+      try { const snap = await getDocs(query(collection(db, 'ext_sources'), limit(20))); snap.forEach(d => { docs[d.id] = d.data() || {}; }); }
+      catch (e) { box.innerHTML = '<div class="text-sm text-red-600 text-center py-4">조회 실패: ' + escHtmlAdmin(e.message || e) + '</div>'; return; }
+      let total = 0;
+      box.innerHTML = EXT_SITES.map(([id, name]) => {
+        const d = docs[id] || {}; const c = d.counts || {}; const n = (c.accom || 0) + (c.rent || 0) + (c.jobs || 0); total += n;
+        const last = d.lastRunAt && d.lastRunAt.toDate ? d.lastRunAt.toDate().toLocaleString('ko-KR') : '아직 없음';
+        const note = [d.hasParser === false ? '파서 없음(등록만)' : '', d.lastError ? '오류: ' + d.lastError : '', d.todo || ''].filter(Boolean).join(' · ');
+        return '<div class="flex items-center gap-3 flex-wrap p-3 border border-gray-200 rounded-lg">'
+          + '<label class="inline-flex items-center gap-2 font-bold text-gray-900"><input type="checkbox" data-ext-toggle="' + id + '"' + (d.enabled ? ' checked' : '') + '> ' + escHtmlAdmin(name) + '</label>'
+          + '<select data-ext-mode="' + id + '" class="p-1 border border-gray-300 rounded text-xs text-gray-900" style="width:auto;" title="link: 제목·가격·동네만, 누르면 원문 / full: 본문·올린 시각·전화(로그인 회원만)까지"><option value="link"' + (d.mode !== 'full' ? ' selected' : '') + '>원문만(link)</option><option value="full"' + (d.mode === 'full' ? ' selected' : '') + '>본문·전화까지(full)</option></select>'
+          + '<span class="text-gray-700">쉐어 ' + (c.accom || 0) + ' · 렌트 ' + (c.rent || 0) + ' · 구인 ' + (c.jobs || 0) + '</span>'
+          + '<span class="text-gray-500 text-xs">마지막 수집 ' + escHtmlAdmin(last) + (note ? ' · ' + escHtmlAdmin(note) : '') + '</span>'
+          + '<span class="ml-auto flex gap-1 flex-wrap"><button type="button" class="page-back" data-ext-act="run" data-ext-id="' + id + '">지금 수집(14일)</button>'
+          + '<button type="button" class="page-back" data-ext-act="hide" data-ext-id="' + id + '">전부 숨김</button>'
+          + '<button type="button" class="page-back" data-ext-act="purge" data-ext-id="' + id + '" style="color:#b91c1c">전부 삭제</button></span></div>';
+      }).join('');
+      const tot = document.getElementById('extTotal'); if (tot) tot.textContent = total + '건';
+    }
+    function startExtSources() {
+      const box = document.getElementById('extSourceList'); if (!box || box._extBound) return; box._extBound = true;
+      const log = m => { const el = document.getElementById('extLog'); if (el) el.textContent = (new Date().toLocaleTimeString('ko-KR') + ' ' + m + '\n' + el.textContent).slice(0, 6000); };
+      box.addEventListener('change', async e => {
+        const md = e.target.closest('[data-ext-mode]');
+        if (md) { const id = md.dataset.extMode; md.disabled = true; try { await setDoc(doc(db, 'ext_sources', id), { mode: md.value, updatedAt: serverTimestamp() }, { merge: true }); log(id + ' 모드 → ' + md.value + (md.value === 'link' ? ' — 다음 수집 때 저장된 본문·전화를 지웁니다(화면은 즉시 원문 이동으로)' : ' — 다음 수집부터 본문·전화를 가져옵니다')); } catch (err) { log(id + ' 모드 저장 실패: ' + (err.message || err)); } md.disabled = false; return; }
+        const cb = e.target.closest('[data-ext-toggle]'); if (!cb) return;
+        const id = cb.dataset.extToggle; cb.disabled = true;
+        try { await setDoc(doc(db, 'ext_sources', id), { enabled: !!cb.checked, updatedAt: serverTimestamp() }, { merge: true }); log(id + (cb.checked ? ' 켬 — 다음 수집(30분 안)부터 가져옵니다. 바로 가져오려면 [지금 수집]' : ' 끔 — 화면에서 즉시 빠지고, 다음 수집 때 저장된 글도 숨깁니다')); }
+        catch (err) { log(id + ' 저장 실패: ' + (err.message || err)); cb.checked = !cb.checked; }
+        cb.disabled = false;
+      });
+      box.addEventListener('click', async e => {
+        const b = e.target.closest('[data-ext-act]'); if (!b) return;
+        const action = b.dataset.extAct, id = b.dataset.extId;
+        if (action === 'purge' && !confirm(id + ' 글을 전부 삭제합니다. 되돌릴 수 없습니다. 계속할까요?')) return;
+        if (action === 'hide' && !confirm(id + ' 글을 전부 숨깁니다(문서는 남아 다시 켜면 되살아남). 계속할까요?')) return;
+        b.disabled = true; log(id + ' ' + action + ' 시작…(수집은 1~3분 걸릴 수 있습니다)');
+        try { const r = await callExtAdmin({ action, source: id, pages: 20 }); log(id + ' ' + action + ' 끝: ' + JSON.stringify(r.data).slice(0, 800)); }
+        catch (err) { log(id + ' ' + action + ' 실패: ' + (err.message || err)); }
+        b.disabled = false; renderExtSources();
+      });
+      const sb = document.getElementById('extStatsBtn');
+      if (sb && !sb._extBound) { sb._extBound = true; sb.addEventListener('click', async () => { sb.disabled = true; try { const r = await callExtAdmin({ action: 'stats' }); log('숫자판: ' + JSON.stringify(r.data).slice(0, 800)); } catch (err) { log('숫자판 실패: ' + (err.message || err)); } sb.disabled = false; }); }
+      renderExtSources();
+    }
     function startInquirySubscription() {
       const listEl   = document.getElementById('dashInquiryList');
       const searchEl = document.getElementById('dashInquirySearch');
@@ -1933,6 +1999,7 @@
         loadSanctions();
         startInquirySubscription();
         startSeekerProfiles();
+        startExtSources();   // 11-05 외부 사이트 글
       }
     };
   </script>
