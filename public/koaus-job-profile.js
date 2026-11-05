@@ -29,7 +29,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
   const DRAFT_KEY = 'koaus-job-draft-v1';
   const HAS_KEY = 'koaus-job-has-v1';        // {uid, has} — jobs 진입 때 koaus-role.js 가 '프로필 없음' 판단에 먼저 씀
   const MAX_SUBURBS = 4, MAX_INDUSTRIES = 5;   // 11-05: 동네 5 → 4 (규칙 표현식 한도 — 사는 곳·경력 검사가 더 있음)
-  const TOTAL_STEPS = 6, QUICK_STEPS = 3;
+  const TOTAL_STEPS = 5, QUICK_STEPS = 3;   // 11-05: 사는 곳 단계 삭제. ①업종·동네 ②경력·차·근무형태·시작일 ③나이대·성별·비자(선택) ④자격증·시급 ⑤공개·알림
   const RADII = [3, 5, 10, 20];
   const WORK_TYPES = [{ code: 'casual', label: '캐주얼' }, { code: 'part', label: '파트타임' }, { code: 'full', label: '풀타임' }];
   const LICENSES = [
@@ -117,8 +117,8 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
 
   // ── 완성도 ──
   const TODO = [
-    { label: '자격증 · 시급 · 경력',    step: 4, done: p => !!((p.licenses && p.licenses.length) || p.payMin || p.experience) },
-    { label: '나이대 · 성별 · 사는 곳', step: 5, done: p => !!(p.ageBand && p.gender) },
+    { label: '나이대 · 성별 · 비자', step: 3, done: p => !!(p.ageBand && p.gender && p.visa) },
+    { label: '자격증 · 희망 시급',   step: 4, done: p => !!((p.licenses && p.licenses.length) || p.payMin) },
   ];
   const completeness = p => { const todo = TODO.filter(t => !t.done(p)); return { pct: 100 - todo.length * 10, todo }; };
 
@@ -157,8 +157,8 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
             <div class="ksp-prow-main"><div class="ksp-prow-k">${k}${own ? '<span class="ksp-own">본인만</span>' : ''}</div><div class="ksp-prow-v${v ? '' : ' empty'}">${v || '미등록'}</div></div>
             <button type="button" class="ksp-link" data-kjp="step" data-step="${step}">편집</button>
           </div>`;
-    const extra = [licL(p.licenses), p.payMin ? '시급 $' + esc(p.payMin) + ' 이상' : '', p.experience ? '경력: ' + esc(p.experience) : ''].filter(Boolean).join(' · ');
-    const who = [p.ageBand ? en.label('ageBands', p.ageBand) : '', p.gender ? en.label('genders', p.gender) : '', p.homeSuburb && p.homeSuburb.name ? '사는 곳 ' + esc(p.homeSuburb.name) : ''].filter(Boolean).join(' · ');
+    const extra = [licL(p.licenses), p.payMin ? '시급 $' + esc(p.payMin) + ' 이상' : ''].filter(Boolean).join(' · ');
+    const who = [p.ageBand ? en.label('ageBands', p.ageBand) : '', p.gender ? en.label('genders', p.gender) : '', p.visa ? en.label('visas', p.visa) : ''].filter(Boolean).join(' · ');
     return `
       <div class="ksp-card ksp-prof" data-kjp-card style="margin-top:12px;">
         <div class="ksp-prof-head">
@@ -182,14 +182,13 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
         <div class="ksp-sec">
           <div class="ksp-sec-title"><span>내 조건</span><span>사장님에게 보입니다</span></div>
           ${row('업종 · 동네', [esc(indL(p.industries, en)), subs ? subs + (p.radiusKm && (p.suburbs || []).some(x => !(x.km || x.all)) ? ' (반경 ' + esc(p.radiusKm) + 'km)' : '') : ''].filter(Boolean).join('<br>'), 1)}
-          ${row('근무 형태 · 시작 · 차', [esc(wtL(p.workTypes)), esc(startLabel(p.startDate)), typeof p.hasCar === 'boolean' ? (p.hasCar ? '차 있음' : '차 없음') : ''].filter(Boolean).join(' · '), 2)}
-          ${row('비자', esc(en.label('visas', p.visa)), 3)}
-          ${row('자격증 · 시급 · 경력', extra, 4)}
-          ${row('나이대 · 성별 · 사는 곳', who, 5)}
+          ${row('경력 · 차 · 근무 형태', [p.experience ? esc(p.experience) : '', typeof p.hasCar === 'boolean' ? (p.hasCar ? '차 있음' : '차 없음') : '', esc(wtL(p.workTypes)), esc(startLabel(p.startDate))].filter(Boolean).join(' · '), 2)}
+          ${row('나이대 · 성별 · 비자', who, 3)}
+          ${row('자격증 · 희망 시급', extra, 4)}
         </div>
         <div class="ksp-sec">
           <div class="ksp-sec-title"><span>본인만 보는 정보</span><span>사장님에게 보이지 않습니다</span></div>
-          ${row('새 일자리 알림', esc(alertL) + (al && al.email ? ' · ' + esc(al.email) : ''), 6, true)}
+          ${row('새 일자리 알림', esc(alertL) + (al && al.email ? ' · ' + esc(al.email) : ''), 5, true)}
         </div>
         <div class="ksp-prof-foot">
           <button type="button" class="ksp-btn" data-kjp="status">${found ? '다시 구합니다' : '구했습니다'}</button>
@@ -332,9 +331,9 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     const body = $('#kjpBody', ovl); if (!body) return;
     const v = id => { const el = $('#' + id, body); return el ? el.value : undefined; };
     switch (step) {
-      case 2: draft.startDate = v('kjpStart') || draft.startDate; break;
-      case 4: draft.payMin = (v('kjpPay') || '').trim(); draft.experience = (v('kjpExp') || '').trim(); break;
-      case 6: draft.alertEmail = (v('kjpAlertEmail') || '').trim(); break;
+      case 2: draft.startDate = v('kjpStart') || draft.startDate; draft.experience = (v('kjpExp') || '').trim(); break;
+      case 4: draft.payMin = (v('kjpPay') || '').trim(); break;
+      case 5: draft.alertEmail = (v('kjpAlertEmail') || '').trim(); break;
     }
   }
   const chipsHtml = (name, items, selected, multi) => `<div class="ksp-chips" data-chips="${name}" data-multi="${multi ? 1 : 0}">` +
@@ -388,55 +387,46 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
         break;
       case 2:
         html = `
-          <div class="ksp-q">근무 형태와 시작 가능일</div>
+          <div class="ksp-q">경력과 차, 근무 형태</div>
+          <div class="ksp-label">경력 한 줄 <span class="req">(필수, 120자)</span></div>
+          <input class="ksp-input" id="kjpExp" type="text" maxlength="120" placeholder="예: 식당 주방 1년, 농장 패킹 6개월 (없으면 '경력 없음')" value="${esc(draft.experience)}">
+          <div class="ksp-help">사장님이 가장 먼저 보는 칸입니다. 전화번호·카톡 아이디·링크는 넣을 수 없습니다(연락은 채팅으로).</div>
+          <div class="ksp-label">차 있음 <span class="req">(필수)</span></div>
+          ${boolChips('hasCar', draft.hasCar)}
           <div class="ksp-label">근무 형태 <span class="req">(필수, 여러 개)</span></div>
           ${chipsHtml('workTypes', WORK_TYPES, draft.workTypes, true)}
           <div class="ksp-label">시작 가능일 <span class="req">(필수)</span></div>
           <input class="ksp-input" id="kjpStart" type="date" value="${esc(draft.startDate < openedDay ? openedDay : draft.startDate)}" min="${openedDay}">
           <div class="ksp-chips"><button type="button" class="ksp-opt" data-asap>바로 가능</button></div>
-          <div class="ksp-label">차 있음 <span class="req">(필수)</span></div>
-          <div class="ksp-help">사장님이 가장 먼저 보는 항목 중 하나입니다.</div>
-          ${boolChips('hasCar', draft.hasCar)}
           <div class="ksp-err" id="kjpErr2"></div>`;
         break;
       case 3:
         html = `
-          <div class="ksp-q">비자를 알려 주십시오.</div>
-          <div class="ksp-help">사장님이 가장 먼저 보는 칸입니다. 만료일은 받지 않습니다.</div>
-          <div class="ksp-label">비자 <span class="req">(필수)</span></div>
+          <div class="ksp-q">본인에 대해 알려 주십시오. <span class="ksp-dim">(선택)</span></div>
+          <div class="ksp-help">사장님에게는 닉네임 <b>${esc(draft.nick || '')}</b>과 아래 항목만 보입니다(실명·사진 없음). 비워 두어도 됩니다.</div>
+          <div class="ksp-label">나이대 <span class="req">(선택)</span></div>
+          ${chipsHtml('ageBand', en.ageBands, draft.ageBand, false)}
+          <div class="ksp-label">성별 <span class="req">(선택)</span></div>
+          ${chipsHtml('gender', en.genders, draft.gender, false)}
+          <div class="ksp-label">비자 <span class="req">(선택)</span></div>
+          <div class="ksp-help">만료일은 받지 않습니다.</div>
           ${chipsHtml('visa', en.visas, draft.visa, false)}
-          ${quick ? '<div class="ksp-help">등록하면 바로 프로필이 만들어집니다. 자격증·경력·나이대 같은 나머지는 추후 프로필 설정에서 변경·추가할 수 있습니다.</div>' : ''}
+          ${quick ? '<div class="ksp-help">등록하면 바로 프로필이 만들어집니다. 자격증·희망 시급은 추후 프로필 설정에서 추가할 수 있습니다.</div>' : ''}
           <div class="ksp-err" id="kjpErr3"></div>`;
         if (quick) next = '등록';
         break;
       case 4:
         html = `
-          <div class="ksp-q">자격증 · 희망 시급 · 경력</div>
+          <div class="ksp-q">자격증 · 희망 시급</div>
           <div class="ksp-help">고르지 않으면 "없음"으로 저장됩니다.</div>
           <div class="ksp-label">자격증 <span class="req">(선택, 여러 개)</span></div>
           ${chipsHtml('licenses', LICENSES, draft.licenses, true)}
           <div class="ksp-label">희망 시급(AUD) <span class="req">(선택, 최소)</span></div>
           <input class="ksp-input" id="kjpPay" type="number" inputmode="numeric" min="0" max="200" step="1" placeholder="예: 28" value="${esc(draft.payMin)}">
           <div class="ksp-help">비워 두면 "상관없음"으로 저장됩니다.</div>
-          <div class="ksp-label">경력 한 줄 <span class="req">(선택, 120자)</span></div>
-          <input class="ksp-input" id="kjpExp" type="text" maxlength="120" placeholder="예: 식당 주방 1년, 농장 패킹 6개월" value="${esc(draft.experience)}">
-          <div class="ksp-help">전화번호·카톡 아이디·링크는 넣을 수 없습니다. 연락은 채팅으로 옵니다.</div>
           <div class="ksp-err" id="kjpErr4"></div>`;
         break;
       case 5:
-        html = `
-          <div class="ksp-q">본인에 대해 알려 주십시오.</div>
-          <div class="ksp-help">사장님에게는 닉네임 <b>${esc(draft.nick || '')}</b>과 아래 항목만 보입니다(실명·사진 없음).</div>
-          <div class="ksp-label">나이대 <span class="req">(선택)</span></div>
-          ${chipsHtml('ageBand', en.ageBands, draft.ageBand, false)}
-          <div class="ksp-label">성별 <span class="req">(선택)</span></div>
-          ${chipsHtml('gender', en.genders, draft.gender, false)}
-          <div class="ksp-label">사는 곳 <span class="req">(선택, 동네만)</span></div>
-          <input class="ksp-input" id="kjpHomeQ" type="text" placeholder="예: Sunnybank, 4109" autocomplete="off" inputmode="search" value="${draft.homeSuburb ? esc(draft.homeSuburb.name + ' ' + String(draft.homeSuburb.state || '').toUpperCase()) : ''}">
-          <ul class="ksp-sug" id="kjpHomeSug"></ul>
-          <div class="ksp-err" id="kjpErr5"></div>`;
-        break;
-      case 6:
         html = `
           <div class="ksp-q">공개와 알림을 정해 주십시오.</div>
           <div class="ksp-help">근처에 일자리를 올리시는 분께 내 조건이 이렇게 보입니다.</div>
@@ -446,7 +436,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
           ${chipsHtml('alertMode', [{ code: 'instant', label: '새 일자리마다' }, { code: 'threshold5', label: '5건 이상 모이면' }, { code: 'daily', label: '하루 한 번' }, { code: 'off', label: '받지 않음' }], draft.alertMode, false)}
           <div class="ksp-label">알림 받을 이메일 <span class="req">(필수)</span></div>
           <input class="ksp-input" id="kjpAlertEmail" type="email" maxlength="120" value="${esc(draft.alertEmail)}" placeholder="로그인 이메일">
-          <div class="ksp-err" id="kjpErr6"></div>`;
+          <div class="ksp-err" id="kjpErr5"></div>`;
         next = editing ? '저장' : '완료';
         break;
       default: {
@@ -496,7 +486,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
         } else {
           if (name === 'hasCar') draft.hasCar = (val === 'yes');
           else if (name === 'radiusKm') draft.radiusKm = Number(val);
-          else draft[name] = (draft[name] === val && name !== 'alertMode' && name !== 'visa') ? '' : val;
+          else draft[name] = (draft[name] === val && name !== 'alertMode') ? '' : val;   // 11-05: 비자도 선택이라 다시 누르면 해제
           group.querySelectorAll('.ksp-opt').forEach(x => x.setAttribute('aria-pressed', x === b && (draft[name] !== '' && draft[name] !== null) ? 'true' : 'false'));
         }
       });
@@ -504,7 +494,6 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     const next = $('#kjpNext', ovl); if (next) next.addEventListener('click', onNext);
     if (step === 1) { wireSuburb(body); wireRegionChips(body); try { if (window.koausGeo) window.koausGeo.ready(); } catch (_) {} }
     if (step === 2) { const asap = $('[data-asap]', body); if (asap) asap.addEventListener('click', () => { $('#kjpStart', body).value = openedDay || todayStr(); }); }
-    if (step === 5) wireHome(body);
   }
 
   // ── 동네 검색(koaus-geo.js) ──
@@ -575,11 +564,6 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     sel.innerHTML = draft.suburbs.map((s, i) => `<span class="ksp-chip on">${suburbLabel(s)} <button type="button" data-rm="${i}" aria-label="빼기">×</button></span>`).join('');
     sel.querySelectorAll('[data-rm]').forEach(b => b.addEventListener('click', () => { draft.suburbs.splice(Number(b.dataset.rm), 1); renderSuburbSel(); try { ovl.querySelectorAll('#kjpRegionChips [data-region], #kjpStateChips [data-region]').forEach(c => { const it = window.koausGeo.regionItem(c.dataset.region); c.setAttribute('aria-pressed', it && draft.suburbs.some(x => (x.km || x.all) && x.name === it.name && x.state === it.state) ? 'true' : 'false'); }); } catch (_) {} }));
   }
-  function wireHome(body) {
-    const q = $('#kjpHomeQ', body), sug = $('#kjpHomeSug', body);
-    bindSuggest(q, sug, item => { draft.homeSuburb = item; q.value = item.name + ' ' + String(item.state).toUpperCase(); });
-    q.addEventListener('input', () => { if (!q.value.trim()) draft.homeSuburb = null; });
-  }
 
   // ── 검증·저장 ──
   function validate() {
@@ -591,20 +575,20 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
         if (!draft.suburbs.length) return set('동네를 한 곳 이상 골라 주십시오.');
         return set('');
       case 2: {
+        if (!draft.experience) return set("경력을 한 줄 적어 주십시오. 없으면 '경력 없음'이라고 적으시면 됩니다.");
+        if (typeof draft.hasCar !== 'boolean') return set('차가 있는지 골라 주십시오.');
         if (!draft.workTypes.length) return set('근무 형태를 하나 이상 골라 주십시오.');
         if (!/^\d{4}-\d{2}-\d{2}$/.test(draft.startDate)) return set('시작 가능일을 골라 주십시오.');
         if (openedDay && draft.startDate < openedDay) return set('시작 가능일은 오늘 이후로 골라 주십시오.');
-        if (typeof draft.hasCar !== 'boolean') return set('차가 있는지 골라 주십시오.');
-        return set('');
-      }
-      case 3: return set(draft.visa ? '' : '비자를 골라 주십시오.');
-      case 4:
-        if (draft.payMin !== '' && (!Number.isFinite(Number(draft.payMin)) || Number(draft.payMin) < 0 || Number(draft.payMin) > 200)) return set('희망 시급을 확인해 주십시오. (0~200)');
-        if (draft.experience.length > 120) return set('120자 이내로 적어 주십시오.');
+        if (draft.experience.length > 120) return set('경력은 120자 이내로 적어 주십시오.');
         if (CONTACT_RE.test(draft.experience)) return set('전화번호·카톡 아이디·링크는 넣을 수 없습니다. 연락은 채팅으로 옵니다.');
         return set('');
-      case 5: return set('');
-      case 6:
+      }
+      case 3: return set('');
+      case 4:
+        if (draft.payMin !== '' && (!Number.isFinite(Number(draft.payMin)) || Number(draft.payMin) < 0 || Number(draft.payMin) > 200)) return set('희망 시급을 확인해 주십시오. (0~200)');
+        return set('');
+      case 5:
         if (!draft.alertMode) return set('알림 방식을 골라 주십시오.');
         if (draft.alertMode !== 'off' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(draft.alertEmail)) return set('알림 받을 이메일을 확인해 주십시오.');
         return set('');
@@ -626,7 +610,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       states: Array.from(new Set(draft.suburbs.map(s => s.state))).slice(0, 5),
       radiusKm: RADII.includes(Number(draft.radiusKm)) ? Number(draft.radiusKm) : 5,
       workTypes: draft.workTypes.slice(0, 3),
-      startDate: draft.startDate, visa: draft.visa,
+      startDate: draft.startDate,
       nick, visible: !!draft.visible,
       status: (profile && profile.status === 'found' && editing) ? 'found' : 'looking',
       step: quick ? QUICK_STEPS : TOTAL_STEPS,
@@ -637,9 +621,10 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     if (draft.licenses.length) d.licenses = draft.licenses.slice(0, 8);
     if (typeof draft.hasCar === 'boolean') d.hasCar = draft.hasCar;
     if (draft.experience) d.experience = draft.experience.slice(0, 120);
+    if (draft.visa) d.visa = draft.visa;   // 11-05: 비자는 선택
     if (draft.ageBand) d.ageBand = draft.ageBand;
     if (draft.gender) d.gender = draft.gender;
-    if (draft.homeSuburb && draft.homeSuburb.name) d.homeSuburb = { name: String(draft.homeSuburb.name).slice(0, 60), state: draft.homeSuburb.state, lat: Number(draft.homeSuburb.lat), lng: Number(draft.homeSuburb.lng) };
+    // 11-05: 사는 곳(homeSuburb)은 받지 않는다(일하고 싶은 동네만)
     const p = {
       alerts: quick ? { enabled: true, mode: 'threshold5', email: String((me && me.email) || '').slice(0, 120) }
                     : { enabled: draft.alertMode !== 'off', mode: draft.alertMode, email: draft.alertEmail.slice(0, 120) },
@@ -665,7 +650,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     } catch (e) {
       console.warn('[job-profile] 저장 실패', e);
       const denied = e && (e.code === 'permission-denied' || /permission/i.test(e.message || ''));
-      const errEl = $('#kjpErr' + step, ovl) || $('#kjpErr6', ovl);
+      const errEl = $('#kjpErr' + step, ovl) || $('#kjpErr5', ovl);
       if (errEl) errEl.textContent = denied ? (quick ? '저장할 수 없는 내용이 있습니다. 휴대폰 인증이 되어 있는지 확인해 주십시오. 계속 안 되면 닫고 마이페이지에서 다시 시도해 주십시오.' : '저장할 수 없는 내용이 있습니다. 경력에 연락처·링크가 없는지, 휴대폰 인증이 되어 있는지 확인해 주십시오.') : '저장하지 못했습니다. 잠시 후 다시 시도해 주십시오.';
       if (quick) { unlocked = true; try { $('[data-kjp-nav="close"]', ovl).style.visibility = 'visible'; } catch (_) {} }   // 짧은 등록 잠금은 저장 실패 시 풀어 준다(갇히지 않게, 11-04b)
       if (btn) { btn.disabled = false; btn.textContent = (editing || single) ? '저장' : (quick ? '등록' : '완료'); }
@@ -829,7 +814,6 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
             <dt>비자</dt><dd>${esc(en.label('visas', p.visa) || '—')}</dd>
             ${extra ? `<dt>기타</dt><dd>${esc(extra)}</dd>` : ''}
             ${p.experience ? `<dt>경력</dt><dd>${esc(p.experience)}</dd>` : ''}
-            ${p.homeSuburb && p.homeSuburb.name ? `<dt>사는 곳</dt><dd>${esc(p.homeSuburb.name)} ${esc(String(p.homeSuburb.state || '').toUpperCase())}</dd>` : ''}
           </dl></div>
           <div class="kjp-sec"><div class="ksp-help">이메일·연락처는 보이지 않습니다. 연락은 채팅으로만 됩니다.</div></div>
         </div>

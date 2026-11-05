@@ -51,7 +51,7 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, g
       address: where ? (where + ' ' + st.toUpperCase()) : '', state: st,
       lat: typeof x.lat === 'number' ? x.lat : undefined, lng: typeof x.lng === 'number' ? x.lng : undefined,
       body: typeof x.body === 'string' ? x.body : '', hasDetail: !!x.hasDetail, hasPhone: !!x.hasPhone, imageCount: Number(x.imageCount) || 0,
-      mode: 'offer', types: [], roomTypes: [], imageUrls: [], status: 'approved', isHidden: false, postType: 'hiring',
+      mode: 'offer', types: [], roomTypes: [], imageUrls: [], status: 'approved', isHidden: false, postType: 'hiring', locationPrivate: true,   // 핀은 동네 중심(비공개 주소와 같은 취급)
       date: dt ? `${p2(dt.getMonth() + 1)}/${p2(dt.getDate())}` : '', time: dt && x.hasDetail ? `${p2(dt.getHours())}:${p2(dt.getMinutes())}` : '',
       postedMs: ms,
       // 상세를 받은 글은 실제 올린 시각, 아니면 그 날 안에서 글 번호 순(KoAus 글보다 아래)

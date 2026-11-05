@@ -1153,11 +1153,11 @@ service cloud.firestore {
         && d.workTypes.hasOnly(['casual', 'part', 'full'])
         && d.startDate is string && d.startDate.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}')
         && pOptInt(d, 'payMin', 0, 200)
-        && d.visa in ['whv1', 'whv2', 'whv3', 'student', 'pr', 'citizen', 'other']
+        && (!('visa' in d) || d.visa in ['whv1', 'whv2', 'whv3', 'student', 'pr', 'citizen', 'other'])   // 11-05: 비자 선택
         && pOptList(d, 'licenses', 8)
         && (!('licenses' in d) || d.licenses.hasOnly(['rsa', 'whitecard', 'forklift', 'barista', 'foodsafety', 'driver', 'firstaid', 'other']))
         && pOptBool(d, 'hasCar')
-        && pOptStr(d, 'experience', 120)
+        && pReqStr(d, 'experience', 1, 120)   // 11-05: 경력 필수(사용자 결정)
         && (!('experience' in d) || !d.experience.matches('(?s).*(([0-9][ .-]?){6,}|https?://|www[.]|[.]com|[.]au|[.]kr).*'))   // 11-05: 정규식 2개 → 1개(표현식 한도)
         && (!('ageBand' in d) || d.ageBand in ['20s', '30s', '40p', '20e', '20m', '20l', '30e', '30l'])
         && (!('gender' in d) || d.gender in ['female', 'male'])

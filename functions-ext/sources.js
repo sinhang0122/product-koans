@@ -11,7 +11,7 @@ const SB = 'https://www.sunbrisbane.com/brsb/bbs/board.php';
 
 const SOURCES = {
   sunbrisbane: {
-    name: '선브리즈번', home: 'https://www.sunbrisbane.com/', state: 'qld', defaultEnabled: true, defaultMode: 'full',   // 사용자 결정(11-05): 선브리즈번은 본문·전화까지(full). 경고 오면 관리자가 link 로
+    name: '선브리즈번', home: 'https://www.sunbrisbane.com/', state: 'qld', defaultEnabled: false, defaultMode: 'full',   // 11-05: 결제 카드 정지 중이라 처음엔 꺼 둠 — 관리자 페이지에서 켠다   // 사용자 결정(11-05): 선브리즈번은 본문·전화까지(full). 경고 오면 관리자가 link 로
     // 구인 게시판의 '구직'(일 구함)·'운송'(공항 픽업 광고)·'우대'(업체 광고)는 뺀다
     skipCategories: ['구직', '운송', '우대', '공지'],
     boards: [
