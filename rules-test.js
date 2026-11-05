@@ -952,7 +952,7 @@ const cases = [
   mk({ label: 'ext_posts visible 글 비로그인 get → 허용', expectation: 'ALLOW', path: 'ext_posts/sunbrisbane_home_1', method: 'get', resourceData: { visible: true, title: 't', url: 'https://www.sunbrisbane.com/x' } }),
   mk({ label: 'ext_private 전화 — 로그인 회원 get → 허용', expectation: 'ALLOW', path: 'ext_private/sunbrisbane_home_1', method: 'get', uid: 'testuser123', resourceData: { phone: '0412345678' } }),
   mk({ label: 'ext_private 전화 — 비로그인 get → 거부', expectation: 'DENY', path: 'ext_private/sunbrisbane_home_1', method: 'get', resourceData: { phone: '0412345678' } }),
-  mk({ label: 'ext_private 회원 list → 거부', expectation: 'DENY', path: 'ext_private', method: 'list', uid: 'testuser123', query: { limit: 10 }, resourceData: { phone: '0412345678' } }),
+  mk({ label: 'ext_private 회원 list → 거부', expectation: 'DENY', path: 'ext_private/anyid', method: 'list', uid: 'testuser123', query: { limit: 10 }, resourceData: { phone: '0412345678' } }),
   mk({ label: 'ext_sources 관리자 mode=full update → 허용', expectation: 'ALLOW', path: 'ext_sources/sunbrisbane', method: 'update', uid: 'admin1', admin: true, data: { name: '선브리즈번', enabled: true, mode: 'full', counts: {} }, resourceData: { name: '선브리즈번', enabled: true, mode: 'link', counts: {} } }),
   mk({ label: 'ext_sources 관리자 mode=이상한 값 → 거부', expectation: 'DENY', path: 'ext_sources/sunbrisbane', method: 'update', uid: 'admin1', admin: true, data: { name: '선브리즈번', enabled: true, mode: 'everything', counts: {} }, resourceData: { name: '선브리즈번', enabled: true, mode: 'link', counts: {} } }),
   // ── 11-05 규칙 표현식 한도 점검(가장 무거운 문서) ──
