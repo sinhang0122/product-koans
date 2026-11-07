@@ -261,7 +261,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
           <button type="button" class="ksp-btn" data-ksp="preview">집주인이 보는 카드</button>
         </div>
         ${paused ? `<div class="ksp-banner"><span>30일 동안 활동이 없어 일시정지되었습니다. 계속 구하고 계시면 다시 켜 주십시오.</span><button type="button" class="ksp-btn small primary" data-ksp="resume">다시 켜기</button></div>` : ''}
-        <label class="ksp-switch ksp-prof-switch"><span class="ksp-switch-txt"><span>내 조건 활성화</span><small>${found ? '구했습니다 상태에서는 공개되지 않습니다' : (vis && !paused ? '근처 집주인에게 보입니다' : '꺼져 있습니다 — 알림만 받습니다')}</small></span><input type="checkbox" data-ksp="visible" ${vis && !paused ? 'checked' : ''} ${found ? 'disabled' : ''}></label>
+        <label class="ksp-switch ksp-prof-switch"><span class="ksp-switch-txt"><span>내 조건 활성화</span><small>${found ? '구했습니다 상태에서는 공개되지 않습니다' : (vis && !paused ? '근처 집주인에게 보입니다' : '꺼져 있습니다 — 알림도 오지 않습니다')}</small></span><input type="checkbox" data-ksp="visible" ${vis && !paused ? 'checked' : ''} ${found ? 'disabled' : ''}></label>
         ${c.todo.length ? `
         <div class="ksp-complete">
           <div class="ksp-complete-head"><b>프로필 완성하기</b><span>${c.pct}%</span></div>
@@ -593,7 +593,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
           <div class="ksp-help">근처에 집을 올리시는 분께 간단한 내 조건이 이렇게 보입니다.</div>
           ${previewCardHtml()}
           <label class="ksp-switch"><input type="checkbox" id="kspVisible" ${draft.visible ? 'checked' : ''}> 내 조건 활성화 (근처 집주인에게 공개)</label>
-          <div class="ksp-help">공개하면 희망 동네 근처에 방을 올린 집주인이 내 카드를 보고 채팅으로 연락할 수 있습니다. 끄면 알림만 받습니다. 30일 동안 활동이 없으면 자동으로 일시정지됩니다.</div>
+          <div class="ksp-help">공개하면 희망 동네 근처에 방을 올린 집주인이 내 카드를 보고 채팅으로 연락할 수 있습니다. 끄면 보이지 않고 알림도 오지 않습니다. 30일 동안 활동이 없으면 자동으로 일시정지됩니다.</div>
           <div class="ksp-label">새 매물 알림 <span class="req">(필수)</span></div>
           ${chipsHtml('alertMode', [{ code: 'instant', label: '새 매물마다' }, { code: 'threshold5', label: '5건 이상 모이면' }, { code: 'daily', label: '하루 한 번' }, { code: 'off', label: '받지 않음' }], draft.alertMode, false)}
           <div class="ksp-label">알림 받을 이메일 <span class="req">(필수)</span></div>
@@ -611,8 +611,8 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
             <div class="ksp-q">프로필이 만들어졌습니다.</div>
             <div class="ksp-help">근처에 집을 올리시는 분께 내 조건이 이렇게 보입니다. 닉네임과 조건만 보이고 이메일·소개글은 보이지 않습니다. 연락은 채팅으로만 옵니다.</div>
             ${previewCardHtml()}
-            <label class="ksp-switch ksp-prof-switch"><span class="ksp-switch-txt"><span>내 조건 활성화</span><small>${on ? '근처 집주인에게 보입니다' : '꺼져 있습니다 — 알림만 받습니다'}</small></span><input type="checkbox" id="kspVisibleDone" ${on ? 'checked' : ''}></label>
-            <div class="ksp-help">추후 프로필 설정에서 변경 가능합니다. 새 매물 알림은 로그인 이메일로, 5건 이상 모이면 보냅니다.</div>
+            <label class="ksp-switch ksp-prof-switch"><span class="ksp-switch-txt"><span>내 조건 활성화</span><small>${on ? '근처 집주인에게 보입니다' : '꺼져 있습니다 — 알림도 오지 않습니다'}</small></span><input type="checkbox" id="kspVisibleDone" ${on ? 'checked' : ''}></label>
+            <div class="ksp-help">추후 프로필 설정에서 변경 가능합니다. 새 매물 알림은 프로필이 켜져 있을 때만 로그인 이메일로, 5건 이상 모이면 보냅니다.</div>
             <div class="ksp-done-actions">
               <a class="ksp-btn primary" href="accom.html${st ? '?state=' + esc(st) : ''}">조건에 맞는 방 보러 가기</a>
               <button type="button" class="ksp-btn" data-ksp-nav="more">프로필 더 채우기</button>
@@ -627,7 +627,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
             <div class="ksp-q">${editing ? '저장했습니다.' : '프로필을 만들었습니다.'}</div>
             <div class="ksp-help">${on ? '희망 동네 근처에 방을 올린 집주인에게 내 조건이 이렇게 보입니다.' : '지금은 꺼져 있어 집주인에게 보이지 않습니다. 알림 메일만 받습니다.'} 연락이 오면 채팅 탭에 표시됩니다.</div>
             ${previewCardHtml()}
-            <label class="ksp-switch ksp-prof-switch"><span class="ksp-switch-txt"><span>내 조건 활성화</span><small>${on ? '근처 집주인에게 보입니다' : '꺼져 있습니다 — 알림만 받습니다'}</small></span><input type="checkbox" id="kspVisibleDone" ${on ? 'checked' : ''}></label>
+            <label class="ksp-switch ksp-prof-switch"><span class="ksp-switch-txt"><span>내 조건 활성화</span><small>${on ? '근처 집주인에게 보입니다' : '꺼져 있습니다 — 알림도 오지 않습니다'}</small></span><input type="checkbox" id="kspVisibleDone" ${on ? 'checked' : ''}></label>
             <div class="ksp-done-actions">
               <a class="ksp-btn primary" href="accom.html${st ? '?state=' + esc(st) : ''}">조건에 맞는 방 보러 가기</a>
             </div>
@@ -643,8 +643,8 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       try {
         await updateDoc(doc(db, 'seeker_profiles', me.uid), { visible: on, lastActiveAt: serverTimestamp(), updatedAt: serverTimestamp() });
         await loadProfile(true); if (panelEl) rerenderCard();
-        try { const sm = doneSw.closest('.ksp-switch').querySelector('small'); if (sm) sm.textContent = on ? '근처 집주인에게 보입니다' : '꺼져 있습니다 — 알림만 받습니다'; } catch (_) {}
-        toast(on ? '활성화했습니다. 근처 집주인에게 보입니다.' : '비활성화했습니다. 알림만 받습니다.');
+        try { const sm = doneSw.closest('.ksp-switch').querySelector('small'); if (sm) sm.textContent = on ? '근처 집주인에게 보입니다' : '꺼져 있습니다 — 알림도 오지 않습니다'; } catch (_) {}
+        toast(on ? '활성화했습니다. 근처 집주인에게 보입니다.' : '비활성화했습니다. 켜기 전까지 알림도 오지 않습니다.');
       } catch (e) { doneSw.checked = !on; toast('변경하지 못했습니다. 잠시 후 다시 시도해 주십시오.'); }
     });
     foot.innerHTML = next ? `<button type="button" class="ksp-btn primary" id="kspNext">${next}</button>` : '';

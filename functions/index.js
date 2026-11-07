@@ -280,8 +280,15 @@ const POST_OPTS = { region: REGION, maxInstances: 3, retry: false };
 async function onNewListing(event, board) {
   const snap = event.data; if (!snap) return;
   const p = snap.data() || {};
-  if (p.status && p.status !== 'approved') return;
-  if ((p.mode || 'offer') !== 'offer') return;
+  const isExt = board === 'ext_posts';   // 11-07: 외부 한인 사이트 글(functions-ext 가 씀)도 알림 — 쉐어·렌트만, 보이는 글만, 이틀 이내 글만
+  if (isExt) {
+    if (p.visible !== true || (p.board !== 'accom' && p.board !== 'rent')) return;
+    const pm = p.postedAt && p.postedAt.toMillis ? p.postedAt.toMillis() : 0;
+    if (!pm || Date.now() - pm > 2 * 86400000) return;
+  } else {
+    if (p.status && p.status !== 'approved') return;
+    if ((p.mode || 'offer') !== 'offer') return;
+  }
   const st = String(p.state || '').toLowerCase();
   const lat = Number(p.lat), lng = Number(p.lng);
   if (!st || !lat || !lng) return;
@@ -289,8 +296,9 @@ async function onNewListing(event, board) {
   const q = await db().collection('seeker_profiles').where('states', 'array-contains', st).where('visible', '==', true).orderBy('lastActiveAt', 'desc').limit(100).get();
   const postId = event.params.postId;
   const title = String(p.title || '').slice(0, 80);
-  const suburb = String(p.suburb || '').trim() || suburbFromAddress(p.address);
-  const link = `${SITE}/${board === 'rent_posts' ? 'rent' : 'accom'}.html?id=${encodeURIComponent(postId)}`;
+  const suburb = isExt ? String(p.suburbEn || p.suburb || p.zone || '').trim() : (String(p.suburb || '').trim() || suburbFromAddress(p.address));
+  const link = isExt ? `${SITE}/${p.board === 'rent' ? 'rent' : 'accom'}.html?id=${encodeURIComponent('ext_' + postId)}`
+                     : `${SITE}/${board === 'rent_posts' ? 'rent' : 'accom'}.html?id=${encodeURIComponent(postId)}`;
   for (const d of q.docs) {
     const s = d.data() || {}; const uid = d.id;
     if (uid === (p.uid || p.authorUid)) continue;
@@ -349,6 +357,7 @@ async function flushDigest(uid, minCount) {
   await ref.set({ items: [], lastSentAt: FV.serverTimestamp() }, { merge: true });
 }
 exports.onAccomPostCreated = onDocumentCreated({ ...POST_OPTS, document: 'accom_posts/{postId}', secrets: [RESEND_API_KEY] }, e => onNewListing(e, 'accom_posts'));
+exports.onExtPostCreated   = onDocumentCreated({ ...POST_OPTS, document: 'ext_posts/{postId}',   secrets: [RESEND_API_KEY] }, e => onNewListing(e, 'ext_posts'));   // 11-07
 exports.onRentPostCreated  = onDocumentCreated({ ...POST_OPTS, document: 'rent_posts/{postId}',  secrets: [RESEND_API_KEY] }, e => onNewListing(e, 'rent_posts'));
 
 // ── ② 채팅 새 메시지 — 받는 쪽 설정대로, 대화당 한 통 ──

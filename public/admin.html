@@ -795,6 +795,16 @@
       </section>
 
       <!-- 11-05: 외부 한인 사이트 글 — 스위치·지금 수집·숨김·전부 삭제 (functions-ext extAdmin · ext_sources) -->
+      <style>
+        .ext-sw{display:inline-flex;align-items:center;gap:8px;cursor:pointer;user-select:none}
+        .ext-sw input{position:absolute;opacity:0;width:0;height:0}
+        .ext-sw-track{position:relative;width:46px;height:26px;border-radius:999px;background:#c7c7cc;transition:background .18s;flex-shrink:0}
+        .ext-sw-knob{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 2px 5px rgba(0,0,0,.25);transition:left .18s}
+        .ext-sw input:checked + .ext-sw-track{background:#34c759}
+        .ext-sw input:checked + .ext-sw-track .ext-sw-knob{left:23px}
+        .ext-sw input:disabled + .ext-sw-track{opacity:.5}
+        .ext-sw-state{font-size:12px;font-weight:800;color:#374151;min-width:30px}
+      </style>
       <section class="admin-card bg-white rounded-xl shadow-sm border border-gray-200 p-7">
         <header class="flex items-center gap-3 pb-4 mb-6 border-b border-gray-200">
           <div class="flex items-center justify-center w-10 h-10 bg-amber-500 rounded-lg flex-shrink-0 text-white text-lg">↗</div>
@@ -1563,7 +1573,8 @@
         const last = d.lastRunAt && d.lastRunAt.toDate ? d.lastRunAt.toDate().toLocaleString('ko-KR') : '아직 없음';
         const note = [d.hasParser === false ? '파서 없음(등록만)' : '', d.lastError ? '오류: ' + d.lastError : '', d.todo || ''].filter(Boolean).join(' · ');
         return '<div class="flex items-center gap-3 flex-wrap p-3 border border-gray-200 rounded-lg">'
-          + '<label class="inline-flex items-center gap-2 font-bold text-gray-900"><input type="checkbox" data-ext-toggle="' + id + '"' + (d.enabled ? ' checked' : '') + '> ' + escHtmlAdmin(name) + '</label>'
+          + '<label class="ext-sw" title="켜면 30분 안에 수집 시작, 끄면 화면에서 즉시 빠지고 다음 수집 때 저장된 글도 숨김"><input type="checkbox" data-ext-toggle="' + id + '"' + (d.enabled ? ' checked' : '') + '><span class="ext-sw-track"><span class="ext-sw-knob"></span></span><span class="ext-sw-state">' + (d.enabled ? '켜짐' : '꺼짐') + '</span></label>'
+          + '<span class="font-bold text-gray-900">' + escHtmlAdmin(name) + '</span>'
           + '<select data-ext-mode="' + id + '" class="p-1 border border-gray-300 rounded text-xs text-gray-900" style="width:auto;" title="link: 제목·가격·동네만, 누르면 원문 / full: 본문·올린 시각·전화(로그인 회원만)까지"><option value="link"' + (d.mode !== 'full' ? ' selected' : '') + '>원문만(link)</option><option value="full"' + (d.mode === 'full' ? ' selected' : '') + '>본문·전화까지(full)</option></select>'
           + '<span class="text-gray-700">쉐어 ' + (c.accom || 0) + ' · 렌트 ' + (c.rent || 0) + ' · 구인 ' + (c.jobs || 0) + '</span>'
           + '<span class="text-gray-500 text-xs">마지막 수집 ' + escHtmlAdmin(last) + (note ? ' · ' + escHtmlAdmin(note) : '') + '</span>'
@@ -1581,7 +1592,7 @@
         if (md) { const id = md.dataset.extMode; md.disabled = true; try { await setDoc(doc(db, 'ext_sources', id), { mode: md.value, updatedAt: serverTimestamp() }, { merge: true }); log(id + ' 모드 → ' + md.value + (md.value === 'link' ? ' — 다음 수집 때 저장된 본문·전화를 지웁니다(화면은 즉시 원문 이동으로)' : ' — 다음 수집부터 본문·전화를 가져옵니다')); } catch (err) { log(id + ' 모드 저장 실패: ' + (err.message || err)); } md.disabled = false; return; }
         const cb = e.target.closest('[data-ext-toggle]'); if (!cb) return;
         const id = cb.dataset.extToggle; cb.disabled = true;
-        try { await setDoc(doc(db, 'ext_sources', id), { enabled: !!cb.checked, updatedAt: serverTimestamp() }, { merge: true }); log(id + (cb.checked ? ' 켬 — 다음 수집(30분 안)부터 가져옵니다. 바로 가져오려면 [지금 수집]' : ' 끔 — 화면에서 즉시 빠지고, 다음 수집 때 저장된 글도 숨깁니다')); }
+        try { await setDoc(doc(db, 'ext_sources', id), { enabled: !!cb.checked, updatedAt: serverTimestamp() }, { merge: true }); const stEl = cb.closest('.ext-sw') && cb.closest('.ext-sw').querySelector('.ext-sw-state'); if (stEl) stEl.textContent = cb.checked ? '켜짐' : '꺼짐'; log(id + (cb.checked ? ' 켬 — 다음 수집(30분 안)부터 가져옵니다. 바로 가져오려면 [지금 수집]' : ' 끔 — 화면에서 즉시 빠지고, 다음 수집 때 저장된 글도 숨깁니다')); }
         catch (err) { log(id + ' 저장 실패: ' + (err.message || err)); cb.checked = !cb.checked; }
         cb.disabled = false;
       });
