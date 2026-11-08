@@ -1149,8 +1149,8 @@ service cloud.firestore {
         && d.states is list && d.states.size() >= 1 && d.states.size() <= 5
         && d.states.hasOnly(['qld', 'nsw', 'vic', 'wa', 'sa', 'tas', 'act', 'nt'])
         && pOptInt(d, 'radiusKm', 1, 50)
-        && d.workTypes is list && d.workTypes.size() >= 1 && d.workTypes.size() <= 3
-        && d.workTypes.hasOnly(['casual', 'part', 'full'])
+        && (!('workTypes' in d) || (d.workTypes is list && d.workTypes.size() >= 1 && d.workTypes.size() <= 3
+                                    && d.workTypes.hasOnly(['casual', 'part', 'full'])))   // 11-08: 근무 형태는 선택(짧은 등록은 받지 않음)
         && d.startDate is string && d.startDate.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}')
         && pOptInt(d, 'payMin', 0, 200)
         && (!('visa' in d) || d.visa in ['whv1', 'whv2', 'whv3', 'student', 'pr', 'citizen', 'other'])   // 11-05: 비자 선택

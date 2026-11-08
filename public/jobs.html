@@ -65,6 +65,8 @@
   <script type="module" src="koaus-ext.js"></script>   <!-- 11-05: 다른 한인 사이트 글(출처 표시·원문 이동) -->
   <script src="koaus-enums.js" defer></script>   <!-- 11-04: 값 목록(업종·비자 등) — 일 구해요 프로필 -->
   <script src="koaus-geo.js" defer></script>   <!-- 11-04: 동네 검색 공통(Maps JS, 한글·영문·우편번호) -->
+  <script src="koaus-state-pick.js" defer></script>   <!-- 11-08: 상단바·지도 헤더 주(State) 드롭다운 -->
+  <script src="koaus-people-deck.js" defer></script>   <!-- 11-08: 구하는 사람 카드 넘겨 보기(공용) -->
   <script type="module" src="koaus-job-profile.js"></script>   <!-- 11-04 ②: 일 구해요 프로필 + 사장님용 근처 목록 -->
 </head>
 <body>
@@ -858,7 +860,8 @@
 
     // ── Tabs ──
     const urlTab = new URLSearchParams(location.search).get('tab');
-    const currentState = (new URLSearchParams(location.search).get('state') || '').toLowerCase();
+    // 11-08: 주소에 ?state= 가 없으면 상단바 주 설정(koaus-state-pick.js, LS koaus-state-pref-v1). '전체' = 빈 값 → 모든 주 글 + 전국 지도(Living·Job 동일)
+    const currentState = (function () { const u = (new URLSearchParams(location.search).get('state') || '').toLowerCase(); if (u) return u; try { const v = (localStorage.getItem('koaus-state-pref-v1') || '').toLowerCase(); return /^(nsw|vic|qld|wa|sa|tas|act|nt)$/.test(v) ? v : ''; } catch (_) { return ''; } })();
     // 2026-10: '구직'(seeking) 글 숨김 — 글은 일자리 내주는 쪽만 올림. 플래그만 true 로 바꾸면 복구
     //   (기존 seeking 글·jobs_posts 데이터·rules 그대로, 목록은 postType 필터로 자연 제외).
     const SEEKING_ENABLED = false;
@@ -1781,8 +1784,8 @@
       const el = document.getElementById('jobsMap');
       if (!el) return;
       const urlState = currentState;
-      const profileView = (function () { try { if (urlState) return null; const c = JSON.parse(localStorage.getItem('koaus-profile-center-v1') || 'null'); if (!(c && typeof c.lat === 'number')) return null; if (c.all && STATE_VIEWS[c.state]) return { center: STATE_VIEWS[c.state].center, zoom: 9 }; return { center: { lat: c.lat, lng: c.lng }, zoom: c.km ? 10 : 12 }; } catch (_) { return null; } })();   // 11-04: 프로필 첫 동네 기준
-      const view = STATE_VIEWS[currentState] || profileView || AUS_VIEW;
+      const profileView = (function () { try { const c = JSON.parse(localStorage.getItem('koaus-profile-center-v1') || 'null'); if (!(c && typeof c.lat === 'number')) return null; if (c.all && STATE_VIEWS[c.state]) return { center: STATE_VIEWS[c.state].center, zoom: 9, state: c.state }; return { center: { lat: c.lat, lng: c.lng }, zoom: c.km ? 10 : 12, state: c.state }; } catch (_) { return null; } })();   // 11-04: 프로필 첫 동네 기준
+      const view = currentState ? ((profileView && profileView.state === currentState) ? profileView : (STATE_VIEWS[currentState] || AUS_VIEW)) : (profileView || AUS_VIEW);   // 11-08: Living 과 같은 규칙(주 → 내 동네/중심 도시, 전체 → 내 동네/전국)
       jobsMap = new google.maps.Map(el, { gestureHandling: 'greedy', center: view.center, zoom: view.zoom, mapTypeControl: false, streetViewControl: false });
       mapReady = true;
       updateMapMarkers();

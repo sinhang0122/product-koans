@@ -14,6 +14,7 @@
   var KEY = 'AIzaSyDwogQ55V0-JqZ-ZYRTpYgNZWOdp_-5vOQ';   // accom/rent/jobs 와 같은 공개 키(리퍼러 제한)
   var STATES = ['qld', 'nsw', 'vic', 'wa', 'sa', 'tas', 'act', 'nt'];
   var readyP = null;
+  var lastStatus = '';   // 11-08: 마지막 지오코더 응답 상태(OK·ZERO_RESULTS·REQUEST_DENIED…) — 동네를 못 찾을 때 화면에 같이 보여 준다
 
   function hasGeocoder() { return !!(window.google && window.google.maps && window.google.maps.Geocoder); }
   function ready() {
@@ -37,8 +38,8 @@
     return new Promise(function (resolve) {
       try {
         req.language = 'en';
-        new window.google.maps.Geocoder().geocode(req, function (res, status) { resolve(status === 'OK' && Array.isArray(res) ? res : []); });
-      } catch (_) { resolve([]); }
+        new window.google.maps.Geocoder().geocode(req, function (res, status) { lastStatus = String(status || ''); resolve(status === 'OK' && Array.isArray(res) ? res : []); });
+      } catch (e) { lastStatus = 'GEOCODER_ERROR'; resolve([]); }
     });
   }
   function comp(r, type) { return (r.address_components || []).find(function (c) { return (c.types || []).indexOf(type) !== -1; }) || null; }
@@ -67,7 +68,7 @@
   async function suburbs(text) {
     var t = String(text || '').trim();
     if (!t) return [];
-    if (!(await ready())) { console.warn('[koaus-geo] Maps JS 를 불러오지 못했습니다'); return []; }
+    if (!(await ready())) { lastStatus = 'MAPS_NOT_LOADED'; console.warn('[koaus-geo] Maps JS 를 불러오지 못했습니다'); return []; }
     var isPc = /^\d{4}$/.test(t);
     var results = await geocode(isPc ? { componentRestrictions: { country: 'AU', postalCode: t } } : { address: t, componentRestrictions: { country: 'AU' }, region: 'au' });
     var out = pick(results, isPc ? t : '');
@@ -126,5 +127,5 @@
   var CENTER_KEY = 'koaus-profile-center-v1';
   function saveProfileCenter(s) { try { if (s && typeof s.lat === 'number' && s.state) localStorage.setItem(CENTER_KEY, JSON.stringify({ state: s.state, lat: s.lat, lng: s.lng, name: s.name || '', km: s.km || 0, all: !!s.all })); } catch (_) {} }
   function profileCenter() { try { var c = JSON.parse(localStorage.getItem(CENTER_KEY) || 'null'); return c && typeof c.lat === 'number' ? c : null; } catch (_) { return null; } }
-  window.koausGeo = { suburbs: suburbs, refine: refine, ready: ready, regions: regions, stateRegions: stateRegions, regionItem: regionItem, isRegion: isRegion, REGIONS: REGIONS, STATE_REGIONS: STATE_REGIONS, saveProfileCenter: saveProfileCenter, profileCenter: profileCenter };
+  window.koausGeo = { suburbs: suburbs, refine: refine, ready: ready, regions: regions, stateRegions: stateRegions, regionItem: regionItem, isRegion: isRegion, REGIONS: REGIONS, STATE_REGIONS: STATE_REGIONS, saveProfileCenter: saveProfileCenter, profileCenter: profileCenter, get lastStatus() { return lastStatus; } };
 })();

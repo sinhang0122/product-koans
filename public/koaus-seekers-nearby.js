@@ -1,15 +1,16 @@
 // ════════════════════════════════════════════════════════════════════
 //  KoAus · 근처에서 구하는 사람 보기 (집주인 → seeker_profiles) — 2단계 ① (2026-10)
 //  - accom.html / rent.html 이 로드하는 ES module. 본인 글 상세의 "근처에서 구하는 사람 보기" 버튼이
-//    window.koausSeekersNearby.open(post, board) 호출 → 자체 모달.
-//  - 조회: where('states','array-contains', 글의 주) + where('visible','==',true)
+//    window.koausSeekersNearby.open(post, board) 호출 → 자체 모달(목록) → 행을 누르면 카드 넘겨 보기(deck).
+//  - 조회: where('states','array-contains'(-any), 주) + where('visible','==',true)
 //          + orderBy('lastActiveAt','desc') + limit(20)   ← rules limitedList ≤20 · 복합 인덱스 필수
-//    거리(반경 5/10/20/50km, 기본 10)는 클라이언트: 글 좌표(오프셋) ↔ 프로필 희망 동네 중심 중 가장 가까운 것.
-//  - 여성 전용 글(gender==='female')이면 여성 프로필만. '예산 맞음' 토글 = 글 가격이 프로필 예산 범위 안.
+//    거리(반경 3/5/10/20km)는 클라이언트: 기준 동네 ↔ 프로필 희망 동네 중 가장 가까운 것(양방향 반경·큰 지역 km·주 전체).
+//  - 여성 전용 글(gender==='female')이면 여성 프로필만. '예산' = 내 방 가격이 프로필 예산 범위 안.
 //  - 연락 = 기존 chats 규칙 그대로: chatId {seekerUid}_{집주인uid}, postId=seekerUid, board 'seeker',
-//    ownerUid=seekerUid(프로필 주인), inquirerUid=집주인. create-first → chat.html?id= 이동.
-//    lastMsgAt 은 넣지 않음 — 첫 메시지 전까지 상대 목록에 빈 방이 안 뜸(의도).
-//  - 빈 결과 문구(확정): 목록 끝 "더 이상 표시할 프로필이 없습니다. 범위를 늘리시겠습니까?" → "범위 늘리기".
+//    ownerUid=seekerUid(프로필 주인), inquirerUid=집주인. 메시지는 카드 아래 칸에서 바로 보냄(보내면 칸 잠금, 11-08 지시 19).
+//  - 11-08(지시 18) 도구줄 [쉐어생 구하기]: 목록 페이지 대신 → 상세 필터 시트(동네 혹은 주 최대 3곳 · 반경 · 정렬 · 성별 · 예산)
+//    → 바로 카드 넘겨 보기(koaus-people-deck.js: 옆으로 밀기, 데스크탑은 양옆 흐림). 머리 [‹ 구하는 사람][필터 변경] … [신고][공유].
+//    '저장'(관심) 기능은 숨김 — LS 값은 남겨 둔다(삭제 아님).
 // ════════════════════════════════════════════════════════════════════
 import './koaus-appcheck-init.js';
 import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
@@ -29,6 +30,7 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
     measurementId: 'G-DERZ9MTKPL',
   };
   const RADII = [3, 5, 10, 20];   // 10-19: 기본 5km(동네 2~3개 묶음), 3km = 바로 옆 동네, 20km = 외곽·지방
+  const MAX_CENTERS = 3;          // 11-08: 필터의 동네·주 최대 3곳
   let db = null;
   try { db = getFirestore(getApps().length ? getApp() : initializeApp(firebaseConfig)); } catch (e) { try { console.warn('[seekers-nearby] init 실패', e); } catch (_) {} }
 
@@ -36,6 +38,8 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
   const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   const toast = m => { try { if (window.koausToast) window.koausToast.show(m); else alert(m); } catch (_) { alert(m); } };
   const $ = (sel, root) => (root || document).querySelector(sel);
+  const page = () => (location.pathname.split('/').pop() || '').toLowerCase();
+  const deck = () => window.koausPeopleDeck || null;
 
   function injectCss() {
     if (document.getElementById('ksnStyle')) return;
@@ -53,46 +57,23 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
       .ksn-opt{appearance:none;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);border-radius:999px;padding:6px 12px;font-size:13px;cursor:pointer;font-family:inherit}
       .ksn-opt[aria-pressed="true"]{background:var(--accent);color:var(--accent-text);border-color:var(--accent)}
       .ksn-body{overflow:auto;flex:1;padding:12px 16px 16px;display:flex;flex-direction:column;gap:10px}
-      .ksn-card{border:1px solid var(--border);border-radius:var(--r-lg);background:var(--bg-card);padding:14px;display:flex;flex-direction:column;gap:8px}
-      .ksn-top{display:flex;align-items:center;gap:10px}
-      .ksn-ava{width:40px;height:40px;border-radius:50%;background:var(--accent);color:var(--accent-text);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:17px;flex:0 0 auto}
-      .ksn-name{font-weight:700;font-size:15px}
-      .ksn-meta{font-size:12.5px;color:var(--text-muted)}
       .ksn-tags{display:flex;flex-wrap:wrap;gap:5px}
       .ksn-tag{font-size:12px;padding:2px 8px;border-radius:999px;border:1px solid var(--border);background:var(--bg-surface)}
       .ksn-tag.ok{border-color:rgba(22,163,74,.35);background:var(--green-bg);color:var(--green)}
-      .ksn-grid{display:grid;grid-template-columns:auto 1fr;gap:3px 10px;font-size:13.5px}
-      .ksn-grid dt{color:var(--text-muted)}
-      .ksn-grid dd{margin:0}
-      .ksn-intro{font-size:13.5px;line-height:1.55;white-space:pre-wrap;border-top:1px solid var(--border-subtle);padding-top:8px}
       .ksn-btn{appearance:none;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);border-radius:var(--r-md);padding:9px 14px;font-size:14px;cursor:pointer;font-family:inherit}
       .ksn-btn.primary{background:var(--accent);color:var(--accent-text);border-color:var(--accent)}
       .ksn-btn.small{padding:6px 10px;font-size:12.5px}
       .ksn-btn:disabled{opacity:.5;cursor:default}
       .ksn-end{text-align:center;color:var(--text-muted);font-size:13.5px;padding:18px 8px;display:flex;flex-direction:column;gap:10px;align-items:center}
-      .ksn-km{font-size:12.5px;color:var(--text-secondary);font-weight:600}
-      /* 간단 행(10-20) */
+      /* 간단 행(10-20) — 본인 글 상세의 모달 목록 */
       .ksn-row{appearance:none;width:100%;text-align:left;display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--border);border-radius:14px;padding:14px 16px;background:var(--bg-base);color:var(--text-primary);cursor:pointer;font-family:inherit}
       .ksn-row:hover{border-color:var(--text-primary)}
       .ksn-row-main{display:flex;flex-direction:column;gap:3px;min-width:0}
       .ksn-row-nick{font-size:17px;font-weight:800;letter-spacing:-.01em}
       .ksn-row-meta{font-size:13px;color:var(--text-muted)}
       .ksn-sent{display:inline-block;font-size:11px;font-weight:600;color:var(--text-muted);border:1px solid var(--border);border-radius:6px;padding:0 6px;margin-left:6px;vertical-align:middle}
-      .ksn-sent-line{font-size:13px;color:var(--text-muted);padding:0 16px 10px}
       .ksn-row-arr{color:var(--text-muted);font-size:18px;flex:0 0 auto}
-      /* 프로필 페이지 */
-      .ksn-detail{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9050;display:none;align-items:stretch;justify-content:center}
-      .ksn-detail.open{display:flex}
-      .ksn-detail-box{width:100%;background:var(--bg-base);color:var(--text-primary);display:flex;flex-direction:column;max-height:100%}
-      @media(min-width:640px){.ksn-detail{align-items:center;padding:20px}.ksn-detail-box{max-width:560px;border-radius:18px;max-height:90vh;overflow:hidden}}
-      .ksn-detail-bar{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--border);font-size:14px}
-      .ksn-detail-bar b{font-size:15px}
-      .ksn-lnk{appearance:none;border:0;background:none;color:var(--text-primary);font-size:14px;cursor:pointer;font-family:inherit;padding:4px 0}
-      .ksn-lnk.muted{color:var(--text-muted)}
-      .ksn-detail-body{overflow:auto;flex:1}
-      .ksn-pageovl{z-index:9040}
-      .ksn-pageovl .ksn-detail-box{max-width:640px}
-      .ksn-page-host{padding:12px 14px 20px}
+      /* 카드 안(deck) */
       .ksn-detail-hero{padding:20px 16px 14px}
       .ksn-detail-nick{font-size:24px;font-weight:800;letter-spacing:-.02em}
       .ksn-detail-meta{font-size:14px;color:var(--text-muted);margin-top:4px}
@@ -102,19 +83,11 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
       .ksn-rows{display:grid;grid-template-columns:52px 1fr;gap:7px 10px;font-size:14px;margin:0}
       .ksn-rows dt{color:var(--text-muted)} .ksn-rows dd{margin:0;font-weight:600}
       .ksn-note{font-size:12.5px;color:var(--text-muted);line-height:1.5;padding:12px 16px;border-top:1px solid var(--border)}
-      .ksn-detail-foot{display:flex;gap:8px;padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--border);background:var(--bg-base)}
-      .ksn-compose{display:flex;flex-direction:column;gap:8px;padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--border);background:var(--bg-base)}
-      .ksn-compose textarea{width:100%;box-sizing:border-box;border:1px solid var(--border);background:var(--bg-input);color:var(--text-primary);border-radius:12px;padding:11px 12px;font-size:15px;font-family:inherit;resize:none;min-height:64px;line-height:1.45}
-      .ksn-compose textarea:focus{outline:none;border-color:var(--border-focus)}
-      .ksn-compose-row{display:flex;gap:8px}
-      .ksn-sent-line a{color:inherit;font-weight:700}
-      .ksn-btn.big{padding:13px 16px;font-size:15px;font-weight:800;border-radius:12px;flex:1}
-      .ksn-btn.big.ghost{flex:0 0 auto;background:var(--bg-base);color:var(--text-primary);border-color:var(--text-primary)}
     `;
     document.head.appendChild(st);
   }
 
-  let ovl = null, post = null, board = '', radius = 10, budgetOnly = false, all = null, busy = false;
+  let ovl = null, post = null, board = '', radius = 10, budgetOnly = false, all = null, busy = false, shown = [];
 
   function mount() {
     if (ovl) return;
@@ -136,11 +109,9 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
       if (e.target.closest('[data-ksn="budget"]')) { budgetOnly = !budgetOnly; render(); return; }
       if (e.target.closest('[data-ksn="more"]')) { const i = RADII.indexOf(radius); if (i < RADII.length - 1) { radius = RADII[i + 1]; render(); } return; }
       const o = e.target.closest('[data-ksn-open]');
-      if (o) { const it = (all || []).find(x => x.uid === o.dataset.ksnOpen); if (it) openDetail(it, { price: Number(post && post.price) || 0, radius }); return; }
-      const c = e.target.closest('[data-ksn-chat]');
-      if (c) startChat(c.dataset.ksnChat, c);
+      if (o) { const i = shown.findIndex(x => x.uid === o.dataset.ksnOpen); if (i !== -1) openDeck(shown, i, { price: Number(post && post.price) || 0, radius, title: '근처에서 구하는 사람', fromModal: true }); return; }
     });
-    document.addEventListener('keydown', e => { if (e.key === 'Escape' && ovl.classList.contains('open')) close(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && ovl.classList.contains('open') && !(deck() && deck().isOpen())) close(); });
   }
   function close() { if (!ovl) return; ovl.classList.remove('open'); document.body.style.overflow = ''; }
 
@@ -155,13 +126,15 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
   const tsAgo = ts => {
     try { const ms = ts && typeof ts.toMillis === 'function' ? ts.toMillis() : 0; if (!ms) return ''; const d = Math.floor((Date.now() - ms) / 86400000); return d <= 0 ? '오늘 활동' : d + '일 전 활동'; } catch (_) { return ''; }
   };
+  const kmText = it => it.wide ? '주 전체' : (it.km != null ? (it.km < 1 ? '1km 이내' : '약 ' + Math.round(it.km) + 'km') : '');
 
+  // ── 본인 글 상세 → 근처에서 구하는 사람(모달 목록) ──
   async function open(p, b) {
     const user = window.koausAuth && window.koausAuth.user;
     if (!user) { toast('로그인 후 이용할 수 있습니다.'); return; }
     if (!db) { toast('잠시 후 다시 시도해 주십시오.'); return; }
     mount();
-    post = p; board = b || 'accom'; radius = 5; budgetOnly = false; all = null;
+    post = p; board = b || 'accom'; radius = 5; budgetOnly = false; all = null; shown = [];
     const st = postState(p);
     const en = E();
     $('#ksnSub', ovl).textContent = '이 방 근처에서 집을 구하는 사람입니다. 연락은 채팅으로만 됩니다.' + (p.gender === 'female' ? ' 여성 전용 방이라 여성 프로필만 보입니다.' : '') + (!postCoords(p) ? ' 이 글에는 위치가 없어 ' + (en && en.state(st) ? en.state(st).label : st.toUpperCase()) + ' 전체를 보여드립니다.' : '');
@@ -175,7 +148,7 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
       all = snap.docs.filter(d => d.id !== me).map(d => {
         const x = d.data() || {};
         const r = pc ? reachOf(x, Object.assign({ state: st }, pc)) : { km: null, reach: 0 };   // 주 전체 매칭에 글의 주가 필요(11-04b)
-        return { uid: d.id, p: x, km: r.km, reach: r.reach, wide: r.wide };
+        return { uid: d.id, p: x, km: r.km, reach: r.reach, wide: r.wide, center: pc ? { name: String(p.suburb || '내 글').slice(0, 40), state: st, lat: pc.lat, lng: pc.lng } : null };
       });
     } catch (e) {
       console.warn('[seekers-nearby] 조회 실패', e);
@@ -194,9 +167,9 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
       (price ? `<button type="button" class="ksn-opt" data-ksn="budget" aria-pressed="${budgetOnly ? 'true' : 'false'}">예산 맞음</button>` : '');
     const en = E();
     const femaleOnly = post.gender === 'female';
-    const list = all.filter(it => {
+    shown = all.filter(it => {
       if (femaleOnly && it.p.gender !== 'female') return false;
-      if (hasCoords && (it.km == null || it.km > Math.max(radius, it.reach || 0))) return false;   // 양방향: 집주인 반경 또는 구하는 사람 반경(큰 지역이면 그 지역 km) 중 큰 쪽
+      if (hasCoords && !it.wide && (it.km == null || it.km > Math.max(radius, it.reach || 0))) return false;   // 양방향: 집주인 반경 또는 구하는 사람 반경(큰 지역이면 그 지역 km) 중 큰 쪽. 주 전체(wide)는 통과
       if (budgetOnly && price && !(it.p.budgetMin <= price && price <= it.p.budgetMax)) return false;
       return true;
     }).sort((a, b) => (a.km == null || b.km == null) ? 0 : a.km - b.km);
@@ -204,25 +177,24 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
     const end = atMax
       ? '<div class="ksn-end">더 이상 표시할 프로필이 없습니다.</div>'
       : '<div class="ksn-end"><span>더 이상 표시할 프로필이 없습니다. 범위를 늘리시겠습니까?</span><button type="button" class="ksn-btn primary" data-ksn="more">범위 늘리기</button></div>';
-    $('#ksnBody', ovl).innerHTML = list.map(it => card(it, en, price)).join('') + end;
+    $('#ksnBody', ovl).innerHTML = shown.map(it => card(it, en)).join('') + end;
   }
 
-  // 카드 = 간단 행(닉네임 + 성별·나이대·거리). 사진·글자 동그라미 없음(10-20 확정). 누르면 프로필 페이지(openDetail).
-  function card(it, en, price) {
+  // 모달 목록의 행 = 닉네임 + 성별·나이대·거리. 누르면 카드 넘겨 보기.
+  function card(it, en) {
     const p = it.p;
     const nick = String(p.nick || p.firstName || '').trim() || '회원';
     const meta = [];
     if (p.gender) meta.push(en.label('genders', p.gender));
     if (p.ageBand) meta.push(en.label('ageBands', p.ageBand));
-    if (it.wide) meta.push('주 전체'); else if (it.km != null) meta.push(it.km < 1 ? '1km 이내' : '약 ' + Math.round(it.km) + 'km');
-    const saved = isSavedSeeker(it.uid);
+    const k = kmText(it); if (k) meta.push(k);
     return `
       <button type="button" class="ksn-row" data-ksn-open="${esc(it.uid)}">
-        <span class="ksn-row-main"><span class="ksn-row-nick">${esc(nick)}${isContacted(it.uid) ? ' <span class="ksn-sent">메시지 보냄</span>' : ''}</span><span class="ksn-row-meta">${esc(meta.join(' · ') || '조건 등록')}${saved ? ' · 저장됨' : ''}</span></span>
+        <span class="ksn-row-main"><span class="ksn-row-nick">${esc(nick)}${isContacted(it.uid) ? ' <span class="ksn-sent">메시지 보냄</span>' : ''}</span><span class="ksn-row-meta">${esc(meta.join(' · ') || '조건 등록')}</span></span>
         <span class="ksn-row-arr" aria-hidden="true">›</span>
       </button>`;
   }
-  // 메시지 보낸 사람(11-04) — 기기 LS {내uid: {상대uid: 시각}} + 상세 열 때 chats/{상대_나} 존재 확인
+  // 메시지 보낸 사람(11-04) — 기기 LS {내uid: {상대uid: 시각}} + 카드 열 때 chats/{상대_나} 존재 확인
   const CONTACTED_KEY = 'koaus-contacted-seekers-v1';
   function contactedMap() { try { const m = JSON.parse(localStorage.getItem(CONTACTED_KEY) || '{}'); const u = window.koausAuth && window.koausAuth.user; return (u && m && typeof m === 'object' && m[u.uid] && typeof m[u.uid] === 'object') ? m[u.uid] : {}; } catch (_) { return {}; } }
   function isContacted(uid) { return !!contactedMap()[uid]; }
@@ -239,15 +211,13 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
     const u = window.koausAuth && window.koausAuth.user; if (!u || !db || uid === u.uid) return false;
     try { const snap = await getDoc(doc(db, 'chats', uid + '_' + u.uid)); const on = !!(snap && snap.exists()); markContacted(uid, on); return on; } catch (_) { return isContacted(uid); }
   }
-  // 저장(관심) — 기기 LS. 목록 필터 '저장한 분만'
+  // 저장(관심) — 11-08: 화면에서 숨김(지시 18). LS 값은 그대로 두어 되살리기 쉽게.
   const SAVED_KEY = 'koaus-saved-seekers-v1';
   function savedSeekers() { try { const a = JSON.parse(localStorage.getItem(SAVED_KEY) || '[]'); return Array.isArray(a) ? a : []; } catch (_) { return []; } }
   function isSavedSeeker(uid) { return savedSeekers().includes(uid); }
-  function toggleSavedSeeker(uid) { const a = savedSeekers(); const i = a.indexOf(uid); if (i === -1) a.push(uid); else a.splice(i, 1); try { localStorage.setItem(SAVED_KEY, JSON.stringify(a.slice(-200))); } catch (_) {} return i === -1; }
 
-  // 찾는 조건 한 문장 — 카드·프로필 페이지·미리보기 공용 문구
-  const subName = x => (x && (x.km || x.all) ? (regionKo(x.name) + ' 전체') : (x && x.name) || '');
-  function regionKo(name) { try { const r = (window.koausGeo && window.koausGeo.REGIONS || []).find(z => z.name === name); return r ? r.ko : name; } catch (_) { return name; } }
+  // 찾는 조건 한 문장 — 행·카드·미리보기 공용 문구. 큰 지역·주 전체는 영어 이름 그대로(11-08: 칩과 통일)
+  const subName = x => (x && (x.km || x.all) ? (x.name + ' 전체') : (x && x.name) || '');
   function conditionSentence(p, en) {
     const subs = (p.suburbs || []).map(subName).filter(Boolean).slice(0, 3).join(' · ');
     let when = '';
@@ -266,79 +236,90 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
     return parts.length ? parts.join(', ').replace(/에서, /, '에서 ') + ' 방을 찾습니다.' : '조건을 등록한 분입니다.';
   }
 
-  // ── 프로필 페이지(상세) — 목록·모달 공용. 휴대폰 전체 화면, 데스크탑 가운데 ──
-  let det = null, detUid = null;
-  function openDetail(it, ctx) {
-    injectCss();
-    const en = E(); if (!it || !en) return;
-    const p = it.p; detUid = it.uid;
-    if (!det) {
-      det = document.createElement('div'); det.className = 'ksn-detail'; det.setAttribute('role', 'dialog'); det.setAttribute('aria-modal', 'true');
-      document.body.appendChild(det);
-      det.addEventListener('click', e => {
-        if (e.target === det || e.target.closest('[data-ksn-detail="back"]')) { closeDetail(); return; }
-        if (e.target.closest('[data-ksn-detail="report"]')) { reportSeeker(); return; }
-        const sv = e.target.closest('[data-ksn-detail="save"]');
-        if (sv) { const on = toggleSavedSeeker(detUid); sv.textContent = on ? '저장됨' : '저장'; sv.setAttribute('aria-pressed', on ? 'true' : 'false'); refreshLists(); return; }
-        const c = e.target.closest('[data-ksn-chat]'); if (c) { startChat(c.dataset.ksnChat, c); return; }
-        const sd = e.target.closest('[data-ksn-send]'); if (sd) { const ta = det.querySelector('#ksnMsg'); sendFromProfile(sd.dataset.ksnSend, ta ? ta.value : '', sd); }
-      });
-      document.addEventListener('keydown', e => { if (e.key === 'Escape' && det.classList.contains('open')) closeDetail(); });
-    }
+  // ── 카드 안 HTML(deck 이 그림) — 닉네임·조건·자세히·내 방과 맞는지 ──
+  function cardBody(it, ctx) {
+    const en = E(); const p = it.p;
     const nick = String(p.nick || p.firstName || '').trim() || '회원';
     const meta = [];
     if (p.gender) meta.push(en.label('genders', p.gender));
     if (p.ageBand) meta.push(en.label('ageBands', p.ageBand));
     const act = tsAgo(p.lastActiveAt); if (act) meta.push(act);
-    if (it.wide) meta.push('주 전체'); else if (it.km != null) meta.push(it.km < 1 ? '1km 이내' : '약 ' + Math.round(it.km) + 'km');
-    const subs = (p.suburbs || []).map(x => (x.km || x.all) ? esc(regionKo(x.name)) + ' 전체' + (x.km ? ' ' + esc(x.km) + 'km' : '') : esc(x.name) + ' ' + esc(String(x.state || '').toUpperCase())).join(' · ');
+    const k = kmText(it); if (k) meta.push(k + (ctx && ctx.showCenter && it.center && it.center.name && !it.wide ? ' · ' + it.center.name : ''));
+    const subs = (p.suburbs || []).map(x => (x.km || x.all) ? esc(x.name) + ' 전체' + (x.km ? ' ' + esc(x.km) + 'km' : '') : esc(x.name) + ' ' + esc(String(x.state || '').toUpperCase())).join(' · ');
     const rooms = (p.roomTypes || []).map(c => en.label('roomTypes', c)).filter(Boolean).join(', ');
     const price = Number(ctx && ctx.price) || 0;
     const fit = [];
     if (price) fit.push(price >= (p.budgetMin || 0) && price <= (p.budgetMax != null ? p.budgetMax : 1e9) ? '<span class="ksn-tag ok">예산 맞음</span>' : '<span class="ksn-tag">예산 밖</span>');
     if (it.km != null) fit.push(it.km <= Math.max(Number(ctx && ctx.radius) || 0, it.reach || Number(p.radiusKm) || 0) ? '<span class="ksn-tag ok">반경 안</span>' : '<span class="ksn-tag">반경 밖</span>');
     if (p.moveIn) { const d = new Date(p.moveIn + 'T00:00:00'); const days = Math.ceil((d - new Date()) / 86400000); fit.push(`<span class="ksn-tag">${days <= 0 ? '입주 지금 바로' : '입주일 ' + days + '일 뒤'}</span>`); }
-    const saved = isSavedSeeker(it.uid);
-    det.innerHTML = `
-      <div class="ksn-detail-box">
-        <div class="ksn-detail-bar"><button type="button" class="ksn-lnk" data-ksn-detail="back">‹ 구하는 사람</button><b>${esc(nick)}</b><button type="button" class="ksn-lnk muted" data-ksn-detail="report">신고</button></div>
-        <div class="ksn-detail-body">
-          <div class="ksn-detail-hero"><div class="ksn-detail-nick">${esc(nick)}</div><div class="ksn-detail-meta">${esc(meta.join(' · '))}</div></div>
-          <div class="ksn-sec"><h4>찾는 조건</h4><div class="ksn-line">${esc(conditionSentence(p, en))}</div></div>
-          <div class="ksn-sec"><h4>자세히</h4><dl class="ksn-rows">
-            <dt>동네</dt><dd>${subs || '—'}${p.radiusKm && (p.suburbs || []).some(x => !(x.km || x.all)) ? ' (반경 ' + esc(p.radiusKm) + 'km)' : ''}</dd>
-            <dt>예산</dt><dd>주 $${esc(p.budgetMin != null ? p.budgetMin : 0)}${p.budgetMax != null ? ' ~ $' + esc(p.budgetMax) : ' 이상'}</dd>
-            <dt>입주</dt><dd>${esc(p.moveIn || '—')}${p.stay ? ' · ' + esc(en.label('stays', p.stay)) : ''}</dd>
-            <dt>방</dt><dd>${esc(rooms || '상관없음')}${p.bathroom === 'private' ? ' · 개인 욕실' : ''}</dd>
-          </dl></div>
-          ${fit.length ? `<div class="ksn-sec"><h4>내 방과 맞는지</h4><div class="ksn-tags">${fit.join('')}</div></div>` : ''}
-          <div class="ksn-note">소개글·신분·흡연·반려동물은 본인만 보는 칸입니다. 채팅이 시작되면 이 분이 직접 보낼 수 있습니다. 연락은 채팅으로만 됩니다.</div>
-        </div>
-        <div class="ksn-sent-line" id="ksnSentLine" ${isContacted(it.uid) ? '' : 'hidden'}>메시지를 보냈습니다. <a href="chat.html?id=${esc(it.uid + '_' + ((window.koausAuth && window.koausAuth.user && window.koausAuth.user.uid) || ''))}">채팅에서 보기 ›</a></div>
-        <div class="ksn-compose" id="ksnCompose">
-          <textarea id="ksnMsg" rows="2" maxlength="1000" placeholder="메시지를 적어 주십시오">${isContacted(it.uid) ? '' : '안녕하세요. 찾으시는 조건에 맞는 방이 있어 연락드립니다.'}</textarea>
-          <div class="ksn-compose-row"><button type="button" class="ksn-btn big ghost" data-ksn-detail="save" aria-pressed="${saved ? 'true' : 'false'}">${saved ? '저장됨' : '저장'}</button><button type="button" class="ksn-btn primary big" data-ksn-send="${esc(it.uid)}" id="ksnSendBtn">메시지 보내기</button></div>
-        </div>
-      </div>`;
-    det.classList.add('open');
-    document.body.style.overflow = 'hidden';
-    // 서버 확인(1회) — 다른 기기에서 보낸 메시지도 반영
-    checkContacted(it.uid).then(on => {
-      try { if (detUid !== it.uid) return; const l = det.querySelector('#ksnSentLine'), ta = det.querySelector('#ksnMsg'); if (l) l.hidden = !on; if (on && ta && /^안녕하세요\. 찾으시는 조건에/.test(ta.value)) ta.value = ''; } catch (_) {}
+    return `
+      <div class="ksn-detail-hero"><div class="ksn-detail-nick">${esc(nick)}</div><div class="ksn-detail-meta">${esc(meta.join(' · '))}</div></div>
+      <div class="ksn-sec"><h4>찾는 조건</h4><div class="ksn-line">${esc(conditionSentence(p, en))}</div></div>
+      <div class="ksn-sec"><h4>자세히</h4><dl class="ksn-rows">
+        <dt>동네</dt><dd>${subs || '—'}${p.radiusKm && (p.suburbs || []).some(x => !(x.km || x.all)) ? ' (반경 ' + esc(p.radiusKm) + 'km)' : ''}</dd>
+        <dt>예산</dt><dd>주 $${esc(p.budgetMin != null ? p.budgetMin : 0)}${p.budgetMax != null ? ' ~ $' + esc(p.budgetMax) : ' 이상'}</dd>
+        <dt>입주</dt><dd>${esc(p.moveIn || '—')}${p.stay ? ' · ' + esc(en.label('stays', p.stay)) : ''}</dd>
+        <dt>방</dt><dd>${esc(rooms || '상관없음')}${p.bathroom === 'private' ? ' · 개인 욕실' : ''}</dd>
+      </dl></div>
+      ${fit.length ? `<div class="ksn-sec"><h4>내 방과 맞는지</h4><div class="ksn-tags">${fit.join('')}</div></div>` : ''}
+      <div class="ksn-note">소개글·신분·흡연·반려동물은 본인만 보는 칸입니다. 채팅이 시작되면 이 분이 직접 보낼 수 있습니다. 연락은 채팅으로만 됩니다.</div>`;
+  }
+
+  // ── 카드 넘겨 보기 열기(공용 deck) — list: 보여 줄 사람들, index: 시작 위치, ctx: {price, radius, title, fromModal} ──
+  let deckList = [];
+  function openDeck(list, index, ctx) {
+    const D = deck(); if (!D) { toast('잠시 후 다시 시도해 주십시오.'); return; }
+    injectCss();
+    const en = E(); if (!en) { toast('잠시 후 다시 시도해 주십시오.'); return; }
+    deckList = list || [];
+    const fromModal = !!(ctx && ctx.fromModal);
+    D.open({
+      items: deckList, index: index || 0,
+      title: (ctx && ctx.title) || '구하는 사람',
+      key: it => it.uid,
+      render: it => cardBody(it, ctx),
+      compose: it => ({ sent: isContacted(it.uid), preset: '안녕하세요. 찾으시는 조건에 맞는 방이 있어 연락드립니다.' }),
+      onSend: (it, text) => sendFromProfile(it.uid, text),
+      onSent: () => { try { if (ovl && ovl.classList.contains('open')) render(); } catch (_) {} },
+      onReport: it => reportSeeker(it.uid),
+      onShare: it => shareSeeker(it.uid),
+      onFilter: fromModal ? null : () => openSheet(),
+      onShow: it => { if (it) checkContacted(it.uid).then(on => { if (on && D.isOpen() && D.current() && D.current().uid === it.uid) D.markSent(it.uid); }); },
+      guard: () => !(sheet && sheet.classList.contains('open')),
+      emptyHtml: emptyHtml,
+      loading: !!(ctx && ctx.loading),
+      onClose: () => {
+        if (ovl && ovl.classList.contains('open')) { document.body.style.overflow = 'hidden'; return; }   // 모달 위에서 열렸으면 모달은 그대로
+        try { if (new URLSearchParams(location.search).get('people') === '1' || new URLSearchParams(location.search).get('seeker')) history.replaceState(null, '', location.pathname + (location.search.replace(/[?&](people=1|seeker=[^&]*)/g, '').replace(/^&/, '?') || '')); } catch (_) {}
+      },
     });
   }
-  let pageOvl = null;   // 집주인용 사람 목록 오버레이(아래 openPage)
-  function closeDetail() { if (!det) return; det.classList.remove('open'); if (!(ovl && ovl.classList.contains('open')) && !(pageOvl && pageOvl.classList.contains('open'))) document.body.style.overflow = ''; }
-  function reportSeeker() {
-    const it = (pg && pg.all || all || []).find(x => x.uid === detUid); if (!it) return;
+  function emptyHtml() {
+    const nextR = pg ? RADII[RADII.indexOf(pg.radius) + 1] : null;
+    const hasSuburb = !!(pg && (pg.centers || []).some(c => !c.all));
+    return `<b>조건에 맞는 분이 아직 없습니다.</b><span>동네나 주를 바꾸거나 범위를 늘려 보십시오.</span>
+      <div class="kpd-empty-btns"><button type="button" class="kpd-btn primary" data-kpd="filter">필터 변경</button>${nextR && hasSuburb ? `<button type="button" class="kpd-btn" data-ksn-wider="${nextR}">범위 늘리기 (${nextR}km)</button>` : ''}</div>`;
+  }
+  document.addEventListener('click', e => {
+    const w = e.target.closest('[data-ksn-wider]'); if (!w || !pg) return;
+    pg.radius = Number(w.dataset.ksnWider) || pg.radius; saveFilter(); showResults();
+  });
+  function reportSeeker(uid) {
+    const it = (deckList || []).find(x => x.uid === uid) || (all || []).find(x => x.uid === uid); if (!it) return;
     if (!window.koausDb && db) { try { window.koausDb = db; window.koausFs = { doc, setDoc, getDoc, serverTimestamp, collection, query, where, getDocs, limit }; } catch (_) {} }
-    if (window.koausReport && window.koausReport.open) window.koausReport.open({ postId: detUid, board: 'seeker', postTitle: '집 구해요 · ' + (it.p.nick || ''), postAuthorUid: detUid });
+    if (window.koausReport && window.koausReport.open) window.koausReport.open({ postId: uid, board: 'seeker', postTitle: '집 구해요 · ' + (it.p.nick || ''), postAuthorUid: uid });
     else location.href = 'contact.html';
   }
-  function refreshLists() { try { if (pg && pg.host) renderPage(); } catch (_) {} try { if (ovl && ovl.classList.contains('open')) render(); } catch (_) {} }
+  // 공유 = 이 사람 카드로 바로 열리는 링크 복사(로그인·인증 회원만 볼 수 있음)
+  function shareSeeker(uid) {
+    const url = location.origin + '/' + (page() === 'rent.html' ? 'rent.html' : 'accom.html') + '?people=1&seeker=' + encodeURIComponent(uid);
+    const ok = () => toast('링크가 복사되었습니다');
+    const no = () => prompt('이 링크를 복사해 주십시오', url);
+    try { if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(ok, no); else no(); } catch (_) { no(); }
+  }
 
   async function ensureChat(seekerUid, user) {
-    const it = (pg && pg.all || all || []).find(x => x.uid === seekerUid);
+    const it = (deckList || []).find(x => x.uid === seekerUid) || (all || []).find(x => x.uid === seekerUid);
     const chatId = seekerUid + '_' + user.uid;
     const payload = {
       postId: seekerUid, board: 'seeker', ownerUid: seekerUid, inquirerUid: user.uid, participants: [seekerUid, user.uid],
@@ -350,14 +331,14 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
     try { await setDoc(doc(db, 'chats', chatId), payload); return chatId; }
     catch (_) { const snap = await getDoc(doc(db, 'chats', chatId)); if (snap && snap.exists()) return chatId; throw new Error('deny'); }
   }
-  async function sendFromProfile(seekerUid, text, btn) {
+  // 카드 아래 칸에서 첫 메시지 보내기 — 성공이면 true(deck 이 칸을 잠근다)
+  async function sendFromProfile(seekerUid, text) {
     const user = window.koausAuth && window.koausAuth.user;
-    if (!user || busy) return;
-    if (seekerUid === user.uid) { toast('본인 프로필입니다.'); return; }
+    if (!user || busy) return false;
+    if (seekerUid === user.uid) { toast('본인 프로필입니다.'); return false; }
     const msg = String(text || '').trim().slice(0, 1000);
-    if (!msg) { toast('메시지를 적어 주십시오.'); return; }
-    busy = true; if (btn) { btn.disabled = true; btn.textContent = '보내는 중…'; }
-    const done = () => { busy = false; try { if (btn) { btn.disabled = false; btn.textContent = '메시지 보내기'; } } catch (_) {} };
+    if (!msg) { toast('메시지를 적어 주십시오.'); return false; }
+    busy = true;
     try {
       const chatId = await ensureChat(seekerUid, user);
       const b = writeBatch(db);
@@ -365,93 +346,63 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
       b.update(doc(db, 'chats', chatId), { lastMsg: msg.slice(0, 200), lastMsgAt: serverTimestamp(), lastSenderUid: user.uid, unreadFor: [seekerUid], hiddenFor: [] });
       await b.commit();
       markContacted(seekerUid, true);
-      done();
-      try { const ta = det.querySelector('#ksnMsg'); if (ta) ta.value = ''; const l = det.querySelector('#ksnSentLine'); if (l) l.hidden = false; } catch (_) {}
+      busy = false;
       toast('메시지를 보냈습니다.');
-      refreshLists();
+      return true;
     } catch (e) {
-      done();
+      busy = false;
       const denied = e && (e.message === 'deny' || e.code === 'permission-denied' || /permission/i.test(e.message || ''));
       alert(denied ? '메시지를 보낼 수 없습니다. 휴대폰(SMS) 본인 인증을 완료했는지, 차단된 상대가 아닌지 확인해 주십시오.' : '보내지 못했습니다. 잠시 후 다시 시도해 주십시오.');
-    }
-  }
-  async function startChat(seekerUid, btn) {
-    const user = window.koausAuth && window.koausAuth.user;
-    if (!user || busy) return;
-    if (seekerUid === user.uid) { toast('본인 프로필입니다.'); return; }
-    const it = all && all.find(x => x.uid === seekerUid);
-    const chatId = seekerUid + '_' + user.uid;
-    const goRoom = () => { location.href = 'chat.html?id=' + encodeURIComponent(chatId); };
-    const payload = {
-      postId: seekerUid, board: 'seeker',
-      ownerUid: seekerUid, inquirerUid: user.uid,
-      participants: [seekerUid, user.uid],
-      unreadFor: [], blockedBy: [],
-      createdAt: serverTimestamp(),
-      postTitle: ('집 구해요 · ' + ((it && (it.p.nick || it.p.firstName)) || '')).slice(0, 200),
-    };
-    const oNick = String((it && (it.p.nick || it.p.firstName)) || '').trim().slice(0, 60);
-    if (oNick) payload.ownerNick = oNick;
-    let iNick = '';
-    try { iNick = (localStorage.getItem('koaus-nickname') || user.displayName || '').trim().slice(0, 60); } catch (_) {}
-    if (iNick) payload.inquirerNick = iNick;
-    busy = true; if (btn) btn.disabled = true;
-    const done = () => { busy = false; try { if (btn) btn.disabled = false; } catch (_) {} };
-    const denyMsg = '채팅을 시작할 수 없습니다. 휴대폰(SMS) 본인 인증을 완료했는지 확인해 주십시오.';
-    try {
-      await setDoc(doc(db, 'chats', chatId), payload);
-      markContacted(seekerUid, true);
-      done(); goRoom();
-    } catch (_) {
-      try {
-        const snap = await getDoc(doc(db, 'chats', chatId));
-        done();
-        if (snap && snap.exists()) { markContacted(seekerUid, true); goRoom(); } else alert(denyMsg);
-      } catch (__) { done(); alert(denyMsg); }
+      return false;
     }
   }
 
-  // ═══ 페이지 모드 (①-3, 2026-10 / 10-20 개편) — 마이페이지 ?tab=people '구하는 사람' 탭 / 탭바 '프로필' ═══
-  //   · 머리 한 줄: "Sunnybank Hills · 5km · 가까운 순 · 전체" + [필터] → 시트(기준 주소: 내 글 칩/동네 검색 · 반경 · 정렬 · 성별 · 예산 · 저장한 분만)
-  //   · 행(닉네임 + 성별·나이대·거리) → 누르면 프로필 페이지(openDetail). 사진·동그라미 없음.
-  //   · 매칭 = 거리 ≤ max(내 반경, 구하는 사람 반경). 정렬: 가까운 순 / 최신 등록 순 / 예산 낮은 순.
-  const GEOCODE_KEY = 'AIzaSyDwogQ55V0-JqZ-ZYRTpYgNZWOdp_-5vOQ';
-  const CENTER_KEY = 'koaus-people-center-v2';
-  let pg = null;   // { host, center, radius, sort, gender, budgetOnly, savedOnly, price, all, myPosts, sheetOpen }
+  // ═══ 쉐어생 구하기(지시 18) — 도구줄 버튼 → 상세 필터 시트 → 카드 넘겨 보기 ═══
+  //   · 필터: 동네 혹은 주(최대 3곳: 동네 검색·내 글 동네·주 전체 칩) · 반경(동네 기준) · 정렬 · 성별 · 예산(내 방 주당 가격)
+  //   · 매칭 = 동네: 거리 ≤ max(내 반경, 구하는 사람 반경·큰 지역 km) 또는 그 사람이 주 전체. 주: 그 사람 states 에 그 주.
+  const FILTER_KEY = 'koaus-people-filter-v3';
+  let pg = null;   // { centers:[{name,state,lat,lng,all?}], radius, sort, gender, price, all:[]|null, myPosts:[] }
+  const SORTS = { near: '가까운 순', new: '최신 등록 순', budget: '예산 낮은 순' };
+  const GENDERS = { all: '전체', female: '여성', male: '남성' };
+  const STATES = [['qld', 'QLD'], ['nsw', 'NSW'], ['vic', 'VIC'], ['wa', 'WA'], ['sa', 'SA'], ['act', 'ACT'], ['tas', 'TAS'], ['nt', 'NT']];
 
   function injectPageCss() {
     if (document.getElementById('ksnPageStyle')) return;
     const st = document.createElement('style'); st.id = 'ksnPageStyle';
     st.textContent = `
-      .ksn-page{display:flex;flex-direction:column;gap:8px}
-      .ksn-hdr{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:2px}
-      .ksn-sum{font-size:13.5px;color:var(--text-muted);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
-      .ksn-sum b{color:var(--text-primary)}
-      .ksn-fbtn{flex:0 0 auto;appearance:none;border:1.5px solid var(--text-primary);background:var(--bg-base);color:var(--text-primary);border-radius:999px;padding:8px 14px;font-size:13.5px;font-weight:800;font-family:inherit;cursor:pointer}
-      .ksn-page .ksn-end{padding:14px 0}
-      /* 필터 시트 */
-      .ksn-sheet{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9040;display:none;align-items:flex-end;justify-content:center}
+      .ksn-sheet{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9060;display:none;align-items:flex-end;justify-content:center}
       .ksn-sheet.open{display:flex}
-      .ksn-sheet-box{width:100%;max-width:560px;background:var(--bg-base);color:var(--text-primary);border-radius:18px 18px 0 0;padding:16px 16px calc(18px + env(safe-area-inset-bottom,0px));max-height:88vh;overflow:auto}
+      .ksn-sheet-box{width:100%;max-width:560px;background:var(--bg-base);color:var(--text-primary);border-radius:18px 18px 0 0;padding:16px 16px calc(18px + env(safe-area-inset-bottom,0px));max-height:88vh;overflow:auto;box-sizing:border-box}
       @media(min-width:640px){.ksn-sheet{align-items:center}.ksn-sheet-box{border-radius:18px}}
       .ksn-sheet h3{margin:0 0 6px;font-size:16px;font-weight:800;display:flex;justify-content:space-between;align-items:center}
-      .ksn-lab{font-size:12.5px;color:var(--text-muted);font-weight:700;margin:12px 0 6px}
+      .ksn-lab{font-size:12.5px;color:var(--text-muted);font-weight:700;margin:12px 0 6px;display:flex;gap:6px;align-items:baseline}
+      .ksn-lab .ksn-dim{font-weight:500}
+      .ksn-dim{font-size:11.5px;color:var(--text-muted)}
       .ksn-sheet .ksn-opt{padding:7px 12px}
       .ksn-sheet .ksn-opt.addr{border-radius:10px}
       .ksn-sheet .ksn-q{position:relative;margin-top:6px}
       .ksn-sheet input{width:100%;box-sizing:border-box;border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-size:13.5px;font-family:inherit;background:var(--bg-base);color:var(--text-primary)}
+      .ksn-sheet input:focus{outline:none;border-color:var(--border-focus,var(--text-primary))}
       .ksn-sug{list-style:none;margin:4px 0 0;padding:0;border:1px solid var(--border);border-radius:10px;background:var(--bg-base);max-height:200px;overflow:auto;display:none}
       .ksn-sug.on{display:block}
       .ksn-sug li{padding:9px 12px;font-size:13.5px;cursor:pointer;border-bottom:1px solid var(--border-subtle)}
       .ksn-sug li:last-child{border-bottom:0}
       .ksn-sug li:hover{background:var(--bg-card)}
-      .ksn-apply{margin-top:16px;appearance:none;border:0;background:var(--text-primary);color:var(--bg-base);border-radius:12px;padding:13px;font-size:15px;font-weight:800;font-family:inherit;width:100%;cursor:pointer}`;
+      .ksn-centers{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;min-height:4px}
+      .ksn-center{display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:700;padding:5px 8px 5px 11px;border-radius:999px;background:var(--accent);color:var(--accent-text)}
+      .ksn-center button{appearance:none;border:0;background:transparent;color:inherit;cursor:pointer;font-size:15px;line-height:1;padding:0 2px}
+      .ksn-lnk{appearance:none;border:0;background:none;color:var(--text-primary);font-size:14px;cursor:pointer;font-family:inherit;padding:4px 0}
+      .ksn-lnk.muted{color:var(--text-muted)}
+      .ksn-help{font-size:12px;color:var(--text-muted);line-height:1.5;margin-top:6px}
+      .ksn-apply{margin-top:16px;appearance:none;border:0;background:var(--text-primary);color:var(--bg-base);border-radius:12px;padding:13px;font-size:15px;font-weight:800;font-family:inherit;width:100%;cursor:pointer}
+      .ksn-apply:disabled{opacity:.5;cursor:default}`;
     document.head.appendChild(st);
   }
-  function loadCenter() { try { return JSON.parse(localStorage.getItem(CENTER_KEY) || 'null'); } catch (_) { return null; } }
-  function saveCenter() { try { localStorage.setItem(CENTER_KEY, JSON.stringify({ center: pg.center, radius: pg.radius, sort: pg.sort, gender: pg.gender, price: pg.price })); } catch (_) {} }
+  function loadFilter() { try { return JSON.parse(localStorage.getItem(FILTER_KEY) || 'null'); } catch (_) { return null; } }
+  function saveFilter() { try { localStorage.setItem(FILTER_KEY, JSON.stringify({ centers: pg.centers, radius: pg.radius, sort: pg.sort, gender: pg.gender, price: pg.price })); } catch (_) {} }
+  const sameCenter = (a, b) => !!(a && b && a.state === b.state && !!a.all === !!b.all && (a.all || (a.lat === b.lat && a.lng === b.lng)));
 
-  // 동네 검색 — koaus-geo.js 공통(Maps JS, 한글·영문·우편번호). 11-04: REST(한글 language=ko) → 공통으로 통일
+  // 동네 검색 — koaus-geo.js 공통(Maps JS, 한글·영문·우편번호)
   async function geocodeSuburb(text) {
     if (!window.koausGeo) { console.warn('[seekers-nearby] koaus-geo.js 가 없습니다'); return []; }
     try { return (await window.koausGeo.suburbs(text)).slice(0, 8); } catch (e) { console.warn('[seekers-nearby] geocode 실패', e); return []; }
@@ -477,7 +428,7 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
   function reachOf(x, center) {
     let km = null, reach = Number(x.radiusKm) || 0, wide = false, hit = false;
     (Array.isArray(x.suburbs) ? x.suburbs : []).forEach(s => {
-      if (s.all && s.state && center && s.state === center.state) wide = true;
+      if (s.all) { if (s.state && center && s.state === center.state) wide = true; return; }   // 11-08: 주 전체는 거리 계산에서 뺀다(좌표는 주도일 뿐)
       if (typeof s.lat !== 'number' || typeof s.lng !== 'number') return;
       const k = kmBetween(center, s);
       if (km == null || k < km) km = k;
@@ -486,105 +437,133 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
     if ((wide || hit) && km != null) reach = Math.max(reach, km);
     return { km, reach, wide };
   }
-  async function fetchFor(center, meUid) {
-    const snap = await getDocs(query(collection(db, 'seeker_profiles'), where('states', 'array-contains', center.state), where('visible', '==', true), orderBy('lastActiveAt', 'desc'), limit(20)));
-    return snap.docs.filter(d => d.id !== meUid).map(d => {
-      const x = d.data() || {};
-      const r = reachOf(x, center);
-      return { uid: d.id, p: x, km: r.km, reach: r.reach, wide: r.wide };
-    });
+  // 여러 기준(동네·주)으로 한 번에 조회 — 주가 하나면 array-contains, 여럿이면 array-contains-any(같은 인덱스)
+  async function fetchForCenters(centers, meUid) {
+    const states = Array.from(new Set((centers || []).map(c => c.state).filter(Boolean))).slice(0, 10);
+    if (!states.length) return [];
+    const byState = states.length === 1 ? where('states', 'array-contains', states[0]) : where('states', 'array-contains-any', states);
+    const snap = await getDocs(query(collection(db, 'seeker_profiles'), byState, where('visible', '==', true), orderBy('lastActiveAt', 'desc'), limit(20)));
+    return snap.docs.filter(d => d.id !== meUid).map(d => ({ uid: d.id, p: d.data() || {} }));
   }
-
-  const SORTS = { near: '가까운 순', new: '최신 등록 순', budget: '예산 낮은 순' };
-  const GENDERS = { all: '전체', female: '여성', male: '남성' };
+  // 한 사람이 지금 필터(기준들·반경)에 맞는지 → {km, reach, wide, center} 또는 null
+  function matchOf(x, centers, radius) {
+    let best = null;
+    (centers || []).forEach(c => {
+      if (c.all) {
+        const inState = (Array.isArray(x.states) && x.states.includes(c.state)) || (Array.isArray(x.suburbs) && x.suburbs.some(s => s.state === c.state));
+        if (inState && !best) best = { km: null, reach: 0, wide: true, center: c };
+        return;
+      }
+      const r = reachOf(x, c);
+      const ok = r.wide || (r.km != null && r.km <= Math.max(radius, r.reach || 0));
+      if (!ok) return;
+      const cand = { km: r.km, reach: r.reach, wide: r.wide && !(r.km != null && r.km <= Math.max(radius, r.reach || 0)), center: c };
+      if (!best || best.km == null || (cand.km != null && cand.km < best.km)) best = cand;
+    });
+    return best;
+  }
   function filtered() {
-    const list = (pg.all || []).filter(it => {
-      if (pg.gender !== 'all' && it.p.gender !== pg.gender) return false;
-      if (it.km == null || it.km > Math.max(pg.radius, it.reach || 0)) return false;   // 양방향(큰 지역 km 포함)
-      if (pg.budgetOnly && pg.price && !((it.p.budgetMin || 0) <= pg.price && pg.price <= (it.p.budgetMax != null ? it.p.budgetMax : 1e9))) return false;
-      if (pg.savedOnly && !isSavedSeeker(it.uid)) return false;
-      return true;
+    const list = [];
+    (pg.all || []).forEach(x => {
+      const m = matchOf(x.p, pg.centers, pg.radius); if (!m) return;
+      if (pg.gender !== 'all' && x.p.gender !== pg.gender) return;
+      if (pg.price && !((x.p.budgetMin || 0) <= pg.price && pg.price <= (x.p.budgetMax != null ? x.p.budgetMax : 1e9))) return;
+      list.push(Object.assign({ uid: x.uid, p: x.p }, m));
     });
     const ms = ts => (ts && typeof ts.toMillis === 'function') ? ts.toMillis() : 0;
     if (pg.sort === 'new') list.sort((a, b) => ms(b.p.createdAt) - ms(a.p.createdAt));
     else if (pg.sort === 'budget') list.sort((a, b) => ((a.p.budgetMax != null ? a.p.budgetMax : 1e9) - (b.p.budgetMax != null ? b.p.budgetMax : 1e9)));
-    else list.sort((a, b) => a.km - b.km);
+    else list.sort((a, b) => (a.km == null ? 1e9 : a.km) - (b.km == null ? 1e9 : b.km));
     return list;
   }
-
-  function renderPage() {
-    if (!pg || !pg.host) return;
-    const en = E(); const h = pg.host; const c = pg.center;
-    const sum = c
-      ? `<b>${esc(c.name)}</b> · ${pg.radius}km · ${SORTS[pg.sort]} · ${GENDERS[pg.gender]}${pg.budgetOnly ? ' · 예산 맞음' : ''}${pg.savedOnly ? ' · 저장한 분' : ''}`
-      : '기준 동네를 정해 주십시오';
-    let body = '';
-    if (!c) body = '<div class="ksn-end">[필터]에서 기준 동네(내 글 또는 검색)를 고르면 그 근처에서 집을 구하는 분들이 보입니다.</div>';
-    else if (!pg.all) body = '<div class="ksn-end">불러오는 중…</div>';
-    else {
-      const list = filtered();
-      const atMax = pg.radius === RADII[RADII.length - 1];
-      const end = atMax
-        ? '<div class="ksn-end">더 이상 표시할 프로필이 없습니다.</div>'
-        : `<div class="ksn-end"><span>더 이상 표시할 프로필이 없습니다.</span><button type="button" class="ksn-btn primary" data-ksn="more">범위 늘리기 (${RADII[RADII.indexOf(pg.radius) + 1]}km)</button></div>`;
-      body = list.map(it => card(it, en, pg.price)).join('') + end;
+  // 필터 적용 → 조회(필요하면) → 카드 넘겨 보기
+  async function showResults(focusUid) {
+    const user = window.koausAuth && window.koausAuth.user; if (!user || !pg) return;
+    const D = deck(); if (!D) return;
+    const ctx = { price: pg.price, radius: pg.radius, title: '구하는 사람', showCenter: true };
+    const need = !pg.all || pg.allKey !== pg.centers.map(c => c.state).sort().join(',');
+    if (need) {
+      pg.all = null;
+      if (!D.isOpen()) openDeck([], 0, Object.assign({ loading: true }, ctx)); else D.setLoading(true);
+      try { pg.all = await fetchForCenters(pg.centers, user.uid); pg.allKey = pg.centers.map(c => c.state).sort().join(','); }
+      catch (e) { console.warn('[seekers-nearby] 조회 실패', e); pg.all = []; toast('불러오지 못했습니다. 잠시 후 다시 시도해 주십시오.'); }
     }
-    h.innerHTML = `<div class="ksn-page"><div class="ksn-hdr"><div class="ksn-sum">${sum}</div><button type="button" class="ksn-fbtn" data-ksn="filter">필터</button></div>${body}</div>`;
-    h.onclick = e => {
-      if (e.target.closest('[data-ksn="filter"]')) { openSheet(); return; }
-      if (e.target.closest('[data-ksn="more"]')) { const i = RADII.indexOf(pg.radius); if (i < RADII.length - 1) { pg.radius = RADII[i + 1]; saveCenter(); renderPage(); } return; }
-      const o = e.target.closest('[data-ksn-open]');
-      if (o) { const it = (pg.all || []).find(x => x.uid === o.dataset.ksnOpen); if (it) openDetail(it, { price: pg.price, radius: pg.radius }); }
-    };
+    const list = filtered();
+    const i = focusUid ? Math.max(0, list.findIndex(x => x.uid === focusUid)) : 0;
+    if (!D.isOpen()) openDeck(list, i, ctx);
+    else { deckList = list; D.update(list, i); }
   }
 
-  // ── 필터 시트 ──
-  let sheet = null, sugTimer2 = null, sugSeq2 = 0;
+  // ── 상세 필터 시트 ──
+  let sheet = null, sugTimer2 = null, sugSeq2 = 0, fillMyChips = null;
   function openSheet() {
-    injectPageCss();
+    injectCss(); injectPageCss();
+    if (!pg) return;
     if (!sheet) {
       sheet = document.createElement('div'); sheet.className = 'ksn-sheet'; sheet.setAttribute('role', 'dialog'); sheet.setAttribute('aria-modal', 'true');
       document.body.appendChild(sheet);
       sheet.addEventListener('click', e => { if (e.target === sheet || e.target.closest('[data-ksn-sheet="close"]')) closeSheet(); });
       document.addEventListener('keydown', e => { if (e.key === 'Escape' && sheet.classList.contains('open')) closeSheet(); });
     }
-    const draft = { center: pg.center, radius: pg.radius, sort: pg.sort, gender: pg.gender, budgetOnly: pg.budgetOnly, savedOnly: pg.savedOnly, price: pg.price };
-    const chips = (pg.myPosts || []).map((m, i) => `<button type="button" class="ksn-opt addr" data-my="${i}" aria-pressed="${draft.center && draft.center.lat === m.lat && draft.center.lng === m.lng ? 'true' : 'false'}">${esc(m.board)} · ${esc(m.name)}</button>`).join('');
-    const custom = draft.center && !(pg.myPosts || []).some(m => m.lat === draft.center.lat && m.lng === draft.center.lng);
+    const draft = { centers: (pg.centers || []).map(c => Object.assign({}, c)), radius: pg.radius, sort: pg.sort, gender: pg.gender, price: pg.price };
     const opts = (name, map, cur) => Object.keys(map).map(k => `<button type="button" class="ksn-opt" data-set="${name}" data-val="${k}" aria-pressed="${String(cur) === k ? 'true' : 'false'}">${esc(map[k])}</button>`).join('');
     sheet.innerHTML = `
       <div class="ksn-sheet-box">
-        <h3>필터 <button type="button" class="ksn-lnk muted" data-ksn-sheet="close">닫기</button></h3>
-        <div class="ksn-lab">기준 주소</div>
-        <div class="ksn-bar" style="padding:0;border:0;">${chips}${custom ? `<button type="button" class="ksn-opt addr" data-my="custom" aria-pressed="true">${esc(draft.center.name)}</button>` : ''}</div>
-        <div class="ksn-q"><input id="ksnSheetQ" type="text" placeholder="다른 동네 검색 — 예: Sunnybank, 4109" autocomplete="off" inputmode="search"><ul class="ksn-sug" id="ksnSheetSug"></ul></div>
-        <div class="ksn-lab">반경</div><div class="ksn-bar" style="padding:0;border:0;">${RADII.map(r => `<button type="button" class="ksn-opt" data-set="radius" data-val="${r}" aria-pressed="${r === draft.radius ? 'true' : 'false'}">${r}km</button>`).join('')}</div>
+        <h3>상세 필터 <button type="button" class="ksn-lnk muted" data-ksn-sheet="close">닫기</button></h3>
+        <div class="ksn-lab">동네 혹은 주 검색 <span class="ksn-dim">(최대 ${MAX_CENTERS}곳)</span></div>
+        <div class="ksn-q"><input id="ksnSheetQ" type="text" placeholder="동네 이름이나 우편번호 — 예: Sunnybank, 4109" autocomplete="off" inputmode="search"><ul class="ksn-sug" id="ksnSheetSug"></ul></div>
+        <div class="ksn-bar" id="ksnStateChips" style="padding:8px 0 0;border:0;">${STATES.map(s => `<button type="button" class="ksn-opt" data-state="${s[0]}">${s[1]}</button>`).join('')}</div>
+        <div id="ksnMyWrap"></div>
+        <div class="ksn-centers" id="ksnCenters"></div>
+        <div class="ksn-lab">반경 <span class="ksn-dim">(동네 기준)</span></div><div class="ksn-bar" style="padding:0;border:0;">${RADII.map(r => `<button type="button" class="ksn-opt" data-set="radius" data-val="${r}" aria-pressed="${r === draft.radius ? 'true' : 'false'}">${r}km</button>`).join('')}</div>
         <div class="ksn-lab">정렬</div><div class="ksn-bar" style="padding:0;border:0;">${opts('sort', SORTS, draft.sort)}</div>
         <div class="ksn-lab">성별</div><div class="ksn-bar" style="padding:0;border:0;">${opts('gender', GENDERS, draft.gender)}</div>
-        ${draft.price ? `<div class="ksn-lab">예산 (내 방 주 $${esc(draft.price)})</div><div class="ksn-bar" style="padding:0;border:0;">${opts('budgetOnly', { false: '전체', true: '내 방 가격에 맞는 분만' }, draft.budgetOnly)}</div>` : ''}
-        <div class="ksn-lab">저장</div><div class="ksn-bar" style="padding:0;border:0;">${opts('savedOnly', { false: '전체', true: '저장한 분만' }, draft.savedOnly)}</div>
+        <div class="ksn-lab">예산 <span class="ksn-dim">(내 방 주당 가격 · 선택)</span></div>
+        <input id="ksnPrice" type="number" inputmode="numeric" min="0" max="3000" step="10" placeholder="예: 250" value="${draft.price ? esc(draft.price) : ''}">
+        <div class="ksn-help">적으면 이 가격이 예산 안에 드는 분만 보입니다.</div>
         <button type="button" class="ksn-apply" data-ksn-sheet="apply">적용</button>
       </div>`;
     const box = sheet.querySelector('.ksn-sheet-box');
+    // 내 글 동네 칩 — 내 글 조회가 끝나면 채운다(시트를 다시 그리지 않음)
+    fillMyChips = () => {
+      const w = box.querySelector('#ksnMyWrap'); if (!w || !(pg.myPosts || []).length) return;
+      w.innerHTML = `<div class="ksn-lab">내 글 동네</div><div class="ksn-bar" style="padding:0;border:0;">${pg.myPosts.map((m, i) => `<button type="button" class="ksn-opt addr" data-my="${i}" aria-pressed="${draft.centers.some(c => sameCenter(c, m)) ? 'true' : 'false'}">${esc(m.board)} · ${esc(m.name)}</button>`).join('')}</div>`;
+    };
+    fillMyChips();
+    const paintCenters = () => {
+      const el = box.querySelector('#ksnCenters');
+      el.innerHTML = draft.centers.map((c, i) => `<span class="ksn-center">${esc(c.all ? c.name + ' 전체' : c.name + ' ' + String(c.state).toUpperCase())}<button type="button" data-rm="${i}" aria-label="빼기">×</button></span>`).join('');
+      box.querySelectorAll('[data-state]').forEach(b => b.setAttribute('aria-pressed', draft.centers.some(c => c.all && c.state === b.dataset.state) ? 'true' : 'false'));
+      box.querySelectorAll('[data-my]').forEach(b => { const m = pg.myPosts[Number(b.dataset.my)]; b.setAttribute('aria-pressed', m && draft.centers.some(c => sameCenter(c, m)) ? 'true' : 'false'); });
+      box.querySelector('[data-ksn-sheet="apply"]').disabled = !draft.centers.length;
+    };
+    const addCenter = c => {
+      const i = draft.centers.findIndex(x => sameCenter(x, c));
+      if (i !== -1) { draft.centers.splice(i, 1); paintCenters(); return; }
+      if (draft.centers.length >= MAX_CENTERS) { toast('동네·주는 ' + MAX_CENTERS + '곳까지 고를 수 있습니다.'); return; }
+      draft.centers.push(c); paintCenters();
+    };
+    paintCenters();
     box.onclick = async e => {
       const my = e.target.closest('[data-my]');
-      if (my) {
-        if (my.dataset.my !== 'custom') { const m = pg.myPosts[Number(my.dataset.my)]; draft.center = { name: m.name, state: m.state, lat: m.lat, lng: m.lng }; draft.price = m.price || 0; }
-        box.querySelectorAll('[data-my]').forEach(b => b.setAttribute('aria-pressed', b === my ? 'true' : 'false'));
-        return;
-      }
+      if (my) { const m = pg.myPosts[Number(my.dataset.my)]; if (m) { addCenter({ name: m.name, state: m.state, lat: m.lat, lng: m.lng }); if (m.price && !box.querySelector('#ksnPrice').value) box.querySelector('#ksnPrice').value = m.price; } return; }
+      const sc = e.target.closest('[data-state]');
+      if (sc) { addCenter({ name: sc.textContent.trim(), state: sc.dataset.state, all: true }); return; }
+      const rm = e.target.closest('[data-rm]');
+      if (rm) { draft.centers.splice(Number(rm.dataset.rm), 1); paintCenters(); return; }
       const st = e.target.closest('[data-set]');
       if (st) {
         const k = st.dataset.set, v = st.dataset.val;
-        draft[k] = (k === 'radius') ? Number(v) : (v === 'true' ? true : v === 'false' ? false : v);
+        draft[k] = (k === 'radius') ? Number(v) : v;
         st.parentElement.querySelectorAll('[data-set]').forEach(b => b.setAttribute('aria-pressed', b === st ? 'true' : 'false'));
         return;
       }
       if (e.target.closest('[data-ksn-sheet="apply"]')) {
-        const changedCenter = !pg.center || !draft.center || pg.center.lat !== draft.center.lat || pg.center.lng !== draft.center.lng || pg.center.state !== draft.center.state;
-        Object.assign(pg, { radius: draft.radius, sort: draft.sort, gender: draft.gender, budgetOnly: draft.budgetOnly, savedOnly: draft.savedOnly, price: draft.price });
-        closeSheet();
-        if (draft.center && changedCenter) await setCenter(draft.center); else { saveCenter(); renderPage(); }
+        if (!draft.centers.length) { toast('동네나 주를 한 곳 이상 골라 주십시오.'); return; }
+        const pv = Number(box.querySelector('#ksnPrice').value); draft.price = Number.isFinite(pv) && pv > 0 ? Math.round(pv) : 0;
+        Object.assign(pg, { centers: draft.centers, radius: draft.radius, sort: draft.sort, gender: draft.gender, price: draft.price });
+        saveFilter(); closeSheet();
+        await showResults();
       }
     };
     const q = box.querySelector('#ksnSheetQ'), sug = box.querySelector('#ksnSheetSug');
@@ -595,88 +574,68 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
       sugTimer2 = setTimeout(async () => {
         try {
           const list = await geocodeSuburb(t); if (seq !== sugSeq2) return;
-          sug.innerHTML = list.length ? list.map((o, i) => `<li data-i="${i}">${esc(o.name)} ${esc(o.state.toUpperCase())}${o.postcode ? ' ' + esc(o.postcode) : ''}</li>`).join('') : '<li>찾지 못했습니다</li>';
+          const st = window.koausGeo && window.koausGeo.lastStatus;
+          sug.innerHTML = list.length ? list.map((o, i) => `<li data-i="${i}">${esc(o.name)} ${esc(o.state.toUpperCase())}${o.postcode ? ' ' + esc(o.postcode) : ''}</li>`).join('') : `<li>찾지 못했습니다${st && st !== 'ZERO_RESULTS' && st !== 'OK' ? ' (지도 서비스: ' + esc(st) + ')' : ''}</li>`;
           sug.classList.add('on'); sug._list = list;
         } catch (_) {}
       }, 320);
     });
+    q.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); const li = sug.querySelector('li[data-i]'); if (li) li.click(); } });
     sug.addEventListener('click', async e => {
       const li = e.target.closest('li[data-i]'); if (!li || !sug._list) return;
       let o = sug._list[Number(li.dataset.i)];
       if (o.approx && window.koausGeo) { try { o = await window.koausGeo.refine(o); } catch (_) {} }   // 우편번호로 고른 동네 → 동네 좌표
-      draft.center = { name: o.name, state: o.state, lat: Number(o.lat), lng: Number(o.lng) }; draft.price = 0;
-      q.value = o.name + ' ' + o.state.toUpperCase(); sug.classList.remove('on');
-      box.querySelectorAll('[data-my]').forEach(b => b.setAttribute('aria-pressed', 'false'));
+      addCenter({ name: o.name, state: o.state, lat: Number(o.lat), lng: Number(o.lng) });
+      q.value = ''; sug.classList.remove('on'); sug.innerHTML = '';
     });
     sheet.classList.add('open');
     document.body.style.overflow = 'hidden';
+    setTimeout(() => { try { if (!draft.centers.length) q.focus({ preventScroll: true }); } catch (_) {} }, 50);
   }
-  function closeSheet() { if (!sheet) return; sheet.classList.remove('open'); document.body.style.overflow = ''; }
+  function closeSheet() { if (!sheet) return; sheet.classList.remove('open'); if (!(deck() && deck().isOpen()) && !(ovl && ovl.classList.contains('open'))) document.body.style.overflow = ''; }
 
-  async function setCenter(c) {
-    if (!c) return;
-    pg.center = { name: c.name, state: c.state, lat: c.lat, lng: c.lng };
-    if (c.price != null) pg.price = c.price || 0;
-    pg.all = null; saveCenter();
-    renderPage();
-    try {
-      const user = window.koausAuth && window.koausAuth.user;
-      pg.all = await fetchFor(pg.center, user ? user.uid : '');
-    } catch (e) { console.warn('[seekers-nearby] 조회 실패', e); pg.all = []; toast('불러오지 못했습니다. 잠시 후 다시 시도해 주십시오.'); }
-    renderPage();
-  }
-
-  async function mountPage(host) {
-    if (!host) return;
-    injectCss(); injectPageCss();
-    const user = window.koausAuth && window.koausAuth.user;
-    if (!user) { host.innerHTML = '<div class="post-empty">로그인 후 이용할 수 있습니다.</div>'; return; }
-    if (!db || !E()) { host.innerHTML = '<div class="post-empty">불러오는 중…</div>'; setTimeout(() => mountPage(host), 600); return; }
-    const saved = loadCenter() || {};
-    pg = { host, center: null, radius: RADII.includes(saved.radius) ? saved.radius : 5, sort: SORTS[saved.sort] ? saved.sort : 'near',
-           gender: GENDERS[saved.gender] ? saved.gender : 'all', budgetOnly: false, savedOnly: false, price: Number(saved.price) || 0, all: null, myPosts: [] };
-    renderPage();
-    pg.myPosts = await loadMyPosts(user.uid);
-    if (saved.center && saved.center.lat && saved.center.state) setCenter(saved.center);
-    else if (pg.myPosts.length) setCenter(pg.myPosts[0]);
-    else renderPage();
-  }
-
-  // ── (10-20) 집주인용 '프로필' 버튼: 목록 페이지 위에 전체 화면(데스크탑은 가운데 창)으로 사람 목록 — 마이페이지 탭 대신 ──
-  function openPage() {
+  // 도구줄 [쉐어생 구하기] / 탭바 / ?people=1 — 필터 시트부터(지시 18). 지난번 필터는 채워져 있다.
+  async function openPage(opts) {
     const user = window.koausAuth && window.koausAuth.user;
     if (!user) { if (window.koausAuth && window.koausAuth.openAuthModal) window.koausAuth.openAuthModal(); return; }
+    if (!db || !E()) { toast('잠시 후 다시 시도해 주십시오.'); return; }
     injectCss(); injectPageCss();
-    if (!pageOvl) {
-      pageOvl = document.createElement('div');
-      pageOvl.className = 'ksn-detail ksn-pageovl';
-      pageOvl.setAttribute('role', 'dialog'); pageOvl.setAttribute('aria-modal', 'true');
-      pageOvl.innerHTML = '<div class="ksn-detail-box"><div class="ksn-detail-bar"><b>근처에서 집 구하는 분</b><button type="button" class="ksn-lnk" data-ksn-page-close>닫기</button></div><div class="ksn-detail-body"><div class="ksn-page-host" id="ksnPageHost"></div></div></div>';
-      document.body.appendChild(pageOvl);
-      pageOvl.addEventListener('click', e => { if (e.target.closest('[data-ksn-page-close]') || e.target === pageOvl) closePage(); });
-      document.addEventListener('keydown', e => { if (e.key === 'Escape' && pageOvl.classList.contains('open') && !document.querySelector('.ksn-detail.open:not(.ksn-pageovl)')) closePage(); });
+    if (!pg || pg.uid !== user.uid) {
+      const saved = loadFilter() || {};
+      const centers = Array.isArray(saved.centers) ? saved.centers.filter(c => c && c.state && (c.all || (typeof c.lat === 'number' && typeof c.lng === 'number'))).slice(0, MAX_CENTERS) : [];
+      pg = { uid: user.uid, centers, radius: RADII.includes(saved.radius) ? saved.radius : 5, sort: SORTS[saved.sort] ? saved.sort : 'near',
+             gender: GENDERS[saved.gender] ? saved.gender : 'all', price: Number(saved.price) || 0, all: null, allKey: '', myPosts: [] };
+      loadMyPosts(user.uid).then(list => { pg.myPosts = list; try { if (sheet && sheet.classList.contains('open') && fillMyChips) fillMyChips(); } catch (_) {} });
     }
-    pageOvl.classList.add('open');
-    document.body.style.overflow = 'hidden';
-    mountPage(document.getElementById('ksnPageHost'));
+    if (opts && opts.seeker) { await openSeekerLink(opts.seeker); return; }
+    openSheet();
   }
-  function closePage() {
-    if (!pageOvl) return;
-    pageOvl.classList.remove('open');
-    if (!document.querySelector('.ksn-detail.open')) document.body.style.overflow = '';
-    try { if (new URLSearchParams(location.search).get('people') === '1') history.replaceState(null, '', location.pathname + (location.search.replace(/[?&]people=1/, '').replace(/^&/, '?') || '')); } catch (_) {}
+  // 공유 링크(?seeker=uid) — 그 사람 카드 한 장부터. '필터 변경'으로 이어서 찾을 수 있다.
+  async function openSeekerLink(uid) {
+    const user = window.koausAuth && window.koausAuth.user; if (!user) return;
+    if (uid === user.uid) { toast('본인 프로필입니다.'); openSheet(); return; }
+    try {
+      const snap = await getDoc(doc(db, 'seeker_profiles', uid));
+      if (!snap.exists() || snap.data().visible !== true) { toast('이 프로필은 지금 공개되어 있지 않습니다.'); openSheet(); return; }
+      const x = snap.data();
+      const m = (pg && pg.centers.length) ? matchOf(x, pg.centers, pg.radius) : null;
+      openDeck([Object.assign({ uid, p: x }, m || { km: null, reach: 0, wide: false, center: null })], 0, { price: pg ? pg.price : 0, radius: pg ? pg.radius : 5, title: '구하는 사람', showCenter: true });
+    } catch (e) { console.warn('[seekers-nearby] 링크 조회 실패', e); toast('이 프로필을 불러오지 못했습니다.'); openSheet(); }
   }
-  // ?people=1 딥링크(탭바 '프로필' 탭) — 로그인 확정 뒤 한 번
+  function closePage() { try { if (deck()) deck().close(); } catch (_) {} closeSheet(); }
+
+  // ?people=1 딥링크(탭바·공유 링크) — 로그인 확정 뒤 한 번
   (function autoOpen() {
-    try { if (new URLSearchParams(location.search).get('people') !== '1') return; } catch (_) { return; }
+    let q; try { q = new URLSearchParams(location.search); } catch (_) { return; }
+    const want = q.get('people') === '1' || !!q.get('seeker'); if (!want) return;
     const t0 = Date.now();
     const tick = () => {
       const user = window.koausAuth && window.koausAuth.user;
-      if (user && db && E()) { openPage(); return; }
+      if (user && db && E() && deck()) { openPage({ seeker: q.get('seeker') || '' }); return; }
       if (Date.now() - t0 < 8000) setTimeout(tick, 250);
     };
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(tick, 300)); else setTimeout(tick, 300);
   })();
 
-  window.koausSeekersNearby = { open, close, mountPage, openDetail, openPage, closePage };
+  window.koausSeekersNearby = { open, close, mountPage: openPage, openDetail: (it, ctx) => openDeck([it], 0, ctx || {}), openPage, closePage, openSheet, isSavedSeeker };
 })();

@@ -4,7 +4,8 @@
      감시자가 토글) — 목록 뷰·데스크탑에서는 완전 미노출.
    ─ 구조(스케치 2):
        1행  [← 뒤로가기] [섹션 이동 아코디언 ▾] [☰ 햄버거(topbar 동일 38px)]
-       2행  [상세 필터 50%] [목록 | 지도 토글 50%]
+       2행  [상세 필터 50%] [List View | Map View 토글 50%] (11-08: 영어 표기)
+       1행 햄버거 왼쪽에 주(State) 드롭다운(koaus-state-pick.js, 11-08 지시 2)
      그 아래 지도 꽉 참(style.css: #mapView top = env+96px) —
      '이 지역 검색'은 페이지 JS 기존 동작(지도 이동 시 .show) 그대로.
    ─ 전부 프록시: 필터→#filterModalBtn, 목록→#viewListBtn,
@@ -41,7 +42,7 @@
   ];
 
   var page = (location.pathname.split('/').pop() || '').replace(/\.html$/i, '').toLowerCase();
-  var st = new URLSearchParams(location.search).get('state') || '';
+  var st = new URLSearchParams(location.search).get('state') || (window.koausStatePick ? window.koausStatePick.get() : '') || '';   // 11-08: 상단바 주 설정 포함
   var cur = PAGE_META[page] || null;
 
   /* ── 스타일 주입 ── */
@@ -56,6 +57,7 @@
       '-webkit-tap-highlight-color:transparent;touch-action:manipulation;}' +
     '.kmh-icon-btn svg{width:21px;height:21px;display:block;}' +
     '.kmh-back{border:0;}' +
+    '.kmh-row1 .koaus-state-sel{flex:0 0 auto;}' +
     '.kmh-section{flex:1 1 auto;min-width:0;display:flex;align-items:center;justify-content:center;' +
       'gap:6px;height:38px;background:none;border:0;cursor:pointer;padding:0;' +
       'font-family:inherit;font-size:16.5px;font-weight:800;letter-spacing:-.3px;' +
@@ -174,7 +176,9 @@
       if (hb) hb.click();
     });
 
-    row1.appendChild(back); row1.appendChild(sect); row1.appendChild(menu);
+    row1.appendChild(back); row1.appendChild(sect);
+    if (window.koausStatePick) { try { row1.appendChild(window.koausStatePick.makeSelect('kmh-state')); } catch (_) {} }   // 11-08: 주 고르기(햄버거 옆)
+    row1.appendChild(menu);
 
     /* 2행 — 상세 필터 | 목록/지도 */
     var row2 = document.createElement('div');
@@ -198,7 +202,7 @@
     var tList = document.createElement('button');
     tList.type = 'button';
     tList.className = 'kmh-tab';
-    tList.textContent = '목록';
+    tList.textContent = 'List View';   // 11-08: 영어 표기(사용자 지시 2)
     tList.addEventListener('click', function () {
       closeDrop();
       var lb = document.getElementById('viewListBtn');
@@ -208,7 +212,7 @@
     var tMap = document.createElement('button');
     tMap.type = 'button';
     tMap.className = 'kmh-tab kmh-active';
-    tMap.textContent = '지도';
+    tMap.textContent = 'Map View';
     tMap.setAttribute('aria-current', 'true');
 
     tog.appendChild(tList); tog.appendChild(tMap);

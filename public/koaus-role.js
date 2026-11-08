@@ -217,9 +217,9 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       location.href = 'mypage.html?tab=profile&profile=quick';
       return;
     }
-    if (app === 'living' && code === 'owner') { toast('저장했습니다. 방을 올리면 근처에서 집 구하는 분들을 아래 "프로필" 탭에서 볼 수 있습니다.'); return; }
+    if (app === 'living' && code === 'owner') { toast('저장했습니다. 방을 올리면 근처에서 집 구하는 분들을 [쉐어생 구하기]에서 볼 수 있습니다.'); return; }
     if (app === 'job' && code === 'seeker') { if (window.koausJobProfile && window.koausJobProfile.openQuick) { window.koausJobProfile.openQuick(); return; } location.href = 'mypage.html?tab=profile'; return; }
-    if (app === 'job') toast('저장했습니다. 일자리를 올리면 근처에서 일 구하는 분들을 도구줄 "프로필" 버튼에서 볼 수 있습니다.');
+    if (app === 'job') toast('저장했습니다. 일자리를 올리면 근처에서 일 구하는 분들을 [워커 구하기]에서 볼 수 있습니다.');
   }
 
   // 0.5초 돌아가는 원 → fn. 로그인 창·휴대폰 인증 창이 닫히는 애니메이션과 겹치지 않을 만큼만.
@@ -276,7 +276,8 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     if (!pb) {
       pb = document.createElement('button');
       pb.type = 'button'; pb.id = 'peopleBtnOpen'; pb.className = 'board-write-btn board-write-btn--ghost';
-      pb.textContent = app === 'living' ? '프로필' : '프로필';
+      // 11-08(지시 18): 버튼 이름 — 쉐어 '쉐어생 구하기' · 렌트 '세입자 구하기' · 구인구직 '워커 구하기'
+      pb.textContent = app === 'living' ? ((location.pathname.split('/').pop() || '').toLowerCase() === 'rent.html' ? '세입자 구하기' : '쉐어생 구하기') : '워커 구하기';
       pb.title = app === 'living' ? '근처에서 집 구하는 분' : '일자리 찾는 분';
       pb.addEventListener('click', () => {
         if (app === 'living') { if (window.koausSeekersNearby && window.koausSeekersNearby.openPage) window.koausSeekersNearby.openPage(); else location.href = 'accom.html?people=1'; }

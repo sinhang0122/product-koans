@@ -447,12 +447,12 @@
            옛 introText 는 Living 폴백(읽기 전용), 각 700자, koaus-contact-actions.js 가 보드별로 읽어 문의 본문에 넣음(변경 없음). -->
       <div class="mypage-account-row">
         <div class="mypage-account-row-info">
-          <div class="mypage-account-row-label">Living 프로필 설정</div>
-          <div class="mypage-account-row-desc">내 역할 · 집·방 찾기 조건과 공개 여부 · 쉐어·렌트 문의 자기소개</div>
+          <div class="mypage-account-row-label">프로필 설정</div>
+          <div class="mypage-account-row-desc">Living · Job 조건과 공개 여부 · 내 역할 · 문의 자기소개</div>
         </div>
         <button class="mypage-edit-btn" type="button" data-mp-sheet="mpLivingSheet">설정</button>
       </div>
-      <div class="mypage-account-row">
+      <div class="mypage-account-row" hidden>   <!-- 11-08: Job 설정은 위 프로필 시트의 Job 탭으로(숨김, 삭제 아님) -->
         <div class="mypage-account-row-info">
           <div class="mypage-account-row-label">Job 프로필 설정</div>
           <div class="mypage-account-row-desc">내 역할 · 구인구직 문의 자기소개 (경력 등은 추후 추가)</div>
@@ -460,10 +460,19 @@
         <button class="mypage-edit-btn" type="button" data-mp-sheet="mpJobSheet">설정</button>
       </div>
 
+      <!-- 11-08(지시 15): 프로필 시트 하나에 [Living | Job] 분절 토글(지도의 Map View/List View 처럼) — 긴 스크롤 대신 탭 전환 -->
+      <style id="mpSegStyle">
+        .mp-seg{display:flex;gap:2px;border:1px solid var(--border,#e0e0e0);border-radius:999px;padding:3px;background:var(--bg-surface,#f6f6f7);flex:0 0 auto}
+        .mp-seg button{appearance:none;border:0;background:none;border-radius:999px;padding:6px 14px;font-family:inherit;font-size:13px;font-weight:800;color:var(--text-secondary,#555);cursor:pointer;letter-spacing:-.2px}
+        .mp-seg button[aria-selected="true"]{background:var(--accent,#111);color:var(--accent-text,#fff)}
+        #mpLivingPane #kjpHost{display:none}   /* Living 탭에는 Living 카드만(Job 카드는 Job 탭에) */
+        @media(max-width:380px){.mp-seg button{padding:6px 10px;font-size:12px}}
+      </style>
       <div class="mp-sheet-ovl" id="mpLivingSheet" hidden>
-        <div class="mp-sheet" role="dialog" aria-modal="true" aria-label="Living 프로필 설정">
-          <div class="mp-sheet-head"><b>Living 프로필 설정</b><button type="button" class="mypage-photo-btn" data-mp-sheet-close>닫기</button></div>
+        <div class="mp-sheet" role="dialog" aria-modal="true" aria-label="프로필 설정">
+          <div class="mp-sheet-head"><b>프로필 설정</b><div class="mp-seg" role="tablist" aria-label="Living 또는 Job"><button type="button" role="tab" data-mp-seg="living" aria-selected="true">Living</button><button type="button" role="tab" data-mp-seg="job" aria-selected="false">Job</button></div><button type="button" class="mypage-photo-btn" data-mp-sheet-close>닫기</button></div>
           <div class="mp-sheet-body">
+            <div id="mpLivingPane">
             <!-- koaus-seeker-profile.js 가 koaus:mypage-profile 이벤트로 렌더: 내 역할 박스 + 인스타식 프로필(완성도·행별 편집) — 마이페이지 내 프로필과 같은 화면 -->
             <div id="mpProfilePanel" class="mp-sheet-panel"><div class="post-empty">불러오는 중…</div></div>
             <div class="mp-prow" id="mpIntroLivingRow">
@@ -479,13 +488,8 @@
                 <button class="mypage-edit-btn" id="mpIntroLivingSaveBtn" type="button">저장</button>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
-      <div class="mp-sheet-ovl" id="mpJobSheet" hidden>
-        <div class="mp-sheet" role="dialog" aria-modal="true" aria-label="Job 프로필 설정">
-          <div class="mp-sheet-head"><b>Job 프로필 설정</b><button type="button" class="mypage-photo-btn" data-mp-sheet-close>닫기</button></div>
-          <div class="mp-sheet-body">
+            </div>
+            <div id="mpJobPane" hidden>
             <div id="mpJobRoles" class="mp-sheet-panel"></div>   <!-- koausRole.renderSwitcher — 내 역할 박스(Living·Job) -->
             <div id="mpJobProfilePanel" class="mp-sheet-panel"></div>   <!-- 11-04: koaus-job-profile.js 가 koaus:job-profile-panel 이벤트로 Job 프로필 카드 렌더 -->
             <div class="mp-sec-title"><span>Job 프로필</span><span>경력·가능 시간대 등은 추후 추가</span></div>
@@ -502,9 +506,12 @@
                 <button class="mypage-edit-btn" id="mpIntroWorkSaveBtn" type="button">저장</button>
               </div>
             </div>
+            </div>
           </div>
         </div>
       </div>
+      <!-- 11-08: 옛 Job 시트 틀 — 내용은 위 프로필 시트의 Job 탭으로 옮김(숨김, 삭제 아님) -->
+      <div class="mp-sheet-ovl" id="mpJobSheet" hidden><div class="mp-sheet" role="dialog" aria-modal="true" aria-label="Job 프로필 설정"><div class="mp-sheet-head"><b>Job 프로필 설정</b><button type="button" class="mypage-photo-btn" data-mp-sheet-close>닫기</button></div><div class="mp-sheet-body"></div></div></div>
 
       <!-- 6) 영상 등록 (Video) — 홈 '영상' 칸 게시 신청, 운영자 승인 후 노출.
            버튼 클릭은 koaus-video-reg.js 의 [data-koaus-video-reg] 위임 리스너가 처리 (홈 ＋ 버튼 폐지 — 등록은 여기서만) -->
@@ -1039,15 +1046,29 @@
         var o = document.getElementById(id); if (!o) return;
         o.hidden = false; document.body.style.overflow = 'hidden';
         try { o.querySelector('.mp-sheet').scrollTop = 0; } catch (_) {}
-        if (id === 'mpLivingSheet') {
-          syncPreview('mpIntroLiving');
-          try { document.dispatchEvent(new CustomEvent('koaus:mypage-profile', { detail: { panel: document.getElementById('mpProfilePanel') } })); } catch (_) {}
-        }
+        if (id === 'mpLivingSheet') showPane('living');   // 11-08: 시트 하나 + [Living | Job] 토글
         if (id === 'mpJobSheet') {
           syncPreview('mpIntroWork');
           try { if (window.koausRole && window.koausRole.renderSwitcher) window.koausRole.renderSwitcher(document.getElementById('mpJobRoles')); } catch (_) {}
           try { document.dispatchEvent(new CustomEvent('koaus:job-profile-panel', { detail: { panel: document.getElementById('mpJobProfilePanel') } })); } catch (_) {}
         }
+      }
+      // 11-08(지시 15): [Living | Job] 토글 — 한쪽만 보이고, 고른 쪽을 그린다
+      function showPane(which) {
+        var o = document.getElementById('mpLivingSheet'); if (!o) return;
+        o.querySelectorAll('[data-mp-seg]').forEach(function (b) { b.setAttribute('aria-selected', b.getAttribute('data-mp-seg') === which ? 'true' : 'false'); });
+        var lp = document.getElementById('mpLivingPane'), jp = document.getElementById('mpJobPane');
+        if (lp) lp.hidden = which !== 'living';
+        if (jp) jp.hidden = which !== 'job';
+        if (which === 'job') {
+          syncPreview('mpIntroWork');
+          try { if (window.koausRole && window.koausRole.renderSwitcher) window.koausRole.renderSwitcher(document.getElementById('mpJobRoles')); } catch (_) {}
+          try { document.dispatchEvent(new CustomEvent('koaus:job-profile-panel', { detail: { panel: document.getElementById('mpJobProfilePanel') } })); } catch (_) {}
+        } else {
+          syncPreview('mpIntroLiving');
+          try { document.dispatchEvent(new CustomEvent('koaus:mypage-profile', { detail: { panel: document.getElementById('mpProfilePanel') } })); } catch (_) {}
+        }
+        try { o.querySelector('.mp-sheet').scrollTop = 0; } catch (_) {}
       }
       document.addEventListener('koaus:roles-changed', function () {
         try { var h = document.getElementById('mpJobRoles'); if (h && h.offsetParent !== null && window.koausRole) window.koausRole.renderSwitcher(h); } catch (_) {}
@@ -1057,6 +1078,7 @@
       });
       function closeAll() { var any = false; document.querySelectorAll('.mp-sheet-ovl:not([hidden])').forEach(function (o) { o.hidden = true; any = true; }); if (any) document.body.style.overflow = ''; }
       document.addEventListener('click', function (e) {
+        var sg = e.target.closest('[data-mp-seg]'); if (sg) { showPane(sg.getAttribute('data-mp-seg')); return; }
         var b = e.target.closest('[data-mp-sheet]'); if (b) { e.preventDefault(); open(b.getAttribute('data-mp-sheet')); return; }
         var x = e.target.closest('[data-mp-expand]');
         if (x) { var blk = document.getElementById(x.getAttribute('data-mp-expand')); if (blk) { blk.hidden = !blk.hidden; x.textContent = blk.hidden ? '편집' : '접기'; if (!blk.hidden) { var t = blk.querySelector('textarea'); if (t) { try { t.focus({ preventScroll: true }); } catch (_) {} } } } return; }

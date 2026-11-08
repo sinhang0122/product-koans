@@ -70,6 +70,8 @@
   <script type="module" src="koaus-phone-auth.js"></script>
   <script type="module" src="koaus-seeker-profile.js"></script>   <!-- 2026-10 ①-2: "집 구해요" 선택 직후 짧은 조건 등록(3단계·건너뛰기) -->
   <script src="koaus-geo.js" defer></script>   <!-- 11-04: 동네 검색 공통(Maps JS, 한글·영문·우편번호) -->
+  <script src="koaus-state-pick.js" defer></script>   <!-- 11-08: 상단바·지도 헤더 주(State) 드롭다운 -->
+  <script src="koaus-people-deck.js" defer></script>   <!-- 11-08: 구하는 사람 카드 넘겨 보기(공용) -->
   <script type="module" src="koaus-role.js"></script>   <!-- 2026-10 ①-2: Living/Job 역할 선택(로그인 뒤 한 번) -->
   <script type="module" src="koaus-ext.js"></script>   <!-- 11-05: 다른 한인 사이트 글(출처 표시·원문 이동) -->
 </head>
@@ -1071,7 +1073,8 @@
     const STATE_NAMES = { nsw:'NSW', vic:'VIC', qld:'QLD', wa:'WA', sa:'SA', tas:'TAS', act:'ACT', nt:'NT' };
     const MODE_LABELS = { offer: '매물 올리기', find: '매물 구하기' };
 
-    const currentState = (new URLSearchParams(location.search).get('state') || '').toLowerCase();
+    // 11-08: 주소에 ?state= 가 없으면 상단바 주 설정(koaus-state-pick.js, LS koaus-state-pref-v1). '전체' = 빈 값 → 모든 주 글 + 전국 지도(Living·Job 동일)
+    const currentState = (function () { const u = (new URLSearchParams(location.search).get('state') || '').toLowerCase(); if (u) return u; try { const v = (localStorage.getItem('koaus-state-pref-v1') || '').toLowerCase(); return /^(nsw|vic|qld|wa|sa|tas|act|nt)$/.test(v) ? v : ''; } catch (_) { return ''; } })();
     const urlMode      = new URLSearchParams(location.search).get('mode');
     // URL ?mode=offer | seek(=find). 페이지 내 탭으로도 전환
     let activeMode     = (urlMode === 'find' || urlMode === 'seek') ? 'find' : 'offer';
@@ -2424,10 +2427,11 @@
       act: { center: { lat: -35.2809, lng: 149.1300 }, zoom: 11 },  // 캔버라
     };
     const AUS_VIEW        = { center: { lat: -25.2744, lng: 133.7751 }, zoom: 4 };  // 전국
-    const urlState        = (new URLSearchParams(location.search).get('state') || '').toLowerCase();
+    const urlState        = currentState;   // 11-08: 상단바 주 설정 포함
     // 11-04: 주 미지정이면 내 프로필(집·일 구해요)의 첫 동네를 지도 첫 화면으로(LS koaus-profile-center-v1, koaus-geo.js 가 기록). 없으면 종전처럼 시드니.
-    const profileView     = (function () { try { if (urlState) return null; const c = JSON.parse(localStorage.getItem('koaus-profile-center-v1') || 'null'); if (!(c && typeof c.lat === 'number')) return null; if (c.all && STATE_VIEWS[c.state]) return { center: STATE_VIEWS[c.state].center, zoom: 9 }; return { center: { lat: c.lat, lng: c.lng }, zoom: c.km ? 10 : 12 }; } catch (_) { return null; } })();
-    const activeStateView = STATE_VIEWS[urlState] || profileView || STATE_VIEWS.nsw;
+    const profileView     = (function () { try { const c = JSON.parse(localStorage.getItem('koaus-profile-center-v1') || 'null'); if (!(c && typeof c.lat === 'number')) return null; if (c.all && STATE_VIEWS[c.state]) return { center: STATE_VIEWS[c.state].center, zoom: 9, state: c.state }; return { center: { lat: c.lat, lng: c.lng }, zoom: c.km ? 10 : 12, state: c.state }; } catch (_) { return null; } })();
+    // 11-08: 주 설정 있음 → 내 프로필 동네가 그 주면 그 동네, 아니면 그 주의 중심 도시. 주 설정 없음(전체) → 프로필 동네 → 전국(Job 과 같은 규칙)
+    const activeStateView = urlState ? ((profileView && profileView.state === urlState) ? profileView : (STATE_VIEWS[urlState] || AUS_VIEW)) : (profileView || AUS_VIEW);
 
     // 주소 자동완성 (네이티브 Places Autocomplete 위젯)
     function whenPlacesReady(cb) {

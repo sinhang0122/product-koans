@@ -116,3 +116,8 @@ a.ksp-btn:hover{text-decoration:none}
 .ksp-btn.danger{color:var(--red);border-color:var(--border)}
 .ksp-dim{font-size:11px;color:var(--text-muted);font-weight:500}
 .ksp-chip.on .ksp-dim{color:inherit;opacity:.8}
+/* 11-08: 1단계 제목 옆 (필수, 최대 n곳) · 동네 칩 이름 버튼 · '지도 기준' 표시 */
+.ksp-q .req{font-size:13px;font-weight:500;color:var(--text-muted);margin-left:4px}
+.ksp-sel .ksp-chip .ksp-chip-name{appearance:none;border:0;background:none;color:inherit;font:inherit;padding:0;cursor:pointer;display:inline-flex;gap:4px;align-items:center}
+.ksp-sel .ksp-pin{font-size:10px;font-weight:700;border:1px solid currentColor;border-radius:4px;padding:0 4px;opacity:.9;margin-left:2px}
+.ksp-sel .ksp-first-help{flex-basis:100%;margin-top:2px}

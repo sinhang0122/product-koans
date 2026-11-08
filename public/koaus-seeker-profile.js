@@ -157,7 +157,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     } catch (_) { return ''; }
   };
   const regionKo = name => { try { const r = (window.koausGeo && window.koausGeo.REGIONS || []).find(z => z.name === name); return r ? r.ko : name; } catch (_) { return name; } };
-  const suburbLabel = s => (s && (s.km || s.all)) ? (esc(regionKo(s.name)) + ' 전체' + (s.km ? ' <span class="ksp-dim">' + esc(s.km) + 'km</span>' : '')) : (esc(s.name) + ' ' + esc(String(s.state || '').toUpperCase()));
+  const suburbLabel = s => (s && (s.km || s.all)) ? (esc(s.name) + ' 전체' + (s.km ? ' <span class="ksp-dim">' + esc(s.km) + 'km</span>' : '')) : (esc(s.name) + ' ' + esc(String(s.state || '').toUpperCase()));
 
   async function refreshPanel() {
     if (!panelEl) return;
@@ -197,7 +197,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
   };
   // 집주인이 보는 한 문장(koaus-seekers-nearby.js conditionSentence 와 같은 형태)
   function sentenceOf(d, en) {
-    const subs = (d.suburbs || []).map(x => (x.km || x.all) ? regionKo(x.name) + ' 전체' : x.name).filter(Boolean).slice(0, 3).join(' · ');
+    const subs = (d.suburbs || []).map(x => (x.km || x.all) ? x.name + ' 전체' : x.name).filter(Boolean).slice(0, 3).join(' · ');
     const when = moveInLabel(d.moveIn);
     const stay = d.stay === 'tbd' ? '기간은 상의 후 결정' : (en.label('stays', d.stay) || '');
     const budget = budgetLabel(d.budgetMin, d.budgetMax);
@@ -261,7 +261,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
           <button type="button" class="ksp-btn" data-ksp="preview">집주인이 보는 카드</button>
         </div>
         ${paused ? `<div class="ksp-banner"><span>30일 동안 활동이 없어 일시정지되었습니다. 계속 구하고 계시면 다시 켜 주십시오.</span><button type="button" class="ksp-btn small primary" data-ksp="resume">다시 켜기</button></div>` : ''}
-        <label class="ksp-switch ksp-prof-switch"><span class="ksp-switch-txt"><span>내 조건 활성화</span><small>${found ? '구했습니다 상태에서는 공개되지 않습니다' : (vis && !paused ? '근처 집주인에게 보입니다' : '꺼져 있습니다 — 알림도 오지 않습니다')}</small></span><input type="checkbox" data-ksp="visible" ${vis && !paused ? 'checked' : ''} ${found ? 'disabled' : ''}></label>
+        <label class="ksp-switch ksp-prof-switch"><span class="ksp-switch-txt"><span>${(vis && !paused && !found) ? '조건 활성화 · 알림 활성화' : '조건 비활성화 · 알림 비활성화'}</span>${found ? '<small>구했습니다 상태에서는 공개되지 않습니다</small>' : ''}</span><input type="checkbox" data-ksp="visible" ${vis && !paused ? 'checked' : ''} ${found ? 'disabled' : ''}></label>
         ${c.todo.length ? `
         <div class="ksp-complete">
           <div class="ksp-complete-head"><b>프로필 완성하기</b><span>${c.pct}%</span></div>
@@ -318,7 +318,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     const sw = $('[data-ksp="visible"]', card);
     if (sw) sw.addEventListener('change', async () => {
       const on = sw.checked;
-      const ok = await patch(on ? { visible: true, pausedAt: deleteField() } : { visible: false }, on ? '공개로 바꿨습니다.' : '비공개로 바꿨습니다. 알림 메일은 계속 받습니다.');
+      const ok = await patch(on ? { visible: true, pausedAt: deleteField() } : { visible: false }, on ? '활성화했습니다.' : '비활성화했습니다. 켜기 전까지 알림도 오지 않습니다.');
       if (!ok) sw.checked = !on;
     });
   }
@@ -525,16 +525,14 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     switch (step > TS ? 0 : step) {
       case 1:
         html = `
-          <div class="ksp-q">찾으시는 동네</div>
-          <div class="ksp-help">동네 이름이나 우편번호로 찾아 추가하십시오. 여러 곳을 넣으면 그 동네마다 방을 올린 집주인에게 보입니다(${MAX_SUBURBS}곳까지).</div>
-          <div class="ksp-label">찾으시는 동네 <span class="req">(필수, 1곳 이상)</span></div>
-          <input class="ksp-input" id="kspSuburbQ" type="text" placeholder="예: Brisbane City, 4000" autocomplete="off" inputmode="search">
+          <div class="ksp-q">찾으시는 동네 <span class="req">(필수, 최대 ${MAX_SUBURBS}곳)</span></div>
+          <input class="ksp-input" id="kspSuburbQ" type="text" placeholder="동네 이름이나 우편번호 — 예: Sunnybank, 4109" autocomplete="off" inputmode="search">
           <ul class="ksp-sug" id="kspSuburbSug"></ul>
           <div class="ksp-sel" id="kspSuburbSel"></div>
-          <div class="ksp-label">또는 크게 고르기 <span class="req">(도시권 전체)</span></div>
+          <div class="ksp-label">크게 고르기</div>
           ${regionChipsHtml()}
           <div class="ksp-label">동네 기준 반경 <span class="req">(필수)</span></div>
-          <div class="ksp-help">고른 동네에서 이 거리 안에 방을 올린 집주인에게 내 조건이 보입니다. 집주인이 보는 범위를 더 넓게 잡으면 그만큼 더 보입니다.</div>
+          <div class="ksp-help">고른 동네에서 이 거리 안에 방을 올린 집주인에게 보입니다.</div>
           ${chipsHtml('radiusKm', RADII.map(r => ({ code: String(r), label: r + 'km' })), String(draft.radiusKm || 5), false)}
           <div class="ksp-err" id="kspErr1"></div>`;
         break;
@@ -611,7 +609,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
             <div class="ksp-q">프로필이 만들어졌습니다.</div>
             <div class="ksp-help">근처에 집을 올리시는 분께 내 조건이 이렇게 보입니다. 닉네임과 조건만 보이고 이메일·소개글은 보이지 않습니다. 연락은 채팅으로만 옵니다.</div>
             ${previewCardHtml()}
-            <label class="ksp-switch ksp-prof-switch"><span class="ksp-switch-txt"><span>내 조건 활성화</span><small>${on ? '근처 집주인에게 보입니다' : '꺼져 있습니다 — 알림도 오지 않습니다'}</small></span><input type="checkbox" id="kspVisibleDone" ${on ? 'checked' : ''}></label>
+            <label class="ksp-switch ksp-prof-switch"><span class="ksp-switch-txt"><span>${on ? '조건 활성화 · 알림 활성화' : '조건 비활성화 · 알림 비활성화'}</span></span><input type="checkbox" id="kspVisibleDone" ${on ? 'checked' : ''}></label>
             <div class="ksp-help">추후 프로필 설정에서 변경 가능합니다. 새 매물 알림은 프로필이 켜져 있을 때만 로그인 이메일로, 5건 이상 모이면 보냅니다.</div>
             <div class="ksp-done-actions">
               <a class="ksp-btn primary" href="accom.html${st ? '?state=' + esc(st) : ''}">조건에 맞는 방 보러 가기</a>
@@ -625,9 +623,9 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
         html = `
           <div class="ksp-done">
             <div class="ksp-q">${editing ? '저장했습니다.' : '프로필을 만들었습니다.'}</div>
-            <div class="ksp-help">${on ? '희망 동네 근처에 방을 올린 집주인에게 내 조건이 이렇게 보입니다.' : '지금은 꺼져 있어 집주인에게 보이지 않습니다. 알림 메일만 받습니다.'} 연락이 오면 채팅 탭에 표시됩니다.</div>
+            <div class="ksp-help">${on ? '희망 동네 근처에 방을 올린 집주인에게 내 조건이 이렇게 보입니다.' : '지금은 꺼져 있어 집주인에게 보이지 않고 알림도 오지 않습니다.'} 연락이 오면 채팅 탭에 표시됩니다.</div>
             ${previewCardHtml()}
-            <label class="ksp-switch ksp-prof-switch"><span class="ksp-switch-txt"><span>내 조건 활성화</span><small>${on ? '근처 집주인에게 보입니다' : '꺼져 있습니다 — 알림도 오지 않습니다'}</small></span><input type="checkbox" id="kspVisibleDone" ${on ? 'checked' : ''}></label>
+            <label class="ksp-switch ksp-prof-switch"><span class="ksp-switch-txt"><span>${on ? '조건 활성화 · 알림 활성화' : '조건 비활성화 · 알림 비활성화'}</span></span><input type="checkbox" id="kspVisibleDone" ${on ? 'checked' : ''}></label>
             <div class="ksp-done-actions">
               <a class="ksp-btn primary" href="accom.html${st ? '?state=' + esc(st) : ''}">조건에 맞는 방 보러 가기</a>
             </div>
@@ -643,7 +641,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       try {
         await updateDoc(doc(db, 'seeker_profiles', me.uid), { visible: on, lastActiveAt: serverTimestamp(), updatedAt: serverTimestamp() });
         await loadProfile(true); if (panelEl) rerenderCard();
-        try { const sm = doneSw.closest('.ksp-switch').querySelector('small'); if (sm) sm.textContent = on ? '근처 집주인에게 보입니다' : '꺼져 있습니다 — 알림도 오지 않습니다'; } catch (_) {}
+        try { const sm = doneSw.closest('.ksp-switch').querySelector('.ksp-switch-txt > span'); if (sm) sm.textContent = on ? '조건 활성화 · 알림 활성화' : '조건 비활성화 · 알림 비활성화'; } catch (_) {}
         toast(on ? '활성화했습니다. 근처 집주인에게 보입니다.' : '비활성화했습니다. 켜기 전까지 알림도 오지 않습니다.');
       } catch (e) { doneSw.checked = !on; toast('변경하지 못했습니다. 잠시 후 다시 시도해 주십시오.'); }
     });
@@ -704,7 +702,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
         const seq = ++sugSeq;
         const hits = await geocodeSuburb(text);
         if (seq !== sugSeq) return;
-        if (!hits.length) { sug.innerHTML = '<li data-none>동네를 찾지 못했습니다. 동네 이름이나 우편번호로 다시 검색해 주십시오.</li>'; sug.classList.add('show'); return; }
+        if (!hits.length) { const gs = (window.koausGeo && window.koausGeo.lastStatus) || ''; sug.innerHTML = '<li data-none>동네를 찾지 못했습니다. 동네 이름이나 우편번호로 다시 검색해 주십시오.' + (gs && !/^(OK|ZERO_RESULTS)$/.test(gs) ? ' (지도 서비스: ' + esc(gs) + ')' : '') + '</li>'; sug.classList.add('show'); return; }
         sug.innerHTML = hits.map((h, i) => `<li data-i="${i}">${suburbLabel(h)}${h.postcode ? ' ' + esc(h.postcode) : ''}</li>`).join('');
         sug.__hits = hits; sug.classList.add('show');
       }, 350);
@@ -729,9 +727,9 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     const ordered = st ? list.filter(r => r.state === st).concat(list.filter(r => r.state !== st)) : list;
     const states = (window.koausGeo && window.koausGeo.STATE_REGIONS) || [];
     const sOrdered = st ? states.filter(r => r.state === st).concat(states.filter(r => r.state !== st)) : states;
-    return `<div class="ksp-chips" id="kspRegionChips">${ordered.map(r => `<button type="button" class="ksp-opt" data-region="${esc(r.code)}" aria-pressed="${draft.suburbs.some(x => x.km && x.name === r.name) ? 'true' : 'false'}">${esc(r.ko)}</button>`).join('')}</div>
-          <div class="ksp-label">또는 주 전체로 고르기 <span class="ksp-dim">(같은 주면 거리와 상관없이 보입니다)</span></div>
-          <div class="ksp-chips" id="kspStateChips">${sOrdered.map(r => `<button type="button" class="ksp-opt" data-region="${esc(r.code)}" aria-pressed="${draft.suburbs.some(x => x.all && x.state === r.state) ? 'true' : 'false'}">${esc(r.ko)}</button>`).join('')}</div>`;
+    return `<div class="ksp-chips" id="kspRegionChips">${ordered.map(r => `<button type="button" class="ksp-opt" data-region="${esc(r.code)}" aria-pressed="${draft.suburbs.some(x => x.km && x.name === r.name) ? 'true' : 'false'}">${esc(r.name)}</button>`).join('')}</div>
+          <div class="ksp-label">주 전체 고르기</div>
+          <div class="ksp-chips" id="kspStateChips">${sOrdered.map(r => `<button type="button" class="ksp-opt" data-region="${esc(r.code)}" aria-pressed="${draft.suburbs.some(x => x.all && x.state === r.state) ? 'true' : 'false'}">${esc(r.name)}</button>`).join('')}</div>`;
   }
   function wireRegionChips(body) {
     body.querySelectorAll('#kspRegionChips, #kspStateChips').forEach(box => box.addEventListener('click', e => {
@@ -748,7 +746,9 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
   }
   function renderSuburbSel() {
     const sel = $('#kspSuburbSel', ovl); if (!sel) return;
-    sel.innerHTML = draft.suburbs.map((s, i) => `<span class="ksp-chip on">${suburbLabel(s)} <button type="button" data-rm="${i}" aria-label="빼기">×</button></span>`).join('');
+    // 11-08(지시 10): 첫 동네가 지도 첫 화면의 기준(koaus-geo saveProfileCenter 가 suburbs[0] 저장). 다른 동네 이름을 누르면 앞으로 옮겨 기준이 바뀐다.
+    sel.innerHTML = draft.suburbs.map((s, i) => `<span class="ksp-chip on"><button type="button" class="ksp-chip-name" data-first="${i}" title="${i ? '지도 기준으로' : '지도 기준'}">${suburbLabel(s)}</button>${i === 0 && draft.suburbs.length > 1 ? '<small class="ksp-pin">지도 기준</small>' : ''}<button type="button" data-rm="${i}" aria-label="빼기">×</button></span>`).join('') + (draft.suburbs.length > 1 ? '<div class="ksp-help ksp-first-help">첫 동네가 지도 첫 화면의 기준입니다. 다른 동네를 누르면 기준이 바뀝니다.</div>' : '');
+    sel.querySelectorAll('[data-first]').forEach(b => b.addEventListener('click', () => { const i = Number(b.dataset.first); if (!i) return; const it = draft.suburbs.splice(i, 1)[0]; draft.suburbs.unshift(it); renderSuburbSel(); }));
     sel.querySelectorAll('[data-rm]').forEach(b => b.addEventListener('click', () => { draft.suburbs.splice(Number(b.dataset.rm), 1); renderSuburbSel(); try { ovl.querySelectorAll('#kspRegionChips [data-region], #kspStateChips [data-region]').forEach(c => { const it = window.koausGeo.regionItem(c.dataset.region); c.setAttribute('aria-pressed', it && draft.suburbs.some(x => (x.km || x.all) && x.name === it.name && x.state === it.state) ? 'true' : 'false'); }); } catch (_) {} }));
   }
   // 동네 검색 — koaus-geo.js(window.koausGeo) 공통: Maps JS Geocoder, 한글·영문, 우편번호(4자리)는 속한 동네 전부(11-04)
