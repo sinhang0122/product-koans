@@ -57,7 +57,7 @@
     '}';
 
   var ovl = null, bar = null, stage = null, track = null, countEl = null, hintEl = null;
-  var o = null, items = [], idx = 0, drafts = {}, sent = {}, base = 0, dragging = null, animating = false, suppressClick = 0, peek = false, hintShown = false, loading = false;
+  var o = null, items = [], idx = 0, drafts = {}, sent = {}, base = 0, dragging = null, animating = false, suppressClick = 0, peek = false, hintShown = false, loading = false, goTimer = null;
 
   var esc = function (s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); };
   function injectCss() {
@@ -131,13 +131,15 @@
     stage.addEventListener('pointermove', onMove);
     stage.addEventListener('pointerup', onUp);
     stage.addEventListener('pointercancel', onCancel);
+    stage.addEventListener('lostpointercapture', function () { if (dragging) onCancel(); });   // 창 밖·alt-tab 으로 up 이 안 오면 되돌린다
+    window.addEventListener('blur', onCancel);
     document.addEventListener('keydown', function (e) {
       if (!isOpen()) return;
       if (o && o.guard && o.guard() === false) return;
       var t = e.target; if (t && (t.tagName === 'TEXTAREA' || t.tagName === 'INPUT' || t.tagName === 'SELECT')) { if (e.key === 'Escape') { try { t.blur(); } catch (_) {} } return; }
       if (e.key === 'ArrowRight') { go(1); e.preventDefault(); }
       else if (e.key === 'ArrowLeft') { go(-1); e.preventDefault(); }
-      else if (e.key === 'Escape') close();
+      else if (e.key === 'Escape') { close(); e.stopImmediatePropagation(); }   // 뒤에 등록된 다른 Esc 처리(옛 모달)가 같이 닫지 않게
     });
     window.addEventListener('resize', function () { if (isOpen()) { layout(); } });
   }
@@ -182,7 +184,7 @@
     if (ni < 0 || ni >= items.length) { setX(0, true); return; }
     animating = true;
     setX(-dir * (slotPx() + gapPx()), true);
-    setTimeout(function () { animating = false; idx = ni; renderAll(); }, 290);
+    goTimer = setTimeout(function () { goTimer = null; animating = false; idx = ni; renderAll(); }, 290);
   }
 
   function composeHtml(it, cur) {
@@ -238,13 +240,14 @@
     var text = ta ? ta.value : (drafts[k] || '');
     if (!String(text || '').trim()) { if (ta) { try { ta.focus(); } catch (_) {} } return; }
     btn.disabled = true; btn.textContent = '보내는 중…';
-    var ok = false;
+    var ok = false, myO = o;
     try { ok = await o.onSend(it, text); } catch (_) { ok = false; }
+    if (ok && o !== myO) return;   // 보내는 동안 닫혔거나 다른 목록으로 바뀜 — 화면은 건드리지 않는다
     if (ok) {
       sent[k] = true; delete drafts[k];
       var comp = card && card.querySelector('.kpd-compose');
       if (comp) comp.outerHTML = '<div class="kpd-sent">메시지를 보냈습니다.</div>';
-      if (o.onSent) { try { o.onSent(it); } catch (_) {} }
+      if (o && o.onSent) { try { o.onSent(it); } catch (_) {} }   // 보내는 동안 닫았으면 o 가 없다
     } else {
       btn.disabled = false; btn.textContent = '메시지 보내기';
     }
@@ -279,6 +282,7 @@
     if (!isOpen()) return;
     ovl.classList.remove('open');
     document.body.style.overflow = '';
+    if (goTimer) { clearTimeout(goTimer); goTimer = null; } animating = false; dragging = null;
     var cb = o && o.onClose; o = null; items = []; drafts = {}; sent = {};
     if (cb) { try { cb(); } catch (_) {} }
   }

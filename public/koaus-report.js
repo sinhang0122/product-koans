@@ -34,7 +34,7 @@
   const STYLE_ID  = 'koaus-report-style';
   const HOST_ID   = 'koaus-report-host';
   const CSS = `
-    .koaus-report-overlay { position: fixed; inset: 0; z-index: 4000; background: rgba(0,0,0,0.55); display: none; align-items: center; justify-content: center; padding: 20px; }
+    .koaus-report-overlay { position: fixed; inset: 0; z-index: 9100;   /* 11-08: 구하는 사람 카드(9045)·필터 시트(9060) 위에서도 보이게 */ background: rgba(0,0,0,0.55); display: none; align-items: center; justify-content: center; padding: 20px; }
     .koaus-report-overlay.open { display: flex; }
     .koaus-report-modal { background: var(--bg-surface, #fff); color: var(--text-primary, #111); border-radius: 14px; max-width: 480px; width: 100%; padding: 24px 20px; box-shadow: 0 16px 48px rgba(0,0,0,0.35); display: flex; flex-direction: column; gap: 14px; font-family: 'Urbanist','Noto Sans KR',sans-serif; }
     .koaus-report-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }

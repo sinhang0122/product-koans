@@ -665,7 +665,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
   const JSORTS = { near: '가까운 순', new: '최신 등록 순' };
   const JGENDERS = { all: '전체', female: '여성', male: '남성' };
   const JSTATES = [['qld', 'QLD'], ['nsw', 'NSW'], ['vic', 'VIC'], ['wa', 'WA'], ['sa', 'SA'], ['act', 'ACT'], ['tas', 'TAS'], ['nt', 'NT']];
-  let pg = null, busy = false, deckList = [];
+  let pg = null, busy = false, deckList = [], deckCtx = {};
   const deck = () => window.koausPeopleDeck || null;
   function injectPageCss() {
     if (document.getElementById('kjpPageStyle')) return;
@@ -798,11 +798,11 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
   function openDeck(list, index, ctx) {
     const D = deck(); if (!D) { toast('잠시 후 다시 시도해 주십시오.'); return; }
     injectCss(); injectPageCss();
-    deckList = list || [];
+    deckList = list || []; deckCtx = ctx || {};
     D.open({
       items: deckList, index: index || 0, title: '일 구하는 분', loading: !!(ctx && ctx.loading),
       key: it => it.uid,
-      render: it => cardBody(it, ctx),
+      render: it => cardBody(it, deckCtx),
       compose: it => ({ sent: isContacted(it.uid), preset: '안녕하세요. 찾으시는 일과 맞는 자리가 있어 연락드립니다.' }),
       onSend: (it, text) => sendFromProfile(it.uid, text),
       onReport: it => reportSeeker(it.uid),
@@ -811,7 +811,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       onShow: it => { if (it && me && db) getDoc(doc(db, 'chats', 'job_' + it.uid + '_' + me.uid)).then(s => { const on = !!(s && s.exists()); markContacted(it.uid, on); if (on && D.isOpen() && D.current() && D.current().uid === it.uid) D.markSent(it.uid); }).catch(() => {}); },
       guard: () => !(sheet && sheet.classList.contains('open')),
       emptyHtml,
-      onClose: () => { try { if (/[?&](people=1|worker=)/.test(location.search)) history.replaceState(null, '', location.pathname + (location.search.replace(/[?&](people=1|worker=[^&]*)/g, '').replace(/^&/, '?') || '')); } catch (_) {} },
+      onClose: () => { try { const q = new URLSearchParams(location.search); if (q.has('people') || q.has('worker')) { q.delete('people'); q.delete('worker'); history.replaceState(null, '', location.pathname + (q.toString() ? '?' + q.toString() : '') + location.hash); } } catch (_) {} },
     });
   }
   function shareWorker(uid) {
@@ -833,10 +833,11 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       if (!D.isOpen()) openDeck([], 0, Object.assign({ loading: true }, ctx)); else D.setLoading(true);
       try { pg.all = await fetchForCenters(pg.centers); pg.allKey = key; }
       catch (e) { console.warn('[job-profile] 목록 조회 실패', e); pg.all = []; toast('불러오지 못했습니다. 잠시 후 다시 시도해 주십시오.'); }
+      if (!D.isOpen()) return;   // 불러오는 동안 닫았으면 다시 열지 않는다
     }
     const list = filtered();
     const i = focusUid ? Math.max(0, list.findIndex(x => x.uid === focusUid)) : 0;
-    if (!D.isOpen()) openDeck(list, i, ctx); else { deckList = list; D.update(list, i); }
+    if (!D.isOpen()) openDeck(list, i, ctx); else { deckList = list; deckCtx = ctx; D.update(list, i); }
   }
   // ── 상세 필터 시트 ──
   let sheet = null, fillMyChips = null;
@@ -848,7 +849,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       sheet = document.createElement('div'); sheet.className = 'kjp-sheet'; sheet.setAttribute('role', 'dialog'); sheet.setAttribute('aria-modal', 'true');
       document.body.appendChild(sheet);
       sheet.addEventListener('click', e => { if (e.target === sheet || e.target.closest('[data-kjp-sheet="close"]')) closeSheet(); });
-      document.addEventListener('keydown', e => { if (e.key === 'Escape' && sheet.classList.contains('open')) closeSheet(); });
+      document.addEventListener('keydown', e => { if (e.key === 'Escape' && sheet.classList.contains('open')) { e.stopImmediatePropagation(); closeSheet(); } });   // 시트만 닫는다
     }
     const draft = { centers: (pg.centers || []).map(c => Object.assign({}, c)), radius: pg.radius, industry: pg.industry, sort: pg.sort, gender: pg.gender };
     const opts = (name, map, cur) => Object.keys(map).map(k => `<button type="button" class="kjp-opt" data-set="${name}" data-val="${k}" aria-pressed="${String(cur) === k ? 'true' : 'false'}">${esc(map[k])}</button>`).join('');

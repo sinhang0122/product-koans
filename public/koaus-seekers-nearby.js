@@ -266,18 +266,18 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
   }
 
   // ── 카드 넘겨 보기 열기(공용 deck) — list: 보여 줄 사람들, index: 시작 위치, ctx: {price, radius, title, fromModal} ──
-  let deckList = [];
+  let deckList = [], deckCtx = {};
   function openDeck(list, index, ctx) {
     const D = deck(); if (!D) { toast('잠시 후 다시 시도해 주십시오.'); return; }
     injectCss();
     const en = E(); if (!en) { toast('잠시 후 다시 시도해 주십시오.'); return; }
-    deckList = list || [];
+    deckList = list || []; deckCtx = ctx || {};
     const fromModal = !!(ctx && ctx.fromModal);
     D.open({
       items: deckList, index: index || 0,
       title: (ctx && ctx.title) || '구하는 사람',
       key: it => it.uid,
-      render: it => cardBody(it, ctx),
+      render: it => cardBody(it, deckCtx),   // 필터를 바꾸면 deckCtx 도 바뀐다(예산·반경 표시)
       compose: it => ({ sent: isContacted(it.uid), preset: '안녕하세요. 찾으시는 조건에 맞는 방이 있어 연락드립니다.' }),
       onSend: (it, text) => sendFromProfile(it.uid, text),
       onSent: () => { try { if (ovl && ovl.classList.contains('open')) render(); } catch (_) {} },
@@ -290,7 +290,7 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
       loading: !!(ctx && ctx.loading),
       onClose: () => {
         if (ovl && ovl.classList.contains('open')) { document.body.style.overflow = 'hidden'; return; }   // 모달 위에서 열렸으면 모달은 그대로
-        try { if (new URLSearchParams(location.search).get('people') === '1' || new URLSearchParams(location.search).get('seeker')) history.replaceState(null, '', location.pathname + (location.search.replace(/[?&](people=1|seeker=[^&]*)/g, '').replace(/^&/, '?') || '')); } catch (_) {}
+        try { const q = new URLSearchParams(location.search); if (q.has('people') || q.has('seeker')) { q.delete('people'); q.delete('seeker'); history.replaceState(null, '', location.pathname + (q.toString() ? '?' + q.toString() : '') + location.hash); } } catch (_) {}
       },
     });
   }
@@ -487,11 +487,12 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
       if (!D.isOpen()) openDeck([], 0, Object.assign({ loading: true }, ctx)); else D.setLoading(true);
       try { pg.all = await fetchForCenters(pg.centers, user.uid); pg.allKey = pg.centers.map(c => c.state).sort().join(','); }
       catch (e) { console.warn('[seekers-nearby] 조회 실패', e); pg.all = []; toast('불러오지 못했습니다. 잠시 후 다시 시도해 주십시오.'); }
+      if (!D.isOpen()) return;   // 불러오는 동안 닫았으면 다시 열지 않는다
     }
     const list = filtered();
     const i = focusUid ? Math.max(0, list.findIndex(x => x.uid === focusUid)) : 0;
     if (!D.isOpen()) openDeck(list, i, ctx);
-    else { deckList = list; D.update(list, i); }
+    else { deckList = list; deckCtx = ctx; D.update(list, i); }
   }
 
   // ── 상세 필터 시트 ──
@@ -503,7 +504,7 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
       sheet = document.createElement('div'); sheet.className = 'ksn-sheet'; sheet.setAttribute('role', 'dialog'); sheet.setAttribute('aria-modal', 'true');
       document.body.appendChild(sheet);
       sheet.addEventListener('click', e => { if (e.target === sheet || e.target.closest('[data-ksn-sheet="close"]')) closeSheet(); });
-      document.addEventListener('keydown', e => { if (e.key === 'Escape' && sheet.classList.contains('open')) closeSheet(); });
+      document.addEventListener('keydown', e => { if (e.key === 'Escape' && sheet.classList.contains('open')) { e.stopImmediatePropagation(); closeSheet(); } });   // 시트만 닫는다(카드 넘겨 보기는 그대로)
     }
     const draft = { centers: (pg.centers || []).map(c => Object.assign({}, c)), radius: pg.radius, sort: pg.sort, gender: pg.gender, price: pg.price };
     const opts = (name, map, cur) => Object.keys(map).map(k => `<button type="button" class="ksn-opt" data-set="${name}" data-val="${k}" aria-pressed="${String(cur) === k ? 'true' : 'false'}">${esc(map[k])}</button>`).join('');
@@ -637,5 +638,7 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(tick, 300)); else setTimeout(tick, 300);
   })();
 
-  window.koausSeekersNearby = { open, close, mountPage: openPage, openDetail: (it, ctx) => openDeck([it], 0, ctx || {}), openPage, closePage, openSheet, isSavedSeeker };
+  // mountPage(host): 옛 마이페이지 '구하는 사람' 탭용 — 탭은 숨김(koaus-role.js). 호출되면 안내 한 줄과 [쉐어생 구하기] 버튼만 그린다.
+  function mountPage(host) { if (!host) return; host.innerHTML = '<div class="post-empty">구하는 사람은 쉐어·렌트 목록의 [쉐어생 구하기]에서 봅니다. <button type="button" class="ksn-btn primary" data-ksn-mount-open>지금 열기</button></div>'; host.onclick = e => { if (e.target.closest('[data-ksn-mount-open]')) openPage(); }; }
+  window.koausSeekersNearby = { open, close, mountPage, openDetail: (it, ctx) => openDeck([it], 0, ctx || {}), openPage, closePage, openSheet, isSavedSeeker };
 })();
