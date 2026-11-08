@@ -1052,6 +1052,7 @@ service cloud.firestore {
         && s.lat is number && s.lng is number;
     }
     // 사는 곳(homeSuburb, 11-05): 동네 하나뿐이라 km·all·정규식 없이 가볍게 — 표현식 1,000개 한도 때문에(validSuburb 6번은 넘침)
+    //   11-08: 근무 형태를 선택으로 바꾸며 다시 한도를 넘어, 이 검사는 더 쓰지 않는다(homeSuburb 는 `is map` 만). 함수는 기록용으로 남김.
     function validHomeSuburb(s) {
       return s is map
         && s.keys().hasOnly(['name', 'state', 'postcode', 'lat', 'lng'])
@@ -1161,7 +1162,7 @@ service cloud.firestore {
         && (!('experience' in d) || !d.experience.matches('(?s).*(([0-9][ .-]?){6,}|https?://|www[.]|[.]com|[.]au|[.]kr).*'))   // 11-05: 정규식 2개 → 1개(표현식 한도)
         && (!('ageBand' in d) || d.ageBand in ['20s', '30s', '40p', '20e', '20m', '20l', '30e', '30l'])
         && (!('gender' in d) || d.gender in ['female', 'male'])
-        && (!('homeSuburb' in d) || validHomeSuburb(d.homeSuburb))
+        && (!('homeSuburb' in d) || d.homeSuburb is map)   // 11-08: 사는 곳은 11-05부터 받지 않음(옛 문서에만 남음) — 표현식 한도 때문에 형식만 본다(validHomeSuburb 는 더 안 씀)
         && pReqStr(d, 'nick', 1, 30)
         && !d.nick.matches('(?s).*([0-9][ .-]?){6,}.*')
         && d.visible is bool
