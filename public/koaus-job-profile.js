@@ -210,7 +210,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       const b = e.target.closest('[data-kjp]'); if (!b) return;
       const act = b.dataset.kjp;
       if (act === 'create') { openModal(null, { quick: true }); return; }
-      if (act === 'edit') { openModal(profile); return; }
+      if (act === 'edit') { openModal(profile, { startStep: QUICK_STEPS + 1, flow: true }); return; }   // 11-08g: 짧은 등록 다음 단계(3)부터, '뒤로' 가능
       if (act === 'step') { openModal(profile, { startStep: Number(b.dataset.step) || 1 }); return; }
       if (act === 'preview') { openPreview(); return; }
       if (act === 'delete') { await deleteProfile(); return; }
@@ -288,7 +288,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       const nav = e.target.closest('[data-kjp-nav]');
       if (!nav) { if (e.target === ovl && !locked()) closeModal(); return; }
       if (nav.dataset.kjpNav === 'close') { if (!locked()) closeModal(); }
-      if (nav.dataset.kjpNav === 'more') { const p = profile; closeModal(); setTimeout(() => openModal(p, { startStep: 4, flow: true }), 60); }
+      if (nav.dataset.kjpNav === 'more') { const p = profile; closeModal(); setTimeout(() => openModal(p, { startStep: QUICK_STEPS + 1, flow: true }), 60); }   // 11-08g: 4 → 3(짧은 등록이 2단계로 준 뒤 안 따라온 값)
       if (nav.dataset.kjpNav === 'back') { if (step > 1) { collect(); step--; renderStep(); } else if (!locked()) closeModal(); }
     });
     document.addEventListener('keydown', e => { if (e.key === 'Escape' && ovl.classList.contains('open') && !locked()) closeModal(); });
@@ -301,6 +301,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     if (window.koausRequireCanPost && !window.koausRequireCanPost(me, window.koausAuth && window.koausAuth.openAuthModal, () => openModal(existing, opts))) return;
     if (!E()) { toast('잠시 후 다시 시도해 주십시오.'); return; }
     mountModal();
+    try { if (window.koausSeekerProfile && window.koausSeekerProfile.showPane) window.koausSeekerProfile.showPane('job'); } catch (_) {}   // 11-08g: 마이페이지 토글을 Job 쪽으로(다른 페이지에선 아무 일 없음)
     editing = !!existing;
     quick = !!(opts && opts.quick) && !existing; unlocked = false;
     single = !!(existing && opts && opts.startStep && !opts.flow);
@@ -1024,7 +1025,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
   window.koausJobProfile = {
     refresh: refreshHost,
     open: () => openModal(profile),
-    openQuick: () => loadProfile(false).then(p => (p ? openModal(p, { startStep: 4, flow: true }) : openModal(null, { quick: true }))),
+    openQuick: () => loadProfile(false).then(p => (p ? openModal(p, { startStep: QUICK_STEPS + 1, flow: true }) : openModal(null, { quick: true }))),
     has: () => loadProfile(false).then(p => !!p),
     openPage, closePage,
   };

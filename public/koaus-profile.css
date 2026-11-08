@@ -125,3 +125,10 @@ a.ksp-btn:hover{text-decoration:none}
 /* 11-08b: 주 전체 고르기 드롭다운 */
 .ksp-select{appearance:none;-webkit-appearance:none;padding-right:34px;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23777' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9.5 12 15.5 18 9.5'/></svg>");background-repeat:no-repeat;background-position:right 11px center;background-size:12px 12px;cursor:pointer}
 #kjpExpList{display:flex;flex-direction:column;gap:8px}
+
+/* 11-08g: 마이페이지 '내 프로필' [Living | Job] 토글(환경설정 시트의 .mp-seg 와 같은 모양) */
+.ksp-seg{display:flex;gap:2px;border:1px solid var(--border,#e0e0e0);border-radius:999px;padding:3px;background:var(--bg-surface,#f6f6f7);width:max-content;max-width:100%;margin:2px auto 14px}
+#kspRoles{margin-top:14px}
+.ksp-seg button{appearance:none;border:0;background:none;border-radius:999px;padding:7px 26px;font-family:inherit;font-size:13px;font-weight:800;color:var(--text-secondary,#555);cursor:pointer;letter-spacing:-.2px;-webkit-tap-highlight-color:transparent}
+.ksp-seg button[aria-selected="true"]{background:var(--accent,#111);color:var(--accent-text,#fff)}
+#kspLivingPane[hidden],#kjpHost[hidden]{display:none}

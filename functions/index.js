@@ -168,6 +168,9 @@ exports.releaseRecycledPhone = onCall(CALL_OPTS, async (request) => {
 //  · ① 조건 맞는 방: accom_posts / rent_posts 생성 → 같은 주의 seeker_profiles(visible) 중
 //    거리 ≤ 구하는 사람 반경(radiusKm, 기본 5) & 가격 ∈ [budgetMin, budgetMax] → seeker_private.alerts 설정대로
 //      instant → 바로 큐 / threshold5 → mail_digest/{uid} 에 모아 5건 되면 한 통 / daily → 매일 08:00(시드니) 한 통 / off → 안 보냄
+//  · ③ 조건 맞는 일자리(11-08g): jobs_posts(구인) / ext_posts(board 'jobs') 생성 → 같은 주의 job_profiles(visible) 중
+//    동네 반경(①과 같은 규칙) & 업종(글의 분류·제목 키워드 ↔ industries, 알 수 없으면 통과) & 근무 형태·시급(둘 다 있을 때만)
+//    → job_private.alerts 설정대로(①과 같은 네 가지). 모음은 mail_digest/{uid}_job (uid·kind 필드로 구분).
 //  · ② 채팅: chats/{id}/messages 생성 → 받는 쪽 users/{uid}.notify (없으면 instant) — 대화당 한 통(읽기 전까지 재발송 없음),
 //      10m/30m/1h/2h/5h 는 sendAfter 뒤 아직 안 읽었을 때만, daily 는 정해진 시각(hh:mm, 시드니) 한 통, off 는 안 보냄.
 //  · 수신거부: 메일 하단 링크(mailUnsub?u=uid&k=kind&t=HMAC) — 로그인 없이 그 종류 알림을 끈다. List-Unsubscribe 헤더도 같이.
@@ -256,9 +259,9 @@ async function sendViaResend(doc) {
   return body.id || '';
 }
 
-// ── 알림 설정 읽기 ──
-async function seekerAlert(uid) {
-  const s = await db().doc(`seeker_private/${uid}`).get().catch(() => null);
+// ── 알림 설정 읽기 — seeker_private(방) / job_private(일자리) 의 alerts {enabled, mode, email} (11-08g: 공통화) ──
+async function alertOf(col, uid) {
+  const s = await db().doc(`${col}/${uid}`).get().catch(() => null);
   const a = (s && s.exists && s.data().alerts) || null;
   if (!a || a.enabled === false) return null;
   const mode = a.mode || 'threshold5';
@@ -266,6 +269,8 @@ async function seekerAlert(uid) {
   const email = a.email || (await admin.auth().getUser(uid).then(u => u.email).catch(() => ''));
   return email ? { mode, email } : null;
 }
+const seekerAlert = uid => alertOf('seeker_private', uid);
+const jobAlert = uid => alertOf('job_private', uid);
 async function chatNotify(uid) {
   const u = await db().doc(`users/${uid}`).get().catch(() => null);
   const n = (u && u.exists && u.data().notify) || {};
@@ -346,19 +351,116 @@ function listingItemsHtml(items) {
     <div style="font-size:13px;color:#555;margin-top:3px;">주 $${escHtml(it.price)}${it.suburb ? ' · ' + escHtml(it.suburb) : ''}${it.km != null ? ' · 내 동네에서 약 ' + escHtml(it.km) + 'km' : ''}</div>
   </div>`).join('') + `<div style="margin-top:14px;"><a href="${SITE}/accom.html" style="display:inline-block;background:#111;color:#fff;text-decoration:none;padding:10px 16px;border-radius:10px;font-weight:700;font-size:14px;">조건에 맞는 방 보러 가기</a></div>`;
 }
-async function flushDigest(uid, minCount) {
-  const ref = db().doc(`mail_digest/${uid}`);
+async function flushDigest(docId, minCount) {   // docId: '{uid}'(방, kind 'listing') 또는 '{uid}_job'(일자리, 문서의 uid·kind 필드)
+  const ref = db().doc(`mail_digest/${docId}`);
   const snap = await ref.get(); if (!snap.exists) return;
   const d = snap.data() || {}; const items = Array.isArray(d.items) ? d.items : [];
   if (items.length < (minCount || 1) || !d.email) return;
-  await enqueue({ to: d.email, uid, kind: 'listing', subject: `[KoAus] 조건에 맞는 방 ${items.length}건이 올라왔습니다`,
-    html: wrapHtml(`조건에 맞는 방 ${items.length}건`, listingItemsHtml(items), uid, 'listing'),
-    text: items.map(it => `${it.title} · 주 $${it.price} · ${it.link}`).join('\n') });
+  const uid = d.uid || docId, kind = d.kind === 'job' ? 'job' : 'listing';
+  if (kind === 'job') {
+    await enqueue({ to: d.email, uid, kind: 'job', subject: `[KoAus] 조건에 맞는 일자리 ${items.length}건이 올라왔습니다`,
+      html: wrapHtml(`조건에 맞는 일자리 ${items.length}건`, jobItemsHtml(items), uid, 'job'),
+      text: items.map(it => `${it.title}${it.pay ? ' · ' + it.pay : ''} · ${it.link}`).join('\n') });
+  } else {
+    await enqueue({ to: d.email, uid, kind: 'listing', subject: `[KoAus] 조건에 맞는 방 ${items.length}건이 올라왔습니다`,
+      html: wrapHtml(`조건에 맞는 방 ${items.length}건`, listingItemsHtml(items), uid, 'listing'),
+      text: items.map(it => `${it.title} · 주 $${it.price} · ${it.link}`).join('\n') });
+  }
   await ref.set({ items: [], lastSentAt: FV.serverTimestamp() }, { merge: true });
 }
+// ── ③ 조건 맞는 일자리 — jobs_posts(구인) / ext_posts(board 'jobs') 새 글 → job_profiles (11-08g) ──
+//    업종: 글에 업종 칸이 없어(사이트 구인 글은 category 빈 값, 외부 글은 '한식' 같은 분류) 분류·제목(·사이트 글은 본문 앞 300자)에서
+//    키워드로 업종 코드를 뽑는다. 하나도 못 뽑으면(알 수 없음) 업종으로 거르지 않는다 — 놓치는 쪽보다 낫고, 5건/하루 모드가 양을 줄여 준다.
+const JOB_KEYWORDS = [
+  ['food',    /한식|일식|양식|중식|분식|카페|식당|레스토랑|주방|키친|홀\s?(서빙|스탭|스텝|직원|매니저)|서빙|바리스타|셰프|쉐프|요리|조리|고기집|치킨|피자|버거|스시|초밥|라멘|베이커리|제빵|디저트|술집|펍|cafe|restaurant|kitchen|chef|cook|barista|waiter|waitress|sushi|bakery|dishwash|\bbar\b/i],
+  ['farm',    /농장|피킹|과수원|수확|딸기|블루베리|토마토|바나나|팜\s?잡|farm|pick(ing|er)|orchard|harvest/i],
+  ['factory', /공장|팩토리|육가공|미트\s?(공장|팩토리|웍|work)|패킹|창고|물류|지게차|생산직|factory|abattoir|warehouse|packing|forklift|production/i],
+  ['trade',   /건설|공사|타일|페인트|목수|빌더|트레이드|용접|전기\s?(기사|공|일|작업)|배관|플러밍|지붕|루핑|렌더|플라스터|철거|조경|콘크리트|비계|라부러|construction|builder|tiler|tiling|painter|painting|carpent|welder|welding|electrician|plumb|roofing|render(er|ing)|plaster|demolition|landscap|labou?rer|concrete|scaffold/i],
+  ['clean',   /청소|클리닝|클리너|하우스키핑|clean|housekeep|janitor/i],
+  ['retail',  /(?<!스)마트|리테일|판매|스토어|매장|슈퍼|편의점|캐셔|계산대|소매|retail|\bstore|\bshop\b|cashier|supermarket|grocery|sales/i],
+  ['drive',   /운전|배달|딜리버리|드라이버|택배|운송|트럭|우버|driver|driving|delivery|courier|truck|uber/i],
+  ['office',  /사무|오피스|회계|경리|마케팅|디자인|디자이너|개발자|프로그래|소프트웨어|아이티|행정|번역|통역|상담|리셉션|접수|학원|강사|교사|튜터|과외|유학원|이민|부동산|보험|은행|office|admin|account|marketing|design|developer|software|reception|tutor|teacher|consult|real estate|clerk/i],
+  ['beauty',  /미용|네일|헤어|뷰티|마사지|속눈썹|왁싱|피부|에스테틱|메이크업|이발|beauty|nail|hair|salon|massage|\blash|wax|barber/i],
+];
+function jobIndustries(text) {
+  const t = String(text || '');
+  return JOB_KEYWORDS.filter(([, re]) => re.test(t)).map(([c]) => c);
+}
+async function onNewJob(event, board) {
+  const snap = event.data; if (!snap) return;
+  const p = snap.data() || {};
+  const isExt = board === 'ext_posts';
+  if (isExt) {
+    if (p.visible !== true || p.board !== 'jobs') return;
+    const pm = p.postedAt && p.postedAt.toMillis ? p.postedAt.toMillis() : 0;
+    if (!pm || Date.now() - pm > 2 * 86400000) return;
+  } else {
+    if (p.status && p.status !== 'approved') return;
+    if ((p.postType || 'hiring') !== 'hiring') return;   // 구직 글은 알림 대상 아님
+  }
+  const st = String(p.state || '').toLowerCase();
+  if (!st) return;
+  const lat = Number(p.lat), lng = Number(p.lng);
+  const hasPin = Number.isFinite(lat) && Number.isFinite(lng) && !!lat && !!lng;   // 핀 없는 글은 '주 전체' 프로필에만
+  const inds = jobIndustries([p.category, p.title, isExt ? '' : String(p.body || '').slice(0, 300)].join(' '));
+  const empType = String(p.empType || '').toLowerCase();   // 사이트 글: fulltime | parttime | casual | contract | ''
+  const wt = empType === 'fulltime' ? 'full' : empType === 'parttime' ? 'part' : empType === 'casual' ? 'casual' : '';
+  const hourly = (!isExt && String(p.payUnit || '') === 'hour' && Number(p.payAmount) > 0) ? Number(p.payAmount) : 0;
+  const q = await db().collection('job_profiles').where('states', 'array-contains', st).where('visible', '==', true).orderBy('lastActiveAt', 'desc').limit(100).get();
+  const postId = event.params.postId;
+  const title = String(p.title || '').slice(0, 80);
+  const suburb = isExt ? String(p.suburbEn || p.suburb || p.zone || '').trim() : (String(p.suburb || '').trim() || suburbFromAddress(p.address));
+  const link = `${SITE}/jobs.html?id=${encodeURIComponent(isExt ? 'ext_' + postId : postId)}`;
+  const pay = hourly ? `시급 $${hourly}` : '';
+  for (const d of q.docs) {
+    const s = d.data() || {}; const uid = d.id;
+    if (uid === (p.uid || p.authorUid)) continue;
+    if (s.pausedAt || s.status === 'found') continue;
+    if (inds.length && Array.isArray(s.industries) && s.industries.length && !s.industries.some(c => inds.includes(c))) continue;
+    if (wt && Array.isArray(s.workTypes) && s.workTypes.length && !s.workTypes.includes(wt)) continue;
+    if (hourly && s.payMin != null && s.payMin !== '' && hourly < Number(s.payMin)) continue;
+    let km = null, hit = false, near = false;
+    const radius = Number(s.radiusKm) || 5;
+    (Array.isArray(s.suburbs) ? s.suburbs : []).forEach(x => {
+      if (x.all === true && String(x.state || '').toLowerCase() === st) hit = true;
+      if (!hasPin || typeof x.lat !== 'number' || typeof x.lng !== 'number') return;
+      const k = kmBetween({ lat, lng }, x); if (km == null || k < km) km = k;
+      if (k <= Math.max(radius, Number(x.km) || 0)) { hit = true; near = true; }
+    });
+    if (!hit) continue;
+    const al = await jobAlert(uid); if (!al) continue;
+    const item = { postId, board, title, pay, suburb, km: (near && km != null) ? Math.round(km * 10) / 10 : null, link, at: Date.now() };
+    if (al.mode === 'instant') {
+      await enqueue({ to: al.email, uid, kind: 'job', subject: `[KoAus] 조건에 맞는 일자리가 올라왔습니다 — ${title}`,
+        html: wrapHtml('조건에 맞는 일자리가 올라왔습니다', jobItemsHtml([item]), uid, 'job'),
+        text: `${title}${pay ? ' · ' + pay : ''}${suburb ? ' · ' + suburb : ''}${item.km != null ? ' · 약 ' + item.km + 'km' : ''}\n${link}` });
+    } else {
+      // threshold5 / daily → mail_digest/{uid}_job (uid·kind 필드로 flushDigest 가 구분)
+      const docId = `${uid}_job`;
+      const ref = db().doc(`mail_digest/${docId}`);
+      await db().runTransaction(async tx => {
+        const cur = await tx.get(ref);
+        const items = (cur.exists && Array.isArray(cur.data().items) ? cur.data().items : []).filter(x => x.postId !== postId).slice(-19);
+        items.push(item);
+        tx.set(ref, { uid, kind: 'job', items, mode: al.mode, email: al.email, updatedAt: FV.serverTimestamp() }, { merge: true });
+      });
+      if (al.mode === 'threshold5') await flushDigest(docId, 5);
+    }
+  }
+}
+function jobItemsHtml(items) {
+  return items.map(it => `<div style="padding:10px 0;border-top:1px solid #eee;">
+    <a href="${it.link}" style="color:#111;font-weight:700;text-decoration:none;font-size:15px;">${escHtml(it.title)}</a>
+    <div style="font-size:13px;color:#555;margin-top:3px;">${[it.pay ? escHtml(it.pay) : '', it.suburb ? escHtml(it.suburb) : '', it.km != null ? '내 동네에서 약 ' + escHtml(it.km) + 'km' : ''].filter(Boolean).join(' · ')}</div>
+  </div>`).join('') + `<div style="margin-top:14px;"><a href="${SITE}/jobs.html" style="display:inline-block;background:#111;color:#fff;text-decoration:none;padding:10px 16px;border-radius:10px;font-weight:700;font-size:14px;">일자리 더 보기</a></div>`;
+}
 exports.onAccomPostCreated = onDocumentCreated({ ...POST_OPTS, document: 'accom_posts/{postId}', secrets: [RESEND_API_KEY] }, e => onNewListing(e, 'accom_posts'));
-exports.onExtPostCreated   = onDocumentCreated({ ...POST_OPTS, document: 'ext_posts/{postId}',   secrets: [RESEND_API_KEY] }, e => onNewListing(e, 'ext_posts'));   // 11-07
+exports.onExtPostCreated   = onDocumentCreated({ ...POST_OPTS, document: 'ext_posts/{postId}',   secrets: [RESEND_API_KEY] }, e => {   // 11-07 쉐어·렌트, 11-08g 구인
+  const b = (e.data && e.data.data() || {}).board;
+  return b === 'jobs' ? onNewJob(e, 'ext_posts') : onNewListing(e, 'ext_posts');
+});
 exports.onRentPostCreated  = onDocumentCreated({ ...POST_OPTS, document: 'rent_posts/{postId}',  secrets: [RESEND_API_KEY] }, e => onNewListing(e, 'rent_posts'));
+exports.onJobPostCreated   = onDocumentCreated({ ...POST_OPTS, document: 'jobs_posts/{postId}',  secrets: [RESEND_API_KEY] }, e => onNewJob(e, 'jobs_posts'));   // 11-08g
 
 // ── ② 채팅 새 메시지 — 받는 쪽 설정대로, 대화당 한 통 ──
 const DELAY_MS = { '10m': 10 * 60e3, '30m': 30 * 60e3, '1h': 3600e3, '2h': 2 * 3600e3, '5h': 5 * 3600e3 };
@@ -445,13 +547,14 @@ exports.mailPump = onSchedule({ region: REGION, schedule: 'every 10 minutes', ti
 // ── 수신거부(로그인 없이) — 링크의 HMAC 토큰 검증 → 그 종류 알림 끔 ──
 exports.mailUnsub = onRequest({ region: REGION, secrets: [RESEND_API_KEY], maxInstances: 2 }, async (req, res) => {
   const uid = String(req.query.u || req.body?.u || '').slice(0, 128), kind = String(req.query.k || req.body?.k || ''), t = String(req.query.t || req.body?.t || '');
-  const ok = uid && ['listing', 'chat'].includes(kind) && t && t === unsubToken(uid, kind);
+  const ok = uid && ['listing', 'chat', 'job'].includes(kind) && t && t === unsubToken(uid, kind);
   res.set('Content-Type', 'text/html; charset=utf-8');
   if (!ok) { res.status(400).send('<p style="font-family:sans-serif">링크가 올바르지 않습니다.</p>'); return; }
   try {
     if (kind === 'listing') await db().doc(`seeker_private/${uid}`).set({ alerts: { enabled: false, mode: 'off' }, updatedAt: FV.serverTimestamp() }, { merge: true });
+    else if (kind === 'job') await db().doc(`job_private/${uid}`).set({ alerts: { enabled: false, mode: 'off' }, updatedAt: FV.serverTimestamp() }, { merge: true });   // 11-08g
     else await db().doc(`users/${uid}`).set({ notify: { mode: 'off' } }, { merge: true });
-    res.status(200).send(`<p style="font-family:sans-serif;padding:24px">${kind === 'listing' ? '새 매물 알림' : '채팅 알림'} 메일을 껐습니다. 다시 받으려면 KoAus 환경설정에서 켜 주십시오.</p>`);
+    res.status(200).send(`<p style="font-family:sans-serif;padding:24px">${kind === 'listing' ? '새 매물 알림' : kind === 'job' ? '새 일자리 알림' : '채팅 알림'} 메일을 껐습니다. 다시 받으려면 KoAus 환경설정에서 켜 주십시오.</p>`);
   } catch (e) { res.status(500).send('<p style="font-family:sans-serif">처리하지 못했습니다. 잠시 후 다시 시도해 주십시오.</p>'); }
 });
 

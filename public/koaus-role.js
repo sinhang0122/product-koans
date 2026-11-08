@@ -330,7 +330,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
         <div class="kr-switch-title">내 역할 <span>둘 다 켤 수 있고 언제든 바꿀 수 있습니다. 하나는 남겨야 합니다.</span></div>
         <div class="kr-switch-row"><b>Living</b>${seg('living', ['seeker', 'owner'])}</div>
         <div class="kr-switch-row"><b>Job</b>${seg('job', ['seeker', 'employer'])}</div>
-        <div class="kr-switch-help">"집·방 올리기"·"일자리 올리기"를 켜면 글쓰기 버튼이 생깁니다(집·방 올리기는 탭바 "프로필" 탭도). "집·방 찾기"는 아래 내 조건이 근처 집주인에게 보입니다.</div>
+        <div class="kr-switch-help">"집·방 올리기"·"일자리 올리기"를 켜면 글쓰기 버튼이 생깁니다(집·방 올리기는 탭바 "프로필" 탭도). "집·방 찾기"는 위 내 조건이 근처 집주인에게 보입니다.</div>
       </div>`;
     host.onclick = async e => {
       const b = e.target.closest('.kr-seg button'); if (!b) return;

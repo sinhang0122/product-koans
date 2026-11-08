@@ -167,11 +167,34 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     if (loadedFor !== me.uid) panelEl.innerHTML = '<div class="post-empty">불러오는 중…</div>';
     await loadProfile(false);
     if (!panelEl) return;
-    panelEl.innerHTML = '<div id="kspRoles"></div>' + renderSeekerCard(profile) + '<div id="kjpHost"></div>';   // kjpHost: 일 구해요 카드 자리(koaus-job-profile.js)
+    // 11-08g(사용자): Living · Job 카드를 아래로 쌓지 않고 [Living | Job] 토글로 하나씩(환경설정 시트와 같은 모양). 마지막 선택 기억.
+    //   순서: 토글 → 고른 쪽 카드 → '내 역할'(둘 다에 해당, 자주 안 바꾸니 맨 아래)
+    const pane = currentPane();
+    panelEl.innerHTML = '<div class="ksp-seg" role="tablist" aria-label="Living 또는 Job"><button type="button" role="tab" data-ksp-pane="living" aria-selected="' + (pane !== 'job') + '">Living</button><button type="button" role="tab" data-ksp-pane="job" aria-selected="' + (pane === 'job') + '">Job</button></div>'
+      + '<div id="kspLivingPane"' + (pane === 'job' ? ' hidden' : '') + '>' + renderSeekerCard(profile) + '</div>'
+      + '<div id="kjpHost"' + (pane === 'job' ? '' : ' hidden') + '></div>'   // kjpHost: 일 구해요 카드 자리(koaus-job-profile.js)
+      + '<div id="kspRoles"></div>';
     try { if (window.koausRole && window.koausRole.renderSwitcher) window.koausRole.renderSwitcher(document.getElementById('kspRoles')); } catch (_) {}
+    panelEl.querySelectorAll('[data-ksp-pane]').forEach(b => b.addEventListener('click', () => showPane(b.dataset.kspPane)));
     wireCard();
     touchActive();
     try { document.dispatchEvent(new CustomEvent('koaus:seeker-panel-rendered', { detail: { panel: panelEl, host: document.getElementById('kjpHost') } })); } catch (_) {}
+  }
+
+  // ── [Living | Job] 토글(11-08g) — LS 기억 + ?pane=job 딥링크. Job 모듈이 모달을 열 때도 showPane('job') ──
+  const PANE_KEY = 'koaus-mypage-pane-v1';
+  function currentPane() {
+    try { const u = new URLSearchParams(location.search).get('pane'); if (u === 'job' || u === 'living') return u; } catch (_) {}
+    try { return localStorage.getItem(PANE_KEY) === 'job' ? 'job' : 'living'; } catch (_) { return 'living'; }
+  }
+  function showPane(which) {
+    which = which === 'job' ? 'job' : 'living';
+    try { localStorage.setItem(PANE_KEY, which); } catch (_) {}
+    if (!panelEl) return;
+    const lp = document.getElementById('kspLivingPane'), jh = document.getElementById('kjpHost');
+    if (lp) lp.hidden = which === 'job';
+    if (jh) jh.hidden = which !== 'job';
+    panelEl.querySelectorAll('[data-ksp-pane]').forEach(b => b.setAttribute('aria-selected', b.dataset.kspPane === which ? 'true' : 'false'));
   }
 
   // ── 프로필 완성도(10-20, 틴더 식) — 필수 3단계(동네·예산·입주)=70%, 선택 3묶음 각 +10%(11-04: 소개글 제외) ──
@@ -293,7 +316,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     if (!panelEl) return;
     const old = $('[data-ksp-card="seeker"]', panelEl);
     if (old) { old.outerHTML = renderSeekerCard(profile); }
-    else { panelEl.insertAdjacentHTML('beforeend', renderSeekerCard(profile)); }
+    else { (document.getElementById('kspLivingPane') || panelEl).insertAdjacentHTML('beforeend', renderSeekerCard(profile)); }
     wireCard();
   }
   function wireCard() {
@@ -303,9 +326,11 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       const b = e.target.closest('[data-ksp]');
       if (!b) return;
       const act = b.dataset.ksp;
-      if (act === 'create' || act === 'edit') { openModal(act === 'edit' ? profile : null); return; }
+      if (act === 'create') { openModal(null); return; }
+      // 11-08g(사용자): 짧은 등록 1~3단계는 이미 했으니 '프로필 편집'은 4단계부터 — '뒤로'로 1~3단계도 고칠 수 있다
+      if (act === 'edit') { openModal(profile, { startStep: QUICK_STEPS + 1, flow: true }); return; }
       if (act === 'step') { openModal(profile, { startStep: Number(b.dataset.step) || 1 }); return; }
-      if (act === 'job') { if (window.koausJobProfile && window.koausJobProfile.openQuick) window.koausJobProfile.openQuick(); else toast('Job 프로필은 곧 열립니다.'); return; }
+      if (act === 'job') { showPane('job'); if (window.koausJobProfile && window.koausJobProfile.openQuick) window.koausJobProfile.openQuick(); else toast('Job 프로필은 곧 열립니다.'); return; }
       if (act === 'preview') { openPreview(); return; }
       if (act === 'delete') { await deleteProfile(); return; }
       if (act === 'resume') { await patch({ visible: true, pausedAt: deleteField() }, '다시 켰습니다. 근처 집주인에게 다시 보입니다.'); return; }
@@ -907,8 +932,9 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     refresh: refreshPanel,
     open: () => openModal(profile),
     // 짧은 등록(①-2 역할 선택 뒤·accom/rent 진입 줄): 프로필이 없으면 3단계 → 바로 생성, 이미 있으면 상세 조건(4단계~끝) 흐름(10-20)
-    openQuick: () => loadProfile(false).then(p => (p ? openModal(p, { startStep: 4, flow: true }) : openModal(null, { quick: true }))),
-    openMore: () => loadProfile(false).then(p => (p ? openModal(p, { startStep: 4, flow: true }) : openModal(null, { quick: true }))),
+    openQuick: () => loadProfile(false).then(p => (p ? openModal(p, { startStep: QUICK_STEPS + 1, flow: true }) : openModal(null, { quick: true }))),
+    openMore: () => loadProfile(false).then(p => (p ? openModal(p, { startStep: QUICK_STEPS + 1, flow: true }) : openModal(null, { quick: true }))),
     has: () => loadProfile(false).then(p => { applyEntryRow(); return !!p; }),
+    showPane,   // 11-08g: 마이페이지 [Living | Job] 토글
   };
 })();

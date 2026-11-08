@@ -54,12 +54,16 @@
   <script src="koaus-people-deck.js" defer></script>   <!-- 11-08: 구하는 사람 카드 넘겨 보기(공용) -->
   <script type="module" src="koaus-job-profile.js"></script>   <!-- 11-04 ②: 일 구해요 프로필 + 사장님용 근처 목록 -->
   <script type="module" src="koaus-seekers-nearby.js"></script>   <!-- 2026-10 ①-3: '구하는 사람' 탭(페이지 모드) -->
+  <script type="module" src="koaus-video-reg.js"></script>   <!-- 11-08g: 영상 등록 버튼(계정 머리 오른쪽) — 환경설정과 같은 모달 -->
   <style>
     /* 마이페이지 슬림 개편 (2026-07) — 환경설정 진입 + 최근 본 영상 그리드 */
     .mp-settings-gear{flex:0 0 auto;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;
       color:var(--text-secondary,#374151);background:var(--bg-subtle,#f3f4f6);border:1px solid var(--border,#e5e7eb);text-decoration:none;}
     .mp-settings-gear:hover{background:var(--border,#e5e7eb);}
     .mp-settings-gear svg{display:block;}
+    button.mp-settings-gear{padding:0;font:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+    /* 11-08g: 로그아웃 버튼은 로그인 확인 뒤에만(session-timeout.js 가 html[data-koaus-auth] 를 in/out/checking/cached-in 으로 둠) */
+    html[data-koaus-auth="out"] .mypage-logout-btn,html[data-koaus-auth="checking"] .mypage-logout-btn{display:none;}
     .mp-videos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;}
     .mp-video-card{display:flex;flex-direction:column;gap:6px;text-decoration:none;color:inherit;}
     .mp-video-card img{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:12px;background:var(--bg-subtle,#f3f4f6);display:block;}
@@ -419,12 +423,12 @@
           <h2 class="mypage-account-title">KoAus 계정</h2>
           <p class="mypage-account-subtitle">닉네임 · 사진 · 인증 · 영상 · 계정 관리는 환경설정에서</p>
         </div>
-        <!-- 우측 액션 2종: 채팅(chat.html — 데스크탑 진입점, 모바일은 탭바와 병행)
+        <!-- 우측 액션 2종(11-08g): 영상 등록(환경설정과 같은 koaus-video-reg.js 모달 — 채팅은 상단바에 있어 여기선 뺌)
              + 환경설정(각자의 고유링크 ?uid= 는 로그인 후 onAuthStateChanged 가 세팅) -->
         <div style="display:flex;align-items:center;gap:8px;flex:none;">
-        <a class="mp-settings-gear" id="mpChatLink" href="chat.html" aria-label="채팅" title="채팅">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.4c0 3.98-4.03 7.2-9 7.2-1.02 0-2-.13-2.9-.38L4.3 19.7l1.02-3.1C4.07 15.3 3 13.44 3 11.4 3 7.42 7.03 4.2 12 4.2s9 3.22 9 7.2z"/></svg>
-        </a>
+        <button type="button" class="mp-settings-gear" id="mpVideoBtn" data-koaus-video-reg aria-label="영상 등록" title="영상 등록">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3z"/></svg>
+        </button>
         <a class="mp-settings-gear" id="mpSettingsLink" href="settings.html" aria-label="환경설정" title="환경설정">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
         </a>
@@ -447,9 +451,9 @@
     </section>
 
     <div class="mypage-tabs" id="mypageTabs" style="display:none;">
-      <button class="mypage-tab" data-mtab="profile">내 프로필</button>
+      <button class="mypage-tab active" data-mtab="profile">내 프로필</button>
       <button class="mypage-tab" data-mtab="people" id="mpPeopleTab" hidden>구하는 사람</button>   <!-- 2026-10 ①-3: 역할이 '방 올려요'일 때만(koaus-role.js) -->
-      <button class="mypage-tab active" data-mtab="mine">내가 쓴 글</button>
+      <button class="mypage-tab" data-mtab="mine">내가 쓴 글</button>
       <button class="mypage-tab" data-mtab="saved">저장한 글</button>
       <button class="mypage-tab" data-mtab="recent">최근 본 글</button>
       <button class="mypage-tab" data-mtab="videos">최근 본 영상</button>
@@ -785,7 +789,7 @@
     const boardLabel = b => b === 'accom' ? '쉐어' : b === 'rent' ? '렌트' : b === 'jobs' ? 'Job' : b;
     const boardHref  = b => ({accom:'accom.html',rent:'rent.html',jobs:'jobs.html',auto:'auto.html',points:'points.html',trades:'trades.html',gp:'gp.html',salon:'salon.html',restaurants:'restaurants.html',care:'care.html'}[b] || '#');
 
-    let mtab = 'mine';
+    let mtab = 'profile';   // 11-08g(사용자): 기본 탭은 '내 프로필'
     const emptyMsg = { mine: '아직 작성한 글이 없습니다.', recent: '최근 본 글이 없습니다.', saved: '저장한 글이 없습니다.', videos: '최근 본 영상이 없습니다.' };
     // ── 본인 글 Firestore 직접 조회 (accom/rent/jobs) ──────────────────
     //   게시판 캐시는 approved 스냅샷으로 통째 덮어써서 숨김/블라인드 글이 증발 —
@@ -1114,7 +1118,7 @@
     //    기존 클릭 핸들러 재사용(active 클래스 + mtab + renderList 일괄 처리).
     (() => {
       const t = new URLSearchParams(location.search).get('tab');
-      if (!t || t === 'mine') return;
+      if (!t || t === 'profile') return;   // 11-08g: 기본이 '내 프로필'
       const btn = document.querySelector('.mypage-tab[data-mtab="' + t.replace(/[^a-z]/g, '') + '"]');
       if (btn) btn.click();
     })();
