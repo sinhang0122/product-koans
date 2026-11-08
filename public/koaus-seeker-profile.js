@@ -214,7 +214,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       return `
         <div class="ksp-card" data-ksp-card="seeker">
           <div class="ksp-title" style="font-size:17px;">프로필을 활성화해 더욱 편리하게 구해 보십시오.</div>
-          <div class="ksp-sub">동네·예산·입주일을 등록하면 그 근처에 방을 올린 집주인에게 내 조건이 보이고, 조건에 맞는 방이 올라오면 이메일로 알려드립니다. 연락은 채팅으로만 옵니다. 사진은 받지 않습니다.</div>
+          <div class="ksp-sub">내 조건을 활성화하세요.</div>
           <div class="ksp-prof-btns" style="grid-template-columns:1fr;">
             <button type="button" class="ksp-btn primary" data-ksp="create">Living 프로필 만들기</button>
             <button type="button" class="ksp-btn" data-ksp="job">Job 프로필 만들기</button>
@@ -572,7 +572,6 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       case 5:
         html = `
           <div class="ksp-q">본인에 대해 알려 주십시오.</div>
-          <div class="ksp-help">집주인에게는 닉네임 <b>${esc(draft.nick || '')}</b>과 나이대·성별만 보입니다(실명·사진 없음). 아래 신분·흡연·반려동물은 본인만 보는 칸이라 적어 두면 나중에 채팅에서 보낼 때 씁니다.</div>
           <div class="ksp-label">나이대 <span class="req">(선택)</span></div>
           ${chipsHtml('ageBand', en.ageBands, draft.ageBand, false)}
           <div class="ksp-label">성별 <span class="req">(선택)</span></div>
@@ -591,7 +590,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
           <div class="ksp-help">근처에 집을 올리시는 분께 간단한 내 조건이 이렇게 보입니다.</div>
           ${previewCardHtml()}
           <label class="ksp-switch"><input type="checkbox" id="kspVisible" ${draft.visible ? 'checked' : ''}> 내 조건 활성화 (근처 집주인에게 공개)</label>
-          <div class="ksp-help">공개하면 희망 동네 근처에 방을 올린 집주인이 내 카드를 보고 채팅으로 연락할 수 있습니다. 끄면 보이지 않고 알림도 오지 않습니다. 30일 동안 활동이 없으면 자동으로 일시정지됩니다.</div>
+          <div class="ksp-help">비활성화 시 알림도 비활성화됩니다.</div>
           <div class="ksp-label">새 매물 알림 <span class="req">(필수)</span></div>
           ${chipsHtml('alertMode', [{ code: 'instant', label: '새 매물마다' }, { code: 'threshold5', label: '5건 이상 모이면' }, { code: 'daily', label: '하루 한 번' }, { code: 'off', label: '받지 않음' }], draft.alertMode, false)}
           <div class="ksp-label">알림 받을 이메일 <span class="req">(필수)</span></div>
@@ -753,9 +752,8 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
   }
   function renderSuburbSel() {
     const sel = $('#kspSuburbSel', ovl); if (!sel) return;
-    // 11-08(지시 10): 첫 동네가 지도 첫 화면의 기준(koaus-geo saveProfileCenter 가 suburbs[0] 저장). 다른 동네 이름을 누르면 앞으로 옮겨 기준이 바뀐다.
-    sel.innerHTML = draft.suburbs.map((s, i) => `<span class="ksp-chip on"><button type="button" class="ksp-chip-name" data-first="${i}" title="${i ? '지도 기준으로' : '지도 기준'}">${suburbLabel(s)}</button>${i === 0 && draft.suburbs.length > 1 ? '<small class="ksp-pin">지도 기준</small>' : ''}<button type="button" data-rm="${i}" aria-label="빼기">×</button></span>`).join('') + (draft.suburbs.length > 1 ? '<div class="ksp-help ksp-first-help">첫 동네가 지도 첫 화면의 기준입니다. 다른 동네를 누르면 기준이 바뀝니다.</div>' : '');
-    sel.querySelectorAll('[data-first]').forEach(b => b.addEventListener('click', () => { const i = Number(b.dataset.first); if (!i) return; const it = draft.suburbs.splice(i, 1)[0]; draft.suburbs.unshift(it); renderSuburbSel(); }));
+    // 11-08b(사용자 결정): 지도 첫 화면 기준 = 프로필 만들 때 첫 번째로 넣은 동네(suburbs[0], koaus-geo saveProfileCenter). 눌러서 바꾸는 기능은 뺌.
+    sel.innerHTML = draft.suburbs.map((s, i) => `<span class="ksp-chip on">${suburbLabel(s)} <button type="button" data-rm="${i}" aria-label="빼기">×</button></span>`).join('');
     sel.querySelectorAll('[data-rm]').forEach(b => b.addEventListener('click', () => { draft.suburbs.splice(Number(b.dataset.rm), 1); renderSuburbSel(); try { ovl.querySelectorAll('#kspRegionChips [data-region], #kspStateChips [data-region]').forEach(c => { const it = window.koausGeo.regionItem(c.dataset.region); c.setAttribute('aria-pressed', it && draft.suburbs.some(x => (x.km || x.all) && x.name === it.name && x.state === it.state) ? 'true' : 'false'); }); } catch (_) {} }));
   }
   // 동네 검색 — koaus-geo.js(window.koausGeo) 공통: Maps JS Geocoder, 한글·영문, 우편번호(4자리)는 속한 동네 전부(11-04)
