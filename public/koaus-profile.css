@@ -121,3 +121,6 @@ a.ksp-btn:hover{text-decoration:none}
 .ksp-sel .ksp-chip .ksp-chip-name{appearance:none;border:0;background:none;color:inherit;font:inherit;padding:0;cursor:pointer;display:inline-flex;gap:4px;align-items:center}
 .ksp-sel .ksp-pin{font-size:10px;font-weight:700;border:1px solid currentColor;border-radius:4px;padding:0 4px;opacity:.9;margin-left:2px}
 .ksp-sel .ksp-first-help{flex-basis:100%;margin-top:2px}
+/* 11-08b: 주 전체 고르기 드롭다운 */
+.ksp-select{appearance:none;-webkit-appearance:none;padding-right:34px;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23777' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9.5 12 15.5 18 9.5'/></svg>");background-repeat:no-repeat;background-position:right 11px center;background-size:12px 12px;cursor:pointer}
+#kjpExpList{display:flex;flex-direction:column;gap:8px}

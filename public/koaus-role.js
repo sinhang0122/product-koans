@@ -276,8 +276,8 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     if (!pb) {
       pb = document.createElement('button');
       pb.type = 'button'; pb.id = 'peopleBtnOpen'; pb.className = 'board-write-btn board-write-btn--ghost';
-      // 11-08(지시 18): 버튼 이름 — 쉐어 '쉐어생 구하기' · 렌트 '세입자 구하기' · 구인구직 '워커 구하기'
-      pb.textContent = app === 'living' ? ((location.pathname.split('/').pop() || '').toLowerCase() === 'rent.html' ? '세입자 구하기' : '쉐어생 구하기') : '워커 구하기';
+      // 11-08(지시 18): 버튼 이름 — 쉐어·렌트 '쉐어생 구하기'(11-08b 사용자 확정) · 구인구직 '워커 구하기'
+      pb.textContent = app === 'living' ? '쉐어생 구하기' : '워커 구하기';
       pb.title = app === 'living' ? '근처에서 집 구하는 분' : '일자리 찾는 분';
       pb.addEventListener('click', () => {
         if (app === 'living') { if (window.koausSeekersNearby && window.koausSeekersNearby.openPage) window.koausSeekersNearby.openPage(); else location.href = 'accom.html?people=1'; }

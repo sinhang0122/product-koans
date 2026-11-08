@@ -3,7 +3,7 @@
    ─ 목록 없이 상세 카드부터 보여 주고, 틴더처럼 옆으로 넘긴다(손가락 끌기·화살표·← →).
      · 휴대폰: 카드 한 장이 화면을 채우고 옆으로 밀면 다음 사람.
      · 데스크탑(≥900px): 가운데 카드 양옆에 이전·다음 사람이 흐리게 보인다(누르면 그쪽으로).
-   ─ 머리: [‹ 제목] [필터 변경] [n / N] … [신고] [공유]
+   ─ 머리: [‹ 제목] ……… [필터 변경](가운데, 네모 상자) ……… [신고] [공유]  (11-08b: 'n / N' 표시 없음)
    ─ 카드 아래 메시지 칸: 보내면 칸이 잠기고 "메시지를 보냈습니다."만 남는다(지시 19). 이미 보낸 사람도 같은 모양.
    ─ 쓰는 쪽이 넘기는 것: items(배열), key(it)→id, render(it)→카드 안 HTML, compose(it)→{sent, preset},
      onSend(it, text)→Promise<boolean>, onReport(it), onShare(it), onFilter(), onClose(), emptyHtml, title, guard()→false 면 Esc 무시
@@ -16,10 +16,12 @@
     '.kpd-ovl{position:fixed;inset:0;z-index:9045;display:none;background:rgba(0,0,0,.62)}' +
     '.kpd-ovl.open{display:block}' +
     '.kpd-box{position:absolute;inset:0;display:flex;flex-direction:column;background:var(--bg-base,#fff);color:var(--text-primary,#111)}' +
-    '.kpd-bar{display:flex;align-items:center;gap:10px;padding:calc(8px + env(safe-area-inset-top,0px)) 14px 8px;border-bottom:1px solid var(--border,#e0e0e0);font-size:14px;min-height:46px;background:var(--bg-base,#fff);box-sizing:border-box}' +
+    '.kpd-bar{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;padding:calc(8px + env(safe-area-inset-top,0px)) 14px 8px;border-bottom:1px solid var(--border,#e0e0e0);font-size:14px;min-height:46px;background:var(--bg-base,#fff);box-sizing:border-box}' +
+    '.kpd-bar-l{display:flex;justify-content:flex-start;min-width:0}.kpd-bar-c{display:flex;justify-content:center}.kpd-bar-r{display:flex;justify-content:flex-end;gap:12px}' +
+    '.kpd-ok{color:#0b7a5c;font-weight:800}:root[data-theme=dark] .kpd-ok{color:#5eead4}' +
     '.kpd-lnk{appearance:none;border:0;background:none;color:var(--text-primary,#111);font-family:inherit;font-size:14px;cursor:pointer;padding:4px 0;white-space:nowrap;-webkit-tap-highlight-color:transparent}' +
     '.kpd-lnk.muted{color:var(--text-muted,#8e8e93)}' +
-    '.kpd-lnk.kpd-filter{font-weight:800;font-size:13px;border:1.5px solid var(--text-primary,#111);border-radius:999px;padding:4px 11px}' +
+    '.kpd-lnk.kpd-filter{font-weight:800;font-size:13px;border:1.5px solid var(--text-primary,#111);border-radius:8px;padding:6px 14px}' +
     '.kpd-count{font-size:13px;color:var(--text-muted,#8e8e93);font-weight:700;white-space:nowrap}' +
     '.kpd-spacer{flex:1}' +
     '.kpd-stage{position:relative;flex:1;min-height:0;overflow:hidden;touch-action:pan-y}' +
@@ -39,7 +41,7 @@
     '.kpd-empty-btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}' +
     '.kpd-btn{appearance:none;border:1.5px solid var(--text-primary,#111);background:var(--bg-base,#fff);color:var(--text-primary,#111);border-radius:999px;padding:9px 16px;font-size:14px;font-weight:800;font-family:inherit;cursor:pointer}' +
     '.kpd-btn.primary{background:var(--text-primary,#111);color:var(--bg-base,#fff)}' +
-    '.kpd-hint{position:absolute;left:50%;top:14px;transform:translateX(-50%);background:rgba(17,24,39,.9);color:#fff;font-size:12.5px;font-weight:700;padding:7px 13px;border-radius:999px;pointer-events:none;opacity:0;transition:opacity .25s;white-space:nowrap}' +
+    '.kpd-hint{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:rgba(17,24,39,.9);color:#fff;font-size:12.5px;font-weight:700;padding:7px 13px;border-radius:999px;pointer-events:none;opacity:0;transition:opacity .25s;white-space:nowrap}' +
     '.kpd-hint.show{opacity:1}' +
     '.kpd-arrow{display:none}' +
     '@media(min-width:900px){' +
@@ -56,7 +58,7 @@
       '.kpd-ovl.kpd-peek .kpd-arrow:disabled{opacity:.3;cursor:default}' +
     '}';
 
-  var ovl = null, bar = null, stage = null, track = null, countEl = null, hintEl = null;
+  var ovl = null, bar = null, stage = null, track = null, hintEl = null;
   var o = null, items = [], idx = 0, drafts = {}, sent = {}, base = 0, dragging = null, animating = false, suppressClick = 0, peek = false, hintShown = false, loading = false, goTimer = null;
 
   var esc = function (s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); };
@@ -90,12 +92,9 @@
     ovl.innerHTML =
       '<div class="kpd-box">' +
         '<div class="kpd-bar">' +
-          '<button type="button" class="kpd-lnk" data-kpd="close" id="kpdTitle">‹ 구하는 사람</button>' +
-          '<button type="button" class="kpd-lnk kpd-filter" data-kpd="filter">필터 변경</button>' +
-          '<span class="kpd-count" id="kpdCount"></span>' +
-          '<span class="kpd-spacer"></span>' +
-          '<button type="button" class="kpd-lnk muted" data-kpd="report">신고</button>' +
-          '<button type="button" class="kpd-lnk muted" data-kpd="share">공유</button>' +
+          '<div class="kpd-bar-l"><button type="button" class="kpd-lnk" data-kpd="close" id="kpdTitle">‹ 구하는 사람</button></div>' +
+          '<div class="kpd-bar-c"><button type="button" class="kpd-lnk kpd-filter" data-kpd="filter">필터 변경</button></div>' +
+          '<div class="kpd-bar-r"><button type="button" class="kpd-lnk muted" data-kpd="report">신고</button><button type="button" class="kpd-lnk muted" data-kpd="share">공유</button></div>' +
         '</div>' +
         '<div class="kpd-stage"><div class="kpd-track"></div>' +
           '<button type="button" class="kpd-arrow l" data-kpd="prev" aria-label="이전 사람">‹</button>' +
@@ -105,7 +104,7 @@
       '</div>';
     document.body.appendChild(ovl);
     bar = ovl.querySelector('.kpd-bar'); stage = ovl.querySelector('.kpd-stage'); track = ovl.querySelector('.kpd-track');
-    countEl = ovl.querySelector('#kpdCount'); hintEl = ovl.querySelector('#kpdHint');
+    hintEl = ovl.querySelector('#kpdHint');
 
     ovl.addEventListener('click', function (e) {
       if (Date.now() < suppressClick) { e.preventDefault(); e.stopPropagation(); return; }
@@ -213,11 +212,9 @@
       track.innerHTML = '<article class="kpd-card kpd-prev kpd-ghost" aria-hidden="true"></article>' +
         '<article class="kpd-card kpd-cur kpd-empty-card"><div class="kpd-body"><div class="kpd-empty">' + eh + '</div></div></article>' +
         '<article class="kpd-card kpd-next kpd-ghost" aria-hidden="true"></article>';
-      countEl.textContent = '';
     } else {
       idx = Math.max(0, Math.min(idx, items.length - 1));
       track.innerHTML = cardHtml(items[idx - 1], 'kpd-prev') + cardHtml(items[idx], 'kpd-cur') + cardHtml(items[idx + 1], 'kpd-next');
-      countEl.textContent = (idx + 1) + ' / ' + items.length;
     }
     var l = ovl.querySelector('.kpd-arrow.l'), r = ovl.querySelector('.kpd-arrow.r');
     if (l) l.disabled = idx <= 0; if (r) r.disabled = idx >= items.length - 1;
@@ -265,7 +262,7 @@
     drafts = {}; sent = {}; dragging = null; animating = false; loading = !!o.loading;
     mount();
     ovl.querySelector('#kpdTitle').textContent = '‹ ' + (o.title || '구하는 사람');
-    ovl.querySelector('[data-kpd="filter"]').style.display = o.onFilter ? '' : 'none';
+    ovl.querySelector('[data-kpd="filter"]').style.visibility = o.onFilter ? 'visible' : 'hidden';
     ovl.classList.add('open');
     document.body.style.overflow = 'hidden';
     layout(); renderAll();

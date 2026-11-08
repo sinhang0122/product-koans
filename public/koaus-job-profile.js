@@ -3,7 +3,7 @@
 //  - 집 구해요(koaus-seeker-profile.js)와 같은 틀: 공개/비공개 두 문서, 짧은 등록 3단계 → 바로 생성, 인스타식 카드(완성도·행별 편집).
 //    공개 job_profiles/{uid} = 사장님이 보는 칸: 닉네임·성별·나이대·업종·동네(+반경)·근무 형태·시작 가능일·희망 시급·비자·자격증·차·경력·사는 곳
 //    비공개 job_private/{uid} = 알림 이메일(본인만). 소개글 없음(문의 자기소개는 환경설정).
-//  - 짧은 등록(11-08): ① 업종 + 일하고 싶은 동네(반경)/큰 지역 ② 경력 + 차 유무 + 시작 가능일 → 등록(근무 형태·나이대·비자는 받지 않음). 전체 등록 ③ 나이대·성별·비자 ④ 자격증·희망 시급 ⑤ 공개·알림.
+//  - 짧은 등록(11-08): ① 업종 + 일하고 싶은 동네(반경)/큰 지역 ② 경력(여러 줄) + 차 유무 + 시작 가능일 → 등록. 전체 등록 ③ 나이대·성별·비자·근무 형태(전부 선택, 11-08b) ④ 자격증·희망 시급 ⑤ 공개·알림.
 //  - 사장님 쪽(11-08): jobs.html 도구줄 [워커 구하기] → openPage() — 상세 필터 시트(동네 혹은 주 최대 3곳·반경·업종·정렬·성별) → 카드 넘겨 보기(koaus-people-deck.js) → 카드 아래 칸에서 메시지(board 'jobseeker', chatId 'job_{uid}_{나}').
 //  - 스타일은 koaus-profile.css(.ksp-*) 공통. 동네 검색은 koaus-geo.js(window.koausGeo). 값 목록은 koaus-enums.js.
 //  - 페이지: jobs.html · mypage.html · settings.html — <script type="module" src="koaus-job-profile.js">
@@ -29,7 +29,8 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
   const DRAFT_KEY = 'koaus-job-draft-v1';
   const HAS_KEY = 'koaus-job-has-v1';        // {uid, has} — jobs 진입 때 koaus-role.js 가 '프로필 없음' 판단에 먼저 씀
   const MAX_SUBURBS = 4, MAX_INDUSTRIES = 5;   // 11-05: 동네 5 → 4 (규칙 표현식 한도 — 사는 곳·경력 검사가 더 있음)
-  const TOTAL_STEPS = 5, QUICK_STEPS = 2;   // 11-08: 짧은 등록 2단계(①업종·동네 ②경력·차·시작일, 근무 형태 없음). 전체 ③나이대·성별·비자(선택) ④자격증·시급 ⑤공개·알림
+  const TOTAL_STEPS = 5, QUICK_STEPS = 2;   // 11-08: 짧은 등록 2단계(①업종·동네 ②경력·차·시작일). 전체 ③나이대·성별·비자·근무 형태(선택, 11-08b) ④자격증·시급 ⑤공개·알림
+  const MAX_EXP_LINES = 5, MAX_EXP_LEN = 300;   // 11-08b: 경력 여러 줄(줄바꿈으로 저장, 규칙 experience 300자)
   const RADII = [3, 5, 10, 20];
   const WORK_TYPES = [{ code: 'casual', label: '캐주얼' }, { code: 'part', label: '파트타임' }, { code: 'full', label: '풀타임' }];
   const LICENSES = [
@@ -103,6 +104,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
   const indL = (codes, en) => (codes || []).map(c => en.label('industries', c)).filter(Boolean).join(', ');
   const wtL = codes => (codes || []).map(c => (WORK_TYPES.find(w => w.code === c) || {}).label).filter(Boolean).join(' · ');
   const licL = codes => (codes || []).map(c => (LICENSES.find(w => w.code === c) || {}).label).filter(Boolean).join(', ');
+  const expLines = s => String(s || '').split('\n').map(x => x.trim()).filter(Boolean).slice(0, MAX_EXP_LINES);   // 11-08b: 경력 여러 줄
   // 사장님이 보는 한 문장
   function sentenceOf(d, en) {
     const subs = (d.suburbs || []).map(x => (x.km || x.all) ? x.name + ' 전체' : x.name).filter(Boolean).slice(0, 3).join(' · ');
@@ -117,7 +119,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
 
   // ── 완성도 ──
   const TODO = [
-    { label: '나이대 · 성별 · 비자', step: 3, done: p => !!(p.ageBand && p.gender && p.visa) },
+    { label: '나이대 · 성별 · 비자 · 근무 형태', step: 3, done: p => !!(p.ageBand && p.gender && p.visa) },
     { label: '자격증 · 희망 시급',   step: 4, done: p => !!((p.licenses && p.licenses.length) || p.payMin) },
   ];
   const completeness = p => { const todo = TODO.filter(t => !t.done(p)); return { pct: 100 - todo.length * 10, todo }; };
@@ -182,8 +184,8 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
         <div class="ksp-sec">
           <div class="ksp-sec-title"><span>내 조건</span><span>사장님에게 보입니다</span></div>
           ${row('업종 · 동네', [esc(indL(p.industries, en)), subs ? subs + (p.radiusKm && (p.suburbs || []).some(x => !(x.km || x.all)) ? ' (반경 ' + esc(p.radiusKm) + 'km)' : '') : ''].filter(Boolean).join('<br>'), 1)}
-          ${row('경력 · 차 · 근무 형태', [p.experience ? esc(p.experience) : '', typeof p.hasCar === 'boolean' ? (p.hasCar ? '차 있음' : '차 없음') : '', esc(wtL(p.workTypes)), esc(startLabel(p.startDate))].filter(Boolean).join(' · '), 2)}
-          ${row('나이대 · 성별 · 비자', who, 3)}
+          ${row('경력 · 차 · 시작일', [p.experience ? esc(expLines(p.experience).join(' · ')) : '', typeof p.hasCar === 'boolean' ? (p.hasCar ? '차 있음' : '차 없음') : '', esc(startLabel(p.startDate))].filter(Boolean).join(' · '), 2)}
+          ${row('나이대 · 성별 · 비자 · 근무 형태', [who, esc(wtL(p.workTypes))].filter(Boolean).join(' · '), 3)}
           ${row('자격증 · 희망 시급', extra, 4)}
         </div>
         <div class="ksp-sec">
@@ -331,7 +333,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     const body = $('#kjpBody', ovl); if (!body) return;
     const v = id => { const el = $('#' + id, body); return el ? el.value : undefined; };
     switch (step) {
-      case 2: draft.startDate = v('kjpStart') || draft.startDate; draft.experience = (v('kjpExp') || '').trim(); break;
+      case 2: draft.startDate = v('kjpStart') || draft.startDate; draft.experience = Array.from(body.querySelectorAll('.kjp-exp')).map(x => x.value.trim()).filter(Boolean).slice(0, MAX_EXP_LINES).join('\n'); break;
       case 4: draft.payMin = (v('kjpPay') || '').trim(); break;
       case 5: draft.alertEmail = (v('kjpAlertEmail') || '').trim(); break;
     }
@@ -354,7 +356,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
           <dt>동네</dt><dd>${subs || '—'}${draft.radiusKm && draft.suburbs.some(x => !(x.km || x.all)) ? ' · 반경 ' + esc(draft.radiusKm) + 'km' : ''}</dd>
           <dt>근무</dt><dd>${[esc(wtL(draft.workTypes)), draft.startDate ? esc(startLabel(draft.startDate)) : '', draft.payMin ? '시급 $' + esc(draft.payMin) + '~' : ''].filter(Boolean).join(' · ') || '—'}</dd>
           ${extra ? `<dt>기타</dt><dd>${esc(extra)}</dd>` : ''}
-          ${draft.experience ? `<dt>경력</dt><dd>${esc(draft.experience)}</dd>` : ''}
+          ${draft.experience ? `<dt>경력</dt><dd>${expLines(draft.experience).map(esc).join('<br>')}</dd>` : ''}
         </dl>
       </div>`;
   }
@@ -387,13 +389,13 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
         break;
       case 2:
         html = `
-          <div class="ksp-q">${quick ? '경력과 차, 시작 가능일' : '경력과 차, 근무 형태'}</div>
-          <div class="ksp-label">경력 한 줄 <span class="req">(필수, 120자)</span></div>
-          <input class="ksp-input" id="kjpExp" type="text" maxlength="120" placeholder="예: 식당 주방 1년, 농장 패킹 6개월 (없으면 '경력 없음')" value="${esc(draft.experience)}">
+          <div class="ksp-q">경력과 차, 시작 가능일</div>
+          <div class="ksp-label">경력 <span class="req">(필수 · 한 줄에 하나, ${MAX_EXP_LINES}줄까지)</span></div>
+          <div id="kjpExpList">${(expLines(draft.experience).length ? expLines(draft.experience) : ['']).map((l, i) => `<input class="ksp-input kjp-exp" type="text" maxlength="120" placeholder="${i ? '예: 농장 패킹 6개월' : "예: 식당 주방 1년 (없으면 '경력 없음')"}" value="${esc(l)}">`).join('')}</div>
+          <div class="ksp-chips"><button type="button" class="ksp-opt" data-exp-add>+ 경력 추가</button></div>
           <div class="ksp-help">사장님이 가장 먼저 보는 칸입니다. 전화번호·카톡 아이디·링크는 넣을 수 없습니다(연락은 채팅으로).</div>
           <div class="ksp-label">차 있음 <span class="req">(필수)</span></div>
           ${boolChips('hasCar', draft.hasCar)}
-          ${quick ? '' : `<div class="ksp-label">근무 형태 <span class="req">(선택, 여러 개)</span></div>${chipsHtml('workTypes', WORK_TYPES, draft.workTypes, true)}`}
           <div class="ksp-label">시작 가능일 <span class="req">(필수)</span></div>
           <input class="ksp-input" id="kjpStart" type="date" value="${esc(draft.startDate < openedDay ? openedDay : draft.startDate)}" min="${openedDay}">
           <div class="ksp-chips"><button type="button" class="ksp-opt" data-asap>바로 가능</button></div>
@@ -412,6 +414,8 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
           <div class="ksp-label">비자 <span class="req">(선택)</span></div>
           <div class="ksp-help">만료일은 받지 않습니다.</div>
           ${chipsHtml('visa', en.visas, draft.visa, false)}
+          <div class="ksp-label">근무 형태 <span class="req">(선택, 여러 개)</span></div>
+          ${chipsHtml('workTypes', WORK_TYPES, draft.workTypes, true)}
           <div class="ksp-err" id="kjpErr3"></div>`;
         break;
       case 4:
@@ -492,7 +496,15 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     });
     const next = $('#kjpNext', ovl); if (next) next.addEventListener('click', onNext);
     if (step === 1) { wireSuburb(body); wireRegionChips(body); try { if (window.koausGeo) window.koausGeo.ready(); } catch (_) {} }
-    if (step === 2) { const asap = $('[data-asap]', body); if (asap) asap.addEventListener('click', () => { $('#kjpStart', body).value = openedDay || todayStr(); }); }
+    if (step === 2) {
+      const asap = $('[data-asap]', body); if (asap) asap.addEventListener('click', () => { $('#kjpStart', body).value = openedDay || todayStr(); });
+      const add = $('[data-exp-add]', body); if (add) add.addEventListener('click', () => {   // 11-08b: 경력 칸 추가(최대 5줄)
+        const list = $('#kjpExpList', body); const n = list.querySelectorAll('.kjp-exp').length;
+        if (n >= MAX_EXP_LINES) { toast('경력은 ' + MAX_EXP_LINES + '줄까지 적을 수 있습니다.'); return; }
+        const inp = document.createElement('input'); inp.className = 'ksp-input kjp-exp'; inp.type = 'text'; inp.maxLength = 120; inp.placeholder = '예: 농장 패킹 6개월';
+        list.appendChild(inp); try { inp.focus({ preventScroll: true }); } catch (_) {}
+      });
+    }
   }
 
   // ── 동네 검색(koaus-geo.js) ──
@@ -543,9 +555,16 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     const sOrdered = st ? states.filter(r => r.state === st).concat(states.filter(r => r.state !== st)) : states;
     return `<div class="ksp-chips" id="kjpRegionChips">${ordered.map(r => `<button type="button" class="ksp-opt" data-region="${esc(r.code)}" aria-pressed="${draft.suburbs.some(x => x.km && x.name === r.name) ? 'true' : 'false'}">${esc(r.name)}</button>`).join('')}</div>
           <div class="ksp-label">주 전체 고르기</div>
-          <div class="ksp-chips" id="kjpStateChips">${sOrdered.map(r => `<button type="button" class="ksp-opt" data-region="${esc(r.code)}" aria-pressed="${draft.suburbs.some(x => x.all && x.state === r.state) ? 'true' : 'false'}">${esc(r.name)}</button>`).join('')}</div>`;
+          <select class="ksp-input ksp-select" id="kjpStateSel"><option value="">고르기…</option>${sOrdered.map(r => `<option value="${esc(r.code)}">${esc(r.name)} 전체</option>`).join('')}</select>`;
   }
   function wireRegionChips(body) {
+    const stSel = $('#kjpStateSel', body);   // 11-08b: 주 전체는 드롭다운 — 고르면 칩으로 들어가고 드롭다운은 비운다
+    if (stSel) stSel.addEventListener('change', () => {
+      const it = window.koausGeo && window.koausGeo.regionItem(stSel.value); stSel.value = ''; if (!it) return;
+      if (draft.suburbs.some(x => x.all && x.state === it.state)) return;
+      if (draft.suburbs.length >= MAX_SUBURBS) { $('#kjpErr1', body).textContent = '동네·지역은 ' + MAX_SUBURBS + '곳까지 넣을 수 있습니다.'; return; }
+      draft.suburbs.push(it); $('#kjpErr1', body).textContent = ''; renderSuburbSel();
+    });
     body.querySelectorAll('#kjpRegionChips, #kjpStateChips').forEach(box => box.addEventListener('click', e => {
       const b = e.target.closest('[data-region]'); if (!b) return;
       const it = window.koausGeo && window.koausGeo.regionItem(b.dataset.region); if (!it) return;
@@ -580,7 +599,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
         if (typeof draft.hasCar !== 'boolean') return set('차가 있는지 골라 주십시오.');
         if (!/^\d{4}-\d{2}-\d{2}$/.test(draft.startDate)) return set('시작 가능일을 골라 주십시오.');
         if (openedDay && draft.startDate < openedDay) return set('시작 가능일은 오늘 이후로 골라 주십시오.');
-        if (draft.experience.length > 120) return set('경력은 120자 이내로 적어 주십시오.');
+        if (draft.experience.length > MAX_EXP_LEN) return set('경력은 모두 합쳐 ' + MAX_EXP_LEN + '자 이내로 적어 주십시오.');
         if (CONTACT_RE.test(draft.experience)) return set('전화번호·카톡 아이디·링크는 넣을 수 없습니다. 연락은 채팅으로 옵니다.');
         return set('');
       }
@@ -620,7 +639,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     if (draft.workTypes.length) d.workTypes = draft.workTypes.slice(0, 3);   // 11-08: 근무 형태는 선택(짧은 등록은 받지 않음, 규칙도 선택)
     if (draft.licenses.length) d.licenses = draft.licenses.slice(0, 8);
     if (typeof draft.hasCar === 'boolean') d.hasCar = draft.hasCar;
-    if (draft.experience) d.experience = draft.experience.slice(0, 120);
+    if (draft.experience) d.experience = draft.experience.slice(0, MAX_EXP_LEN);
     if (draft.visa) d.visa = draft.visa;   // 11-05: 비자는 선택
     if (draft.ageBand) d.ageBand = draft.ageBand;
     if (draft.gender) d.gender = draft.gender;
@@ -661,7 +680,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
   //   11-08(지시 18): 목록 대신 → 상세 필터 시트(동네 혹은 주 최대 3곳 · 반경 · 업종 · 정렬 · 성별) → 바로 카드 넘겨 보기(koaus-people-deck.js).
   //   매칭 = 동네: 거리 ≤ max(내 반경, 그 사람 반경·큰 지역 km) 또는 그 사람이 주 전체. 주: 그 사람 states 에 그 주. 함수 규칙(11-04b)과 같음.
   const FILTER_KEY = 'koaus-jobpeople-filter-v2';
-  const MAX_CENTERS = 3;
+  const MAX_CENTERS = 3;   // 11-08b: 동네 최대 3곳(주는 드롭다운으로 한 곳)
   const JSORTS = { near: '가까운 순', new: '최신 등록 순' };
   const JGENDERS = { all: '전체', female: '여성', male: '남성' };
   const JSTATES = [['qld', 'QLD'], ['nsw', 'NSW'], ['vic', 'VIC'], ['wa', 'WA'], ['sa', 'SA'], ['act', 'ACT'], ['tas', 'TAS'], ['nt', 'NT']];
@@ -772,18 +791,20 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     const k = kmText(it); if (k) meta.push(k + (ctx && ctx.showCenter && it.center && it.center.name && !it.wide ? ' · ' + it.center.name : ''));
     const subs = (p.suburbs || []).map(suburbLabel).join(' · ');
     const extra = [licL(p.licenses), typeof p.hasCar === 'boolean' ? (p.hasCar ? '차 있음' : '차 없음') : ''].filter(Boolean).join(' · ');
+    // 11-08b: 문장·안내문 없이 표 하나. 내 조건(필터)에 맞는 값만 ✓ 초록 — 업종(필터 업종이 있을 때)·동네(반경 안·주 전체)
+    const nearOk = !!(it.wide || (it.km != null && it.km <= Math.max(Number(ctx && ctx.radius) || 0, it.reach || Number(p.radiusKm) || 0)));
+    const indOk = !!(ctx && ctx.industry && (p.industries || []).includes(ctx.industry));
+    const ok = (yes, html) => yes ? '<dd class="kpd-ok">✓ ' + html + '</dd>' : '<dd>' + html + '</dd>';
     return `
       <div class="kjp-hero"><div class="kjp-nick">${esc(nick)}</div><div class="kjp-meta">${esc(meta.join(' · '))}</div></div>
-      <div class="kjp-sec"><h4>찾는 일</h4><div class="kjp-line">${esc(sentenceOf(p, en))}</div></div>
-      <div class="kjp-sec"><h4>자세히</h4><dl class="kjp-rows">
-        <dt>업종</dt><dd>${esc(indL(p.industries, en) || '—')}</dd>
-        <dt>동네</dt><dd>${subs || '—'}${p.radiusKm && (p.suburbs || []).some(x => !(x.km || x.all)) ? ' (반경 ' + esc(p.radiusKm) + 'km)' : ''}</dd>
+      <div class="kjp-sec"><h4>찾는 일</h4><dl class="kjp-rows">
+        <dt>업종</dt>${ok(indOk, esc(indL(p.industries, en) || '—'))}
+        <dt>동네</dt>${ok(nearOk, (subs || '—') + (p.radiusKm && (p.suburbs || []).some(x => !(x.km || x.all)) ? ' (반경 ' + esc(p.radiusKm) + 'km)' : ''))}
         <dt>근무</dt><dd>${[esc(wtL(p.workTypes)), p.startDate ? esc(startLabel(p.startDate)) : '', p.payMin ? '시급 $' + esc(p.payMin) + ' 이상' : ''].filter(Boolean).join(' · ') || '—'}</dd>
         <dt>비자</dt><dd>${esc(en.label('visas', p.visa) || '—')}</dd>
         ${extra ? `<dt>기타</dt><dd>${esc(extra)}</dd>` : ''}
-        ${p.experience ? `<dt>경력</dt><dd>${esc(p.experience)}</dd>` : ''}
-      </dl></div>
-      <div class="kjp-sec"><div class="ksp-help">이메일·연락처는 보이지 않습니다. 연락은 채팅으로만 됩니다.</div></div>`;
+        ${p.experience ? `<dt>경력</dt><dd>${expLines(p.experience).map(esc).join('<br>')}</dd>` : ''}
+      </dl></div>`;
   }
   function emptyHtml() {
     const nextR = pg ? RADII[RADII.indexOf(pg.radius) + 1] : null;
@@ -826,7 +847,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
   async function showResults(focusUid) {
     if (!me || !pg) return;
     const D = deck(); if (!D) return;
-    const ctx = { radius: pg.radius, showCenter: true };
+    const ctx = { radius: pg.radius, industry: pg.industry, showCenter: true };
     const key = pg.centers.map(c => c.state).sort().join(',');
     if (!pg.all || pg.allKey !== key) {
       pg.all = null;
@@ -851,15 +872,16 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       sheet.addEventListener('click', e => { if (e.target === sheet || e.target.closest('[data-kjp-sheet="close"]')) closeSheet(); });
       document.addEventListener('keydown', e => { if (e.key === 'Escape' && sheet.classList.contains('open')) { e.stopImmediatePropagation(); closeSheet(); } });   // 시트만 닫는다
     }
-    const draft = { centers: (pg.centers || []).map(c => Object.assign({}, c)), radius: pg.radius, industry: pg.industry, sort: pg.sort, gender: pg.gender };
+    const draft = { state: ((pg.centers || []).find(c => c.all) || {}).state || '', centers: (pg.centers || []).filter(c => !c.all).map(c => Object.assign({}, c)), radius: pg.radius, industry: pg.industry, sort: pg.sort, gender: pg.gender };
     const opts = (name, map, cur) => Object.keys(map).map(k => `<button type="button" class="kjp-opt" data-set="${name}" data-val="${k}" aria-pressed="${String(cur) === k ? 'true' : 'false'}">${esc(map[k])}</button>`).join('');
     const indChips = [{ code: '', label: '전체' }].concat(en.industries).map(i => `<button type="button" class="kjp-opt" data-set="industry" data-val="${esc(i.code)}" aria-pressed="${draft.industry === i.code ? 'true' : 'false'}">${esc(i.label)}</button>`).join('');
     sheet.innerHTML = `
       <div class="kjp-sheet-box">
         <h3>상세 필터 <button type="button" class="kjp-lnk muted" data-kjp-sheet="close">닫기</button></h3>
-        <div class="kjp-lab">동네 혹은 주 검색 <span class="ksp-dim">(최대 ${MAX_CENTERS}곳)</span></div>
+        <div class="kjp-lab">주 <span class="ksp-dim">(한 곳)</span></div>
+        <select class="ksp-input ksp-select" id="kjpSheetState"><option value="">고르지 않음</option>${JSTATES.map(s => `<option value="${s[0]}"${draft.state === s[0] ? ' selected' : ''}>${s[1]} 전체</option>`).join('')}</select>
+        <div class="kjp-lab">동네 검색 <span class="ksp-dim">(최대 ${MAX_CENTERS}곳)</span></div>
         <input id="kjpSheetQ" type="text" placeholder="동네 이름이나 우편번호 — 예: Sunnybank, 4109" autocomplete="off" inputmode="search"><ul class="ksp-sug" id="kjpSheetSug"></ul>
-        <div class="kjp-chips" id="kjpStateChips" style="margin-top:8px;">${JSTATES.map(s => `<button type="button" class="kjp-opt" data-state="${s[0]}">${s[1]}</button>`).join('')}</div>
         <div id="kjpMyWrap"></div>
         <div class="kjp-centers" id="kjpCenters"></div>
         <div class="kjp-lab">반경 <span class="ksp-dim">(동네 기준)</span></div><div class="kjp-chips">${RADII.map(r => `<button type="button" class="kjp-opt" data-set="radius" data-val="${r}" aria-pressed="${r === draft.radius ? 'true' : 'false'}">${r}km</button>`).join('')}</div>
@@ -875,23 +897,22 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     };
     fillMyChips();
     const paintCenters = () => {
-      box.querySelector('#kjpCenters').innerHTML = draft.centers.map((c, i) => `<span class="kjp-center">${esc(c.all ? c.name + ' 전체' : c.name + ' ' + String(c.state).toUpperCase())}<button type="button" data-rm="${i}" aria-label="빼기">×</button></span>`).join('');
-      box.querySelectorAll('[data-state]').forEach(b => b.setAttribute('aria-pressed', draft.centers.some(c => c.all && c.state === b.dataset.state) ? 'true' : 'false'));
+      box.querySelector('#kjpCenters').innerHTML = draft.centers.map((c, i) => `<span class="kjp-center">${esc(c.name + ' ' + String(c.state).toUpperCase())}<button type="button" data-rm="${i}" aria-label="빼기">×</button></span>`).join('');
       box.querySelectorAll('[data-my]').forEach(b => { const m = pg.myPosts[Number(b.dataset.my)]; b.setAttribute('aria-pressed', m && draft.centers.some(c => sameCenter(c, m)) ? 'true' : 'false'); });
-      box.querySelector('[data-kjp-sheet="apply"]').disabled = !draft.centers.length;
+      box.querySelector('[data-kjp-sheet="apply"]').disabled = !(draft.centers.length || draft.state);
     };
     const addCenter = c => {
       const i = draft.centers.findIndex(x => sameCenter(x, c));
       if (i !== -1) { draft.centers.splice(i, 1); paintCenters(); return; }
-      if (draft.centers.length >= MAX_CENTERS) { toast('동네·주는 ' + MAX_CENTERS + '곳까지 고를 수 있습니다.'); return; }
+      if (draft.centers.length >= MAX_CENTERS) { toast('동네는 ' + MAX_CENTERS + '곳까지 고를 수 있습니다.'); return; }
       draft.centers.push(c); paintCenters();
     };
     paintCenters();
+    const stSel = box.querySelector('#kjpSheetState');
+    stSel.addEventListener('change', () => { draft.state = stSel.value || ''; paintCenters(); });
     box.onclick = async e => {
       const my = e.target.closest('[data-my]');
       if (my) { const m = pg.myPosts[Number(my.dataset.my)]; if (m) addCenter({ name: m.name, state: m.state, lat: m.lat, lng: m.lng }); return; }
-      const sc = e.target.closest('[data-state]');
-      if (sc) { addCenter({ name: sc.textContent.trim(), state: sc.dataset.state, all: true }); return; }
       const rm = e.target.closest('[data-rm]');
       if (rm) { draft.centers.splice(Number(rm.dataset.rm), 1); paintCenters(); return; }
       const st = e.target.closest('[data-set]');
@@ -902,8 +923,10 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
         return;
       }
       if (e.target.closest('[data-kjp-sheet="apply"]')) {
-        if (!draft.centers.length) { toast('동네나 주를 한 곳 이상 골라 주십시오.'); return; }
-        Object.assign(pg, { centers: draft.centers, radius: draft.radius, industry: draft.industry, sort: draft.sort, gender: draft.gender });
+        if (!draft.centers.length && !draft.state) { toast('주나 동네를 한 곳 이상 골라 주십시오.'); return; }
+        const stName = (JSTATES.find(s => s[0] === draft.state) || [])[1] || '';
+        const centers = (draft.state ? [{ name: stName, state: draft.state, all: true }] : []).concat(draft.centers.slice(0, MAX_CENTERS));
+        Object.assign(pg, { centers, radius: draft.radius, industry: draft.industry, sort: draft.sort, gender: draft.gender });
         saveFilter(); closeSheet();
         await showResults();
       }
@@ -922,7 +945,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     injectCss(); injectPageCss();
     if (!pg || pg.uid !== me.uid) {
       const saved = loadFilter() || {};
-      const centers = Array.isArray(saved.centers) ? saved.centers.filter(c => c && c.state && (c.all || (typeof c.lat === 'number' && typeof c.lng === 'number'))).slice(0, MAX_CENTERS) : [];
+      const centers = Array.isArray(saved.centers) ? saved.centers.filter(c => c && c.state && (c.all || (typeof c.lat === 'number' && typeof c.lng === 'number'))).slice(0, MAX_CENTERS + 1) : [];
       pg = { uid: me.uid, centers, radius: RADII.includes(saved.radius) ? saved.radius : 5, industry: String(saved.industry || ''), sort: JSORTS[saved.sort] ? saved.sort : 'near',
              gender: JGENDERS[saved.gender] ? saved.gender : 'all', all: null, allKey: '', myPosts: [] };
       loadMyJobPosts(me.uid).then(list => { pg.myPosts = list; try { if (sheet && sheet.classList.contains('open') && fillMyChips) fillMyChips(); } catch (_) {} });

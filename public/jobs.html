@@ -860,8 +860,8 @@
 
     // ── Tabs ──
     const urlTab = new URLSearchParams(location.search).get('tab');
-    // 11-08: 주소에 ?state= 가 없으면 상단바 주 설정(koaus-state-pick.js, LS koaus-state-pref-v1). '전체' = 빈 값 → 모든 주 글 + 전국 지도(Living·Job 동일)
-    const currentState = (function () { const u = (new URLSearchParams(location.search).get('state') || '').toLowerCase(); if (u) return u; try { const v = (localStorage.getItem('koaus-state-pref-v1') || '').toLowerCase(); return /^(nsw|vic|qld|wa|sa|tas|act|nt)$/.test(v) ? v : ''; } catch (_) { return ''; } })();
+    // 11-08b: 주소에 ?state= 가 없으면 이 게시판의 주 설정(LS koaus-state-pref-v1:jobs, 게시판마다 따로) → 내 프로필 동네의 주 → NSW. '전체(호주 전역)'는 없음(사용자 결정)
+    const currentState = (function () { const ok = v => /^(nsw|vic|qld|wa|sa|tas|act|nt)$/.test(v); const u = (new URLSearchParams(location.search).get('state') || '').toLowerCase(); if (ok(u)) return u; try { const v = (localStorage.getItem('koaus-state-pref-v1:jobs') || '').toLowerCase(); if (ok(v)) return v; const c = JSON.parse(localStorage.getItem('koaus-profile-center-v1') || 'null'); const ps = String((c && c.state) || '').toLowerCase(); if (ok(ps)) return ps; } catch (_) {} return 'nsw'; })();
     // 2026-10: '구직'(seeking) 글 숨김 — 글은 일자리 내주는 쪽만 올림. 플래그만 true 로 바꾸면 복구
     //   (기존 seeking 글·jobs_posts 데이터·rules 그대로, 목록은 postType 필터로 자연 제외).
     const SEEKING_ENABLED = false;

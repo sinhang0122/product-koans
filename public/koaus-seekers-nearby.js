@@ -30,7 +30,7 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
     measurementId: 'G-DERZ9MTKPL',
   };
   const RADII = [3, 5, 10, 20];   // 10-19: 기본 5km(동네 2~3개 묶음), 3km = 바로 옆 동네, 20km = 외곽·지방
-  const MAX_CENTERS = 3;          // 11-08: 필터의 동네·주 최대 3곳
+  const MAX_CENTERS = 3;          // 11-08b: 필터의 동네 최대 3곳(주는 드롭다운으로 한 곳)
   let db = null;
   try { db = getFirestore(getApps().length ? getApp() : initializeApp(firebaseConfig)); } catch (e) { try { console.warn('[seekers-nearby] init 실패', e); } catch (_) {} }
 
@@ -216,8 +216,9 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
   function savedSeekers() { try { const a = JSON.parse(localStorage.getItem(SAVED_KEY) || '[]'); return Array.isArray(a) ? a : []; } catch (_) { return []; } }
   function isSavedSeeker(uid) { return savedSeekers().includes(uid); }
 
-  // 찾는 조건 한 문장 — 행·카드·미리보기 공용 문구. 큰 지역·주 전체는 영어 이름 그대로(11-08: 칩과 통일)
+  // 찾는 조건 한 문장 — 모달 행 등에서 씀. 큰 지역·주 전체는 영어 이름 그대로(11-08: 칩과 통일)
   const subName = x => (x && (x.km || x.all) ? (x.name + ' 전체') : (x && x.name) || '');
+  const moveInLabel = s => { if (!s) return ''; const d = new Date(s + 'T00:00:00'), t = new Date(); t.setHours(0, 0, 0, 0); return (isNaN(d) || d <= t) ? '최대한 빨리' : (d.getMonth() + 1) + '월 ' + d.getDate() + '일부터'; };
   function conditionSentence(p, en) {
     const subs = (p.suburbs || []).map(subName).filter(Boolean).slice(0, 3).join(' · ');
     let when = '';
@@ -247,22 +248,19 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
     const k = kmText(it); if (k) meta.push(k + (ctx && ctx.showCenter && it.center && it.center.name && !it.wide ? ' · ' + it.center.name : ''));
     const subs = (p.suburbs || []).map(x => (x.km || x.all) ? esc(x.name) + ' 전체' + (x.km ? ' ' + esc(x.km) + 'km' : '') : esc(x.name) + ' ' + esc(String(x.state || '').toUpperCase())).join(' · ');
     const rooms = (p.roomTypes || []).map(c => en.label('roomTypes', c)).filter(Boolean).join(', ');
+    // 11-08b: 문장·'내 방과 맞는지'·안내문 없이 표 하나. 내 조건(필터·내 글)에 맞는 값만 ✓ 초록(색약도 읽히는 청록, 다크 모드 별도)
     const price = Number(ctx && ctx.price) || 0;
-    const fit = [];
-    if (price) fit.push(price >= (p.budgetMin || 0) && price <= (p.budgetMax != null ? p.budgetMax : 1e9) ? '<span class="ksn-tag ok">예산 맞음</span>' : '<span class="ksn-tag">예산 밖</span>');
-    if (it.km != null) fit.push(it.km <= Math.max(Number(ctx && ctx.radius) || 0, it.reach || Number(p.radiusKm) || 0) ? '<span class="ksn-tag ok">반경 안</span>' : '<span class="ksn-tag">반경 밖</span>');
-    if (p.moveIn) { const d = new Date(p.moveIn + 'T00:00:00'); const days = Math.ceil((d - new Date()) / 86400000); fit.push(`<span class="ksn-tag">${days <= 0 ? '입주 지금 바로' : '입주일 ' + days + '일 뒤'}</span>`); }
+    const budgetOk = !!(price && price >= (p.budgetMin || 0) && price <= (p.budgetMax != null ? p.budgetMax : 1e9));
+    const nearOk = !!(it.wide || (it.km != null && it.km <= Math.max(Number(ctx && ctx.radius) || 0, it.reach || Number(p.radiusKm) || 0)));
+    const ok = (yes, html) => yes ? '<dd class="kpd-ok">✓ ' + html + '</dd>' : '<dd>' + html + '</dd>';
     return `
       <div class="ksn-detail-hero"><div class="ksn-detail-nick">${esc(nick)}</div><div class="ksn-detail-meta">${esc(meta.join(' · '))}</div></div>
-      <div class="ksn-sec"><h4>찾는 조건</h4><div class="ksn-line">${esc(conditionSentence(p, en))}</div></div>
-      <div class="ksn-sec"><h4>자세히</h4><dl class="ksn-rows">
-        <dt>동네</dt><dd>${subs || '—'}${p.radiusKm && (p.suburbs || []).some(x => !(x.km || x.all)) ? ' (반경 ' + esc(p.radiusKm) + 'km)' : ''}</dd>
-        <dt>예산</dt><dd>주 $${esc(p.budgetMin != null ? p.budgetMin : 0)}${p.budgetMax != null ? ' ~ $' + esc(p.budgetMax) : ' 이상'}</dd>
-        <dt>입주</dt><dd>${esc(p.moveIn || '—')}${p.stay ? ' · ' + esc(en.label('stays', p.stay)) : ''}</dd>
+      <div class="ksn-sec"><h4>찾는 조건</h4><dl class="ksn-rows">
+        <dt>동네</dt>${ok(nearOk, (subs || '—') + (p.radiusKm && (p.suburbs || []).some(x => !(x.km || x.all)) ? ' (반경 ' + esc(p.radiusKm) + 'km)' : ''))}
+        <dt>예산</dt>${ok(budgetOk, '주 $' + esc(p.budgetMin != null ? p.budgetMin : 0) + (p.budgetMax != null ? ' ~ $' + esc(p.budgetMax) : ' 이상'))}
+        <dt>입주</dt><dd>${esc(moveInLabel(p.moveIn) || p.moveIn || '—')}${p.stay ? ' · ' + esc(en.label('stays', p.stay)) : ''}</dd>
         <dt>방</dt><dd>${esc(rooms || '상관없음')}${p.bathroom === 'private' ? ' · 개인 욕실' : ''}</dd>
-      </dl></div>
-      ${fit.length ? `<div class="ksn-sec"><h4>내 방과 맞는지</h4><div class="ksn-tags">${fit.join('')}</div></div>` : ''}
-      <div class="ksn-note">소개글·신분·흡연·반려동물은 본인만 보는 칸입니다. 채팅이 시작되면 이 분이 직접 보낼 수 있습니다. 연락은 채팅으로만 됩니다.</div>`;
+      </dl></div>`;
   }
 
   // ── 카드 넘겨 보기 열기(공용 deck) — list: 보여 줄 사람들, index: 시작 위치, ctx: {price, radius, title, fromModal} ──
@@ -383,6 +381,7 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
       .ksn-sheet .ksn-q{position:relative;margin-top:6px}
       .ksn-sheet input{width:100%;box-sizing:border-box;border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-size:13.5px;font-family:inherit;background:var(--bg-base);color:var(--text-primary)}
       .ksn-sheet input:focus{outline:none;border-color:var(--border-focus,var(--text-primary))}
+      .ksn-select{appearance:none;-webkit-appearance:none;width:100%;box-sizing:border-box;border:1px solid var(--border);border-radius:10px;padding:9px 32px 9px 12px;font-size:13.5px;font-family:inherit;background:var(--bg-base) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23777' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9.5 12 15.5 18 9.5'/></svg>") no-repeat right 10px center/12px 12px;color:var(--text-primary)}
       .ksn-sug{list-style:none;margin:4px 0 0;padding:0;border:1px solid var(--border);border-radius:10px;background:var(--bg-base);max-height:200px;overflow:auto;display:none}
       .ksn-sug.on{display:block}
       .ksn-sug li{padding:9px 12px;font-size:13.5px;cursor:pointer;border-bottom:1px solid var(--border-subtle)}
@@ -506,14 +505,16 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
       sheet.addEventListener('click', e => { if (e.target === sheet || e.target.closest('[data-ksn-sheet="close"]')) closeSheet(); });
       document.addEventListener('keydown', e => { if (e.key === 'Escape' && sheet.classList.contains('open')) { e.stopImmediatePropagation(); closeSheet(); } });   // 시트만 닫는다(카드 넘겨 보기는 그대로)
     }
-    const draft = { centers: (pg.centers || []).map(c => Object.assign({}, c)), radius: pg.radius, sort: pg.sort, gender: pg.gender, price: pg.price };
+    // 11-08b: 주는 드롭다운으로 한 곳, 동네는 최대 3곳. 저장은 centers(주 all 항목 + 동네들) 한 배열
+    const draft = { state: ((pg.centers || []).find(c => c.all) || {}).state || '', centers: (pg.centers || []).filter(c => !c.all).map(c => Object.assign({}, c)), radius: pg.radius, sort: pg.sort, gender: pg.gender, price: pg.price };
     const opts = (name, map, cur) => Object.keys(map).map(k => `<button type="button" class="ksn-opt" data-set="${name}" data-val="${k}" aria-pressed="${String(cur) === k ? 'true' : 'false'}">${esc(map[k])}</button>`).join('');
     sheet.innerHTML = `
       <div class="ksn-sheet-box">
         <h3>상세 필터 <button type="button" class="ksn-lnk muted" data-ksn-sheet="close">닫기</button></h3>
-        <div class="ksn-lab">동네 혹은 주 검색 <span class="ksn-dim">(최대 ${MAX_CENTERS}곳)</span></div>
+        <div class="ksn-lab">주 <span class="ksn-dim">(한 곳)</span></div>
+        <select class="ksn-select" id="ksnStateSel"><option value="">고르지 않음</option>${STATES.map(s => `<option value="${s[0]}"${draft.state === s[0] ? ' selected' : ''}>${s[1]} 전체</option>`).join('')}</select>
+        <div class="ksn-lab">동네 검색 <span class="ksn-dim">(최대 ${MAX_CENTERS}곳)</span></div>
         <div class="ksn-q"><input id="ksnSheetQ" type="text" placeholder="동네 이름이나 우편번호 — 예: Sunnybank, 4109" autocomplete="off" inputmode="search"><ul class="ksn-sug" id="ksnSheetSug"></ul></div>
-        <div class="ksn-bar" id="ksnStateChips" style="padding:8px 0 0;border:0;">${STATES.map(s => `<button type="button" class="ksn-opt" data-state="${s[0]}">${s[1]}</button>`).join('')}</div>
         <div id="ksnMyWrap"></div>
         <div class="ksn-centers" id="ksnCenters"></div>
         <div class="ksn-lab">반경 <span class="ksn-dim">(동네 기준)</span></div><div class="ksn-bar" style="padding:0;border:0;">${RADII.map(r => `<button type="button" class="ksn-opt" data-set="radius" data-val="${r}" aria-pressed="${r === draft.radius ? 'true' : 'false'}">${r}km</button>`).join('')}</div>
@@ -533,23 +534,22 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
     fillMyChips();
     const paintCenters = () => {
       const el = box.querySelector('#ksnCenters');
-      el.innerHTML = draft.centers.map((c, i) => `<span class="ksn-center">${esc(c.all ? c.name + ' 전체' : c.name + ' ' + String(c.state).toUpperCase())}<button type="button" data-rm="${i}" aria-label="빼기">×</button></span>`).join('');
-      box.querySelectorAll('[data-state]').forEach(b => b.setAttribute('aria-pressed', draft.centers.some(c => c.all && c.state === b.dataset.state) ? 'true' : 'false'));
+      el.innerHTML = draft.centers.map((c, i) => `<span class="ksn-center">${esc(c.name + ' ' + String(c.state).toUpperCase())}<button type="button" data-rm="${i}" aria-label="빼기">×</button></span>`).join('');
       box.querySelectorAll('[data-my]').forEach(b => { const m = pg.myPosts[Number(b.dataset.my)]; b.setAttribute('aria-pressed', m && draft.centers.some(c => sameCenter(c, m)) ? 'true' : 'false'); });
-      box.querySelector('[data-ksn-sheet="apply"]').disabled = !draft.centers.length;
+      box.querySelector('[data-ksn-sheet="apply"]').disabled = !(draft.centers.length || draft.state);
     };
     const addCenter = c => {
       const i = draft.centers.findIndex(x => sameCenter(x, c));
       if (i !== -1) { draft.centers.splice(i, 1); paintCenters(); return; }
-      if (draft.centers.length >= MAX_CENTERS) { toast('동네·주는 ' + MAX_CENTERS + '곳까지 고를 수 있습니다.'); return; }
+      if (draft.centers.length >= MAX_CENTERS) { toast('동네는 ' + MAX_CENTERS + '곳까지 고를 수 있습니다.'); return; }
       draft.centers.push(c); paintCenters();
     };
     paintCenters();
+    const stSel = box.querySelector('#ksnStateSel');
+    stSel.addEventListener('change', () => { draft.state = stSel.value || ''; paintCenters(); });
     box.onclick = async e => {
       const my = e.target.closest('[data-my]');
       if (my) { const m = pg.myPosts[Number(my.dataset.my)]; if (m) { addCenter({ name: m.name, state: m.state, lat: m.lat, lng: m.lng }); if (m.price && !box.querySelector('#ksnPrice').value) box.querySelector('#ksnPrice').value = m.price; } return; }
-      const sc = e.target.closest('[data-state]');
-      if (sc) { addCenter({ name: sc.textContent.trim(), state: sc.dataset.state, all: true }); return; }
       const rm = e.target.closest('[data-rm]');
       if (rm) { draft.centers.splice(Number(rm.dataset.rm), 1); paintCenters(); return; }
       const st = e.target.closest('[data-set]');
@@ -560,9 +560,11 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
         return;
       }
       if (e.target.closest('[data-ksn-sheet="apply"]')) {
-        if (!draft.centers.length) { toast('동네나 주를 한 곳 이상 골라 주십시오.'); return; }
+        if (!draft.centers.length && !draft.state) { toast('주나 동네를 한 곳 이상 골라 주십시오.'); return; }
         const pv = Number(box.querySelector('#ksnPrice').value); draft.price = Number.isFinite(pv) && pv > 0 ? Math.round(pv) : 0;
-        Object.assign(pg, { centers: draft.centers, radius: draft.radius, sort: draft.sort, gender: draft.gender, price: draft.price });
+        const stName = (STATES.find(s => s[0] === draft.state) || [])[1] || '';
+        const centers = (draft.state ? [{ name: stName, state: draft.state, all: true }] : []).concat(draft.centers.slice(0, MAX_CENTERS));
+        Object.assign(pg, { centers, radius: draft.radius, sort: draft.sort, gender: draft.gender, price: draft.price });
         saveFilter(); closeSheet();
         await showResults();
       }
@@ -603,7 +605,7 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
     injectCss(); injectPageCss();
     if (!pg || pg.uid !== user.uid) {
       const saved = loadFilter() || {};
-      const centers = Array.isArray(saved.centers) ? saved.centers.filter(c => c && c.state && (c.all || (typeof c.lat === 'number' && typeof c.lng === 'number'))).slice(0, MAX_CENTERS) : [];
+      const centers = Array.isArray(saved.centers) ? saved.centers.filter(c => c && c.state && (c.all || (typeof c.lat === 'number' && typeof c.lng === 'number'))).slice(0, MAX_CENTERS + 1) : [];
       pg = { uid: user.uid, centers, radius: RADII.includes(saved.radius) ? saved.radius : 5, sort: SORTS[saved.sort] ? saved.sort : 'near',
              gender: GENDERS[saved.gender] ? saved.gender : 'all', price: Number(saved.price) || 0, all: null, allKey: '', myPosts: [] };
       loadMyPosts(user.uid).then(list => { pg.myPosts = list; try { if (sheet && sheet.classList.contains('open') && fillMyChips) fillMyChips(); } catch (_) {} });

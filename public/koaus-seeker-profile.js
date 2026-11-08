@@ -729,9 +729,16 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     const sOrdered = st ? states.filter(r => r.state === st).concat(states.filter(r => r.state !== st)) : states;
     return `<div class="ksp-chips" id="kspRegionChips">${ordered.map(r => `<button type="button" class="ksp-opt" data-region="${esc(r.code)}" aria-pressed="${draft.suburbs.some(x => x.km && x.name === r.name) ? 'true' : 'false'}">${esc(r.name)}</button>`).join('')}</div>
           <div class="ksp-label">주 전체 고르기</div>
-          <div class="ksp-chips" id="kspStateChips">${sOrdered.map(r => `<button type="button" class="ksp-opt" data-region="${esc(r.code)}" aria-pressed="${draft.suburbs.some(x => x.all && x.state === r.state) ? 'true' : 'false'}">${esc(r.name)}</button>`).join('')}</div>`;
+          <select class="ksp-input ksp-select" id="kspStateSel"><option value="">고르기…</option>${sOrdered.map(r => `<option value="${esc(r.code)}">${esc(r.name)} 전체</option>`).join('')}</select>`;
   }
   function wireRegionChips(body) {
+    const stSel = $('#kspStateSel', body);   // 11-08b: 주 전체는 드롭다운 — 고르면 칩으로 들어가고 드롭다운은 비운다
+    if (stSel) stSel.addEventListener('change', () => {
+      const it = window.koausGeo && window.koausGeo.regionItem(stSel.value); stSel.value = ''; if (!it) return;
+      if (draft.suburbs.some(x => x.all && x.state === it.state)) return;
+      if (draft.suburbs.length >= MAX_SUBURBS) { $('#kspErr1', body).textContent = '동네·지역은 ' + MAX_SUBURBS + '곳까지 넣을 수 있습니다.'; return; }
+      draft.suburbs.push(it); $('#kspErr1', body).textContent = ''; renderSuburbSel();
+    });
     body.querySelectorAll('#kspRegionChips, #kspStateChips').forEach(box => box.addEventListener('click', e => {
       const b = e.target.closest('[data-region]'); if (!b) return;
       const it = window.koausGeo && window.koausGeo.regionItem(b.dataset.region); if (!it) return;

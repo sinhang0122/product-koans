@@ -1158,7 +1158,7 @@ service cloud.firestore {
         && pOptList(d, 'licenses', 8)
         && (!('licenses' in d) || d.licenses.hasOnly(['rsa', 'whitecard', 'forklift', 'barista', 'foodsafety', 'driver', 'firstaid', 'other']))
         && pOptBool(d, 'hasCar')
-        && pReqStr(d, 'experience', 1, 120)   // 11-05: 경력 필수(사용자 결정)
+        && pReqStr(d, 'experience', 1, 300)   // 11-05: 경력 필수(사용자 결정) · 11-08b: 여러 줄(줄바꿈)이라 300자
         && (!('experience' in d) || !d.experience.matches('(?s).*(([0-9][ .-]?){6,}|https?://|www[.]|[.]com|[.]au|[.]kr).*'))   // 11-05: 정규식 2개 → 1개(표현식 한도)
         && (!('ageBand' in d) || d.ageBand in ['20s', '30s', '40p', '20e', '20m', '20l', '30e', '30l'])
         && (!('gender' in d) || d.gender in ['female', 'male'])
