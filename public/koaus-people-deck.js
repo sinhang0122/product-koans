@@ -134,8 +134,8 @@
     window.addEventListener('blur', onCancel);
     document.addEventListener('keydown', function (e) {
       if (!isOpen()) return;
-      if (o && o.guard && o.guard() === false) return;
-      var t = e.target; if (t && (t.tagName === 'TEXTAREA' || t.tagName === 'INPUT' || t.tagName === 'SELECT')) { if (e.key === 'Escape') { try { t.blur(); } catch (_) {} } return; }
+      if (o && o.guard && o.guard() === false) { if (e.key === 'Escape') setTimeout(relock, 0); return; }   // 시트가 Esc 를 처리한 뒤에도 카드는 남는다
+      var t = e.target; if (t && (t.tagName === 'TEXTAREA' || t.tagName === 'INPUT' || t.tagName === 'SELECT')) { if (e.key === 'Escape') { try { t.blur(); } catch (_) {} relock(); } return; }
       if (e.key === 'ArrowRight') { go(1); e.preventDefault(); }
       else if (e.key === 'ArrowLeft') { go(-1); e.preventDefault(); }
       else if (e.key === 'Escape') { close(); e.stopImmediatePropagation(); }   // 뒤에 등록된 다른 Esc 처리(옛 모달)가 같이 닫지 않게
@@ -251,6 +251,8 @@
   }
 
   function current() { return (items.length && !loading) ? items[idx] : null; }
+  // 11-08f: 페이지 공통 Esc 처리(사이드바·인증 모달 닫기)가 body overflow 를 비워도, 카드가 떠 있으면 배경 잠금을 되살린다(koaus-scroll-lock.js 가 'hidden' 을 본다)
+  function relock() { if (isOpen() && document.body.style.overflow !== 'hidden') document.body.style.overflow = 'hidden'; }
   // 불러오는 중 표시(필터 적용 뒤 조회 동안)
   function setLoading(v) { loading = !!v; if (isOpen()) renderAll(); }
   function isOpen() { return !!(ovl && ovl.classList.contains('open')); }
@@ -293,5 +295,5 @@
   }
   function setIndex(i) { if (!isOpen()) return; idx = Math.max(0, Math.min(Number(i) || 0, Math.max(0, items.length - 1))); renderAll(); }
 
-  window.koausPeopleDeck = { open: open, update: update, close: close, isOpen: isOpen, current: current, markSent: markSent, setIndex: setIndex, setLoading: setLoading, go: go };
+  window.koausPeopleDeck = { open: open, update: update, close: close, isOpen: isOpen, current: current, markSent: markSent, setIndex: setIndex, setLoading: setLoading, go: go, relock: relock };
 })();

@@ -177,7 +177,11 @@
       if (t.href) {
         el = document.createElement('a');
         el.href = t.href;
-        if (t.active) {
+        if (t.key === 'people') {   // 11-08f: 쉐어 페이지 위 오버레이가 닫힌 뒤에도 다시 열리게 — 모듈이 있으면 바로 열고, 없으면 링크로
+          el.addEventListener('click', function (e) {
+            if (window.koausSeekersNearby && window.koausSeekersNearby.openPage) { e.preventDefault(); window.koausSeekersNearby.openPage(); }
+          });
+        } else if (t.active) {
           el.setAttribute('aria-current', 'page');
           /* 활성 탭 재탭 = 최상단 스크롤 (앱 관례) */
           el.addEventListener('click', function (e) {

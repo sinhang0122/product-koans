@@ -1159,7 +1159,7 @@ service cloud.firestore {
         && (!('licenses' in d) || d.licenses.hasOnly(['rsa', 'whitecard', 'forklift', 'barista', 'foodsafety', 'driver', 'firstaid', 'other']))
         && pOptBool(d, 'hasCar')
         && pReqStr(d, 'experience', 1, 300)   // 11-05: 경력 필수(사용자 결정) · 11-08b: 여러 줄(줄바꿈)이라 300자
-        && (!('experience' in d) || !d.experience.matches('(?s).*(([0-9][ .-]?){6,}|https?://|www[.]|[.]com|[.]au|[.]kr).*'))   // 11-05: 정규식 2개 → 1개(표현식 한도)
+        && (!('experience' in d) || !d.experience.matches('(?s).*(([0-9][[:space:].-]?){6,}|https?://|www[.]|[.]com|[.]au|[.]kr).*'))   // 11-05: 정규식 2개 → 1개(표현식 한도) · 11-08f: 줄바꿈도 숫자 사이 구분자([[:space:]]) — 여러 줄로 번호를 나눠 넣는 우회 차단
         && (!('ageBand' in d) || d.ageBand in ['20s', '30s', '40p', '20e', '20m', '20l', '30e', '30l'])
         && (!('gender' in d) || d.gender in ['female', 'male'])
         && (!('homeSuburb' in d) || d.homeSuburb is map)   // 11-08: 사는 곳은 11-05부터 받지 않음(옛 문서에만 남음) — 표현식 한도 때문에 형식만 본다(validHomeSuburb 는 더 안 씀)

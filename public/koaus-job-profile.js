@@ -38,7 +38,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     { code: 'barista', label: '바리스타' }, { code: 'foodsafety', label: '푸드 세이프티' }, { code: 'driver', label: '운전면허' },
     { code: 'firstaid', label: '응급처치' }, { code: 'other', label: '기타' },
   ];
-  const CONTACT_RE = /([0-9][ .-]?){6,}|https?:\/\/|www\.|\.com|\.au|\.kr|카톡|카카오|kakao|인스타|insta/i;
+  const CONTACT_RE = /([0-9][\s.-]?){6,}|https?:\/\/|www\.|\.com|\.au|\.kr|카톡|카카오|kakao|인스타|insta/i;   // 11-08f: 줄바꿈(\s)도 숫자 사이 구분자로 — 경력 여러 줄로 번호를 나눠 넣는 우회 차단
 
   let db = null, me = null;
   let profile = null, priv = null, loadedFor = null;
@@ -851,7 +851,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       pg.all = null;
       if (!D.isOpen()) openDeck([], 0, Object.assign({ loading: true }, ctx)); else D.setLoading(true);
       try { pg.all = await fetchForCenters(pg.centers); pg.allKey = key; }
-      catch (e) { console.warn('[job-profile] 목록 조회 실패', e); pg.all = []; toast('불러오지 못했습니다. 잠시 후 다시 시도해 주십시오.'); }
+      catch (e) { console.warn('[job-profile] 목록 조회 실패', e); pg.all = []; toast((e && (e.code === 'permission-denied' || /permission/i.test(e.message || ''))) ? '휴대폰(SMS) 또는 이메일 인증을 마친 회원만 볼 수 있습니다.' : '불러오지 못했습니다. 잠시 후 다시 시도해 주십시오.'); }
       if (!D.isOpen()) return;   // 불러오는 동안 닫았으면 다시 열지 않는다
     }
     const list = filtered();
@@ -935,10 +935,11 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     document.body.style.overflow = 'hidden';
     setTimeout(() => { try { if (!draft.centers.length) q.focus({ preventScroll: true }); } catch (_) {} }, 50);
   }
-  function closeSheet() { if (!sheet) return; sheet.classList.remove('open'); if (!(deck() && deck().isOpen())) document.body.style.overflow = ''; }
+  function closeSheet() { if (!sheet) return; sheet.classList.remove('open'); document.body.style.overflow = (deck() && deck().isOpen()) ? 'hidden' : ''; }   // 11-08f: 카드가 남아 있으면 잠금 유지
   // 도구줄 [워커 구하기] — 필터 시트부터(지시 18). 지난번 필터는 채워져 있다.
   async function openPage(opts) {
     if (!me) { if (window.koausAuth && window.koausAuth.openAuthModal) window.koausAuth.openAuthModal(); return; }
+    if (window.koausRequireCanPost && !window.koausRequireCanPost(me, window.koausAuth && window.koausAuth.openAuthModal, () => openPage(opts))) return;   // 11-08f: 인증 회원만(규칙 isVerifiedUser)
     if (!db || !E()) { toast('잠시 후 다시 시도해 주십시오.'); return; }
     injectCss(); injectPageCss();
     if (!pg || pg.uid !== me.uid) {

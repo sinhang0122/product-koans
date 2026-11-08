@@ -994,6 +994,8 @@ const cases = [
        path: 'job_profiles/testuser123', method: 'create', uid: 'testuser123', data: Object.assign({}, jobData, { experience: '가'.repeat(301) }) }),
   mk({ label: 'job_profiles 근무 형태 빈 목록 → 거부', expectation: 'DENY',
        path: 'job_profiles/testuser123', method: 'create', uid: 'testuser123', data: Object.assign({}, jobData, { workTypes: [] }) }),
+  mk({ label: 'job_profiles 경력 두 줄에 나눈 전화번호("04123\\n45678") → 거부(11-08f)', expectation: 'DENY',
+       path: 'job_profiles/testuser123', method: 'create', uid: 'testuser123', data: Object.assign({}, jobData, { experience: '주방 1년 04123\n45678' }) }),
   mk({ label: 'job_profiles 경력에 전화번호 → 거부', expectation: 'DENY',
        path: 'job_profiles/testuser123', method: 'create', uid: 'testuser123', data: Object.assign({}, jobData, { experience: '주방 1년 0412 345 678' }) }),
   mk({ label: 'job_profiles 타인 글 create → 거부', expectation: 'DENY',

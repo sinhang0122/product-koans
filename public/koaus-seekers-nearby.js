@@ -485,7 +485,7 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
       pg.all = null;
       if (!D.isOpen()) openDeck([], 0, Object.assign({ loading: true }, ctx)); else D.setLoading(true);
       try { pg.all = await fetchForCenters(pg.centers, user.uid); pg.allKey = pg.centers.map(c => c.state).sort().join(','); }
-      catch (e) { console.warn('[seekers-nearby] 조회 실패', e); pg.all = []; toast('불러오지 못했습니다. 잠시 후 다시 시도해 주십시오.'); }
+      catch (e) { console.warn('[seekers-nearby] 조회 실패', e); pg.all = []; toast((e && (e.code === 'permission-denied' || /permission/i.test(e.message || ''))) ? '휴대폰(SMS) 또는 이메일 인증을 마친 회원만 볼 수 있습니다.' : '불러오지 못했습니다. 잠시 후 다시 시도해 주십시오.'); }
       if (!D.isOpen()) return;   // 불러오는 동안 닫았으면 다시 열지 않는다
     }
     const list = filtered();
@@ -595,12 +595,14 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
     document.body.style.overflow = 'hidden';
     setTimeout(() => { try { if (!draft.centers.length) q.focus({ preventScroll: true }); } catch (_) {} }, 50);
   }
-  function closeSheet() { if (!sheet) return; sheet.classList.remove('open'); if (!(deck() && deck().isOpen()) && !(ovl && ovl.classList.contains('open'))) document.body.style.overflow = ''; }
+  function closeSheet() { if (!sheet) return; sheet.classList.remove('open'); document.body.style.overflow = ((deck() && deck().isOpen()) || (ovl && ovl.classList.contains('open'))) ? 'hidden' : ''; }   // 11-08f: 남은 창이 있으면 잠금을 다시 건다(페이지 Esc 처리가 비웠을 수 있음)
 
   // 도구줄 [쉐어생 구하기] / 탭바 / ?people=1 — 필터 시트부터(지시 18). 지난번 필터는 채워져 있다.
   async function openPage(opts) {
     const user = window.koausAuth && window.koausAuth.user;
     if (!user) { if (window.koausAuth && window.koausAuth.openAuthModal) window.koausAuth.openAuthModal(); return; }
+    // 11-08f: 목록은 인증 회원(휴대폰/이메일)만 읽을 수 있다(규칙 isVerifiedUser) — 글쓰기와 같은 게이트로 먼저 안내
+    if (window.koausRequireCanPost && !window.koausRequireCanPost(user, window.koausAuth && window.koausAuth.openAuthModal, () => openPage(opts))) return;
     if (!db || !E()) { toast('잠시 후 다시 시도해 주십시오.'); return; }
     injectCss(); injectPageCss();
     if (!pg || pg.uid !== user.uid) {
