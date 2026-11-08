@@ -80,7 +80,7 @@
     if (!vt || !vt.parentNode || vt.parentNode.querySelector('.koaus-state-sel')) return;
     vt.parentNode.insertBefore(makeSelect('ctrl-state-sel'), vt.nextSibling);
   }
-  function mountAll() { mountTopbar(); mountControls(); }
+  function mountAll() { var u = fromUrl(); if (u && u !== pref()) set(u); mountTopbar(); mountControls(); }   // 11-08e: 주소로 들어온 주도 이 게시판의 저장값으로(다음에 와도 그대로)
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mountAll); else mountAll();
 
   window.koausStatePick = { KEY: KEY, STATES: STATES, DEFAULT_STATE: DEFAULT_STATE, board: board, get: effective, pref: pref, fromUrl: fromUrl, set: set, go: go, label: label, makeSelect: makeSelect };

@@ -56,7 +56,7 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
       .ksn-bar{display:flex;flex-wrap:wrap;gap:6px;padding:10px 16px;border-bottom:1px solid var(--border-subtle)}
       .ksn-opt{appearance:none;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);border-radius:999px;padding:6px 12px;font-size:13px;cursor:pointer;font-family:inherit}
       .ksn-opt[aria-pressed="true"]{background:var(--accent);color:var(--accent-text);border-color:var(--accent)}
-      .ksn-body{overflow:auto;flex:1;padding:12px 16px 16px;display:flex;flex-direction:column;gap:10px}
+      .ksn-body{overflow:auto;overscroll-behavior:contain;flex:1;padding:12px 16px 16px;display:flex;flex-direction:column;gap:10px}
       .ksn-tags{display:flex;flex-wrap:wrap;gap:5px}
       .ksn-tag{font-size:12px;padding:2px 8px;border-radius:999px;border:1px solid var(--border);background:var(--bg-surface)}
       .ksn-tag.ok{border-color:rgba(22,163,74,.35);background:var(--green-bg);color:var(--green)}
@@ -370,7 +370,7 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
     st.textContent = `
       .ksn-sheet{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9060;display:none;align-items:flex-end;justify-content:center}
       .ksn-sheet.open{display:flex}
-      .ksn-sheet-box{width:100%;max-width:560px;background:var(--bg-base);color:var(--text-primary);border-radius:18px 18px 0 0;padding:16px 16px calc(18px + env(safe-area-inset-bottom,0px));max-height:88vh;overflow:auto;box-sizing:border-box}
+      .ksn-sheet-box{width:100%;max-width:560px;background:var(--bg-base);color:var(--text-primary);border-radius:18px 18px 0 0;padding:16px 16px calc(18px + env(safe-area-inset-bottom,0px));max-height:88vh;overflow:auto;overscroll-behavior:contain;box-sizing:border-box}
       @media(min-width:640px){.ksn-sheet{align-items:center}.ksn-sheet-box{border-radius:18px}}
       .ksn-sheet h3{margin:0 0 6px;font-size:16px;font-weight:800;display:flex;justify-content:space-between;align-items:center}
       .ksn-lab{font-size:12.5px;color:var(--text-muted);font-weight:700;margin:12px 0 6px;display:flex;gap:6px;align-items:baseline}

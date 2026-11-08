@@ -29,7 +29,7 @@
     '.kpd-track{position:absolute;top:0;bottom:0;left:0;display:flex;gap:var(--gap,0px);will-change:transform}' +
     '.kpd-card{flex:0 0 var(--slot,100vw);width:var(--slot,100vw);height:100%;display:flex;flex-direction:column;background:var(--bg-base,#fff);color:var(--text-primary,#111);overflow:hidden;box-sizing:border-box}' +
     '.kpd-card.kpd-ghost{visibility:hidden}' +
-    '.kpd-body{flex:1;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch}' +
+    '.kpd-body{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}' +
     '.kpd-compose{display:flex;flex-direction:column;gap:8px;padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--border,#e0e0e0);background:var(--bg-base,#fff)}' +
     '.kpd-compose textarea{width:100%;box-sizing:border-box;border:1px solid var(--border,#e0e0e0);background:var(--bg-input,var(--bg-base,#fff));color:var(--text-primary,#111);border-radius:12px;padding:11px 12px;font-size:15px;font-family:inherit;resize:none;min-height:64px;line-height:1.45}' +
     '.kpd-compose textarea:focus{outline:none;border-color:var(--border-focus,var(--text-primary,#111))}' +

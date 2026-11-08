@@ -693,7 +693,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       .kjp-rows{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:14px;margin:0}.kjp-rows dt{color:var(--text-muted)}.kjp-rows dd{margin:0}
       .kjp-sheet{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9060;display:none;align-items:flex-end;justify-content:center}
       .kjp-sheet.open{display:flex}
-      .kjp-sheet-box{width:100%;max-width:560px;background:var(--bg-base);color:var(--text-primary);border-radius:18px 18px 0 0;padding:16px 16px calc(18px + env(safe-area-inset-bottom,0px));max-height:88vh;overflow:auto;box-sizing:border-box}
+      .kjp-sheet-box{width:100%;max-width:560px;background:var(--bg-base);color:var(--text-primary);border-radius:18px 18px 0 0;padding:16px 16px calc(18px + env(safe-area-inset-bottom,0px));max-height:88vh;overflow:auto;overscroll-behavior:contain;box-sizing:border-box}
       @media(min-width:640px){.kjp-sheet{align-items:center}.kjp-sheet-box{border-radius:18px}}
       .kjp-sheet h3{margin:0 0 6px;font-size:16px;font-weight:800;display:flex;justify-content:space-between;align-items:center}
       .kjp-lab{font-size:12.5px;color:var(--text-muted);font-weight:700;margin:12px 0 6px;display:flex;gap:6px;align-items:baseline}

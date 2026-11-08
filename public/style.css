@@ -3986,7 +3986,7 @@ body.is-admin .admin-only.admin-only--block { display: block !important; }
 .filter-overlay.open { display: flex; }
 .filter-modal {
   background: var(--bg-base); border: 1px solid var(--border); border-radius: var(--r-xl);
-  width: 100%; max-width: 480px; max-height: 88vh; overflow-y: auto;
+  width: 100%; max-width: 480px; max-height: 88vh; overflow-y: auto; overscroll-behavior: contain;   /* 11-08e: 끝까지 내려도 뒤 목록이 같이 안 움직이게 */
   box-shadow: 0 24px 64px rgba(0,0,0,0.18);
 }
 .filter-modal-header {
@@ -4299,7 +4299,7 @@ body.is-admin .admin-only.admin-only--block { display: block !important; }
 /* 환경설정 프로필 설정 시트(10-20) — 모바일 하단, 640px↑ 중앙 */
 .mp-sheet-ovl { position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 9000; display: flex; align-items: flex-end; justify-content: center; }
 .mp-sheet-ovl[hidden] { display: none; }
-.mp-sheet { width: 100%; max-width: 560px; max-height: 92vh; overflow: auto; background: var(--bg-base); border-radius: 18px 18px 0 0; padding: 0 16px 16px; box-sizing: border-box; }
+.mp-sheet { width: 100%; max-width: 560px; max-height: 92vh; overflow: auto; overscroll-behavior: contain; background: var(--bg-base); border-radius: 18px 18px 0 0; padding: 0 16px 16px; box-sizing: border-box; }
 .mp-sheet-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px 0 10px; border-bottom: 1px solid var(--border); font-size: 16px; position: sticky; top: 0; background: var(--bg-base); }
 .mp-sheet-body .mypage-account-row:last-child { border-bottom: 0; }
 @media (min-width: 640px) { .mp-sheet-ovl { align-items: center; } .mp-sheet { border-radius: 18px; } }
@@ -5041,3 +5041,8 @@ body.koaus-home-v2 #sectionShortcuts { display: none !important; }
   .home-acc-meta { font-size: 11.5px; }
   .home-acc-panel { border-radius: 14px; }
 }
+
+/* 11-08e: 마이페이지·환경설정·보안 머리 — [← 홈으로]/[로그아웃] 세로 버튼 아래 밑줄 간격을 두 버튼 사이 간격(8px)과 같게
+   (모바일 .page-header{padding:0} 때문에 밑줄이 버튼에 붙어 보였음, 사용자 지적 11-08) */
+.page-header:has(> .page-header-actions--col) { padding-bottom: 8px; }
+.page-header-actions.page-header-actions--col { gap: 8px; }   /* 모바일(≤767px)의 .page-header-actions{gap:6px} 보다 우선 — 버튼 사이도 8px */

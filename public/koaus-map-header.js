@@ -42,7 +42,7 @@
   ];
 
   var page = (location.pathname.split('/').pop() || '').replace(/\.html$/i, '').toLowerCase();
-  var st = new URLSearchParams(location.search).get('state') || (window.koausStatePick ? window.koausStatePick.get() : '') || '';   // 11-08: 상단바 주 설정 포함
+  var st = new URLSearchParams(location.search).get('state') || '';   // 홈으로 돌아갈 때만 씀. 11-08e: 섹션 이동 링크에는 주를 붙이지 않는다(게시판마다 주 설정이 따로)
   var cur = PAGE_META[page] || null;
 
   /* ── 스타일 주입 ── */
@@ -240,8 +240,7 @@
       } else {
         el = document.createElement('a');
         el.className = 'kmh-drop-item' + (isCur ? ' kmh-cur' : '');
-        var q = [];
-        if (st) q.push('state=' + encodeURIComponent(st));
+        var q = [];   // 11-08e: ?state= 없음 — 가는 게시판의 저장된 주(koaus-state-pick.js)를 쓴다
         if (b.extra) q.push(b.extra);
         el.href = b.id + '.html' + (q.length ? '?' + q.join('&') : '');
         el.innerHTML = '<span class="kmh-ico" aria-hidden="true">' + b.ico + '</span>' +

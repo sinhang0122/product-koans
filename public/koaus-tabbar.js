@@ -76,7 +76,7 @@
     var tabs = TABS.slice();
     if (r.living === 'owner' || r.living === 'both') {   // 10-20: 둘 다('both')도 올리기
       tabs.splice(3, 0, { key: 'people', label: '프로필', icon: ICONS.people,
-        href: 'accom.html?people=1' + (st ? '&state=' + encodeURIComponent(st) : ''),   // 10-20: 마이페이지 탭 대신 쉐어 페이지 위 오버레이
+        href: 'accom.html?people=1',   // 10-20: 마이페이지 탭 대신 쉐어 페이지 위 오버레이 · 11-08e: ?state= 없음(쉐어의 저장된 주를 씀)
         active: page === 'accom.html' && qs.get('people') === '1' });
     }
     return tabs;
