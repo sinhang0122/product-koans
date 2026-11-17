@@ -5071,3 +5071,122 @@ body.koaus-home-v2 #sectionShortcuts { display: none !important; }
 .mypage-account-row[hidden] { display: none; }
 /* 문의하기 실패 안내 옆 [메일로 보내기] */
 .contact-mail-fallback { font-weight: 800; color: var(--text-primary); text-decoration: underline; white-space: nowrap; }
+
+/* ══ 11-17 모양 통일 — 버튼·입력·칩은 모서리 둥근 사각형 ══ */
+/* 기준: 누르는 것(버튼·입력칸·선택 상자·고르는 칩)은 알약(999px)·원(50%)·각진 3~4px 대신 "모서리 둥근 사각형"으로 통일.
+   반경은 모바일(390px)에서 잰 높이로 3단계 — 40px 이상 12px · 32~39px 10px · 32px 미만 8px (공지 카드: 41px 높이에 12px).
+   · 이 블록은 border-radius 만 바꾼다(크기·여백·색·글꼴·배치 그대로).
+   · 앞에 html 이 붙은 셀렉터 = 페이지 안 <style>·JS 주입 <style>·koaus-profile.css 가 style.css 뒤에 읽혀서 특이도를 한 단계 올린 것.
+   · 그대로 두는 것: 켜고 끄는 스위치·체크/라디오·사진/지도/영상 위 둥근 아이콘 버튼·아바타·상태 배지·밑줄 탭·카드/창/토스트·하단 탭바·관리자 전용.
+   · 새 버튼·입력칸·칩을 만들 때는 높이에 맞는 토큰(var(--r-btn-lg) / var(--r-btn) / var(--r-btn-sm))을 쓰면 된다. */
+:root {
+  --r-btn-lg: 12px;   /* 높이 40px 이상 */
+  --r-btn:    10px;   /* 높이 32~39px */
+  --r-btn-sm: 8px;    /* 높이 32px 미만 */
+}
+
+/* ── 큰 단계: 높이 40px 이상 → 12px ── */
+/* 입력칸 — 글쓰기·필터·신고(기타 사유)·문의·환율 */
+.write-input, .write-textarea, .contact-input, .contact-textarea, .exchange-amount-input, .exchange-cur-select { border-radius: var(--r-btn-lg); }
+/* 입력칸 — 등록 요청 창의 긴 글 칸 · FAQ 검색 */
+.request-field textarea, html .faq-page .faq-search { border-radius: var(--r-btn-lg); }
+/* 입력칸 — 프로필 창(koaus-profile.css) */
+html .ksp-input { border-radius: var(--r-btn-lg); }
+/* 입력칸 — 신고 창(koaus-report.js) · 영상 등록 창(koaus-video-reg.js) · 채팅 입력줄 · 카드 넘겨 보기 메시지 칸 */
+html .koaus-report-select,
+html .koaus-report-textarea,
+html .kv-reg input[type="text"],
+html .kv-reg input[type="url"],
+html .kc-composer textarea,
+html .kpd-compose textarea { border-radius: var(--r-btn-lg); }
+/* 주요 버튼 — 글쓰기·필터·창 아래 확인/취소 */
+.board-write-btn, .write-cancel-btn, .write-submit-btn, .filter-apply-btn, .filter-reset-btn, .request-actions button { border-radius: var(--r-btn-lg); }
+/* 주요 버튼 — 로그인 창 · 문의 · 마이페이지 · 케어 · 파워볼 */
+.auth-submit, .auth-google, .contact-submit, .mypage-login-btn, .myacct-logout-btn, .care-call-btn, .care-map-btn, .pb-gen-btn, .pb-official-btn { border-radius: var(--r-btn-lg); }
+/* 주요 버튼 — 글 상세(길찾기·연락처·문자·오픈채팅·구글 리뷰) */
+.rea-loc-btn, .rea-contact-btn, .contact-action-grid > .rea-contact-btn, .contact-action-btn, html .prd-review-btn { border-radius: var(--r-btn-lg); }
+/* 주요 버튼 — 사진 추가 칸 · 환율 맞바꾸기(원 → 둥근 사각형) */
+.photo-add-btn, .exchange-swap-btn { border-radius: var(--r-btn-lg); }
+/* 주요 버튼 — 프로필 카드·창(koaus-profile.css): 편집·완료 버튼 · 알림 켜기 줄 · 채우기 카드 */
+.ksp-prof-btns .ksp-btn, html .ksp-done-actions .ksp-btn, html .ksp-prof-switch, html .ksp-todo-card { border-radius: var(--r-btn-lg); }
+/* 주요 버튼 — 구하기 시트·카드 넘겨 보기·옛 목록 창(JS 주입) */
+html .ksn-apply, html .kjp-apply, html .kpd-send, html .kpd-btn, html .ksn-btn { border-radius: var(--r-btn-lg); }
+/* 주요 버튼 — 외부 글 상세 · 신고 창 · 영상 등록 창 · 채팅 전송(JS 주입·페이지 안 style) */
+html .kxt-btn, html .koaus-report-btn, html .kv-reg .kv-reg-actions button, html .kc-composer button { border-radius: var(--r-btn-lg); }
+/* 주요 버튼 — 영상 재생 불가 안내의 [유튜브에서 보기] · 외부 이동 안내(out.html) · 소개(about.html) */
+html .kv-fallback a, html .out-btn, html .about-page .about-cta a { border-radius: var(--r-btn-lg); }
+/* 마이페이지 계정 머리의 둥근 아이콘 버튼 2개(영상 등록·환경설정) → 둥근 사각형 */
+html .mp-settings-gear { border-radius: var(--r-btn-lg); }
+/* 이어 붙인 묶음 — 방/욕실 수 고르기: 바깥 상자만 둥글게(안쪽 버튼은 0 유지, 상자가 잘라 줌) */
+.seg-group { border-radius: var(--r-btn-lg); }
+
+/* ── 가운데 단계: 높이 32~39px → 10px ── */
+/* 상단바 — 로그인·채팅·테마·글자 크기·메뉴 · 주 고르기 */
+.topbar-login-btn, .topbar-my-btn, .topbar-menu-btn, .topbar-theme-btn, html .koaus-textsize-btn, html .koaus-state-sel { border-radius: var(--r-btn); }
+/* 사이드 메뉴 — 닫기 · 내 계정 */
+.sidebar-close-btn, .sidebar-acct-top { border-radius: var(--r-btn); }
+/* 검색 줄 — 범위·입력칸·검색·지우기 */
+.koaus-search-scope, .koaus-search-input, .koaus-search-btn, .koaus-search-clear { border-radius: var(--r-btn); }
+/* 입력칸 — 로그인/회원가입 · 등록 요청 창의 한 줄 칸 · 구하기 시트(JS 주입) */
+.auth-input, .request-field input:not([type="checkbox"]):not([type="file"]), html .ksn-select, html .ksn-sheet input, html .kjp-sheet input { border-radius: var(--r-btn); }
+/* 입력칸을 감싼 상자 — 가격 범위 칸 · 기준 환율 칸 */
+.price-input-row .price-input-cell, .exchange-live-input-wrap { border-radius: var(--r-btn); }
+/* 게시판 도구줄 — 상세 필터(선택 상자형 포함) · 쪽 번호 · 지도 위 [이 지역 검색] */
+select.board-write-btn, .accom-filter-btn, .pagination-btn, .area-search-btn { border-radius: var(--r-btn); }
+/* 탭 모양 버튼·고르는 칩 — K-Food/일상 · 일상 분류 · 집 형태 · 기간/옵션 · 상세 필터 칩 · FAQ 분류 */
+.others-nav-item, html .daily-cat-tab, .filter-pill, .toggle-pill, .trades-chip, html .faq-page .faq-chip { border-radius: var(--r-btn); }
+/* 고르는 칩 — 프로필 창(koaus-profile.css) · 구하기 시트(JS 주입, 내 글 동네 칩 포함) */
+html .ksp-opt, html .ksn-opt, html .kjp-opt, html .ksn-sheet .ksn-opt.addr, html .kjp-opt.addr { border-radius: var(--r-btn); }
+/* 작은 버튼 — 환경설정·보안 줄 버튼 · 글 상세 내 글 버튼 · 지도 전체화면 · 옛 상세 닫기 */
+.mypage-edit-btn, .mypage-photo-btn, .detail-action-btn, .detail-edit-btn, .detail-delete-btn, .fullscreen-btn, .rea-map-expand, .post-detail-close { border-radius: var(--r-btn); }
+/* 작은 버튼 — 프로필 카드·창 기본 버튼 · 카드 넘겨 보기 [필터 변경] · 옛 목록 창 [닫기] · 지도 머리줄(JS 주입) */
+html .ksp-btn, html .kpd-lnk.kpd-filter, .ksn-btn.small, html .kmh-icon-btn, html .kmh-tab { border-radius: var(--r-btn); }
+/* 사진·영상 위 글자 버튼 — 일상 상세 [문의] · 영상 [바로가기] (아이콘 원형 버튼은 그대로) */
+html .prd-cover-cta, html .kv-cta { border-radius: var(--r-btn); }
+/* 견인 안내의 [견인 서비스 찾기](지금은 뜨는 경로가 없는 배너 — 강제로 띄워 확인) */
+.auto-tow-btn { border-radius: var(--r-btn); }
+/* 둥근 아이콘 버튼(사진 위가 아닌 것) → 둥근 사각형 — 일상 상세 머리줄의 찜·공유 · 외부 글 닫기 · 약관 쪽 닫기 */
+html .prd-ovl, html .kxt-x, .legal-close-btn { border-radius: var(--r-btn); }
+/* 누르거나 올렸을 때만 바탕이 보이는 아이콘 버튼 — 상세 뒤로/닫기 · 신고 창 닫기 · 비밀번호 보기 · 채팅 뒤로 */
+.rea-back, .rea-nav-close, .report-close, .pw-toggle, html .kc-back { border-radius: var(--r-btn); }
+/* 이어 붙인 묶음 — List View | Map View · 내 역할: 바깥 상자만 둥글게(안쪽 버튼은 0 유지) */
+.view-toggle, html .kr-seg { border-radius: var(--r-btn); }
+/* 세그먼트 토글 — [Living | Job] 바깥 상자 */
+html .ksp-seg, html .mp-seg { border-radius: var(--r-btn); }
+
+/* ── 작은 단계: 높이 32px 미만 → 8px ── */
+/* ← 홈으로 · 로그아웃(머리 버튼) */
+.page-back { border-radius: var(--r-btn-sm); }
+/* 아주 작은 버튼 — 목록의 공유/신고/수정(카드 안의 것은 지금 숨김) · 마이페이지 글 관리 · 주소 복사 · 채팅방 차단/신고/나가기 · 내 영상 삭제 */
+.mini-btn,
+.accom-grid--compact .accom-card .mini-btn,
+.mp-edit,
+.mp-del,
+.mp-dup,
+.mp-toggle,
+.myacct-edit-btn,
+.detail-addr-copy,
+html .kc-mini-btn,
+html .kv-my-del { border-radius: var(--r-btn-sm); }
+/* 프로필 창 머리의 뒤로/닫기 · 일시정지 배너 [다시 켜기] */
+.ksp-btn.small { border-radius: var(--r-btn-sm); }
+/* 고르는 칩 — 글쓰기 선택 항목 · 최근 검색 · 고른 동네(×로 빼는 칩) */
+.write-opt, .recent-chip, .ksp-sel .ksp-chip, html .ksn-center, html .kjp-center { border-radius: var(--r-btn-sm); }
+/* 작은 선택 상자 — 영업시간 · 송금 속도 */
+.biz-hours-sel, .exchange-speed-select { border-radius: var(--r-btn-sm); }
+/* 이어 붙인 묶음 — 공지 줄 ‹ › : 바깥 상자만 둥글게 */
+.ticker-nav-group { border-radius: var(--r-btn-sm); }
+/* 세그먼트 토글 안쪽 버튼 — 바깥(10px)보다 3px 작게 해서 겹쳐 보이게 */
+html .ksp-seg button, html .mp-seg button { border-radius: calc(var(--r-btn) - 3px); }
+
+/* ── 같은 클래스가 문맥에 따라 다른 높이로 그려지는 곳(문맥별로 단계를 다시 맞춤) ── */
+/* 로그인 창의 선택 상자(41px) · 휴대폰 인증 번호 칸(옆 선택 상자에 맞춰 41px) */
+select.auth-input, #koausPhoneInput { border-radius: var(--r-btn-lg); }
+
+/* ── 인라인 style 속성에 반경이 박힌 것 — !important 로만 이길 수 있다(각 줄에 까닭) ── */
+.photo-upload-btn { border-radius: var(--r-btn-lg) !important; }   /* !important: 사진 첨부 버튼 — HTML 에 style="border-radius:10px" 가 박혀 있음(auto·points·salon) */
+#koausPhoneResendBtn { border-radius: var(--r-btn-lg) !important; }   /* !important: 휴대폰 인증 [재전송] — koaus-phone-auth.js 템플릿에 style 로 박혀 있음 */
+#mpIntroLivingText, #mpIntroWorkText { border-radius: var(--r-btn-lg) !important; }   /* !important: 환경설정 자기소개 칸 — settings.html 에 style="border-radius:10px" 가 박혀 있음 */
+#authSignupNickCheck { border-radius: var(--r-btn) !important; }   /* !important: 회원가입 닉네임 [중복확인] — auth-extra.js 템플릿에 style 로 박혀 있음(지금은 숨겨 둔 칸) */
+#areaResetTopBtn { border-radius: var(--r-btn-sm) !important; }   /* !important: 구인구직 [지역 제한 적용 중 — 전체 보기] 칩 — jobs.html 에 style="border-radius:999px" 가 박혀 있음 */
+.recent-chip-wrap, .recent-clear-all { border-radius: var(--r-btn-sm) !important; }   /* !important: 구인구직 상세 필터의 최근 검색 칩 · [모두 지우기] — jobs.html 템플릿에 style 로 박혀 있음 */
