@@ -1,7 +1,9 @@
 // ════════════════════════════════════════════════════════════════════
 //  KoAus · 오프라인(Network Offline) 감지 토스트
 //  - window.online / offline 이벤트 수신.
-//  - 끊김 즉시 상단 중앙에 빨간 토스트 표시. 복구 시 초록 토스트(2초) 후 자동 제거.
+//  - 끊김 즉시 상단바 아래 가운데에 안내 카드. 복구 시 청록 점 안내(2초) 후 자동 제거.
+//  - 11-17(사용자 선택 — 후보 B): 빨강·초록 그라데이션 알약 → 흰 카드(얇은 테두리 · 모서리 12px · 14px) + 왼쪽 점.
+//    같은 모양: session-timeout.js(자동 로그아웃) · koaus-toast.js(공용 토스트). 모양을 바꿀 땐 세 곳을 같이.
 //  - 모든 페이지에 <script src="offline.js" defer></script> 한 줄로 로드.
 //  - 별도 의존성 없음 (Firebase·Swiper 등과 무관).
 // ════════════════════════════════════════════════════════════════════
@@ -13,33 +15,28 @@
     if (document.getElementById('koaus-offline-style')) return;
     const css = `
       .koaus-net-toast {
-        position: fixed; top: 14px; left: 50%; transform: translateX(-50%) translateY(-110%);
+        /* 가운데 = 좌우 16px + auto 여백(left:50% 는 폭이 화면 절반으로 줄어 글이 꺾인다) */
+        position: fixed; top: calc(66px + env(safe-area-inset-top, 0px)); left: 16px; right: 16px; margin: 0 auto; width: fit-content;
+        transform: translateY(-12px);
         z-index: 99999;
-        display: flex; align-items: center; gap: 8px;
-        max-width: calc(100vw - 32px);
-        padding: 11px 18px; border-radius: 999px;
-        font: 600 13.5px/1.3 'Noto Sans KR','Urbanist',system-ui,-apple-system,sans-serif;
-        color: #fff;
-        box-shadow: 0 10px 30px rgba(0,0,0,.18);
+        display: flex; align-items: center; gap: 9px;
+        max-width: calc(100vw - 32px); box-sizing: border-box;
+        padding: 10px 16px 10px 14px; border-radius: 12px;
+        font: 600 14px/1.35 'Noto Sans KR','Urbanist',system-ui,-apple-system,sans-serif; letter-spacing: -.2px; word-break: keep-all;
+        color: var(--text-primary, #111); background: var(--bg-base, #fff); border: 1px solid var(--border, #dcdcdc);
+        box-shadow: 0 6px 20px rgba(0,0,0,.10);
         opacity: 0;
-        transition: opacity .25s ease, transform .35s cubic-bezier(.2,.7,.3,1);
+        transition: opacity .22s ease, transform .22s ease;
         pointer-events: none;
-        white-space: nowrap;
       }
       .koaus-net-toast.is-show {
         opacity: 1;
-        transform: translateX(-50%) translateY(0);
+        transform: translateY(0);
       }
-      .koaus-net-toast--offline {
-        background: linear-gradient(135deg, #b91c1c 0%, #ef4444 100%);
-      }
-      .koaus-net-toast--online {
-        background: linear-gradient(135deg, #047857 0%, #10b981 100%);
-      }
-      .koaus-net-toast .net-ico { font-size: 16px; line-height: 1; flex-shrink: 0; }
-      @supports (padding: max(0px)) {
-        .koaus-net-toast { top: max(14px, env(safe-area-inset-top)); }
-      }
+      .koaus-net-toast .net-ico { width: 8px; height: 8px; border-radius: 50%; background: #8e8e93; flex: 0 0 auto; }
+      .koaus-net-toast--online .net-ico { background: #0b7a5c; }
+      :root[data-theme="dark"] .koaus-net-toast { background: #111; border-color: #333; }
+      :root[data-theme="dark"] .koaus-net-toast--online .net-ico { background: #5eead4; }
     `;
     const tag = document.createElement('style');
     tag.id = 'koaus-offline-style';
@@ -66,7 +63,7 @@
     const el = ensureToast();
     el.classList.remove('koaus-net-toast--offline', 'koaus-net-toast--online');
     el.classList.add(kind === 'online' ? 'koaus-net-toast--online' : 'koaus-net-toast--offline');
-    el.querySelector('.net-ico').textContent = kind === 'online' ? '✓' : '';
+    el.querySelector('.net-ico').textContent = '';   // 11-17: 글자 대신 점(색은 --offline/--online 클래스)
     el.querySelector('.net-msg').textContent = message;
     // force reflow → transition 적용
     void el.offsetWidth;
@@ -85,10 +82,10 @@
   }
 
   function handleOffline() {
-    show('offline', '네트워크 연결이 끊어졌습니다. 연결을 확인해 주세요.', 0);
+    show('offline', '인터넷 연결이 끊겼습니다.', 0);
   }
   function handleOnline() {
-    show('online', '네트워크가 다시 연결되었습니다.', 2200);
+    show('online', '다시 연결되었습니다.', 2200);
   }
 
   function bind() {

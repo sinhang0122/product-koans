@@ -5046,3 +5046,28 @@ body.koaus-home-v2 #sectionShortcuts { display: none !important; }
    (모바일 .page-header{padding:0} 때문에 밑줄이 버튼에 붙어 보였음, 사용자 지적 11-08) */
 .page-header:has(> .page-header-actions--col) { padding-bottom: 8px; }
 .page-header-actions.page-header-actions--col { gap: 8px; }   /* 모바일(≤767px)의 .page-header-actions{gap:6px} 보다 우선 — 버튼 사이도 8px */
+
+/* ── 11-15 읽기 쉽게(모바일 점검) ── */
+/* 제목·부제는 단어 단위로 줄바꿈("자기 PR 보/드"처럼 음절 중간에서 꺾이던 것) */
+.page-title, .page-subtitle, .mypage-account-subtitle, .post-empty { word-break: keep-all; overflow-wrap: anywhere; }
+/* 마이페이지 탭: "내 프로/필"처럼 음절 중간에서 꺾이던 것 → 단어 단위로("내/프로필"), 탭은 전부 보이게 */
+@media (max-width: 600px) {
+  .mypage-tab { flex: 1 1 0; min-width: 0; word-break: keep-all; padding: 13px 4px; }
+}
+/* 창 닫기(✕) 버튼: 25×28px → 누르기 쉬운 36px */
+.filter-modal-close, .write-modal-close { min-width: 36px; min-height: 36px; display: inline-flex; align-items: center; justify-content: center; }
+.auth-close { min-width: 36px; min-height: 36px; display: inline-flex; align-items: center; justify-content: center; top: 10px; right: 10px; }
+/* 환경설정의 작은 버튼(닉네임 변경·설정 등): 11px/26px → 12px/32px */
+.mypage-edit-btn, .mypage-photo-btn { font-size: 12px; padding: 7px 12px; }
+/* 상단바: 좁은 화면(≤400px)에서 '로그인' 이 "로그/인"으로 꺾이던 것 — 줄바꿈 금지 + 여백 줄이기 */
+.topbar-login-btn { white-space: nowrap; flex: 0 0 auto; }
+@media (max-width: 400px) {
+  .topbar { padding: 0 12px; }
+  .topbar-actions { gap: 6px; }
+  .topbar-login-btn { padding: 7px 11px; }
+  .topbar-logo-text { font-size: 21px; }
+}
+/* 환경설정의 'Job 프로필 설정' 줄: hidden 속성을 줬는데도 보였다(.mypage-account-row{display:flex} 가 hidden 을 이김, 11-08 숨김 누락) */
+.mypage-account-row[hidden] { display: none; }
+/* 문의하기 실패 안내 옆 [메일로 보내기] */
+.contact-mail-fallback { font-weight: 800; color: var(--text-primary); text-decoration: underline; white-space: nowrap; }

@@ -3,6 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="alternate icon" href="favicon.ico" sizes="32x32" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
   <title>호주 환율 계산기 — AUD KRW 송금 비교 | KoAus</title>
   <meta name="description" content="오늘의 호주 달러 환율 — AUD↔KRW 실시간 환율과 주요 송금 앱 수수료·한도를 비교하는 환율 계산기." />
   <meta property="og:type" content="website" />
@@ -43,7 +49,6 @@
   <script src="koaus-textsize.js" defer></script>
   <script type="module" src="session-timeout.js"></script>
   <script src="local-analytics.js" defer></script>
-  <script src="hero-banner.js" defer></script>
   <script src="koaus-gallery.js" defer></script>
   <script src="koaus-dedupe.js" defer></script>
   <script src="koaus-url-guard.js" defer></script>
@@ -381,8 +386,6 @@
 
   <main class="page-container">
 
-    <!-- 통합 배너 — 띠(strip) variant · hero-banner.js 렌더 -->
-    <section class="koaus-hero" hidden data-koaus-hero-cat="calculator" aria-label="KoAus 배너"></section>
 
     <section class="notice-section">
       <div class="notice-row" id="tickerRow">

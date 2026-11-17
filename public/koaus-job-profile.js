@@ -56,7 +56,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
 
   const E = () => window.koausEnums;
   const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-  const toast = (m) => { try { if (window.koausToast) window.koausToast.show(m); else alert(m); } catch (_) { alert(m); } };
+  const toast = (m) => { try { if (window.koausToast) window.koausToast.show(m, Math.min(6000, 1800 + String(m).length * 70)); else alert(m); } catch (_) { alert(m); } };   // 11-15: 시간을 안 주면 안 사라졌다
   const $ = (sel, root) => (root || document).querySelector(sel);
   const todayStr = () => { const d = new Date(); const z = n => String(n).padStart(2, '0'); return d.getFullYear() + '-' + z(d.getMonth() + 1) + '-' + z(d.getDate()); };
   const regionKo = name => { try { const r = (window.koausGeo && window.koausGeo.REGIONS || []).find(z => z.name === name); return r ? r.ko : name; } catch (_) { return name; } };
@@ -694,7 +694,12 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       .kjp-rows{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:14px;margin:0}.kjp-rows dt{color:var(--text-muted)}.kjp-rows dd{margin:0}
       .kjp-sheet{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9060;display:none;align-items:flex-end;justify-content:center}
       .kjp-sheet.open{display:flex}
-      .kjp-sheet-box{width:100%;max-width:560px;background:var(--bg-base);color:var(--text-primary);border-radius:18px 18px 0 0;padding:16px 16px calc(18px + env(safe-area-inset-bottom,0px));max-height:88vh;overflow:auto;overscroll-behavior:contain;box-sizing:border-box}
+      .kjp-sheet-box{width:100%;max-width:560px;background:var(--bg-base);color:var(--text-primary);border-radius:18px 18px 0 0;max-height:88vh;overflow:hidden;box-sizing:border-box;display:flex;flex-direction:column}
+      /* 11-15: 본문만 스크롤, [적용] 은 아래 고정 */
+      .kjp-sheet-body{flex:1 1 auto;min-height:0;overflow:auto;overscroll-behavior:contain;padding:16px 16px 10px}
+      .kjp-sheet-foot{flex:0 0 auto;padding:10px 16px calc(14px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--border);background:var(--bg-base)}
+      .kjp-apply-hint{font-size:12.5px;color:var(--text-muted);text-align:center;margin:0 0 8px}
+      .kjp-apply-hint[hidden]{display:none}
       @media(min-width:640px){.kjp-sheet{align-items:center}.kjp-sheet-box{border-radius:18px}}
       .kjp-sheet h3{margin:0 0 6px;font-size:16px;font-weight:800;display:flex;justify-content:space-between;align-items:center}
       .kjp-lab{font-size:12.5px;color:var(--text-muted);font-weight:700;margin:12px 0 6px;display:flex;gap:6px;align-items:baseline}
@@ -710,7 +715,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       .kjp-center{display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:700;padding:5px 8px 5px 11px;border-radius:999px;background:var(--accent);color:var(--accent-text)}
       .kjp-center button{appearance:none;border:0;background:transparent;color:inherit;cursor:pointer;font-size:15px;line-height:1;padding:0 2px}
       .kjp-lnk{appearance:none;border:0;background:none;color:var(--text-primary);font-size:14px;cursor:pointer;font-family:inherit;padding:4px 0}.kjp-lnk.muted{color:var(--text-muted)}
-      .kjp-apply{margin-top:16px;appearance:none;border:0;background:var(--text-primary);color:var(--bg-base);border-radius:12px;padding:13px;font-size:15px;font-weight:800;font-family:inherit;width:100%;cursor:pointer}
+      .kjp-apply{margin-top:0;appearance:none;border:0;background:var(--text-primary);color:var(--bg-base);border-radius:12px;padding:13px;font-size:15px;font-weight:800;font-family:inherit;width:100%;cursor:pointer}
       .kjp-apply:disabled{opacity:.5;cursor:default}`;
     document.head.appendChild(st);
   }
@@ -875,7 +880,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     const opts = (name, map, cur) => Object.keys(map).map(k => `<button type="button" class="kjp-opt" data-set="${name}" data-val="${k}" aria-pressed="${String(cur) === k ? 'true' : 'false'}">${esc(map[k])}</button>`).join('');
     const indChips = [{ code: '', label: '전체' }].concat(en.industries).map(i => `<button type="button" class="kjp-opt" data-set="industry" data-val="${esc(i.code)}" aria-pressed="${draft.industry === i.code ? 'true' : 'false'}">${esc(i.label)}</button>`).join('');
     sheet.innerHTML = `
-      <div class="kjp-sheet-box">
+      <div class="kjp-sheet-box"><div class="kjp-sheet-body">
         <h3>상세 필터 <button type="button" class="kjp-lnk muted" data-kjp-sheet="close">닫기</button></h3>
         <div class="kjp-lab">주 <span class="ksp-dim">(한 곳)</span></div>
         <select class="ksp-input ksp-select" id="kjpSheetState"><option value="">고르지 않음</option>${JSTATES.map(s => `<option value="${s[0]}"${draft.state === s[0] ? ' selected' : ''}>${s[1]} 전체</option>`).join('')}</select>
@@ -887,8 +892,10 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
         <div class="kjp-lab">업종</div><div class="kjp-chips">${indChips}</div>
         <div class="kjp-lab">정렬</div><div class="kjp-chips">${opts('sort', JSORTS, draft.sort)}</div>
         <div class="kjp-lab">성별</div><div class="kjp-chips">${opts('gender', JGENDERS, draft.gender)}</div>
+        </div><div class="kjp-sheet-foot">
+        <div class="kjp-apply-hint" id="kjpApplyHint" hidden>주나 동네를 먼저 고르십시오.</div>
         <button type="button" class="kjp-apply" data-kjp-sheet="apply">적용</button>
-      </div>`;
+      </div></div>`;
     const box = sheet.querySelector('.kjp-sheet-box');
     fillMyChips = () => {
       const w = box.querySelector('#kjpMyWrap'); if (!w || !(pg.myPosts || []).length) return;
@@ -898,7 +905,9 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     const paintCenters = () => {
       box.querySelector('#kjpCenters').innerHTML = draft.centers.map((c, i) => `<span class="kjp-center">${esc(c.name + ' ' + String(c.state).toUpperCase())}<button type="button" data-rm="${i}" aria-label="빼기">×</button></span>`).join('');
       box.querySelectorAll('[data-my]').forEach(b => { const m = pg.myPosts[Number(b.dataset.my)]; b.setAttribute('aria-pressed', m && draft.centers.some(c => sameCenter(c, m)) ? 'true' : 'false'); });
-      box.querySelector('[data-kjp-sheet="apply"]').disabled = !(draft.centers.length || draft.state);
+      const ready = !!(draft.centers.length || draft.state);
+      box.querySelector('[data-kjp-sheet="apply"]').disabled = !ready;
+      const hint = box.querySelector('#kjpApplyHint'); if (hint) hint.hidden = ready;   // 11-15: 회색일 때 이유
     };
     const addCenter = c => {
       const i = draft.centers.findIndex(x => sameCenter(x, c));

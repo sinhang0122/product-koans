@@ -466,8 +466,7 @@ onAuthStateChanged(auth, async user => {
       // nicknames 측 securityA 미러 — 아이디 찾기 폐기로 미사용, 평문 사본 자체를 제거 (H3)
       tx.set(nickRef, {
         uid: user.uid,
-        nickname: pending.nickname,
-        email: lowEmail,
+        nickname: pending.nickname,   // 11-15(보안): email 은 넣지 않는다 — 누구나 읽을 수 있는 문서(중복 확인용)
         createdAt: now,
       });
       tx.set(emailRef, {

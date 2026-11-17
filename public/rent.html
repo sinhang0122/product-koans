@@ -3,6 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="alternate icon" href="favicon.ico" sizes="32x32" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
   <title>호주 렌트 — 한인 렌트 매물 게시판 | KoAus</title>
   <meta name="description" content="호주 렌트 게시판 — NSW·VIC·QLD 등 주(State)별 한인 렌트 매물 정보를 지도로 확인하고 무료로 등록하세요." />
   <meta property="og:type" content="website" />
@@ -969,7 +975,7 @@
         </div>
         <div class="auth-field">
           <label class="auth-label" for="authSignupPw">비밀번호</label>
-          <input class="auth-input" id="authSignupPw" type="password" placeholder="6자 이상" autocomplete="new-password" />
+          <input class="auth-input" id="authSignupPw" type="password" placeholder="영문 대·소문자 + 숫자 + 특수문자 10자 이상" autocomplete="new-password" />
         </div>
         <div class="auth-field">
           <label class="auth-label" for="authSignupPwConfirm">비밀번호 확인</label>
@@ -1827,7 +1833,7 @@
       const isFind = (p.mode || 'offer') === 'find';
       const priceHtml = isFind
         ? '<span class="accom-card-find">매물 구하기</span>'
-        : (p.price ? `<span class="accom-price">$${p.price}<small>/wk</small></span>` : '<span class="accom-card-find">가격 협의</span>');
+        : (p.price ? `<span class="accom-price">$${escHtml(String(p.price))}<small>/wk</small></span>` : '<span class="accom-card-find">가격 협의</span>');
       // 동네(suburb) 만 추출 — 전체주소·redact주소 모두 "Suburb STATE Postcode" 패턴의 suburb 캡처.
       //   매칭 실패 시 '' (프라이버시 우선 — 도로명/번지 폴백 금지). 모듈 extractSuburb() 재사용.
       const _subb = extractSuburb(p.address);  // 카드 위치 + 사진 없을 때 placeholder 동네명
@@ -1838,7 +1844,7 @@
         ? `<div class="koaus-map-ph"><span class="mp-pin" aria-hidden="true"><svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-.15em"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></span><span class="mp-name">${escHtml(_subb)}</span></div>`
         : '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>';
       return `
-        <div class="accom-card${isMine(p) ? ' my-post-highlight' : ''}" data-id="${p.id}">
+        <div class="accom-card${isMine(p) ? ' my-post-highlight' : ''}" data-id="${escHtml(p.id)}">
           <div class="accom-card-thumb">
             ${(Array.isArray(p.imageUrls) && p.imageUrls.length)
               ? `<img src="${escHtml(p.imageUrls[0])}" alt="${escHtml(p.title || '')}" loading="lazy" />`
@@ -1848,12 +1854,12 @@
             <div class="accom-card-row1">
               <div class="accom-card-title2">${escHtml(p.title)}</div>
               <div class="accom-card-actions">
-                <button class="bookmark-btn${saved ? ' is-saved' : ''}" data-id="${p.id}" title="저장한 글" aria-label="저장">${saved ? '★' : '☆'}</button>
+                <button class="bookmark-btn${saved ? ' is-saved' : ''}" data-id="${escHtml(p.id)}" title="저장한 글" aria-label="저장">${saved ? '★' : '☆'}</button>
                 <div class="post-mini-actions">
-                  <button class="mini-btn mini-share" data-id="${p.id}" type="button">공유</button>
-                  ${(!isMine(p) && !window.koausIsAdmin) ? `<button class="mini-btn mini-report" data-id="${p.id}" data-uid="${p.uid || p.authorUid || ''}" type="button">신고</button>` : ''}
-                  ${(isMine(p) && !window.koausIsAdmin) ? `<button class="mini-btn mini-edit" data-id="${p.id}" type="button">수정</button>` : ''}
-                  ${(isMine(p) || window.koausIsAdmin) ? `<button class="mini-btn mini-hide" data-id="${p.id}" type="button">숨김</button><button class="mini-btn mini-del" data-id="${p.id}" type="button">삭제</button>` : ''}
+                  <button class="mini-btn mini-share" data-id="${escHtml(p.id)}" type="button">공유</button>
+                  ${(!isMine(p) && !window.koausIsAdmin) ? `<button class="mini-btn mini-report" data-id="${escHtml(p.id)}" data-uid="${escHtml(p.uid || p.authorUid || '')}" type="button">신고</button>` : ''}
+                  ${(isMine(p) && !window.koausIsAdmin) ? `<button class="mini-btn mini-edit" data-id="${escHtml(p.id)}" type="button">수정</button>` : ''}
+                  ${(isMine(p) || window.koausIsAdmin) ? `<button class="mini-btn mini-hide" data-id="${escHtml(p.id)}" type="button">숨김</button><button class="mini-btn mini-del" data-id="${escHtml(p.id)}" type="button">삭제</button>` : ''}
                 </div>
               </div>
             </div>
@@ -2655,7 +2661,7 @@
       const addBtn = document.getElementById('wPhotoAddBtn');
       if (!box) return;
       box.innerHTML = window.pendingPhotoFiles.map((p, i) =>
-        `<div class="photo-thumb"><img src="${p.preview}" alt="사진 ${i+1}"><button type="button" class="photo-thumb-x" data-idx="${i}" aria-label="삭제">✕</button></div>`
+        `<div class="photo-thumb"><img src="${escHtml(p.preview)}" alt="사진 ${i+1}"><button type="button" class="photo-thumb-x" data-idx="${i}" aria-label="삭제">✕</button></div>`
       ).join('');
       box.querySelectorAll('.photo-thumb-x').forEach(b => b.addEventListener('click', () => {
         window.pendingPhotoFiles.splice(Number(b.dataset.idx), 1);
@@ -2814,7 +2820,7 @@
       const errEl = document.getElementById('authSignupError');
       if (!authAgree.checked) { errEl.textContent = '이용약관에 동의해 주세요.'; return; }
       if (!email || !pw) { errEl.textContent = '이메일과 비밀번호를 입력해 주세요.'; return; }
-      if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{10,}$/.test(pw)) { errEl.textContent = '비밀번호는 영문, 숫자, 특수문자를 포함하여 10자 이상이어야 합니다.'; return; }
+      if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{10,}$/.test(pw)) { errEl.textContent = '비밀번호는 영문 대문자·소문자, 숫자, 특수문자를 모두 넣어 10자 이상이어야 합니다.'; return; }
       if (pw !== pw2)    { errEl.textContent = '비밀번호가 일치하지 않습니다.'; return; }
       if (typeof grecaptcha !== 'undefined' && !grecaptcha.getResponse()) { errEl.textContent = "'로봇이 아닙니다' 인증을 완료해 주세요."; return; }
       try {

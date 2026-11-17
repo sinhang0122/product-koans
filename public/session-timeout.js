@@ -1,11 +1,13 @@
 // ════════════════════════════════════════════════════════════════════
-//  KoAus · 세션 영속(Persistence) 강제 + 1 시간 미활동 자동 로그아웃
+//  KoAus · 세션 영속(Persistence) 강제 + 하루(24시간) 미활동 자동 로그아웃
 //  - 모든 페이지에 <script type="module" src="session-timeout.js"></script>
 //    한 줄로 로드.
 //  - Firebase Auth Persistence 를 LOCAL 로 강제 → 페이지 이동/탭 이동/
 //    브라우저 재시작 후에도 명시적 로그아웃 전까지 세션 유지.
-//  - 1 시간(3,600,000ms) 동안 click/touchstart/scroll/keydown 등
-//    사용자 동작이 없으면 자동 signOut + 안내 토스트 + 메인 이동.
+//  - 24 시간 동안(11-17 사용자 결정: 1시간 → 하루) click/touchstart/scroll/keydown 등
+//    사용자 동작이 없으면 자동 signOut + 안내 카드 + 메인 이동.
+//    · 켜 둔 탭 기준이다 — 탭을 닫았다 다시 오는 것은 로그아웃 대상이 아니다(영속 LOCAL).
+//    · 마지막 동작 시각은 탭끼리 공유(LS koaus-last-active) — 다른 탭에서 쓰는 중이면 가만히 둔 탭이 로그아웃시키지 않는다.
 //  - admin.html 은 별도 인증 가드(custom claim) 가 있으므로 이 모듈 영향 0.
 // ════════════════════════════════════════════════════════════════════
 import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
@@ -97,7 +99,18 @@ if (!window.__koausSessionInited) {
     }
 
     // 2) 미활동 자동 로그아웃 ─────────────────────────────────────────
-    const INACTIVITY_MS = 60 * 60 * 1000;  // 1 시간
+    const INACTIVITY_MS = 24 * 60 * 60 * 1000;  // 24 시간 (11-17: 1시간 → 하루)
+    const ACTIVE_KEY = 'koaus-last-active';      // 탭끼리 공유하는 마지막 동작 시각(ms)
+    let lastMark = 0;
+    function markActive() {   // 1분에 한 번만 기록(스크롤·마우스 이동마다 쓰지 않게)
+      const now = Date.now();
+      if (now - lastMark < 60000) return;
+      lastMark = now;
+      try { localStorage.setItem(ACTIVE_KEY, String(now)); } catch (_) {}
+    }
+    function idleFor() {      // 어느 탭에서든 마지막 동작 뒤 흐른 시간(ms). 기록을 못 읽으면 이 탭의 타이머만 믿는다
+      try { const t = parseInt(localStorage.getItem(ACTIVE_KEY) || '0', 10); return t > 0 ? Date.now() - t : Infinity; } catch (_) { return Infinity; }
+    }
     let timerId = null;
     let isLoggedIn = false;
     let isLoggingOut = false;
@@ -109,22 +122,26 @@ if (!window.__koausSessionInited) {
         const style = document.createElement('style');
         style.textContent = `
           #koausSessionToast {
-            position: fixed; top: max(14px, env(safe-area-inset-top, 14px));
-            left: 50%; transform: translateX(-50%) translateY(-110%);
+            /* 11-17(후보 B): offline.js · koaus-toast.js 와 같은 모양 — 흰 카드 · 얇은 테두리 · 모서리 12px · 14px. 긴 문구는 줄바꿈 */
+            position: fixed; top: calc(66px + env(safe-area-inset-top, 0px));
+            left: 16px; right: 16px; margin: 0 auto; width: fit-content; transform: translateY(-12px);
             z-index: 99999;
-            background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
-            color: #fff;
-            padding: 11px 18px; border-radius: 999px;
-            font: 600 13.5px/1.3 'Noto Sans KR','Urbanist',system-ui,-apple-system,sans-serif;
-            box-shadow: 0 10px 30px rgba(0,0,0,.25);
+            background: var(--bg-base, #fff);
+            color: var(--text-primary, #111);
+            border: 1px solid var(--border, #dcdcdc);
+            padding: 10px 16px 10px 14px; border-radius: 12px;
+            font: 600 14px/1.35 'Noto Sans KR','Urbanist',system-ui,-apple-system,sans-serif; letter-spacing: -.2px; word-break: keep-all;
+            box-shadow: 0 6px 20px rgba(0,0,0,.10);
             opacity: 0;
-            transition: opacity .25s ease, transform .35s cubic-bezier(.2,.7,.3,1);
+            transition: opacity .22s ease, transform .22s ease;
             pointer-events: none;
-            display: flex; align-items: center; gap: 8px;
-            max-width: calc(100vw - 32px); white-space: nowrap;
+            display: flex; align-items: center; gap: 9px;
+            max-width: calc(100vw - 32px); box-sizing: border-box;
           }
+          #koausSessionToast .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-primary, #111); flex: 0 0 auto; }
+          :root[data-theme="dark"] #koausSessionToast { background: #111; border-color: #333; }
           #koausSessionToast.is-show {
-            opacity: 1; transform: translateX(-50%) translateY(0);
+            opacity: 1; transform: translateY(0);
           }
         `;
         document.head.appendChild(style);
@@ -132,7 +149,7 @@ if (!window.__koausSessionInited) {
         host.id = 'koausSessionToast';
         host.setAttribute('role', 'status');
         host.setAttribute('aria-live', 'polite');
-        host.innerHTML = '<span aria-hidden="true"></span><span class="msg"></span>';
+        host.innerHTML = '<span class="dot" aria-hidden="true"></span><span class="msg"></span>';
         document.body.appendChild(host);
       }
       host.querySelector('.msg').textContent = message;
@@ -145,7 +162,7 @@ if (!window.__koausSessionInited) {
       if (isLoggingOut) return;
       isLoggingOut = true;
       try {
-        showToast('보안을 위해 1시간 동안 활동이 없어 자동 로그아웃 되었습니다.');
+        showToast('장시간 미활동으로 로그아웃 되었습니다.');
       } catch (_) {}
       try { await signOut(auth); } catch (e) { console.warn('[session] signOut 실패', e); }
       // 토스트가 잠시 보이도록 1.6 초 후 메인으로 이동
@@ -167,8 +184,15 @@ if (!window.__koausSessionInited) {
       // 2026-10 홈 임베드(iframe ?embed=1): iframe 안에서는 활동이 거의 없어 1시간 뒤 부모와 무관하게
       // 로그아웃·index 이동이 일어난다 → 임베드에서는 타이머를 켜지 않는다(부모 페이지가 담당)
       if (document.documentElement.classList.contains('koaus-embed')) return;
+      markActive();
       if (timerId) clearTimeout(timerId);
-      timerId = setTimeout(performAutoLogout, INACTIVITY_MS);
+      timerId = setTimeout(onIdleTimer, INACTIVITY_MS);
+    }
+    function onIdleTimer() {
+      // 11-17: 다른 탭에서 쓰고 있었다면(공유 기록이 최근) 로그아웃하지 않고 남은 시간만큼 다시 잰다
+      const idle = idleFor();
+      if (idle < INACTIVITY_MS) { timerId = setTimeout(onIdleTimer, Math.max(60000, INACTIVITY_MS - idle)); return; }
+      performAutoLogout();
     }
     function stopTimer() {
       if (timerId) { clearTimeout(timerId); timerId = null; }

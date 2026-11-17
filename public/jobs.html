@@ -3,6 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="alternate icon" href="favicon.ico" sizes="32x32" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
   <title>호주 구인구직 — 한인 일자리·워홀 알바 | KoAus</title>
   <meta name="description" content="호주 한인 구인구직 게시판 — 시드니·멜버른 일자리, 워홀 알바, 직종·경력·지역별 구인 정보를 확인하고 무료로 등록하세요." />
   <meta property="og:type" content="website" />
@@ -968,7 +974,7 @@
           : '<span class="accom-card-find">면접 후 협의</span>';
         const addr = p.address || '';
         return `
-        <div class="accom-card${isMine(p) ? ' my-post-highlight' : ''}" data-id="${p.id}">
+        <div class="accom-card${isMine(p) ? ' my-post-highlight' : ''}" data-id="${escHtml(p.id)}">
           <div class="accom-card-thumb">
             ${(Array.isArray(p.imageUrls) && p.imageUrls.length)
               ? `<img src="${escHtml(p.imageUrls[0])}" alt="${escHtml(p.title || '')}" loading="lazy" />`
@@ -978,12 +984,12 @@
             <div class="accom-card-row1">
               <div class="accom-card-title2">${escHtml(p.title)}</div>
               <div class="accom-card-actions">
-                <button class="bookmark-btn${saved ? ' is-saved' : ''}" data-id="${p.id}" title="저장한 글" aria-label="저장">${saved ? '★' : '☆'}</button>
+                <button class="bookmark-btn${saved ? ' is-saved' : ''}" data-id="${escHtml(p.id)}" title="저장한 글" aria-label="저장">${saved ? '★' : '☆'}</button>
                 <div class="post-mini-actions">
-                  <button class="mini-btn mini-share" data-id="${p.id}" type="button">공유</button>
-                  ${(!isMine(p) && !window.koausIsAdmin) ? `<button class="mini-btn mini-report" data-id="${p.id}" data-uid="${p.uid || p.authorUid || ''}" type="button">신고</button>` : ''}
-                  ${(isMine(p) && !window.koausIsAdmin) ? `<button class="mini-btn mini-edit" data-id="${p.id}" type="button">수정</button>` : ''}
-                  ${(isMine(p) || window.koausIsAdmin) ? `<button class="mini-btn mini-hide" data-id="${p.id}" type="button">숨김</button><button class="mini-btn mini-del" data-id="${p.id}" type="button">삭제</button>` : ''}
+                  <button class="mini-btn mini-share" data-id="${escHtml(p.id)}" type="button">공유</button>
+                  ${(!isMine(p) && !window.koausIsAdmin) ? `<button class="mini-btn mini-report" data-id="${escHtml(p.id)}" data-uid="${escHtml(p.uid || p.authorUid || '')}" type="button">신고</button>` : ''}
+                  ${(isMine(p) && !window.koausIsAdmin) ? `<button class="mini-btn mini-edit" data-id="${escHtml(p.id)}" type="button">수정</button>` : ''}
+                  ${(isMine(p) || window.koausIsAdmin) ? `<button class="mini-btn mini-hide" data-id="${escHtml(p.id)}" type="button">숨김</button><button class="mini-btn mini-del" data-id="${escHtml(p.id)}" type="button">삭제</button>` : ''}
                 </div>
               </div>
             </div>
@@ -1812,11 +1818,11 @@
           ? '$' + p.payAmount + (p.payUnit === 'hour' ? ' / hr' : (p.payUnit === 'year' ? ' / yr' : ''))
           : '';
         return `
-          <div class="iw-card" data-pid="${p.id}" style="display:flex;gap:10px;max-width:270px;padding:4px 2px;cursor:pointer;font-family:'Urbanist','Noto Sans KR',sans-serif;">
+          <div class="iw-card" data-pid="${esc(String(p.id))}" style="display:flex;gap:10px;max-width:270px;padding:4px 2px;cursor:pointer;font-family:'Urbanist','Noto Sans KR',sans-serif;">
             <div style="flex-shrink:0;width:72px;height:72px;border-radius:6px;overflow:hidden;border:1px solid #000;background:#f5f5f5;display:flex;align-items:center;justify-content:center;">${thumb}</div>
             <div style="min-width:0;flex:1;">
               <div style="font-weight:800;font-size:13px;line-height:1.3;color:#000;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${esc(p.title)}</div>
-              ${payTxt ? `<div style="font-size:13px;font-weight:800;color:#000;margin-top:3px;">${payTxt}</div>` : ''}
+              ${payTxt ? `<div style="font-size:13px;font-weight:800;color:#000;margin-top:3px;">${esc(payTxt)}</div>` : ''}
               ${p.address ? `<div style="font-size:11px;color:#444;margin-top:3px;">${esc(p.address)}</div>` : ''}
               <div style="font-size:10px;color:#666;margin-top:4px;">탭하여 상세 보기 →</div>
             </div>
@@ -2169,7 +2175,7 @@
         </div>
         <div class="auth-field">
           <label class="auth-label" for="authSignupPw">비밀번호</label>
-          <input class="auth-input" id="authSignupPw" type="password" placeholder="6자 이상" autocomplete="new-password" />
+          <input class="auth-input" id="authSignupPw" type="password" placeholder="영문 대·소문자 + 숫자 + 특수문자 10자 이상" autocomplete="new-password" />
         </div>
         <div class="auth-field">
           <label class="auth-label" for="authSignupPwConfirm">비밀번호 확인</label>
@@ -2323,7 +2329,7 @@
       const errEl = document.getElementById('authSignupError');
       if (!authAgree.checked) { errEl.textContent = '이용약관에 동의해 주세요.'; return; }
       if (!email || !pw) { errEl.textContent = '이메일과 비밀번호를 입력해 주세요.'; return; }
-      if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{10,}$/.test(pw)) { errEl.textContent = '비밀번호는 영문, 숫자, 특수문자를 포함하여 10자 이상이어야 합니다.'; return; }
+      if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{10,}$/.test(pw)) { errEl.textContent = '비밀번호는 영문 대문자·소문자, 숫자, 특수문자를 모두 넣어 10자 이상이어야 합니다.'; return; }
       if (pw !== pw2)    { errEl.textContent = '비밀번호가 일치하지 않습니다.'; return; }
       if (typeof grecaptcha !== 'undefined' && !grecaptcha.getResponse()) { errEl.textContent = "'로봇이 아닙니다' 인증을 완료해 주세요."; return; }
       try {

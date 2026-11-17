@@ -23,6 +23,10 @@
   //     (QLD 배너 1개 올렸을 때 NSW 사용자에게 '배너 1 + 빈 기본 슬라이드' 가 뜨던 회귀의 원인).
   const HERO_ENABLED = true;    // 비상 스위치. 평소엔 '배너 0개 → 자동 숨김' 이라 관리자 페이지에서 배너만 올리면 다시 보인다
   const MAX_SLOTS = 4;   // admin 슬롯 번호 1~4 — 이제 '순서' 의미만 가짐
+  // ── 11-15(사용자 결정): 히어로 배너는 Living(쉐어·렌트)·Job(구인구직) 페이지에만 ──
+  //   홈·그 밖의 페이지에는 그리지 않는다. 다른 페이지에 <section data-koaus-hero-cat> 자리가 다시 생겨도 여기서 걸러진다(회귀 잠금).
+  //   페이지를 늘리려면 이 목록에 그 페이지의 data-koaus-hero-cat 값을 넣는다.
+  const HERO_PAGES = ['accom', 'rent', 'jobs'];
   function hideHero(c) { try { c.hidden = true; c.style.display = 'none'; } catch (_) {} }
   function showHero(c) { try { c.hidden = false; c.style.removeProperty('display'); } catch (_) {} }
 
@@ -530,8 +534,11 @@
     // 2) 컨테이너 자체가 .notice-section 의 형제로 직전에 있을 경우에도 fetch 결과 innerHTML 작성은
     //    그 컨테이너 안에만 일어남 — notice 의 부모/형제 DOM 은 절대 건드리지 않음.
     // 3) 옛 inline placeholder 가 있을 경우(아직 :empty 가 아님) 그대로 innerHTML 로 교체.
-    const containers = Array.from(document.querySelectorAll('[data-koaus-hero-cat]'))
+    const allContainers = Array.from(document.querySelectorAll('[data-koaus-hero-cat]'))
       .filter(c => !c.closest('.notice-section'));
+    // 11-15: 허용 목록(HERO_PAGES) 밖의 자리는 숨기고 끝 — 배너 조회·Swiper 로드도 하지 않는다
+    const containers = allContainers.filter(c => HERO_PAGES.indexOf(c.getAttribute('data-koaus-hero-cat')) !== -1);
+    allContainers.forEach(c => { if (containers.indexOf(c) === -1) hideHero(c); });
     if (!containers.length) return;
     // 2026-10 홈 임베드(care/calculator ?embed=1 iframe): 배너는 부모 페이지가 보여주므로 fetch 생략
     if (document.documentElement.classList.contains('koaus-embed')) { containers.forEach(hideHero); return; }

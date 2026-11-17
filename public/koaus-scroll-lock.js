@@ -29,7 +29,9 @@
     if (sbw > 0) body.style.paddingRight = sbw + 'px';
     if (touch) {
       body.style.position = 'fixed';
-      body.style.top = (-savedY) + 'px';
+      var z = parseFloat(html.style.zoom) || 1;
+      body.style.top = (-savedY / z) + 'px';   // 11-15: 글자 크게(zoom) 배율 보정
+      html.classList.add('koaus-sl-touch');
       body.style.left = '0'; body.style.right = '0'; body.style.width = '100%';
     }
     html.classList.add('koaus-scroll-locked');
@@ -42,19 +44,38 @@
     body.style.paddingRight = savedPad;
     if (touch) {
       body.style.position = ''; body.style.top = ''; body.style.left = ''; body.style.right = ''; body.style.width = '';
-      try { window.scrollTo(0, savedY); } catch (e) {}
+      // 11-15: 'instant' — html{scroll-behavior:smooth} 때문에 닫을 때마다 맨 위에서 훑어 내려가던 것
+      try { window.scrollTo({ top: savedY, left: 0, behavior: 'instant' }); } catch (e) { try { window.scrollTo(0, savedY); } catch (e2) {} }
+      html.classList.remove('koaus-sl-touch');
     }
     html.classList.remove('koaus-scroll-locked');
   }
+  // 11-15(모바일 점검): body 에 overflow:hidden 을 걸지 않는 창도 떠 있으면 잠근다 —
+  //   구인구직(jobs.html) 글쓰기·상세 필터·글 상세, 영상 등록 창이 뒤 목록과 같이 움직였다.
+  //   창 클래스는 전 페이지 공통(.write-overlay/.filter-overlay/.post-detail-overlay + .open). 영상 등록 창은 열릴 때만 문서에 있다.
+  var OVERLAYS = '.write-overlay.open, .filter-overlay.open, .post-detail-overlay.open, .kv-reg-overlay';
+  function overlayOpen() { try { return !!document.querySelector(OVERLAYS); } catch (e) { return false; } }
   function sync() {
     var v = (document.body && document.body.style.overflow) || '';
-    if (v === 'hidden') lock(); else unlock();
+    if (v === 'hidden' || overlayOpen()) lock(); else unlock();
+  }
+  var pending = false;
+  function syncSoon() {
+    if (pending) return; pending = true;
+    (window.requestAnimationFrame || function (f) { return setTimeout(f, 16); })(function () { pending = false; sync(); });
   }
 
   function init() {
     if (!document.body) return;
+    try {   // 11-15: 터치 잠금 중 구글 주소 자동완성 목록 위치 보정
+      var st = document.createElement('style'); st.id = 'koaus-scroll-lock-style';
+      st.textContent = 'html.koaus-sl-touch .pac-container{position:fixed!important;}';
+      (document.head || document.documentElement).appendChild(st);
+    } catch (e) {}
     try {
       new MutationObserver(sync).observe(document.body, { attributes: true, attributeFilter: ['style'] });
+      // 창이 열리고 닫힐 때(class 변화 · 영상 등록 창 추가/삭제)
+      new MutationObserver(syncSoon).observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ['class'] });
     } catch (e) {}
     sync();
   }

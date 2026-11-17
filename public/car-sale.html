@@ -3,6 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="alternate icon" href="favicon.ico" sizes="32x32" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
   <title>호주 중고차 직거래 — 한인 차량 판매 | KoAus</title>
   <meta name="description" content="호주 한인 중고차 직거래 게시판 — 연식·주행거리·가격 정보와 함께 차량을 사고팔 수 있습니다. 시드니·멜버른 등 전 지역." />
   <meta property="og:type" content="website" />
@@ -41,7 +47,6 @@
   <script src="offline.js" defer></script>
   <script src="koaus-textsize.js" defer></script>
   <script type="module" src="session-timeout.js"></script>
-  <script src="hero-banner.js" defer></script>
   <script src="local-analytics.js" defer></script>
   <script src="koaus-gallery.js" defer></script>
   <script src="koaus-dedupe.js" defer></script>
@@ -380,7 +385,6 @@
   </aside>
 
   <main class="page-container">
-    <section class="koaus-hero" hidden data-koaus-hero-cat="car-sale" aria-label="KoAus 배너"></section>
 
     <section class="notice-section">
       <div class="notice-row" id="tickerRow">
@@ -604,18 +608,18 @@
       if (currentPage > totalPages) currentPage = totalPages;
       const start = (currentPage - 1) * PER_PAGE;
       list.innerHTML = sorted.slice(start, start + PER_PAGE).map((p, i) => `
-        <div class="post-row${isMine(p) ? ' my-post-highlight' : ''}" data-id="${p.id}" style="cursor:pointer">
+        <div class="post-row${isMine(p) ? ' my-post-highlight' : ''}" data-id="${escHtml(p.id)}" style="cursor:pointer">
           <span class="post-num">${posts.length - (start + i)}</span>
           <span class="post-title" style="color:var(--text-primary);font-weight:500;">
             <span class="post-title-text">${escHtml(p.title)}</span>
             <span class="post-mini-actions">
-              ${isMine(p) ? `<button class="mini-btn mini-edit" data-id="${p.id}" type="button">수정</button><button class="mini-btn mini-del" data-id="${p.id}" type="button">삭제</button>` : ''}
-              <button class="mini-btn mini-share" data-id="${p.id}" type="button">공유</button>
-              <button class="mini-btn mini-report" data-id="${p.id}" data-uid="${p.uid || p.authorUid || ''}" type="button">신고</button>
+              ${isMine(p) ? `<button class="mini-btn mini-edit" data-id="${escHtml(p.id)}" type="button">수정</button><button class="mini-btn mini-del" data-id="${escHtml(p.id)}" type="button">삭제</button>` : ''}
+              <button class="mini-btn mini-share" data-id="${escHtml(p.id)}" type="button">공유</button>
+              <button class="mini-btn mini-report" data-id="${escHtml(p.id)}" data-uid="${escHtml(p.uid || p.authorUid || '')}" type="button">신고</button>
             </span>
           </span>
           <span class="post-author">${escHtml(p.author)}</span>
-          <span class="post-date">${p.date}</span>
+          <span class="post-date">${escHtml(p.date)}</span>
         </div>`).join('');
       list.querySelectorAll('.post-row').forEach(row => row.addEventListener('click', () => openDetail(row.dataset.id)));
       list.querySelectorAll('.mini-edit').forEach(btn => btn.addEventListener('click', e => {
@@ -684,7 +688,7 @@
       const p = posts.find(x => String(x.id) === String(id));
       if (!p) return;
       document.getElementById('detailTitle').textContent = p.title;
-      document.getElementById('detailMeta').innerHTML = `<span>${escHtml(p.author)}</span><span>${p.date}</span>`;
+      document.getElementById('detailMeta').innerHTML = `<span>${escHtml(p.author)}</span><span>${escHtml(p.date)}</span>`;
       document.getElementById('detailBody').textContent = p.body;
       const contactEl = document.getElementById('detailContact');
       contactEl.innerHTML = p.contact ? `📞 연락처: <strong>${escHtml(p.contact)}</strong>` : '';

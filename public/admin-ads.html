@@ -3,6 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="favicon.svg" type="image/svg+xml" />
+<link rel="alternate icon" href="favicon.ico" sizes="32x32" />
+<link rel="apple-touch-icon" href="apple-touch-icon.png" />
+<link rel="manifest" href="manifest.json" />
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
 <title>KoAus · 배너 관리자</title>
   <meta name="robots" content="noindex" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -175,14 +181,14 @@
       <div class="hb-grid" id="hbGrid"></div>
       <p class="sub" style="padding:0 16px 12px;margin:0;color:var(--ink-soft);font-size:12px">
         주 탭은 <b>방문자의 주 이용 주(성향)</b> 기준입니다 — 예: NSW 배너는 NSW 성향 방문자에게
-        메인·전체 게시판·계산기 등 모든 페이지에서 노출됩니다.
+        <b>쉐어·렌트·구인구직(Living·Job) 페이지에서만</b> 노출됩니다(11-15: 홈과 그 밖의 페이지에는 나오지 않습니다).
         기본 슬라이드 칸은 각 페이지의 고유 콘텐츠가 노출됩니다.
         우선순위: 광고주 배너 &gt; 하우스 광고, 특정 주 &gt; 전 지역(All), 같으면 최신 등록 우선.</p>
     </section>
 
     <section class="panel">
       <h2>새 배너 추가 — <span id="hbAddLabel">전 지역(All)</span></h2>
-      <p class="sub">선택한 주 성향의 방문자에게 전 페이지 히어로/띠 배너의 <b>기본 슬라이드 N번 자리를 교체</b>합니다.
+      <p class="sub">선택한 주 성향의 방문자에게 쉐어·렌트·구인구직 페이지 히어로 배너의 <b>기본 슬라이드 N번 자리를 교체</b>합니다.
         등록 후 목록에서 다른 주의 슬롯도 따로 지정할 수 있습니다 (주별 독립 — 한 주 변경이 다른 주에 영향 없음).
         이미지는 자동 압축됩니다. 권장 규격 — 풀 히어로 <b>1440×560px (18:7)</b>, 띠 배너 <b>1440×220px (≈6.5:1)</b>, JPG/WebP ≤400KB. 슬라이드는 가운데 기준 cover-crop 되니 핵심 내용은 중앙에 배치하세요.</p>
       <div class="form">

@@ -3,6 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="alternate icon" href="favicon.ico" sizes="32x32" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
   <title>마이페이지 — KoAus</title>
   <meta name="robots" content="noindex" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -42,6 +48,7 @@
   <script src="koaus-url-guard.js" defer></script>
   <script src="koaus-state.js" defer></script>
   <script src="koaus-report.js" defer></script>
+  <script src="koaus-toast.js" defer></script>   <!-- 11-15: 프로필·역할 안내를 브라우저 기본 알림창 대신 사이트 토스트로 -->
   <script type="module" src="admin-mark.js"></script>
   <script type="module" src="koaus-rbac.js"></script>
   <script type="module" src="auth-extra.js"></script>
@@ -604,7 +611,7 @@
         </div>
         <div class="auth-field">
           <label class="auth-label" for="authSignupPw">비밀번호</label>
-          <input class="auth-input" id="authSignupPw" type="password" placeholder="6자 이상" autocomplete="new-password" />
+          <input class="auth-input" id="authSignupPw" type="password" placeholder="영문 대·소문자 + 숫자 + 특수문자 10자 이상" autocomplete="new-password" />
         </div>
         <div class="auth-field">
           <label class="auth-label" for="authSignupPwConfirm">비밀번호 확인</label>
@@ -741,7 +748,7 @@
       const errEl = document.getElementById('authSignupError');
       if (!authAgree.checked) { errEl.textContent = '이용약관에 동의해 주세요.'; return; }
       if (!email || !pw) { errEl.textContent = '이메일과 비밀번호를 입력해 주세요.'; return; }
-      if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{10,}$/.test(pw)) { errEl.textContent = '비밀번호는 영문, 숫자, 특수문자를 포함하여 10자 이상이어야 합니다.'; return; }
+      if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{10,}$/.test(pw)) { errEl.textContent = '비밀번호는 영문 대문자·소문자, 숫자, 특수문자를 모두 넣어 10자 이상이어야 합니다.'; return; }
       if (pw !== pw2)    { errEl.textContent = '비밀번호가 일치하지 않습니다.'; return; }
       if (typeof grecaptcha !== 'undefined' && !grecaptcha.getResponse()) { errEl.textContent = "'로봇이 아닙니다' 인증을 완료해 주세요."; return; }
       try {
@@ -999,14 +1006,14 @@
         return;
       }
       el.innerHTML = items.map(p => {
-        const meta = escHtml(p.author || '') + ' · ' + (p.date || '') + (p.time ? ' ' + p.time : '');
+        const meta = escHtml(p.author || '') + ' · ' + escHtml(p.date || '') + (p.time ? ' ' + escHtml(p.time) : '');
         // 글의 주(state)도 함께 — 없으면 목적지 목록이 통합(기본 NSW)으로 열리는 회귀 방지.
         //   p.state 는 "주소가 진실" 모델에서 대개 비어 있음 → 주소 기반 effective(주소→주)로 도출.
         //   (koaus-state.js 미로드 시에만 저장된 p.state 폴백)
         const _st = (window.koausState ? window.koausState.effective(p) : (p.state || ''));
         const postUrl = boardHref(p.board) + '?id=' + encodeURIComponent(p.fsDocId || p.id)
           + (_st ? '&state=' + encodeURIComponent(_st) : '');
-        const head = '<span class="mypage-item-badge">' + boardLabel(p.board) + '</span>'
+        const head = '<span class="mypage-item-badge">' + escHtml(boardLabel(p.board)) + '</span>'
           + '<a class="mypage-item-title" href="' + postUrl + '" style="color:inherit;text-decoration:none;cursor:pointer;">' + escHtml(p.title || '') + '</a>'
           + '<span class="mypage-item-meta">' + meta + '</span>';
         if (mtab === 'mine') {
@@ -1028,9 +1035,9 @@
             +   '<a class="mp-edit" href="' + editUrl + '">수정</a>'
             +   (adminBlind
                   ? '<button class="mp-toggle-locked" type="button" style="color:#9ca3af;cursor:not-allowed;" title="운영자 숨김은 직접 해제할 수 없습니다.">해제 불가</button>'
-                  : '<button class="mp-toggle" data-board="' + p.board + '" data-id="' + p.id + '" data-hidden="' + (p.isHidden ? '1' : '0') + '">' + toggleLabel + '</button>')
-            +   '<button class="mp-dup" data-board="' + p.board + '" data-id="' + p.id + '">재업로드</button>'
-            +   '<button class="mp-del" data-board="' + p.board + '" data-id="' + p.id + '" data-fsdocid="' + (p.fsDocId || p._fsDocId || '') + '">삭제</button>'
+                  : '<button class="mp-toggle" data-board="' + escHtml(p.board) + '" data-id="' + escHtml(p.id) + '" data-hidden="' + (p.isHidden ? '1' : '0') + '">' + toggleLabel + '</button>')
+            +   '<button class="mp-dup" data-board="' + escHtml(p.board) + '" data-id="' + escHtml(p.id) + '">재업로드</button>'
+            +   '<button class="mp-del" data-board="' + escHtml(p.board) + '" data-id="' + escHtml(p.id) + '" data-fsdocid="' + escHtml(p.fsDocId || p._fsDocId || '') + '">삭제</button>'
             + '</span>'
             + '</div>';
         }

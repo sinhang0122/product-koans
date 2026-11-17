@@ -67,7 +67,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
   let db = null, me = null, roles = null, loadedFor = null, ovl = null;
   const $ = (s, r) => (r || document).querySelector(s);
   const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-  const toast = m => { try { if (window.koausToast) window.koausToast.show(m); else alert(m); } catch (_) { alert(m); } };
+  const toast = m => { try { if (window.koausToast) window.koausToast.show(m, Math.min(6000, 1800 + String(m).length * 70)); else alert(m); } catch (_) { alert(m); } };
 
   function pageApp() {
     const p = (location.pathname.split('/').pop() || '').toLowerCase();

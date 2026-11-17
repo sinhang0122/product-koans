@@ -3,6 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="alternate icon" href="favicon.ico" sizes="32x32" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
   <title>호주 비자·유학 파트너 — 법무법인·유학원 | KoAus</title>
   <meta name="description" content="호주 비자·이민 파트너 정보 — 법무법인, 유학원, 기술심사 가채점 서비스를 한곳에서 확인하세요." />
   <meta property="og:type" content="website" />
@@ -41,7 +47,6 @@
   <script src="offline.js" defer></script>
   <script src="koaus-textsize.js" defer></script>
   <script type="module" src="session-timeout.js"></script>
-  <script src="hero-banner.js" defer></script>
   <script src="search-bar.js" defer></script>
   <script src="local-analytics.js" defer></script>
   <script src="koaus-gallery.js" defer></script>
@@ -415,7 +420,6 @@
   </aside>
 
   <main class="page-container">
-    <section class="koaus-hero" hidden data-koaus-hero-cat="points" aria-label="KoAus 배너"></section>
     <!-- ── KoAus 히어로 배너 (cat=legal / cat=education 분기) — PC: Swiper · 모바일: 카드 ── -->
 
     <section class="notice-section">
@@ -880,7 +884,7 @@
         </div>
         <div class="auth-field">
           <label class="auth-label" for="authSignupPw">비밀번호</label>
-          <input class="auth-input" id="authSignupPw" type="password" placeholder="영문·숫자·특수문자 10자 이상" autocomplete="new-password" />
+          <input class="auth-input" id="authSignupPw" type="password" placeholder="영문 대·소문자 + 숫자 + 특수문자 10자 이상" autocomplete="new-password" />
         </div>
         <div class="auth-field">
           <label class="auth-label" for="authSignupPwConfirm">비밀번호 확인</label>
@@ -1959,7 +1963,7 @@
       if (!authAgree.checked) { errEl.textContent = '이용약관에 동의해 주세요.'; return; }
       if (!email || !pw) { errEl.textContent = '이메일과 비밀번호를 입력해 주세요.'; return; }
       if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{10,}$/.test(pw)) {
-        errEl.textContent = '비밀번호는 영문, 숫자, 특수문자를 포함하여 10자 이상이어야 합니다.';
+        errEl.textContent = '비밀번호는 영문 대문자·소문자, 숫자, 특수문자를 모두 넣어 10자 이상이어야 합니다.';
         return;
       }
       if (pw !== pw2) { errEl.textContent = '비밀번호가 일치하지 않습니다.'; return; }

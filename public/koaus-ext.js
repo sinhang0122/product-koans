@@ -35,7 +35,7 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, g
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const $ = (sel, root) => (root || document).querySelector(sel);
 
-  const api = { board: BOARD, last: {}, raw: {}, byId: {}, sources: {}, stats: null, ready: null };
+  const api = { board: BOARD, last: {}, raw: {}, byId: Object.create(null), sources: {}, stats: null, ready: null };   // 11-15: byId 는 프로토타입 없는 객체(id 'constructor' 같은 값으로 속이지 못하게)
   const modeOf = src => ((api.sources[src] || {}).mode === 'full' ? 'full' : 'link');
 
   function mapDoc(d) {
@@ -139,6 +139,10 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, g
 
   // 카드(목록·지도 서랍 공용) — KoAus 카드 규격(.accom-card) 그대로. 액션 버튼 대신 구석에 *출처
   function cardHtml(p, opts) {
+    // 11-15(보안): 넘겨받은 객체를 믿지 않는다 — ext_posts 에서 읽어 만든 목록(api.byId)에 있는 글만 그린다.
+    //   일반 글 문서에 ext/outUrl 을 심어 외부 글인 척하는 것을 막는다(글 주인은 자기 글 문서를 고칠 수 있다).
+    p = (p && api.byId[p.id]) || null;
+    if (!p) return '';
     opts = opts || {};
     injectCss();
     const st = String(p.state || '').toUpperCase();
@@ -213,7 +217,7 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, g
   }
   async function renderActions(p) {
     const box = $('#kxtActions', ovl); if (!box) return;
-    const orig = `<a class="kxt-btn sec" href="${esc(p.outUrl)}">원문 보기 ›</a>`;
+    const orig = `<a class="kxt-btn sec" href="out.html?id=${encodeURIComponent(p.docId)}">원문 보기 ›</a>`;
     const user = window.koausAuth && window.koausAuth.user;
     if (!p.hasPhone) { box.innerHTML = orig.replace('kxt-btn sec', 'kxt-btn sec full'); return; }
     if (!user) { box.innerHTML = `<button type="button" class="kxt-btn full" data-kxt-login>로그인하고 연락처 보기</button>${orig}`; return; }
@@ -234,12 +238,14 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, g
   }
   // 글 하나 열기 — full 모드면 상세창, link 모드면 원문(out.html)
   async function open(idOrPost) {
-    let p = typeof idOrPost === 'object' ? idOrPost : api.byId[idOrPost];
-    if (!p && typeof idOrPost === 'string' && idOrPost.startsWith('ext_') && db) {
-      try { const s = await getDoc(doc(db, 'ext_posts', idOrPost.slice(4))); if (s.exists()) p = mapDoc(s); } catch (e) { console.warn('[koaus-ext] 글 조회 실패', e); }
+    // 11-15(보안): 객체로 받아도 id 로 우리 목록에서 다시 찾는다. 주소는 p.outUrl 을 쓰지 않고 여기서 만든다(javascript: 주소 차단).
+    const id = (idOrPost && typeof idOrPost === 'object') ? String(idOrPost.id || '') : String(idOrPost || '');
+    let p = api.byId[id];
+    if (!p && id.startsWith('ext_') && db) {
+      try { const s = await getDoc(doc(db, 'ext_posts', id.slice(4))); if (s.exists()) p = mapDoc(s); } catch (e) { console.warn('[koaus-ext] 글 조회 실패', e); }
     }
     if (!p) return false;
-    if (modeOf(p.source) === 'full') openModal(p); else window.location.href = p.outUrl;
+    if (modeOf(p.source) === 'full') openModal(p); else window.location.href = 'out.html?id=' + encodeURIComponent(p.docId);
     return true;
   }
   const go = open;

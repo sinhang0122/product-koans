@@ -6,7 +6,27 @@
   window.__koausTextSizeInited = true;
   var LEVELS = [1, 1.2, 1.4], LABELS = ['가', '가+', '가++'], KEY = 'koaus-textsize', idx = 0;
   try { var s = parseInt(localStorage.getItem(KEY) || '0', 10); if (s >= 0 && s < LEVELS.length) idx = s; } catch (e) {}
-  function applyZoom(){ try { document.documentElement.style.zoom = String(LEVELS[idx]); } catch (e) {} }
+  function applyZoom(){
+    try { document.documentElement.style.zoom = String(LEVELS[idx]); } catch (e) {}
+    // 11-15(모바일 점검): 상단바 안쪽(로고·버튼)은 확대하지 않는다 — 가+/가++ 에서 로그인 버튼이 꺾이고 메뉴 버튼이 화면 밖으로 밀렸다.
+    //   막대(높이 56px)는 그대로 확대돼 본문 위치 계산과 어긋나지 않는다. 좁은 화면에서는 'KoAus' 글자를 접는다.
+    try {
+      var inv = String(1 / LEVELS[idx]);
+      var parts = document.querySelectorAll('.topbar .topbar-brand, .topbar .topbar-actions');
+      for (var i = 0; i < parts.length; i++) parts[i].style.zoom = idx ? inv : '';
+      var cl = document.documentElement.classList;
+      cl.toggle('koaus-ts-1', idx === 1); cl.toggle('koaus-ts-2', idx === 2);
+      if (idx) injectTopbarStyle();
+    } catch (e) {}
+  }
+  function injectTopbarStyle(){
+    if (document.getElementById('koaus-textsize-topbar-style')) return;
+    var t = document.createElement('style'); t.id = 'koaus-textsize-topbar-style';
+    t.textContent =
+      '@media(max-width:480px){html.koaus-ts-1 .topbar,html.koaus-ts-2 .topbar{padding:0 10px;}html.koaus-ts-2 .topbar-logo-text{display:none;}}'+
+      '@media(max-width:379px){html.koaus-ts-1 .topbar-logo-text{display:none;}}';
+    (document.head || document.documentElement).appendChild(t);
+  }
   applyZoom();
 
   function injectStyle(){
@@ -56,5 +76,5 @@
     injectStyle(); var b = makeBtn(); b.classList.add('is-floating'); document.body.appendChild(b);   // 상단바 없는 페이지 폴백
   }
 
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mount, { once:true }); else mount();
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function(){ applyZoom(); mount(); }, { once:true }); else mount();
 })();

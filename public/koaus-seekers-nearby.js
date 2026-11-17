@@ -36,7 +36,7 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
 
   const E = () => window.koausEnums;
   const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-  const toast = m => { try { if (window.koausToast) window.koausToast.show(m); else alert(m); } catch (_) { alert(m); } };
+  const toast = m => { try { if (window.koausToast) window.koausToast.show(m, Math.min(6000, 1800 + String(m).length * 70)); else alert(m); } catch (_) { alert(m); } };   // 11-15: 시간을 안 주면 안 사라졌다
   const $ = (sel, root) => (root || document).querySelector(sel);
   const page = () => (location.pathname.split('/').pop() || '').toLowerCase();
   const deck = () => window.koausPeopleDeck || null;
@@ -370,7 +370,12 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
     st.textContent = `
       .ksn-sheet{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9060;display:none;align-items:flex-end;justify-content:center}
       .ksn-sheet.open{display:flex}
-      .ksn-sheet-box{width:100%;max-width:560px;background:var(--bg-base);color:var(--text-primary);border-radius:18px 18px 0 0;padding:16px 16px calc(18px + env(safe-area-inset-bottom,0px));max-height:88vh;overflow:auto;overscroll-behavior:contain;box-sizing:border-box}
+      .ksn-sheet-box{width:100%;max-width:560px;background:var(--bg-base);color:var(--text-primary);border-radius:18px 18px 0 0;max-height:88vh;overflow:hidden;box-sizing:border-box;display:flex;flex-direction:column}
+      /* 11-15: 본문만 스크롤, [적용] 은 아래 고정 — 내용이 길면 버튼이 시트 끝에 잘려 보이던 것 */
+      .ksn-sheet-body{flex:1 1 auto;min-height:0;overflow:auto;overscroll-behavior:contain;padding:16px 16px 10px}
+      .ksn-sheet-foot{flex:0 0 auto;padding:10px 16px calc(14px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--border);background:var(--bg-base)}
+      .ksn-apply-hint{font-size:12.5px;color:var(--text-muted);text-align:center;margin:0 0 8px}
+      .ksn-apply-hint[hidden]{display:none}
       @media(min-width:640px){.ksn-sheet{align-items:center}.ksn-sheet-box{border-radius:18px}}
       .ksn-sheet h3{margin:0 0 6px;font-size:16px;font-weight:800;display:flex;justify-content:space-between;align-items:center}
       .ksn-lab{font-size:12.5px;color:var(--text-muted);font-weight:700;margin:12px 0 6px;display:flex;gap:6px;align-items:baseline}
@@ -393,7 +398,7 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
       .ksn-lnk{appearance:none;border:0;background:none;color:var(--text-primary);font-size:14px;cursor:pointer;font-family:inherit;padding:4px 0}
       .ksn-lnk.muted{color:var(--text-muted)}
       .ksn-help{font-size:12px;color:var(--text-muted);line-height:1.5;margin-top:6px}
-      .ksn-apply{margin-top:16px;appearance:none;border:0;background:var(--text-primary);color:var(--bg-base);border-radius:12px;padding:13px;font-size:15px;font-weight:800;font-family:inherit;width:100%;cursor:pointer}
+      .ksn-apply{margin-top:0;appearance:none;border:0;background:var(--text-primary);color:var(--bg-base);border-radius:12px;padding:13px;font-size:15px;font-weight:800;font-family:inherit;width:100%;cursor:pointer}
       .ksn-apply:disabled{opacity:.5;cursor:default}`;
     document.head.appendChild(st);
   }
@@ -509,7 +514,7 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
     const draft = { state: ((pg.centers || []).find(c => c.all) || {}).state || '', centers: (pg.centers || []).filter(c => !c.all).map(c => Object.assign({}, c)), radius: pg.radius, sort: pg.sort, gender: pg.gender, price: pg.price };
     const opts = (name, map, cur) => Object.keys(map).map(k => `<button type="button" class="ksn-opt" data-set="${name}" data-val="${k}" aria-pressed="${String(cur) === k ? 'true' : 'false'}">${esc(map[k])}</button>`).join('');
     sheet.innerHTML = `
-      <div class="ksn-sheet-box">
+      <div class="ksn-sheet-box"><div class="ksn-sheet-body">
         <h3>상세 필터 <button type="button" class="ksn-lnk muted" data-ksn-sheet="close">닫기</button></h3>
         <div class="ksn-lab">주 <span class="ksn-dim">(한 곳)</span></div>
         <select class="ksn-select" id="ksnStateSel"><option value="">고르지 않음</option>${STATES.map(s => `<option value="${s[0]}"${draft.state === s[0] ? ' selected' : ''}>${s[1]} 전체</option>`).join('')}</select>
@@ -523,8 +528,10 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
         <div class="ksn-lab">예산 <span class="ksn-dim">(내 방 주당 가격 · 선택)</span></div>
         <input id="ksnPrice" type="number" inputmode="numeric" min="0" max="3000" step="10" placeholder="예: 250" value="${draft.price ? esc(draft.price) : ''}">
         <div class="ksn-help">적으면 이 가격이 예산 안에 드는 분만 보입니다.</div>
+        </div><div class="ksn-sheet-foot">
+        <div class="ksn-apply-hint" id="ksnApplyHint" hidden>주나 동네를 먼저 고르십시오.</div>
         <button type="button" class="ksn-apply" data-ksn-sheet="apply">적용</button>
-      </div>`;
+      </div></div>`;
     const box = sheet.querySelector('.ksn-sheet-box');
     // 내 글 동네 칩 — 내 글 조회가 끝나면 채운다(시트를 다시 그리지 않음)
     fillMyChips = () => {
@@ -536,7 +543,9 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
       const el = box.querySelector('#ksnCenters');
       el.innerHTML = draft.centers.map((c, i) => `<span class="ksn-center">${esc(c.name + ' ' + String(c.state).toUpperCase())}<button type="button" data-rm="${i}" aria-label="빼기">×</button></span>`).join('');
       box.querySelectorAll('[data-my]').forEach(b => { const m = pg.myPosts[Number(b.dataset.my)]; b.setAttribute('aria-pressed', m && draft.centers.some(c => sameCenter(c, m)) ? 'true' : 'false'); });
-      box.querySelector('[data-ksn-sheet="apply"]').disabled = !(draft.centers.length || draft.state);
+      const ready = !!(draft.centers.length || draft.state);
+      box.querySelector('[data-ksn-sheet="apply"]').disabled = !ready;
+      const hint = box.querySelector('#ksnApplyHint'); if (hint) hint.hidden = ready;   // 11-15: 회색일 때 이유
     };
     const addCenter = c => {
       const i = draft.centers.findIndex(x => sameCenter(x, c));

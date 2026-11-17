@@ -3,6 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="alternate icon" href="favicon.ico" sizes="32x32" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
   <title>호주 주별 정보 허브 — NSW·VIC·QLD·WA·SA·ACT | KoAus</title>
   <meta name="description" content="호주 주(State)별 종합 허브 — 선택한 주 기준으로 쉐어·렌트·구인구직 등 카테고리 정보를 한 번에 둘러보세요." />
   <meta property="og:type" content="website" />
@@ -42,7 +48,6 @@
   <script src="koaus-textsize.js" defer></script>
   <script type="module" src="session-timeout.js"></script>
   <script src="local-analytics.js" defer></script>
-  <script src="hero-banner.js" defer></script>
   <script src="koaus-gallery.js" defer></script>
   <script src="koaus-dedupe.js" defer></script>
   <script src="koaus-url-guard.js" defer></script>
@@ -380,8 +385,6 @@
 
   <main class="page-container">
 
-    <!-- 통합 배너 — 띠(strip) variant · hero-banner.js 렌더 -->
-    <section class="koaus-hero" hidden data-koaus-hero-cat="state" aria-label="KoAus 배너"></section>
 
     <section class="notice-section">
       <div class="notice-row" id="tickerRow">

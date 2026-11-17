@@ -65,7 +65,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
 
   const E = () => window.koausEnums;
   const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-  const toast = (m) => { try { if (window.koausToast) window.koausToast.show(m); else alert(m); } catch (_) { alert(m); } };
+  const toast = (m) => { try { if (window.koausToast) window.koausToast.show(m, Math.min(6000, 1800 + String(m).length * 70)); else alert(m); } catch (_) { alert(m); } };
   const $ = (sel, root) => (root || document).querySelector(sel);
   const todayStr = () => { const d = new Date(); const z = n => String(n).padStart(2, '0'); return d.getFullYear() + '-' + z(d.getMonth() + 1) + '-' + z(d.getDate()); };
   const isPanelVisible = () => !!(panelEl && panelEl.style.display !== 'none' && panelEl.offsetParent !== null);

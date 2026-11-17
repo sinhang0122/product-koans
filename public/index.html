@@ -3,6 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="alternate icon" href="favicon.ico" sizes="32x32" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
   <title>KoAus 코어스 — 호주 한인 커뮤니티 포털 | 쉐어하우스·구인구직·렌트·중고차</title>
   <meta name="description" content="호주 한인 커뮤니티 KoAus(코어스) — 시드니·멜버른 등 쉐어하우스, 렌트, 구인구직, 중고차, 한인 식당·미용실·GP, 환율·비자 정보를 한곳에서 확인하세요." />
   <meta property="og:type" content="website" />
@@ -418,9 +424,7 @@
       </div>
     </section>
 
-    <!-- ── KoAus 히어로 배너 — hero-banner.js 가 렌더 (통합 배너 시스템, SLOTS.home)
-         · 2026-10 개편: 전광판 아래로 이동. 등록된 배너 0개면 hidden 유지(자동 숨김) ── -->
-    <section class="koaus-hero" hidden data-koaus-hero-cat="home" aria-label="KoAus 배너"></section>
+    <!-- 11-15(사용자 결정): 홈에는 히어로 배너를 두지 않는다 — Living(쉐어·렌트)·Job(구인구직) 페이지에만(hero-banner.js HERO_PAGES). 여기 다시 넣지 말 것 -->
 
     <!-- ── 홈 진입부 (2026-10 개편) — koaus-home-entry.js
          · 한 홈에서 두 앱으로: Living(집 구하기 = accom/rent) · 구인구직(jobs)
@@ -726,10 +730,6 @@
     }
   </script>
 
-  <!-- ── KoAus 히어로 — Swiper CDN 선로드 + hero-banner.js 가 렌더·초기화 (인라인 init 폐기) ── -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js" defer></script>
-  <script src="hero-banner.js" defer></script>
 
   <script src="koaus-tabbar.js" defer></script>
   <script src="koaus-menu.js" defer></script>
