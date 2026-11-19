@@ -326,6 +326,13 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
     };
     const oNick = String((it && (it.p.nick || it.p.firstName)) || '').trim().slice(0, 60); if (oNick) payload.ownerNick = oNick;
     let iNick = ''; try { iNick = (localStorage.getItem('koaus-nickname') || user.displayName || '').trim().slice(0, 60); } catch (_) {} if (iNick) payload.inquirerNick = iNick;
+    // 11-19 채팅 안전: 새 방은 표(koaus-chat-ticket.js)를 끊고 만든다 — 24시간에 Living 50 · Job 50(묶음은 board 로). 이미 있는 방은 표를 쓰지 않는다.
+    const tkApi = window.koausChatTicket;
+    if (tkApi && tkApi.ensure) {
+      const r = await tkApi.ensure({ db, doc, getDoc, setDoc, serverTimestamp }, user.uid, chatId, payload);
+      if (r && r.ok) return chatId;
+      const err = new Error('deny'); err.koausMsg = (tkApi.message && tkApi.message(r)) || ''; throw err;
+    }
     try { await setDoc(doc(db, 'chats', chatId), payload); return chatId; }
     catch (_) { const snap = await getDoc(doc(db, 'chats', chatId)); if (snap && snap.exists()) return chatId; throw new Error('deny'); }
   }
@@ -349,6 +356,7 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
       return true;
     } catch (e) {
       busy = false;
+      if (e && e.koausMsg) { alert(e.koausMsg); return false; }   // 11-19: 한도(24시간에 Living 50 · Job 50)·내가 차단한 상대
       const denied = e && (e.message === 'deny' || e.code === 'permission-denied' || /permission/i.test(e.message || ''));
       alert(denied ? '메시지를 보낼 수 없습니다. 휴대폰(SMS) 본인 인증을 완료했는지, 차단된 상대가 아닌지 확인해 주십시오.' : '보내지 못했습니다. 잠시 후 다시 시도해 주십시오.');
       return false;

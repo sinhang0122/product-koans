@@ -28,6 +28,7 @@
   const CATEGORIES = [
     { value: 'spam',         label: '스팸 · 홍보성 콘텐츠' },
     { value: 'fraud',        label: '사기 의심 (보증금/대금/허위)' },
+    { value: 'harassment',   label: '괴롭힘 · 성희롱 · 협박' },   // 11-19 채팅 안전
     { value: 'inappropriate',label: '부적절한 콘텐츠 (욕설/혐오/타인 비방)' },
     { value: 'other',        label: '기타 (직접 입력)' },
   ];
@@ -109,6 +110,9 @@
     if (cat) cat.value = 'spam';
     if (det) det.value = '';
     if (note) { note.textContent = ''; note.className = 'koaus-report-note'; }
+    // 11-19: 한 번 접수한 뒤에는 버튼이 '접수 중…'으로 잠긴 채 남아, 새로고침 전에는 다른 글·대화를 신고할 수 없었다 → 열 때마다 되돌린다
+    const sb = host.querySelector('#koausReportSubmit');
+    if (sb) { sb.disabled = false; sb.textContent = '신고 접수'; }
     host.classList.add('open');
     // 핸들러 — 중복 바인딩 방지
     if (!host.__koausWired) {
@@ -170,14 +174,15 @@
       });
       note.textContent = '신고가 접수되었습니다. 운영팀 검토 후 조치합니다.';
       note.className = 'koaus-report-note is-ok';
-      setTimeout(close, 1200);
+      const onDone = (_ctx && typeof _ctx.onDone === 'function') ? _ctx.onDone : null;   // 11-19: 채팅은 접수 뒤 차단할지 묻는다
+      setTimeout(() => { close(); if (onDone) { try { onDone(); } catch (_) {} } }, 1200);
     } catch (err) {
       console.error('[koausReport] 접수 실패', err);
       // 동일 글 재신고 = 기존 doc 의 create→update 취급 → rules 거부(permission-denied).
       // 로그인 유저의 permission-denied 는 사실상 중복 신고 케이스.
       const isDup = err && (err.code === 'permission-denied' || /permission/i.test(err.message || ''));
       note.textContent = isDup
-        ? '이미 신고하신 게시글입니다. 운영팀이 검토 중입니다.'
+        ? ((_ctx && _ctx.board === 'chat') ? '오늘 이미 신고하신 대화입니다. 운영팀이 검토 중입니다.' : '이미 신고하신 게시글입니다. 운영팀이 검토 중입니다.')
         : '접수 실패: ' + (err && err.message ? err.message : err);
       note.className = isDup ? 'koaus-report-note is-ok' : 'koaus-report-note is-error';
       btn.disabled = false; btn.textContent = '신고 접수';

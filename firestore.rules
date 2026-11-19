@@ -89,6 +89,41 @@ service cloud.firestore {
       return !exists(/databases/$(database)/documents/users/$(request.auth.uid))
         || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('status', 'active') != 'suspended';
     }
+    // ── 채팅 안전(2026-11-19, 사용자 지시) ──
+    //   ① 사람 단위 차단: blocks/{차단한uid}/who/{차단당한uid} 가 있으면(어느 방향이든) 그 둘 사이에는
+    //      새 방 만들기·메시지 전송·요약(lastMsg) 갱신을 모두 거부한다. 방 단위 blockedBy 는 화면 표시용으로 유지.
+    //      (전에는 방 단위뿐이라, 차단당한 쪽이 다른 글·프로필로 새 방을 열어 다시 말을 걸 수 있었다)
+    //   ② 새 대화 24시간에 Living 50개 · Job 50개(사용자 결정 11-19): 표 묶음 두 개 —
+    //      chat_tickets/{uid}/living/{1..50} · chat_tickets/{uid}/job/{1..50}. 칸은 비어 있거나 쓴 지 24시간이 지나야 다시 쓸 수 있다.
+    //      방을 만들 때 방의 종류(board)에 맞는 묶음의 그 칸(tk)에 이 방(chatId)이 적혀 있는지 확인한다 — 표 한 장 = 방 하나.
+    //      구인구직(board 가 jobs · jobseeker) = job 묶음, 그 밖(쉐어·렌트·집 구하는 사람 등) = living 묶음.
+    //      board 는 보내는 쪽이 적는 값이라 묶음 구분은 화면 정책이고, 계정 하나의 실제 상한은 둘을 합친 100개다.
+    //      (날짜 계산이 없어 기기 시계와 무관하다. 한도를 바꾸려면 아래 정규식 두 곳과 koaus-chat-ticket.js 의 LIMIT 를 같이 바꾼다)
+    //   비용: 새 방 +3 read(표 1 · 차단 2), 메시지 전송 +2 read(차단 2). 요청당 문서 접근 한도(10) 안.
+    function noUserBlock(peer) {
+      return !exists(/databases/$(database)/documents/blocks/$(peer)/who/$(request.auth.uid))
+          && !exists(/databases/$(database)/documents/blocks/$(request.auth.uid)/who/$(peer));
+    }
+    function peerIn(ps) {
+      return (ps[0] == request.auth.uid ? ps[1] : ps[0]);
+    }
+    function chatPeer(chatId) {
+      return peerIn(get(/databases/$(database)/documents/chats/$(chatId)).data.participants);
+    }
+    function validChatTicket(uid, n) {
+      return isVerifiedUser()
+        && notSuspended()
+        && request.auth.uid == uid
+        && n.matches('([1-9]|[1-4][0-9]|50)')
+        && reqStr('chatId', 3, 240)
+        && 'createdAt' in data() && data().createdAt == request.time
+        && data().keys().hasOnly(['chatId', 'createdAt']);
+    }
+    function chatTicketOk(chatId) {
+      return (data().board in ['jobs', 'jobseeker']
+        ? (get(/databases/$(database)/documents/chat_tickets/$(request.auth.uid)/job/$(request.resource.data.tk)).data.chatId == chatId)
+        : (get(/databases/$(database)/documents/chat_tickets/$(request.auth.uid)/living/$(request.resource.data.tk)).data.chatId == chatId));
+    }
 
     // ── 게시판 글 검증 ──
     // 작성자 본인 확인 (update/delete 용) — create 시 위조 차단은 validBaseCreate 가 담당
@@ -1243,11 +1278,15 @@ service cloud.firestore {
                        && data().blockedBy is list
                        && data().blockedBy.size() == 0
                        && 'createdAt' in data() && data().createdAt == request.time
+                       // 11-19: 새 대화 표(24시간에 Living 50 · Job 50) + 사람 단위 차단
+                       && data().tk is string && data().tk.matches('([1-9]|[1-4][0-9]|50)')
+                       && chatTicketOk(chatId)
+                       && noUserBlock(data().ownerUid)
                        && data().keys().hasOnly([
                             'postId', 'board', 'postTitle', 'ownerUid', 'inquirerUid',
                             'ownerNick', 'inquirerNick', 'participants',
                             'lastMsg', 'lastMsgAt', 'lastSenderUid',
-                            'unreadFor', 'blockedBy', 'createdAt'
+                            'unreadFor', 'blockedBy', 'createdAt', 'tk'
                           ]);
       allow get:  if isAdmin()
                      || (isSignedIn() && request.auth.uid in resource.data.participants);
@@ -1280,11 +1319,14 @@ service cloud.firestore {
                            || (resource.data.blockedBy.size() == 0
                                && data().lastSenderUid == request.auth.uid
                                && data().lastMsg is string && data().lastMsg.size() <= 200
-                               && data().lastMsgAt == request.time)
+                               && data().lastMsgAt == request.time
+                               && noUserBlock(peerIn(resource.data.participants)))   // 11-19 사람 단위 차단
                            || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastMsg', 'unreadFor'])
                                && resource.data.lastSenderUid == request.auth.uid
                                && data().lastMsg is string && data().lastMsg.size() <= 200
-                               && resource.data.unreadFor.hasAll(data().unreadFor)))
+                               && resource.data.unreadFor.hasAll(data().unreadFor)
+                               // 11-19: 수정·삭제 창(5분) 안에서만 — 전에는 기한이 없어 차단된 뒤에도 미리보기 글을 계속 바꿀 수 있었다
+                               && request.time < resource.data.lastMsgAt + duration.value(5, 'm')))
                        // readAt(2026-10) = { uid: 그 사람이 마지막으로 읽음 처리한 시각 } — 본인 키만, serverTimestamp 강제.
                        //   삭제 시 "상대가 못 본 내 메시지가 더 남아 있나" 판단용(클라이언트). 다른 키는 건드릴 수 없음.
                        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['readAt'])
@@ -1306,7 +1348,8 @@ service cloud.firestore {
       //   · create 비용: 부모 get 1 read (notSuspended 의 users get 과 별개 doc).
       //   · 전송 = writeBatch(메시지 addDoc + 부모 요약 update) — 차단 시 양쪽 다 거부.
       //   · update 는 본인 메시지에 두 가지만(2026-10): ① 삭제 표시(보낸 지 5분 내) text=''+deleted+deletedAt==request.time
-      //     ② 내용 수정(보낸 지 24시간 내) text(1~1000)+edited=true+editedAt==request.time ('수정됨' 표시 강제).
+      //     ② 내용 수정(보낸 지 5분 내 — 11-19: 24시간 → 5분. 읽힌 뒤에 말을 바꾸는 것을 막는다)
+      //        text(1~1000)+edited=true+editedAt==request.time ('수정됨' 표시 강제).
       //     삭제된 메시지는 재변경 불가.
       //   · delete(문서 삭제)는 admin 만(불법 콘텐츠 제재).
       match /messages/{msgId} {
@@ -1318,7 +1361,8 @@ service cloud.firestore {
                          && data().keys().hasOnly(['senderUid', 'text', 'createdAt'])
                          && request.auth.uid in
                             get(/databases/$(database)/documents/chats/$(chatId)).data.participants
-                         && get(/databases/$(database)/documents/chats/$(chatId)).data.blockedBy.size() == 0;
+                         && get(/databases/$(database)/documents/chats/$(chatId)).data.blockedBy.size() == 0
+                         && noUserBlock(chatPeer(chatId));   // 11-19 사람 단위 차단(부모 chat 은 같은 요청 안에서 한 번만 읽힌다)
         allow get:  if isAdmin()
                        || (isSignedIn() && request.auth.uid in
                            get(/databases/$(database)/documents/chats/$(chatId)).data.participants);
@@ -1336,7 +1380,7 @@ service cloud.firestore {
                                && data().deleted == true
                                && data().deletedAt == request.time)
                               ||
-                              (request.time < resource.data.createdAt + duration.value(24, 'h')
+                              (request.time < resource.data.createdAt + duration.value(5, 'm')
                                && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text', 'edited', 'editedAt'])
                                && data().text is string && data().text.size() >= 1 && data().text.size() <= 1000
                                && data().edited == true
@@ -1344,6 +1388,45 @@ service cloud.firestore {
                             );
         allow delete: if isAdmin();
       }
+    }
+
+    // ── 사람 단위 차단(blocks) — 2026-11-19 ──
+    //   · 경로 = blocks/{차단한uid}/who/{차단당한uid}. 차단한 본인만 만들고·보고·지운다(상대는 볼 수 없다 — 규칙의 exists() 만 본다).
+    //   · 정지 계정도 차단은 할 수 있다(보호 기능). 수정 불가(만들기·지우기뿐). 칸은 createdAt 하나.
+    //   · 목록에 있는 'legacy-migrated-1119' 는 uid 가 아니다 — "예전 방 단위 차단을 사람 단위로 옮겼다"는 표시(chat.html migrateLegacyBlocks, 계정당 한 번).
+    match /blocks/{blockerUid}/who/{blockedUid} {
+      allow get:    if isSignedIn() && (request.auth.uid == blockerUid || isAdmin());
+      allow list:   if isSignedIn() && (request.auth.uid == blockerUid || isAdmin()) && request.query.limit <= 100;
+      allow create: if isSignedIn()
+                       && request.auth.uid == blockerUid
+                       && blockedUid != blockerUid
+                       && blockedUid.size() >= 6 && blockedUid.size() <= 128
+                       && 'createdAt' in data() && data().createdAt == request.time
+                       && data().keys().hasOnly(['createdAt']);
+      allow delete: if isSignedIn() && request.auth.uid == blockerUid;
+      allow update: if false;
+    }
+
+    // ── 새 대화 표(chat_tickets) — 2026-11-19: 24시간에 Living 50개 · Job 50개 ──
+    //   · 경로 = chat_tickets/{uid}/living/{n} · chat_tickets/{uid}/job/{n}, n 은 '1'~'50' → 묶음마다 표가 50칸뿐이다.
+    //   · 칸 하나 = 방 하나(chatId). chats create 가 방의 종류(board)에 맞는 묶음에서 tk 칸을 읽어 chatId 가 같은지 확인한다(chatTicketOk).
+    //   · 새로 쓰기(create)는 빈 칸에만, 덮어쓰기(update)는 쓴 지 24시간이 지난 칸에만 → 어느 24시간에도 묶음마다 50장을 넘지 못한다.
+    //   · 지우기 불가. 본인(과 관리자)만 읽는다. 두 묶음의 규칙은 같다.
+    match /chat_tickets/{uid}/living/{n} {
+      allow get:    if isSignedIn() && (request.auth.uid == uid || isAdmin());
+      allow list:   if isSignedIn() && (request.auth.uid == uid || isAdmin()) && request.query.limit <= 50;
+      allow create: if validChatTicket(uid, n);
+      allow update: if validChatTicket(uid, n)
+                       && request.time > resource.data.createdAt + duration.value(24, 'h');
+      allow delete: if false;
+    }
+    match /chat_tickets/{uid}/job/{n} {
+      allow get:    if isSignedIn() && (request.auth.uid == uid || isAdmin());
+      allow list:   if isSignedIn() && (request.auth.uid == uid || isAdmin()) && request.query.limit <= 50;
+      allow create: if validChatTicket(uid, n);
+      allow update: if validChatTicket(uid, n)
+                       && request.time > resource.data.createdAt + duration.value(24, 'h');
+      allow delete: if false;
     }
 
     // ── 외부 한인 사이트 글(11-05) — 서버 함수(functions-ext)만 쓴다. 공개 읽기는 visible 만, 목록은 200건 이하 ──

@@ -461,6 +461,9 @@
   //        '없음'과 '권한없음'을 클라가 구분 못 한다 (denied 확인 후 create 불가).
   //   · 비로그인은 위 capture 게이트가 먼저 차단 → 여기 도달 안 함.
   //   · inquiry_logs(method:'chat') 기록도 capture 게이트의 logInquiryClick 이 담당.
+  //   · 11-19 채팅 안전: 새 방은 표(koaus-chat-ticket.js)를 끊고 만든다 — 24시간에 Living 50 · Job 50. 표 방식은 방이 있는지를 먼저 본다
+  //     (없는 방 조회 거부를 '없음'으로 보고 표를 끊는다 → 이미 있는 방에는 표를 쓰지 않는다). 아래 create-first 는
+  //     표 스크립트가 없을 때만 쓰는 예비 경로이고, 새 규칙에서는 tk 없는 생성이 거부된다.
   var _chatBusy = false;
   document.addEventListener('click', function (e) {
     var btn = e.target && e.target.closest && e.target.closest('.contact-action-btn--chat');
@@ -501,7 +504,18 @@
     _chatBusy = true;
     btn.disabled = true;
     var done = function () { _chatBusy = false; try { btn.disabled = false; } catch (_) {} };
-    var denyMsg = '채팅을 시작할 수 없습니다.\n휴대폰(SMS) 본인 인증을 완료했는지 확인해 주세요.';
+    var denyMsg = '채팅을 시작할 수 없습니다.\n휴대폰(SMS) 본인 인증을 완료했는지, 차단된 상대가 아닌지 확인해 주세요.';
+    var tkApi = window.koausChatTicket;
+    if (tkApi && tkApi.ensure) {
+      tkApi.ensure({ db: db, doc: fs.doc, getDoc: fs.getDoc, setDoc: fs.setDoc, serverTimestamp: fs.serverTimestamp }, user.uid, chatId, payload)
+        .then(function (r) {
+          done();
+          if (r && r.ok) { goRoom(); return; }
+          try { alert((tkApi.message && tkApi.message(r)) || denyMsg); } catch (_) {}
+        })
+        .catch(function () { done(); try { alert(denyMsg); } catch (_) {} });
+      return;
+    }
     fs.setDoc(fs.doc(db, 'chats', chatId), payload)
       .then(function () { done(); goRoom(); })
       .catch(function () {

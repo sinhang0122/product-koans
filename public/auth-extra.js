@@ -165,6 +165,11 @@ function mountSignupExtra() {
       setNickMsg('한글 포함 2~12자, 영문·숫자는 3~12자만 사용 가능합니다. (숫자 단독 불가)', 'err');
       _nickConfirmed = ''; return;
     }
+    // 11-19: 관리자 사칭 방지 금지어 — 설정 화면(settings.html RESERVED_NICKS)과 같은 목록. 지금은 자동 닉네임이라 이 입력칸은 숨겨져 있다.
+    if (/(운영|관리|admin|koaus|대표)/i.test(nick)) {
+      setNickMsg('해당 닉네임은 관리자 사칭 방지를 위해 사용할 수 없습니다.', 'err');
+      _nickConfirmed = ''; return;
+    }
     nickCheckBtn.disabled = true; nickCheckBtn.textContent = '확인 중…';
     try {
       // nicknames/{nick.toLowerCase()} 단일 doc get — 비로그인 유저도 id 1건 조회로 중복 판별

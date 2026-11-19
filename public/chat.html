@@ -141,6 +141,13 @@
     .kc-row.me .kc-bubble   { background: var(--accent, #2563eb); color: var(--accent-text, #fff); border-bottom-right-radius: 6px; }
     .kc-row.them .kc-bubble { background: var(--bg-elevated, #eef0f3); color: var(--text-primary, #111); border-bottom-left-radius: 6px; }
     .kc-msg-time { font-size: 10.5px; color: var(--text-muted, #8e8e93); margin: 3px 4px 0; }
+    /* 11-19 채팅 안전: 방 맨 위 안내 · 위험 문구 아래 경고.
+       경고는 위험 표시에 흔히 쓰는 빨간색(사용자 지시) — 밝은 화면: 글씨 #b91c1c · 바탕 #fef2f2 · 테두리 #fecaca · 왼쪽 띠 --red(#dc2626),
+       어두운 화면: 글씨 #fca5a5 · 옅은 빨강 바탕. 글씨 대비 4.5:1 이상. */
+    .kc-safety { align-self: stretch; flex: none; font-size: 12.5px; line-height: 1.55; color: var(--text-secondary, #4b5563); background: var(--bg-card, #fff); border: 1px solid var(--border, #e0e0e0); border-radius: var(--r-btn-lg, 12px); padding: 10px 12px; word-break: keep-all; }
+    .kc-safety b { color: var(--text-primary, #111); font-weight: 800; margin-right: 6px; }
+    .kc-warn { margin: 5px 2px 0; font-size: 12px; line-height: 1.5; font-weight: 700; color: #b91c1c; background: #fef2f2; border: 1px solid #fecaca; border-left: 3px solid var(--red, #dc2626); border-radius: var(--r-btn-sm, 8px); padding: 7px 10px; word-break: keep-all; }
+    :root[data-theme="dark"] .kc-warn { color: #fca5a5; background: rgba(248, 113, 113, .12); border-color: rgba(248, 113, 113, .35); border-left-color: var(--red, #f87171); }
     /* 2026-10 메시지 삭제 표시 + 5분 내 삭제 버튼 */
     .kc-bubble.kc-deleted { background: transparent !important; color: var(--text-muted, #8e8e93) !important; border: 1px dashed var(--border, #d9d9d9); font-style: italic; }
     .kc-bubble { -webkit-touch-callout: none; }   /* 길게 누르기 → 자체 메뉴 (iOS 기본 콜아웃 억제) */
@@ -665,9 +672,11 @@
     //  · 빌링: 목록 = participants array-contains 구독 limit 20 (복합 인덱스),
     //    방 = messages orderBy createdAt desc limit 50 구독,
     //    profiles 조회는 6h LS 캐시. 전송 = writeBatch 2 write (메시지 + 요약).
-    //  · 차단: chats.blockedBy (본인 uid 만 증감 — rules 강제). 한쪽이라도
-    //    차단하면 전송 거부(rules), 읽음 처리·차단 해제만 가능.
-    //  · 신고: koaus-report.js 재사용 — board:'chat', postId=chatId.
+    //  · 차단(11-19 사람 단위): blocks/{내uid}/who/{상대uid} — 규칙이 그 둘 사이의 새 방·전송을 막는다.
+    //    방의 chats.blockedBy(본인 uid 만 증감)는 화면 표시용으로 같이 맞춘다. 읽음 처리·차단 해제만 가능.
+    //  · 신고: koaus-report.js 재사용 — board:'chat', postId=chatId#날짜(하루 한 번 다시 신고 가능). 접수 뒤 차단할지 묻는다.
+    //  · 안전(11-19): 방 맨 위 안내 한 줄 + 상대 메시지에 돈·인증번호 요구 표현이 있으면 그 아래 빨간 경고 한 줄.
+    //    문구는 방의 종류(board)에 맞게 따로 — Living "집을 직접 보기 전에는" / Job "일을 시작하기 전에는".
     // ════════════════════════════════════════════════════════════════
     import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
     import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
@@ -713,7 +722,7 @@
     const composer = $('kcComposer'), input = $('kcInput'), sendBtn = $('kcSendBtn');
     const blockedBar = $('kcBlockedBar'), blockBtn = $('kcBlockBtn'), reportBtn = $('kcReportBtn'), leaveBtn = $('kcLeaveBtn');
     const DELETE_WINDOW_MS = 5 * 60 * 1000;        // 본인 메시지 삭제 가능 창(rules 와 동일 5분)
-    const EDIT_WINDOW_MS   = 24 * 60 * 60 * 1000;   // 본인 메시지 수정 가능 창(rules 와 동일 24시간)
+    const EDIT_WINDOW_MS   = 5 * 60 * 1000;         // 본인 메시지 수정 가능 창(rules 와 동일 5분 — 11-19: 24시간 → 5분. 읽힌 뒤에 말을 바꾸지 못하게)
     function isHiddenForMe(c) { return Array.isArray(c.hiddenFor) && c.hiddenFor.indexOf(ME.uid) !== -1; }
 
     let ME = null;            // auth user
@@ -721,6 +730,12 @@
     let curChat = null;       // 열린 방 doc 데이터
     let msgs = [];            // 방 메시지 (asc)
     let listUnsub = null, msgsUnsub = null;
+    // 11-19 채팅 안전: 사람 단위 차단 — blocks/{내uid}/who/{상대uid}. 규칙이 새 방·전송을 막고, 방의 blockedBy 는 화면 표시용으로 같이 맞춘다.
+    let myBlocks = new Set();      // 내가 차단한 uid
+    let blocksReady = false;       // 목록을 읽었는가(읽지 못하면 = 규칙이 아직 옛것 → 방 단위 차단만으로 동작)
+    const blockSynced = new Set(); // 이번 접속에서 맞춰 본 방 id(같은 쓰기를 되풀이하지 않게)
+    const MIG_ID = 'legacy-migrated-1119';   // 예전 방 단위 차단을 사람 단위로 옮겼다는 표시(계정당 한 번). 차단 목록에 같이 두지만 uid 가 아니다.
+    let legacyTodo = false, listReady = false;
 
     // 게시글 딥링크 — 보드 화이트리스트 (board 값 = 파일명, koaus-contact-actions._boardOf)
     const BOARD_PAGES = ['accom', 'rent', 'jobs', 'auto', 'restaurants', 'salon', 'trades', 'gp', 'points', 'car-sale'];
@@ -829,6 +844,7 @@
         chats = snap.docs.map(s => Object.assign({ id: s.id }, s.data())).filter(c => !isHiddenForMe(c));
         renderList();
         updateUnreadLS();
+        if (!listReady) { listReady = true; migrateLegacyBlocks(); }   // 11-19: 예전 방 단위 차단 → 사람 단위(계정당 한 번)
         // 열린 방의 실시간 상태(차단/읽음) 동기화
         if (curChat) {
           const f = chats.find(x => x.id === curChat.id);
@@ -859,7 +875,7 @@
         const msgEl = document.createElement('span'); msgEl.className = 'kc-item-msg';
         msgEl.textContent = String(c.lastMsg || '대화를 시작해 보세요');
         last.appendChild(msgEl);
-        if (Array.isArray(c.blockedBy) && c.blockedBy.length) {
+        if ((Array.isArray(c.blockedBy) && c.blockedBy.length) || myBlocks.has(p.uid)) {
           const chip = document.createElement('span'); chip.className = 'kc-chip-blocked'; chip.textContent = '차단됨';
           last.appendChild(chip);
         } else if (item.className.indexOf('kc-unread') !== -1) {
@@ -939,15 +955,92 @@
     function renderRoomState() {
       if (!curChat) return;
       const bb = Array.isArray(curChat.blockedBy) ? curChat.blockedBy : [];
-      const iBlocked = bb.indexOf(ME.uid) !== -1;
-      const frozen = bb.length > 0;
+      const peer = partnerOf(curChat).uid;
+      const iBlocked = iBlockedRoom(curChat);   // 11-19: 다른 방에서 차단한 사람도 여기서 차단 상태
+      const frozen = isFrozen(curChat);
       blockBtn.textContent = iBlocked ? '차단 해제' : '차단';
       composer.classList.toggle('kc-disabled', frozen);
       sendBtn.disabled = frozen;
       blockedBar.hidden = !frozen;
       if (frozen) {
-        blockedBar.textContent = iBlocked ? '차단한 대화입니다 — 메시지를 보낼 수 없어요' : '상대방이 대화를 차단했어요';
+        blockedBar.textContent = iBlocked ? '차단한 사용자입니다 — 메시지를 보낼 수 없어요' : '상대방이 대화를 차단했어요';
       }
+      syncBlockState(curChat, peer, bb);
+    }
+    // ── 11-19 사람 단위 차단 ──
+    function iBlockedRoom(c) { return (Array.isArray(c.blockedBy) && c.blockedBy.indexOf(ME.uid) !== -1) || myBlocks.has(partnerOf(c).uid); }
+    function isFrozen(c) { return (Array.isArray(c.blockedBy) && c.blockedBy.length > 0) || myBlocks.has(partnerOf(c).uid); }
+    const blockRef = peer => doc(db, 'blocks', ME.uid, 'who', peer);
+    // 내가 사람 단위로 차단한 상대의 방인데 방 표시(blockedBy)가 아직 없으면 넣는다 — 상대 화면에도 '차단' 표시가 뜨게.
+    //   방마다 한 번, 실패해도 조용히 넘어간다. 반대 방향(방 표시만 있고 사람 단위 차단이 없는 방)은 여기서 옮기지 않는다 —
+    //   차단을 푼 뒤 목록 밖의 옛 방에 표시가 남아 있을 수 있는데, 그걸 볼 때마다 옮기면 푼 차단이 되살아난다(아래 migrateLegacyBlocks 가 한 번만 옮긴다).
+    function syncBlockState(c, peer, bb) {
+      if (!blocksReady || !c || !peer || blockSynced.has(c.id)) return;
+      blockSynced.add(c.id);
+      if (myBlocks.has(peer) && bb.indexOf(ME.uid) === -1) {
+        updateDoc(doc(db, 'chats', c.id), { blockedBy: arrayUnion(ME.uid) }).then(() => setLocalBlocked(c.id, true)).catch(() => {});
+      }
+    }
+    async function loadBlocks() {
+      try {
+        const snap = await getDocs(query(collection(db, 'blocks', ME.uid, 'who'), limit(100)));
+        const ids = snap.docs.map(s => s.id);
+        // 표시 문서(MIG_ID)는 목록에 같이 온다 — 목록이 100개로 잘렸을 때만 따로 읽어 본다(읽지 못하면 옮기지 않는다)
+        let migrated = ids.indexOf(MIG_ID) !== -1;
+        if (!migrated && ids.length >= 100) { try { migrated = (await getDoc(blockRef(MIG_ID))).exists(); } catch (_) { migrated = true; } }
+        myBlocks = new Set(ids.filter(id => id !== MIG_ID));
+        blocksReady = true;
+        legacyTodo = !migrated;
+        if (chats.length) renderList();
+        if (curChat) renderRoomState();
+        migrateLegacyBlocks();
+      } catch (_) { /* 규칙이 아직 옛것이면 읽지 못한다 — 방 단위 차단만으로 동작 */ }
+    }
+    // 11-19 이전에 방 단위로 해 둔 차단 → 사람 단위로 옮긴다. 계정당 한 번(표시 문서 MIG_ID), 최근 목록의 방과 열려 있는 방만.
+    async function migrateLegacyBlocks() {
+      if (!legacyTodo || !blocksReady || !listReady || !ME) return;
+      legacyTodo = false;
+      const peers = [];
+      chats.concat(curChat ? [curChat] : []).forEach(c => {
+        const u = partnerOf(c).uid;
+        if (u && Array.isArray(c.blockedBy) && c.blockedBy.indexOf(ME.uid) !== -1 && !myBlocks.has(u) && peers.indexOf(u) === -1) peers.push(u);
+      });
+      try {
+        await Promise.all(peers.map(u => setDoc(blockRef(u), { createdAt: serverTimestamp() }).then(() => { myBlocks.add(u); })));
+        await setDoc(blockRef(MIG_ID), { createdAt: serverTimestamp() });
+      } catch (_) { /* 표시를 남기지 못했다 — 다음 접속 때 남은 것만 다시 옮긴다 */ }
+    }
+    function roomsWith(peer) {
+      const ids = chats.filter(c => partnerOf(c).uid === peer).map(c => c.id);
+      if (curChat && partnerOf(curChat).uid === peer && ids.indexOf(curChat.id) === -1) ids.push(curChat.id);
+      return ids;
+    }
+    function setLocalBlocked(id, on) {   // 목록 구독에 없는 방(아직 메시지가 없는 방)은 서버 값이 화면에 오지 않는다 → 열린 방은 직접 맞춘다
+      if (!curChat || curChat.id !== id) return;
+      const bb = (Array.isArray(curChat.blockedBy) ? curChat.blockedBy : []).filter(u => u !== ME.uid);
+      if (on) bb.push(ME.uid);
+      curChat = Object.assign({}, curChat, { blockedBy: bb });
+    }
+    async function blockUser(peer) {
+      let okUser = false, okRoom = false;
+      try { await setDoc(blockRef(peer), { createdAt: serverTimestamp() }); okUser = true; }
+      catch (_) { try { const s = await getDoc(blockRef(peer)); okUser = !!(s && s.exists()); } catch (_2) {} }   // 이미 차단해 둔 사람이면 성공으로 본다
+      const ids = roomsWith(peer);
+      await Promise.all(ids.map(id => updateDoc(doc(db, 'chats', id), { blockedBy: arrayUnion(ME.uid) })
+        .then(() => { okRoom = true; setLocalBlocked(id, true); }).catch(() => {})));
+      if (!okUser && !okRoom) throw new Error('block-failed');
+      if (okUser) myBlocks.add(peer);
+      ids.forEach(id => blockSynced.add(id));
+    }
+    async function unblockUser(peer) {
+      let okUser = false, okRoom = false;
+      try { await deleteDoc(blockRef(peer)); okUser = true; } catch (_) {}
+      const ids = roomsWith(peer);
+      await Promise.all(ids.map(id => updateDoc(doc(db, 'chats', id), { blockedBy: arrayRemove(ME.uid) })
+        .then(() => { okRoom = true; setLocalBlocked(id, false); }).catch(() => {})));
+      if (!okUser && !okRoom) throw new Error('unblock-failed');
+      if (okUser || !blocksReady) myBlocks.delete(peer);
+      ids.forEach(id => blockSynced.add(id));
     }
     function markRead(c) {
       if (Array.isArray(c.unreadFor) && c.unreadFor.indexOf(ME.uid) !== -1) {
@@ -982,8 +1075,44 @@
         if (curChat) markRead(curChat);
       }, err => { console.warn('[chat] 메시지 구독 실패', err); });
     }
+    // 11-19 채팅 안전: 상대가 보낸 말에 돈을 먼저 요구하거나 인증번호를 묻는 표현이 있으면 그 아래에 한 줄 경고(막지는 않는다)
+    //   '먼저 보내'처럼 돈이 아닌 말(사진·주소)에도 흔한 표현은 넣지 않는다 — 돈을 가리키는 말과 함께일 때만.
+    const RISK_MONEY = /(선입금|먼저\s*(입금|송금|이체)|돈(을|은|이|도)?\s*(먼저|부터)|(보증금|디파짓|본드|방값|렌트비|deposit|bond)[^\n]{0,12}(먼저|부터|first|before|upfront)|(교육비|소개비|등록비|가입비|유니폼비)[^\n]{0,12}(먼저|입금|송금|이체|보내|내야|내셔야)|계좌\s*번호|\bbsb\b|pay\s?id|송금\s*해|입금\s*해|이체\s*해|gift\s?card|기프트\s*카드|상품권)/i;
+    const RISK_CODE  = /(인증\s*번호|인증\s*코드|verification\s*code|\botp\b)/i;
+    // 문구는 방의 종류에 맞게 따로(사용자 지시 11-19 — Living 과 Job 은 떨어져 있다): 쉐어·렌트·집 구하는 사람 = living, 구인구직·일 구하는 사람 = job, 그 밖 = etc
+    function sectionOf(c) { const b = String((c && c.board) || ''); return (b === 'jobs' || b === 'jobseeker') ? 'job' : (b === 'accom' || b === 'rent' || b === 'seeker') ? 'living' : 'etc'; }
+    const SAFETY_TEXT = {
+      living: '집을 직접 보기 전에는 돈을 보내지 마십시오.',
+      job:    '일을 시작하기 전에는 돈을 보내지 마십시오.',
+      etc:    '직접 확인하기 전에는 돈을 보내지 마십시오.',
+    };
+    const SAFETY_TAIL = ' KoAus 운영자는 채팅으로 돈이나 인증번호를 요구하지 않습니다.';
+    const MONEY_WARN = {
+      living: '주의: 집을 보기 전에 돈을 먼저 요구하면 사기일 수 있습니다.',
+      job:    '주의: 일을 시작하기 전에 돈을 먼저 요구하면 사기일 수 있습니다.',
+      etc:    '주의: 직접 확인하기 전에 돈을 먼저 요구하면 사기일 수 있습니다.',
+    };
+    function riskOf(text, sec) {
+      const t = String(text || '');
+      if (RISK_CODE.test(t)) return '주의: 인증번호는 누구에게도 알려 주지 마십시오.';
+      if (RISK_MONEY.test(t)) return MONEY_WARN[sec] || MONEY_WARN.etc;
+      return '';
+    }
     function renderMsgs() {
       msgsBox.textContent = '';
+      const safety = document.createElement('div'); safety.className = 'kc-safety';
+      const sb = document.createElement('b'); sb.textContent = '안전 안내';
+      safety.appendChild(sb);
+      const sec = sectionOf(curChat);
+      safety.appendChild(document.createTextNode((SAFETY_TEXT[sec] || SAFETY_TEXT.etc) + SAFETY_TAIL));
+      msgsBox.appendChild(safety);
+      // 경고는 방마다 가장 최근의 위험 문구 하나에만(화면이 경고로 덮이지 않게)
+      let warnId = '', warnText = '';
+      for (let i = msgs.length - 1; i >= 0; i--) {
+        const x = msgs[i];
+        if (x.senderUid === ME.uid || x.deleted === true) continue;
+        const w = riskOf(x.text, sec); if (w) { warnId = x.id; warnText = w; break; }
+      }
       msgs.forEach(m => {
         const row = document.createElement('div');
         row.className = 'kc-row ' + (m.senderUid === ME.uid ? 'me' : 'them');
@@ -997,6 +1126,7 @@
         const t = document.createElement('div'); t.className = 'kc-msg-time';
         t.textContent = fmtTime(m.createdAt) + (m.edited === true && m.deleted !== true ? ' · 수정됨' : '');
         row.appendChild(b); row.appendChild(t);
+        if (warnId && m.id === warnId) { const w = document.createElement('div'); w.className = 'kc-warn'; w.textContent = warnText; row.appendChild(w); }
         if (m.deleted !== true) attachLongPress(b, m);   // 길게 누르기(모바일) / 우클릭(데스크탑) → 복사·공유·수정·삭제
         msgsBox.appendChild(row);
       });
@@ -1004,7 +1134,7 @@
     }
 
     // ── 2026-10 메시지 액션 시트 — 카톡처럼 길게 누르면(데스크탑은 우클릭) 복사 · 공유 · 수정 · 삭제 ──
-    //   수정·삭제는 본인 메시지 + 보낸 지 5분 이내에만 노출(rules 가 같은 조건으로 재검증). 수정은 '수정됨' 표시 강제.
+    //   수정·삭제는 본인 메시지 + 보낸 지 5분 이내에만 노출(rules 가 같은 조건으로 재검증 — 11-19 부터 수정도 5분). 수정은 '수정됨' 표시 강제.
     const sheetOvl = document.createElement('div'); sheetOvl.className = 'kc-sheet-ovl';
     sheetOvl.innerHTML = '<div class="kc-sheet" role="menu"><div class="kc-sheet-prev" id="kcSheetPrev"></div>'
       + '<button type="button" data-act="copy">복사</button>'
@@ -1068,7 +1198,7 @@
     composer.parentNode.insertBefore(editBar, composer);
     $('kcEditCancel').addEventListener('click', () => cancelEdit());
     function startEdit(m) {
-      if (!canEdit(m)) { toast('보낸 지 24시간이 지난 메시지는 수정할 수 없습니다'); return; }
+      if (!canEdit(m)) { toast('보낸 지 5분이 지난 메시지는 수정할 수 없습니다'); return; }
       editingMsg = m; editBar.classList.add('open');
       input.value = String(m.text || ''); input.focus();
       input.style.height = 'auto'; input.style.height = Math.min(input.scrollHeight, 120) + 'px';
@@ -1089,7 +1219,7 @@
       } catch (err) {
         console.warn('[chat] 메시지 수정 실패', err);
         const denied = err && (err.code === 'permission-denied' || /permission/i.test(err.message || ''));
-        toast(denied ? '보낸 지 24시간이 지난 메시지는 수정할 수 없습니다' : '수정 실패 — 잠시 후 다시 시도해 주세요');
+        toast(denied ? '보낸 지 5분이 지난 메시지는 수정할 수 없습니다' : '수정 실패 — 잠시 후 다시 시도해 주세요');
       }
     }
 
@@ -1138,7 +1268,7 @@
       const text = (input.value || '').trim().slice(0, 1000);
       if (!text) return;
       if (editingMsg) { await submitEdit(text); return; }   // 수정 모드면 새 메시지 대신 updateDoc
-      if (Array.isArray(curChat.blockedBy) && curChat.blockedBy.length) { toast('차단된 대화입니다'); return; }
+      if (isFrozen(curChat)) { toast('차단된 대화입니다'); return; }
       sendBtn.disabled = true;
       try {
         const other = partnerOf(curChat).uid;
@@ -1160,7 +1290,7 @@
         const denied = err && (err.code === 'permission-denied' || /permission/i.test(err.message || ''));
         toast(denied ? '메시지를 보낼 수 없어요 (차단 또는 권한 없음)' : '전송 실패 — 잠시 후 다시 시도해 주세요');
       } finally {
-        sendBtn.disabled = curChat && Array.isArray(curChat.blockedBy) && curChat.blockedBy.length > 0;
+        sendBtn.disabled = !!(curChat && isFrozen(curChat));
         input.focus();
       }
     });
@@ -1180,11 +1310,13 @@
     // ── 차단 / 신고 ──
     blockBtn.addEventListener('click', async () => {
       if (!ME || !curChat) return;
-      const iBlocked = Array.isArray(curChat.blockedBy) && curChat.blockedBy.indexOf(ME.uid) !== -1;
-      if (!iBlocked && !confirm('이 사용자를 차단할까요?\n서로 메시지를 보낼 수 없게 됩니다. (차단 해제 가능)')) return;
+      const peer = partnerOf(curChat).uid;
+      const iBlocked = iBlockedRoom(curChat);
+      if (!iBlocked && !confirm('이 사용자를 차단할까요?\n이 사람과의 모든 대화에서 서로 메시지를 보낼 수 없고, 상대가 새 대화를 열 수도 없습니다. (차단 해제 가능)')) return;
       blockBtn.disabled = true;
       try {
-        await updateDoc(doc(db, 'chats', curChat.id), { blockedBy: iBlocked ? arrayRemove(ME.uid) : arrayUnion(ME.uid) });
+        if (iBlocked) await unblockUser(peer); else await blockUser(peer);   // 11-19: 방 단위 → 사람 단위
+        renderRoomState(); renderList();
         toast(iBlocked ? '차단을 해제했어요' : '차단했어요');
       } catch (err) {
         console.warn('[chat] 차단 처리 실패', err);
@@ -1195,11 +1327,20 @@
       if (!curChat || !window.koausReport) return;
       const p = partnerOf(curChat);
       const excerpt = msgs.filter(m => m.senderUid !== ME.uid).slice(-3).map(m => String(m.text || '')).join(' / ').slice(0, 300);
+      // 11-19: 신고 문서 ID = {postId}_{신고자uid} 라 같은 방은 한 번밖에 못 했다 → 날짜를 붙여 하루 한 번 다시 신고할 수 있게
+      const d = new Date(), ymd = '' + d.getFullYear() + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0');
+      const rid = (curChat.id.length <= 90) ? curChat.id + '#' + ymd : curChat.id;   // 규칙의 postId 100자 한도 안에서만
+      const chatAt = curChat.id;
       window.koausReport.open({
-        postId: curChat.id, board: 'chat',
+        postId: rid, board: 'chat',
         postTitle: ('[채팅] ' + p.nick + ' — ' + String(curChat.postTitle || '')).slice(0, 200),
         postAuthorUid: p.uid,
         postBodyExcerpt: excerpt,
+        onDone: () => {   // 접수 뒤: 아직 차단하지 않았으면 차단할지 묻는다
+          if (!ME || !curChat || curChat.id !== chatAt || iBlockedRoom(curChat)) return;
+          if (!confirm('신고가 접수되었습니다.\n이 사용자를 차단할까요?')) return;
+          blockUser(p.uid).then(() => { renderRoomState(); renderList(); toast('차단했어요'); }).catch(() => { toast('처리 실패 — 잠시 후 다시 시도해 주세요'); });
+        },
       });
     });
 
@@ -1224,6 +1365,7 @@
       document.body.classList.toggle('kc-auth', !!user);   // 데스크톱 분할 표시 조건
       if (!user) {
         if (listUnsub) { try { listUnsub(); } catch (_) {} listUnsub = null; }
+        myBlocks = new Set(); blocksReady = false; blockSynced.clear(); legacyTodo = false; listReady = false;
         showList();
         listView.style.display = 'none';
         loginReq.style.display = '';
@@ -1236,6 +1378,7 @@
       if (tlb) tlb.textContent = nick;
       syncMyProfile(user);
       startList();
+      loadBlocks();   // 11-19 사람 단위 차단
       openFromUrl();
     });
   </script>
