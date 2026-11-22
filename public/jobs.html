@@ -1349,8 +1349,20 @@
       document.addEventListener('webkitfullscreenchange', onFsChange);
     })();
 
-    function deletePost(id) {
+    // 11-21: 삭제도 서버에 반영한다(쉐어·렌트와 같은 koausRbac.selfDelete). 전에는 기기의 목록에서만 지워져 새로 고치면 다시 나타났다.
+    async function deletePost(id) {
       if (!confirm('정말 이 게시글을 삭제하시겠습니까?')) return;
+      const post = loadPosts().find(x => String(x.id) === String(id));
+      const fsDocId = post && post._fsDocId;
+      if (fsDocId && window.koausRbac && window.koausRbac.selfDelete) {
+        try {
+          await window.koausRbac.selfDelete('jobs_posts', String(fsDocId));
+        } catch (e) {
+          console.error('[jobs] Firestore 삭제 실패', e);
+          alert('삭제 실패: ' + (e?.code || e?.message || e));
+          return;
+        }
+      }
       savePosts(loadPosts().filter(x => String(x.id) !== String(id)));
       removeRecord(MYPOSTS_KEY, id);
       removeRecord(SAVED_KEY, id);
@@ -1409,6 +1421,7 @@
     });
     const writeOverlay = document.getElementById('writeOverlay');
     let editingId = null;  // 수정 중인 글 id
+    let editingPost = null;   // 11-21: 수정 중인 글의 원래 값(서버 문서 id · 주소가 그대로인지 확인용)
 
     function setWriteMode(mode) {
       const isEdit = mode === 'edit';
@@ -1424,7 +1437,7 @@
       if (hidden) hidden.value = nick;
     }
     function openWriteModal() {
-      editingId = null;
+      editingId = null; editingPost = null;
       setWriteMode('create');
       fillAuthorBadge();
       applyDuplicateData();   // ?duplicate=1 진입 시 원본 데이터 prefill
@@ -1459,7 +1472,7 @@
       if (_veSet) _veSet.checked = !!d.visaEligible;
     }
     function openWriteModalForEdit(p) {
-      editingId = p.id;
+      editingId = p.id; editingPost = p;
       document.getElementById(p.postType === 'seeking' ? 'wPostTypeSeeking' : 'wPostTypeHiring').checked = true;
       document.getElementById('wTitle').value   = p.title || '';
       document.getElementById('wBody').value    = p.body || '';
@@ -1470,6 +1483,7 @@
       const elVe = document.getElementById('wVisaEligible'); if (elVe) elVe.checked  = !!p.visaEligible;
       const elCa = document.getElementById('wChatAllowed');  if (elCa) elCa.checked  = p.chatAllowed === true;   // 옛 글(필드 없음) = 해제 상태
       const elAd = document.getElementById('wAddress');     if (elAd) elAd.value     = p.address    || '';
+      if (elAd) { delete elAd.dataset.lat; delete elAd.dataset.lng; }   // 11-21: 앞서 다른 글에서 고른 주소의 좌표가 남아 이 글에 붙지 않게
       const elEt = document.getElementById('wEmpType');     if (elEt) elEt.value     = p.empType    || '';
       const elPu = document.getElementById('wPayUnit');     if (elPu) elPu.value     = p.payUnit    || 'hour';
       const elPa = document.getElementById('wPayAmount');   if (elPa) elPa.value     = p.payAmount || '';
@@ -1604,7 +1618,13 @@
         // ── 3) 주소 → 좌표: Places Autocomplete 위젯이 미리 채워둔 dataset.lat/lng 우선,
         //      직접 타이핑 후 선택 안 한 경우 geocode 로 폴백 (best-effort) ──
         let lat = 0, lng = 0;
-        if (elAddress && elAddress.dataset.lat && elAddress.dataset.lng) {
+        // 11-21: 수정이고 주소를 바꾸지 않았으면 좌표를 다시 찾지 않고 그대로 둔다(다시 찾다 실패해 0,0 으로 덮어쓰지 않게)
+        const _orig = (editingId != null) ? editingPost : null;
+        const _addrSame = !!_orig && address === String(_orig.address || '').trim();
+        if (_addrSame) {
+          lat = Number(_orig.lat) || 0;
+          lng = Number(_orig.lng) || 0;
+        } else if (elAddress && elAddress.dataset.lat && elAddress.dataset.lng) {
           lat = Number(elAddress.dataset.lat);
           lng = Number(elAddress.dataset.lng);
         } else if (address && typeof geocode === 'function') {
@@ -1615,13 +1635,31 @@
         // ── 4) 로컬 저장 (Firestore 실패해도 본인 기기에는 보임) ──
         const posts = loadPosts();
         if (editingId != null) {
+          // 11-21: 수정은 서버(jobs_posts)에 저장한다. 전에는 기기에 있는 목록만 고쳐서 새로 고치면 수정이 사라졌고,
+          //        없는 변수(email)를 읽어 '글 등록 중 오류가 발생했습니다 — email is not defined' 로 끝났다.
+          //        보내는 칸은 규칙 validJobsUpdate 의 목록 안에 있어야 한다(칸을 더하면 규칙도 같이).
           const idx = posts.findIndex(x => String(x.id) === String(editingId));
-          if (idx >= 0) {
-            Object.assign(posts[idx], { postType, title, body: bodySafe, contact, phone, kakaoLink, contactEmail, email, visaEligible, chatAllowed, category, empType, payUnit, payAmount, address, lat, lng });
-            savePosts(posts);
-            recordMyPost(posts[idx]);
+          const cur = idx >= 0 ? posts[idx] : null;
+          const patch = { postType, title, body: bodySafe, contact, phone, kakaoLink, contactEmail, visaEligible, chatAllowed, empType, payUnit, payAmount, address };
+          if (elCategory) patch.category = category;            // 직종 칸이 폼에 있을 때만(없으면 기존 값 유지)
+          if (!_addrSame) { patch.lat = lat; patch.lng = lng; }   // 주소를 바꿨을 때만 좌표도 바꾼다
+          const fsId = (cur && cur._fsDocId) || (_orig && _orig._fsDocId) || '';
+          if (fsId) {
+            if (!(window.koausJobs && window.koausJobs.update)) { alert('Firestore 연결이 아직 준비되지 않았습니다. 잠시 후 다시 시도해 주세요.'); return; }
+            try {
+              await window.koausJobs.update(String(fsId), patch);
+            } catch (error) {
+              console.error('[jobs] 수정 실패', error);
+              alert('수정 실패: ' + ((error && (error.code || error.message)) || error));
+              return;   // 창을 닫지 않는다 — 쓴 내용이 남아 있어 다시 시도할 수 있다
+            }
           }
-          editingId = null;
+          if (cur) {
+            Object.assign(cur, patch);
+            savePosts(posts);
+            recordMyPost(cur);
+          }
+          editingId = null; editingPost = null;
         } else {
           const post = {
             id: Date.now(), postType, title, body: bodySafe,
@@ -1642,6 +1680,8 @@
               .then(ref => console.log('Firestore 저장 성공 docId =', ref && ref.id))
               .catch(error => {
                 console.error('Firestore 전송 실패 원인: ', error);
+                // 11-21: 저장에 실패한 글은 이 기기의 목록에서도 뺀다(전에는 이 기기에만 계속 남아, 올라간 것처럼 보였다)
+                try { savePosts(loadPosts().filter(x => String(x.id) !== String(post.id))); removeRecord(MYPOSTS_KEY, post.id); renderPosts(); } catch (_) {}
                 alert('서버 저장 실패\n코드: ' + (error.code || '-') + '\n메시지: ' + (error.message || error) + '\n\n글은 본인 기기에는 표시됩니다. Firestore 콘솔에서 규칙 배포 여부와 jobs_posts 컬렉션 권한을 확인해 주세요.');
               });
           } else {
@@ -1857,7 +1897,9 @@
     // ── 필터 (직종/근무형태/급여/지역) + applyFilters ──
     function applyFilters(posts) {
       // 지시 8/10 — 숨김(hidden) 처리 글은 모든 뷰(List/Map)에서 즉시 제외
-      posts = posts.filter(p => !(p.isHidden || p.status === 'hidden'));
+      // 11-21: 삭제한 글(deleted) · 마감한 글(completed · closed)도 내린다. 구인 글은 status 없이 만들어져 목록 조회가 status 로 거르지 못한다
+      //        (쉐어·렌트는 조회 조건 status=='approved' 가 걸러 준다) — 전에는 삭제·마감해도 목록에 그대로 남았다.
+      posts = posts.filter(p => !(p.isHidden || p.status === 'hidden' || p.status === 'deleted' || p.status === 'completed' || p.status === 'closed'));
       return posts.filter(p => {
         if (areaBounds) {
           if (!(p.lat && p.lng) || !areaBounds.contains({ lat:p.lat, lng:p.lng })) return false;
@@ -2217,7 +2259,7 @@
       createUserWithEmailAndPassword, signInWithEmailAndPassword,
     } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
     import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app-check.js';
-    import { getFirestore, collection, addDoc, setDoc, getDoc, onSnapshot, query, orderBy, limit, serverTimestamp, where, getDocs, doc, deleteDoc, startAfter, getDocsFromServer } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
+    import { getFirestore, collection, addDoc, setDoc, getDoc, onSnapshot, query, orderBy, limit, serverTimestamp, where, getDocs, doc, deleteDoc, startAfter, getDocsFromServer, updateDoc } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js';
 
     const firebaseConfig = {
       apiKey:            'AIzaSyCamqnt0bNUD9uz1N5BbCuQjSkWLSpPqlU',
@@ -2413,6 +2455,12 @@
     // 글쓰기 인라인 스크립트에서 사용할 write 헬퍼
     // 컬렉션은 무조건 'jobs_posts' (Firestore rules의 /jobs_posts/{postId}와 일치)
     window.koausJobs = {
+      // 11-21: 글 수정 — 바뀐 칸만 보낸다(updatedAt 은 서버 시각. 규칙이 그렇게 요구한다)
+      update: async (fsDocId, patch) => {
+        const u = auth.currentUser;
+        if (!u) throw Object.assign(new Error('로그인 필요'), { code: 'auth/not-signed-in' });
+        await updateDoc(doc(db, 'jobs_posts', String(fsDocId)), { ...patch, updatedAt: serverTimestamp() });
+      },
       write: async (post) => {
         const u = auth.currentUser;
         if (!u) {

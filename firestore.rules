@@ -4,7 +4,7 @@ rules_version = '2';
 //  KoAus · Firestore 보안 규칙
 //  목적: 봇/매크로의 무한 읽기·쓰기로 인한 요금 폭탄(Billing Shock) 방어
 //   - 쓰기(create): 로그인 + 필수 필드/타입/길이 검증 + 본인 소유만 허용
-//   - 수정/삭제(update/delete): 글 작성자 본인만
+//   - 수정/삭제(update/delete): 글 작성자 본인만 — 수정은 바뀌는 칸의 목록·종류·길이도 검사(2026-11-21)
 //   - 목록 읽기(list): 한 번에 최대 20개까지만 (페이지네이션 강제)
 //   - 정의되지 않은 모든 경로: 기본 거부(deny-all)
 //  배포:  firebase deploy --only firestore:rules
@@ -154,6 +154,15 @@ service cloud.firestore {
     function pOptBool(d, field) {
       return !(field in d) || d[field] is bool;
     }
+    // 선택 수(정수·소수 모두): 없거나 / 있으면 number + 범위 안 — 시급처럼 센트가 붙는 값(11-21)
+    function pOptNum(d, field, minVal, maxVal) {
+      return !(field in d) || (d[field] is number && d[field] >= minVal && d[field] <= maxVal);
+    }
+    // 좌표 칸(lat · lng): 없거나 null 이거나 수(11-21) — 글자를 넣어 지도 그리기를 깨뜨리는 것을 막는다. 새 글·수정 공통.
+    function latLngOk(d) {
+      return (d.get('lat', null) == null || d.lat is number)
+          && (d.get('lng', null) == null || d.lng is number);
+    }
     // 전 게시판 공통 메타/연락처 검증 (소유자 위조 차단 포함)
     function validBaseCreate(d) {
       return isVerifiedUser() && 'uid' in d && d.uid == request.auth.uid
@@ -194,6 +203,7 @@ service cloud.firestore {
         && pOptList(d, 'imageUrls', 8)
         && pOptList(d, 'types', 10)
         && pOptList(d, 'roomTypes', 10)
+        && latLngOk(d)   // 11-21: 좌표는 없거나 null 이거나 수
         && d.keys().hasOnly([
              'uid', 'authorUid', 'author',
              'state', 'status', 'date', 'time', 'createdAt', 'updatedAt', 'id',
@@ -212,10 +222,11 @@ service cloud.firestore {
         && pOptStr(d, 'category', 40)
         && pOptStr(d, 'empType', 30)
         && pOptStr(d, 'payUnit', 20)
-        && pOptInt(d, 'payAmount', 0, 9999999)
+        && pOptNum(d, 'payAmount', 0, 9999999)   // 11-21: 정수만 받던 것을 소수도(시급 28.5 같은 값이 등록 거부되던 것)
         && pOptBool(d, 'visaEligible')
         && pOptBool(d, 'chatAllowed')
         && pOptList(d, 'imageUrls', 8)
+        && latLngOk(d)   // 11-21: 좌표는 없거나 null 이거나 수
         && d.keys().hasOnly([
              'uid', 'authorUid', 'author',
              'state', 'status', 'date', 'time', 'createdAt', 'updatedAt', 'id',
@@ -247,6 +258,7 @@ service cloud.firestore {
         && pOptBool(d, 'locationPrivate')
         && pOptBool(d, 'chatAllowed')
         && pOptList(d, 'imageUrls', 8)
+        && latLngOk(d)   // 11-21: 좌표는 없거나 null 이거나 수
         && d.keys().hasOnly([
              'uid', 'authorUid', 'author',
              'state', 'status', 'date', 'time', 'createdAt', 'updatedAt', 'id',
@@ -295,6 +307,7 @@ service cloud.firestore {
         && pOptBool(d, 'chatAllowed')
         && pOptBool(d, 'avatarHidden')
         && pOptList(d, 'imageUrls', 10)
+        && latLngOk(d)   // 11-21: 좌표는 없거나 null 이거나 수
         && d.keys().hasOnly([
              'uid', 'authorUid', 'author',
              'state', 'status', 'date', 'time', 'createdAt', 'updatedAt', 'id',
@@ -392,6 +405,186 @@ service cloud.firestore {
         || request.resource.data.status == 'deleted';   // 소프트삭제(작성자 본인 글 — 사기 추적 보관). adminBlindLock/uidLocked 는 유지
     }
 
+    // ════════════════════════════════════════════════════════════════
+    // 글 수정(update) 검증 — 2026-11-21 (보안 점검 '높음' 항목)
+    //   전에는 글 주인이 자기 글을 고칠 때 규칙이 칸의 종류·길이를 다시 보지 않았고 모르는 칸도 넣을 수 있었다
+    //   (가격에 글자 · 수 MB 본문 · email 칸 · 목록 맨 위로 올리려는 createdAt 변경 등). 화면은 11-15a 에서 막았고, 여기서 규칙도 막는다.
+    //   ① 바뀌는 칸은 게시판마다 정한 목록 안에서만(affectedKeys().hasOnly). 목록에 없는 uid · authorUid · createdAt · date · time · id ·
+    //      운영자 칸(hiddenBy 등) · isPremium 은 글 주인이 바꿀 수 없다. '바뀐 칸'만 보므로 예전 글에 남아 있는 칸이 수정을 막지는 않는다.
+    //   ② 숨김 · 다시 노출 · 완료 · 삭제(status · isHidden · hiddenAt · completedAt · deletedAt 만 바뀌는 요청)는 내용 검사를 하지 않는다 —
+    //      예전 글의 내용이 지금 기준에 안 맞더라도 글을 내리는 것은 언제나 된다.
+    //   ③ 그 밖의 수정은 고친 뒤 문서의 칸이 새 글과 같은 종류·길이여야 한다(validXxxUpdate — 기준은 validXxxCreate 와 같다).
+    //      ⚠️ 글쓰기 폼에 칸을 더하면 create 검증기와 update 검증기 두 곳(검사 + 칸 목록)을 같이 고친다 — 한쪽만 고치면 새 글은 되는데 수정이 거부된다.
+    //   ④ 시각 칸은 바뀔 때 서버 시각이어야 한다(updatedAt · completedAt · deletedAt · hiddenAt — hiddenAt 은 다시 노출할 때 null).
+    //   ⑤ 좌표(lat · lng)는 없거나 null 이거나 수(latLngOk) — 새 글(create)에도 같은 검사를 넣었다.
+    //   기존 잠금(uidLocked · noModeratorFieldChange · statusAllowedForOwner · adminBlindLock)은 그대로 두고 검사를 하나 더한 것이다.
+    //   표현식 한도(요청당 1,000): 수정은 잠금 검사가 앞에 붙어 새 글보다 여유가 적다. 그래서 pOpt*(d, 칸, …) 대신 값을 넘겨받는 가벼운
+    //   검사 uStr · uInt · uList 를 쓴다 — 없는 칸은 d.get(칸, 기본값) 으로 기본값이 되어 통과한다(= '없거나, 있으면 종류·길이' 와 같은 뜻).
+    //   rules-test.js ⑨ 의 '모든 칸 수정' 경우가 한도를 감시한다. 여기에 검사를 더할 때는 그 경우부터 돌려 볼 것.
+    // ════════════════════════════════════════════════════════════════
+    function uStr(v, maxLen) {
+      return v is string && v.size() <= maxLen;
+    }
+    function uInt(v, minVal, maxVal) {
+      return v is int && v >= minVal && v <= maxVal;
+    }
+    function uList(v, maxCount) {
+      return v is list && v.size() <= maxCount;
+    }
+    function postLifecycleOnly(aff) {
+      return aff.hasOnly(['status', 'isHidden', 'hiddenAt', 'completedAt', 'deletedAt']);
+    }
+    function postStampsOk(d, aff) {
+      return (!aff.hasAny(['updatedAt'])   || d.updatedAt == request.time)
+          && (!aff.hasAny(['completedAt']) || d.completedAt == request.time)
+          && (!aff.hasAny(['deletedAt'])   || d.deletedAt == request.time)
+          && (!aff.hasAny(['hiddenAt'])    || d.hiddenAt == null || d.hiddenAt == request.time)
+          && d.get('isHidden', false) is bool;
+    }
+    // 전 게시판 공통 칸 — 기준은 validBaseCreate 와 같다(본인 확인·정지 여부는 update 규칙의 ownerOnExisting() 이 맡는다)
+    function postBaseFieldsOk(d) {
+      return uStr(d.get('title', ''), 120)
+        && d.get('title', '').trim().size() >= 1
+        && uStr(d.get('body', ''), 5000)
+        && d.get('body', '').size() >= 1
+        && uStr(d.get('state', ''), 10)
+        && uStr(d.get('mode', ''), 20)
+        && uStr(d.get('address', ''), 300)
+        && uStr(d.get('contact', ''), 100)
+        && uStr(d.get('phone', ''), 30)
+        && uStr(d.get('kakaoLink', ''), 500)
+        && uStr(d.get('author', ''), 50)
+        && uStr(d.get('contactEmail', ''), 200);
+    }
+    // accom(쉐어) + rent(렌트) 수정 — validShareRentCreate 와 짝
+    function validShareRentUpdate(d, aff) {
+      return postStampsOk(d, aff)
+        && ( postLifecycleOnly(aff)
+             || ( aff.hasOnly([
+                    'status', 'isHidden', 'hiddenAt', 'completedAt', 'deletedAt', 'updatedAt', 'author', 'state',
+                    'title', 'body', 'mode', 'contact', 'phone', 'kakaoLink', 'contactEmail',
+                    'address', 'lat', 'lng', 'locationPrivate', 'chatAllowed', 'imageUrls',
+                    'propType', 'types', 'roomTypes', 'gender', 'availableDate', 'minStay',
+                    'bedrooms', 'bathrooms', 'carSpaces',
+                    'parking', 'petFriendly', 'kidsInHouse', 'airCon', 'price'
+                  ])
+                  && postBaseFieldsOk(d)
+                  && uStr(d.get('propType', ''), 30)
+                  && uStr(d.get('minStay', ''), 10)
+                  && uStr(d.get('gender', ''), 20)
+                  && uStr(d.get('availableDate', ''), 30)
+                  && uInt(d.get('price', 0), 0, 9999999)
+                  && uInt(d.get('bedrooms', 0), 0, 20)
+                  && uInt(d.get('bathrooms', 0), 0, 20)
+                  && uInt(d.get('carSpaces', 0), 0, 20)
+                  && d.get('parking', false) is bool
+                  && d.get('petFriendly', false) is bool
+                  && d.get('kidsInHouse', false) is bool
+                  && d.get('airCon', false) is bool
+                  && d.get('locationPrivate', false) is bool
+                  && d.get('chatAllowed', false) is bool
+                  && uList(d.get('imageUrls', []), 8)
+                  && uList(d.get('types', []), 10)
+                  && uList(d.get('roomTypes', []), 10)
+                  && latLngOk(d) ) );
+    }
+    // jobs(구인구직) 수정 — validJobsCreate 와 짝
+    function validJobsUpdate(d, aff) {
+      return postStampsOk(d, aff)
+        && ( postLifecycleOnly(aff)
+             || ( aff.hasOnly([
+                    'status', 'isHidden', 'hiddenAt', 'completedAt', 'deletedAt', 'updatedAt', 'author', 'state',
+                    'title', 'body', 'mode', 'contact', 'phone', 'kakaoLink', 'contactEmail',
+                    'address', 'lat', 'lng', 'imageUrls',
+                    'postType', 'category', 'empType', 'payUnit', 'payAmount', 'visaEligible', 'chatAllowed'
+                  ])
+                  && postBaseFieldsOk(d)
+                  && uStr(d.get('postType', ''), 20)
+                  && uStr(d.get('category', ''), 40)
+                  && uStr(d.get('empType', ''), 30)
+                  && uStr(d.get('payUnit', ''), 20)
+                  && pOptNum(d, 'payAmount', 0, 9999999)
+                  && d.get('visaEligible', false) is bool
+                  && d.get('chatAllowed', false) is bool
+                  && uList(d.get('imageUrls', []), 8)
+                  && latLngOk(d) ) );
+    }
+    // auto(차량) 수정 — validAutoCreate 와 짝. isPremium 은 목록에 없다(글 주인이 스스로 켤 수 없다)
+    function validAutoUpdate(d, aff) {
+      return postStampsOk(d, aff)
+        && ( postLifecycleOnly(aff)
+             || ( aff.hasOnly([
+                    'status', 'isHidden', 'hiddenAt', 'completedAt', 'deletedAt', 'updatedAt', 'author', 'state',
+                    'title', 'body', 'mode', 'contact', 'phone', 'kakaoLink', 'contactEmail',
+                    'address', 'lat', 'lng', 'locationPrivate', 'chatAllowed', 'imageUrls',
+                    'category', 'region', 'brand', 'model', 'year', 'mileage',
+                    'rwc', 'regoExpiry', 'hours', 'timeSlot',
+                    'inspectionAvailable', 'inspectionPrice',
+                    'emergencyAvailable', 'emergencyPrice', 'price'
+                  ])
+                  && postBaseFieldsOk(d)
+                  && uStr(d.get('category', ''), 40)
+                  && uStr(d.get('region', ''), 300)
+                  && uStr(d.get('brand', ''), 40)
+                  && uStr(d.get('model', ''), 60)
+                  && uStr(d.get('year', ''), 10)
+                  && uStr(d.get('mileage', ''), 20)
+                  && uStr(d.get('rwc', ''), 20)
+                  && uStr(d.get('regoExpiry', ''), 20)
+                  && uStr(d.get('hours', ''), 60)
+                  && uStr(d.get('timeSlot', ''), 60)
+                  && uInt(d.get('price', 0), 0, 9999999)
+                  && uInt(d.get('inspectionPrice', 0), 0, 9999999)
+                  && uInt(d.get('emergencyPrice', 0), 0, 9999999)
+                  && d.get('inspectionAvailable', false) is bool
+                  && d.get('emergencyAvailable', false) is bool
+                  && d.get('locationPrivate', false) is bool
+                  && d.get('chatAllowed', false) is bool
+                  && uList(d.get('imageUrls', []), 8)
+                  && latLngOk(d) ) );
+    }
+    // daily(일상 자기 PR 보드) 수정 — validDailyCreate 와 짝(주소·링크 검사는 그쪽 식 그대로)
+    function validDailyUpdate(d, aff) {
+      return postStampsOk(d, aff)
+        && ( postLifecycleOnly(aff)
+             || ( aff.hasOnly([
+                    'status', 'isHidden', 'hiddenAt', 'completedAt', 'deletedAt', 'updatedAt', 'author', 'state',
+                    'title', 'body', 'category', 'intro', 'closing', 'comment',
+                    'address', 'lat', 'lng', 'locationPrivate', 'chatAllowed',
+                    'imageUrls', 'coverImageUrl', 'avatarUrl', 'avatarHidden', 'coverOrient', 'primaryContact',
+                    'phone', 'openKakaoUrl', 'googleReviewUrl'
+                  ])
+                  && uStr(d.get('title', ''), 60)
+                  && d.get('title', '').trim().size() >= 1
+                  && uStr(d.get('body', ''), 3000)
+                  && d.get('body', '').size() >= 1
+                  && uStr(d.get('state', ''), 10)
+                  && uStr(d.get('address', ''), 300)
+                  && uStr(d.get('author', ''), 50)
+                  && d.get('category', '') in ['food', 'beauty', 'tech']
+                  && uStr(d.get('intro', ''), 300)
+                  && uStr(d.get('closing', ''), 200)
+                  && uStr(d.get('comment', ''), 500)
+                  && d.get('coverOrient', 'portrait') in ['portrait', 'landscape']
+                  && d.get('primaryContact', 'sms') in ['sms', 'kakao', 'chat']
+                  && uStr(d.get('phone', ''), 30)
+                  && (d.get('phone', '') == '' || d.phone.matches('[0-9]{6,15}'))
+                  && uStr(d.get('openKakaoUrl', ''), 300)
+                  && (d.get('openKakaoUrl', '') == '' || d.openKakaoUrl.matches('https://open[.]kakao[.]com/.+'))
+                  && uStr(d.get('googleReviewUrl', ''), 500)
+                  && (d.get('googleReviewUrl', '') == ''
+                      || d.googleReviewUrl.matches('https://((www[.])?google[.]com/maps.*|maps[.]app[.]goo[.]gl/.+|g[.]page/.+)'))
+                  && uStr(d.get('coverImageUrl', ''), 500)
+                  && (d.get('coverImageUrl', '') == '' || d.coverImageUrl.matches('https://.+'))
+                  && uStr(d.get('avatarUrl', ''), 500)
+                  && (d.get('avatarUrl', '') == '' || d.avatarUrl.matches('https://.+'))
+                  && d.get('locationPrivate', false) is bool
+                  && d.get('chatAllowed', false) is bool
+                  && d.get('avatarHidden', false) is bool
+                  && uList(d.get('imageUrls', []), 10)
+                  && latLngOk(d) ) );
+    }
+
     // ── 게시판 컬렉션 (현재 localStorage 스토어 → 향후 Firestore 전환 대비) ──
     //   koaus-accom-posts → accom_posts,  koaus-rent-posts → rent_posts,
     //   koaus-jobs-posts  → jobs_posts,   koaus-auto-posts → auto_posts
@@ -405,7 +598,9 @@ service cloud.firestore {
                             && uidLocked()
                             && noModeratorFieldChange()
                             && statusAllowedForOwner()
-                            && adminBlindLock() );
+                            && adminBlindLock()
+                            && validShareRentUpdate(request.resource.data,
+                                 request.resource.data.diff(resource.data).affectedKeys()) );   // 11-21: 바뀌는 칸 목록 + 칸 종류·길이
       allow delete: if isAdmin() || ownerOnExisting();
     }
     match /rent_posts/{postId} {
@@ -417,7 +612,9 @@ service cloud.firestore {
                             && uidLocked()
                             && noModeratorFieldChange()
                             && statusAllowedForOwner()
-                            && adminBlindLock() );
+                            && adminBlindLock()
+                            && validShareRentUpdate(request.resource.data,
+                                 request.resource.data.diff(resource.data).affectedKeys()) );   // 11-21: 바뀌는 칸 목록 + 칸 종류·길이
       allow delete: if isAdmin() || ownerOnExisting();
     }
     match /jobs_posts/{postId} {
@@ -429,7 +626,9 @@ service cloud.firestore {
                             && uidLocked()
                             && noModeratorFieldChange()
                             && statusAllowedForOwner()
-                            && adminBlindLock() );
+                            && adminBlindLock()
+                            && validJobsUpdate(request.resource.data,
+                                 request.resource.data.diff(resource.data).affectedKeys()) );   // 11-21: 바뀌는 칸 목록 + 칸 종류·길이
       allow delete: if isAdmin() || ownerOnExisting();
     }
     match /auto_posts/{postId} {
@@ -441,7 +640,9 @@ service cloud.firestore {
                             && uidLocked()
                             && noModeratorFieldChange()
                             && statusAllowedForOwner()
-                            && adminBlindLock() );
+                            && adminBlindLock()
+                            && validAutoUpdate(request.resource.data,
+                                 request.resource.data.diff(resource.data).affectedKeys()) );   // 11-21: 바뀌는 칸 목록 + 칸 종류·길이
       allow delete: if isAdmin() || ownerOnExisting();
     }
 
@@ -455,7 +656,9 @@ service cloud.firestore {
                             && uidLocked()
                             && noModeratorFieldChange()
                             && statusAllowedForOwner()
-                            && adminBlindLock() );
+                            && adminBlindLock()
+                            && validDailyUpdate(request.resource.data,
+                                 request.resource.data.diff(resource.data).affectedKeys()) );   // 11-21: 바뀌는 칸 목록 + 칸 종류·길이
       allow delete: if isAdmin() || ownerOnExisting();
     }
 
@@ -663,12 +866,21 @@ service cloud.firestore {
     //   · get: 누구나 1건 조회 (가입 전 중복 체크 + 아이디 찾기 nick+secA 매칭)
     //   · list: 전면 차단 (열거 방지)
     //   · create/update/delete: 본인(uid) 소유만
+    //   · 11-21: 칸은 uid · nickname · createdAt 뿐(hasOnly) — 누구나 읽는 문서라 email 등 다른 칸을 넣을 수 없다.
+    //     가입(auth-extra.js)·닉네임 변경(settings.html)은 둘 다 이 세 칸으로 문서를 통째로 다시 쓴다(tx.set, 합치기 아님).
+    //     예전 문서에 남은 email 은 migrate-nickname-email.js --apply 로 지운다(Admin SDK — 이 규칙과 무관).
+    function validNicknameDoc() {
+      return request.resource.data.uid == request.auth.uid
+        && request.resource.data.nickname is string
+        && request.resource.data.nickname.size() <= 30
+        && request.resource.data.keys().hasOnly(['uid', 'nickname', 'createdAt']);
+    }
     match /nicknames/{nick} {
       allow get:    if true;
       allow list:   if false;
-      allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid;
+      allow create: if isSignedIn() && validNicknameDoc();
       allow update: if isSignedIn() && resource.data.uid == request.auth.uid
-                       && request.resource.data.uid == request.auth.uid;
+                       && validNicknameDoc();
       allow delete: if isSignedIn() && resource.data.uid == request.auth.uid;
     }
 
