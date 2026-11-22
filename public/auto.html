@@ -410,7 +410,7 @@
         <div class="ticker-viewport">
           <div class="ticker-track" id="tickerTrack">
             <a class="ticker-item" id="tickerItem" rel="noopener noreferrer">
-              <span class="ticker-content" id="tickerContent">숙소 · 구인구직 · 차량 · 환전 게시판을 자유롭게 이용해 보세요 · KoAus는 호주 한인 커뮤니티의 새로운 기준을 만들어 갑니다</span>
+              <span class="ticker-content" id="tickerContent">쉐어 · 렌트 · 구인구직 게시판을 자유롭게 이용해 보세요 · KoAus는 호주 한인 커뮤니티의 새로운 기준을 만들어 갑니다</span>
               <span class="ticker-arrow" id="tickerArrow" aria-hidden="true"></span>
             </a>
           </div>
@@ -2462,7 +2462,7 @@
       const _bEd = document.getElementById('detailEditBtn');     if (_bEd) _bEd.onclick = () => openWriteModalForEdit(p);
       const _bDl = document.getElementById('detailDeleteBtn');   if (_bDl) _bDl.onclick = () => deletePost(p.id);
       const _bCp = document.getElementById('detailCompleteBtn'); if (_bCp) _bCp.onclick = async () => {
-        if (!confirm('거래 완료 처리하시겠습니까? (status=completed)')) return;
+        if (!confirm('거래 완료 처리하시겠습니까?')) return;
         try {
           // auto 본문은 localStorage 저장(타임스탬프 id) — Firestore 글(_fsDocId)일 때만 rbac, 아니면 localStorage 토글
           //   · 옛 버그: services 를 p.id(타임스탬프)로 호출 → "No document to update". deletePost 의 _fsDocId 게이트와 동일 패턴으로 정합.

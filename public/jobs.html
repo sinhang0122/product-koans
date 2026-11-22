@@ -416,7 +416,7 @@
         <div class="ticker-viewport">
           <div class="ticker-track" id="tickerTrack">
             <a class="ticker-item" id="tickerItem" rel="noopener noreferrer">
-              <span class="ticker-content" id="tickerContent">숙소 · 구인구직 · 차량 · 환전 게시판을 자유롭게 이용해 보세요 · KoAus는 호주 한인 커뮤니티의 새로운 기준을 만들어 갑니다</span>
+              <span class="ticker-content" id="tickerContent">쉐어 · 렌트 · 구인구직 게시판을 자유롭게 이용해 보세요 · KoAus는 호주 한인 커뮤니티의 새로운 기준을 만들어 갑니다</span>
               <span class="ticker-arrow" id="tickerArrow" aria-hidden="true"></span>
             </a>
           </div>
@@ -643,7 +643,7 @@
           <li>환전 및 담배 등 호주 내 불법·편법 거래 금지</li>
           <li>호주 법률 위반 글 또는 타인의 초상권·저작권 침해 사진 업로드 시 무통보 삭제 및 사이트 영구 이용 불가</li>
           <li>1일 2회 등록 가능 (주소만 살짝 바꾸는 중복 도배 글은 동일 글로 간주하여 제재)</li>
-          <li>단기 렌트·쉐어 거래 시 보증금(Deposit) 사기 및 먹튀에 각별히 주의하세요.</li>
+          <li>일을 시작하기 전에 돈(교육비 · 소개비 등)을 요구하는 취업 사기에 각별히 주의하세요.</li>
           <li>상세 정보 없이 외부 메신저(카카오톡 등)로 유도하는 글은 피싱 사기일 확률이 높습니다.</li>
           <li><strong>(구인구직)</strong> 호주 최저임금 및 Fair Work 규정을 위반하는 불법 구인 글은 즉시 삭제됩니다.</li>
         </ol>
@@ -1220,7 +1220,7 @@
       const _bEd = document.getElementById('detailEditBtn');     if (_bEd) _bEd.onclick = () => openWriteModalForEdit(p);
       const _bDl = document.getElementById('detailDeleteBtn');   if (_bDl) _bDl.onclick = () => deletePost(p.id);
       const _bCp = document.getElementById('detailCompleteBtn'); if (_bCp) _bCp.onclick = async () => {
-        if (!confirm('구인을 마감 처리하시겠습니까? (status=completed)')) return;
+        if (!confirm('구인을 마감할까요? 마감한 글은 목록에서 내려갑니다.')) return;
         try {
           const fsId = p._fsDocId || p.fsDocId || p.id;   // 스냅샷이 _fsDocId 채움 — 옛 p.fsDocId 오타 → p.id 타임스탬프 폴백 회귀 교정
           if (_rbac && _rbac.markCompleted) await _rbac.markCompleted('jobs_posts', String(fsId));
@@ -1682,7 +1682,7 @@
                 console.error('Firestore 전송 실패 원인: ', error);
                 // 11-21: 저장에 실패한 글은 이 기기의 목록에서도 뺀다(전에는 이 기기에만 계속 남아, 올라간 것처럼 보였다)
                 try { savePosts(loadPosts().filter(x => String(x.id) !== String(post.id))); removeRecord(MYPOSTS_KEY, post.id); renderPosts(); } catch (_) {}
-                alert('서버 저장 실패\n코드: ' + (error.code || '-') + '\n메시지: ' + (error.message || error) + '\n\n글은 본인 기기에는 표시됩니다. Firestore 콘솔에서 규칙 배포 여부와 jobs_posts 컬렉션 권한을 확인해 주세요.');
+                alert('글을 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.\n(' + ((error && (error.code || error.message)) || error) + ')');
               });
           } else {
             console.error('window.koausJobs 미초기화 — Firestore 모듈 로드 순서를 확인하세요');
