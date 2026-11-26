@@ -102,13 +102,17 @@ const wsTitleData    = Object.assign({}, accomData, { title: '   ' });
 const padTitleData   = Object.assign({}, accomData, { title: '  정상 제목  ' });
 const spaceBodyData  = Object.assign({}, accomData, { body: ' ' });
 
+// 11-26b: 구글 로그인 토큰 — 이메일은 확인된 것으로 오지만(email_verified) 폰을 연결하기 전에는 phone_number 가 없다
+const GOOGLE_NO_PHONE   = { firebase: { sign_in_provider: 'google.com' }, email_verified: true };
+const GOOGLE_WITH_PHONE = { firebase: { sign_in_provider: 'google.com' }, email_verified: true, phone_number: '+61400000000' };
 function mkCreate(data, expectation, coll, label, token) {
   return {
     _label: label,
     expectation,
     request: {
-      // 기본 토큰 = 이메일 인증 계정(H2 isVerifiedUser 통과 — 정상 유저). 5번째 인자로 토큰 오버라이드(미인증/폰 케이스).
-      auth: { uid: 'testuser123', token: token || { firebase: { sign_in_provider: 'password' }, email_verified: true } },
+      // 기본 토큰 = 휴대폰(SMS) 인증을 마친 계정(H2 isVerifiedUser 통과 — 정상 유저). 11-26b: 이메일 인증만으로는 통과하지 못한다.
+      //   5번째 인자로 토큰 오버라이드(미인증 · 구글 로그인 케이스).
+      auth: { uid: 'testuser123', token: token || { firebase: { sign_in_provider: 'password' }, phone_number: '+61400000000' } },
       path: `/databases/(default)/documents/${coll}/newdoc1`,
       method: 'create',
       time: '2026-06-10T00:00:00Z',
@@ -145,7 +149,12 @@ function mkUnauth(expectation, coll, method, query, label, resourceData) {
 //     rules 의 에러 흡수(||) 로 false 처리 — 의도된 동작.
 function mk(opts) {
   const req = {
-    auth: opts.uid ? { uid: opts.uid, token: Object.assign({ firebase: { sign_in_provider: 'password' }, email_verified: true }, opts.admin ? { admin: true } : {}, opts.unverified ? { email_verified: false } : {}) } : null,   // opts.unverified: 이메일 미인증·폰 없음(isVerifiedUser 실패)
+    // 11-26b: 기본 = 휴대폰 인증 계정. opts.unverified = 폰 없음 · 이메일 미인증(가입 직후), opts.googleOnly = 구글 로그인(이메일은 확인됨)인데 폰 없음 — 둘 다 isVerifiedUser 실패
+    auth: opts.uid ? { uid: opts.uid, token: Object.assign({ firebase: { sign_in_provider: opts.googleOnly ? 'google.com' : 'password' } },
+                                                           (opts.unverified || opts.googleOnly) ? {} : { phone_number: '+61400000000' },
+                                                           opts.googleOnly ? { email_verified: true } : {},
+                                                           opts.unverified ? { email_verified: false } : {},
+                                                           opts.admin ? { admin: true } : {}) } : null,
     path: `/databases/(default)/documents/${opts.path}`,
     method: opts.method,
     time: opts.time || '2026-06-10T00:00:00Z',   // opts.time: request.time 재지정 (메시지 5분 삭제 창 테스트)
@@ -461,12 +470,12 @@ const cases = [
   mkCreate({ category: 'trades', title: '업체', contact: '0400000000', uid: 'testuser123',
              status: 'approved', contactEmail: 'biz@example.com' },
            'ALLOW', 'services', 'create: services contactEmail 포함 → 허용 (contactEmail 기능)'),
-  // [H2] 본인인증 게이트 — UGC create 는 폰 SMS 인증 OR 이메일 인증 계정만 (미인증 SDK 우회 차단)
+  // [H2] 본인인증 게이트 — UGC create 는 휴대폰(SMS) 인증 계정만 (미인증 SDK 우회 차단). 11-26b: 이메일 인증만으로는 거부(구글 로그인 포함)
   mkCreate(accomData, 'DENY',  'accom_posts', 'create: 미인증(폰X·이메일미인증) → 거부 (H2)',
            { firebase: { sign_in_provider: 'password' } }),
   mkCreate(accomData, 'ALLOW', 'accom_posts', 'create: 폰 SMS 인증 → 허용 (H2)',
            { firebase: { sign_in_provider: 'phone' }, phone_number: '+61400000000' }),
-  mkCreate(accomData, 'ALLOW', 'accom_posts', 'create: 이메일 인증 → 허용 (H2)',
+  mkCreate(accomData, 'DENY',  'accom_posts', 'create: 이메일 인증만(폰 X) → 거부 (H2 · 11-26b: 전에는 허용)',
            { firebase: { sign_in_provider: 'password' }, email_verified: true }),
   mkCreate({ category: 'trades', title: '업체', contact: '0400000000', uid: 'testuser123', status: 'approved' },
            'DENY', 'services', 'create: services 미인증 → 거부 (H2)',
@@ -688,7 +697,7 @@ const cases = [
        data: chatData }),
   (() => { const c = mk({ label: 'chats create 미인증(폰X·이메일미인증) → 거부 (H2)', expectation: 'DENY',
        path: 'chats/post123_testuser123', method: 'create', uid: 'testuser123',
-       data: chatData, getMock: chatTicket }); delete c.request.auth.token.email_verified; return c; })(),
+       data: chatData, getMock: chatTicket }); delete c.request.auth.token.phone_number; return c; })(),
   mk({ label: 'chats create 정지 계정 → 거부 (notSuspended)', expectation: 'DENY',
        path: 'chats/post123_testuser123', method: 'create', uid: 'testuser123',
        data: chatData, userDocStatus: 'suspended' }),
@@ -1619,6 +1628,65 @@ const cases = [
        path: 'nicknames/신행', method: 'delete', uid: 'testuser123', resourceData: nickDoc }),
   mk({ label: 'nicknames 남의 문서 삭제 → 거부', expectation: 'DENY',
        path: 'nicknames/신행', method: 'delete', uid: 'attacker999', resourceData: nickDoc }),
+
+  // ⑩ 11-26b: 구글 로그인도 문자 인증 — isVerifiedUser 는 휴대폰(SMS) 인증만 본다(사용자 결정 "구글도 문자 인증해야지").
+  //   G = 구글 로그인(이메일은 확인됨)인데 폰을 연결하지 않은 계정. 전에는 아래 '거부'가 모두 '허용'이었다.
+  //   글(게시판 5곳 + 업체)
+  mkCreate(accomData,    'DENY',  'accom_posts', '구글 로그인 · 폰 없음: 쉐어 글 만들기 → 거부 (11-26b)', GOOGLE_NO_PHONE),
+  mkCreate(accomData,    'DENY',  'rent_posts',  '구글 로그인 · 폰 없음: 렌트 글 만들기 → 거부 (11-26b)', GOOGLE_NO_PHONE),
+  mkCreate(jobsLikeData, 'DENY',  'jobs_posts',  '구글 로그인 · 폰 없음: 구인 글 만들기 → 거부 (11-26b)', GOOGLE_NO_PHONE),
+  mkCreate(autoData,     'DENY',  'auto_posts',  '구글 로그인 · 폰 없음: 차량 글 만들기 → 거부 (11-26b)', GOOGLE_NO_PHONE),
+  mkCreate(dailyData,    'DENY',  'daily_posts', '구글 로그인 · 폰 없음: 일상 글 만들기 → 거부 (11-26b)', GOOGLE_NO_PHONE),
+  mkCreate({ category: 'trades', title: '업체', contact: '0400000000', uid: 'testuser123', status: 'approved' },
+           'DENY', 'services', '구글 로그인 · 폰 없음: 업체 글 만들기 → 거부 (11-26b)', GOOGLE_NO_PHONE),
+  mkCreate(videoData,    'DENY',  'videos',      '구글 로그인 · 폰 없음: 영상 등록 → 거부 (11-26b)', GOOGLE_NO_PHONE),
+  //   같은 계정이 폰을 연결하면(구글 + 폰) 통과한다
+  mkCreate(accomData,    'ALLOW', 'accom_posts', '구글 로그인 + 폰 연결: 쉐어 글 만들기 → 허용 (11-26b)', GOOGLE_WITH_PHONE),
+  mkCreate(jobsLikeData, 'ALLOW', 'jobs_posts',  '구글 로그인 + 폰 연결: 구인 글 만들기 → 허용 (11-26b)', GOOGLE_WITH_PHONE),
+  mkCreate(videoData,    'ALLOW', 'videos',      '구글 로그인 + 폰 연결: 영상 등록 → 허용 (11-26b)', GOOGLE_WITH_PHONE),
+  mkCreate(accomData,    'ALLOW', 'accom_posts', '이메일 가입 + 폰 연결(이메일은 미확인): 쉐어 글 만들기 → 허용 (11-26b)',
+           { firebase: { sign_in_provider: 'password' }, email_verified: false, phone_number: '+61400000000' }),
+  //   채팅
+  mk({ label: '구글 로그인 · 폰 없음: 채팅방 만들기 → 거부 (11-26b)', expectation: 'DENY',
+       path: 'chats/post123_testuser123', method: 'create', uid: 'testuser123', googleOnly: true,
+       data: chatData, getMock: chatTicket }),
+  mk({ label: '구글 로그인 · 폰 없음: 메시지 보내기 → 거부 (11-26b)', expectation: 'DENY',
+       path: 'chats/post123_testuser123/messages/msg1', method: 'create', uid: 'testuser123', googleOnly: true,
+       data: msgData, getMock: chatParent }),
+  mk({ label: '구글 로그인 · 폰 없음: 새 대화 표 끊기 → 거부 (11-26b)', expectation: 'DENY',
+       path: 'chat_tickets/testuser123/living/1', method: 'create', uid: 'testuser123', googleOnly: true, data: chatTicket }),
+  //   프로필(집 구해요 · 일 구해요)
+  mk({ label: '구글 로그인 · 폰 없음: 집 구해요 프로필 만들기 → 거부 (11-26b)', expectation: 'DENY',
+       path: 'seeker_profiles/testuser123', method: 'create', uid: 'testuser123', googleOnly: true, data: seekerData }),
+  mk({ label: '구글 로그인 · 폰 없음: 집 구해요 비공개 칸 → 거부 (11-26b)', expectation: 'DENY',
+       path: 'seeker_private/testuser123', method: 'create', uid: 'testuser123', googleOnly: true, data: seekerPrivData }),
+  mk({ label: '구글 로그인 · 폰 없음: 일 구해요 프로필 만들기 → 거부 (11-26b)', expectation: 'DENY',
+       path: 'job_profiles/testuser123', method: 'create', uid: 'testuser123', googleOnly: true, data: jobData }),
+  mk({ label: '구글 로그인 · 폰 없음: 일 구해요 비공개 칸 → 거부 (11-26b)', expectation: 'DENY',
+       path: 'job_private/testuser123', method: 'create', uid: 'testuser123', googleOnly: true,
+       data: { alerts: { enabled: true, mode: 'threshold5', email: 'e@e.com' }, updatedAt: '2026-06-10T00:00:00Z' } }),
+  mk({ label: '구글 로그인 · 폰 없음: 구하는 사람 목록 보기 → 거부 (11-26b)', expectation: 'DENY',
+       path: 'seeker_profiles/testuser123', method: 'list', uid: 'owner456xyz', googleOnly: true,
+       query: { limit: 20, orderBy: 'lastActiveAt DESC' }, resourceData: seekerExisting }),
+  //   관리자는 폰이 없어도 목록을 본다(isAdmin 이 먼저 통과시킨다) — 관리 화면이 막히지 않는지
+  mk({ label: '관리자(폰 없음): 구하는 사람 목록 보기 → 허용 (11-26b)', expectation: 'ALLOW',
+       path: 'seeker_profiles/testuser123', method: 'list', uid: 'adminuid001', googleOnly: true, admin: true,
+       query: { limit: 20, orderBy: 'lastActiveAt DESC' }, resourceData: seekerExisting }),
+  //   가입 직후(폰 연결 전)에 쓰는 문서는 그대로 된다 — 문자 인증 창까지 가는 길이 막히면 안 된다
+  mk({ label: '가입 직후(폰 없음): 회원 문서 만들기 → 허용 (11-26b)', expectation: 'ALLOW',
+       path: 'users/testuser123', method: 'create', uid: 'testuser123', unverified: true,
+       data: { email: 'me@example.com', nickname: '신행', securityQ: 'q1', securityAHash: 'h', securityASalt: 's', securityAIter: 100000, createdAt: 1765000000000 } }),
+  mk({ label: '가입 직후(폰 없음): 닉네임 문서 만들기 → 허용 (11-26b)', expectation: 'ALLOW',
+       path: 'nicknames/신행', method: 'create', uid: 'testuser123', unverified: true, data: nickDoc }),
+  mk({ label: '가입 직후(폰 없음): 이메일 색인 문서 만들기 → 허용 (11-26b)', expectation: 'ALLOW',
+       path: 'emails/me@example.com', method: 'create', uid: 'testuser123', unverified: true,
+       data: { uid: 'testuser123', securityQ: 'q1', securityAHash: 'h', securityASalt: 's', securityAIter: 100000, createdAt: 1765000000000 } }),
+  mk({ label: '구글 첫 로그인(폰 없음): 회원 문서 만들기 → 허용 (11-26b)', expectation: 'ALLOW',
+       path: 'users/testuser123', method: 'create', uid: 'testuser123', googleOnly: true,
+       data: { email: 'me@example.com', createdAt: 1765000000000 } }),
+  //   폰이 없어도 읽기는 된다(공개 글 · 본인 회원 문서)
+  mk({ label: '구글 로그인 · 폰 없음: 본인 회원 문서 읽기 → 허용 (11-26b)', expectation: 'ALLOW',
+       path: 'users/testuser123', method: 'get', uid: 'testuser123', googleOnly: true, resourceData: { email: 'me@example.com' } }),
 ];
 
 // ── 기본 functionMocks 주입 ──

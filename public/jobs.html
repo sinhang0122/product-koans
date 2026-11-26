@@ -591,7 +591,7 @@
           <div class="write-field">
             <label class="write-label">급여 Pay</label>
             <div style="display:flex;gap:8px;">
-              <select class="write-input" id="wPayUnit" style="flex:0 0 110px;">
+              <select class="write-input" id="wPayUnit" style="flex:0 0 120px;">
                 <option value="hour">시급 / hr</option>
                 <option value="year">연봉 / yr</option>
                 <option value="negotiable">협의</option>
@@ -1273,6 +1273,7 @@
       window.currentDetailPost = p; // koaus-report.js 신고 스냅샷용 노출 (id 일치 시에만 소비)
       document.getElementById('detailOverlay').classList.add('open');
       const rc = document.querySelector('.rea-content'); if (rc) rc.scrollTop = 0;
+      const rs = document.querySelector('#detailOverlay .rea-scroll'); if (rs) rs.scrollTop = 0;   // 11-26b: 모바일은 .rea-scroll 이 구른다 — 앞 글을 내려 읽은 뒤 다른 글을 열어도 맨 위에서 시작
     }
 
     // ── 상세 지도 (accom 패턴 1:1) ──

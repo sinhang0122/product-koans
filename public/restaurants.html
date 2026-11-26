@@ -2041,6 +2041,7 @@
       if (typeof markVisited === 'function') markVisited(p.id);
       document.getElementById('detailOverlay').classList.add('open');
       const rc = document.querySelector('.rea-content'); if (rc) rc.scrollTop = 0;
+      const rs = document.querySelector('#detailOverlay .rea-scroll'); if (rs) rs.scrollTop = 0;   // 11-26b: 모바일은 .rea-scroll 이 구른다 — 앞 글을 내려 읽은 뒤 다른 글을 열어도 맨 위에서 시작
     }
 
     function deletePost(id) {
@@ -2453,7 +2454,7 @@
       script.defer   = true;
       script.onerror = () => {
         document.getElementById('accomMap').innerHTML =
-          '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-muted);font-size:14px;">지도를 불러올 수 없습니다. API 키를 확인해 주세요.</div>';
+          '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-muted);font-size:14px;">지도를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.</div>';
       };
       document.head.appendChild(script);
     }

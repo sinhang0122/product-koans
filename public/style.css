@@ -5190,3 +5190,7 @@ select.auth-input, #koausPhoneInput { border-radius: var(--r-btn-lg); }
 #authSignupNickCheck { border-radius: var(--r-btn) !important; }   /* !important: 회원가입 닉네임 [중복확인] — auth-extra.js 템플릿에 style 로 박혀 있음(지금은 숨겨 둔 칸) */
 #areaResetTopBtn { border-radius: var(--r-btn-sm) !important; }   /* !important: 구인구직 [지역 제한 적용 중 — 전체 보기] 칩 — jobs.html 에 style="border-radius:999px" 가 박혀 있음 */
 .recent-chip-wrap, .recent-clear-all { border-radius: var(--r-btn-sm) !important; }   /* !important: 구인구직 상세 필터의 최근 검색 칩 · [모두 지우기] — jobs.html 템플릿에 style 로 박혀 있음 */
+
+/* 11-26b: 글쓰기 창이 한 단으로 겹쳐질 때(≤768px) 첫 단의 마지막 칸과 둘째 단의 첫 칸 사이에도 다른 칸과 같은 간격(.write-col 의 11px).
+   위쪽의 `.write-grid { … gap: 0 }` 두 곳보다 뒤에 있어 이 값이 쓰인다. */
+@media (max-width: 768px) { .write-grid { row-gap: 11px; } }
