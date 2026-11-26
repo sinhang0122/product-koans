@@ -487,9 +487,9 @@ onAuthStateChanged(auth, async user => {
     try { localStorage.setItem('koaus-nickname', pending.nickname); } catch (_) {}
   } catch (e) {
     console.warn('[auth-extra] 회원가입 추가 정보 저장 실패', e && e.message || e);
-    // 가입 자체(Auth)는 성공한 상태 — 트랜잭션 실패 시 마이페이지에서 별명 재설정 가능
+    // 가입 자체(Auth)는 성공한 상태 — 트랜잭션 실패 시 환경설정에서 닉네임 재설정 가능(닉네임 변경은 환경설정으로 옮겨졌다)
     if (e && (e.message === 'NICK_TAKEN' || e.message === 'EMAIL_TAKEN')) {
-      try { alert('가입 직후 부가 정보 저장에 실패했습니다.\n마이페이지에서 별명을 다시 설정해 주세요.'); } catch (_) {}
+      try { alert('가입 직후 부가 정보 저장에 실패했습니다.\n환경설정에서 닉네임을 다시 설정해 주세요.'); } catch (_) {}
     }
   } finally {
     window.__koausPendingSignup = null;

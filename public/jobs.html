@@ -1376,7 +1376,7 @@
     // 신고 버튼 — 공용 신고 헬퍼 (지시 6/7: 4 카테고리 select + addDoc)
     safeOn('detailReportBtn', 'click', () => {
       if (!window.koausReport || !window.koausReport.open) {
-        alert('신고 모듈을 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요.'); return;
+        alert('신고 창을 불러오지 못했습니다. 새로 고친 뒤 다시 시도해 주세요.'); return;
       }
       // 현재 상세 모달에 표시 중인 글의 ID — detailOverlay 의 data 또는 보조 변수
       const titleEl = document.getElementById('detailNavTitle');
@@ -1645,7 +1645,7 @@
           if (!_addrSame) { patch.lat = lat; patch.lng = lng; }   // 주소를 바꿨을 때만 좌표도 바꾼다
           const fsId = (cur && cur._fsDocId) || (_orig && _orig._fsDocId) || '';
           if (fsId) {
-            if (!(window.koausJobs && window.koausJobs.update)) { alert('Firestore 연결이 아직 준비되지 않았습니다. 잠시 후 다시 시도해 주세요.'); return; }
+            if (!(window.koausJobs && window.koausJobs.update)) { alert('아직 불러오는 중입니다. 잠시 후 다시 시도해 주세요.'); return; }
             try {
               await window.koausJobs.update(String(fsId), patch);
             } catch (error) {
@@ -1686,7 +1686,7 @@
               });
           } else {
             console.error('window.koausJobs 미초기화 — Firestore 모듈 로드 순서를 확인하세요');
-            alert('Firestore 연결이 아직 준비되지 않았습니다. 잠시 후 다시 시도해 주세요.');
+            alert('아직 불러오는 중입니다. 잠시 후 다시 시도해 주세요.');
           }
         }
 
@@ -2378,7 +2378,7 @@
       try {
         const cred = await createUserWithEmailAndPassword(auth, email, pw);
         hardCloseAuthModal();
-        alert('가입이 완료되었습니다.\n글을 작성하실 때 휴대폰 SMS 인증을 거치게 됩니다.');
+        alert('가입이 완료되었습니다.\n이어서 휴대폰 문자(SMS) 인증을 진행합니다.');
       } catch (e) {
         const msg = authErrMsg(e.code);
         if (errEl) errEl.textContent = msg;

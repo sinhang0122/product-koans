@@ -1511,7 +1511,7 @@
       //  지시 2/4 — Firestore (rent_posts) 전환 (accom 동일 패턴)
       // ═══════════════════════════════════════════════════════════════════
       if (!window.koausDb || !window.koausFs) {
-        alert('Firestore 미초기화 — 잠시 후 다시 시도해 주세요.');
+        alert('아직 불러오는 중입니다. 잠시 후 다시 시도해 주세요.');
         return;
       }
       const { addDoc, updateDoc, doc: _fsDoc, collection: _fsCol, serverTimestamp } = window.koausFs;
@@ -1580,7 +1580,7 @@
           }
         } catch (e) {
           console.error('[rent] Firestore 등록 실패', e);
-          alert('등록 실패: ' + (e?.code === 'permission-denied' ? '권한 거부 — 로그인 상태 및 필수 필드 확인' : (e?.code || e?.message || e)));
+          alert('등록 실패: ' + (e?.code === 'permission-denied' ? '로그인 상태와 입력한 내용을 확인해 주세요.' : (e?.code || e?.message || e)));
           return;
         }
         if (target.locationPrivate && target.exactAddress && window.koausListingPrivacy.savePrivateLocation) {
@@ -2827,7 +2827,7 @@
       try {
         const cred = await createUserWithEmailAndPassword(auth, email, pw);
         hardCloseAuthModal();
-        alert('가입이 완료되었습니다.\n글을 작성하실 때 휴대폰 SMS 인증을 거치게 됩니다.');
+        alert('가입이 완료되었습니다.\n이어서 휴대폰 문자(SMS) 인증을 진행합니다.');
       } catch (e) {
         const msg = authErrMsg(e.code);
         if (errEl) errEl.textContent = msg;

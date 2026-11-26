@@ -37,8 +37,9 @@
     { id: 'accom', ico: '', label: '쉐어' },
     { id: 'rent',  ico: '', label: '렌트' },
     { id: 'jobs',  ico: '', label: '구인구직' },
-    { id: 'auto',  ico: '', label: '중고차판매', extra: 'category=used' },
-    { id: null,    ico: '', label: 'Life', sub: '맛집·뷰티·병원·기술자', locked: true }
+    /* 11-26a(사용자 결정): 메뉴에서 숨긴 게시판은 이 목록에서도 숨긴다 — 지우지 않고 hidden: true 만 붙였다(되살리려면 그 값만 지운다) */
+    { id: 'auto',  ico: '', label: '중고차판매', extra: 'category=used', hidden: true },
+    { id: null,    ico: '', label: 'Life', sub: '맛집·뷰티·병원·기술자', locked: true, hidden: true }
   ];
 
   var page = (location.pathname.split('/').pop() || '').replace(/\.html$/i, '').toLowerCase();
@@ -112,6 +113,8 @@
 
   /* ── 미니 토스트 (자급자족 — koaus-tabbar.js 와 동일 스타일) ── */
   function toast(msg) {
+    /* 11-26a: 공용 토스트(koaus-toast.js — 흰 카드 + 점, 후보 B)가 있으면 그것으로 낸다. 아래 예전 검정 알약은 그 스크립트가 없는 페이지에서만 쓰인다 */
+    if (window.koausToast && typeof window.koausToast.show === 'function') { window.koausToast.show(msg, Math.min(6000, 1800 + String(msg).length * 70)); return; }
     try {
       var t = document.createElement('div');
       t.textContent = msg;
@@ -223,6 +226,7 @@
     drop.className = 'kmh-drop';
     drop.hidden = true;
     ITEMS.forEach(function (b) {
+      if (b.hidden) return;   /* 11-26a: 숨긴 항목은 만들지 않는다 */
       var el, isCur = b.id && b.id === page;
       if (b.locked) {
         /* Life(맛집·뷰티·병원·기술자 통합 섹션) — 출시 전 진입 차단: 준비 중 토스트 + GA 수요 측정 */

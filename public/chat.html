@@ -44,6 +44,7 @@
   <script src="koaus-tabbar.js" defer></script>
   <script src="koaus-menu.js" defer></script>
   <script src="koaus-scroll-lock.js" defer></script>
+  <script src="koaus-toast.js" defer></script>   <!-- 11-26a: 채팅 안내도 공용 토스트(흰 카드 + 점)로 -->
 
   <!-- ── 1:1 채팅 페이지 전용 스타일 (2026-07) — 사이트 CSS 변수 기반 (다크 테마 자동) ── -->
   <style>
@@ -746,6 +747,8 @@
     if (tlb) tlb.addEventListener('click', () => { if (!window.koausAuth.user) _login(); });
 
     function toast(msg) {
+      // 11-26a: 공용 토스트(koaus-toast.js — 흰 카드 + 점, 후보 B)로 낸다. 아래 예전 검정 알약은 그 스크립트를 못 받았을 때만 쓰인다
+      if (window.koausToast && typeof window.koausToast.show === 'function') { window.koausToast.show(msg, Math.min(6000, 1800 + String(msg).length * 70)); return; }
       try {
         const t = document.createElement('div');
         t.textContent = msg;
@@ -906,7 +909,7 @@
         } catch (_) {}
       }
       if (!c || !ME || !Array.isArray(c.participants) || c.participants.indexOf(ME.uid) === -1) {
-        toast('채팅방을 찾을 수 없어요');
+        toast('채팅방을 찾을 수 없습니다.');
         if (!fromPop) { try { history.replaceState(null, '', 'chat.html'); } catch (_) {} }
         showList();
         return;
@@ -1167,11 +1170,11 @@
       else if (act === 'delete') { deleteMsg(m); }
     });
     async function copyText(text) {
-      try { await navigator.clipboard.writeText(text); toast('복사했습니다'); }
+      try { await navigator.clipboard.writeText(text); toast('복사했습니다.'); }
       catch (_) {
         try { const ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
-              document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); toast('복사했습니다'); }
-        catch (e2) { toast('복사에 실패했습니다'); }
+              document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); toast('복사했습니다.'); }
+        catch (e2) { toast('복사하지 못했습니다.'); }
       }
     }
     async function shareText(text) {
@@ -1198,7 +1201,7 @@
     composer.parentNode.insertBefore(editBar, composer);
     $('kcEditCancel').addEventListener('click', () => cancelEdit());
     function startEdit(m) {
-      if (!canEdit(m)) { toast('보낸 지 5분이 지난 메시지는 수정할 수 없습니다'); return; }
+      if (!canEdit(m)) { toast('보낸 지 5분이 지난 메시지는 수정할 수 없습니다.'); return; }
       editingMsg = m; editBar.classList.add('open');
       input.value = String(m.text || ''); input.focus();
       input.style.height = 'auto'; input.style.height = Math.min(input.scrollHeight, 120) + 'px';
@@ -1219,7 +1222,7 @@
       } catch (err) {
         console.warn('[chat] 메시지 수정 실패', err);
         const denied = err && (err.code === 'permission-denied' || /permission/i.test(err.message || ''));
-        toast(denied ? '보낸 지 5분이 지난 메시지는 수정할 수 없습니다' : '수정 실패 — 잠시 후 다시 시도해 주세요');
+        toast(denied ? '보낸 지 5분이 지난 메시지는 수정할 수 없습니다.' : '수정하지 못했습니다. 잠시 후 다시 시도해 주세요.');
       }
     }
 
@@ -1243,7 +1246,7 @@
       } catch (err) {
         console.warn('[chat] 메시지 삭제 실패', err);
         const denied = err && (err.code === 'permission-denied' || /permission/i.test(err.message || ''));
-        toast(denied ? '보낸 지 5분이 지난 메시지는 삭제할 수 없습니다' : '삭제 실패 — 잠시 후 다시 시도해 주세요');
+        toast(denied ? '보낸 지 5분이 지난 메시지는 삭제할 수 없습니다.' : '삭제하지 못했습니다. 잠시 후 다시 시도해 주세요.');
       }
     }
     // ── 2026-10 채팅방 나가기 — 내 목록에서만 숨김(상대방은 그대로), 읽음 처리 동반 ──
@@ -1253,11 +1256,11 @@
       leaveBtn.disabled = true;
       try {
         await updateDoc(doc(db, 'chats', curChat.id), { hiddenFor: arrayUnion(ME.uid), unreadFor: arrayRemove(ME.uid) });
-        toast('채팅방에서 나갔습니다');
+        toast('채팅방에서 나갔습니다.');
         try { history.back(); } catch (_) { showList(); }
       } catch (err) {
         console.warn('[chat] 나가기 실패', err);
-        toast('처리 실패 — 잠시 후 다시 시도해 주세요');
+        toast('처리하지 못했습니다. 잠시 후 다시 시도해 주세요.');
       } finally { leaveBtn.disabled = false; }
     });
 
@@ -1268,7 +1271,7 @@
       const text = (input.value || '').trim().slice(0, 1000);
       if (!text) return;
       if (editingMsg) { await submitEdit(text); return; }   // 수정 모드면 새 메시지 대신 updateDoc
-      if (isFrozen(curChat)) { toast('차단된 대화입니다'); return; }
+      if (isFrozen(curChat)) { toast('차단된 대화입니다.'); return; }
       sendBtn.disabled = true;
       try {
         const other = partnerOf(curChat).uid;
@@ -1288,7 +1291,7 @@
       } catch (err) {
         console.warn('[chat] 전송 실패', err);
         const denied = err && (err.code === 'permission-denied' || /permission/i.test(err.message || ''));
-        toast(denied ? '메시지를 보낼 수 없어요 (차단 또는 권한 없음)' : '전송 실패 — 잠시 후 다시 시도해 주세요');
+        toast(denied ? '메시지를 보낼 수 없습니다. 차단되었거나 이용이 제한된 상태입니다.' : '보내지 못했습니다. 잠시 후 다시 시도해 주세요.');
       } finally {
         sendBtn.disabled = !!(curChat && isFrozen(curChat));
         input.focus();
@@ -1317,10 +1320,10 @@
       try {
         if (iBlocked) await unblockUser(peer); else await blockUser(peer);   // 11-19: 방 단위 → 사람 단위
         renderRoomState(); renderList();
-        toast(iBlocked ? '차단을 해제했어요' : '차단했어요');
+        toast(iBlocked ? '차단을 해제했습니다.' : '차단했습니다.');
       } catch (err) {
         console.warn('[chat] 차단 처리 실패', err);
-        toast('처리 실패 — 잠시 후 다시 시도해 주세요');
+        toast('처리하지 못했습니다. 잠시 후 다시 시도해 주세요.');
       } finally { blockBtn.disabled = false; }
     });
     reportBtn.addEventListener('click', () => {
@@ -1339,7 +1342,7 @@
         onDone: () => {   // 접수 뒤: 아직 차단하지 않았으면 차단할지 묻는다
           if (!ME || !curChat || curChat.id !== chatAt || iBlockedRoom(curChat)) return;
           if (!confirm('신고가 접수되었습니다.\n이 사용자를 차단할까요?')) return;
-          blockUser(p.uid).then(() => { renderRoomState(); renderList(); toast('차단했어요'); }).catch(() => { toast('처리 실패 — 잠시 후 다시 시도해 주세요'); });
+          blockUser(p.uid).then(() => { renderRoomState(); renderList(); toast('차단했습니다.'); }).catch(() => { toast('처리하지 못했습니다. 잠시 후 다시 시도해 주세요.'); });
         },
       });
     });

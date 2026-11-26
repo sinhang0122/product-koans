@@ -1697,8 +1697,8 @@
           return;
         }
         if (!window.koausDb || !window.koausFs) {
-          errEl.textContent = 'Firestore 미초기화 — 잠시 후 다시 시도해 주세요.';
-          alert('Firestore 미초기화 — 잠시 후 다시 시도해 주세요.');
+          errEl.textContent = '아직 불러오는 중입니다. 잠시 후 다시 시도해 주세요.';
+          alert('아직 불러오는 중입니다. 잠시 후 다시 시도해 주세요.');
           return;
         }
         const { addDoc, collection, serverTimestamp } = window.koausFs;
@@ -1748,7 +1748,7 @@
           console.error('[visa] 등록 실패', { code: e && e.code, message: e && e.message, error: e });
           let msg;
           if (e && e.code === 'permission-denied') {
-            msg = '권한 거부 — 게시판 등록 규칙(필수 필드/로그인 상태) 을 다시 확인해 주세요.';
+            msg = '로그인 상태와 입력한 내용을 다시 확인해 주세요.';
           } else if (e && e.code === 'unavailable') {
             msg = '서비스 일시 중단 — 인터넷 연결을 확인 후 다시 시도해 주세요.';
           } else {
@@ -1974,7 +1974,7 @@
       try {
         const cred = await createUserWithEmailAndPassword(auth, email, pw);
         hardCloseAuthModal();
-        alert('가입이 완료되었습니다.\n글을 작성하실 때 휴대폰 SMS 인증을 거치게 됩니다.');
+        alert('가입이 완료되었습니다.\n이어서 휴대폰 문자(SMS) 인증을 진행합니다.');
       } catch (e) {
         errEl.textContent = authErrMsg(e.code);
       }

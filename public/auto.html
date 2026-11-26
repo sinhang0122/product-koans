@@ -1896,7 +1896,7 @@
           //   · patch = stripPrivateFields(fields + updatedAt). fields.imageUrls 는 수정 모달 prefill 로 기존 사진 보존
           //     (텍스트만 수정해도 비지 않음) — 사진 추가/삭제는 __usedPhotoUrls 에 반영됨.
           //   · uid/status/isHidden 미포함 → update 룰(uidLocked·noModeratorFieldChange·statusAllowedForOwner·adminBlindLock) 통과.
-          if (!window.koausDb || !window.koausFs || !window.koausFs.updateDoc) { alert('Firestore 미초기화 — 잠시 후 다시 시도해 주세요.'); return; }
+          if (!window.koausDb || !window.koausFs || !window.koausFs.updateDoc) { alert('아직 불러오는 중입니다. 잠시 후 다시 시도해 주세요.'); return; }
           const { updateDoc: _upd, doc: _doc, serverTimestamp: _ts2 } = window.koausFs;
           const _base = Object.assign({}, fields, { updatedAt: _ts2() });
           if (!String(_base.body || '').trim()) _base.body = ' ';
@@ -1907,7 +1907,7 @@
             await _upd(_doc(window.koausDb, editingCol, String(editingId)), patch);
           } catch (e) {
             console.error('[auto] 수정 실패', e);
-            alert('수정 실패: ' + (e?.code === 'permission-denied' ? '권한 거부 — 본인 글만 수정 가능' : (e?.code || e?.message || e)));
+            alert('수정 실패: ' + (e?.code === 'permission-denied' ? '로그인 상태와 입력한 내용을 확인해 주세요.' : (e?.code || e?.message || e)));
             return;
           }
           // private_data 갱신 — 비공개 글 정확 위치
@@ -1936,7 +1936,7 @@
         //   · 사진은 fields.imageUrls(__usedPhotoUrls — change 시점에 이미 Storage 업로드됨) 그대로 사용(방식 B).
         //   · stripPrivateFields 로 exact* 누수 차단, locationPrivate 시 private_data 별도 저장.
         //   · status:'approved' 즉시 노출. onSnapshot(auto_posts) 이 STORE 캐싱(직접 savePosts 제거).
-        if (!window.koausDb || !window.koausFs) { alert('Firestore 미초기화 — 잠시 후 다시 시도해 주세요.'); return; }
+        if (!window.koausDb || !window.koausFs) { alert('아직 불러오는 중입니다. 잠시 후 다시 시도해 주세요.'); return; }
         const { addDoc: _add, collection: _col, serverTimestamp: _ts } = window.koausFs;
         const target = {
           state: ((window.koausState && window.koausState.fromAddress(fields.address || fields.region)) || currentState), category: activeCategory, isPremium: false,
@@ -1952,7 +1952,7 @@
           docRef = await _add(_col(window.koausDb, 'auto_posts'), safePayload);
         } catch (e) {
           console.error('[auto] Firestore 등록 실패', e);
-          alert('등록 실패: ' + (e?.code === 'permission-denied' ? '권한 거부 — 로그인 상태 및 필수 필드 확인' : (e?.code || e?.message || e)));
+          alert('등록 실패: ' + (e?.code === 'permission-denied' ? '로그인 상태와 입력한 내용을 확인해 주세요.' : (e?.code || e?.message || e)));
           return;
         }
         // private_data 서브컬렉션 — used + 비공개 시 정확 위치만 별도 저장
@@ -1970,7 +1970,7 @@
       } else {
         // ── 새 정비/견인 글 → Firestore services (status:'approved') — used 분기 미러, 컬렉션만 services ──
         //   services onSnapshot(AUTO_CATS) 이 모두에게 렌더. ⚠️ payload 에 email/authorEmail 금지(H4). contact 필수(rules).
-        if (!window.koausDb || !window.koausFs) { alert('Firestore 미초기화 — 잠시 후 다시 시도해 주세요.'); return; }
+        if (!window.koausDb || !window.koausFs) { alert('아직 불러오는 중입니다. 잠시 후 다시 시도해 주세요.'); return; }
         const { addDoc: _add, collection: _col, serverTimestamp: _ts } = window.koausFs;
         if (!fields.contact) fields.contact = fields.phone || '연락처 문의';   // rules pReqStr contact≥1 — 빈 채 가면 permission-denied
         const target = {
@@ -1984,7 +1984,7 @@
           docRef = await _add(_col(window.koausDb, 'services'), Object.assign({}, target, { createdAt: _ts() }));
         } catch (e) {
           console.error('[auto] services 등록 실패', e);
-          alert('등록 실패: ' + (e?.code === 'permission-denied' ? '권한 거부 — 로그인 상태 및 필수 필드 확인' : (e?.code || e?.message || e)));
+          alert('등록 실패: ' + (e?.code === 'permission-denied' ? '로그인 상태와 입력한 내용을 확인해 주세요.' : (e?.code || e?.message || e)));
           return;
         }
         target.id = docRef.id; target._fsDocId = docRef.id;
@@ -2674,6 +2674,9 @@
 
     // ── 토스트 알림 ──
     function showToast(msg) {
+      // 11-26a: 공용 토스트(koaus-toast.js — 흰 카드 + 점, 후보 B)로 낸다. 아래 예전 방식(검정 알약 .koaus-toast)은 그 스크립트를 못 받았을 때만 쓰인다.
+      //   전에는 둘이 같은 id 'koausToast' 를 써서, 이쪽이 먼저 뜨면 예전 모양이 나오고 나중에 뜨면 공용 토스트의 점 · 글 칸을 지워 그 뒤 안내가 오류로 끝났다.
+      if (window.koausToast && typeof window.koausToast.show === 'function') { window.koausToast.show(msg, 2000); return; }
       let t = document.getElementById('koausToast');
       if (!t) { t = document.createElement('div'); t.id = 'koausToast'; t.className = 'koaus-toast'; document.body.appendChild(t); }
       t.textContent = msg;
@@ -2728,7 +2731,7 @@
         copyText(url, '링크가 복사되었습니다.');
       } else if (kind === 'kakao') {
         // 카카오 SDK 미탑재 → 링크 복사 폴백 (붙여넣기로 공유)
-        copyText(url, '링크를 복사했어요. 카카오톡에 붙여넣어 공유하세요.');
+        copyText(url, '링크가 복사되었습니다. 카카오톡에 붙여넣어 주세요.');
       }
       shareMenu.classList.remove('show');
     });
@@ -3270,7 +3273,7 @@
         // 소프트 게이트: 가입 후 로그아웃하지 않고 로그인 상태 유지 + 인증 메일 1회 발송
         const cred = await createUserWithEmailAndPassword(auth, email, pw);
         hardCloseAuthModal();
-        alert('가입이 완료되었습니다.\n글을 작성하실 때 휴대폰 SMS 인증을 거치게 됩니다.');
+        alert('가입이 완료되었습니다.\n이어서 휴대폰 문자(SMS) 인증을 진행합니다.');
       } catch (e) {
         const msg = authErrMsg(e.code);
         if (errEl) errEl.textContent = msg;

@@ -143,7 +143,7 @@
       return;
     }
     if (!window.koausDb || !window.koausFs) {
-      note.textContent = 'Firestore 미초기화 — 잠시 후 다시 시도해 주세요.';
+      note.textContent = '아직 불러오는 중입니다. 잠시 후 다시 시도해 주세요.';
       note.className = 'koaus-report-note is-error'; return;
     }
     const postId = String((_ctx && _ctx.postId) || '').trim();

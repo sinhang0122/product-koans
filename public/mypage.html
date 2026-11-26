@@ -755,7 +755,7 @@
       try {
         const cred = await createUserWithEmailAndPassword(auth, email, pw);
         hardCloseAuthModal();
-        alert('가입이 완료되었습니다.\n글을 작성하실 때 휴대폰 SMS 인증을 거치게 됩니다.');
+        alert('가입이 완료되었습니다.\n이어서 휴대폰 문자(SMS) 인증을 진행합니다.');
       } catch (e) {
         const msg = authErrMsg(e.code);
         if (errEl) errEl.textContent = msg;

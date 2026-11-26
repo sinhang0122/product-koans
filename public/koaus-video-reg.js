@@ -285,7 +285,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       }).then(function () {
         ga('home_video_submit');
         closeRegModal();
-        alert('접수 완료! 운영자 검토(승인) 후 홈에 게시됩니다. \n아래 "내 등록 영상"에서 상태 확인·삭제할 수 있어요.');
+        alert('접수되었습니다. 운영자 검토(승인) 후 홈에 게시됩니다.\n환경설정의 "내 등록 영상"에서 상태를 확인하거나 삭제할 수 있습니다.');
       });
     }).catch(function (err) {
       var code = (err && err.code) || '';

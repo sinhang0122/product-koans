@@ -150,6 +150,8 @@
 
   // 토스트 — 짧은 안내 (복사됨/마이페이지 작성). alert 폴백.
   function toast(msg) {
+    /* 11-26a: 공용 토스트(koaus-toast.js — 흰 카드 + 점, 후보 B)가 있으면 그것으로 낸다. 아래 예전 검정 알약은 그 스크립트가 없는 페이지에서만 쓰인다 */
+    if (window.koausToast && typeof window.koausToast.show === 'function') { window.koausToast.show(msg, Math.min(6000, 1800 + String(msg).length * 70)); return; }
     try {
       var t = document.createElement('div');
       t.textContent = msg;

@@ -211,7 +211,7 @@ document.getElementById('authSignupSubmit').addEventListener('click', async () =
     await createUserWithEmailAndPassword(auth, email, pw);
     // 이메일 인증 메일 자동 발송 폐기 — 글쓰기 시점에 휴대폰 SMS 인증으로 대체 (Phase 2)
     closeAuthModal();
-    alert('가입이 완료되었습니다.\n글을 작성하실 때 휴대폰 SMS 인증을 거치게 됩니다.');
+    alert('가입이 완료되었습니다.\n이어서 휴대폰 문자(SMS) 인증을 진행합니다.');
   } catch (e) {
     // 이메일 중복 등 명확한 사용자 에러 → 텍스트 + 알림(토스트)으로 이중 안내
     const friendlyMsg = authErrMsg(e.code);
