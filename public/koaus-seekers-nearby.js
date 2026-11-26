@@ -131,7 +131,7 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, s
   // ── 본인 글 상세 → 근처에서 구하는 사람(모달 목록) ──
   async function open(p, b) {
     const user = window.koausAuth && window.koausAuth.user;
-    if (!user) { toast('로그인 후 이용할 수 있습니다.'); return; }
+    if (!user) { toast('로그인이 필요한 서비스입니다.'); return; }
     if (!db) { toast('잠시 후 다시 시도해 주십시오.'); return; }
     mount();
     post = p; board = b || 'accom'; radius = 5; budgetOnly = false; all = null; shown = [];

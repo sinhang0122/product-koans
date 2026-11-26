@@ -1248,7 +1248,7 @@
         const u = window.koausAuth && window.koausAuth.user;
         if (!u) {
           // 비로그인 가드 — alert 닫힘 후 로그인 모달 즉시 호출 (백그라운드 튕김 차단)
-          alert('로그인 후 작성할 수 있습니다.');
+          alert('로그인이 필요한 서비스입니다.');
           if (window.koausAuth && typeof window.koausAuth.openAuthModal === 'function') {
             // 로그인 성공 시 글쓰기 모달 자동 재오픈
             window.koausAuth.afterLogin = openWrite;
@@ -1692,8 +1692,8 @@
         }
         const u = window.koausAuth && window.koausAuth.user;
         if (!u) {
-          errEl.textContent = '로그인이 필요합니다.';
-          alert('로그인이 필요합니다.');
+          errEl.textContent = '로그인이 필요한 서비스입니다.';
+          alert('로그인이 필요한 서비스입니다.');
           return;
         }
         if (!window.koausDb || !window.koausFs) {
@@ -2149,7 +2149,7 @@
         const remain = MAX_PHOTOS - (window.__visaPhotoFiles || []).length;
         if (remain <= 0) { alert('최대 8장까지 첨부할 수 있습니다.'); return; }
         const u = auth.currentUser;
-        if (!u) { alert('사진 업로드는 로그인 후 이용 가능합니다.'); return; }
+        if (!u) { alert('로그인이 필요한 서비스입니다.'); return; }
         const batch = files.slice(0, remain);
         const _lb = $$('vwPhotoBtnLabel');
         const setBusy = b => { if (_lb) _lb.textContent = b ? '⏳ 압축·업로드 중…' : `사진 첨부 (${(window.__visaPhotoFiles||[]).length}/${MAX_PHOTOS})`; window.__visaPhotoBusy = Math.max(0, (window.__visaPhotoBusy||0) + (b ? 1 : -1)); const _sb = document.getElementById('vwSubmit'); if (_sb) _sb.disabled = (window.__visaPhotoBusy||0) > 0; if (window.koausToast) { (window.__visaPhotoBusy||0) > 0 ? window.koausToast.show('⏳ 사진 처리 중…') : window.koausToast.hide(); } };

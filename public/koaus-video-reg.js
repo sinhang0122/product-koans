@@ -113,7 +113,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
   function open() {
     var user = me || (window.koausAuth && window.koausAuth.user) || null;
     if (!user) {
-      alert('영상을 등록하려면 로그인이 필요합니다.');
+      alert('로그인이 필요한 서비스입니다.');
       try {
         if (window.koausAuth && typeof window.koausAuth.openAuthModal === 'function') window.koausAuth.openAuthModal();
       } catch (_) {}

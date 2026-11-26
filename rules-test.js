@@ -30,6 +30,10 @@
 //               운영자 칸 · isPremium 잠금), 고친 뒤 칸의 종류·길이는 새 글과 같은 기준, 시각 칸은 서버 시각, 좌표는 수(새 글에도 적용) ·
 //               숨김 · 다시 노출 · 완료 · 삭제는 내용 검사 없이 언제나 가능(예전 글 포함) · 구인 시급 소수 허용 ·
 //               닉네임 문서는 uid · nickname · createdAt 세 칸만(email 금지). 실제 화면이 보내는 내용 그대로를 '허용' 경우로 둔다.
+//            ⑩ 구글 로그인도 문자 인증 (2026-11-26b) — isVerifiedUser 는 휴대폰 인증만 본다
+//            ⑪ 글 등록 표 (2026-11-26c) — post_tickets/{uid}/accom|rent|jobs/{1|2}: 게시판마다 24시간에 2건.
+//               빈 칸에만 create · 24시간 지난 칸만 update · 지우기 불가 · 글 create 는 내 칸에 이 글 id 가 적혀 있고 끊은 지 10분 안이어야 한다 ·
+//               관리자는 표 없이. 쉐어 · 렌트 · 구인 글 create 케이스에는 맨 아래에서 '방금 끊은 표' 모킹을 기본으로 얹는다(_noTicket 케이스 제외).
 //  · 주의:   App Check Enforce 계층 차단은 본 스위트로 못 잡는다 — 콘솔 작업(K4류)
 //            후엔 운영 도메인에서 공개 페이지 1회 열람 확인 병행할 것.
 // ════════════════════════════════════════════════════════════════════
@@ -227,6 +231,16 @@ const chatData = {
 };
 // 새 대화 표(chat_tickets/{uid}/living|job/{n}) — chats create 의 get 모킹 데이터이자 표 자체의 표준 페이로드
 const chatTicket = { chatId: 'post123_testuser123', createdAt: '2026-06-10T00:00:00Z' };
+// 11-26c: 글 등록 표(post_tickets/{uid}/accom|rent|jobs/{1|2}) 의 표준 페이로드 — 글 id 는 자동 id(20자)
+const postTicket = { postId: 'newPost0000000000001', createdAt: '2026-06-10T00:00:00Z' };
+// 글 create 케이스에 얹는 기본 표 모킹(맨 아래)을 끄고, 표를 직접 정한다 — tk 가 없으면 '표 없음'(get 모킹 없음 → 규칙의 get 이 오류 → 거부)
+function noTicket(c, tk) {
+  c._noTicket = true;
+  const ex = (c.functionMocks || []).filter(x => x.function !== 'get');
+  c.functionMocks = (ex.length ? ex : [{ function: 'exists', args: [{ anyValue: {} }], result: { value: false } }])
+    .concat(tk ? [{ function: 'get', args: [{ anyValue: {} }], result: { value: { data: tk } } }] : []);
+  return c;
+}
 // 이미 만들어진 chat doc(update·get·list 의 resource) — tk 는 만들 때 한 번 들어가고 그대로 남는다
 // 내가 마지막으로 보낸 상태의 chat doc (수정·삭제 미리보기 교체 테스트용) — lastMsgAt 은 request.time 보다 3분 전(11-19: 교체는 5분 안에서만)
 const chatLastMine = Object.assign({}, chatData, {
@@ -1687,6 +1701,103 @@ const cases = [
   //   폰이 없어도 읽기는 된다(공개 글 · 본인 회원 문서)
   mk({ label: '구글 로그인 · 폰 없음: 본인 회원 문서 읽기 → 허용 (11-26b)', expectation: 'ALLOW',
        path: 'users/testuser123', method: 'get', uid: 'testuser123', googleOnly: true, resourceData: { email: 'me@example.com' } }),
+
+  // ⑪ 11-26c: 글 등록 표 — 게시판마다 24시간에 2건(사용자 지시 "코드로 막아줘")
+  //   표 문서(post_tickets/{uid}/accom|rent|jobs/{1|2})
+  mk({ label: 'post_tickets create 본인 쉐어 1번 칸 → 허용 (11-26c)', expectation: 'ALLOW',
+       path: 'post_tickets/testuser123/accom/1', method: 'create', uid: 'testuser123', data: postTicket }),
+  mk({ label: 'post_tickets create 본인 쉐어 2번 칸 → 허용', expectation: 'ALLOW',
+       path: 'post_tickets/testuser123/accom/2', method: 'create', uid: 'testuser123', data: postTicket }),
+  mk({ label: 'post_tickets create 본인 렌트 1번 칸 → 허용', expectation: 'ALLOW',
+       path: 'post_tickets/testuser123/rent/1', method: 'create', uid: 'testuser123', data: postTicket }),
+  mk({ label: 'post_tickets create 본인 구인 2번 칸 → 허용', expectation: 'ALLOW',
+       path: 'post_tickets/testuser123/jobs/2', method: 'create', uid: 'testuser123', data: postTicket }),
+  mk({ label: 'post_tickets create 3번 칸 → 거부 (게시판마다 두 칸뿐 — 한도의 핵심)', expectation: 'DENY',
+       path: 'post_tickets/testuser123/accom/3', method: 'create', uid: 'testuser123', data: postTicket }),
+  mk({ label: 'post_tickets create 0번 칸 → 거부', expectation: 'DENY',
+       path: 'post_tickets/testuser123/accom/0', method: 'create', uid: 'testuser123', data: postTicket }),
+  mk({ label: 'post_tickets create 01번 칸(같은 칸의 다른 표기) → 거부', expectation: 'DENY',
+       path: 'post_tickets/testuser123/accom/01', method: 'create', uid: 'testuser123', data: postTicket }),
+  mk({ label: 'post_tickets create 없는 묶음(auto) → 거부 (쉐어 · 렌트 · 구인 셋뿐)', expectation: 'DENY',
+       path: 'post_tickets/testuser123/auto/1', method: 'create', uid: 'testuser123', data: postTicket }),
+  mk({ label: 'post_tickets create 남의 표 → 거부', expectation: 'DENY',
+       path: 'post_tickets/testuser123/accom/1', method: 'create', uid: 'attacker999', data: postTicket }),
+  mk({ label: 'post_tickets create 남는 칸(extra) → 거부', expectation: 'DENY',
+       path: 'post_tickets/testuser123/accom/1', method: 'create', uid: 'testuser123', data: Object.assign({}, postTicket, { extra: 1 }) }),
+  mk({ label: 'post_tickets create postId 없음 → 거부', expectation: 'DENY',
+       path: 'post_tickets/testuser123/accom/1', method: 'create', uid: 'testuser123', data: { createdAt: '2026-06-10T00:00:00Z' } }),
+  mk({ label: 'post_tickets create postId 너무 짧음 → 거부', expectation: 'DENY',
+       path: 'post_tickets/testuser123/accom/1', method: 'create', uid: 'testuser123', data: Object.assign({}, postTicket, { postId: 'abc' }) }),
+  mk({ label: 'post_tickets create postId 가 숫자 → 거부', expectation: 'DENY',
+       path: 'post_tickets/testuser123/accom/1', method: 'create', uid: 'testuser123', data: Object.assign({}, postTicket, { postId: 12345678901 }) }),
+  mk({ label: 'post_tickets create createdAt 과거(serverTimestamp 아님) → 거부', expectation: 'DENY',
+       path: 'post_tickets/testuser123/accom/1', method: 'create', uid: 'testuser123', data: Object.assign({}, postTicket, { createdAt: '2026-06-01T00:00:00Z' }) }),
+  mk({ label: 'post_tickets create 미인증(폰 없음) → 거부', expectation: 'DENY',
+       path: 'post_tickets/testuser123/accom/1', method: 'create', uid: 'testuser123', data: postTicket, unverified: true }),
+  mk({ label: 'post_tickets create 구글 로그인 · 폰 없음 → 거부', expectation: 'DENY',
+       path: 'post_tickets/testuser123/accom/1', method: 'create', uid: 'testuser123', data: postTicket, googleOnly: true }),
+  mk({ label: 'post_tickets create 정지 계정 → 거부', expectation: 'DENY',
+       path: 'post_tickets/testuser123/accom/1', method: 'create', uid: 'testuser123', data: postTicket, userDocStatus: 'suspended' }),
+  mk({ label: 'post_tickets create 비로그인 → 거부', expectation: 'DENY',
+       path: 'post_tickets/testuser123/accom/1', method: 'create', data: postTicket }),
+  mk({ label: 'post_tickets 다시 쓰기 · 쓴 지 25시간 → 허용 (24시간 지난 칸)', expectation: 'ALLOW',
+       path: 'post_tickets/testuser123/accom/1', method: 'update', uid: 'testuser123', data: postTicket,
+       resourceData: { postId: 'oldPost0000000000001', createdAt: '2026-06-08T23:00:00Z' } }),
+  mk({ label: 'post_tickets 구인 묶음 다시 쓰기 · 쓴 지 25시간 → 허용', expectation: 'ALLOW',
+       path: 'post_tickets/testuser123/jobs/2', method: 'update', uid: 'testuser123', data: postTicket,
+       resourceData: { postId: 'oldPost0000000000001', createdAt: '2026-06-08T23:00:00Z' } }),
+  mk({ label: 'post_tickets 다시 쓰기 · 쓴 지 23시간 → 거부 (한도의 핵심)', expectation: 'DENY',
+       path: 'post_tickets/testuser123/accom/1', method: 'update', uid: 'testuser123', data: postTicket,
+       resourceData: { postId: 'oldPost0000000000001', createdAt: '2026-06-09T01:00:00Z' } }),
+  mk({ label: 'post_tickets 렌트 묶음 다시 쓰기 · 쓴 지 23시간 → 거부', expectation: 'DENY',
+       path: 'post_tickets/testuser123/rent/2', method: 'update', uid: 'testuser123', data: postTicket,
+       resourceData: { postId: 'oldPost0000000000001', createdAt: '2026-06-09T01:00:00Z' } }),
+  mk({ label: 'post_tickets 다시 쓰기 · 정확히 24시간 → 거부', expectation: 'DENY',
+       path: 'post_tickets/testuser123/accom/1', method: 'update', uid: 'testuser123', data: postTicket,
+       resourceData: { postId: 'oldPost0000000000001', createdAt: '2026-06-09T00:00:00Z' } }),
+  mk({ label: 'post_tickets 다시 쓰기 · 25시간 지났지만 createdAt 을 옛 값 그대로 → 거부', expectation: 'DENY',
+       path: 'post_tickets/testuser123/accom/1', method: 'update', uid: 'testuser123',
+       data: { postId: 'newPost0000000000001', createdAt: '2026-06-08T23:00:00Z' },
+       resourceData: { postId: 'oldPost0000000000001', createdAt: '2026-06-08T23:00:00Z' } }),
+  mk({ label: 'post_tickets delete 본인 → 거부 (지우면 한도가 풀린다)', expectation: 'DENY',
+       path: 'post_tickets/testuser123/accom/1', method: 'delete', uid: 'testuser123', resourceData: postTicket }),
+  mk({ label: 'post_tickets get 본인 → 허용', expectation: 'ALLOW',
+       path: 'post_tickets/testuser123/accom/1', method: 'get', uid: 'testuser123', resourceData: postTicket }),
+  mk({ label: 'post_tickets get 본인 · 빈 칸 → 허용', expectation: 'ALLOW',
+       path: 'post_tickets/testuser123/jobs/2', method: 'get', uid: 'testuser123' }),
+  mk({ label: 'post_tickets get 남의 표 → 거부', expectation: 'DENY',
+       path: 'post_tickets/testuser123/accom/1', method: 'get', uid: 'attacker999', resourceData: postTicket }),
+  mk({ label: 'post_tickets get 관리자 → 허용', expectation: 'ALLOW',
+       path: 'post_tickets/testuser123/accom/1', method: 'get', uid: 'adminuid001', admin: true, resourceData: postTicket }),
+  mk({ label: 'post_tickets list 본인 limit 2 → 허용', expectation: 'ALLOW',
+       path: 'post_tickets/testuser123/accom/1', method: 'list', uid: 'testuser123', query: { limit: 2 }, resourceData: postTicket }),
+  mk({ label: 'post_tickets list 본인 limit 3 → 거부', expectation: 'DENY',
+       path: 'post_tickets/testuser123/accom/1', method: 'list', uid: 'testuser123', query: { limit: 3 }, resourceData: postTicket }),
+  //   글 create — 표가 있어야 한다(위의 기존 '허용' 케이스들은 맨 아래 기본 모킹 = 이 글 id 로 방금 끊은 표)
+  mkCreate(accomData, 'ALLOW', 'rent_posts', '렌트 글 만들기 + 방금 끊은 표 → 허용 (11-26c)'),
+  noTicket(mkCreate(accomData,    'DENY', 'accom_posts', '쉐어 글 만들기 · 표 없음 → 거부 (11-26c: 전에는 허용 — 한도의 핵심)')),
+  noTicket(mkCreate(accomData,    'DENY', 'rent_posts',  '렌트 글 만들기 · 표 없음 → 거부 (11-26c)')),
+  noTicket(mkCreate(jobsLikeData, 'DENY', 'jobs_posts',  '구인 글 만들기 · 표 없음 → 거부 (11-26c)')),
+  noTicket(mkCreate(accomData,    'DENY', 'accom_posts', '쉐어 글 만들기 · 표에 다른 글 id → 거부 (표 한 장 = 글 하나)'),
+           { postId: 'otherPost00000000001', createdAt: '2026-06-10T00:00:00Z' }),
+  noTicket(mkCreate(jobsLikeData, 'DENY', 'jobs_posts',  '구인 글 만들기 · 표에 다른 글 id → 거부'),
+           { postId: 'otherPost00000000001', createdAt: '2026-06-10T00:00:00Z' }),
+  noTicket(mkCreate(accomData,    'DENY', 'accom_posts', '쉐어 글 만들기 · 11분 전에 끊은 표 → 거부 (10분 창 — 지우고 같은 id 로 다시 만들기 차단)'),
+           { postId: 'newdoc1', createdAt: '2026-06-09T23:49:00Z' }),
+  noTicket(mkCreate(accomData,    'DENY', 'accom_posts', '쉐어 글 만들기 · 정확히 10분 전에 끊은 표 → 거부'),
+           { postId: 'newdoc1', createdAt: '2026-06-09T23:50:00Z' }),
+  noTicket(mkCreate(accomData,    'ALLOW', 'accom_posts', '쉐어 글 만들기 · 9분 전에 끊은 표 → 허용 (화면은 9분 안에만 같은 표를 다시 쓴다)'),
+           { postId: 'newdoc1', createdAt: '2026-06-09T23:51:00Z' }),
+  noTicket(mkCreate(accomData,    'DENY', 'accom_posts', '쉐어 글 만들기 · 표에 createdAt 없음 → 거부'),
+           { postId: 'newdoc1' }),
+  //   관리자는 표 없이 올린다(공지 · 대신 올려 주기)
+  noTicket(mk({ label: '관리자: 쉐어 글 만들기 · 표 없음 → 허용 (11-26c)', expectation: 'ALLOW',
+       path: 'accom_posts/newdoc1', method: 'create', uid: 'testuser123', admin: true, data: accomData })),
+  noTicket(mk({ label: '관리자: 구인 글 만들기 · 표 없음 → 허용', expectation: 'ALLOW',
+       path: 'jobs_posts/newdoc1', method: 'create', uid: 'testuser123', admin: true, data: jobsLikeData })),
+  //   표와 무관한 것 — 수정 · 삭제는 표를 보지 않는다(횟수에 들어가지 않는다)
+  noTicket(mk({ label: '쉐어 글 삭제 · 표 없음 → 허용 (삭제는 표와 무관)', expectation: 'ALLOW',
+       path: 'accom_posts/existdoc1', method: 'delete', uid: 'testuser123', resourceData: accomData })),
 ];
 
 // ── 기본 functionMocks 주입 ──
@@ -1700,6 +1811,19 @@ for (const c of cases) {
       { function: 'exists', args: [{ anyValue: {} }], result: { value: false } },
     ];
   }
+}
+// 11-26c: 글 등록 표 — 쉐어 · 렌트 · 구인 글 create 는 규칙이 post_tickets 의 내 칸을 get 으로 읽는다(postTicketOk).
+//   모킹은 경로를 가리지 않으므로(anyValue) 그 케이스의 get 결과에 '이 글 id 로 방금 끊은 표'(postId · createdAt)를 얹는다.
+//   · get 모킹이 이미 있으면(정지 · 활성 계정 흉내) 그 data 에 두 칸을 더한다 — 한 문서가 users 문서 흉내와 표 흉내를 겸한다.
+//   · _noTicket 케이스(⑪ 블록 — 표 없음 · 남의 표 · 낡은 표)는 건드리지 않는다. _noTicket 표시는 API 로 보내기 전에 지운다.
+for (const c of cases) {
+  const skip = c._noTicket; delete c._noTicket;
+  const m = /\/documents\/(accom|rent|jobs)_posts\/([^/]+)$/.exec((c.request && c.request.path) || '');
+  if (skip || !m || c.request.method !== 'create') continue;
+  const tk = { postId: m[2], createdAt: c.request.time };
+  const g = c.functionMocks.find(x => x.function === 'get');
+  if (g) g.result.value.data = Object.assign({}, g.result.value.data, tk);
+  else c.functionMocks = c.functionMocks.concat([{ function: 'get', args: [{ anyValue: {} }], result: { value: { data: tk } } }]);
 }
 
 (async () => {

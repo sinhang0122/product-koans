@@ -3,7 +3,7 @@
    ─ [QLD ▾] 드롭다운 자리: 데스크탑은 상단바 햄버거 옆, 모바일은 지도 풀스크린 헤더 햄버거 옆(koaus-map-header.js)
      + 목록 화면의 보기 토글(List View|Map View) 옆(상단바는 모바일에서 자리가 없어 숨김 — 로그인·가·달·햄버거로 꽉 참).
    ─ 보드마다 따로 저장(사용자 결정 11-08b: 쉐어·렌트·구인구직이 서로 따라가지 않음) — LS koaus-state-pref-v1:accom / :rent / :jobs.
-     '전체(호주 전역)' 항목은 없음. 아무것도 안 골랐으면 내 프로필 동네의 주 → 없으면 NSW.
+     '전체(호주 전역)' 항목은 없음. 아무것도 안 골랐으면 다른 게시판에서 마지막으로 고른 주(11-26c, :last) → 내 프로필 동네의 주 → 없으면 NSW.
    ─ 보드 페이지(accom/rent/jobs)는 주소에 ?state= 가 없으면 같은 순서로 currentState 를 정한다
      (각 페이지 인라인 스크립트가 LS 를 직접 읽음 — 이 파일보다 먼저 실행되기 때문).
    ─ 주소의 ?state= 가 있으면 그게 우선(공유 링크 의도 존중). 드롭다운도 그 값을 보여 준다.
@@ -23,12 +23,15 @@
   function fromUrl() { try { var v = (new URLSearchParams(location.search).get('state') || '').toLowerCase(); return valid(v) ? v : ''; } catch (_) { return ''; } }
   function pref() { try { var v = (localStorage.getItem(keyFor()) || '').toLowerCase(); return valid(v) ? v : ''; } catch (_) { return ''; } }
   function profileState() { try { var c = JSON.parse(localStorage.getItem('koaus-profile-center-v1') || 'null'); var v = String((c && c.state) || '').toLowerCase(); return valid(v) ? v : ''; } catch (_) { return ''; } }
-  function effective() { return fromUrl() || pref() || profileState() || DEFAULT_STATE; }
+  // 11-26c: 처음 여는 게시판은 다른 게시판에서 고른 주로 시작한다(마지막으로 고른 주 → 쉐어 · 렌트 · 구인 순). 각 게시판에서 한 번 고르면 그 뒤로는 그 게시판 것만 따른다(11-08b 그대로)
+  function others() { try { var ks = ['last', 'accom', 'rent', 'jobs']; for (var i = 0; i < ks.length; i++) { var v = (localStorage.getItem(KEY + ':' + ks[i]) || '').toLowerCase(); if (valid(v)) return v; } } catch (_) {} return ''; }
+  function effective() { return fromUrl() || pref() || others() || profileState() || DEFAULT_STATE; }
   function set(v) { v = valid(v) ? v : ''; try { if (v) localStorage.setItem(keyFor(), v); else localStorage.removeItem(keyFor()); } catch (_) {} }
   // 고른 주로 같은 페이지 다시 열기 — 글 딥링크(id)·페이지 번호는 떼고, 나머지(mode·category 등)는 유지
   function go(v) {
     if (!valid(v)) return;
     set(v);
+    try { localStorage.setItem(KEY + ':last', v); } catch (_) {}   // 11-26c: 드롭다운에서 직접 고른 주만 적는다(주소로 들어온 주는 적지 않는다)
     var q;
     try { q = new URLSearchParams(location.search); } catch (_) { q = new URLSearchParams(''); }
     q.delete('state'); q.delete('id'); q.delete('page');

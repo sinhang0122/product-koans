@@ -128,6 +128,29 @@ service cloud.firestore {
         : (get(/databases/$(database)/documents/chat_tickets/$(request.auth.uid)/living/$(request.resource.data.tk)).data.chatId == chatId));
     }
 
+    // ── 글 등록 표(post_tickets) — 2026-11-26c(사용자 지시 "코드로 막아줘"): 게시판마다 24시간에 2건 ──
+    //   · 표는 게시판마다 두 칸 — post_tickets/{uid}/accom|rent|jobs/{1|2}. 칸 하나 = 글 하나(postId).
+    //   · 새로 쓰기(create)는 빈 칸에만, 덮어쓰기(update)는 쓴 지 24시간이 지난 칸에만 → 어느 24시간에도 게시판마다 2장을 넘지 못한다.
+    //   · 글 create 는 내 두 칸 가운데 하나에 이 글의 id 가 적혀 있고, 그 표를 끊은 지 10분이 안 됐어야 한다(postTicketOk).
+    //     10분 창: 글을 지우고 같은 id 로 다시 만드는 식으로 표 한 장을 여러 번 쓰지 못하게 한다. 화면은 표를 끊은 직후에 글을 만든다.
+    //   · 관리자는 표 없이 올린다. 글 수정 · 숨김 · 삭제는 표와 무관하다.
+    function validPostTicket(uid, n) {
+      return isVerifiedUser()
+        && notSuspended()
+        && request.auth.uid == uid
+        && n in ['1', '2']
+        && reqStr('postId', 10, 64)
+        && 'createdAt' in data() && data().createdAt == request.time
+        && data().keys().hasOnly(['postId', 'createdAt']);
+    }
+    function postTicketHit(board, n, postId) {
+      let t = get(/databases/$(database)/documents/post_tickets/$(request.auth.uid)/$(board)/$(n)).data;
+      return t.postId == postId && request.time < t.createdAt + duration.value(10, 'm');
+    }
+    function postTicketOk(board, postId) {
+      return isAdmin() || postTicketHit(board, '1', postId) || postTicketHit(board, '2', postId);
+    }
+
     // ── 게시판 글 검증 ──
     // 작성자 본인 확인 (update/delete 용) — create 시 위조 차단은 validBaseCreate 가 담당
     //   · notSuspended — 정지 계정은 본인 글 수정/삭제도 차단 (제재 1단계)
@@ -595,7 +618,7 @@ service cloud.firestore {
     match /accom_posts/{postId} {
       allow get:    if true;
       allow list:   if isAdmin() || limitedList();   // isAdmin: count() 집계(limit 없음) 허용
-      allow create: if validShareRentCreate();
+      allow create: if validShareRentCreate() && postTicketOk('accom', postId);   // 11-26c: 24시간에 2건(글 등록 표)
       allow update: if isAdmin()
                        || ( ownerOnExisting()
                             && uidLocked()
@@ -609,7 +632,7 @@ service cloud.firestore {
     match /rent_posts/{postId} {
       allow get:    if true;
       allow list:   if isAdmin() || limitedList();   // isAdmin: count() 집계(limit 없음) 허용
-      allow create: if validShareRentCreate();
+      allow create: if validShareRentCreate() && postTicketOk('rent', postId);   // 11-26c: 24시간에 2건(글 등록 표)
       allow update: if isAdmin()
                        || ( ownerOnExisting()
                             && uidLocked()
@@ -623,7 +646,7 @@ service cloud.firestore {
     match /jobs_posts/{postId} {
       allow get:    if true;
       allow list:   if isAdmin() || limitedList();   // isAdmin: count() 집계(limit 없음) 허용
-      allow create: if validJobsCreate();
+      allow create: if validJobsCreate() && postTicketOk('jobs', postId);   // 11-26c: 24시간에 2건(글 등록 표)
       allow update: if isAdmin()
                        || ( ownerOnExisting()
                             && uidLocked()
@@ -1640,6 +1663,33 @@ service cloud.firestore {
       allow list:   if isSignedIn() && (request.auth.uid == uid || isAdmin()) && request.query.limit <= 50;
       allow create: if validChatTicket(uid, n);
       allow update: if validChatTicket(uid, n)
+                       && request.time > resource.data.createdAt + duration.value(24, 'h');
+      allow delete: if false;
+    }
+
+    // ── 글 등록 표(post_tickets) — 2026-11-26c: 게시판마다 24시간에 2건. 설명은 위 validPostTicket ──
+    //   · 지우기 불가. 본인(과 관리자)만 읽는다. 세 묶음의 규칙은 같다.
+    match /post_tickets/{uid}/accom/{n} {
+      allow get:    if isSignedIn() && (request.auth.uid == uid || isAdmin());
+      allow list:   if isSignedIn() && (request.auth.uid == uid || isAdmin()) && request.query.limit <= 2;
+      allow create: if validPostTicket(uid, n);
+      allow update: if validPostTicket(uid, n)
+                       && request.time > resource.data.createdAt + duration.value(24, 'h');
+      allow delete: if false;
+    }
+    match /post_tickets/{uid}/rent/{n} {
+      allow get:    if isSignedIn() && (request.auth.uid == uid || isAdmin());
+      allow list:   if isSignedIn() && (request.auth.uid == uid || isAdmin()) && request.query.limit <= 2;
+      allow create: if validPostTicket(uid, n);
+      allow update: if validPostTicket(uid, n)
+                       && request.time > resource.data.createdAt + duration.value(24, 'h');
+      allow delete: if false;
+    }
+    match /post_tickets/{uid}/jobs/{n} {
+      allow get:    if isSignedIn() && (request.auth.uid == uid || isAdmin());
+      allow list:   if isSignedIn() && (request.auth.uid == uid || isAdmin()) && request.query.limit <= 2;
+      allow create: if validPostTicket(uid, n);
+      allow update: if validPostTicket(uid, n)
                        && request.time > resource.data.createdAt + duration.value(24, 'h');
       allow delete: if false;
     }

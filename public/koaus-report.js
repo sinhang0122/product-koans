@@ -137,7 +137,7 @@
     }
     const user = (window.koausAuth && window.koausAuth.user) || null;
     if (!user || !user.uid) {
-      note.textContent = '로그인이 필요합니다.';
+      note.textContent = '로그인이 필요한 서비스입니다.';
       note.className = 'koaus-report-note is-error';
       if (window.koausAuth && window.koausAuth.openAuthModal) setTimeout(() => window.koausAuth.openAuthModal(), 600);
       return;

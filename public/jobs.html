@@ -72,6 +72,8 @@
   <script type="module" src="koaus-ext.js"></script>   <!-- 11-05: 다른 한인 사이트 글(출처 표시·원문 이동) -->
   <script src="koaus-enums.js" defer></script>   <!-- 11-04: 값 목록(업종·비자 등) — 일 구해요 프로필 -->
   <script src="koaus-geo.js" defer></script>   <!-- 11-04: 동네 검색 공통(Maps JS, 한글·영문·우편번호) -->
+  <script src="koaus-area.js" defer></script>   <!-- 11-26c: 지도에서 정한 지역 — 기억 · 목록 표시 · 이어 보기 -->
+  <script src="koaus-post-ticket.js" defer></script>   <!-- 11-26c: 글 등록 표 — 게시판마다 24시간에 2건(규칙과 짝) -->
   <script src="koaus-state-pick.js" defer></script>   <!-- 11-08: 상단바·지도 헤더 주(State) 드롭다운 -->
   <script src="koaus-people-deck.js" defer></script>   <!-- 11-08: 구하는 사람 카드 넘겨 보기(공용) -->
   <script type="module" src="koaus-job-profile.js?v=1119a"></script>   <!-- 11-04 ②: 일 구해요 프로필 + 사장님용 근처 목록 -->
@@ -462,12 +464,7 @@
       </div>
       <span class="board-count" id="boardCount">총 0건</span>
       <!-- List View 에서도 지도 영역 제한 알림 — 클릭 시 전체 지역 복원 (지시 3/3) -->
-      <button id="areaResetTopBtn" type="button"
-              style="display:none;margin-left:8px;padding:4px 10px;font-size:11.5px;font-weight:700;
-                     background:#fef3c7;color:#92400e;border:1px solid #fde68a;border-radius:999px;
-                     cursor:pointer;white-space:nowrap;">
-        지역 제한 적용 중 — 전체 보기
-      </button>
+      <button id="areaResetTopBtn" type="button" class="koaus-area-chip" style="display:none;">지도에서 정한 지역만 보는 중 · 전체 보기</button>   <!-- 11-26c: 지도에서 정한 지역으로 좁혀 보는 중임을 목록에서도 알리고, 누르면 푼다 -->
       <div class="accom-ctrl-actions">
         <button class="board-write-btn board-write-btn--ghost" id="filterModalBtn">상세 필터</button>
         <button class="board-write-btn" id="writeBtnOpen">+ 글쓰기</button>
@@ -484,7 +481,7 @@
     <div id="mapView" style="display:none;">
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap;">
         <button class="area-search-btn" id="areaSearchBtn">이 지역 잡 구하기</button>
-        <button class="area-search-btn" id="areaResetBtn" type="button" style="display:none;background:var(--bg-card);color:var(--text-primary);border:1px solid var(--border);">전체 지역 보기</button>
+        <button id="areaResetBtn" type="button" class="koaus-area-chip on-map" style="display:none;">지도에서 정한 지역만 보는 중 · 전체 보기</button>   <!-- 11-26c -->
       </div>
       <div id="jobsMap" style="width:100%;height:480px;border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;"></div>
     </div>
@@ -868,7 +865,7 @@
     // ── Tabs ──
     const urlTab = new URLSearchParams(location.search).get('tab');
     // 11-08b: 주소에 ?state= 가 없으면 이 게시판의 주 설정(LS koaus-state-pref-v1:jobs, 게시판마다 따로) → 내 프로필 동네의 주 → NSW. '전체(호주 전역)'는 없음(사용자 결정)
-    const currentState = (function () { const ok = v => /^(nsw|vic|qld|wa|sa|tas|act|nt)$/.test(v); const u = (new URLSearchParams(location.search).get('state') || '').toLowerCase(); if (ok(u)) return u; try { const v = (localStorage.getItem('koaus-state-pref-v1:jobs') || '').toLowerCase(); if (ok(v)) return v; const c = JSON.parse(localStorage.getItem('koaus-profile-center-v1') || 'null'); const ps = String((c && c.state) || '').toLowerCase(); if (ok(ps)) return ps; } catch (_) {} return 'nsw'; })();
+    const currentState = (function () { const ok = v => /^(nsw|vic|qld|wa|sa|tas|act|nt)$/.test(v); const u = (new URLSearchParams(location.search).get('state') || '').toLowerCase(); if (ok(u)) return u; try { const v = (localStorage.getItem('koaus-state-pref-v1:jobs') || '').toLowerCase(); if (ok(v)) return v; { const ks = ['last', 'accom', 'rent', 'jobs']; for (let i = 0; i < ks.length; i++) { const o = (localStorage.getItem('koaus-state-pref-v1:' + ks[i]) || '').toLowerCase(); if (ok(o)) return o; } }   /* 11-26c: 처음 여는 게시판은 다른 게시판에서 고른 주로 */ const c = JSON.parse(localStorage.getItem('koaus-profile-center-v1') || 'null'); const ps = String((c && c.state) || '').toLowerCase(); if (ok(ps)) return ps; } catch (_) {} return 'nsw'; })();
     // 2026-10: '구직'(seeking) 글 숨김 — 글은 일자리 내주는 쪽만 올림. 플래그만 true 로 바꾸면 복구
     //   (기존 seeking 글·jobs_posts 데이터·rules 그대로, 목록은 postType 필터로 자연 제외).
     const SEEKING_ENABLED = false;
@@ -1683,7 +1680,7 @@
                 console.error('Firestore 전송 실패 원인: ', error);
                 // 11-21: 저장에 실패한 글은 이 기기의 목록에서도 뺀다(전에는 이 기기에만 계속 남아, 올라간 것처럼 보였다)
                 try { savePosts(loadPosts().filter(x => String(x.id) !== String(post.id))); removeRecord(MYPOSTS_KEY, post.id); renderPosts(); } catch (_) {}
-                alert('글을 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.\n(' + ((error && (error.code || error.message)) || error) + ')');
+                alert((error && error.koausMsg) || ('글을 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.\n(' + ((error && (error.code || error.message)) || error) + ')'));   // 11-26c: 24시간 2건 한도 안내는 그 문구 그대로
               });
           } else {
             console.error('window.koausJobs 미초기화 — Firestore 모듈 로드 순서를 확인하세요');
@@ -1834,13 +1831,15 @@
       const urlState = currentState;
       const profileView = (function () { try { const c = JSON.parse(localStorage.getItem('koaus-profile-center-v1') || 'null'); if (!(c && typeof c.lat === 'number')) return null; if (c.all && STATE_VIEWS[c.state]) return { center: STATE_VIEWS[c.state].center, zoom: 9, state: c.state }; return { center: { lat: c.lat, lng: c.lng }, zoom: c.km ? 10 : 12, state: c.state }; } catch (_) { return null; } })();   // 11-04: 프로필 첫 동네 기준
       const view = currentState ? ((profileView && profileView.state === currentState) ? profileView : (STATE_VIEWS[currentState] || AUS_VIEW)) : (profileView || AUS_VIEW);   // 11-08: Living 과 같은 규칙(주 → 내 동네/중심 도시, 전체 → 내 동네/전국)
-      jobsMap = new google.maps.Map(el, { gestureHandling: 'greedy', center: view.center, zoom: view.zoom, mapTypeControl: false, streetViewControl: false });
+      jobsMap = new google.maps.Map(el, { gestureHandling: 'greedy', center: (_areaStart || view).center, zoom: (_areaStart || view).zoom, mapTypeControl: false, streetViewControl: false });   // 11-26c: 이어 보기로 켠 범위가 있으면 그곳에서 연다
       mapReady = true;
+      if (areaBounds && !_areaStart) _areaMoveMap();   // 11-26c: 중심 · 축척 없이 적어 둔 범위면 범위에 맞춘다
       updateMapMarkers();
       // 드래그/줌 시 "이 지역 잡 구하기" 재검색 버튼 노출
       const asb = document.getElementById('areaSearchBtn');
-      jobsMap.addListener('dragend',     () => { if (asb) asb.classList.add('show'); });
-      jobsMap.addListener('zoom_changed',() => { if (asb) asb.classList.add('show'); });
+      const _showAsb = () => { if (_areaProg) return; if (asb) asb.classList.add('show'); try { window.koausArea && window.koausArea.hideCards(); } catch (_) {} };   // 11-26c: 우리가 옮기는 중엔 띄우지 않고, 손으로 움직이면 '이어 보기' 카드는 접는다
+      jobsMap.addListener('dragend',      _showAsb);
+      jobsMap.addListener('zoom_changed', _showAsb);
     };
     function updateMapMarkers() {
       if (!jobsMap || !window.google) return;
@@ -1995,6 +1994,7 @@
       const _ffVe    = document.getElementById('ffVisaEligible');
       const visaEligible = !!(_ffVe && _ffVe.checked);
       activeFilter = { region, empType, payUnit, minPay, visaEligible };
+      if (areaBounds) { try { if (window.koausArea) window.koausArea.forget('jobs'); } catch (_) {} }   // 11-26c
       areaBounds = null;
       if (region) {
         try { const c = await geocode(region);
@@ -2013,23 +2013,55 @@
       const ffVe = document.getElementById('ffVisaEligible'); if (ffVe) ffVe.checked = false;
       document.getElementById('ffPayUnit').value = 'hour';
       activeFilter = {}; areaBounds = null;
+      try { if (window.koausArea) window.koausArea.forget('jobs'); } catch (_) {}   // 11-26c
       renderPosts(); updateMapMarkers();
       updateAreaResetVisibility();
     });
     // 지도 영역 제한 해제 — 세컨/써드 잡 전국 검색 등 광역 탐색용 (List + Map 양쪽 동기화)
+    // 11-26c: 목록 · 지도의 칩은 쉐어 · 렌트와 같은 것("○○ 근처만 보는 중 · 전체 보기") — koaus-area.js. 지도 쪽 버튼은 전에는 보이지 않았다(.area-search-btn 은 .show 없이는 숨김)
+    let _areaLabel = '';     // 칩에 적는 동네 이름('' 이면 '지도에서 정한 지역')
+    let _areaStart = null;   // 이어 보기로 켠 범위의 지도 중심 · 축척
+    let _areaProg = false;   // 우리가 지도를 옮기는 중 — '이 지역 잡 구하기' 버튼을 띄우지 않는다
     function updateAreaResetVisibility() {
-      const mapBtn  = document.getElementById('areaResetBtn');
-      const listBtn = document.getElementById('areaResetTopBtn');
       const show = !!areaBounds;
-      if (mapBtn)  mapBtn.style.display  = show ? '' : 'none';
-      if (listBtn) listBtn.style.display = show ? 'inline-flex' : 'none';
+      if (!show) { _areaLabel = ''; _areaStart = null; }
+      const txt = window.koausArea ? window.koausArea.chipText(_areaLabel) : '지도에서 정한 지역만 보는 중 · 전체 보기';
+      ['areaResetTopBtn', 'areaResetBtn'].forEach(id => { const b = document.getElementById(id); if (!b) return; b.textContent = txt; b.style.display = show ? 'inline-flex' : 'none'; });
     }
     function _resetAreaBounds() {
       areaBounds = null;
+      try { if (window.koausArea) window.koausArea.forget('jobs'); } catch (_) {}   // [전체 보기] — 적어 둔 범위도 지운다
+      const asb = document.getElementById('areaSearchBtn'); if (asb) asb.classList.remove('show');
       updateAreaResetVisibility();
       renderPosts();
       try { updateMapMarkers(); } catch (_) {}
     }
+    function _areaMoveMap() {
+      if (!jobsMap || !areaBounds) return;
+      _areaProg = true;
+      try {
+        if (_areaStart) { jobsMap.setCenter(_areaStart.center); jobsMap.setZoom(_areaStart.zoom); }
+        else if (areaBounds.toJSON) jobsMap.fitBounds(areaBounds.toJSON());
+      } catch (_) {}
+      setTimeout(() => { _areaProg = false; }, 600);
+    }
+    window.__koausAreaHost = {
+      board: 'jobs', state: currentState,
+      active: () => !!areaBounds,
+      // 이어 보기 — 적어 둔 범위를 켜고 view('map' | 'list')로 보여 준다
+      apply: (rec, view) => {
+        const b = window.koausArea && window.koausArea.shim(rec.o); if (!b) return;
+        areaBounds = b; _areaLabel = rec.label || '';
+        _areaStart = (rec.c && rec.z) ? { center: rec.c, zoom: rec.z } : null;
+        try { window.koausArea.remember('jobs', currentState, b, { label: _areaLabel, center: rec.c, zoom: rec.z }); } catch (_) {}   // 다시 본 시각으로 갱신(14일)
+        const asb = document.getElementById('areaSearchBtn'); if (asb) asb.classList.remove('show');
+        if (view === 'map' || view === 'list') { _koausSaveView(view); switchView(view); }
+        if (jobsMap) _areaMoveMap();
+        updateAreaResetVisibility();
+        renderPosts();
+        try { updateMapMarkers(); } catch (_) {}
+      },
+    };
     safeOn('areaResetBtn',    'click', _resetAreaBounds);
     safeOn('areaResetTopBtn', 'click', _resetAreaBounds);
     // 세컨/써드 비자 체크박스 — 즉시 필터 적용 (모달 [적용하기] 안 눌러도 실시간 반영)
@@ -2068,6 +2100,10 @@
       areaBounds = jobsMap.getBounds();
       const asb = document.getElementById('areaSearchBtn');
       if (asb) asb.classList.remove('show');
+      // 11-26c: 칩에 적을 동네(범위 안 글에서) · 이 기기에 적어 두기
+      _areaStart = null;
+      try { _areaLabel = window.koausArea ? window.koausArea.labelFrom(applyFilters(loadPosts().filter(p => (p.postType || 'hiring') === activeTab))) : ''; } catch (_) { _areaLabel = ''; }
+      try { if (window.koausArea) window.koausArea.remember('jobs', currentState, areaBounds, { label: _areaLabel, center: jobsMap.getCenter ? jobsMap.getCenter() : null, zoom: jobsMap.getZoom ? jobsMap.getZoom() : null }); } catch (_) {}
       updateAreaResetVisibility();
       updateMapMarkers();
       renderPosts();
@@ -2477,7 +2513,16 @@
         console.log('Firestore 전송 시도 데이터: ', payload, '| collection=jobs_posts | uid=', u.uid);
         try {
           // ── Step 1: 새 글 등록 — 반드시 먼저 성공해야 함 ──
-          const ref = await addDoc(collection(db, 'jobs_posts'), payload);
+          // 11-26c: 1일 2회 등록 — 글 등록 표를 끊고 그 id 로 글을 만든다(koaus-post-ticket.js, 규칙 postTicketOk). 표 모듈이 없으면 예전 방식.
+          let ref;
+          if (window.koausPostTicket) {
+            const _tk = await window.koausPostTicket.create({ db, doc, getDoc, setDoc, collection, serverTimestamp }, u.uid, 'jobs',
+              async postId => { const r = doc(db, 'jobs_posts', postId); await setDoc(r, payload); return r; });
+            if (!_tk.ok) { const _m = window.koausPostTicket.message(_tk); throw Object.assign(new Error('post-ticket'), _m ? { code: 'koaus/post-limit', koausMsg: _m } : { code: 'permission-denied' }); }   // 한도면 그 안내를, 표를 못 끊은 다른 경우(미인증 · 정지)는 전과 같은 알림
+            ref = _tk.ref;
+          } else {
+            ref = await addDoc(collection(db, 'jobs_posts'), payload);
+          }
           console.log('Firestore addDoc 성공 — docId =', ref.id);
           // ── Step 2: 새 글 등록 100% 성공 확인 직후에만 과거 중복 글 삭제 (Rollback-safe) ──
           //   · 조건: 같은 uid + 같은 title + 같은 body (완전 동일)

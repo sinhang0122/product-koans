@@ -397,7 +397,7 @@
     e.preventDefault();
     e.stopPropagation();
     if (e.stopImmediatePropagation) e.stopImmediatePropagation();
-    try { alert('연락처 확인 및 문의를 위해서는 로그인이 필요합니다.'); } catch (_) {}
+    try { alert('로그인이 필요한 서비스입니다.'); } catch (_) {}
     try {
       if (window.koausAuth && window.koausAuth.openAuthModal) {
         window.koausAuth.openAuthModal();

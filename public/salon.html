@@ -1074,7 +1074,7 @@
     // salon.html — 글쓰기 버튼 없음 (관리자 전용 등록). 안전한 no-op 가드.
     (document.getElementById('writeBtnOpen') || { addEventListener(){} }).addEventListener('click', () => {
       const u = window.koausAuth && window.koausAuth.user;
-      if (!u) { alert('글을 작성하려면 로그인이 필요합니다.'); window.koausAuth && window.koausAuth.openAuthModal(); return; }
+      if (!u) { alert('로그인이 필요한 서비스입니다.'); window.koausAuth && window.koausAuth.openAuthModal(); return; }
       // 휴대폰 인증은 로그인 시점 글로벌 인터셉터에서 강제 — 여기선 로그인 여부만 신뢰
       openWriteModal();
     });
@@ -1231,7 +1231,7 @@
     (document.getElementById('writeBtnSubmit') || { addEventListener(){} }).addEventListener('click', () => {
       // 로그인 필수: 미로그인 시 로그인 모달을 띄우고, 로그인 직후 등록을 이어서 진행
       if (!window.koausAuth || !window.koausAuth.user) {
-        alert('글을 등록하려면 로그인이 필요합니다.');
+        alert('로그인이 필요한 서비스입니다.');
         if (window.koausAuth) {
           window.koausAuth.afterLogin = submitPost;  // 로그인 성공 시 자동 재시도
           window.koausAuth.openAuthModal();
@@ -2821,7 +2821,7 @@
       open.addEventListener('click', e => {
         e.preventDefault();
         const u = auth.currentUser;
-        if (!u) { alert('로그인 후 등록 요청을 보낼 수 있습니다.'); if (window.koausAuth && window.koausAuth.openAuthModal) window.koausAuth.openAuthModal(); return; }
+        if (!u) { alert('로그인이 필요한 서비스입니다.'); if (window.koausAuth && window.koausAuth.openAuthModal) window.koausAuth.openAuthModal(); return; }
         show();
       });
       close && close.addEventListener('click', hide);
@@ -2831,7 +2831,7 @@
         e.preventDefault();
         const note = $('rqNote'); note.classList.remove('is-ok','is-error');
         const u = auth.currentUser;
-        if (!u) { note.textContent = '로그인이 필요합니다.'; note.classList.add('is-error'); return; }
+        if (!u) { note.textContent = '로그인이 필요한 서비스입니다.'; note.classList.add('is-error'); return; }
         const title = $('rqTitle').value.trim(), contact = $('rqContact').value.trim();
         const phone     = ($('rqPhone') && $('rqPhone').value.trim()) || '';
         const kakaoLink = ($('rqKakao') && $('rqKakao').value.trim()) || '';
@@ -3012,7 +3012,7 @@
         const files = Array.from(e.target.files || []); e.target.value = '';
         const rem = MAX - (window.__rqPhotoFiles || []).length;
         if (rem <= 0) { alert('최대 8장까지 첨부할 수 있습니다.'); return; }
-        const u = auth.currentUser; if (!u) { alert('로그인 후 사진 업로드 가능합니다.'); return; }
+        const u = auth.currentUser; if (!u) { alert('로그인이 필요한 서비스입니다.'); return; }
         const batch = files.slice(0, rem);
         const _lb = $$('rqPhotoBtnLabel');
         const setBusy = b => { if (_lb) _lb.textContent = b ? '⏳ 압축·업로드 중…' : `사진 첨부 (${(window.__rqPhotoFiles||[]).length}/${MAX})`; window.__rqPhotoBusy = Math.max(0, (window.__rqPhotoBusy||0) + (b ? 1 : -1)); const _sb = document.getElementById('writeBtnSubmit'); if (_sb) _sb.disabled = (window.__rqPhotoBusy||0) > 0; if (window.koausToast) { (window.__rqPhotoBusy||0) > 0 ? window.koausToast.show('⏳ 사진 처리 중…') : window.koausToast.hide(); } };

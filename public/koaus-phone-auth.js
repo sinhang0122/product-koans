@@ -500,7 +500,7 @@ onAuthStateChanged(auth, async (user) => {
 // 그러나 미인증 유저가 어떤 우회 경로로 통과했을 경우의 안전망으로 유지
 window.koausRequireCanPost = function (user, openAuthModalFn, retryCb) {
   if (!user) {
-    alert('로그인 후 이용할 수 있습니다.');
+    alert('로그인이 필요한 서비스입니다.');
     if (typeof openAuthModalFn === 'function') openAuthModalFn();
     return false;
   }

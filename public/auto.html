@@ -1536,7 +1536,7 @@
       // 정비소/견인: 일반 유저 직접 글쓰기 차단 → 관리자 등록 문의 모달
       if (CAT_CFG[activeCategory].write === 'inquiry') { openInquiryModal(); return; }
       const u = window.koausAuth && window.koausAuth.user;
-      if (!u) { alert('글을 작성하려면 로그인이 필요합니다.'); window.koausAuth && window.koausAuth.openAuthModal(); return; }
+      if (!u) { alert('로그인이 필요한 서비스입니다.'); window.koausAuth && window.koausAuth.openAuthModal(); return; }
       // 휴대폰 인증은 로그인 시점 글로벌 인터셉터에서 강제 — 여기선 로그인 여부만 신뢰
       openWriteModal();
     });
@@ -1680,7 +1680,7 @@
 
       // 로그인 필수: 미로그인 시 로그인 모달을 띄우고, 로그인 직후 등록을 이어서 진행
       if (!window.koausAuth || !window.koausAuth.user) {
-        alert('글을 등록하려면 로그인이 필요합니다.');
+        alert('로그인이 필요한 서비스입니다.');
         if (window.koausAuth) {
           window.koausAuth.afterLogin = submitPost;  // 로그인 성공 시 자동 재시도
           window.koausAuth.openAuthModal();
@@ -3474,7 +3474,7 @@
       open.addEventListener('click', e => {
         e.preventDefault();
         const u = auth.currentUser;
-        if (!u) { alert('로그인 후 등록 요청을 보낼 수 있습니다.'); if (window.koausAuth && window.koausAuth.openAuthModal) window.koausAuth.openAuthModal(); return; }
+        if (!u) { alert('로그인이 필요한 서비스입니다.'); if (window.koausAuth && window.koausAuth.openAuthModal) window.koausAuth.openAuthModal(); return; }
         show();
       });
       close && close.addEventListener('click', hide);
@@ -3484,7 +3484,7 @@
         e.preventDefault();
         const note = $('rqNote'); note.classList.remove('is-ok','is-error');
         const u = auth.currentUser;
-        if (!u) { note.textContent = '로그인이 필요합니다.'; note.classList.add('is-error'); return; }
+        if (!u) { note.textContent = '로그인이 필요한 서비스입니다.'; note.classList.add('is-error'); return; }
         const currentCat = getCat();
         if (!REQUEST_ENABLED.has(currentCat)) { note.textContent = '이 카테고리는 등록 요청을 받지 않습니다.'; note.classList.add('is-error'); return; }
         const title = $('rqTitle').value.trim(), contact = $('rqContact').value.trim();
@@ -3603,7 +3603,7 @@
         const remain = MAX_PHOTOS - (window.__usedPhotoFiles || []).length;
         if (remain <= 0) { alert('최대 8장까지 첨부할 수 있습니다.'); return; }
         const u = auth.currentUser;
-        if (!u) { alert('사진 업로드는 로그인 후 이용 가능합니다.'); return; }
+        if (!u) { alert('로그인이 필요한 서비스입니다.'); return; }
         // 동시성 3 병렬 (직렬→3병렬, 체감 ~3× 단축) + 단계 표시
         const batch = files.slice(0, remain);
         const _lb = $$('usedPhotoBtnLabel');
@@ -3722,7 +3722,7 @@
         const remain = MAX_PHOTOS - (window.__maintPhotoFiles || []).length;
         if (remain <= 0) { alert('최대 8장까지 첨부할 수 있습니다.'); return; }
         const u = auth.currentUser;
-        if (!u) { alert('사진 업로드는 로그인 후 이용 가능합니다.'); return; }
+        if (!u) { alert('로그인이 필요한 서비스입니다.'); return; }
         const batch = files.slice(0, remain);
         const _lb = $$('maintPhotoBtnLabel');
         const setBusy = b => { if (_lb) _lb.textContent = b ? '⏳ 압축·업로드 중…' : `사진 첨부 (${(window.__maintPhotoFiles||[]).length}/${MAX_PHOTOS})`; window.__maintPhotoBusy = Math.max(0, (window.__maintPhotoBusy||0) + (b ? 1 : -1)); const _tot = (window.__usedPhotoBusy||0) + (window.__maintPhotoBusy||0); const _sb = document.getElementById('writeBtnSubmit'); if (_sb) _sb.disabled = _tot > 0; if (window.koausToast) { _tot > 0 ? window.koausToast.show('⏳ 사진 처리 중…') : window.koausToast.hide(); } };

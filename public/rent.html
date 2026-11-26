@@ -77,6 +77,8 @@
   <script type="module" src="koaus-phone-auth.js"></script>
   <script type="module" src="koaus-seeker-profile.js"></script>   <!-- 2026-10 ①-2: "집 구해요" 선택 직후 짧은 조건 등록(3단계·건너뛰기) -->
   <script src="koaus-geo.js" defer></script>   <!-- 11-04: 동네 검색 공통(Maps JS, 한글·영문·우편번호) -->
+  <script src="koaus-area.js" defer></script>   <!-- 11-26c: 지도에서 정한 지역 — 기억 · 목록 표시 · 이어 보기 -->
+  <script src="koaus-post-ticket.js" defer></script>   <!-- 11-26c: 글 등록 표 — 게시판마다 24시간에 2건(규칙과 짝) -->
   <script src="koaus-state-pick.js" defer></script>   <!-- 11-08: 상단바·지도 헤더 주(State) 드롭다운 -->
   <script src="koaus-people-deck.js" defer></script>   <!-- 11-08: 구하는 사람 카드 넘겨 보기(공용) -->
   <script type="module" src="koaus-role.js"></script>   <!-- 2026-10 ①-2: Living/Job 역할 선택(로그인 뒤 한 번) -->
@@ -462,6 +464,7 @@
         </button>
       </div>
       <span class="board-count" id="boardCount">총 0건</span>
+      <button id="areaResetTopBtn" type="button" class="koaus-area-chip" style="display:none;">지도에서 정한 지역만 보는 중 · 전체 보기</button>   <!-- 11-26c: 지도에서 정한 지역으로 좁혀 보는 중임을 목록에서도 알리고, 누르면 푼다 -->
       <div class="accom-ctrl-actions">
         <button class="accom-filter-btn" id="filterModalBtn">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
@@ -488,6 +491,7 @@
     <!-- Map View -->
     <div id="mapView" style="display:none;">
       <button class="area-search-btn" id="areaSearchBtn">이 지역 매물 검색하기</button>
+      <button id="areaResetBtn" type="button" class="koaus-area-chip on-map" style="display:none;">지도에서 정한 지역만 보는 중 · 전체 보기</button>   <!-- 11-26c -->
       <div id="accomMap"></div>
     </div>
 
@@ -1081,7 +1085,7 @@
     const MODE_LABELS = { offer: '매물 올리기', find: '매물 구하기' };
 
     // 11-08b: 주소에 ?state= 가 없으면 이 게시판의 주 설정(LS koaus-state-pref-v1:rent, 게시판마다 따로) → 내 프로필 동네의 주 → NSW. '전체(호주 전역)'는 없음(사용자 결정)
-    const currentState = (function () { const ok = v => /^(nsw|vic|qld|wa|sa|tas|act|nt)$/.test(v); const u = (new URLSearchParams(location.search).get('state') || '').toLowerCase(); if (ok(u)) return u; try { const v = (localStorage.getItem('koaus-state-pref-v1:rent') || '').toLowerCase(); if (ok(v)) return v; const c = JSON.parse(localStorage.getItem('koaus-profile-center-v1') || 'null'); const ps = String((c && c.state) || '').toLowerCase(); if (ok(ps)) return ps; } catch (_) {} return 'nsw'; })();
+    const currentState = (function () { const ok = v => /^(nsw|vic|qld|wa|sa|tas|act|nt)$/.test(v); const u = (new URLSearchParams(location.search).get('state') || '').toLowerCase(); if (ok(u)) return u; try { const v = (localStorage.getItem('koaus-state-pref-v1:rent') || '').toLowerCase(); if (ok(v)) return v; { const ks = ['last', 'accom', 'rent', 'jobs']; for (let i = 0; i < ks.length; i++) { const o = (localStorage.getItem('koaus-state-pref-v1:' + ks[i]) || '').toLowerCase(); if (ok(o)) return o; } }   /* 11-26c: 처음 여는 게시판은 다른 게시판에서 고른 주로 */ const c = JSON.parse(localStorage.getItem('koaus-profile-center-v1') || 'null'); const ps = String((c && c.state) || '').toLowerCase(); if (ok(ps)) return ps; } catch (_) {} return 'nsw'; })();
     const urlMode      = new URLSearchParams(location.search).get('mode');
     // URL ?mode=offer | seek(=find). 페이지 내 탭으로도 전환
     let activeMode     = (urlMode === 'find' || urlMode === 'seek') ? 'find' : 'offer';
@@ -1111,6 +1115,7 @@
       activeMode = mode;
       currentPage = 1;
       areaBounds = null;  // 탭 전환 시 지역 검색 초기화
+      _areaLabel = ''; _areaStart = null; _areaUi();   // 11-26c: 칩도 끈다(적어 둔 범위는 그대로 — 화면을 열 때마다 여기를 지난다)
       const asb = document.getElementById('areaSearchBtn');
       if (asb) asb.classList.remove('show');
       document.querySelectorAll('#modeTabs .accom-tab').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
@@ -1207,7 +1212,7 @@
     // 글쓰기 이메일 인증 게이트 (소프트 게이트)
     function guardedOpenWrite() {
       const u = window.koausAuth && window.koausAuth.user;
-      if (!u) { alert('글을 작성하려면 로그인이 필요합니다.'); window.koausAuth && window.koausAuth.openAuthModal(); return; }
+      if (!u) { alert('로그인이 필요한 서비스입니다.'); window.koausAuth && window.koausAuth.openAuthModal(); return; }
       // 휴대폰 인증은 로그인 시점 글로벌 인터셉터에서 강제 — 여기선 로그인 여부만 신뢰
       openWriteModal();
     }
@@ -1358,7 +1363,7 @@
 
       // 로그인 필수: 미로그인 시 로그인 모달을 띄우고, 로그인 직후 등록을 이어서 진행
       if (!window.koausAuth || !window.koausAuth.user) {
-        alert('글을 등록하려면 로그인이 필요합니다.');
+        alert('로그인이 필요한 서비스입니다.');
         if (window.koausAuth) {
           window.koausAuth.afterLogin = submitPost;  // 로그인 성공 시 자동 재시도
           window.koausAuth.openAuthModal();
@@ -1570,13 +1575,20 @@
           // 재업로드 시 이전 글 자동 끌어올리기 — 동일 [uid+title+address] 과거 글 삭제(Rollback-safe).
           // 삭제된 옛 doc 은 onSnapshot 이 list view 에서 즉시 제거 → "이전 글 잔존" 회귀 차단.
           const _ded = window.koausDedupe, _fs = window.koausFs;
-          if (_ded && _ded.addAndCleanup && _fs.query && _fs.where && _fs.getDocs && _fs.deleteDoc && _fs.limit) {
-            docRef = await _ded.addAndCleanup(
-              { db: window.koausDb, addDoc, collection: _fsCol, query: _fs.query, where: _fs.where, getDocs: _fs.getDocs, doc: _fs.doc, deleteDoc: _fs.deleteDoc, limit: _fs.limit },
-              'rent_posts', safePayload, { uid: user.uid, title: target.title, address: target.address }
-            );
+          // 11-26c: 1일 2회 등록 — 글 등록 표를 끊고 그 id 로 글을 만든다(koaus-post-ticket.js, 규칙 postTicketOk). 표 모듈이 없으면 예전 방식.
+          const _mk = add => (_ded && _ded.addAndCleanup && _fs.query && _fs.where && _fs.getDocs && _fs.deleteDoc && _fs.limit)
+            ? _ded.addAndCleanup(
+                { db: window.koausDb, addDoc: add, collection: _fsCol, query: _fs.query, where: _fs.where, getDocs: _fs.getDocs, doc: _fs.doc, deleteDoc: _fs.deleteDoc, limit: _fs.limit },
+                'rent_posts', safePayload, { uid: user.uid, title: target.title, address: target.address })
+            : add(_fsCol(window.koausDb, 'rent_posts'), safePayload);
+          if (window.koausPostTicket && _fs.setDoc && _fs.getDoc) {
+            const _tk = await window.koausPostTicket.create(
+              { db: window.koausDb, doc: _fsDoc, getDoc: _fs.getDoc, setDoc: _fs.setDoc, collection: _fsCol, serverTimestamp }, user.uid, 'rent',
+              postId => _mk(async (col, payload) => { const r = _fsDoc(window.koausDb, 'rent_posts', postId); await _fs.setDoc(r, payload); return r; }));
+            if (!_tk.ok) { alert(window.koausPostTicket.message(_tk) || '등록 실패: 로그인 상태와 입력한 내용을 확인해 주세요.'); return; }
+            docRef = _tk.ref;
           } else {
-            docRef = await addDoc(_fsCol(window.koausDb, 'rent_posts'), safePayload);
+            docRef = await _mk(addDoc);
           }
         } catch (e) {
           console.error('[rent] Firestore 등록 실패', e);
@@ -2420,8 +2432,58 @@
       areaBounds = map.getBounds();
       document.getElementById('areaSearchBtn').classList.remove('show');
       currentPage = 1;
+      _areaSet('');   // 11-26c: 칩 · 기억(이름은 범위 안 글의 동네에서)
       renderAll();
     });
+
+    // ── 11-26c: 지도에서 정한 지역 — 목록 · 지도에 표시([전체 보기]) · 기억 · 이어 보기 (koaus-area.js) ──
+    let _areaLabel = '';     // 칩에 적는 동네 이름('' 이면 '지도에서 정한 지역')
+    let _areaStart = null;   // 이어 보기로 켠 범위의 지도 중심 · 축척 — 지도를 아직 안 불러왔으면 initMap 이 이 값으로 연다
+    function _areaUi() {
+      const on = !!areaBounds;
+      const txt = window.koausArea ? window.koausArea.chipText(_areaLabel) : '지도에서 정한 지역만 보는 중 · 전체 보기';
+      ['areaResetTopBtn', 'areaResetBtn'].forEach(id => { const b = document.getElementById(id); if (!b) return; b.textContent = txt; b.style.display = on ? 'inline-flex' : 'none'; });
+    }
+    // 사용자가 범위를 정했다(버튼 · 지역 검색) — 칩을 켜고 이 기기에 적어 둔다
+    function _areaSet(label) {
+      _areaStart = null;
+      _areaLabel = label || (window.koausArea ? window.koausArea.labelFrom(applyFilters(loadPosts())) : '');
+      _areaUi();
+      try { if (window.koausArea && areaBounds) window.koausArea.remember('rent', currentState, areaBounds, { label: _areaLabel, center: map && map.getCenter ? map.getCenter() : null, zoom: map && map.getZoom ? map.getZoom() : null }); } catch (_) {}
+    }
+    // [전체 보기] — 범위를 풀고, 적어 둔 것도 지운다
+    function _areaClear() {
+      areaBounds = null; _areaLabel = ''; _areaStart = null; currentPage = 1;
+      const asb = document.getElementById('areaSearchBtn'); if (asb) asb.classList.remove('show');
+      try { if (window.koausArea) window.koausArea.forget('rent'); } catch (_) {}
+      _areaUi(); renderAll();
+    }
+    ['areaResetTopBtn', 'areaResetBtn'].forEach(id => { const b = document.getElementById(id); if (b) b.addEventListener('click', _areaClear); });
+    // 지도를 적어 둔 범위로 옮긴다(중심 · 축척이 있으면 그대로, 없으면 범위에 맞춤) — '이 지역 매물 검색하기' 버튼은 띄우지 않는다
+    function _areaMoveMap() {
+      if (!map || !areaBounds) return;
+      programmaticMove = true;
+      try {
+        if (_areaStart) { map.setCenter(_areaStart.center); map.setZoom(_areaStart.zoom); }
+        else if (areaBounds.toJSON) map.fitBounds(areaBounds.toJSON());
+      } catch (_) {}
+      setTimeout(() => { programmaticMove = false; }, 600);
+    }
+    window.__koausAreaHost = {
+      board: 'rent', state: currentState,
+      active: () => !!areaBounds,
+      // 이어 보기 — 적어 둔 범위를 켜고 view('map' | 'list')로 보여 준다
+      apply: (rec, view) => {
+        const b = window.koausArea && window.koausArea.shim(rec.o); if (!b) return;
+        areaBounds = b; _areaLabel = rec.label || ''; currentPage = 1;
+        _areaStart = (rec.c && rec.z) ? { center: rec.c, zoom: rec.z } : null;
+        try { window.koausArea.remember('rent', currentState, b, { label: _areaLabel, center: rec.c, zoom: rec.z }); } catch (_) {}   // 다시 본 시각으로 갱신(14일)
+        const asb = document.getElementById('areaSearchBtn'); if (asb) asb.classList.remove('show');
+        if (view === 'map' || view === 'list') { _koausSaveView(view); switchView(view); }
+        if (mapReady && map) _areaMoveMap();
+        _areaUi(); renderAll();
+      },
+    };
 
     // 주(State)별 지도 중심/축척. URL ?state=nsw 등으로 진입 시 해당 주의 주요 도시로 중심 이동.
     const STATE_VIEWS = {
@@ -2500,8 +2562,8 @@
       mapLoading = true;
       window.initMap = function () {
         map = new google.maps.Map(document.getElementById('accomMap'), { gestureHandling: 'greedy',
-          center: activeStateView.center,
-          zoom: activeStateView.zoom,
+          center: (_areaStart || activeStateView).center,   // 11-26c: 이어 보기로 켠 범위가 있으면 그곳에서 연다
+          zoom: (_areaStart || activeStateView).zoom,
           mapTypeControl: false,
           streetViewControl: false,
           fullscreenControl: false,
@@ -2509,7 +2571,8 @@
         infoWindow = new google.maps.InfoWindow();
         mapReady   = true;
         mapLoading = false;
-        const showAreaBtn = () => { if (!programmaticMove) document.getElementById('areaSearchBtn').classList.add('show'); };
+        if (areaBounds && !_areaStart) _areaMoveMap();   // 11-26c: 중심 · 축척 없이 적어 둔 범위면 범위에 맞춘다
+        const showAreaBtn = () => { if (!programmaticMove) { document.getElementById('areaSearchBtn').classList.add('show'); try { window.koausArea && window.koausArea.hideCards(); } catch (_) {} } };   // 11-26c: 손으로 지도를 움직이면 '이어 보기' 카드는 접는다
         map.addListener('dragend', showAreaBtn);
         map.addListener('zoom_changed', showAreaBtn);
         updateMapMarkers(applyFilters(loadPosts()));

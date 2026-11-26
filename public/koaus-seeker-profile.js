@@ -162,7 +162,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
   async function refreshPanel() {
     if (!panelEl) return;
     injectCss();
-    if (!me) { panelEl.innerHTML = '<div class="post-empty">로그인 후 이용할 수 있습니다.</div>'; return; }
+    if (!me) { panelEl.innerHTML = '<div class="post-empty">로그인이 필요한 서비스입니다.</div>'; return; }
     if (!E()) { panelEl.innerHTML = '<div class="post-empty">불러오는 중…</div>'; return; }
     if (loadedFor !== me.uid) panelEl.innerHTML = '<div class="post-empty">불러오는 중…</div>';
     await loadProfile(false);

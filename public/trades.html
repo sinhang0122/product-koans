@@ -1428,7 +1428,7 @@
 
     document.getElementById('writeBtnOpen').addEventListener('click', () => {
       const u = window.koausAuth && window.koausAuth.user;
-      if (!u) { alert('PR을 등록하려면 로그인이 필요합니다.'); window.koausAuth && window.koausAuth.openAuthModal(); return; }
+      if (!u) { alert('로그인이 필요한 서비스입니다.'); window.koausAuth && window.koausAuth.openAuthModal(); return; }
       // 휴대폰 인증은 로그인 시점 글로벌 인터셉터에서 강제 — 여기선 로그인 여부만 신뢰
       openWriteModal();
     });
@@ -1632,7 +1632,7 @@
       }
       // 로그인 필수: 미로그인 시 로그인 모달을 띄우고, 로그인 직후 등록을 이어서 진행
       if (!window.koausAuth || !window.koausAuth.user) {
-        alert('PR을 등록하려면 로그인이 필요합니다.');
+        alert('로그인이 필요한 서비스입니다.');
         if (window.koausAuth) {
           window.koausAuth.afterLogin = submitPost;  // 로그인 성공 시 자동 재시도
           window.koausAuth.openAuthModal();

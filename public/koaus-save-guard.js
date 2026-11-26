@@ -25,10 +25,10 @@
       if (window.koausAuth && typeof window.koausAuth.openAuthModal === 'function') {
         window.koausAuth.openAuthModal();
       } else {
-        alert('저장하려면 로그인이 필요합니다.');
+        alert('로그인이 필요한 서비스입니다.');
       }
     } catch (_) {
-      alert('저장하려면 로그인이 필요합니다.');
+      alert('로그인이 필요한 서비스입니다.');
     }
   }, true);  // ← capture phase (target 의 onclick/bubble 핸들러보다 먼저)
 })();
