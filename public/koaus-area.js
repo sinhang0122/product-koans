@@ -1,11 +1,19 @@
 /* ══════════════════════════════════════════════════════════════════
-   KoAus · 지도에서 정한 지역 — 기억 · 목록 표시 · 이어 보기 (11-26c, 사용자 지시)
+   KoAus · 지도에서 정한 지역 — 기억 · 목록 표시 · 이어 보기 (11-26c, 11-26d 에 사용자 지시로 다듬음)
    ─ 지도에서 [이 지역 매물 검색하기]를 누르거나 상세 필터에서 지역을 검색하면 그 범위의 글만 보인다(목록 · 지도 공통 — 전부터 그랬다).
+     11-26d: 지역을 정해 보는 동안은 주(QLD · NSW …)로 나누지 않는다 — 그 범위 안의 글이면 어느 주든 나온다
+             (게시판 화면의 거르기가 주 조건을 건너뛴다. "맵뷰에서 이 지역만 했어 그럼 그거만 나와야지").
      이 파일이 더하는 것:
        ① 기억 — 정한 범위를 이 기기에 적어 둔다(LS koaus-area-v1:<게시판>, 14일). 화면을 나갔다 와도 다시 불러올 수 있다.
-       ② 표시 — 목록과 지도에 "○○ 근처만 보는 중 · 전체 보기" 칩(게시판 화면이 그린다 — chipText()).
-       ③ 이어 보기 — 게시판에 다시 들어오면 "지난번에 보던 ○○ 근처 … [지도로 보기] [목록으로 보기]" 카드(목록 위 · 지도 위).
-          홈에서는 가장 최근에 본 게시판 하나를 같은 카드로 보여 주고, 누르면 그 게시판으로 간다(?state=…&area=map|list).
+       ② 표시 — 목록과 지도에 칩 [전체 보기](게시판 화면이 그린다 — chipText() · 풍선말 chipHint()).
+          제목은 "○○ 근처 쉐어"(where()), 지역을 보는 동안 주 고르기([QLD ▾])와 카드의 작은 주 표기(가격 아래 'QLD')는 숨긴다
+          (html.koaus-area-on — 게시판 화면이 붙인다. [전체 보기]로 풀면 다시 보인다).
+       ③ 이어 보기 — 게시판에 다시 들어오면 카드:  지난번에 보던 ○○ 근처, / 이어서 보시겠습니까? / [지도로 보기] [목록으로 보기]
+          · 목록 보기: 목록 맨 위.
+          · 지도 보기: 아래쪽(11-26d, "웨이즈처럼"). 모바일은 집 카드가 뜨는 칸(지도 아래 칸 — 지도를 덮지 않는다. 집 카드가 열려 있는 동안은 비켜 준다),
+            PC 는 지도 아래쪽 가운데에 작게 얹는다(PC 의 집 카드 칸은 지도 밑이라 화면 밖일 때가 많다). 지도의 아래쪽이 화면 밖이면
+            화면 아래에 붙어 따라온다(position: sticky) — 스크롤하지 않아도 보인다.
+          · 홈에는 두지 않는다(11-26d "홈에서는 제외해줘").
    ─ 게시판 화면(accom · rent · jobs)과의 약속 — 화면의 인라인 스크립트가 먼저 돌고 이 파일(defer)이 뒤에 돈다:
        window.__koausAreaHost = {
          board: 'accom', state: 'qld',
@@ -16,14 +24,13 @@
        [전체 보기]로 풀 때 koausArea.forget(board) 를 부른다. 목록은 koausArea.shim(saved.o).contains({lat,lng}) 로 거른다
        (구글 지도를 불러오지 않아도 목록을 좁힐 수 있다 — 지도 객체의 getBounds() 와 같은 contains 만 흉내 낸다).
    ─ 적어 두는 것: { o: {s,w,n,e}, c: {lat,lng}, z, label, state, t }. 위치 정보(기기의 현재 위치)는 쓰지 않는다 — 지도에서 본 범위뿐이다.
+     state 는 적어만 둔다(11-26d 부터 이어 보기는 지금 보는 주와 상관없이 묻는다 — 지역은 주로 나누지 않는다).
    ══════════════════════════════════════════════════════════════════ */
 (function () {
   'use strict';
   if (window.koausArea) return;
   var KEY = 'koaus-area-v1:', TTL = 14 * 24 * 60 * 60 * 1000, SKIP = 'koaus-area-skip:';
   var BOARDS = ['accom', 'rent', 'jobs'];
-  var NAME = { accom: '쉐어', rent: '렌트', jobs: '구인구직' };
-  var PAGE = { accom: 'accom.html', rent: 'rent.html', jobs: 'jobs.html' };
   var STATE_RE = /^(nsw|vic|qld|wa|sa|tas|act|nt)$/;
 
   function num(v) { return typeof v === 'number' && isFinite(v); }
@@ -91,8 +98,10 @@
     });
     return best;
   }
-  function where(label) { return label ? label + ' 근처' : '지도에서 정한 지역'; }
-  function chipText(label) { return where(clean(label)) + '만 보는 중 · 전체 보기'; }
+  function where(label) { label = clean(label); return label ? label + ' 근처' : '지도에서 정한 지역'; }
+  // 칩 — 글자는 [전체 보기]뿐(11-26d). 무엇을 보는 중인지는 제목("○○ 근처 쉐어")과 풍선말에 있다
+  function chipText() { return '전체 보기'; }
+  function chipHint(label) { return where(label) + '만 보는 중 — 전체 보기'; }
 
   // ── 모양 — 공용 안내(후보 B: 흰 카드 · 얇은 테두리 · 왼쪽 점)와 같은 결 ──
   var css =
@@ -101,21 +110,32 @@
     '.koaus-area-chip:hover{background:var(--text-primary,#111);color:var(--bg-base,#fff);}' +
     '.koaus-area-chip.on-map{position:absolute;top:60px;left:50%;transform:translateX(-50%);z-index:5;margin:0;max-width:calc(100% - 24px);box-shadow:0 2px 10px rgba(0,0,0,.18);}' +
     '@media(max-width:768px){.koaus-area-chip.on-map{top:48px;}}' +
-    '.koaus-resume{display:flex;align-items:center;flex-wrap:wrap;gap:8px 10px;box-sizing:border-box;padding:10px 12px 10px 14px;margin:0 0 12px;' +
+    /* 지역을 보는 동안은 주 고르기와 카드의 작은 주 표기를 숨긴다 — 주로 나눈 것처럼 보이지 않게(11-26d) */
+    'html.koaus-area-on .koaus-state-sel,html.koaus-area-on .accom-card-state{display:none !important;}' +
+    /* 이어 보기 카드 — 두 줄 글 + 그 아래 버튼 둘(11-26d) */
+    '.koaus-resume{display:flex;align-items:flex-start;gap:10px;box-sizing:border-box;max-width:460px;padding:12px 6px 12px 14px;margin:0 0 12px;' +
       'background:var(--bg-base,#fff);color:var(--text-primary,#111);border:1px solid var(--border,#dcdcdc);border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,.08);' +
-      'font:600 14px/1.35 var(--font,"Noto Sans KR",system-ui,sans-serif);letter-spacing:-.2px;word-break:keep-all;}' +
+      'font:600 14px/1.4 var(--font,"Noto Sans KR",system-ui,sans-serif);letter-spacing:-.2px;word-break:keep-all;}' +
     '.koaus-resume[hidden]{display:none;}' +
-    '.koaus-resume .kr-dot{width:8px;height:8px;border-radius:50%;background:var(--text-primary,#111);flex:0 0 auto;}' +
-    '.koaus-resume .kr-text{flex:1 1 180px;min-width:0;}' +
+    '.koaus-resume .kr-dot{width:8px;height:8px;border-radius:50%;background:var(--text-primary,#111);flex:0 0 auto;margin-top:6px;}' +
+    '.koaus-resume .kr-main{flex:1 1 auto;min-width:0;}' +
     '.koaus-resume .kr-text b{font-weight:800;}' +
-    '.koaus-resume .kr-acts{display:flex;gap:6px;flex:0 0 auto;}' +
+    '.koaus-resume .kr-acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px;}' +
     '.koaus-resume .kr-btn{height:34px;padding:0 12px;border:1px solid var(--text-primary,#111);border-radius:var(--r-btn,10px);background:var(--text-primary,#111);color:var(--bg-base,#fff);' +
       'font:700 13px/1 var(--font,"Noto Sans KR",system-ui,sans-serif);letter-spacing:-.2px;cursor:pointer;white-space:nowrap;text-decoration:none;display:inline-flex;align-items:center;}' +
     '.koaus-resume .kr-btn.sec{background:transparent;color:var(--text-primary,#111);}' +
-    '.koaus-resume .kr-x{flex:0 0 auto;width:34px;height:34px;border:0;background:none;color:var(--text-muted,#777);font-size:15px;cursor:pointer;border-radius:var(--r-btn,10px);}' +
-    '.koaus-resume.on-map{position:absolute;top:60px;left:50%;transform:translateX(-50%);z-index:6;width:min(440px,calc(100% - 24px));margin:0;box-shadow:0 6px 24px rgba(0,0,0,.22);}' +
-    '@media(max-width:768px){.koaus-resume.on-map{top:48px;}}' +
-    '.koaus-resume.on-home{margin:12px 0 0;}' +
+    '.koaus-resume .kr-x{flex:0 0 auto;width:34px;height:34px;margin-top:-6px;border:0;background:none;color:var(--text-muted,#777);font-size:15px;cursor:pointer;border-radius:var(--r-btn,10px);}' +
+    '@media(max-width:768px){.koaus-resume .kr-btn{height:38px;padding:0 14px;}}' +
+    /* 지도 보기 — 지도 바로 뒤의 칸(.koaus-resume-slot). PC: 높이 0 인 칸에서 지도와 같은 크기의 틀(.kr-over, 누름은 통과)을 위로 펼치고,
+       카드는 그 틀의 맨 아래 가운데 — sticky 라서 지도의 아래쪽이 화면 밖이면 화면 아래(24px 위)에 붙어 따라온다 */
+    '.koaus-resume-slot{position:relative;height:0;}' +
+    '.koaus-resume-slot .kr-over{position:absolute;left:0;right:0;bottom:0;height:var(--kr-map-h,560px);display:flex;flex-direction:column;justify-content:flex-end;align-items:center;pointer-events:none;z-index:6;}' +
+    '.koaus-resume-slot .koaus-resume{position:sticky;bottom:24px;width:min(400px,calc(100% - 24px));max-width:none;margin:0 0 24px;pointer-events:auto;box-shadow:0 6px 24px rgba(0,0,0,.22);}' +
+    /* 모바일(지도가 화면을 채우는 보기): 집 카드가 뜨는 칸 — 지도 아래에 자리를 차지하고 지도는 그만큼만 줄어든다. 집 카드가 열리면 비켜 준다 */
+    '@media(max-width:768px){.koaus-resume-slot{height:auto;flex:0 0 auto;}' +
+      '.koaus-resume-slot .kr-over{position:static;height:auto;display:block;pointer-events:auto;}' +
+      '.koaus-resume-slot .koaus-resume{position:static;width:auto;margin:8px;box-shadow:none;}' +
+      '.koaus-resume-slot[data-drawer="1"]{display:none;}}' +
     ':root[data-theme="dark"] .koaus-resume{background:#111;border-color:#333;}';
   function injectCss() {
     if (document.getElementById('koaus-area-style')) return;
@@ -130,12 +150,13 @@
   function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
 
   // 카드 하나 — onPick(view) · onClose()
-  function card(cls, html, onPick, onClose) {
+  function card(html, onPick, onClose) {
     var el = document.createElement('div');
-    el.className = 'koaus-resume' + (cls ? ' ' + cls : '');
+    el.className = 'koaus-resume';
     el.setAttribute('role', 'region'); el.setAttribute('aria-label', '지난번에 보던 지역');
-    el.innerHTML = '<span class="kr-dot" aria-hidden="true"></span><span class="kr-text">' + html + '</span>' +
-      '<span class="kr-acts"><button type="button" class="kr-btn" data-v="map">지도로 보기</button><button type="button" class="kr-btn sec" data-v="list">목록으로 보기</button></span>' +
+    el.innerHTML = '<span class="kr-dot" aria-hidden="true"></span>' +
+      '<div class="kr-main"><div class="kr-text">' + html + '</div>' +
+      '<div class="kr-acts"><button type="button" class="kr-btn" data-v="map">지도로 보기</button><button type="button" class="kr-btn sec" data-v="list">목록으로 보기</button></div></div>' +
       '<button type="button" class="kr-x" aria-label="닫기">✕</button>';
     el.addEventListener('click', function (e) {
       var b = e.target.closest('[data-v]');
@@ -146,51 +167,49 @@
     return el;
   }
 
+  // 지도 보기의 칸 — 지도 바로 뒤에 둔다. 집 카드(#mapCardDrawer, koaus-map-cluster.js 가 #mapView 끝에 만든다)가 열려 있으면 data-drawer="1"
+  function mountOnMap(mv, el) {
+    var slot = document.createElement('div'), over = document.createElement('div');
+    slot.className = 'koaus-resume-slot'; over.className = 'kr-over';
+    over.appendChild(el); slot.appendChild(over);
+    var mapEl = mv.querySelector('#accomMap, #jobsMap');
+    if (mapEl && mapEl.parentNode === mv) mv.insertBefore(slot, mapEl.nextSibling); else mv.appendChild(slot);
+    // PC 의 틀 높이 = 지도 높이(쉐어 · 렌트 560px, 구인 480px — 지도 보기가 열릴 때 · 창 크기가 바뀔 때 다시 잰다)
+    var fit = function () { try { var h = mapEl ? mapEl.offsetHeight : 0; if (h > 0) slot.style.setProperty('--kr-map-h', h + 'px'); } catch (_) {} };
+    fit();
+    try { if (mapEl && typeof ResizeObserver === 'function') new ResizeObserver(fit).observe(mapEl); else window.addEventListener('resize', fit); } catch (_) {}
+    if (typeof MutationObserver !== 'function') return;
+    var seen = null;
+    var sync = function () {
+      var d = mv.querySelector('#mapCardDrawer');
+      if (d && d !== seen) { seen = d; try { new MutationObserver(sync).observe(d, { attributes: true, attributeFilter: ['hidden'] }); } catch (_) {} }
+      if (d && !d.hasAttribute('hidden')) slot.setAttribute('data-drawer', '1'); else slot.removeAttribute('data-drawer');
+    };
+    try { new MutationObserver(sync).observe(mv, { childList: true }); } catch (_) {}
+    sync();
+  }
+
   // ── 게시판 화면 ──
   function initBoard(host) {
     var board = host.board; if (BOARDS.indexOf(board) < 0) return;
     injectCss();
     var rec = saved(board);
-    // 홈의 카드나 공유한 주소로 들어온 경우(?area=map|list) — 묻지 않고 바로 켠다. 주소의 area 는 지운다(새로 고쳐도 다시 켜지지 않게)
-    var q; try { q = new URLSearchParams(location.search); } catch (_) { q = null; }
-    var want = q ? (q.get('area') || '') : '';
-    if (want === 'map' || want === 'list') {
-      try { q.delete('area'); var qs = q.toString(); history.replaceState(null, '', location.pathname + (qs ? '?' + qs : '') + location.hash); } catch (_) {}
-      if (rec && (!rec.state || rec.state === host.state)) { try { host.apply(rec, want); } catch (e) { try { console.warn('[koaus-area] 적용 실패', e); } catch (_) {} } return; }
-    }
-    if (!rec || (rec.state && rec.state !== host.state)) return;   // 다른 주를 보고 있으면 묻지 않는다
-    if (skipped(board, rec)) return;
+    if (!rec || skipped(board, rec)) return;
     try { if (host.active && host.active()) return; } catch (_) {}
-    try { if (q && q.get('id')) return; } catch (_) {}              // 글 하나를 바로 여는 주소면 방해하지 않는다
-    var html = '지난번에 보던 <b>' + esc(where(rec.label)) + '</b>, 이어서 보시겠습니까?';
+    try { if (new URLSearchParams(location.search).get('id')) return; } catch (_) {}   // 글 하나를 바로 여는 주소면 방해하지 않는다
+    var html = '지난번에 보던 <b>' + esc(where(rec.label)) + '</b>,<br>이어서 보시겠습니까?';
     var pick = function (v) { hideCards(); try { host.apply(rec, v); } catch (e) { try { console.warn('[koaus-area] 적용 실패', e); } catch (_) {} } };
     var close = function () { skip(board, rec); };
     var lv = document.getElementById('listView'), mv = document.getElementById('mapView');
-    if (lv) lv.insertBefore(card('', html, pick, close), lv.firstChild);
-    if (mv) mv.appendChild(card('on-map', html, pick, close));
-  }
-
-  // ── 홈 — 가장 최근에 본 게시판 하나 ──
-  function initHome() {
-    var root = document.getElementById('homeEntry'); if (!root) return;
-    var best = null, bb = '';
-    BOARDS.forEach(function (b) { var r = saved(b); if (r && r.state && (!best || r.t > best.t)) { best = r; bb = b; } });
-    if (!best || skipped(bb, best)) return;
-    injectCss();
-    var html = '지난번에 보던 <b>' + esc(NAME[bb] + ' · ' + where(best.label)) + '</b>, 이어서 보시겠습니까?';
-    var go = function (v) { location.href = PAGE[bb] + '?state=' + encodeURIComponent(best.state) + '&area=' + v; };
-    var el = card('on-home', html, go, function () { skip(bb, best); });
-    var tiles = root.querySelector('.home-entry-tiles');
-    if (tiles && tiles.parentNode) tiles.parentNode.insertBefore(el, tiles.nextSibling); else root.insertBefore(el, root.firstChild);
+    if (lv) lv.insertBefore(card(html, pick, close), lv.firstChild);
+    if (mv) mountOnMap(mv, card(html, pick, close));
   }
 
   function boot() {
-    try {
-      if (window.__koausAreaHost) initBoard(window.__koausAreaHost);
-      else if (document.getElementById('homeEntry')) initHome();
-    } catch (e) { try { console.warn('[koaus-area] 시작 실패', e); } catch (_) {} }
+    try { if (window.__koausAreaHost) initBoard(window.__koausAreaHost); }
+    catch (e) { try { console.warn('[koaus-area] 시작 실패', e); } catch (_) {} }
   }
 
-  window.koausArea = { plain: plain, shim: shim, saved: saved, remember: remember, forget: forget, labelFrom: labelFrom, chipText: chipText, where: where, hideCards: hideCards, TTL: TTL };
+  window.koausArea = { plain: plain, shim: shim, saved: saved, remember: remember, forget: forget, labelFrom: labelFrom, chipText: chipText, chipHint: chipHint, where: where, hideCards: hideCards, TTL: TTL };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
 })();

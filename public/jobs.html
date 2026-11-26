@@ -73,7 +73,7 @@
   <script src="koaus-enums.js" defer></script>   <!-- 11-04: 값 목록(업종·비자 등) — 일 구해요 프로필 -->
   <script src="koaus-geo.js" defer></script>   <!-- 11-04: 동네 검색 공통(Maps JS, 한글·영문·우편번호) -->
   <script src="koaus-area.js" defer></script>   <!-- 11-26c: 지도에서 정한 지역 — 기억 · 목록 표시 · 이어 보기 -->
-  <script src="koaus-post-ticket.js" defer></script>   <!-- 11-26c: 글 등록 표 — 게시판마다 24시간에 2건(규칙과 짝) -->
+  <script src="koaus-post-ticket.js" defer></script>   <!-- 11-26c: 글 등록 표 — 2건: 쉐어 12시간(11-26d) · 렌트 · 구인 24시간(규칙과 짝) -->
   <script src="koaus-state-pick.js" defer></script>   <!-- 11-08: 상단바·지도 헤더 주(State) 드롭다운 -->
   <script src="koaus-people-deck.js" defer></script>   <!-- 11-08: 구하는 사람 카드 넘겨 보기(공용) -->
   <script type="module" src="koaus-job-profile.js?v=1119a"></script>   <!-- 11-04 ②: 일 구해요 프로필 + 사장님용 근처 목록 -->
@@ -464,7 +464,7 @@
       </div>
       <span class="board-count" id="boardCount">총 0건</span>
       <!-- List View 에서도 지도 영역 제한 알림 — 클릭 시 전체 지역 복원 (지시 3/3) -->
-      <button id="areaResetTopBtn" type="button" class="koaus-area-chip" style="display:none;">지도에서 정한 지역만 보는 중 · 전체 보기</button>   <!-- 11-26c: 지도에서 정한 지역으로 좁혀 보는 중임을 목록에서도 알리고, 누르면 푼다 -->
+      <button id="areaResetTopBtn" type="button" class="koaus-area-chip" style="display:none;">전체 보기</button>   <!-- 11-26c: 지도에서 정한 지역으로 좁혀 보는 중임을 목록에서도 알리고, 누르면 푼다. 11-26d: 글자는 '전체 보기'만(무엇을 보는 중인지는 제목 · 풍선말) -->
       <div class="accom-ctrl-actions">
         <button class="board-write-btn board-write-btn--ghost" id="filterModalBtn">상세 필터</button>
         <button class="board-write-btn" id="writeBtnOpen">+ 글쓰기</button>
@@ -481,7 +481,7 @@
     <div id="mapView" style="display:none;">
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap;">
         <button class="area-search-btn" id="areaSearchBtn">이 지역 잡 구하기</button>
-        <button id="areaResetBtn" type="button" class="koaus-area-chip on-map" style="display:none;">지도에서 정한 지역만 보는 중 · 전체 보기</button>   <!-- 11-26c -->
+        <button id="areaResetBtn" type="button" class="koaus-area-chip on-map" style="display:none;">전체 보기</button>   <!-- 11-26c · 11-26d -->
       </div>
       <div id="jobsMap" style="width:100%;height:480px;border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;"></div>
     </div>
@@ -920,7 +920,7 @@
       try {
         all = loadPosts().filter(p =>
           (p.postType || 'hiring') === activeTab &&
-          (!currentState || (function(){ var _es = (window.koausState ? window.koausState.effective(p) : (p.state || '')); return !_es || _es === currentState; })()) &&
+          (areaBounds || !currentState || (function(){ var _es = (window.koausState ? window.koausState.effective(p) : (p.state || '')); return !_es || _es === currentState; })()) &&   // 11-26d: 지도에서 지역을 정해 보는 동안은 주로 나누지 않는다
           // 일시 숨김 글 제외 — 메인 리스트에서 즉시 사라짐 (지시 5/7)
           !p.isHidden
         );
@@ -1837,7 +1837,7 @@
       updateMapMarkers();
       // 드래그/줌 시 "이 지역 잡 구하기" 재검색 버튼 노출
       const asb = document.getElementById('areaSearchBtn');
-      const _showAsb = () => { if (_areaProg) return; if (asb) asb.classList.add('show'); try { window.koausArea && window.koausArea.hideCards(); } catch (_) {} };   // 11-26c: 우리가 옮기는 중엔 띄우지 않고, 손으로 움직이면 '이어 보기' 카드는 접는다
+      const _showAsb = () => { if (_areaProg) return; if (asb) asb.classList.add('show'); };   // 11-26c: 우리가 옮기는 중엔 띄우지 않는다. 11-26d: 이어 보기 카드는 아래 칸이라 지도를 움직여도 접지 않는다
       jobsMap.addListener('dragend',      _showAsb);
       jobsMap.addListener('zoom_changed', _showAsb);
     };
@@ -2018,15 +2018,17 @@
       updateAreaResetVisibility();
     });
     // 지도 영역 제한 해제 — 세컨/써드 잡 전국 검색 등 광역 탐색용 (List + Map 양쪽 동기화)
-    // 11-26c: 목록 · 지도의 칩은 쉐어 · 렌트와 같은 것("○○ 근처만 보는 중 · 전체 보기") — koaus-area.js. 지도 쪽 버튼은 전에는 보이지 않았다(.area-search-btn 은 .show 없이는 숨김)
+    // 11-26c: 목록 · 지도의 칩은 쉐어 · 렌트와 같은 것([전체 보기] — 11-26d 부터 글자는 이것뿐) — koaus-area.js. 지도 쪽 버튼은 전에는 보이지 않았다(.area-search-btn 은 .show 없이는 숨김)
     let _areaLabel = '';     // 칩에 적는 동네 이름('' 이면 '지도에서 정한 지역')
     let _areaStart = null;   // 이어 보기로 켠 범위의 지도 중심 · 축척
     let _areaProg = false;   // 우리가 지도를 옮기는 중 — '이 지역 잡 구하기' 버튼을 띄우지 않는다
     function updateAreaResetVisibility() {
       const show = !!areaBounds;
       if (!show) { _areaLabel = ''; _areaStart = null; }
-      const txt = window.koausArea ? window.koausArea.chipText(_areaLabel) : '지도에서 정한 지역만 보는 중 · 전체 보기';
-      ['areaResetTopBtn', 'areaResetBtn'].forEach(id => { const b = document.getElementById(id); if (!b) return; b.textContent = txt; b.style.display = show ? 'inline-flex' : 'none'; });
+      const txt = window.koausArea ? window.koausArea.chipText(_areaLabel) : '전체 보기';   // 11-26d: 칩 글자는 '전체 보기'만
+      const hint = (show && window.koausArea && window.koausArea.chipHint) ? window.koausArea.chipHint(_areaLabel) : '';   // 풍선말 · 읽어 주는 말
+      ['areaResetTopBtn', 'areaResetBtn'].forEach(id => { const b = document.getElementById(id); if (!b) return; b.textContent = txt; if (hint) { b.title = hint; b.setAttribute('aria-label', hint); } b.style.display = show ? 'inline-flex' : 'none'; });
+      try { document.documentElement.classList.toggle('koaus-area-on', show); } catch (_) {}   // 11-26d: 지역을 보는 동안 주 고르기([QLD ▾])를 숨긴다(koaus-area.js 의 CSS)
     }
     function _resetAreaBounds() {
       areaBounds = null;
@@ -2520,6 +2522,7 @@
               async postId => { const r = doc(db, 'jobs_posts', postId); await setDoc(r, payload); return r; });
             if (!_tk.ok) { const _m = window.koausPostTicket.message(_tk); throw Object.assign(new Error('post-ticket'), _m ? { code: 'koaus/post-limit', koausMsg: _m } : { code: 'permission-denied' }); }   // 한도면 그 안내를, 표를 못 끊은 다른 경우(미인증 · 정지)는 전과 같은 알림
             ref = _tk.ref;
+            try { const _n = window.koausPostTicket.notice && window.koausPostTicket.notice(_tk); if (_n && window.koausToast) window.koausToast.show(_n, 6000); } catch (_) {}   // 11-26d: 올린 뒤 안내("등록되었습니다. 24시간 이내에 1건만 더 등록 가능합니다.")
           } else {
             ref = await addDoc(collection(db, 'jobs_posts'), payload);
           }

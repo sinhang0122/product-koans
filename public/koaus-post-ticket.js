@@ -1,27 +1,33 @@
 /* ══════════════════════════════════════════════════════════════════
    KoAus · 글 등록 표(post_tickets) — 11-26c "1일 2회 등록"을 서버 규칙으로(사용자 지시 "코드로 막아줘")
-   ─ 글쓰기 창의 '1일 2회 등록 가능'은 그동안 안내만 있었다. 이제 게시판마다(쉐어 · 렌트 · 구인구직) 24시간에 2건까지만 올라간다.
+   ─ 글쓰기 창의 '2회 등록 가능'은 그동안 안내만 있었다. 이제 게시판마다 정해진 시간에 2건까지만 올라간다.
+     11-26d(사용자 결정 "쉐어 글은 12시간에 2개로 하자"): 쉐어는 12시간에 2건, 렌트 · 구인구직은 24시간에 2건(HOURS — 규칙과 짝).
      표는 게시판마다 두 칸 — post_tickets/{uid}/accom/{1|2} · …/rent/{1|2} · …/jobs/{1|2}.
-     칸은 비어 있거나 쓴 지 24시간이 지나야 다시 쓸 수 있고(규칙이 강제), 글을 만들 때 규칙이 두 칸 가운데 하나에
+     칸은 비어 있거나 쓴 지 그 시간이 지나야 다시 쓸 수 있고(규칙이 강제), 글을 만들 때 규칙이 두 칸 가운데 하나에
      이 글의 id 가 적혀 있고 끊은 지 10분이 안 됐는지 확인한다(firestore.rules postTicketOk). 날짜 계산이 없어 기기 시계와 무관하다.
    ─ 그래서 글의 문서 id 를 먼저 정하고(자동 id) → 표를 끊고 → 그 id 로 글을 만든다(addDoc 대신 setDoc).
      글 수정 · 숨김 · 삭제는 표와 무관하다(횟수에 들어가지 않는다). 같은 글을 다시 올려 끌어올리는 것은 새 글이라 한 번으로 센다.
    ─ 사용(게시판 화면의 등록 코드):
        const r = await koausPostTicket.create({ db, doc, getDoc, setDoc, collection, serverTimestamp }, uid, 'accom',
                    async postId => { const ref = doc(db, 'accom_posts', postId); await setDoc(ref, payload); return ref; });
-       r = { ok: true, ref, postId } | { ok: false, reason: 'limit'(eta, board) | 'denied' | 'error' }   (글 쓰기 자체의 오류는 그대로 던진다)
+       r = { ok: true, ref, postId, board, left, eta } | { ok: false, reason: 'limit'(eta, board) | 'denied' | 'error' }   (글 쓰기 자체의 오류는 그대로 던진다)
        표를 못 끊었을 때 보여 줄 말: koausPostTicket.message(r)  (없으면 '' — 부르는 쪽의 기본 안내를 쓴다)
+       올린 뒤 보여 줄 말(11-26d): koausPostTicket.notice(r) — "등록되었습니다. 12시간 이내에 1건만 더 등록 가능합니다." (표 없이 올렸으면 '')
      · 표는 끊었는데 글을 못 만든 경우(입력 오류 등) 그 표를 기기에 적어 두었다가 9분 안에는 같은 글 id 로 다시 쓴다(누를 때마다 표가 줄지 않게).
      · 관리자는 표 없이 올린다(규칙의 isAdmin()). 표를 읽지 못하면(규칙이 아직 옛것 — 배포 순서) 표 없이 예전 방식으로 올린다.
-   ─ 한도를 바꾸려면 LIMIT 와 firestore.rules 의 postTicketOk · validPostTicket(칸 이름 '1' · '2') 을 같이 바꾼다.
+   ─ 한도를 바꾸려면: 건수는 LIMIT 와 firestore.rules 의 postTicketOk · validPostTicket(칸 이름 '1' · '2'),
+     시간은 HOURS 와 firestore.rules 의 match /post_tickets/{uid}/<게시판>/{n} 의 duration.value(…, 'h') 를 같이 바꾼다.
    ══════════════════════════════════════════════════════════════════ */
 (function () {
   'use strict';
   if (window.koausPostTicket) return;
-  var LIMIT = 2, WINDOW_MS = 24 * 60 * 60 * 1000, FRESH_MS = 9 * 60 * 1000, LS = 'koaus-post-tk';
+  var LIMIT = 2, FRESH_MS = 9 * 60 * 1000, LS = 'koaus-post-tk';
+  var HOURS = { accom: 12, rent: 24, jobs: 24 };   // 게시판마다 몇 시간에 LIMIT 건 — firestore.rules 의 post_tickets update 규칙과 짝
   var LABEL = { accom: '쉐어', rent: '렌트', jobs: '구인구직' };
 
   function ok(board) { return Object.prototype.hasOwnProperty.call(LABEL, board); }
+  function hours(board) { return HOURS[board] || 24; }
+  function windowMs(board) { return hours(board) * 60 * 60 * 1000; }
   // 기기에 적어 두는 것: { uid, accom: { postId, n, t }, rent: …, jobs: … } — 끊어 두고 아직 글을 못 만든 표
   function readLS(uid) {
     try { var h = JSON.parse(localStorage.getItem(LS) || 'null'); return (h && h.uid === uid) ? h : { uid: uid }; }
@@ -80,21 +86,38 @@
         if (await writeSlot(fs, uid, board, empty[i].n, fresh)) return keep(uid, board, empty[i].n, fresh);
       }
       if (empty.length === LIMIT) return { ok: false, reason: 'denied' };                            // 둘 다 빈 칸인데 거부 = 미인증 · 정지
-      // ④ 가장 오래된 칸(24시간이 지났으면 규칙이 받아 준다)
+      // ④ 가장 오래된 칸(정해진 시간이 지났으면 규칙이 받아 준다)
       for (var j = 0; j < used.length; j++) {
         if (await writeSlot(fs, uid, board, used[j].n, fresh)) return keep(uid, board, used[j].n, fresh);
       }
     } catch (_) { return { ok: false, reason: 'error' }; }
     if (used.length < LIMIT) return { ok: false, reason: 'denied' };
-    var eta = used[0].at ? used[0].at + WINDOW_MS - Date.now() : 0;
+    var eta = used[0].at ? used[0].at + windowMs(board) - Date.now() : 0;
     return { ok: false, reason: 'limit', eta: eta > 0 ? eta : 0, board: board };
   }
 
   async function postExists(fs, board, postId) {
     try { var s = await fs.getDoc(fs.doc(fs.db, board + '_posts', String(postId))); return !!(s && s.exists()); } catch (_) { return false; }
   }
+  // 글을 올린 뒤 남은 횟수(11-26d) — 두 칸을 다시 읽어 서버 시각끼리 견준다(기기 시계와 무관).
+  //   { left: 지금 더 올릴 수 있는 건수, eta: left 가 0 일 때 다음 칸이 비기까지(ms) } | null(표 없이 올렸거나 읽지 못함 — 안내를 내지 않는다)
+  async function after(fs, uid, board, t) {
+    if (!t || t.free || !fs.getDoc) return null;
+    var slots = await Promise.race([readSlots(fs, uid, board), new Promise(function (res) { setTimeout(function () { res(null); }, 2500); })]);
+    if (!slots || slots.length < LIMIT) return null;
+    var mine = null;
+    slots.forEach(function (s) { if (s.used && s.postId === String(t.postId)) mine = s; });
+    if (!mine || !mine.at) return null;
+    var w = windowMs(board), left = 0, eta = 0;
+    slots.forEach(function (s) {
+      if (s === mine) return;
+      var rest = (s.used && s.at) ? (s.at + w - mine.at) : 0;   // 이 칸이 다시 비기까지
+      if (rest <= 0) left++; else if (!eta || rest < eta) eta = rest;
+    });
+    return { left: left, eta: left ? 0 : eta };
+  }
   // 표를 끊고 글을 만든다 — writeFn(postId) 가 그 id 로 글을 쓰고 ref 를 돌려준다(실패하면 던진다).
-  //   { ok: true, ref, postId } | { ok: false, reason, … }(표를 못 끊음 — message() 로 안내) | writeFn 의 오류는 그대로 던진다
+  //   { ok: true, ref, postId, board, left, eta } | { ok: false, reason, … }(표를 못 끊음 — message() 로 안내) | writeFn 의 오류는 그대로 던진다
   async function create(fs, uid, board, writeFn) {
     for (var round = 0; round < 2; round++) {
       var t = await take(fs, uid, board);
@@ -102,7 +125,9 @@
       try {
         var ref = await writeFn(t.postId);
         done(uid, board);
-        return { ok: true, ref: ref, postId: t.postId };
+        var st = null;
+        try { st = await after(fs, uid, board, t); } catch (_) { st = null; }
+        return { ok: true, ref: ref, postId: t.postId, board: board, left: st ? st.left : null, eta: st ? st.eta : 0 };
       } catch (e) {
         // 적어 둔 표로 실패했고 그 글이 이미 있으면(지난번에 글은 올라갔는데 기록만 남은 경우) 기록을 지우고 새 표로 한 번 더.
         // 글이 없는데 실패했으면 표 문제가 아니다(입력 내용 등) — 표를 더 쓰지 않고 그대로 알린다(9분 안에 다시 누르면 같은 표를 쓴다).
@@ -117,14 +142,19 @@
     var min = Math.ceil(ms / 60000);
     return min >= 60 ? '약 ' + Math.ceil(min / 60) + '시간' : '약 ' + Math.max(1, min) + '분';
   }
+  function again(eta) { return (eta > 0 ? etaText(eta) + ' 뒤에' : '잠시 뒤') + ' 다시 등록 가능합니다.'; }
+  // 한도에 걸렸을 때(세 번째 글) — 11-26d: 짧게
   function message(r) {
     if (!r || r.ok) return '';
-    if (r.reason === 'limit') {
-      return (LABEL[r.board] ? LABEL[r.board] + ' ' : '') + '글은 24시간에 ' + LIMIT + '개까지 올릴 수 있습니다. ' +
-        (r.eta > 0 ? etaText(r.eta) + ' 뒤에' : '잠시 뒤') + ' 다시 올릴 수 있습니다.\n올린 글의 내용은 [수정]으로 바꿀 수 있습니다(횟수에 들어가지 않습니다).';
-    }
+    if (r.reason === 'limit') return (LABEL[r.board] ? LABEL[r.board] + ' 글은 ' : '') + hours(r.board) + '시간에 ' + LIMIT + '건까지 등록 가능합니다. ' + again(r.eta);
     return '';
   }
+  // 글을 올린 뒤(11-26d, 사용자 지시 "하나 등록하면 몇 시간 이내에 1건만 등록 가능합니다 이렇게 … 문구 뜨게하자")
+  function notice(r) {
+    if (!r || !r.ok || r.left == null) return '';
+    if (r.left > 0) return '등록되었습니다. ' + hours(r.board) + '시간 이내에 ' + r.left + '건만 더 등록 가능합니다.';
+    return '등록되었습니다. ' + again(r.eta);
+  }
 
-  window.koausPostTicket = { LIMIT: LIMIT, take: take, create: create, done: done, message: message };
+  window.koausPostTicket = { LIMIT: LIMIT, HOURS: HOURS, take: take, create: create, done: done, message: message, notice: notice };
 })();
