@@ -79,7 +79,7 @@
   <script type="module" src="koaus-seeker-profile.js"></script>   <!-- 2026-10 ①-2: "집 구해요" 선택 직후 짧은 조건 등록(3단계·건너뛰기) -->
   <script src="koaus-geo.js" defer></script>   <!-- 11-04: 동네 검색 공통(Maps JS, 한글·영문·우편번호) -->
   <script src="koaus-area.js" defer></script>   <!-- 11-26c: 지도에서 정한 지역 — 기억 · 목록 표시 · 이어 보기 -->
-  <script src="koaus-post-ticket.js" defer></script>   <!-- 11-26c: 글 등록 표 — 2건: 쉐어 12시간(11-26d) · 렌트 · 구인 24시간(규칙과 짝) -->
+  <script src="koaus-post-ticket.js" defer></script>   <!-- 11-26c: 글 등록 표 — 11-27a: 게시판마다 하루(시드니 시각) 4건 · 세 게시판 모두(규칙과 짝) -->
   <script src="koaus-state-pick.js" defer></script>   <!-- 11-08: 상단바·지도 헤더 주(State) 드롭다운 -->
   <script src="koaus-people-deck.js" defer></script>   <!-- 11-08: 구하는 사람 카드 넘겨 보기(공용) -->
   <script type="module" src="koaus-role.js"></script>   <!-- 2026-10 ①-2: Living/Job 역할 선택(로그인 뒤 한 번) -->
@@ -730,7 +730,7 @@
           <li>욕설, 혐오 발언 및 타인 비방 금지</li>
           <li>환전 및 담배 등 호주 내 불법·편법 거래 금지</li>
           <li>호주 법률 위반 글 또는 타인의 초상권·저작권 침해 사진 업로드 시 무통보 삭제 및 사이트 영구 이용 불가</li>
-          <li>12시간에 2건까지 등록 가능 (주소만 살짝 바꾸는 중복 도배 글은 동일 글로 간주하여 제재)</li>   <!-- 11-26d: 1일 2회 → 12시간에 2건(사용자 결정, 규칙과 짝) -->
+          <li>하루 4건까지 등록 가능 — 시드니 시각 기준 (주소만 살짝 바꾸는 중복 도배 글은 동일 글로 간주하여 제재)</li>   <!-- 11-27a: 사용자 결정(하루 4건 · 시드니 시각, 규칙과 짝) -->
           <li>단기 렌트·쉐어 거래 시 보증금(Deposit) 사기 및 먹튀에 각별히 주의하세요.</li>
           <li>상세 정보 없이 외부 메신저(카카오톡 등)로 유도하는 글은 피싱 사기일 확률이 높습니다.</li>
         </ol>
@@ -1101,13 +1101,12 @@
     if (!FIND_MODE_ENABLED) { const _mt = document.getElementById('modeTabs'); if (_mt) _mt.style.display = 'none'; }
 
     function updateBoardTitle() {
-      const st = STATE_NAMES[currentState];
       const board = '쉐어';
       const modeLabel = FIND_MODE_ENABLED ? ' ' + MODE_LABELS[activeMode] : '';   // 탭 숨김 중엔 '방 올리기' 표기 생략
-      // 11-26d: 지도에서 정한 지역을 보는 동안은 주 이름 대신 그 지역("Sunnybank 근처 쉐어") — 지역은 주로 나누지 않는다
-      const aw = _areaOn() ? (window.koausArea ? window.koausArea.where(_areaLabel) : '지도에서 정한 지역') : '';
-      document.getElementById('boardTitle').textContent = aw ? `${aw} ${board}${modeLabel}` : `${st ? st + ' ' : ''}${board}${modeLabel}`;
-      document.getElementById('boardSubtitle').textContent = aw ? `${aw} · ${board}${modeLabel} 게시판` : `${st ? st + ' · ' : ''}${board}${modeLabel} 게시판`;
+      // 11-27a(사용자 지시 "그냥 쉐어로 고정 어디 근처 어느 주 그런 거 없이"): 제목은 게시판 이름뿐 — 주 · 지역 이름을 넣지 않는다
+      //   (어느 주인지는 주 고르기 [QLD ▾], 지역으로 좁혀 보는 중인지는 칩 [전체 보기]가 알린다)
+      document.getElementById('boardTitle').textContent = `${board}${modeLabel}`;
+      document.getElementById('boardSubtitle').textContent = `${board}${modeLabel} 게시판`;
     }
 
     function switchMode(mode) {
@@ -1740,7 +1739,7 @@
           // 재업로드 시 이전 글 자동 끌어올리기 — 동일 [uid+title+address] 과거 글 삭제(Rollback-safe).
           // 삭제된 옛 doc 은 onSnapshot 이 list view 에서 즉시 제거 → "이전 글 잔존" 회귀 차단.
           const _ded = window.koausDedupe, _fs = window.koausFs;
-          // 11-26c: 1일 2회 등록 — 글 등록 표를 끊고 그 id 로 글을 만든다(koaus-post-ticket.js, 규칙 postTicketOk). 표 모듈이 없으면 예전 방식.
+          // 11-26c: 글 등록 한도(11-27a: 하루 4건) — 글 등록 표를 끊고 그 id 로 글을 만든다(koaus-post-ticket.js, 규칙 postTicketOk). 표 모듈이 없으면 예전 방식.
           const _mk = add => (_ded && _ded.addAndCleanup && _fs.query && _fs.where && _fs.getDocs && _fs.deleteDoc && _fs.limit)
             ? _ded.addAndCleanup(
                 { db: window.koausDb, addDoc: add, collection: _fsCol, query: _fs.query, where: _fs.where, getDocs: _fs.getDocs, doc: _fs.doc, deleteDoc: _fs.deleteDoc, limit: _fs.limit },
@@ -1752,7 +1751,7 @@
               postId => _mk(async (col, payload) => { const r = _fsDoc(window.koausDb, 'accom_posts', postId); await _fs.setDoc(r, payload); return r; }));
             if (!_tk.ok) { alert(window.koausPostTicket.message(_tk) || '등록 실패: 로그인 상태와 입력한 내용을 확인해 주세요.'); return; }
             docRef = _tk.ref;
-            var _postNotice = (window.koausPostTicket.notice && window.koausPostTicket.notice(_tk)) || '';   // 11-26d: 올린 뒤 안내("등록되었습니다. ○시간 이내에 1건만 더 등록 가능합니다.") — 글쓰기 창을 닫은 뒤에 띄운다
+            var _postNotice = (window.koausPostTicket.notice && window.koausPostTicket.notice(_tk)) || '';   // 11-26d: 올린 뒤 안내(11-27a: "등록되었습니다. 오늘 총 3건 남았습니다.") — 글쓰기 창을 닫은 뒤에 띄운다
           } else {
             docRef = await _mk(addDoc);
           }
@@ -2028,6 +2027,7 @@
     }
     document.addEventListener('koaus-admin-ready', () => { try { renderAll(); } catch (_) {} }); // admin claim 확정 후 카드 admin 버튼 재렌더
     function renderAll() {
+      try { if (window.koausArea) { if (_areaOn()) window.koausArea.touch('accom'); else window.koausArea.refresh(); } } catch (_) {}   // 11-27a: 지역을 보는 중이면 '마지막으로 본 때'를 지금으로, 아니면 이어 보기 카드의 "새 글 N건"을 다시 센다
       const posts  = loadPosts();
       // pinned 는 필터 통째로 bypass — 일반 글만 필터/검색 적용 후 pinned 와 합침
       const normal = posts.filter(p => !(p && (p.isPinned === true || p.adminPin === true)));
@@ -2884,7 +2884,6 @@
       const hint = (on && window.koausArea && window.koausArea.chipHint) ? window.koausArea.chipHint(_areaLabel) : '';   // 풍선말 · 읽어 주는 말: "○○ 근처만 보는 중 — 전체 보기"
       ['areaResetTopBtn', 'areaResetBtn'].forEach(id => { const b = document.getElementById(id); if (!b) return; b.textContent = txt; if (hint) { b.title = hint; b.setAttribute('aria-label', hint); } b.style.display = on ? 'inline-flex' : 'none'; });
       try { document.documentElement.classList.toggle('koaus-area-on', on); } catch (_) {}   // 11-26d: 지역을 보는 동안 주 고르기([QLD ▾])를 숨긴다(koaus-area.js 의 CSS)
-      try { updateBoardTitle(); } catch (_) {}   // 11-26d: 제목도 주 이름 대신 그 지역
     }
     // 사용자가 범위를 정했다(버튼 · 지역 검색) — 칩을 켜고 이 기기에 적어 둔다
     function _areaSet(label) {
@@ -2914,6 +2913,15 @@
     window.__koausAreaHost = {
       board: 'accom', state: currentState,
       active: () => !!areaBounds,
+      // 11-27a: 이어 보기 카드의 "새 글 N건" — 지난번에 본 뒤(rec.t) 그 범위에 새로 올라온 글 수.
+      //   [이어 보기]를 누르면 보일 목록과 같은 조건으로 센다(범위를 잠깐 켜고 같은 거르기를 돌린다 — 고정 글 · 내 글은 뺀다)
+      countNew: (rec) => {
+        const b = window.koausArea && window.koausArea.shim(rec.o); if (!b || areaBounds) return 0;
+        areaBounds = b;
+        try { return applySearchKw(applyFilters(loadPosts().filter(p => !(p && (p.isPinned === true || p.adminPin === true))))).filter(p => Number(p._ts) > rec.t && !isMine(p)).length; }
+        catch (_) { return 0; }
+        finally { areaBounds = null; }
+      },
       // 이어 보기 — 적어 둔 범위를 켜고 view('map' | 'list')로 보여 준다
       apply: (rec, view) => {
         const b = window.koausArea && window.koausArea.shim(rec.o); if (!b) return;

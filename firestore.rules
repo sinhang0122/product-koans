@@ -128,18 +128,20 @@ service cloud.firestore {
         : (get(/databases/$(database)/documents/chat_tickets/$(request.auth.uid)/living/$(request.resource.data.tk)).data.chatId == chatId));
     }
 
-    // ── 글 등록 표(post_tickets) — 2026-11-26c(사용자 지시 "코드로 막아줘"): 게시판마다 정해진 시간에 2건 ──
-    //   · 11-26d(사용자 결정 "쉐어 글은 12시간에 2개로 하자"): 쉐어는 12시간, 렌트 · 구인은 24시간(아래 match /post_tickets/… 의 duration.value).
-    //   · 표는 게시판마다 두 칸 — post_tickets/{uid}/accom|rent|jobs/{1|2}. 칸 하나 = 글 하나(postId).
-    //   · 새로 쓰기(create)는 빈 칸에만, 덮어쓰기(update)는 쓴 지 그 시간이 지난 칸에만 → 어느 12시간(쉐어) · 24시간(렌트 · 구인)에도 게시판마다 2장을 넘지 못한다.
-    //   · 글 create 는 내 두 칸 가운데 하나에 이 글의 id 가 적혀 있고, 그 표를 끊은 지 10분이 안 됐어야 한다(postTicketOk).
+    // ── 글 등록 표(post_tickets) — 2026-11-26c(사용자 지시 "코드로 막아줘"): 게시판마다 정해진 만큼만 ──
+    //   · 11-27a(사용자 결정 "기준시간은 시드니로 … 그냥 하루 기준 4건하고 오늘 총 3건 남았습니다 … 로 가자"):
+    //     게시판마다 하루 4건. 하루 = 시드니 시각의 0시~24시(서머타임 포함 — sydDst). 쉐어 · 렌트 · 구인 모두 같다.
+    //     (11-26d 의 '쓴 지 12시간(쉐어) · 24시간(렌트 · 구인)에 2건'은 없앴다.)
+    //   · 표는 게시판마다 네 칸 — post_tickets/{uid}/accom|rent|jobs/{1|2|3|4}. 칸 하나 = 글 하나(postId).
+    //   · 새로 쓰기(create)는 빈 칸에만, 덮어쓰기(update)는 그 칸의 표가 시드니 날짜로 오늘 이전의 것일 때만(postSlotStale) → 하루에 게시판마다 4장을 넘지 못한다.
+    //   · 글 create 는 내 네 칸 가운데 하나에 이 글의 id 가 적혀 있고, 그 표를 끊은 지 10분이 안 됐어야 한다(postTicketOk).
     //     10분 창: 글을 지우고 같은 id 로 다시 만드는 식으로 표 한 장을 여러 번 쓰지 못하게 한다. 화면은 표를 끊은 직후에 글을 만든다.
     //   · 관리자는 표 없이 올린다. 글 수정 · 숨김 · 삭제는 표와 무관하다.
     function validPostTicket(uid, n) {
       return isVerifiedUser()
         && notSuspended()
         && request.auth.uid == uid
-        && n in ['1', '2']
+        && n in ['1', '2', '3', '4']
         && reqStr('postId', 10, 64)
         && 'createdAt' in data() && data().createdAt == request.time
         && data().keys().hasOnly(['postId', 'createdAt']);
@@ -148,8 +150,39 @@ service cloud.firestore {
       let t = get(/databases/$(database)/documents/post_tickets/$(request.auth.uid)/$(board)/$(n)).data;
       return t.postId == postId && request.time < t.createdAt + duration.value(10, 'm');
     }
+    // 11-27a: 네 칸을 본다. 관리자 판정은 맨 뒤에 둔다 — 결과는 같다(|| 는 앞이 오류 · 거짓이어도 뒤가 참이면 참. 관리자는 표가 없어도 올린다).
+    //   뒤에 두면 ① 보통 사용자는 관리자 판정을 거치지 않아 가볍고, ② '네 칸을 끝까지 보고도 허용'인 경로(관리자 + 낡은 표)가 생겨
+    //   공식 규칙 시험이 가장 무거운 경로(넷째 칸의 표로 올리는 글)의 식 1,000개 · 문서 읽기 10회 한도를 배포 전에 확인해 준다(rules-test.js ⑪ 끝).
     function postTicketOk(board, postId) {
-      return isAdmin() || postTicketHit(board, '1', postId) || postTicketHit(board, '2', postId);
+      return postTicketHit(board, '1', postId) || postTicketHit(board, '2', postId)
+          || postTicketHit(board, '3', postId) || postTicketHit(board, '4', postId)
+          || isAdmin();
+    }
+    // 11-27a: 그 시각(UTC ms)에 시드니가 서머타임(UTC+11)인가 — 아니면 표준시(UTC+10).
+    //   서머타임은 10월 첫 일요일 02:00 에 시작해 4월 첫 일요일 03:00 에 끝난다(UTC 로는 둘 다 그 전날 토요일 16:00).
+    //   규칙에는 시간대 변환이 없어 경계를 표로 둔다 — 2037년 10월 초까지 맞다. 그 전에 아래에 줄을 더한다(화면의 koaus-post-ticket.js SYD_DST 도 같이).
+    function sydDst(ms) {
+      return ms < 1775318400000                             // ~ 2026-04-04
+        || (ms >= 1791043200000 && ms < 1806768000000)      // 2026-10-03 ~ 2027-04-03
+        || (ms >= 1822492800000 && ms < 1838217600000)      // 2027-10-02 ~ 2028-04-01
+        || (ms >= 1853942400000 && ms < 1869667200000)      // 2028-09-30 ~ 2029-03-31
+        || (ms >= 1885996800000 && ms < 1901721600000)      // 2029-10-06 ~ 2030-04-06
+        || (ms >= 1917446400000 && ms < 1933171200000)      // 2030-10-05 ~ 2031-04-05
+        || (ms >= 1948896000000 && ms < 1964620800000)      // 2031-10-04 ~ 2032-04-03
+        || (ms >= 1980345600000 && ms < 1996070400000)      // 2032-10-02 ~ 2033-04-02
+        || (ms >= 2011795200000 && ms < 2027520000000)      // 2033-10-01 ~ 2034-04-01
+        || (ms >= 2043244800000 && ms < 2058969600000)      // 2034-09-30 ~ 2035-03-31
+        || (ms >= 2075299200000 && ms < 2091024000000)      // 2035-10-06 ~ 2036-04-05
+        || (ms >= 2106748800000 && ms < 2122473600000);     // 2036-10-04 ~ 2037-04-04
+    }
+    // 그 시각이 든 시드니 날짜 — 시드니 시각으로 옮긴 ms 를 하루(86400000) 단위로 내린 값(날짜가 같으면 값이 같다)
+    function sydDay(ms) {
+      let t = ms + (sydDst(ms) ? 39600000 : 36000000);
+      return t - (t % 86400000);
+    }
+    // 이 칸에 적힌 표가 시드니 날짜로 오늘 이전의 것인가(그러면 다시 쓸 수 있다). 두 시각을 저마다의 시차로 옮겨 견준다 — 서머타임이 바뀌는 날에도 맞다
+    function postSlotStale() {
+      return sydDay(resource.data.createdAt.toMillis()) < sydDay(request.time.toMillis());
     }
 
     // ── 게시판 글 검증 ──
@@ -619,7 +652,7 @@ service cloud.firestore {
     match /accom_posts/{postId} {
       allow get:    if true;
       allow list:   if isAdmin() || limitedList();   // isAdmin: count() 집계(limit 없음) 허용
-      allow create: if validShareRentCreate() && postTicketOk('accom', postId);   // 11-26c: 글 등록 표 — 11-26d: 쉐어는 12시간에 2건
+      allow create: if validShareRentCreate() && postTicketOk('accom', postId);   // 11-26c: 글 등록 표 — 11-27a: 하루(시드니 시각) 4건
       allow update: if isAdmin()
                        || ( ownerOnExisting()
                             && uidLocked()
@@ -633,7 +666,7 @@ service cloud.firestore {
     match /rent_posts/{postId} {
       allow get:    if true;
       allow list:   if isAdmin() || limitedList();   // isAdmin: count() 집계(limit 없음) 허용
-      allow create: if validShareRentCreate() && postTicketOk('rent', postId);   // 11-26c: 24시간에 2건(글 등록 표)
+      allow create: if validShareRentCreate() && postTicketOk('rent', postId);   // 11-26c: 글 등록 표 — 11-27a: 하루(시드니 시각) 4건
       allow update: if isAdmin()
                        || ( ownerOnExisting()
                             && uidLocked()
@@ -647,7 +680,7 @@ service cloud.firestore {
     match /jobs_posts/{postId} {
       allow get:    if true;
       allow list:   if isAdmin() || limitedList();   // isAdmin: count() 집계(limit 없음) 허용
-      allow create: if validJobsCreate() && postTicketOk('jobs', postId);   // 11-26c: 24시간에 2건(글 등록 표)
+      allow create: if validJobsCreate() && postTicketOk('jobs', postId);   // 11-26c: 글 등록 표 — 11-27a: 하루(시드니 시각) 4건
       allow update: if isAdmin()
                        || ( ownerOnExisting()
                             && uidLocked()
@@ -1668,31 +1701,28 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // ── 글 등록 표(post_tickets) — 2026-11-26c: 게시판마다 2건. 설명은 위 validPostTicket ──
-    //   · 지우기 불가. 본인(과 관리자)만 읽는다. 세 묶음의 규칙은 다시 쓸 수 있게 되는 시간만 다르다:
-    //     쉐어(accom) 12시간(11-26d) · 렌트(rent) 24시간 · 구인(jobs) 24시간. 화면의 koaus-post-ticket.js HOURS 와 같이 바꾼다.
+    // ── 글 등록 표(post_tickets) — 2026-11-26c. 11-27a: 게시판마다 하루(시드니 시각) 4건. 설명은 위 validPostTicket ──
+    //   · 지우기 불가. 본인(과 관리자)만 읽는다. 세 묶음의 규칙은 같다(11-27a):
+    //     칸은 넷(1~4), 다시 쓰기는 그 칸의 표가 시드니 날짜로 오늘 이전의 것일 때만 — postSlotStale(). 화면의 koaus-post-ticket.js(LIMIT · SYD_DST)와 같이 바꾼다.
     match /post_tickets/{uid}/accom/{n} {
       allow get:    if isSignedIn() && (request.auth.uid == uid || isAdmin());
-      allow list:   if isSignedIn() && (request.auth.uid == uid || isAdmin()) && request.query.limit <= 2;
+      allow list:   if isSignedIn() && (request.auth.uid == uid || isAdmin()) && request.query.limit <= 4;
       allow create: if validPostTicket(uid, n);
-      allow update: if validPostTicket(uid, n)
-                       && request.time > resource.data.createdAt + duration.value(12, 'h');   // 11-26d: 24 → 12시간
+      allow update: if validPostTicket(uid, n) && postSlotStale();
       allow delete: if false;
     }
     match /post_tickets/{uid}/rent/{n} {
       allow get:    if isSignedIn() && (request.auth.uid == uid || isAdmin());
-      allow list:   if isSignedIn() && (request.auth.uid == uid || isAdmin()) && request.query.limit <= 2;
+      allow list:   if isSignedIn() && (request.auth.uid == uid || isAdmin()) && request.query.limit <= 4;
       allow create: if validPostTicket(uid, n);
-      allow update: if validPostTicket(uid, n)
-                       && request.time > resource.data.createdAt + duration.value(24, 'h');
+      allow update: if validPostTicket(uid, n) && postSlotStale();
       allow delete: if false;
     }
     match /post_tickets/{uid}/jobs/{n} {
       allow get:    if isSignedIn() && (request.auth.uid == uid || isAdmin());
-      allow list:   if isSignedIn() && (request.auth.uid == uid || isAdmin()) && request.query.limit <= 2;
+      allow list:   if isSignedIn() && (request.auth.uid == uid || isAdmin()) && request.query.limit <= 4;
       allow create: if validPostTicket(uid, n);
-      allow update: if validPostTicket(uid, n)
-                       && request.time > resource.data.createdAt + duration.value(24, 'h');
+      allow update: if validPostTicket(uid, n) && postSlotStale();
       allow delete: if false;
     }
 

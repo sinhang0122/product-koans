@@ -31,9 +31,9 @@
 //               숨김 · 다시 노출 · 완료 · 삭제는 내용 검사 없이 언제나 가능(예전 글 포함) · 구인 시급 소수 허용 ·
 //               닉네임 문서는 uid · nickname · createdAt 세 칸만(email 금지). 실제 화면이 보내는 내용 그대로를 '허용' 경우로 둔다.
 //            ⑩ 구글 로그인도 문자 인증 (2026-11-26b) — isVerifiedUser 는 휴대폰 인증만 본다
-//            ⑪ 글 등록 표 (2026-11-26c) — post_tickets/{uid}/accom|rent|jobs/{1|2}: 게시판마다 2건 —
-//               쉐어 12시간(11-26d, 사용자 결정) · 렌트 · 구인 24시간.
-//               빈 칸에만 create · 그 시간이 지난 칸만 update · 지우기 불가 · 글 create 는 내 칸에 이 글 id 가 적혀 있고 끊은 지 10분 안이어야 한다 ·
+//            ⑪ 글 등록 표 (2026-11-26c) — post_tickets/{uid}/accom|rent|jobs/{1|2|3|4}: 게시판마다 하루 4건(11-27a, 사용자 결정) —
+//               하루 = 시드니 시각의 0시~24시(서머타임 포함). 세 게시판 모두 같다.
+//               빈 칸에만 create · 시드니 날짜로 오늘 이전의 표가 적힌 칸만 update · 지우기 불가 · 글 create 는 내 칸에 이 글 id 가 적혀 있고 끊은 지 10분 안이어야 한다 ·
 //               관리자는 표 없이. 쉐어 · 렌트 · 구인 글 create 케이스에는 맨 아래에서 '방금 끊은 표' 모킹을 기본으로 얹는다(_noTicket 케이스 제외).
 //  · 주의:   App Check Enforce 계층 차단은 본 스위트로 못 잡는다 — 콘솔 작업(K4류)
 //            후엔 운영 도메인에서 공개 페이지 1회 열람 확인 병행할 것.
@@ -1703,7 +1703,7 @@ const cases = [
   mk({ label: '구글 로그인 · 폰 없음: 본인 회원 문서 읽기 → 허용 (11-26b)', expectation: 'ALLOW',
        path: 'users/testuser123', method: 'get', uid: 'testuser123', googleOnly: true, resourceData: { email: 'me@example.com' } }),
 
-  // ⑪ 11-26c: 글 등록 표 — 게시판마다 2건(사용자 지시 "코드로 막아줘"). 11-26d: 쉐어는 12시간, 렌트 · 구인은 24시간
+  // ⑪ 11-26c: 글 등록 표(사용자 지시 "코드로 막아줘"). 11-27a: 게시판마다 하루(시드니 시각) 4건 — 칸은 넷(1~4), 세 게시판 모두
   //   표 문서(post_tickets/{uid}/accom|rent|jobs/{1|2})
   mk({ label: 'post_tickets create 본인 쉐어 1번 칸 → 허용 (11-26c)', expectation: 'ALLOW',
        path: 'post_tickets/testuser123/accom/1', method: 'create', uid: 'testuser123', data: postTicket }),
@@ -1713,8 +1713,16 @@ const cases = [
        path: 'post_tickets/testuser123/rent/1', method: 'create', uid: 'testuser123', data: postTicket }),
   mk({ label: 'post_tickets create 본인 구인 2번 칸 → 허용', expectation: 'ALLOW',
        path: 'post_tickets/testuser123/jobs/2', method: 'create', uid: 'testuser123', data: postTicket }),
-  mk({ label: 'post_tickets create 3번 칸 → 거부 (게시판마다 두 칸뿐 — 한도의 핵심)', expectation: 'DENY',
+  mk({ label: 'post_tickets create 본인 쉐어 3번 칸 → 허용 (11-27a: 네 칸)', expectation: 'ALLOW',
        path: 'post_tickets/testuser123/accom/3', method: 'create', uid: 'testuser123', data: postTicket }),
+  mk({ label: 'post_tickets create 본인 쉐어 4번 칸 → 허용', expectation: 'ALLOW',
+       path: 'post_tickets/testuser123/accom/4', method: 'create', uid: 'testuser123', data: postTicket }),
+  mk({ label: 'post_tickets create 본인 렌트 4번 칸 → 허용', expectation: 'ALLOW',
+       path: 'post_tickets/testuser123/rent/4', method: 'create', uid: 'testuser123', data: postTicket }),
+  mk({ label: 'post_tickets create 본인 구인 3번 칸 → 허용', expectation: 'ALLOW',
+       path: 'post_tickets/testuser123/jobs/3', method: 'create', uid: 'testuser123', data: postTicket }),
+  mk({ label: 'post_tickets create 5번 칸 → 거부 (게시판마다 네 칸뿐 — 한도의 핵심)', expectation: 'DENY',
+       path: 'post_tickets/testuser123/accom/5', method: 'create', uid: 'testuser123', data: postTicket }),
   mk({ label: 'post_tickets create 0번 칸 → 거부', expectation: 'DENY',
        path: 'post_tickets/testuser123/accom/0', method: 'create', uid: 'testuser123', data: postTicket }),
   mk({ label: 'post_tickets create 01번 칸(같은 칸의 다른 표기) → 거부', expectation: 'DENY',
@@ -1741,37 +1749,74 @@ const cases = [
        path: 'post_tickets/testuser123/accom/1', method: 'create', uid: 'testuser123', data: postTicket, userDocStatus: 'suspended' }),
   mk({ label: 'post_tickets create 비로그인 → 거부', expectation: 'DENY',
        path: 'post_tickets/testuser123/accom/1', method: 'create', data: postTicket }),
-  //   다시 쓰기(update) — 11-26d: 쉐어는 12시간, 렌트 · 구인은 24시간이 지난 칸만. request.time = 2026-06-10T00:00Z
-  mk({ label: 'post_tickets 쉐어 다시 쓰기 · 쓴 지 13시간 → 허용 (11-26d: 12시간 지난 칸)', expectation: 'ALLOW',
+  //   다시 쓰기(update) — 11-27a: 그 칸의 표가 시드니 날짜로 오늘 이전의 것일 때만(하루 4건).
+  //   기본 request.time = 2026-06-10T00:00Z = 시드니 6월 10일 오전 10시(겨울, UTC+10) → 시드니의 오늘은 2026-06-09T14:00Z 에 시작했다.
+  mk({ label: 'post_tickets 쉐어 다시 쓰기 · 오늘(1시간 전) 끊은 표 → 거부 (한도의 핵심 — 하루 4건, 11-27a)', expectation: 'DENY',
        path: 'post_tickets/testuser123/accom/1', method: 'update', uid: 'testuser123', data: postTicket,
-       resourceData: { postId: 'oldPost0000000000001', createdAt: '2026-06-09T11:00:00Z' } }),
-  mk({ label: 'post_tickets 쉐어 다시 쓰기 · 쓴 지 23시간 → 허용 (11-26d: 전에는 거부 — 24시간이었다)', expectation: 'ALLOW',
+       resourceData: { postId: 'oldPost0000000000001', createdAt: '2026-06-09T23:00:00Z' } }),
+  mk({ label: 'post_tickets 쉐어 다시 쓰기 · 오늘 0시 1분의 표 → 거부', expectation: 'DENY',
        path: 'post_tickets/testuser123/accom/2', method: 'update', uid: 'testuser123', data: postTicket,
-       resourceData: { postId: 'oldPost0000000000001', createdAt: '2026-06-09T01:00:00Z' } }),
-  mk({ label: 'post_tickets 쉐어 다시 쓰기 · 쓴 지 11시간 → 거부 (한도의 핵심 — 12시간에 2건)', expectation: 'DENY',
+       resourceData: { postId: 'oldPost0000000000001', createdAt: '2026-06-09T14:01:00Z' } }),
+  mk({ label: 'post_tickets 쉐어 다시 쓰기 · 오늘 0시 0분 0초의 표 → 거부', expectation: 'DENY',
+       path: 'post_tickets/testuser123/accom/3', method: 'update', uid: 'testuser123', data: postTicket,
+       resourceData: { postId: 'oldPost0000000000001', createdAt: '2026-06-09T14:00:00Z' } }),
+  mk({ label: 'post_tickets 쉐어 다시 쓰기 · 어제 23시 59분 59초의 표 → 허용', expectation: 'ALLOW',
+       path: 'post_tickets/testuser123/accom/4', method: 'update', uid: 'testuser123', data: postTicket,
+       resourceData: { postId: 'oldPost0000000000001', createdAt: '2026-06-09T13:59:59Z' } }),
+  mk({ label: 'post_tickets 쉐어 다시 쓰기 · 11시간 전이지만 어제(밤 11시) → 허용 (시간이 아니라 날짜로 센다)', expectation: 'ALLOW',
        path: 'post_tickets/testuser123/accom/1', method: 'update', uid: 'testuser123', data: postTicket,
        resourceData: { postId: 'oldPost0000000000001', createdAt: '2026-06-09T13:00:00Z' } }),
-  mk({ label: 'post_tickets 쉐어 다시 쓰기 · 정확히 12시간 → 거부', expectation: 'DENY',
-       path: 'post_tickets/testuser123/accom/1', method: 'update', uid: 'testuser123', data: postTicket,
-       resourceData: { postId: 'oldPost0000000000001', createdAt: '2026-06-09T12:00:00Z' } }),
-  mk({ label: 'post_tickets 렌트 묶음 다시 쓰기 · 쓴 지 25시간 → 허용 (24시간 지난 칸)', expectation: 'ALLOW',
+  mk({ label: 'post_tickets 렌트 다시 쓰기 · 오늘(1시간 전) → 거부 (11-27a: 렌트도 하루 4건)', expectation: 'DENY',
        path: 'post_tickets/testuser123/rent/1', method: 'update', uid: 'testuser123', data: postTicket,
-       resourceData: { postId: 'oldPost0000000000001', createdAt: '2026-06-08T23:00:00Z' } }),
-  mk({ label: 'post_tickets 구인 묶음 다시 쓰기 · 쓴 지 25시간 → 허용', expectation: 'ALLOW',
+       resourceData: { postId: 'oldPost0000000000001', createdAt: '2026-06-09T23:00:00Z' } }),
+  mk({ label: 'post_tickets 렌트 다시 쓰기 · 어제(11시간 전) → 허용 (11-26d 에서는 24시간이라 거부)', expectation: 'ALLOW',
+       path: 'post_tickets/testuser123/rent/4', method: 'update', uid: 'testuser123', data: postTicket,
+       resourceData: { postId: 'oldPost0000000000001', createdAt: '2026-06-09T13:00:00Z' } }),
+  mk({ label: 'post_tickets 구인 다시 쓰기 · 오늘 0시 1분 → 거부 (11-27a: 구인도 하루 4건)', expectation: 'DENY',
+       path: 'post_tickets/testuser123/jobs/3', method: 'update', uid: 'testuser123', data: postTicket,
+       resourceData: { postId: 'oldPost0000000000001', createdAt: '2026-06-09T14:01:00Z' } }),
+  mk({ label: 'post_tickets 구인 다시 쓰기 · 어제 23시 59분 59초 → 허용', expectation: 'ALLOW',
+       path: 'post_tickets/testuser123/jobs/2', method: 'update', uid: 'testuser123', data: postTicket,
+       resourceData: { postId: 'oldPost0000000000001', createdAt: '2026-06-09T13:59:59Z' } }),
+  mk({ label: 'post_tickets 구인 다시 쓰기 · 25시간 전 → 허용', expectation: 'ALLOW',
        path: 'post_tickets/testuser123/jobs/2', method: 'update', uid: 'testuser123', data: postTicket,
        resourceData: { postId: 'oldPost0000000000001', createdAt: '2026-06-08T23:00:00Z' } }),
-  mk({ label: 'post_tickets 렌트 묶음 다시 쓰기 · 쓴 지 23시간 → 거부 (렌트는 24시간 그대로)', expectation: 'DENY',
-       path: 'post_tickets/testuser123/rent/2', method: 'update', uid: 'testuser123', data: postTicket,
-       resourceData: { postId: 'oldPost0000000000001', createdAt: '2026-06-09T01:00:00Z' } }),
-  mk({ label: 'post_tickets 렌트 묶음 다시 쓰기 · 쓴 지 13시간 → 거부 (쉐어만 12시간)', expectation: 'DENY',
-       path: 'post_tickets/testuser123/rent/1', method: 'update', uid: 'testuser123', data: postTicket,
-       resourceData: { postId: 'oldPost0000000000001', createdAt: '2026-06-09T11:00:00Z' } }),
-  mk({ label: 'post_tickets 구인 묶음 다시 쓰기 · 쓴 지 13시간 → 거부 (쉐어만 12시간)', expectation: 'DENY',
-       path: 'post_tickets/testuser123/jobs/1', method: 'update', uid: 'testuser123', data: postTicket,
-       resourceData: { postId: 'oldPost0000000000001', createdAt: '2026-06-09T11:00:00Z' } }),
-  mk({ label: 'post_tickets 구인 묶음 다시 쓰기 · 정확히 24시간 → 거부', expectation: 'DENY',
-       path: 'post_tickets/testuser123/jobs/1', method: 'update', uid: 'testuser123', data: postTicket,
-       resourceData: { postId: 'oldPost0000000000001', createdAt: '2026-06-09T00:00:00Z' } }),
+  //   시각을 바꿔 가며(겨울 — 시드니 자정은 14:00Z)
+  mk({ label: 'post_tickets 쉐어 다시 쓰기 · 오후 3시에, 그날 오전 11시의 표 → 거부 (낮 12시를 넘겨도 같은 날이면 그대로 — 하루 기준)', expectation: 'DENY',
+       path: 'post_tickets/testuser123/accom/1', method: 'update', uid: 'testuser123', data: Object.assign({}, postTicket, { createdAt: '2026-06-10T05:00:00Z' }), time: '2026-06-10T05:00:00Z',
+       resourceData: { postId: 'oldPost0000000000001', createdAt: '2026-06-10T01:00:00Z' } }),
+  mk({ label: 'post_tickets 쉐어 다시 쓰기 · 밤 11시 59분 59초에, 그날 0시 정각의 표 → 거부 (23시간 59분 59초가 지났어도 같은 날)', expectation: 'DENY',
+       path: 'post_tickets/testuser123/accom/1', method: 'update', uid: 'testuser123', data: Object.assign({}, postTicket, { createdAt: '2026-06-10T13:59:59Z' }), time: '2026-06-10T13:59:59Z',
+       resourceData: { postId: 'oldPost0000000000001', createdAt: '2026-06-09T14:00:00Z' } }),
+  mk({ label: 'post_tickets 렌트 다시 쓰기 · 자정 정각(다음 날 0시 0분 0초)에, 1초 전의 표 → 허용', expectation: 'ALLOW',
+       path: 'post_tickets/testuser123/rent/1', method: 'update', uid: 'testuser123', data: Object.assign({}, postTicket, { createdAt: '2026-06-10T14:00:00Z' }), time: '2026-06-10T14:00:00Z',
+       resourceData: { postId: 'oldPost0000000000001', createdAt: '2026-06-10T13:59:59Z' } }),
+  //   여름(서머타임, UTC+11 — 시드니 자정은 13:00Z)
+  mk({ label: 'post_tickets 구인 다시 쓰기 · 서머타임: 자정 정각(13:00Z)에, 1초 전의 표 → 허용', expectation: 'ALLOW',
+       path: 'post_tickets/testuser123/jobs/1', method: 'update', uid: 'testuser123', data: Object.assign({}, postTicket, { createdAt: '2026-12-10T13:00:00Z' }), time: '2026-12-10T13:00:00Z',
+       resourceData: { postId: 'oldPost0000000000001', createdAt: '2026-12-10T12:59:59Z' } }),
+  mk({ label: 'post_tickets 쉐어 다시 쓰기 · 서머타임: 밤 11시 59분 59초에, 그날 0시 정각의 표 → 거부', expectation: 'DENY',
+       path: 'post_tickets/testuser123/accom/1', method: 'update', uid: 'testuser123', data: Object.assign({}, postTicket, { createdAt: '2026-12-10T12:59:59Z' }), time: '2026-12-10T12:59:59Z',
+       resourceData: { postId: 'oldPost0000000000001', createdAt: '2026-12-09T13:00:00Z' } }),
+  mk({ label: 'post_tickets 쉐어 다시 쓰기 · 서머타임: 0시 30분에, 전날 밤 11시 30분의 표 → 허용 (시드니 시각 — +10시간으로 세면 같은 날이라 거부됐을 것)', expectation: 'ALLOW',
+       path: 'post_tickets/testuser123/accom/2', method: 'update', uid: 'testuser123', data: Object.assign({}, postTicket, { createdAt: '2026-12-10T13:30:00Z' }), time: '2026-12-10T13:30:00Z',
+       resourceData: { postId: 'oldPost0000000000001', createdAt: '2026-12-10T12:30:00Z' } }),
+  mk({ label: 'post_tickets 쉐어 다시 쓰기 · 서머타임: 0시 30분에, 0시 10분의 표 → 거부', expectation: 'DENY',
+       path: 'post_tickets/testuser123/accom/2', method: 'update', uid: 'testuser123', data: Object.assign({}, postTicket, { createdAt: '2026-12-10T13:30:00Z' }), time: '2026-12-10T13:30:00Z',
+       resourceData: { postId: 'oldPost0000000000001', createdAt: '2026-12-10T13:10:00Z' } }),
+  //   서머타임이 바뀌는 날(2026-10-04 시작 · 2027-04-04 끝 — 둘 다 그 전날 16:00Z 에 바뀐다)
+  mk({ label: 'post_tickets 쉐어 다시 쓰기 · 서머타임 시작일 새벽 4시에, 전날 밤 11시 30분(표준시)의 표 → 허용', expectation: 'ALLOW',
+       path: 'post_tickets/testuser123/accom/3', method: 'update', uid: 'testuser123', data: Object.assign({}, postTicket, { createdAt: '2026-10-03T17:00:00Z' }), time: '2026-10-03T17:00:00Z',
+       resourceData: { postId: 'oldPost0000000000001', createdAt: '2026-10-03T13:30:00Z' } }),
+  mk({ label: 'post_tickets 쉐어 다시 쓰기 · 서머타임 시작일 새벽 4시에, 그날 0시 30분(표준시)의 표 → 거부', expectation: 'DENY',
+       path: 'post_tickets/testuser123/accom/3', method: 'update', uid: 'testuser123', data: Object.assign({}, postTicket, { createdAt: '2026-10-03T17:00:00Z' }), time: '2026-10-03T17:00:00Z',
+       resourceData: { postId: 'oldPost0000000000001', createdAt: '2026-10-03T14:30:00Z' } }),
+  mk({ label: 'post_tickets 렌트 다시 쓰기 · 서머타임 끝나는 날 새벽 3시(표준시)에, 전날 밤 11시 30분(서머타임)의 표 → 허용', expectation: 'ALLOW',
+       path: 'post_tickets/testuser123/rent/2', method: 'update', uid: 'testuser123', data: Object.assign({}, postTicket, { createdAt: '2027-04-03T17:00:00Z' }), time: '2027-04-03T17:00:00Z',
+       resourceData: { postId: 'oldPost0000000000001', createdAt: '2027-04-03T12:30:00Z' } }),
+  mk({ label: 'post_tickets 렌트 다시 쓰기 · 서머타임 끝나는 날 새벽 3시(표준시)에, 그날 0시 30분(서머타임)의 표 → 거부', expectation: 'DENY',
+       path: 'post_tickets/testuser123/rent/2', method: 'update', uid: 'testuser123', data: Object.assign({}, postTicket, { createdAt: '2027-04-03T17:00:00Z' }), time: '2027-04-03T17:00:00Z',
+       resourceData: { postId: 'oldPost0000000000001', createdAt: '2027-04-03T13:30:00Z' } }),
   mk({ label: 'post_tickets 다시 쓰기 · 25시간 지났지만 createdAt 을 옛 값 그대로 → 거부', expectation: 'DENY',
        path: 'post_tickets/testuser123/accom/1', method: 'update', uid: 'testuser123',
        data: { postId: 'newPost0000000000001', createdAt: '2026-06-08T23:00:00Z' },
@@ -1788,8 +1833,10 @@ const cases = [
        path: 'post_tickets/testuser123/accom/1', method: 'get', uid: 'adminuid001', admin: true, resourceData: postTicket }),
   mk({ label: 'post_tickets list 본인 limit 2 → 허용', expectation: 'ALLOW',
        path: 'post_tickets/testuser123/accom/1', method: 'list', uid: 'testuser123', query: { limit: 2 }, resourceData: postTicket }),
-  mk({ label: 'post_tickets list 본인 limit 3 → 거부', expectation: 'DENY',
-       path: 'post_tickets/testuser123/accom/1', method: 'list', uid: 'testuser123', query: { limit: 3 }, resourceData: postTicket }),
+  mk({ label: 'post_tickets list 본인 limit 4 → 허용 (11-27a: 네 칸)', expectation: 'ALLOW',
+       path: 'post_tickets/testuser123/accom/1', method: 'list', uid: 'testuser123', query: { limit: 4 }, resourceData: postTicket }),
+  mk({ label: 'post_tickets list 본인 limit 5 → 거부', expectation: 'DENY',
+       path: 'post_tickets/testuser123/accom/1', method: 'list', uid: 'testuser123', query: { limit: 5 }, resourceData: postTicket }),
   //   글 create — 표가 있어야 한다(위의 기존 '허용' 케이스들은 맨 아래 기본 모킹 = 이 글 id 로 방금 끊은 표)
   mkCreate(accomData, 'ALLOW', 'rent_posts', '렌트 글 만들기 + 방금 끊은 표 → 허용 (11-26c)'),
   noTicket(mkCreate(accomData,    'DENY', 'accom_posts', '쉐어 글 만들기 · 표 없음 → 거부 (11-26c: 전에는 허용 — 한도의 핵심)')),
@@ -1812,6 +1859,18 @@ const cases = [
        path: 'accom_posts/newdoc1', method: 'create', uid: 'testuser123', admin: true, data: accomData })),
   noTicket(mk({ label: '관리자: 구인 글 만들기 · 표 없음 → 허용', expectation: 'ALLOW',
        path: 'jobs_posts/newdoc1', method: 'create', uid: 'testuser123', admin: true, data: jobsLikeData })),
+  //   가장 무거운 경로(11-27a) — 규칙이 관리자 판정을 맨 뒤에 두므로 '네 칸을 모두 보고 나서 관리자라서 허용'인 경로가 있다. 계정 문서도 있는 것으로 한다(exists · get).
+  //   · 쉐어: 네 칸 모두 다른 글의 표 — 넷째 칸의 표로 올리는 보통 글(세 칸은 다른 글, 넷째 칸이 이 글)과 식의 수가 같은 수준이다.
+  //   · 구인: 네 칸 모두 글 id 는 맞지만 11분 전에 끊은 표 — 칸마다 시각 비교까지 간다(더 무겁다).
+  //   공식 시험이 이 둘을 허용하면 그 경로가 식 1,000개 · 문서 읽기 10회 한도 안이다(거부 케이스로는 한도 초과와 거부를 가릴 수 없다).
+  noTicket(mk({ label: '관리자: 쉐어 글 만들기 · 최대 38키 · 계정 문서 있음 · 네 칸 모두 다른 글의 표 → 허용 (가장 무거운 경로 — 표현식 · 문서 읽기 한도 감시, 11-27a)', expectation: 'ALLOW',
+       path: 'accom_posts/newdoc1', method: 'create', uid: 'testuser123', admin: true, data: accomMax, userDocStatus: 'active' }),
+           { postId: 'otherPost00000000001', createdAt: '2026-06-10T00:00:00Z', status: 'active' }),
+  noTicket(mk({ label: '관리자: 구인 글 만들기 · 모든 칸 · 계정 문서 있음 · 네 칸 모두 낡은 표 → 허용 (가장 무거운 경로 — 한도 감시, 11-27a)', expectation: 'ALLOW',
+       path: 'jobs_posts/newdoc1', method: 'create', uid: 'testuser123', admin: true, userDocStatus: 'active',
+       data: Object.assign({}, jobsLikeData, { updatedAt: '2026-06-10T00:00:00Z', mode: 'offer', contactEmail: 'boss@example.com', category: '주방',
+                                               address: 'Sunnybank QLD 4109', lat: -27.57, lng: 153.06, imageUrls: ['https://x.com/a.jpg', 'https://x.com/b.jpg'] }) }),
+           { postId: 'newdoc1', createdAt: '2026-06-09T23:49:00Z', status: 'active' }),
   //   표와 무관한 것 — 수정 · 삭제는 표를 보지 않는다(횟수에 들어가지 않는다)
   noTicket(mk({ label: '쉐어 글 삭제 · 표 없음 → 허용 (삭제는 표와 무관)', expectation: 'ALLOW',
        path: 'accom_posts/existdoc1', method: 'delete', uid: 'testuser123', resourceData: accomData })),

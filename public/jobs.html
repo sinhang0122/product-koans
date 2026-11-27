@@ -73,7 +73,7 @@
   <script src="koaus-enums.js" defer></script>   <!-- 11-04: 값 목록(업종·비자 등) — 일 구해요 프로필 -->
   <script src="koaus-geo.js" defer></script>   <!-- 11-04: 동네 검색 공통(Maps JS, 한글·영문·우편번호) -->
   <script src="koaus-area.js" defer></script>   <!-- 11-26c: 지도에서 정한 지역 — 기억 · 목록 표시 · 이어 보기 -->
-  <script src="koaus-post-ticket.js" defer></script>   <!-- 11-26c: 글 등록 표 — 2건: 쉐어 12시간(11-26d) · 렌트 · 구인 24시간(규칙과 짝) -->
+  <script src="koaus-post-ticket.js" defer></script>   <!-- 11-26c: 글 등록 표 — 11-27a: 게시판마다 하루(시드니 시각) 4건 · 세 게시판 모두(규칙과 짝) -->
   <script src="koaus-state-pick.js" defer></script>   <!-- 11-08: 상단바·지도 헤더 주(State) 드롭다운 -->
   <script src="koaus-people-deck.js" defer></script>   <!-- 11-08: 구하는 사람 카드 넘겨 보기(공용) -->
   <script type="module" src="koaus-job-profile.js?v=1119a"></script>   <!-- 11-04 ②: 일 구해요 프로필 + 사장님용 근처 목록 -->
@@ -639,7 +639,7 @@
           <li>욕설, 혐오 발언 및 타인 비방 금지</li>
           <li>환전 및 담배 등 호주 내 불법·편법 거래 금지</li>
           <li>호주 법률 위반 글 또는 타인의 초상권·저작권 침해 사진 업로드 시 무통보 삭제 및 사이트 영구 이용 불가</li>
-          <li>1일 2회 등록 가능 (주소만 살짝 바꾸는 중복 도배 글은 동일 글로 간주하여 제재)</li>
+          <li>하루 4건까지 등록 가능 — 시드니 시각 기준 (주소만 살짝 바꾸는 중복 도배 글은 동일 글로 간주하여 제재)</li>   <!-- 11-27a: 사용자 결정(하루 4건 · 시드니 시각, 규칙과 짝) -->
           <li>일을 시작하기 전에 돈(교육비 · 소개비 등)을 요구하는 취업 사기에 각별히 주의하세요.</li>
           <li>상세 정보 없이 외부 메신저(카카오톡 등)로 유도하는 글은 피싱 사기일 확률이 높습니다.</li>
           <li><strong>(구인구직)</strong> 호주 최저임금 및 Fair Work 규정을 위반하는 불법 구인 글은 즉시 삭제됩니다.</li>
@@ -916,6 +916,7 @@
     let activeFilter = {};
     document.addEventListener('koaus-admin-ready', () => { try { renderPosts(); } catch (_) {} }); // admin claim 확정 후 카드 admin 버튼 재렌더
     function renderPosts() {
+      try { if (window.koausArea) { if (areaBounds) window.koausArea.touch('jobs'); else window.koausArea.refresh(); } } catch (_) {}   // 11-27a: 지역을 보는 중이면 '마지막으로 본 때'를 지금으로, 아니면 이어 보기 카드의 "새 글 N건"을 다시 센다
       let all;
       try {
         all = loadPosts().filter(p =>
@@ -1680,7 +1681,7 @@
                 console.error('Firestore 전송 실패 원인: ', error);
                 // 11-21: 저장에 실패한 글은 이 기기의 목록에서도 뺀다(전에는 이 기기에만 계속 남아, 올라간 것처럼 보였다)
                 try { savePosts(loadPosts().filter(x => String(x.id) !== String(post.id))); removeRecord(MYPOSTS_KEY, post.id); renderPosts(); } catch (_) {}
-                alert((error && error.koausMsg) || ('글을 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.\n(' + ((error && (error.code || error.message)) || error) + ')'));   // 11-26c: 24시간 2건 한도 안내는 그 문구 그대로
+                alert((error && error.koausMsg) || ('글을 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.\n(' + ((error && (error.code || error.message)) || error) + ')'));   // 11-26c: 한도 안내(11-27a: 하루 4건)는 그 문구 그대로
               });
           } else {
             console.error('window.koausJobs 미초기화 — Firestore 모듈 로드 순서를 확인하세요');
@@ -2050,6 +2051,15 @@
     window.__koausAreaHost = {
       board: 'jobs', state: currentState,
       active: () => !!areaBounds,
+      // 11-27a: 이어 보기 카드의 "새 글 N건" — 지난번에 본 뒤(rec.t) 그 범위에 새로 올라온 글 수.
+      //   [이어 보기]를 누르면 보일 목록과 같은 조건으로 센다(범위를 잠깐 켜고 renderPosts 와 같은 거르기를 돌린다 — 내 글은 뺀다)
+      countNew: (rec) => {
+        const b = window.koausArea && window.koausArea.shim(rec.o); if (!b || areaBounds) return 0;
+        areaBounds = b;
+        try { return applyJobsSearchKw(applyFilters(loadPosts().filter(p => (p.postType || 'hiring') === activeTab && !p.isHidden))).filter(p => Number(p._ts) > rec.t && !isMine(p)).length; }
+        catch (_) { return 0; }
+        finally { areaBounds = null; }
+      },
       // 이어 보기 — 적어 둔 범위를 켜고 view('map' | 'list')로 보여 준다
       apply: (rec, view) => {
         const b = window.koausArea && window.koausArea.shim(rec.o); if (!b) return;
@@ -2515,14 +2525,14 @@
         console.log('Firestore 전송 시도 데이터: ', payload, '| collection=jobs_posts | uid=', u.uid);
         try {
           // ── Step 1: 새 글 등록 — 반드시 먼저 성공해야 함 ──
-          // 11-26c: 1일 2회 등록 — 글 등록 표를 끊고 그 id 로 글을 만든다(koaus-post-ticket.js, 규칙 postTicketOk). 표 모듈이 없으면 예전 방식.
+          // 11-26c: 글 등록 한도(11-27a: 하루 4건) — 글 등록 표를 끊고 그 id 로 글을 만든다(koaus-post-ticket.js, 규칙 postTicketOk). 표 모듈이 없으면 예전 방식.
           let ref;
           if (window.koausPostTicket) {
             const _tk = await window.koausPostTicket.create({ db, doc, getDoc, setDoc, collection, serverTimestamp }, u.uid, 'jobs',
               async postId => { const r = doc(db, 'jobs_posts', postId); await setDoc(r, payload); return r; });
             if (!_tk.ok) { const _m = window.koausPostTicket.message(_tk); throw Object.assign(new Error('post-ticket'), _m ? { code: 'koaus/post-limit', koausMsg: _m } : { code: 'permission-denied' }); }   // 한도면 그 안내를, 표를 못 끊은 다른 경우(미인증 · 정지)는 전과 같은 알림
             ref = _tk.ref;
-            try { const _n = window.koausPostTicket.notice && window.koausPostTicket.notice(_tk); if (_n && window.koausToast) window.koausToast.show(_n, 6000); } catch (_) {}   // 11-26d: 올린 뒤 안내("등록되었습니다. 24시간 이내에 1건만 더 등록 가능합니다.")
+            try { const _n = window.koausPostTicket.notice && window.koausPostTicket.notice(_tk); if (_n && window.koausToast) window.koausToast.show(_n, 6000); } catch (_) {}   // 11-26d: 올린 뒤 안내(11-27a: "등록되었습니다. 오늘 총 3건 남았습니다.")
           } else {
             ref = await addDoc(collection(db, 'jobs_posts'), payload);
           }
