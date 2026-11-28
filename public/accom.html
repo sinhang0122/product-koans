@@ -2042,6 +2042,22 @@
       const tail = filteredArr.filter(p => !ids.has(String(p.id)));
       return pinned.concat(tail);
     }
+    // ── 11-28c(사용자 지시 "koaus에서 작성햇으면 상단 노출로 나오게 해줘 1주일 동안 시간 순서대로 타사이트들보다") ─────────────────────
+    //   KoAus 에서 쓴 글은 쓴 지 KOAUS_FIRST_DAYS 일 동안, 다른 사이트에서 가져온 글(p.ext — koaus-ext.js)보다 목록 위에 둔다. 그 안에서는 새 글부터.
+    //   7일이 지나면 전처럼 가져온 글과 시간순으로 섞인다. 걸러 낸 결과(주 · 지역 · 상세 필터 · 검색)에 적용한다 — 지도의 핀과는 관계없다.
+    //   시각은 서버가 적은 올린 시각(_ts = createdAt). 지금보다 하루 넘게 앞선 시각은 새 글로 치지 않는다(기기 시계가 조금 틀린 것은 봐준다).
+    //   이 덩어리는 accom.html · rent.html · jobs.html 세 곳에 글자까지 똑같이 있다 — 고칠 때는 세 곳을 같이 고친다. 날 수만 바꾸려면 KOAUS_FIRST_DAYS(세 곳). 0 이면 끈다(전과 같은 순서).
+    //   var · function 선언으로 둔 까닭: 이 줄이 실행되기 전에 목록을 그리는 일이 있어도 오류가 나지 않게(그때는 순서만 전과 같다).
+    var KOAUS_FIRST_DAYS = 7;
+    function koausPostTs(p) { var t = Number(p && p._ts); if (t > 0) return t; var i = p && p.id; return (typeof i === 'number' && i > 0) ? i : 0; }
+    function koausIsFirst(p, now) { if (!p || p.ext || !(KOAUS_FIRST_DAYS > 0)) return false; var t = koausPostTs(p); return t > 0 && t - now < 86400000 && now - t < KOAUS_FIRST_DAYS * 86400000; }
+    // list 를 묶음 순서로 다시 놓는다: 화면이 전부터 맨 위에 두던 글(baseRank(p) > 0, 큰 값이 위) → KoAus 에서 쓴 지 7일이 안 된 글 → 나머지.
+    //   같은 묶음 안에서는 넘겨받은 순서 그대로다(넘겨받는 목록이 이미 새 글부터다).
+    function koausFirstOrder(list, baseRank) {
+      var now = Date.now();
+      return list.map(function (p, i) { var b = baseRank ? (Number(baseRank(p)) || 0) : 0; return { p: p, i: i, r: b > 0 ? b + 1 : (koausIsFirst(p, now) ? 1 : 0) }; })
+        .sort(function (a, b) { return (b.r - a.r) || (a.i - b.i); }).map(function (x) { return x.p; });
+    }
     document.addEventListener('koaus-admin-ready', () => { try { renderAll(); } catch (_) {} }); // admin claim 확정 후 카드 admin 버튼 재렌더
     function renderAll() {
       try { if (window.koausArea) { if (_areaOn()) window.koausArea.touch('accom'); else window.koausArea.refresh(); } } catch (_) {}   // 11-27a: 지역을 보는 중이면 '마지막으로 본 때'를 지금으로, 아니면 이어 보기 카드의 "새 글 N건"을 다시 센다
@@ -2051,13 +2067,9 @@
       const normal = posts.filter(p => !(p && (p.isPinned === true || p.adminPin === true)));
       const filtered = mergePinnedFirst(applySearchKw(applyFilters(normal)));
       document.getElementById('boardCount').textContent = `총 ${filtered.length}건`;
-      // 정렬: pinned 는 항상 맨 위, 나머지는 최신순 (id 내림차순)
-      const sorted = filtered.slice().sort((a, b) => {
-        const ap = (a.isPinned || a.adminPin) ? 1 : 0;
-        const bp = (b.isPinned || b.adminPin) ? 1 : 0;
-        if (ap !== bp) return bp - ap;   // pinned 우선
-        return b.id - a.id;
-      });
+      // 정렬(11-28c): ① 운영자 고정 글(isPinned · adminPin) ② 운영자 글(services — adminPost) ③ KoAus 에서 쓴 지 7일이 안 된 글 ④ 나머지(가져온 글 · 7일이 지난 KoAus 글).
+      //   같은 묶음 안에서는 합쳐 둔 순서 그대로 — 새 글부터다(_accomMergeAndPersist). 전에는 ① 다음이 곧바로 합쳐 둔 순서였다(운영자 글 → 나머지 시간순).
+      const sorted = koausFirstOrder(filtered, p => ((p.isPinned || p.adminPin) ? 2 : p.adminPost ? 1 : 0));
       const totalPages = Math.max(1, Math.ceil(sorted.length / PER_PAGE));
       if (currentPage > totalPages) currentPage = totalPages;
       renderListView(sorted, totalPages);
@@ -3429,6 +3441,20 @@
         return out;
       }
 
+      // ── 11-28c: 쓴 지 7일(KOAUS_FIRST_DAYS)이 안 된 글이 실시간 창(최근 20건)보다 많으면 그만큼 더 불러온다 ──
+      //   가장 오래된 글이 아직 7일 안이고 서버에 글이 더 있으면 koausLoadOlder() 를 부른다(한 번에 20건 · 화면을 연 동안 많아야 3번 = 80건까지).
+      //   7일 안에 쓴 글이 '상단 노출'에서 빠지지 않게 하려는 것이다. 실패는 조용히 넘긴다 — 목록 끝의 › 로 전처럼 더 불러올 수 있다.
+      let _firstFillN = 0;
+      function _accomFirstFill() {
+        const st = window.koausOlderState, days = Number(window.KOAUS_FIRST_DAYS) || 0;
+        if (!days || !st || !st.hasMore || st.loading || _firstFillN >= 3 || typeof window.koausLoadOlder !== 'function') return;
+        let oldest = 0;
+        [..._accomFsCache, ..._accomOverflow, ..._accomOlder].forEach(p => { const t = Number(p && p._ts) || 0; if (t > 0 && (!oldest || t < oldest)) oldest = t; });
+        if (!oldest || Date.now() - oldest >= days * 86400000) return;
+        _firstFillN++;
+        window.koausLoadOlder().then(() => _accomFirstFill()).catch(() => {});
+      }
+
       // ── 사용자 글 구독 (accom_posts) — 실시간 최신 20건 윈도우 ──
       try {
         onSnapshot(
@@ -3454,6 +3480,7 @@
               }
             }
             _accomMergeAndPersist();
+            _accomFirstFill();   // 11-28c: 7일 안의 글이 창(20건)보다 많으면 더 불러온다
           },
           err => console.warn('[accom] accom_posts 구독 실패', err)
         );

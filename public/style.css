@@ -4932,6 +4932,17 @@ img, iframe, video, canvas, svg, table { max-width: 100%; }
      목록/지도 전환·상세 필터·섹션 이동은 지도 상단 헤더(koaus-map-header.js) 담당. */
 }
 
+/* ═══════════════════════════════════════════════════════════════════
+   11-28c(사용자 지시 "map view에는 광고있으면 안됨") — 지도 보기에는 광고 자리를 두지 않는다
+   ─ 히어로 배너(.koaus-hero) · 전광판(.notice-section) · 상단 노출 글(#pinnedNoticeBox).
+   ─ 모바일은 지도가 화면 전체를 덮어 전부터 보이지 않았다. PC 는 지도 위에 그대로 남아 있었다(지도는 그 아래로 밀려 있었다).
+   ─ 트리거는 위와 같은 body.koaus-map-active(koaus-tabbar.js 가 #mapView 표시에 맞춰 켠다) — 목록 보기로 돌아오면 다시 보인다.
+   ─ 지우지 않고 숨긴다. 게시판 화면에 광고 자리를 새로 만들면 여기에 같이 적는다(구글 광고 자리도).
+   ═══════════════════════════════════════════════════════════════════ */
+body.koaus-map-active .koaus-hero,
+body.koaus-map-active .notice-section,
+body.koaus-map-active #pinnedNoticeBox { display: none !important; }
+
 /* (2026-07) 옛 홈 12타일 cat-grid CSS 제거 — 카테고리 이동은 하단 탭바/바로가기가 담당,
    그 자리는 홈 영상 칸(#koausHomeVideos, koaus-home-videos.js 자체 주입 스타일)으로 대체. */
 
