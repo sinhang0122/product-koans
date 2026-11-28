@@ -41,7 +41,10 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, g
   function mapDoc(d) {
     const x = d.data() || {};
     const ms = x.postedAt && x.postedAt.toMillis ? x.postedAt.toMillis() : 0;
-    const dt = ms ? new Date(ms) : null; const p2 = n => String(n).padStart(2, '0');
+    // 11-28e: 날짜 · 시각은 '원래 사이트에 적힌 그대로'(브리즈번 시각, UTC+10 — 서버가 그 시간대로 읽어 postedAt 에 적는다: functions-ext dayMs · minuteMs).
+    //   전에는 보는 기기의 시간대로 바꿔 적었다 — 날짜만 아는 글(postedAt = 브리즈번 0시)은 퍼스 · 한국처럼 더 늦은 시간대에서 하루 앞 날짜가 됐다.
+    //   이제 날짜가 카드마다 보이므로 어디서 보든 같은 날짜가 나오게 한다. 다른 시간대의 사이트를 더하면 서버의 시간대와 이 줄을 같이 고친다.
+    const dt = ms ? new Date(ms + 36000000) : null; const p2 = n => String(n).padStart(2, '0');
     const where = x.suburbEn || x.suburb || x.zone || x.region || '';
     const st = String(x.state || '').toLowerCase();
     const p = {
@@ -52,7 +55,7 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, g
       lat: typeof x.lat === 'number' ? x.lat : undefined, lng: typeof x.lng === 'number' ? x.lng : undefined,
       body: typeof x.body === 'string' ? x.body : '', hasDetail: !!x.hasDetail, hasPhone: !!x.hasPhone, imageCount: Number(x.imageCount) || 0,
       mode: 'offer', types: [], roomTypes: [], imageUrls: [], status: 'approved', isHidden: false, postType: 'hiring', locationPrivate: true,   // 핀은 동네 중심(비공개 주소와 같은 취급)
-      date: dt ? `${p2(dt.getMonth() + 1)}/${p2(dt.getDate())}` : '', time: dt && x.hasDetail ? `${p2(dt.getHours())}:${p2(dt.getMinutes())}` : '',
+      date: dt ? `${p2(dt.getUTCMonth() + 1)}/${p2(dt.getUTCDate())}` : '', time: dt && x.hasDetail ? `${p2(dt.getUTCHours())}:${p2(dt.getUTCMinutes())}` : '',
       postedMs: ms,
       // 상세를 받은 글은 실제 올린 시각, 아니면 그 날 안에서 글 번호 순(KoAus 글보다 아래)
       _ts: x.hasDetail ? ms : ms + ((Number(x.extNum) || 0) % 43200000),
@@ -119,6 +122,7 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, g
       @media(min-width:720px){.kxt-box{border-radius:20px;padding:22px}}
       .kxt-head{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-muted,#666);font-weight:700}
       .kxt-head .kxt-src{font-weight:800;color:var(--text-primary,#111)}
+      .kxt-head .kxt-date{font-size:11px;font-weight:600;opacity:.65;white-space:nowrap;font-variant-numeric:tabular-nums}
       .kxt-x{margin-left:auto;border:1.5px solid var(--text-primary,#111);background:transparent;color:var(--text-primary,#111);border-radius:999px;width:32px;height:32px;font-size:16px;font-weight:800;cursor:pointer}
       .kxt-title{font-size:19px;font-weight:900;line-height:1.3;margin:10px 0 8px;letter-spacing:-.01em}
       .kxt-meta{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}
@@ -138,7 +142,9 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, g
   // 카드(목록·지도 서랍 공용) — KoAus 카드 규격(.accom-card) 그대로. 액션 버튼 대신 구석에 *출처
   //   11-28a(사용자 지시 "다른 사이트들에서 글 가져오면 사진 없잖아 사진 없는 글은 다 사진 없애고 제목이랑 지금 나온느 것들만"):
   //   그림 칸을 두지 않는다(.no-thumb) — 가져온 글에는 사진이 없다. 전에는 그 자리에 핀 + 동네 이름을 그려 넣었다(동네는 가격 옆 줄에 그대로 있다).
-  //   카드 높이를 푸는 규칙(.accom-card.no-thumb{min-height:0})은 세 게시판 화면에 있다. 화면은 이 파일을 koaus-ext.js?v=1128a 로 싣는다 — 카드 모양을 바꾸면 그 v 도 바꾼다.
+  //   카드 높이를 푸는 규칙(.accom-card.no-thumb{min-height:0})은 세 게시판 화면에 있다. 화면은 이 파일을 koaus-ext.js?v=1128e 로 싣는다 — 카드 모양을 바꾸면 그 v 도 바꾼다.
+  //   11-28e(사용자 지시 "날짜가 작게 … 썬브리즈번처럼" · 답 "목록 카드 + 상세"): 카드 구석에 작은 날짜(.accom-card-date — 원래 사이트에 올라온 날 p.date, 월/일).
+  //   날짜 모양(.accom-card-date · .has-date)은 세 게시판 화면의 <style> 에 있다(KoAus 글 카드와 같은 규칙).
   function cardHtml(p, opts) {
     // 11-15(보안): 넘겨받은 객체를 믿지 않는다 — ext_posts 에서 읽어 만든 목록(api.byId)에 있는 글만 그린다.
     //   일반 글 문서에 ext/outUrl 을 심어 외부 글인 척하는 것을 막는다(글 주인은 자기 글 문서를 고칠 수 있다).
@@ -159,9 +165,10 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, g
               <div class="accom-card-title2">${esc(p.title)}</div>
               <div class="accom-card-actions"><span class="ext-tag" title="${esc(p.sourceName)} 글">*${esc(p.source)}</span></div>
             </div>
-            <div class="accom-card-row2">
+            <div class="accom-card-row2${p.date ? ' has-date' : ''}">
               <div class="accom-card-price-wrap">${priceHtml}${st ? `<div class="accom-card-state">${esc(st)}</div>` : ''}</div>
               ${sub ? `<div class="accom-card-sub">${sub}</div>` : ''}
+              ${p.date ? `<div class="accom-card-date">${esc(p.date)}</div>` : ''}
             </div>
           </div>
         </div>`;
@@ -203,9 +210,10 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, g
     else { meta.push(p.price ? `<span class="price">$${esc(p.price)}/wk</span>` : '<span>가격 협의</span>'); if (p.kind) meta.push(`<span>${esc(p.kind)}</span>`); if (p.gender) meta.push(`<span>${p.gender === 'female' ? '여성' : '남성'}</span>`); if (p.moveIn) meta.push(`<span>${esc(p.moveIn)}</span>`); }
     const where = [p.suburbEn || p.suburb, p.zone && p.zone !== (p.suburbEn || p.suburb) ? p.zone : '', p.region].filter(Boolean);
     if (where.length) meta.push(`<span>${esc(where.join(' · '))}</span>`);
-    const when = p.postedMs ? (p.hasDetail ? ago(p.postedMs) : p.date) : '';
+    // 11-28e(사용자 지시 "그 시간보다는 날짜가 작게 나어게 하자"): 전에는 상세를 받은 글이면 "3시간 전" 같은 글자가 나왔다 — 이제는 언제나 날짜(월/일)만, 작게(.kxt-date). ago() 는 남겨 둔다(쓰지 않는다).
+    const when = p.postedMs ? p.date : '';
     box.innerHTML = `
-      <div class="kxt-head"><span class="kxt-src">*${esc(p.source)}</span><span>${esc(p.sourceName)}${when ? ' · ' + esc(when) : ''}</span><button type="button" class="kxt-x" data-kxt-close aria-label="닫기">×</button></div>
+      <div class="kxt-head"><span class="kxt-src">*${esc(p.source)}</span><span>${esc(p.sourceName)}</span>${when ? `<span class="kxt-date">${esc(when)}</span>` : ''}<button type="button" class="kxt-x" data-kxt-close aria-label="닫기">×</button></div>
       <h3 class="kxt-title">${esc(p.title)}</h3>
       <div class="kxt-meta">${meta.join('')}</div>
       <div class="kxt-body${p.body ? '' : ' empty'}">${p.body ? esc(p.body) : '본문은 원문에서 볼 수 있습니다.'}</div>
