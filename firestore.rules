@@ -240,7 +240,12 @@ service cloud.firestore {
         && pOptStr(d, 'author', 50)
         && pOptStr(d, 'contactEmail', 200)   // 글쓴이 연락용 이메일(선택) — 계정 PII email/authorEmail 과 별개 키
         // H4: 공개 문서 작성자 PII 제거 — email 미허용(소유권은 uid/authorUid).
-        && !('email' in d) && !('authorEmail' in d);
+        && !('email' in d) && !('authorEmail' in d)
+        // 11-28d(사용자 지시 "서버 시각으로 강제해야지"): 글을 만든 시각은 서버 시각이어야 한다 — 화면은 늘 serverTimestamp() 를 보낸다(2026-06 부터).
+        //   전에는 만들 때 createdAt 을 검사하지 않아, 화면을 거치지 않은 직접 요청으로 앞선 시각을 넣으면 그 글이 시간순 목록의 맨 앞에 오래 남을 수 있었다
+        //   (수정으로 createdAt 을 바꾸는 것은 11-21 에 막았다 — 아래 '글 수정 검증'). 이 검증기를 쓰는 다섯 게시판(쉐어 · 렌트 · 구인 · 중고차 · daily) 공통.
+        //   ⚠️ 글을 만드는 화면 코드를 새로 쓰면 createdAt: serverTimestamp() 를 꼭 넣는다 — 기기 시각(Date.now()) · 빈 값이면 등록이 거부된다.
+        && 'createdAt' in d && d.createdAt == request.time;
     }
     // accom(쉐어) + rent(렌트) — 매물 필드 + 스키마 화이트리스트
     function validShareRentCreate() {

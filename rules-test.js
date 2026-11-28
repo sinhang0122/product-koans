@@ -35,6 +35,8 @@
 //               하루 = 시드니 시각의 0시~24시(서머타임 포함). 세 게시판 모두 같다.
 //               빈 칸에만 create · 시드니 날짜로 오늘 이전의 표가 적힌 칸만 update · 지우기 불가 · 글 create 는 내 칸에 이 글 id 가 적혀 있고 끊은 지 10분 안이어야 한다 ·
 //               관리자는 표 없이. 쉐어 · 렌트 · 구인 글 create 케이스에는 맨 아래에서 '방금 끊은 표' 모킹을 기본으로 얹는다(_noTicket 케이스 제외).
+//            ⑫ 글의 올린 시각 (2026-11-28d) — 글 create 의 createdAt 은 서버 시각(request.time)이어야 한다(validBaseCreate — 쉐어 · 렌트 · 구인 ·
+//               중고차 · daily 공통). 앞선 시각 · 지난 시각 · 수 · 빈 값은 거부, 관리자도 같다. 위 ①~⑪ 의 글 create '허용' 케이스는 모두 createdAt 이 요청 시각과 같다.
 //  · 주의:   App Check Enforce 계층 차단은 본 스위트로 못 잡는다 — 콘솔 작업(K4류)
 //            후엔 운영 도메인에서 공개 페이지 1회 열람 확인 병행할 것.
 // ════════════════════════════════════════════════════════════════════
@@ -1874,6 +1876,23 @@ const cases = [
   //   표와 무관한 것 — 수정 · 삭제는 표를 보지 않는다(횟수에 들어가지 않는다)
   noTicket(mk({ label: '쉐어 글 삭제 · 표 없음 → 허용 (삭제는 표와 무관)', expectation: 'ALLOW',
        path: 'accom_posts/existdoc1', method: 'delete', uid: 'testuser123', resourceData: accomData })),
+
+  // ⑫ 11-28d(사용자 지시 "서버 시각으로 강제해야지"): 글을 만든 시각(createdAt)은 서버 시각이어야 한다 — validBaseCreate(쉐어 · 렌트 · 구인 · 중고차 · daily 공통).
+  //   화면은 늘 serverTimestamp() 를 보낸다(= request.time). 전에는 만들 때 검사가 없어, 직접 요청으로 앞선 시각을 넣으면 그 글이 시간순 목록의 맨 앞에 오래 남을 수 있었다.
+  //   게시판마다 '허용' 하나와 '거부' 다섯은 createdAt 한 칸만 다르다 — 거부의 까닭이 그 칸임을 보이려는 것이다.
+  //   (쉐어 · 렌트 · 구인 create 에는 맨 아래에서 '방금 끊은 표' 모킹이 얹힌다 — 표 때문에 거부되는 것이 아니다)
+  ...[['accom_posts', '쉐어', accomData], ['rent_posts', '렌트', accomData], ['jobs_posts', '구인', jobsLikeData], ['auto_posts', '중고차', autoData], ['daily_posts', 'daily', dailyData]].flatMap(([coll, name, base]) => [
+    mkCreate(upd(base, { createdAt: T0 }), 'ALLOW', coll, `${name} 글 만들기 · createdAt 이 서버 시각(화면이 보내는 그대로) → 허용 (11-28d)`),
+    mkCreate(upd(base, { createdAt: '2026-06-10T01:00:00Z' }), 'DENY', coll, `${name} 글 만들기 · createdAt 이 1시간 뒤 → 거부 (11-28d)`),
+    mkCreate(upd(base, { createdAt: '2026-07-10T00:00:00Z' }), 'DENY', coll, `${name} 글 만들기 · createdAt 이 30일 뒤(목록 맨 앞에 오래 남으려는 것) → 거부 (11-28d)`),
+    mkCreate(upd(base, { createdAt: '2026-06-09T23:59:59Z' }), 'DENY', coll, `${name} 글 만들기 · createdAt 이 1초 전 → 거부 (11-28d)`),
+    mkCreate(upd(base, { createdAt: 1781049600000 }), 'DENY', coll, `${name} 글 만들기 · createdAt 이 수(밀리초) → 거부 (11-28d)`),
+    mkCreate((({ createdAt, ...rest }) => rest)(base), 'DENY', coll, `${name} 글 만들기 · createdAt 없음 → 거부 (11-28d)`),
+  ]),
+  //   관리자도 같다 — 글 만들기에는 관리자 예외가 없다(관리자가 면제받는 것은 글 등록 표뿐)
+  mk({ label: '관리자: 쉐어 글 만들기 · createdAt 이 30일 뒤 → 거부 (11-28d)', expectation: 'DENY',
+       path: 'accom_posts/newdoc1', method: 'create', uid: 'testuser123', admin: true, userDocStatus: 'active',
+       data: upd(accomData, { createdAt: '2026-07-10T00:00:00Z' }) }),
 ];
 
 // ── 기본 functionMocks 주입 ──
