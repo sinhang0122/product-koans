@@ -77,11 +77,11 @@
   <script type="module" src="koaus-phone-auth.js"></script>
   <script type="module" src="koaus-seeker-profile.js"></script>   <!-- 2026-10 ①-2: "집 구해요" 선택 직후 짧은 조건 등록(3단계·건너뛰기) -->
   <script src="koaus-geo.js" defer></script>   <!-- 11-04: 동네 검색 공통(Maps JS, 한글·영문·우편번호) -->
-  <script src="koaus-area.js" defer></script>   <!-- 11-26c: 지도에서 정한 지역 — 기억 · 목록 표시 · 이어 보기 -->
+  <script src="koaus-area.js?v=1127b" defer></script>   <!-- 11-26c: 지도에서 정한 지역 — 기억 · 목록 표시 · 이어 보기. 11-27b: 이 화면과 짝이 맞아야 해서 v 를 붙였다(js 는 한 시간 캐시 — 예전 파일이 남으면 상세 필터 창 안의 [전체 보기]가 보이지 않는다) -->
   <script src="koaus-post-ticket.js" defer></script>   <!-- 11-26c: 글 등록 표 — 11-27a: 게시판마다 하루(시드니 시각) 4건 · 세 게시판 모두(규칙과 짝) -->
   <script src="koaus-state-pick.js" defer></script>   <!-- 11-08: 상단바·지도 헤더 주(State) 드롭다운 -->
   <script src="koaus-people-deck.js" defer></script>   <!-- 11-08: 구하는 사람 카드 넘겨 보기(공용) -->
-  <script type="module" src="koaus-role.js"></script>   <!-- 2026-10 ①-2: Living/Job 역할 선택(로그인 뒤 한 번) -->
+  <script type="module" src="koaus-role.js?v=1127b"></script>   <!-- 2026-10 ①-2: Living/Job 역할 선택(로그인 뒤 한 번). 11-27b: 도구줄 규칙이 바뀌어 v 를 붙였다(예전 파일이 한 시간 남는 것을 막는다) -->
   <script type="module" src="koaus-ext.js"></script>   <!-- 11-05: 다른 한인 사이트 글(출처 표시·원문 이동) -->
 </head>
 <body>
@@ -464,7 +464,6 @@
         </button>
       </div>
       <span class="board-count" id="boardCount">총 0건</span>
-      <button id="areaResetTopBtn" type="button" class="koaus-area-chip" style="display:none;">전체 보기</button>   <!-- 11-26c: 지도에서 정한 지역으로 좁혀 보는 중임을 목록에서도 알리고, 누르면 푼다. 11-26d: 글자는 '전체 보기'만(무엇을 보는 중인지는 제목 · 풍선말) -->
       <div class="accom-ctrl-actions">
         <button class="accom-filter-btn" id="filterModalBtn">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
@@ -491,7 +490,6 @@
     <!-- Map View -->
     <div id="mapView" style="display:none;">
       <button class="area-search-btn" id="areaSearchBtn">이 지역 매물 검색하기</button>
-      <button id="areaResetBtn" type="button" class="koaus-area-chip on-map" style="display:none;">전체 보기</button>   <!-- 11-26c · 11-26d -->
       <div id="accomMap"></div>
     </div>
 
@@ -503,6 +501,13 @@
       <div class="filter-modal-header">
         <span class="filter-modal-title">상세 필터 <em>Filters</em></span>
         <button class="filter-modal-close" id="filterModalClose">✕</button>
+      </div>
+
+      <!-- 11-27b(사용자 결정): 지도에서 정한 지역으로 좁혀 보는 중일 때만 보이는 줄 — [전체 보기]는 여기(상세 필터 창 안)에 둔다.
+           목록 도구줄 · 지도 위에 따로 뜨던 칩은 없앴다. 모양은 koaus-area.js(.koaus-area-now), 켜고 끄는 것은 아래 _areaUi() -->
+      <div class="koaus-area-now" id="areaNowRow" hidden>
+        <span class="kan-text" id="areaNowText"></span>
+        <button type="button" class="koaus-area-chip" id="areaAllBtn">전체 보기</button>
       </div>
 
       <div class="filter-section">
@@ -1182,10 +1187,16 @@
       document.querySelectorAll('#filterPropTypes .filter-pill').forEach((b, i) => b.classList.toggle('active', i === 0));
       document.querySelectorAll('#filterRoomType .filter-pill').forEach((b, i) => b.classList.toggle('active', i === 0));
       document.querySelectorAll('#filterBathroom .filter-pill').forEach((b, i) => b.classList.toggle('active', i === 0));
-      document.getElementById('filterPrice').value = '9999';
+      // 11-27b: 가격은 이중 슬라이더, 방 · 욕실 · 주차는 세그먼트(숨은 칸)다 — 전에는 없어진 칸(#filterPrice)을 건드리다 오류가 나서 여기서 초기화가 멈췄다(아래 줄들이 돌지 않고 창도 안 닫혔다)
+      { const a = document.getElementById('filterPriceMin'), b = document.getElementById('filterPriceMax');
+        if (a && b) { a.value = a.min || '0'; b.value = b.max || '9999'; b.dispatchEvent(new Event('input', { bubbles: true })); } }   // input → 입력창 · 막대 · 글자를 다시 맞춘다(bindDualRange 의 paint)
+      document.querySelectorAll('#filterOverlay .seg-group[data-target]').forEach(grp => {
+        grp.querySelectorAll('.seg-btn').forEach((b, i) => b.classList.toggle('active', i === 0));
+        const t = document.getElementById(grp.dataset.target); if (t) t.value = '';
+      });
       document.querySelectorAll('#filterTypes input').forEach(c => { c.checked = false; });
-      ['fParking','fPet','fKids','fAirCon'].forEach(id => { document.getElementById(id).checked = false; });
-      renderAll();
+      ['fParking','fPet','fKids','fAirCon'].forEach(id => { const el = document.getElementById(id); if (el) el.checked = false; });
+      _areaClear();   // 11-27b: 초기화는 지도에서 정한 지역도 푼다(쉐어 · 구인과 같게 — 그 지역이 이 창 맨 위에 보인다). 안에서 다시 그린다
       updateFilterBtnState();
       closeFilterModal();
     });
@@ -1196,8 +1207,12 @@
     }
 
     function updateFilterBtnState() {
-      const maxPrice = parseInt(document.getElementById('filterPrice').value) || 9999;
-      const hasFilter = activePropType || activeRoomType || activeBathroom || maxPrice < 9999 ||
+      // 11-27b: 가격은 이중 슬라이더(#filterPriceMin · #filterPriceMax), 방 · 욕실 · 주차는 세그먼트(숨은 칸) — 전에는 없어진 칸(#filterPrice)을 읽다가 오류가 나서 이 표시가 한 번도 켜지지 않았다
+      const pMin = document.getElementById('filterPriceMin'), pMax = document.getElementById('filterPriceMax');
+      const top = el => { const mn = Number(el.min || 0), mx = Number(el.max || 0), st = Number(el.step || 1) || 1; return mn + Math.floor((mx - mn) / st) * st; };   // 슬라이더가 실제로 닿는 가장 큰 값(최대 9999 · 10 단위 → 9990 — 처음 값도 이것이다)
+      const priceOn = !!(pMin && pMax) && (Number(pMin.value) > Number(pMin.min || 0) || Number(pMax.value) < top(pMax));
+      const segOn = ['filterBedrooms', 'filterBathrooms', 'filterCarSpaces'].some(id => { const el = document.getElementById(id); return !!(el && el.value); });
+      const hasFilter = activePropType || activeRoomType || activeBathroom || priceOn || segOn ||
         getFilterTypes().length ||
         document.getElementById('fParking').checked || document.getElementById('fPet').checked ||
         document.getElementById('fKids').checked   || document.getElementById('fAirCon').checked;
@@ -2445,12 +2460,17 @@
     let _areaStart = null;   // 이어 보기로 켠 범위의 지도 중심 · 축척 — 지도를 아직 안 불러왔으면 initMap 이 이 값으로 연다
     function _areaUi() {
       const on = !!areaBounds;
-      const txt = window.koausArea ? window.koausArea.chipText(_areaLabel) : '전체 보기';   // 11-26d: 칩 글자는 '전체 보기'만
-      const hint = (on && window.koausArea && window.koausArea.chipHint) ? window.koausArea.chipHint(_areaLabel) : '';   // 풍선말 · 읽어 주는 말: "○○ 근처만 보는 중 — 전체 보기"
-      ['areaResetTopBtn', 'areaResetBtn'].forEach(id => { const b = document.getElementById(id); if (!b) return; b.textContent = txt; if (hint) { b.title = hint; b.setAttribute('aria-label', hint); } b.style.display = on ? 'inline-flex' : 'none'; });
-      try { document.documentElement.classList.toggle('koaus-area-on', on); } catch (_) {}   // 11-26d: 지역을 보는 동안 주 고르기([QLD ▾])를 숨긴다(koaus-area.js 의 CSS)
+      // 11-27b: [전체 보기]는 상세 필터 창 맨 위 줄에 있다 — 좁혀 보는 중일 때만 그 줄이 보인다("○○ 근처만 보는 중"). 목록 · 지도 위의 칩은 없앴다
+      const now = on ? ((window.koausArea && window.koausArea.nowText) ? window.koausArea.nowText(_areaLabel) : '지도에서 정한 지역만 보는 중') : '';
+      const row = document.getElementById('areaNowRow'), rowText = document.getElementById('areaNowText');
+      if (rowText) rowText.textContent = now;
+      if (row) row.hidden = !on;
+      // [상세 필터] 버튼 — 좁혀 보는 동안 점(●)이 붙는다(html.koaus-area-on, koaus-area.js 의 CSS). 읽어 주는 말 · 풍선말에도 적는다
+      const fb = document.getElementById('filterModalBtn');
+      if (fb) { if (on) { fb.title = '상세 필터 — ' + now; fb.setAttribute('aria-label', '상세 필터 — ' + now); } else { fb.removeAttribute('title'); fb.removeAttribute('aria-label'); } }
+      try { document.documentElement.classList.toggle('koaus-area-on', on); } catch (_) {}   // 11-26d: 지역을 보는 동안 주 고르기([QLD ▾])를 숨긴다 · 11-27b: [상세 필터]에 점(koaus-area.js 의 CSS)
     }
-    // 사용자가 범위를 정했다(버튼 · 지역 검색) — 칩을 켜고 이 기기에 적어 둔다
+    // 사용자가 범위를 정했다(버튼 · 지역 검색) — 표시를 켜고 이 기기에 적어 둔다
     function _areaSet(label) {
       _areaStart = null;
       _areaLabel = label || (window.koausArea ? window.koausArea.labelFrom(applyFilters(loadPosts())) : '');
@@ -2464,7 +2484,8 @@
       try { if (window.koausArea) window.koausArea.forget('rent'); } catch (_) {}
       _areaUi(); renderAll();
     }
-    ['areaResetTopBtn', 'areaResetBtn'].forEach(id => { const b = document.getElementById(id); if (b) b.addEventListener('click', _areaClear); });
+    // 11-27b: 상세 필터 창 안의 [전체 보기] — 범위를 푼 뒤 창을 닫는다(렌트의 상세 필터에는 지역 칸이 없다)
+    { const b = document.getElementById('areaAllBtn'); if (b) b.addEventListener('click', () => { _areaClear(); try { closeFilterModal(); } catch (_) {} }); }
     // 지도를 적어 둔 범위로 옮긴다(중심 · 축척이 있으면 그대로, 없으면 범위에 맞춤) — '이 지역 매물 검색하기' 버튼은 띄우지 않는다
     function _areaMoveMap() {
       if (!map || !areaBounds) return;

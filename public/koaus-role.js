@@ -169,6 +169,12 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
       .kr-seg button{appearance:none;border:0;background:none;color:var(--text-primary);padding:7px 13px;font-size:13px;font-family:inherit;cursor:pointer}
       .kr-seg button.on{background:var(--text-primary);color:var(--bg-base)}
       .kr-switch-help{font-size:12px;opacity:.65;line-height:1.45}
+      /* 11-27b: 목록 도구줄에 버튼이 셋인 좁은 화면 — 그 줄을 셋이 똑같이 나눠 쓰고 글자는 줄을 바꾸지 않는다(syncBar 가 .kr-three 를 붙인다) */
+      @media(max-width:480px){
+        .accom-ctrl-actions.kr-three{flex:1 1 100%;margin-left:0;gap:6px}
+        .accom-ctrl-actions.kr-three>button{flex:1 1 0;min-width:0;min-height:42px;justify-content:center;padding-left:4px;padding-right:4px;white-space:nowrap}
+      }
+      @media(max-width:340px){.accom-ctrl-actions.kr-three>button{font-size:12.5px;gap:4px}}
       /* 창이 뜨기 전 잠깐(0.5초) 돌아가는 원 */
       .kr-wait{display:flex;flex-direction:column;align-items:center;gap:12px;color:#fff;font-family:var(--font);font-size:14px;font-weight:600}
       .kr-spin{width:38px;height:38px;border-radius:50%;border:3px solid rgba(255,255,255,.3);border-top-color:#fff;animation:kr-rot .8s linear infinite}
@@ -266,8 +272,11 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     }
   }
 
-  // (10-20) 목록 도구줄: '올리기'에게는 상세 필터 대신 [프로필](근처에서 구하는 사람) 버튼, '찾기'에게는 상세 필터만, 둘 다면 둘 다.
-  //   비로그인·역할 없음 = 상세 필터만(기본). Job 의 프로필 = koaus-job-profile.js openPage()(11-04).
+  // (10-20) 목록 도구줄: '올리기'에게는 [프로필](근처에서 구하는 사람 — [쉐어생 구하기] · [워커 구하기]) 버튼을 더한다.
+  //   Job 의 프로필 = koaus-job-profile.js openPage()(11-04).
+  // 11-27b(사용자 결정 — "우리 상세필터는 어디갔냐" → 모두에게 보이게): [상세 필터]는 역할과 상관없이 누구에게나 보인다.
+  //   10-20 에는 '올리기만'이면 숨겼다(찾기 · 둘 다 · 역할 없음 · 비로그인에게만 보였다). 지역으로 좁혀 보는 중의 [전체 보기]가
+  //   상세 필터 창 안에 있으므로(koaus-area.js ②) 이 버튼이 없으면 풀 곳이 없다. 올리기: [상세 필터] [쉐어생 구하기] [+ 글쓰기].
   function applyToolbar() {
     const app = pageApp(); if (!app) return;
     const bar = document.querySelector('.accom-ctrl-actions'); if (!bar) return;
@@ -288,11 +297,17 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     }
     const r = (me && loadedFor === me.uid && roles) ? roles : null;
     const poster = has(r, app, POST_ROLE[app]);
-    const seeker = has(r, app, 'seeker');
-    const showPeople = poster;
-    const showFilter = !poster || seeker;   // 올리기만이면 상세 필터 숨김, 둘 다·찾기·역할 없음·비로그인은 보임
-    pb.style.display = showPeople ? '' : 'none';
-    if (fb) fb.style.display = showFilter ? '' : 'none';
+    pb.style.display = poster ? '' : 'none';
+    if (fb) fb.style.display = '';   // 11-27b: 누구에게나 보인다(전에는 '올리기만'이면 숨겼다 — 나머지 역할에게는 전과 같은 값)
+    syncBar();
+  }
+  // 11-27b: 도구줄에 보이는 버튼이 셋이면([상세 필터] [쉐어생 구하기 | 워커 구하기] [+ 글쓰기] — 이제 '올리기' 역할의 보통 모습) 표시(.kr-three)를 붙인다.
+  //   좁은 화면(480px 이하)에서는 그 셋이 한 줄을 똑같이 나눠 쓴다(아래 CSS) — 전에는 360 · 375px 화면에서 글자가 버튼 안에서 줄을 바꿨다("쉐어생 구하/기").
+  function syncBar() {
+    const bar = document.querySelector('.accom-ctrl-actions'); if (!bar) return;
+    injectCss();
+    const n = Array.from(bar.children).filter(b => b.tagName === 'BUTTON' && b.style.display !== 'none' && !b.hidden).length;
+    bar.classList.toggle('kr-three', n >= 3);
   }
   // 작은 안내 창(준비 중) — 역할 창과 같은 틀
   function notice(msg) {
@@ -313,6 +328,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
     const hide = !has(r, app, POST_ROLE[app]);
     btn.style.display = hide ? 'none' : '';   // hidden 속성은 .board-write-btn 의 display 에 밀리므로 inline display 로
     btn.setAttribute('aria-hidden', hide ? 'true' : 'false');
+    try { syncBar(); } catch (_) {}   // 11-27b: 보이는 버튼 수가 바뀌었다
   }
   // '나중에 정하기' 뒤에는 자동으로 다시 묻지 않고, 역할은 마이페이지 → 내 프로필에서만 바꾼다(10-19 사용자 확정).
   function applyPrompt() {

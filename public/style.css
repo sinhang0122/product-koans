@@ -3279,6 +3279,7 @@ body.is-admin .admin-only.admin-only--block { display: block !important; }
   flex: 1; min-width: 0; padding: 10px 0; font-size: 14px; font-weight: 700;
   text-align: right; -moz-appearance: textfield;
   background: transparent; border: none; outline: none;
+  color: var(--text-primary);   /* 11-27b: 글자색이 없어 입력창의 기본색(검정)이 쓰였다 — 어두운 화면에서 숫자가 보이지 않았다 */
 }
 .price-input-row .price-num-input::-webkit-outer-spin-button,
 .price-input-row .price-num-input::-webkit-inner-spin-button {

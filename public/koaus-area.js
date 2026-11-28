@@ -1,11 +1,14 @@
 /* ══════════════════════════════════════════════════════════════════
-   KoAus · 지도에서 정한 지역 — 기억 · 목록 표시 · 이어 보기 (11-26c, 11-26d · 11-27a 에 사용자 지시로 다듬음)
+   KoAus · 지도에서 정한 지역 — 기억 · 목록 표시 · 이어 보기 (11-26c, 11-26d · 11-27a · 11-27b 에 사용자 지시로 다듬음)
    ─ 지도에서 [이 지역 매물 검색하기]를 누르거나 상세 필터에서 지역을 검색하면 그 범위의 글만 보인다(목록 · 지도 공통 — 전부터 그랬다).
      11-26d: 지역을 정해 보는 동안은 주(QLD · NSW …)로 나누지 않는다 — 그 범위 안의 글이면 어느 주든 나온다
              (게시판 화면의 거르기가 주 조건을 건너뛴다. "맵뷰에서 이 지역만 했어 그럼 그거만 나와야지").
      이 파일이 더하는 것:
        ① 기억 — 정한 범위를 이 기기에 적어 둔다(LS koaus-area-v1:<게시판>, 14일). 화면을 나갔다 와도 다시 불러올 수 있다.
-       ② 표시 — 목록과 지도에 칩 [전체 보기](게시판 화면이 그린다 — chipText() · 풍선말 chipHint()).
+       ② 표시 — [전체 보기]는 상세 필터 창 안에 있다(11-27b, 사용자 결정 "전체보기는 저거 상세필터에 넣어야"):
+          창 맨 위에 "○○ 근처만 보는 중  [전체 보기]" 한 줄(.koaus-area-now — 게시판 화면의 #areaNowRow · #areaNowText · #areaAllBtn, 좁혀 보는 중일 때만 보인다).
+          목록 도구줄과 지도 위에 따로 뜨던 칩은 없앴다. 대신 좁혀 보는 동안 [상세 필터] 버튼에 점(●)이 붙는다
+          (html.koaus-area-on #filterModalBtn::after — 모바일 지도 머리줄의 상세 필터(.kmh-filter)에도). 그래서 [상세 필터]는 역할과 상관없이 누구에게나 보인다(koaus-role.js).
           게시판 제목은 언제나 "쉐어"처럼 게시판 이름뿐이다(11-27a — 주 · 지역 이름을 넣지 않는다).
           지역을 보는 동안 주 고르기([QLD ▾])와 카드의 작은 주 표기(가격 아래 'QLD')는 숨긴다
           (html.koaus-area-on — 게시판 화면이 붙인다. [전체 보기]로 풀면 다시 보인다).
@@ -26,13 +29,16 @@
          countNew: (saved) => 그 범위에서 saved.t 뒤에 올라온 글 수(11-27a — [이어 보기]를 누르면 보일 목록과 같은 조건으로 센다. 내 글은 뺀다),
        };
        화면은 범위를 켤 때 koausArea.remember(board, state, bounds, { label, center, zoom }),
-       [전체 보기]로 풀 때 koausArea.forget(board) 를 부른다. 목록은 koausArea.shim(saved.o).contains({lat,lng}) 로 거른다
+       [전체 보기](상세 필터 창 안) · [초기화]로 풀 때 koausArea.forget(board) 를 부른다. 창 안의 줄에 적는 말은 koausArea.nowText(label). 목록은 koausArea.shim(saved.o).contains({lat,lng}) 로 거른다
        (구글 지도를 불러오지 않아도 목록을 좁힐 수 있다 — 지도 객체의 getBounds() 와 같은 contains 만 흉내 낸다).
        11-27a: 화면이 목록을 다시 그릴 때마다 — 지역을 보는 중이면 koausArea.touch(board)(마지막으로 본 때를 지금으로),
                아니면 koausArea.refresh()(카드의 "새 글 N건"을 다시 센다 — 글은 화면이 뜬 뒤에 서버에서 들어온다).
    ─ 적어 두는 것: { o: {s,w,n,e}, c: {lat,lng}, z, label, state, t }. 위치 정보(기기의 현재 위치)는 쓰지 않는다 — 지도에서 본 범위뿐이다.
      state 는 적어만 둔다(11-26d 부터 이어 보기는 지금 보는 주와 상관없이 묻는다 — 지역은 주로 나누지 않는다).
      t = 그 범위를 마지막으로 본 때(이 기기의 시계). 14일 보관과 "새 글 N건"의 기준이다 — 글의 시각(서버)과 견주므로 기기 시계가 틀리면 건수가 조금 어긋날 수 있다(안내용 숫자).
+   ─ 싣는 주소(11-27b): accom · rent · jobs 가 koaus-area.js?v=1127b 로 싣는다. js 는 한 시간 캐시라 예전 파일과 새 화면이 섞일 수 있다
+     (예: 11-27a 의 CSS 는 .koaus-area-chip 을 숨긴다 → 새 화면의 창 안 [전체 보기]가 보이지 않는다).
+     이 파일의 모양(CSS)이나 화면이 부르는 함수를 바꾸면 세 화면의 script 주소에 붙은 v 도 함께 바꾼다.
    ══════════════════════════════════════════════════════════════════ */
 (function () {
   'use strict';
@@ -123,20 +129,24 @@
     return best;
   }
   function where(label) { label = clean(label); return label ? label + ' 근처' : '지도에서 정한 지역'; }
-  // 칩 — 글자는 [전체 보기]뿐(11-26d). 무엇을 보는 중인지는 풍선말 · 읽어 주는 말에 있다
-  function chipText() { return '전체 보기'; }
-  function chipHint(label) { return where(label) + '만 보는 중 — 전체 보기'; }
+  // 상세 필터 창 맨 위 줄에 적는 말(11-27b) — "Sunnybank 근처만 보는 중" · 이름이 없으면 "지도에서 정한 지역만 보는 중". 그 옆에 [전체 보기]
+  function nowText(label) { return where(label) + '만 보는 중'; }
   // 이어 보기 카드의 물음(11-27a) — "Sunnybank 근처로 이어 보시겠어요?" · 이름이 없으면 "지도에서 정한 지역으로 이어 보시겠어요?"
   function ask(label) { label = clean(label); return (label ? label + ' 근처로' : '지도에서 정한 지역으로') + ' 이어 보시겠어요?'; }
 
   // ── 모양 — 공용 안내(후보 B: 흰 카드 · 얇은 테두리)와 같은 결. 검정 · 흰색만 쓴다 ──
   var FONT = 'var(--font,"Noto Sans KR",system-ui,sans-serif)';
   var css =
-    '.koaus-area-chip{display:none;align-items:center;max-width:100%;margin-left:8px;padding:5px 10px;border:1px solid var(--text-primary,#111);border-radius:var(--r-btn-sm,8px);' +
-      'background:var(--bg-base,#fff);color:var(--text-primary,#111);font:700 12px/1.25 ' + FONT + ';letter-spacing:-.2px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}' +
+    /* 상세 필터 창 맨 위 줄(11-27b) — "○○ 근처만 보는 중  [전체 보기]". 좁혀 보는 중일 때만(hidden 을 게시판 화면이 뗀다) */
+    '.koaus-area-now{display:flex;align-items:center;justify-content:space-between;gap:12px;box-sizing:border-box;padding:14px 24px;' +
+      'border-bottom:1px solid var(--border-subtle,#ebebeb);background:var(--bg-card,#f4f4f4);}' +
+    '.koaus-area-now[hidden]{display:none;}' +
+    '.koaus-area-now .kan-text{flex:1 1 auto;min-width:0;font:700 14px/1.4 ' + FONT + ';letter-spacing:-.2px;color:var(--text-primary,#111);word-break:keep-all;overflow-wrap:anywhere;}' +
+    '.koaus-area-chip{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;min-height:40px;margin:0;padding:0 16px;border:1px solid var(--text-primary,#111);border-radius:var(--r-btn-sm,8px);' +
+      'background:var(--bg-base,#fff);color:var(--text-primary,#111);font:700 13.5px/1 ' + FONT + ';letter-spacing:-.2px;cursor:pointer;white-space:nowrap;-webkit-tap-highlight-color:transparent;}' +
     '.koaus-area-chip:hover{background:var(--text-primary,#111);color:var(--bg-base,#fff);}' +
-    '.koaus-area-chip.on-map{position:absolute;top:60px;left:50%;transform:translateX(-50%);z-index:5;margin:0;max-width:calc(100% - 24px);box-shadow:0 2px 10px rgba(0,0,0,.18);}' +
-    '@media(max-width:768px){.koaus-area-chip.on-map{top:48px;}}' +
+    /* 좁혀 보는 동안 [상세 필터] 버튼에 점 — 목록 도구줄(#filterModalBtn)과 모바일 지도 머리줄(.kmh-filter). 두 버튼 모두 flex 라 gap 만큼 떨어져 붙는다 */
+    'html.koaus-area-on #filterModalBtn::after,html.koaus-area-on .kmh-filter::after{content:"";flex:0 0 auto;width:7px;height:7px;border-radius:50%;background:currentColor;}' +
     /* 지역을 보는 동안은 주 고르기와 카드의 작은 주 표기를 숨긴다 — 주로 나눈 것처럼 보이지 않게(11-26d) */
     'html.koaus-area-on .koaus-state-sel,html.koaus-area-on .accom-card-state{display:none !important;}' +
     /* 이어 보기 카드(11-27a) — 위: (핀) 물음 + "새 글 N건" / 아래: [아니요] [이어 보기] */
@@ -167,6 +177,7 @@
       '.koaus-resume-slot .koaus-resume{position:static;width:auto;margin:8px;padding:12px;box-shadow:none;}' +
       '.koaus-resume-slot .koaus-resume .kr-acts{margin-top:10px;}' +
       '.koaus-resume-slot[data-drawer="1"]{display:none;}}' +
+    ':root[data-theme="dark"] .koaus-area-now{background:#111;border-bottom-color:#2a2a2a;}' +
     ':root[data-theme="dark"] .koaus-resume{background:#111;border-color:#333;}' +
     ':root[data-theme="dark"] .koaus-resume .kr-ico{background:#242424;}' +
     ':root[data-theme="dark"] .koaus-resume .kr-btn.sec{border-color:#444;}';
@@ -268,6 +279,6 @@
   }
 
   window.koausArea = { plain: plain, shim: shim, saved: saved, remember: remember, forget: forget, touch: touch, refresh: refresh, labelFrom: labelFrom,
-    chipText: chipText, chipHint: chipHint, where: where, ask: ask, hideCards: hideCards, TTL: TTL };
+    nowText: nowText, where: where, ask: ask, hideCards: hideCards, TTL: TTL };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
 })();

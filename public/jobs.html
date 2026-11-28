@@ -68,11 +68,11 @@
   <script src="koaus-contact-actions.js?v=1119a" defer></script>
   <script type="module" src="auth-extra.js"></script>
   <script type="module" src="koaus-phone-auth.js"></script>
-  <script type="module" src="koaus-role.js"></script>   <!-- 2026-10 ①-2: Living/Job 역할 선택(로그인 뒤 한 번) -->
+  <script type="module" src="koaus-role.js?v=1127b"></script>   <!-- 2026-10 ①-2: Living/Job 역할 선택(로그인 뒤 한 번). 11-27b: 도구줄 규칙이 바뀌어 v 를 붙였다(예전 파일이 한 시간 남는 것을 막는다) -->
   <script type="module" src="koaus-ext.js"></script>   <!-- 11-05: 다른 한인 사이트 글(출처 표시·원문 이동) -->
   <script src="koaus-enums.js" defer></script>   <!-- 11-04: 값 목록(업종·비자 등) — 일 구해요 프로필 -->
   <script src="koaus-geo.js" defer></script>   <!-- 11-04: 동네 검색 공통(Maps JS, 한글·영문·우편번호) -->
-  <script src="koaus-area.js" defer></script>   <!-- 11-26c: 지도에서 정한 지역 — 기억 · 목록 표시 · 이어 보기 -->
+  <script src="koaus-area.js?v=1127b" defer></script>   <!-- 11-26c: 지도에서 정한 지역 — 기억 · 목록 표시 · 이어 보기. 11-27b: 이 화면과 짝이 맞아야 해서 v 를 붙였다(js 는 한 시간 캐시 — 예전 파일이 남으면 상세 필터 창 안의 [전체 보기]가 보이지 않는다) -->
   <script src="koaus-post-ticket.js" defer></script>   <!-- 11-26c: 글 등록 표 — 11-27a: 게시판마다 하루(시드니 시각) 4건 · 세 게시판 모두(규칙과 짝) -->
   <script src="koaus-state-pick.js" defer></script>   <!-- 11-08: 상단바·지도 헤더 주(State) 드롭다운 -->
   <script src="koaus-people-deck.js" defer></script>   <!-- 11-08: 구하는 사람 카드 넘겨 보기(공용) -->
@@ -463,8 +463,6 @@
         </button>
       </div>
       <span class="board-count" id="boardCount">총 0건</span>
-      <!-- List View 에서도 지도 영역 제한 알림 — 클릭 시 전체 지역 복원 (지시 3/3) -->
-      <button id="areaResetTopBtn" type="button" class="koaus-area-chip" style="display:none;">전체 보기</button>   <!-- 11-26c: 지도에서 정한 지역으로 좁혀 보는 중임을 목록에서도 알리고, 누르면 푼다. 11-26d: 글자는 '전체 보기'만(무엇을 보는 중인지는 제목 · 풍선말) -->
       <div class="accom-ctrl-actions">
         <button class="board-write-btn board-write-btn--ghost" id="filterModalBtn">상세 필터</button>
         <button class="board-write-btn" id="writeBtnOpen">+ 글쓰기</button>
@@ -481,7 +479,6 @@
     <div id="mapView" style="display:none;">
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap;">
         <button class="area-search-btn" id="areaSearchBtn">이 지역 잡 구하기</button>
-        <button id="areaResetBtn" type="button" class="koaus-area-chip on-map" style="display:none;">전체 보기</button>   <!-- 11-26c · 11-26d -->
       </div>
       <div id="jobsMap" style="width:100%;height:480px;border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;"></div>
     </div>
@@ -494,6 +491,12 @@
       <div class="filter-modal-header">
         <span class="filter-modal-title">상세 필터 <em>Search</em></span>
         <button class="filter-modal-close" id="filterModalClose">✕</button>
+      </div>
+      <!-- 11-27b(사용자 결정): 지도에서 정한 지역으로 좁혀 보는 중일 때만 보이는 줄 — [전체 보기]는 여기(상세 필터 창 안)에 둔다.
+           목록 도구줄 · 지도 위에 따로 뜨던 칩은 없앴다. 모양은 koaus-area.js(.koaus-area-now), 켜고 끄는 것은 아래 updateAreaResetVisibility() -->
+      <div class="koaus-area-now" id="areaNowRow" hidden>
+        <span class="kan-text" id="areaNowText"></span>
+        <button type="button" class="koaus-area-chip" id="areaAllBtn">전체 보기</button>
       </div>
       <div class="filter-section">
         <label class="filter-section-label" for="ffRegion">근무 지역 Region</label>
@@ -2019,17 +2022,22 @@
       updateAreaResetVisibility();
     });
     // 지도 영역 제한 해제 — 세컨/써드 잡 전국 검색 등 광역 탐색용 (List + Map 양쪽 동기화)
-    // 11-26c: 목록 · 지도의 칩은 쉐어 · 렌트와 같은 것([전체 보기] — 11-26d 부터 글자는 이것뿐) — koaus-area.js. 지도 쪽 버튼은 전에는 보이지 않았다(.area-search-btn 은 .show 없이는 숨김)
+    // 11-26c: 쉐어 · 렌트와 같은 표시(koaus-area.js). 11-27b: [전체 보기]는 상세 필터 창 안으로 옮겼다 — 목록 도구줄 · 지도 위에 따로 뜨던 칩은 없앴다.
     let _areaLabel = '';     // 칩에 적는 동네 이름('' 이면 '지도에서 정한 지역')
     let _areaStart = null;   // 이어 보기로 켠 범위의 지도 중심 · 축척
     let _areaProg = false;   // 우리가 지도를 옮기는 중 — '이 지역 잡 구하기' 버튼을 띄우지 않는다
     function updateAreaResetVisibility() {
       const show = !!areaBounds;
       if (!show) { _areaLabel = ''; _areaStart = null; }
-      const txt = window.koausArea ? window.koausArea.chipText(_areaLabel) : '전체 보기';   // 11-26d: 칩 글자는 '전체 보기'만
-      const hint = (show && window.koausArea && window.koausArea.chipHint) ? window.koausArea.chipHint(_areaLabel) : '';   // 풍선말 · 읽어 주는 말
-      ['areaResetTopBtn', 'areaResetBtn'].forEach(id => { const b = document.getElementById(id); if (!b) return; b.textContent = txt; if (hint) { b.title = hint; b.setAttribute('aria-label', hint); } b.style.display = show ? 'inline-flex' : 'none'; });
-      try { document.documentElement.classList.toggle('koaus-area-on', show); } catch (_) {}   // 11-26d: 지역을 보는 동안 주 고르기([QLD ▾])를 숨긴다(koaus-area.js 의 CSS)
+      // 11-27b: [전체 보기]는 상세 필터 창 맨 위 줄에 있다 — 좁혀 보는 중일 때만 그 줄이 보인다("○○ 근처만 보는 중"). 목록 · 지도 위의 칩은 없앴다
+      const now = show ? ((window.koausArea && window.koausArea.nowText) ? window.koausArea.nowText(_areaLabel) : '지도에서 정한 지역만 보는 중') : '';
+      const row = document.getElementById('areaNowRow'), rowText = document.getElementById('areaNowText');
+      if (rowText) rowText.textContent = now;
+      if (row) row.hidden = !show;
+      // [상세 필터] 버튼 — 좁혀 보는 동안 점(●)이 붙는다(html.koaus-area-on, koaus-area.js 의 CSS). 읽어 주는 말 · 풍선말에도 적는다
+      const fb = document.getElementById('filterModalBtn');
+      if (fb) { if (show) { fb.title = '상세 필터 — ' + now; fb.setAttribute('aria-label', '상세 필터 — ' + now); } else { fb.removeAttribute('title'); fb.removeAttribute('aria-label'); } }
+      try { document.documentElement.classList.toggle('koaus-area-on', show); } catch (_) {}   // 11-26d: 지역을 보는 동안 주 고르기([QLD ▾])를 숨긴다 · 11-27b: [상세 필터]에 점(koaus-area.js 의 CSS)
     }
     function _resetAreaBounds() {
       areaBounds = null;
@@ -2074,8 +2082,8 @@
         try { updateMapMarkers(); } catch (_) {}
       },
     };
-    safeOn('areaResetBtn',    'click', _resetAreaBounds);
-    safeOn('areaResetTopBtn', 'click', _resetAreaBounds);
+    // 11-27b: 상세 필터 창 안의 [전체 보기] — 지역 칸도 비우고(남겨 두면 다음 [적용하기] 때 다시 좁혀진다) 범위를 푼 뒤 창을 닫는다
+    safeOn('areaAllBtn', 'click', () => { const el = document.getElementById('ffRegion'); if (el) el.value = ''; _resetAreaBounds(); closeFilterModal(); });
     // 세컨/써드 비자 체크박스 — 즉시 필터 적용 (모달 [적용하기] 안 눌러도 실시간 반영)
     safeOn('ffVisaEligible', 'change', (e) => {
       activeFilter.visaEligible = !!(e.target && e.target.checked);
