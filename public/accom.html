@@ -28,6 +28,9 @@
   <style>
     /* InfoWindow 기본 닫기 헤더 숨김 — 자체 .iw-close ✕가 대신함 (세로 압축) */
     .gm-style-iw-chr { display: none; }
+    /* 11-28a: 사진 없는 글의 카드(.no-thumb) — 그림 칸이 없으니 높이는 글자만큼만(style.css 의 min-height:96px 는 80px 그림 칸에 맞춘 값이다).
+       이 화면에 바로 적는 까닭: style.css 는 한 시간 캐시라, 새 화면과 예전 style.css 가 섞이면 빈 칸이 남은 높은 카드가 된다 */
+    .accom-grid--compact .accom-card.no-thumb { min-height: 0; }
   </style>
   <script>
     (function () {
@@ -83,7 +86,7 @@
   <script src="koaus-state-pick.js" defer></script>   <!-- 11-08: 상단바·지도 헤더 주(State) 드롭다운 -->
   <script src="koaus-people-deck.js" defer></script>   <!-- 11-08: 구하는 사람 카드 넘겨 보기(공용) -->
   <script type="module" src="koaus-role.js?v=1127b"></script>   <!-- 2026-10 ①-2: Living/Job 역할 선택(로그인 뒤 한 번). 11-27b: 도구줄 규칙이 바뀌어 v 를 붙였다(예전 파일이 한 시간 남는 것을 막는다) -->
-  <script type="module" src="koaus-ext.js"></script>   <!-- 11-05: 다른 한인 사이트 글(출처 표시·원문 이동) -->
+  <script type="module" src="koaus-ext.js?v=1128a"></script>   <!-- 11-05: 다른 한인 사이트 글(출처 표시·원문 이동). 11-28a: 카드 모양이 바뀌어 v 를 붙였다(js 는 한 시간 캐시 — 예전 파일이 남으면 가져온 글에만 그림 칸이 남는다) -->
 </head>
 <body>
 
@@ -2066,20 +2069,17 @@
         : (p.price ? `<span class="accom-price">$${escHtml(String(p.price))}<small>/wk</small></span>` : '<span class="accom-card-find">가격 협의</span>');
       // 동네(suburb) 만 추출 — 전체주소·redact주소 모두 "Suburb STATE Postcode" 패턴의 suburb 캡처.
       //   매칭 실패 시 '' (프라이버시 우선 — 도로명/번지 폴백 금지). 모듈 extractSuburb() 재사용.
-      const _subb = extractSuburb(p.address);  // 카드 위치 + 사진 없을 때 placeholder 동네명
+      const _subb = extractSuburb(p.address);  // 카드 위치(CARD_SHOW_SUBURB 일 때). 11-28a: 사진 없는 글의 그림 칸(핀 + 동네 이름)은 없앴다
       // 카드·사진은 공개·비공개 모두 동네(suburb)만 노출 — 도로명/번지 차단.
       //   전체 주소는 공개 매물 상세 페이지에서만 노출(비공개 상세는 redact).
       const sub = isFind ? (p.body || '') : _subb;
-      const mapPh = _subb
-        ? `<div class="koaus-map-ph"><span class="mp-pin" aria-hidden="true"><svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-.15em"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></span><span class="mp-name">${escHtml(_subb)}</span></div>`
-        : '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>';
+      // 11-28a(사용자 지시): 사진이 없는 글은 그림 칸을 두지 않는다 — 제목 · 가격 줄만(카드에 .no-thumb). 사진을 등록한 글만 사진이 보인다.
+      //   전에는 사진이 없으면 그 자리에 그림을 그려 넣었다(핀 + 동네 이름, 동네를 모르면 사진기). 동네 이름은 그 그림 안에만 있었으므로 같이 빠진다
+      //   (사진 있는 글과 같아진다 — 카드에는 '주'만, CARD_SHOW_SUBURB). 지도 아래 칸(koausMapDrawer)도 이 카드를 쓴다.
+      const _img = (Array.isArray(p.imageUrls) && p.imageUrls.length && p.imageUrls[0]) ? p.imageUrls[0] : '';
       return `
-        <div class="accom-card${isMine(p) ? ' my-post-highlight' : ''}" data-id="${escHtml(p.id)}">
-          <div class="accom-card-thumb">
-            ${(Array.isArray(p.imageUrls) && p.imageUrls.length)
-              ? `<img src="${escHtml(p.imageUrls[0])}" alt="${escHtml(p.title || '')}" loading="lazy" />`
-              : mapPh}
-          </div>
+        <div class="accom-card${_img ? '' : ' no-thumb'}${isMine(p) ? ' my-post-highlight' : ''}" data-id="${escHtml(p.id)}">
+          ${_img ? `<div class="accom-card-thumb"><img src="${escHtml(_img)}" alt="${escHtml(p.title || '')}" loading="lazy" /></div>` : ''}
           <div class="accom-card-info">
             <!-- 지시 4/10 — Row 1: 제목(좌) + 액션 그룹(우, 별 + 공유/신고/수정/숨김/삭제) -->
             <div class="accom-card-row1">

@@ -112,8 +112,6 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, g
       .ext-bar{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px;font-size:12px}
       .ext-chip{display:inline-flex;gap:4px;padding:3px 9px;border-radius:999px;border:1.5px solid var(--text-primary,#111);background:var(--text-primary,#111);color:var(--bg-base,#fff);font-size:12px;font-weight:700}
       .ext-tag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.01em;color:var(--text-muted,#777);opacity:.85;white-space:nowrap;line-height:1.2;padding-top:2px}
-      .accom-card-ext .ext-ph{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;width:100%;height:100%;color:var(--text-muted,#666);font-size:11px;font-weight:700;text-align:center;padding:4px;line-height:1.15}
-      .accom-card-ext .ext-ph svg{width:20px;height:20px}
       .kxt-ovl{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9300;display:none;align-items:flex-end;justify-content:center}
       .kxt-ovl.open{display:flex}
       @media(min-width:720px){.kxt-ovl{align-items:center}}
@@ -138,6 +136,9 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, g
   }
 
   // 카드(목록·지도 서랍 공용) — KoAus 카드 규격(.accom-card) 그대로. 액션 버튼 대신 구석에 *출처
+  //   11-28a(사용자 지시 "다른 사이트들에서 글 가져오면 사진 없잖아 사진 없는 글은 다 사진 없애고 제목이랑 지금 나온느 것들만"):
+  //   그림 칸을 두지 않는다(.no-thumb) — 가져온 글에는 사진이 없다. 전에는 그 자리에 핀 + 동네 이름을 그려 넣었다(동네는 가격 옆 줄에 그대로 있다).
+  //   카드 높이를 푸는 규칙(.accom-card.no-thumb{min-height:0})은 세 게시판 화면에 있다. 화면은 이 파일을 koaus-ext.js?v=1128a 로 싣는다 — 카드 모양을 바꾸면 그 v 도 바꾼다.
   function cardHtml(p, opts) {
     // 11-15(보안): 넘겨받은 객체를 믿지 않는다 — ext_posts 에서 읽어 만든 목록(api.byId)에 있는 글만 그린다.
     //   일반 글 문서에 ext/outUrl 을 심어 외부 글인 척하는 것을 막는다(글 주인은 자기 글 문서를 고칠 수 있다).
@@ -151,10 +152,8 @@ import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, g
     if (opts.board === 'jobs') priceHtml = p.category ? `<span class="accom-card-find">${esc(p.category)}</span>` : '<span class="accom-card-find">원문 참고</span>';
     else priceHtml = p.price ? `<span class="accom-price">$${esc(p.price)}<small>/wk</small></span>` : '<span class="accom-card-find">가격 협의</span>';
     const sub = [where, p.kind, p.moveIn].filter(Boolean).map(esc).join(' · ');
-    const pin = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
     return `
-        <div class="accom-card accom-card-ext" data-id="${esc(p.id)}" data-ext="1" data-out="${esc(p.outUrl)}">
-          <div class="accom-card-thumb"><div class="ext-ph">${pin}<span>${where || esc(p.sourceName)}</span></div></div>
+        <div class="accom-card accom-card-ext no-thumb" data-id="${esc(p.id)}" data-ext="1" data-out="${esc(p.outUrl)}">
           <div class="accom-card-info">
             <div class="accom-card-row1">
               <div class="accom-card-title2">${esc(p.title)}</div>
