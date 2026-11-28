@@ -81,6 +81,7 @@
   <script type="module" src="koaus-seeker-profile.js"></script>   <!-- 2026-10 ①-2: "집 구해요" 선택 직후 짧은 조건 등록(3단계·건너뛰기) -->
   <script src="koaus-geo.js" defer></script>   <!-- 11-04: 동네 검색 공통(Maps JS, 한글·영문·우편번호) -->
   <script src="koaus-area.js?v=1127b" defer></script>   <!-- 11-26c: 지도에서 정한 지역 — 기억 · 목록 표시 · 이어 보기. 11-27b: 이 화면과 짝이 맞아야 해서 v 를 붙였다(js 는 한 시간 캐시 — 예전 파일이 남으면 상세 필터 창 안의 [전체 보기]가 보이지 않는다) -->
+  <script src="koaus-price-range.js?v=1128b" defer></script>   <!-- 11-28b: 상세 필터의 가격 범위 — 이중 슬라이더 + 가격대 막대그래프(쉐어 · 렌트). 화면과 짝이라 주소에 v -->
   <script src="koaus-post-ticket.js" defer></script>   <!-- 11-26c: 글 등록 표 — 11-27a: 게시판마다 하루(시드니 시각) 4건 · 세 게시판 모두(규칙과 짝) -->
   <script src="koaus-state-pick.js" defer></script>   <!-- 11-08: 상단바·지도 헤더 주(State) 드롭다운 -->
   <script src="koaus-people-deck.js" defer></script>   <!-- 11-08: 구하는 사람 카드 넘겨 보기(공용) -->
@@ -550,6 +551,8 @@
             <input class="price-num-input" type="number" id="filterPriceMaxInput" min="0" max="9999" step="10" value="9999" placeholder="최대" />
           </div>
         </div>
+        <!-- 11-28b: 값 · 눈금 · 숫자 칸 · 가격대 막대그래프는 koaus-price-range.js 가 맡는다(슬라이더 위에 막대, 아래에 눈금 글자를 그 파일이 넣는다).
+             $0 ~ $9999 — 오른쪽 끝($9999)은 위쪽 제한 없음. 아래 range 칸의 min · max · value 는 그 파일이 눈금에 맞춰 다시 정한다 -->
         <div class="dual-range" id="filterPriceRange" data-min="0" data-max="9999" data-step="10">
           <div class="dual-range-track"></div>
           <div class="dual-range-fill" id="filterPriceFill"></div>
@@ -1191,8 +1194,7 @@
       document.querySelectorAll('#filterRoomType .filter-pill').forEach((b, i) => b.classList.toggle('active', i === 0));
       document.querySelectorAll('#filterBathroom .filter-pill').forEach((b, i) => b.classList.toggle('active', i === 0));
       // 11-27b: 가격은 이중 슬라이더, 방 · 욕실 · 주차는 세그먼트(숨은 칸)다 — 전에는 없어진 칸(#filterPrice)을 건드리다 오류가 나서 여기서 초기화가 멈췄다(아래 줄들이 돌지 않고 창도 안 닫혔다)
-      { const a = document.getElementById('filterPriceMin'), b = document.getElementById('filterPriceMax');
-        if (a && b) { a.value = a.min || '0'; b.value = b.max || '9999'; b.dispatchEvent(new Event('input', { bubbles: true })); } }   // input → 입력창 · 막대 · 글자를 다시 맞춘다(bindDualRange 의 paint)
+      try { if (window.koausPriceRange) window.koausPriceRange.reset(); } catch (_) {}   // 11-28b: 가격은 처음 값($0 ~ $9999)으로 — koaus-price-range.js
       document.querySelectorAll('#filterOverlay .seg-group[data-target]').forEach(grp => {
         grp.querySelectorAll('.seg-btn').forEach((b, i) => b.classList.toggle('active', i === 0));
         const t = document.getElementById(grp.dataset.target); if (t) t.value = '';
@@ -1211,9 +1213,7 @@
 
     function updateFilterBtnState() {
       // 11-27b: 가격은 이중 슬라이더(#filterPriceMin · #filterPriceMax), 방 · 욕실 · 주차는 세그먼트(숨은 칸) — 전에는 없어진 칸(#filterPrice)을 읽다가 오류가 나서 이 표시가 한 번도 켜지지 않았다
-      const pMin = document.getElementById('filterPriceMin'), pMax = document.getElementById('filterPriceMax');
-      const top = el => { const mn = Number(el.min || 0), mx = Number(el.max || 0), st = Number(el.step || 1) || 1; return mn + Math.floor((mx - mn) / st) * st; };   // 슬라이더가 실제로 닿는 가장 큰 값(최대 9999 · 10 단위 → 9990 — 처음 값도 이것이다)
-      const priceOn = !!(pMin && pMax) && (Number(pMin.value) > Number(pMin.min || 0) || Number(pMax.value) < top(pMax));
+      const priceOn = !!(window.koausPriceRange && window.koausPriceRange.active());   // 11-28b: 가격 조건이 걸려 있는가($0 ~ $9999 가 아니면) — koaus-price-range.js
       const segOn = ['filterBedrooms', 'filterBathrooms', 'filterCarSpaces'].some(id => { const el = document.getElementById(id); return !!(el && el.value); });
       const hasFilter = activePropType || activeRoomType || activeBathroom || priceOn || segOn ||
         getFilterTypes().length ||
@@ -1779,13 +1779,16 @@
 
     // ── Filter ──
     function _areaOn() { try { return !!areaBounds; } catch (_) { return false; } }   // 11-26d: 지도에서 정한 지역을 보는 중인가(areaBounds 선언 전에 불려도 안전)
+    // 11-28b: 가격 조건 — 값은 koaus-price-range.js 가 갖고 있다($0 ~ $9999, 위쪽 값이 9999 면 위쪽 제한 없음).
+    //   그 파일이 아직 안 떴으면 조건 없음(처음 값과 같다). _priceOff = 가격대 막대그래프에 쓸 글을 고를 때(가격 조건만 빼고 거른다)
+    let _priceOff = false;
+    function _priceRange() { try { if (window.koausPriceRange) return window.koausPriceRange.get(); } catch (_) {} return { lo: 0, hi: 9999 }; }
     function applyFilters(posts) {
       // 지시 8/10 — 숨김(hidden) 처리 글은 모든 뷰(List/Map)에서 즉시 제외
       posts = posts.filter(p => !(p.isHidden || p.status === 'hidden'));
-      const minEl = document.getElementById('filterPriceMin');
-      const maxEl = document.getElementById('filterPriceMax');
-      const minPrice = minEl ? Number(minEl.value) : 0;
-      const maxPrice = maxEl ? Number(maxEl.value) : 2000;
+      // 11-28b: 가격 범위(위 _priceRange). 막대그래프용으로 거를 때는 가격 조건을 뺀다
+      const _pr = _priceOff ? { lo: 0, hi: 9999 } : _priceRange();
+      const minPrice = _pr.lo, maxPrice = _pr.hi;
       const fParking = document.getElementById('fParking').checked;
       const fPet     = document.getElementById('fPet').checked;
       const fKids    = document.getElementById('fKids').checked;
@@ -1806,9 +1809,9 @@
           if (!fTypes.some(t => pTypes.includes(t))) return false;
         }
         if (activePropType && p.propType !== activePropType) return false;
-        // 가격 이중 슬라이더 — min ≤ p.price ≤ max
+        // 가격 범위: minPrice ≤ p.price ≤ maxPrice — 11-28b: 위쪽 값이 9999 면 위쪽 제한 없음(전에는 슬라이더의 끝값을 넘는 글이 처음부터 빠졌다)
         if (typeof p.price === 'number') {
-          if (p.price < minPrice || p.price > maxPrice) return false;
+          if (p.price < minPrice || (maxPrice < 9999 && p.price > maxPrice)) return false;
         }
         // 방·욕실·주차 최소 개수
         if (minBed  && (Number(p.bedrooms)  || 0) < minBed)  return false;
@@ -1848,6 +1851,7 @@
     document.addEventListener('koaus-admin-ready', () => { try { renderAll(); } catch (_) {} }); // admin claim 확정 후 카드 admin 버튼 재렌더
     function renderAll() {
       try { if (window.koausArea) { if (_areaOn()) window.koausArea.touch('rent'); else window.koausArea.refresh(); } } catch (_) {}   // 11-27a: 지역을 보는 중이면 '마지막으로 본 때'를 지금으로, 아니면 이어 보기 카드의 "새 글 N건"을 다시 센다
+      try { if (window.koausPriceRange) window.koausPriceRange.touch(); } catch (_) {}   // 11-28b: 상세 필터 창이 열려 있으면 가격대 막대그래프를 다시 센다(글은 화면이 뜬 뒤에 서버에서 들어온다)
       const posts    = loadPosts();
       const filtered = applyFilters(posts);
       document.getElementById('boardCount').textContent = `총 ${filtered.length}건`;
@@ -1860,8 +1864,9 @@
     }
 
     // ── 통일 list view 카드 빌더 (목록 grid + 지도 drawer 공용) — accom 동일 패턴 ──
-    // 2026-10 전국 통합 목록: 카드에는 가격 아래 '주(NSW·QLD…)'만 — 동네명은 숨김(CARD_SHOW_SUBURB=true 로 복귀). 주소 비공개 설정은 그대로.
-    const CARD_SHOW_SUBURB = false;
+    // 11-28b(사용자 결정 "모든 글에 적기"): 카드의 가격 옆에 동네 이름을 글자로 적는다 — 사진이 있든 없든(다른 사이트에서 가져온 글과 같은 모양).
+    //   10-19 의 '전국 통합 목록: 카드에는 주만, 동네명 숨김'을 바꾼 것이다. 카드에 나오는 것은 extractSuburb(주소) — 'Suburb STATE 우편번호' 앞의 글자 덩어리다. 번지(숫자)는 나오지 않는다. 주소 비공개(기본값)인 글은 저장된 주소가 이미 동네까지라 동네 이름만 나온다.
+    const CARD_SHOW_SUBURB = true;
     function buildRentListCard(p) {
       if (p && p.ext && window.koausExt) return window.koausExt.cardHtml(p, { board: 'rent' });   // 11-05: 외부 글은 출처 카드
       const saved  = isSaved(p.id);
@@ -1874,10 +1879,10 @@
       const _subb = extractSuburb(p.address);  // 카드 위치(CARD_SHOW_SUBURB 일 때). 11-28a: 사진 없는 글의 그림 칸(핀 + 동네 이름)은 없앴다
       // 카드·사진은 공개·비공개 모두 동네(suburb)만 노출 — 도로명/번지 차단.
       //   전체 주소는 공개 매물 상세 페이지에서만 노출(비공개 상세는 redact).
-      const sub = isFind ? (p.body || '') : _subb;
+      const sub = _subb;   // 11-28b: 동네 이름만(전에는 '구하기' 글이면 본문을 넣게 돼 있었다 — 그때는 CARD_SHOW_SUBURB 가 꺼져 있어 보이지 않았다)
       // 11-28a(사용자 지시): 사진이 없는 글은 그림 칸을 두지 않는다 — 제목 · 가격 줄만(카드에 .no-thumb). 사진을 등록한 글만 사진이 보인다.
       //   전에는 사진이 없으면 그 자리에 그림을 그려 넣었다(핀 + 동네 이름, 동네를 모르면 사진기). 동네 이름은 그 그림 안에만 있었으므로 같이 빠진다
-      //   (사진 있는 글과 같아진다 — 카드에는 '주'만, CARD_SHOW_SUBURB). 지도 아래 칸(koausMapDrawer)도 이 카드를 쓴다.
+      //   (11-28b: 그래서 동네 이름은 가격 옆에 글자로 적는다 — CARD_SHOW_SUBURB, 사진 있는 글도 같다). 지도 아래 칸(koausMapDrawer)도 이 카드를 쓴다.
       const _img = (Array.isArray(p.imageUrls) && p.imageUrls.length && p.imageUrls[0]) ? p.imageUrls[0] : '';
       return `
         <div class="accom-card${_img ? '' : ' no-thumb'}${isMine(p) ? ' my-post-highlight' : ''}" data-id="${escHtml(p.id)}">
@@ -2705,52 +2710,17 @@
       });
     });
 
-    // ════════════════════════════════════════════════════════════════════
-    //  Dual Range Slider + 직접 입력창 (Min/Max) 양방향 동기화 (가격 필터)
-    // ════════════════════════════════════════════════════════════════════
-    (function bindDualRange() {
-      const root = document.getElementById('filterPriceRange');
-      if (!root) return;
-      const minIn  = document.getElementById('filterPriceMin');
-      const maxIn  = document.getElementById('filterPriceMax');
-      const minTxt = document.getElementById('filterPriceMinInput');
-      const maxTxt = document.getElementById('filterPriceMaxInput');
-      const fill   = document.getElementById('filterPriceFill');
-      const label  = document.getElementById('filterPriceLabel');
-      const MIN = Number(root.dataset.min), MAX = Number(root.dataset.max);
-      const STEP = Number(root.dataset.step) || 10;
-      const clamp = v => Math.min(MAX, Math.max(MIN, Math.round(v / STEP) * STEP));
-      function paint(srcEl) {
-        let lo = Number(minIn.value), hi = Number(maxIn.value);
-        if (lo > hi - STEP) {
-          if (srcEl === minIn || srcEl === minTxt) { lo = hi - STEP; }
-          else                                      { hi = lo + STEP; }
-        }
-        lo = clamp(lo); hi = clamp(hi);
-        minIn.value = lo; maxIn.value = hi;
-        if (minTxt && document.activeElement !== minTxt) minTxt.value = lo;
-        if (maxTxt && document.activeElement !== maxTxt) maxTxt.value = hi;
-        const a = ((lo - MIN) / (MAX - MIN)) * 100;
-        const b = ((hi - MIN) / (MAX - MIN)) * 100;
-        fill.style.left  = a + '%';
-        fill.style.right = (100 - b) + '%';
-        const hiTxt = hi >= MAX ? `$${MAX}+` : `$${hi}`;
-        label.textContent = `$${lo} to ${hiTxt}`;
-      }
-      // 슬라이더 → 입력창
-      minIn.addEventListener('input', e => paint(e.target));
-      maxIn.addEventListener('input', e => paint(e.target));
-      // 입력창 → 슬라이더 (실시간 + blur 보정)
-      const fromText = e => {
-        const v = clamp(Number(e.target.value) || 0);
-        if (e.target === minTxt) { minIn.value = v; }
-        else                     { maxIn.value = v; }
-        paint(e.target);
-      };
-      if (minTxt) { minTxt.addEventListener('input', fromText); minTxt.addEventListener('change', fromText); }
-      if (maxTxt) { maxTxt.addEventListener('input', fromText); maxTxt.addEventListener('change', fromText); }
-      paint();
-    })();
+    // 11-28b: 가격의 이중 슬라이더(값 · 눈금 · 숫자 칸 · 가격대 막대그래프)는 koaus-price-range.js 로 옮겼다 — 여기 있던 bindDualRange() 는 없앴다.
+    //   그 파일에 넘기는 것: 막대그래프에 쓸 가격들 = 지금 목록과 같은 조건(주 · 지도에서 정한 지역 · 다른 필터)에서 '가격 조건만 뺀' 글들의 가격
+    window.__koausPriceHost = {
+      board: 'rent',
+      prices: () => {
+        _priceOff = true;
+        try { return applyFilters(loadPosts()).map(p => p.price).filter(v => typeof v === 'number' && v > 0); }
+        catch (_) { return []; }
+        finally { _priceOff = false; }
+      },
+    };
 
     // ════════════════════════════════════════════════════════════════════
     //  사진 첨부 (최대 8장) — pendingPhotoFiles 글로벌
@@ -3212,7 +3182,7 @@
   <script type="module" src="koaus-pinned.js"></script>
   <script src="hero-banner.js" defer></script>
   <script src="koaus-map-header.js" defer></script>
-  <script src="koaus-tabbar.js" defer></script>
+  <script src="koaus-tabbar.js?v=1128b" defer></script>
   <script src="koaus-menu.js" defer></script>
   <script src="koaus-scroll-lock.js" defer></script>
 </body>

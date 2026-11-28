@@ -11,7 +11,9 @@
        koausDb/koausFs 있을 때만 60s 스로틀 쿼리(unreadFor array-contains, limit 1
        = 최대 1 read)로 갱신. 브리지·로그인 없으면 LS 값만, 실패 전부 silent.
        chat.html 자체는 onSnapshot 실시간이라 이 폴링과 무관.
-   ─ 프로필 탭(2026-10 ①-3): LS koaus-roles-v1(koaus-role.js) 의 living==='owner'|'both'(집·방 올리기)일 때만
+   ─ 11-28b: 탭은 누구에게나 다섯(홈 / 저장 / 최근 본 / 채팅 / 마이) — 아래의 '프로필' 탭은 숨겼다(SHOW_PEOPLE_TAB = false, 사용자 지시).
+     화면들은 이 파일을 koaus-tabbar.js?v=1128b 로 싣는다(js 는 한 시간 캐시 — 탭 구성을 바꾸면 그 v 도 함께 바꾼다).
+   ─ (숨김) 프로필 탭(2026-10 ①-3): LS koaus-roles-v1(koaus-role.js) 의 living==='owner'|'both'(집·방 올리기)일 때만
      '최근 본'과 '채팅' 사이에 '프로필'(mypage.html?tab=people — 근처에서 집 구하는 사람 카드) 노출.
      'koaus:roles-changed' 이벤트로 즉시 다시 그림. 집 구하는 사람·비로그인은 5탭 그대로.
    ─ 데스크탑(>768px) 미노출 · admin* 페이지에는 스크립트 미포함
@@ -71,10 +73,13 @@
   function rolesLS() {
     try { var r = JSON.parse(localStorage.getItem('koaus-roles-v1') || 'null'); return r && typeof r === 'object' ? r : {}; } catch (_) { return {}; }
   }
+  // 11-28b(사용자 지시 "그 모바일 아래 홈 저장 최근 본 채팅 마이만 나머지는 위에 있는 기능이니까"): '프로필' 탭을 숨긴다 — 탭은 누구에게나 다섯.
+  //   같은 기능(근처에서 집 구하는 분 보기)은 쉐어 · 렌트 목록 위의 [쉐어생 구하기] 버튼에 있다. 지우지 않고 꺼 둔다 — 되살리려면 true 로.
+  var SHOW_PEOPLE_TAB = false;
   function buildTabs() {
     var r = rolesLS();
     var tabs = TABS.slice();
-    if (r.living === 'owner' || r.living === 'both') {   // 10-20: 둘 다('both')도 올리기
+    if (SHOW_PEOPLE_TAB && (r.living === 'owner' || r.living === 'both')) {   // 10-20: 둘 다('both')도 올리기
       tabs.splice(3, 0, { key: 'people', label: '프로필', icon: ICONS.people,
         href: 'accom.html?people=1',   // 10-20: 마이페이지 탭 대신 쉐어 페이지 위 오버레이 · 11-08e: ?state= 없음(쉐어의 저장된 주를 씀)
         active: page === 'accom.html' && qs.get('people') === '1' });

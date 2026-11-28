@@ -3,6 +3,7 @@
 //  -----------------------------------------------------------------
 //  대상: accom (쉐어), rent (렌트), auto-used (중고차 개인 판매)
 //  목적: 매물 글의 정확한 주소/좌표가 모든 사용자에게 노출되는 위험 차단.
+//  11-28b: redactAddress — 동네 이름에 '길 낱말'이 든 곳(St Lucia · Kelvin Grove · Lane Cove …)이 잘려 저장되던 것을 고쳤다(아래 _suburbOf).
 //        '비공개' 매물은 지도에 300~500m 오프셋된 대략 좌표 + 흐릿한 원만 노출,
 //        정확 주소·좌표는 본인 + admin 만 접근 가능 (firestore.rules 지시 2/5).
 //  공개 API: window.koausListingPrivacy = {
@@ -95,11 +96,46 @@
     var s = String(raw == null ? '' : raw).trim();
     if (!s) return '';
     s = s.replace(/,?\s*(Australia|오스트레일리아|호주)\s*$/i, '').trim();   // 국가명 꼬리 제거
+    s = s.replace(/\bSt\.\s*/gi, 'St ');   // 11-28b: "St. Lucia" · "Smith St. Sydney" 의 마침표 — 마침표가 있으면 그 앞 낱말이 통째로 빠졌다("St. Lucia" → "Lucia")
     for (var i = 0; i < _KO_STATE.length; i++) {
       var re = new RegExp(_KO_STATE[i][0] + '(?:\\s*주)?(?=\\s|,|$)', 'g');
       s = s.replace(re, _KO_STATE[i][1]);
     }
     return s.replace(/\s{2,}/g, ' ').replace(/\s+,/g, ',').replace(/,\s*$/, '').trim();
+  }
+
+  // ── (b-1) 주(state) 앞의 글자 덩어리에서 동네 이름만 — 길 이름은 버린다 ──────────────
+  //   덩어리 = "Coronation Dr Green Valley"(쉼표 없이 적은 주소) 또는 "Green Valley"(쉼표로 나뉜 주소의 끝 조각). 번지는 이미 빠져 있다.
+  //   길 낱말(St · Rd · Dr …) 뒤에 글자가 더 있으면 그 뒤만 남긴다(되풀이한다). 그래도 길 낱말이 남으면(끝 낱말) 마지막 낱말만 남긴다
+  //   — 모르면 자른다: 길 이름을 내보내지 않는 쪽이 먼저다.
+  //   11-28b: 동네 이름에 길 낱말이 든 곳이 잘려 저장되던 것을 고쳤다 — St Lucia → "Lucia", Kelvin Grove → "Grove", Lane Cove → "Cove".
+  //   (위치 비공개가 기본값이라 그 동네의 글은 거의 다 그렇게 저장됐다. 이미 저장된 글은 글쓴이가 수정에서 다시 저장해야 바뀐다.)
+  //     ① 덩어리의 끝이 아래 목록(_SUBURB_KEEP)의 이름이면 그 이름이 동네다(쉼표 없이 적은 "5 Smith St St Lucia" 도 여기서 잡힌다).
+  //        돌려주는 것이 목록의 동네 이름뿐이라 길 이름이 샐 수 없다. 길 낱말이 든 동네를 더 알게 되면 여기에 소문자로 더한다.
+  //     ② 덩어리가 St 로 시작하고 그 뒤에 길 낱말이 하나도 없으면 Saint 로 시작하는 동네다(목록에 없는 St Huberts Island 같은 곳).
+  //        길 이름 뒤에 붙는 St(Street)는 앞에 이름이 있어야 하므로 덩어리의 맨 앞에 올 수 없다. 길 낱말에서 자른 뒤에 남은 St 는 여기에 들지 않는다
+  //        ("12 Court St Sunnybank" 의 St 는 길 이름의 꼬리다).
+  const _SUBURB_KEEP = ['st lucia', 'st leonards', 'st ives', 'st ives chase', 'st peters', 'st marys', 'st clair', 'st johns park', 'st kilda', 'st kilda east', 'st kilda west',
+    'st albans', 'st albans park', 'st helena', 'st james', 'st morris', 'st georges', 'st agnes', 'st helens', 'st helens park', 'st george',
+    'kelvin grove', 'ferny grove', 'cedar grove', 'petrie terrace', 'lane cove', 'lane cove north', 'lane cove west', 'liberty grove', 'hurstville grove',
+    'wattle grove', 'raymond terrace', 'crescent head', 'ocean grove', 'golden grove', 'golden square', 'orange grove', 'aubin grove', 'banksia grove'];
+  const _CUT_RE = new RegExp('\\b' + _ROADTYPE + '\\s+(.+)$', 'i');
+  function _suburbOf(group) {
+    var s = String(group == null ? '' : group).trim().replace(/\s+/g, ' ');
+    var low = s.toLowerCase();
+    for (var i = 0; i < _SUBURB_KEEP.length; i++) {                                   // ①
+      var n = _SUBURB_KEEP[i];
+      if (low === n || low.slice(-(n.length + 1)) === ' ' + n) return s.slice(s.length - n.length);
+    }
+    var saint = s.match(/^st\s+(\S.*)$/i);                                             // ②
+    if (saint && !_ROAD_RE.test(saint[1])) return s;
+    for (var g = 0; g < 8; g++) {                                                     // "Coronation Dr Green Valley" → "Green Valley" · "Lane Cove Rd Macquarie Park" → "Macquarie Park"
+      var c = s.match(_CUT_RE);
+      if (!c) break;
+      s = c[1].trim();
+    }
+    if (_ROAD_RE.test(s)) { var w = s.split(/\s+/); s = w[w.length - 1]; }             // 끝 낱말이 길 낱말("Pitt Street") → 마지막 낱말만
+    return s;
   }
 
   function redactAddress(address) {
@@ -117,13 +153,7 @@
     for (var i = parts.length - 1; i >= 0; i--) {
       var m = parts[i].match(partRe);
       if (!m) continue;
-      var suburb = m[1].trim().replace(/\s+/g, ' ');
-      var cut = suburb.match(new RegExp('\\b' + _ROADTYPE + '\\s+(.+)$', 'i'));   // "Coronation Dr Green Valley" → "Green Valley"
-      if (cut) suburb = cut[1].trim();
-      else suburb = suburb.replace(/^\d+[A-Za-z]?\/?\d*\s+/, '').trim();          // 앞 번지 제거
-      if (_ROAD_RE.test(suburb)) {                                               // 도로타입 잔존 → 마지막 1단어만
-        var w = suburb.split(/\s+/); suburb = w[w.length - 1];
-      }
+      var suburb = _suburbOf(m[1]);   // 11-28b: 길 이름은 버리고 동네 이름만(St Lucia · Kelvin Grove 처럼 길 낱말이 든 동네는 그대로)
       var pc = m[3] ? ' ' + m[3] : '';
       return (suburb ? suburb + ' ' : '') + m[2].toUpperCase() + pc;
     }
